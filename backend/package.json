@@ -21,7 +21,6 @@
         "@capacitor/network": "^8.0.1",
         "@capacitor/status-bar": "^8.0.3",
         "@capacitor/toast": "^8.0.1",
-        "@inertiajs/vue3": "^3.7.0",
         "@vitejs/plugin-vue": "^6.0.8",
         "axios": "^1.19.0",
         "flatpickr": "^4.6.13",

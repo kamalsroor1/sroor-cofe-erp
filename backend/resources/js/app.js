@@ -1,24 +1,22 @@
-import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import router from './router';
+import App from './App.vue';
 import { trans } from './helpers/trans';
 
-const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'مخزني ERP';
+const app = createApp(App);
+const pinia = createPinia();
 
-createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
-    setup({ el, App, props, plugin }) {
-        const vueApp = createApp({ render: () => h(App, props) });
-        vueApp.config.globalProperties.$t = trans;
-        vueApp.config.globalProperties.trans = trans;
-        return vueApp
-            .use(plugin)
-            .mount(el);
-    },
-    progress: {
-        color: '#10b981', // Emerald primary accent
-        showSpinner: true,
-    },
-});
+app.use(pinia);
+app.use(router);
+
+// Global translation helpers
+app.config.globalProperties.$t = trans;
+app.config.globalProperties.trans = trans;
+
+window.spaRouter = router;
+
+const mountEl = document.getElementById('app') || document.getElementById('spa-app');
+if (mountEl) {
+    app.mount(mountEl);
+}

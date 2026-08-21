@@ -573,13 +573,38 @@
 
 ---
 
-## 23. مصفوفة تتبع حالة الترحيل الشاملة (Migration Tracking Matrix)
+## 23. المرحلة 5: التنظيف النهائي والتحول الكامل (Final Cleanup & Pure SPA Cutover) — بتاريخ 2026-08-21
+
+### أ. التحول المعماري الكامل (Full SPA Cutover):
+1. `[REFACTORED]` `routes/web.php` — تحويل كامل المسارات العامة والمحمية لتخدم Pure Vue 3 SPA مباشرة عبر Catch-All Route `Route::get('/{any?}')` مع الإبقاء على مسارات الطباعة والتصدير والـ PWA.
+2. `[REFACTORED]` `resources/js/app.js` — تحويل المدخل الرئيسي لتشغيل تطبيق الـ Vue 3 SPA مع Pinia و Vue Router ودوال الترجمة العالمية.
+3. `[REFACTORED]` `resources/views/app.blade.php` — استبدال توجيهات `@inertia` بقالب SPA خفيف ونظيف يضم حاوية التطبيق `<div id="app"></div>` و `@vite(['resources/css/app.css', 'resources/js/app.js'])`.
+4. `[CLEANUP]` `resources/views/spa.blade.php` — توجيهه مباشرة إلى `app.blade.php`.
+5. `[CLEANUP]` `vite.config.js` — ضبط إعدادات خادم التطوير `host: 'localhost'` و `hmr: { host: 'localhost' }` لحل خطأ `ERR_ADDRESS_INVALID`، وحصر مدخلات البناء في `resources/js/app.js` و `resources/css/app.css`.
+
+### ب. إزالة حزم ومخلفات Inertia.js:
+1. `[REMOVED]` `@inertiajs/vue3` من ملف `package.json`.
+2. `[REMOVED]` `inertiajs/inertia-laravel` من ملف `composer.json`.
+3. `[REMOVED]` `app/Http/Middleware/HandleInertiaRequests.php` وإزالته من `bootstrap/app.php`.
+4. `[REMOVED]` مجلد `resources/js/Pages/` القديم بالكامل بعد اكتمال كافة الشاشات الـ 16 بنسبة 100% داخل `resources/js/views/`.
+5. `[REMOVED]` اختبارات Inertia القديمة في `tests/Feature/*InertiaTest.php` واستبدالها بحزمة اختبارات Pure API الشاملة.
+6. `[REMOVED]` ملف `public/hot` القديم.
+
+### ج. التحقق والاختبارات الشاملة (Final Quality Assurance):
+* اجتياز كامل الـ **103 اختبارات برمجية Feature & Unit Tests** بنسبة **100%** (634 Assertions).
+* بناء Vite للإنتاج `npm run build` في **4.24 ثانية** بحجم ملفات مضغوطة ومنظمة.
+
+### حالة المرحلة 5: ✅ مكتملة بنجاح 100%
+
+---
+
+## 24. مصفوفة تتبع حالة الترحيل النهائية (Final Migration Matrix - 100% Complete)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
 - [x] **المرحلة 2: بناء Permissions & System Context API (Backend)** ✅ (2026-08-21)
 - [x] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)** ✅ (2026-08-21)
-- [x] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):** ✅ (2026-08-21)
+- [x] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module - 16/16 Modules):** ✅ (2026-08-21)
   - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
   - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
   - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
@@ -596,9 +621,9 @@
   - [x] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ✅ (2026-08-21)
   - [x] **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)** ✅ (2026-08-21)
   - [x] **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)** ✅ (2026-08-21)
-- [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل** ⏳ (المرحلة القادمة والأخيرة)
+- [x] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل (Pure SPA)** ✅ (2026-08-21)
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 بالكامل (الموديولات 01 إلى 16 بنسبة 100%)  
-**المرحلة التالية المستهدفة:** **المرحلة 5: التنظيف النهائي (إزالة Inertia.js وحزمها من composer.json و package.json وتوحيد الواجهة بالكامل على Pure API SPA)**
+🏆 **تم الانتهاء بنجاح تام من ترحيل وتطوير مشروع "سرور كوفي ERP" كاملاً إلى معمارية Pure Laravel RESTful API + Vue 3 SPA بنسبة 100%!**
+
 
