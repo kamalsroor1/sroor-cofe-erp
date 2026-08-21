@@ -61,6 +61,26 @@ const routes = [
         },
     },
     {
+        path: '/suppliers',
+        name: 'suppliers.index',
+        component: () => import('../views/Suppliers/SuppliersView.vue'),
+        meta: {
+            title: 'الموردين وكشوف الحساب',
+            requiresAuth: true,
+            permission: 'suppliers.manage',
+        },
+    },
+    {
+        path: '/suppliers/:id/statement',
+        name: 'suppliers.statement',
+        component: () => import('../views/Suppliers/SupplierStatementView.vue'),
+        meta: {
+            title: 'كشف حساب مورد',
+            requiresAuth: true,
+            permission: 'suppliers.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

@@ -65,6 +65,9 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/suppliers', [SupplierController::class, 'store'])->name('api.suppliers.store');
         Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->name('api.suppliers.update');
         Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('api.suppliers.destroy');
+        Route::patch('/suppliers/{id}/toggle-active', [SupplierController::class, 'toggleActive'])->name('api.suppliers.toggle_active');
+        Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('api.suppliers.pay');
+        Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->name('api.suppliers.statement');
         // Purchases & Coffee Bean Inbound
         Route::get('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'index'])->name('api.purchases.index');
         Route::get('/purchases/{id}', [\App\Http\Controllers\Api\PurchaseController::class, 'show'])->name('api.purchases.show');

@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 4 - Module 02: العملاء وكشوف الحساب (`Customers & Statements`) مكتمل ومختبر بنجاح بنسبة 100%.
+> **الحالة العامة:** المرحلة 4 - Module 03: الموردين وكشوف الحساب وسندات الصرف (`Suppliers & Statements`) مكتمل ومختبر بنجاح بنسبة 100%.
 
 ---
 
@@ -46,9 +46,9 @@
   4. `DashboardApiController` (الملخص اللحظي المالي والتشغيلي)
   5. `StoreController` (إدارة الفروع والمخازن، أرصدة المخازن، التعيينات، وتبديل الفروع)
   6. `CustomerController` (إدارة العملاء، كشف الحساب التفصيلي، تحصيل المديونيات)
-  7. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
-  8. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
-  9. `SupplierController` (الموردين، إضافة مورد، كشف الحساب)
+  7. `SupplierController` (إدارة الموردين، كشف الحساب التفصيلي، وسندات صرف مستحقات الموردين)
+  8. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
+  9. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
   10. `PurchaseController` (المشتريات وإلغاؤها)
   11. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
   12. `StockTransferController` (التحويلات بين الفروع)
@@ -90,8 +90,8 @@
 [المرحلة 4: ترحيل الموديولات تدريجياً (Module by Module)]
   ├── 1. الفروع والمخازن (Stores & Stocks) ✅
   ├── 2. العملاء وكشوف الحساب (Customers & Statements) ✅
-  ├── 3. الموردين وكشوف الحساب (Suppliers & Statements) ⏳
-  ├── 4. المصروفات والعهد (Expenses & Petty Cash)
+  ├── 3. الموردين وكشوف الحساب (Suppliers & Statements) ✅
+  ├── 4. المصروفات والعهد (Expenses & Petty Cash) ⏳
   ├── 5. الأصناف وحركة المخزون والنواقص (Items & Low Stock Radar)
   ├── 6. الورديات ودفتر اليومية والخزينة (Cash Shifts & Daily Journal)
   ├── 7. المشتريات والتوريدات وإعادة الطلب الذكي (Purchases & Smart Reorder)
@@ -139,42 +139,49 @@
 ---
 
 ## 8. Module 02: العملاء وكشوف الحساب التفصيلية (`Customers & Statements`) — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `CustomerDTO`, `CollectCustomerPaymentDTO`, `CreateCustomerAction`, `UpdateCustomerAction`, `DeleteCustomerAction`, `ToggleCustomerActiveAction`, `CollectCustomerPaymentAction`, `GetCustomerStatementAction`, `CustomerResource`, `CustomerController`, `CustomersView.vue`, `CustomerStatementView.vue`.
+* **الاختبارات:** `CustomersApiTest` (7/7 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 9. Module 03: الموردين وكشوف الحساب وسندات الصرف (`Suppliers & Statements`) — بتاريخ 2026-08-21
 
 ### أ. الـ Backend (Laravel Pure API):
-1. `[NEW]` `app/DTOs/Customers/CustomerDTO.php` (Strictly Typed DTO لبيانات العملاء).
-2. `[NEW]` `app/DTOs/Customers/CollectCustomerPaymentDTO.php` (Strictly Typed DTO لتحصيل سداد المديونيات).
-3. `[NEW]` `app/Actions/Customers/CreateCustomerAction.php` (Single Action لإنشاء العميل وإثبات الرصيد الافتتاحي).
-4. `[NEW]` `app/Actions/Customers/UpdateCustomerAction.php` (Single Action لتعديل بيانات العميل).
-5. `[NEW]` `app/Actions/Customers/DeleteCustomerAction.php` (Single Action لحذف العميل مع فحص موانع الحذف والمديونيات).
-6. `[NEW]` `app/Actions/Customers/ToggleCustomerActiveAction.php` (Single Action لتفعيل / تعطيل حساب العميل).
-7. `[NEW]` `app/Actions/Customers/CollectCustomerPaymentAction.php` (Single Action لتحصيل السداد وربطه بـ PaymentService).
-8. `[NEW]` `app/Actions/Customers/GetCustomerStatementAction.php` (Single Action لتوليد كشف الحساب التفصيلي وحساب الرصيد اللحظي التراكمي بدقة bcmath).
-9. `[NEW]` `app/Http/Resources/CustomerResource.php` (تنسيق بيانات العميل، إحصائيات الفواتير والسدادات، وموانع الحذف).
-10. `[REFACTORED]` `app/Http/Controllers/Api/CustomerController.php` (متحكم API متكامل للعملاء وكشف الحساب والتحصيل).
-11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات العملاء والتحصيل وكشف الحساب).
-12. `[NEW]` `tests/Feature/Api/CustomersApiTest.php` (حزمة 7 اختبارات Feature شاملة لكافة العمليات بنسبة نجاح 100%).
+1. `[NEW]` `app/DTOs/Suppliers/SupplierDTO.php` (Strictly Typed DTO لبيانات الموردين والشركات).
+2. `[NEW]` `app/DTOs/Suppliers/PaySupplierDTO.php` (Strictly Typed DTO لسندات الصرف وسداد الموردين).
+3. `[NEW]` `app/Actions/Suppliers/CreateSupplierAction.php` (Single Action لإنشاء المورد وإثبات الرصيد الافتتاحي داخل Transaction).
+4. `[NEW]` `app/Actions/Suppliers/UpdateSupplierAction.php` (Single Action لتعديل بيانات المورد).
+5. `[NEW]` `app/Actions/Suppliers/DeleteSupplierAction.php` (Single Action لحذف المورد مع التحقق الصارم من موانع الحذف والمستحقات).
+6. `[NEW]` `app/Actions/Suppliers/ToggleSupplierActiveAction.php` (Single Action لتفعيل / تعطيل حساب المورد).
+7. `[NEW]` `app/Actions/Suppliers/PaySupplierAction.php` (Single Action لسداد المورد وربطه بـ PaymentService).
+8. `[NEW]` `app/Actions/Suppliers/GetSupplierStatementAction.php` (Single Action لتوليد كشف الحساب التفصيلي وحساب الرصيد اللحظي التراكمي بدقة bcmath).
+9. `[NEW]` `app/Http/Resources/SupplierResource.php` (تنسيق بيانات المورد، إحصائيات المشتريات والسدادات، وموانع الحذف).
+10. `[REFACTORED]` `app/Http/Controllers/Api/SupplierController.php` (متحكم API متكامل للموردين وكشف الحساب وسندات الصرف).
+11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الموردين وسندات الصرف وكشف الحساب).
+12. `[NEW]` `tests/Feature/Api/SuppliersApiTest.php` (حزمة 7 اختبارات Feature شاملة لكافة العمليات بنسبة نجاح 100%).
 
 ### ب. الـ Frontend (Pure Vue 3 SPA):
-1. `[NEW]` `resources/js/views/Customers/CustomersView.vue` (شاشة إدارة العملاء، بطاقات المؤشرات المالية، فلاتر المديونيات، نوافذ الإضافة والتعديل والتحصيل السريع).
-2. `[NEW]` `resources/js/views/Customers/CustomerStatementView.vue` (شاشة كشف الحساب التفصيلي مع الفلاتر الزمنية السريعة والطباعة والرصيد التراكمي).
-3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/customers` و `/customers/:id/statement` مع حماية الصلاحيات).
-4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (ربط زر العملاء في القائمة الجانبية بالـ Router).
+1. `[NEW]` `resources/js/views/Suppliers/SuppliersView.vue` (شاشة إدارة الموردين، بطاقات المؤشرات المالية، فلاتر المستحقات، نوافذ الإضافة والتعديل وسندات الصرف السريع).
+2. `[NEW]` `resources/js/views/Suppliers/SupplierStatementView.vue` (شاشة كشف حساب المورد التفصيلي مع الفلاتر الزمنية السريعة والطباعة والرصيد التراكمي).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/suppliers` و `/suppliers/:id/statement` مع حماية الصلاحيات).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (ربط زر الموردين في القائمة الجانبية بالـ Router).
 
 ### ج. نقاط النهاية المعتمدة (API Endpoints):
-* `GET /api/v1/customers` — قائمة العملاء مع الفلاتر والبحث والمؤشرات المالية
-* `POST /api/v1/customers` — إضافة عميل جديد
-* `GET /api/v1/customers/{id}` — تفاصيل بروفايل عميل
-* `PUT /api/v1/customers/{id}` — تعديل بيانات العميل
-* `DELETE /api/v1/customers/{id}` — حذف العميل (مع الحماية من حذف العملاء ذوي المديونيات)
-* `PATCH /api/v1/customers/{id}/toggle-active` — تفعيل / تعطيل العميل
-* `POST /api/v1/customers/{id}/collect-payment` — تسجيل سند قبض وتحصيل مديونية
-* `GET /api/v1/customers/{id}/statement` — كشف الحساب التفصيلي والرصيد التراكمي
+* `GET /api/v1/suppliers` — قائمة الموردين مع الفلاتر والبحث والمؤشرات المالية
+* `POST /api/v1/suppliers` — إضافة مورد جديد
+* `GET /api/v1/suppliers/{id}` — تفاصيل بروفايل مورد
+* `PUT /api/v1/suppliers/{id}` — تعديل بيانات المورد
+* `DELETE /api/v1/suppliers/{id}` — حذف المورد (مع الحماية من حذف الموردين المرتبطين بمشتريات أو مستحقات)
+* `PATCH /api/v1/suppliers/{id}/toggle-active` — تفعيل / تعطيل المورد
+* `POST /api/v1/suppliers/{id}/pay` — تسجيل سند صرف وسداد مستحقات للمورد
+* `GET /api/v1/suppliers/{id}/statement` — كشف الحساب التفصيلي والرصيد التراكمي
 
 ### حالة الموديول: ✅ مكتمل بنجاح 100%
 
 ---
 
-## 9. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 10. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -183,8 +190,8 @@
 - [ ] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):**
   - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
   - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
-  - [ ] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)
+  - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
+  - [ ] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ⏳ (التالي في الترتيب)
   - [ ] Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)
   - [ ] Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)
   - [ ] Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)
@@ -200,5 +207,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 02: العملاء وكشوف الحساب (`Customers & Statements`)  
-**الموديول التالي المستهدف:** **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)  
+**الموديول التالي المستهدف:** **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)**

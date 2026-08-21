@@ -150,13 +150,14 @@
             <span class="font-tajawal">العملاء وكشوف الحساب</span>
           </router-link>
 
-          <a
-            href="/suppliers"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"
+          <router-link
+            to="/suppliers"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
-            <Factory class="w-4 h-4 text-indigo-400" />
-            <span class="font-tajawal">الموردين والمشتريات</span>
-          </a>
+            <Factory class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('suppliers') ? 'text-slate-950' : 'text-indigo-400'" />
+            <span class="font-tajawal">الموردين وكشوف الحساب</span>
+          </router-link>
 
           <a
             href="/daily-journal"
