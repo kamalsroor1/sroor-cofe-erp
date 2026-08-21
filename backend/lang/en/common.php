@@ -54,4 +54,6 @@ return [
     'quick_filter'       => 'Quick Filters',
     'restored_success'   => 'Record restored successfully',
     'force_deleted_success' => 'Record permanently deleted from database',
+    'system'             => 'System',
+    'unspecified'        => 'Unspecified',
 ];

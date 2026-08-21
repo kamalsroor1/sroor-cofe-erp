@@ -54,4 +54,6 @@ return [
     'quick_filter'       => 'فلاتر سريعة',
     'restored_success'   => 'تم استعادة السجل المحذوف بنجاح',
     'force_deleted_success' => 'تم حذف السجل نهائياً من قاعدة البيانات',
+    'system'             => 'النظام',
+    'unspecified'        => 'غير محدد',
 ];
