@@ -141,6 +141,10 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/transfers', [\App\Http\Controllers\Api\StockTransferController::class, 'store'])->name('api.transfers.store');
         Route::post('/transfers/{id}/cancel', [\App\Http\Controllers\Api\StockTransferController::class, 'cancel'])->name('api.transfers.cancel');
 
+        // Coffee Blender Engine & Custom Roasting Studio
+        Route::post('/coffee-blender/calculate', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate');
+        Route::post('/coffee-blender/invoice', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice');
+
         // Admin Settings
         Route::get('/settings', [\App\Http\Controllers\Api\SettingController::class, 'index'])->name('api.settings.index');
         Route::post('/settings', [\App\Http\Controllers\Api\SettingController::class, 'update'])->name('api.settings.update');

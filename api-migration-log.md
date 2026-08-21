@@ -379,7 +379,31 @@
 
 ---
 
-## 17. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 17. Module 11: توليفات البن والتصنيع والتكلفة (`Coffee Blender Engine & Custom Roasting`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Blends/CreateBlenderInvoiceDTO.php` (Strictly Typed DTO لبيانات فاتورة التوليفة والوزن المستهدف ودرجة التحميص والطحن والإضافات).
+2. `[NEW]` `app/Actions/Blends/CalculateBlendCostAction.php` (Single Action لحساب تكاليف خامات البن والحبهان وهوامش الربح بدقة `DECIMAL(12,3)` و `bcmath`).
+3. `[NEW]` `app/Actions/Blends/CreateBlenderInvoiceAction.php` (Single Action لاعتماد فاتورة التوليفة وخصم الخامات بالأوزان الدقيقة من المخزون وتحديث حساب العميل).
+4. `[MODIFIED]` `app/Http/Requests/CreateBlenderInvoiceRequest.php` (التحقق الصارم عبر Form Request ومنع أي `$request->validate()` في الكنترولر).
+5. `[NEW]` `app/Http/Controllers/Api/CoffeeBlenderController.php` (متحكم API نقي وخفيف لحاسبة التوليفات وإصدار الفواتير).
+6. `[MODIFIED]` `routes/api.php` (تسجيل مسارات `/coffee-blender/calculate` و `/coffee-blender/invoice`).
+7. `[NEW]` `tests/Feature/Api/CoffeeBlenderApiTest.php` (حزمة اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/CoffeeBlender/CoffeeBlenderView.vue` (استوديو توليف وخلاط البن التفاعلي، أوزان سريعة 125g/250g/500g/1000g، سلايدرات تفاعلية لنسب حبوب البن، حساب فوري للجرامات وسعر البيع والتكلفة، وإصدار الفاتورة وتأكيدها فوراً).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/coffee-blender`).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط استوديو وخلاط البن في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `POST /api/v1/coffee-blender/calculate` — احتساب تكلفة وهوامش ربح وأوزان التوليفة لحظياً
+* `POST /api/v1/coffee-blender/invoice` — إصدار وتأكيد فاتورة مبيعات لتوليفة البن وخصم الخامات فوراً
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 18. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -396,8 +420,8 @@
   - [x] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ✅ (2026-08-21)
   - [x] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ✅ (2026-08-21)
   - [x] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ✅ (2026-08-21)
-  - [ ] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)
+  - [x] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ✅ (2026-08-21)
+  - [ ] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ⏳ (التالي في الترتيب)
   - [ ] Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)
   - [ ] Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)
   - [ ] Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)
@@ -405,5 +429,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)  
-**الموديول التالي المستهدف:** **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)  
+**الموديول التالي المستهدف:** **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)**

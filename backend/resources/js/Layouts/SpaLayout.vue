@@ -131,6 +131,15 @@
             <span class="font-tajawal">مرتجعات المبيعات والمشتريات</span>
           </router-link>
 
+          <router-link
+            to="/coffee-blender"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Coffee class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-amber-400'" />
+            <span class="font-tajawal">استوديو وخلاط البن</span>
+          </router-link>
+
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             الفروع والمخزون
           </div>
@@ -249,6 +258,7 @@ import {
     Wallet,
     BarChart3,
     RotateCcw,
+    Coffee,
     Sun,
     Moon,
     LogOut

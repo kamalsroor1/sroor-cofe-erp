@@ -211,6 +211,16 @@ const routes = [
         },
     },
     {
+        path: '/coffee-blender',
+        name: 'coffee_blender.index',
+        component: () => import('../views/CoffeeBlender/CoffeeBlenderView.vue'),
+        meta: {
+            title: 'محرك توليف وخلاط البن',
+            requiresAuth: true,
+            permission: 'items.create',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
