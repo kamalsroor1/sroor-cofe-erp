@@ -2,84 +2,64 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\AppVersions\CheckAppUpdateAction;
+use App\Actions\AppVersions\DownloadLatestApkAction;
+use App\DTOs\AppVersions\CheckUpdateDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AppVersions\CheckUpdateRequest;
+use App\Models\AppVersion;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AppUpdateController extends Controller
 {
     /**
-     * Check for new mobile app updates (OTA / In-House Forced Updater)
+     * Check for new mobile app updates (Database-driven OTA In-App Updater)
      */
-    public function checkVersion(Request $request)
+    public function checkVersion(Request $request, CheckAppUpdateAction $action): JsonResponse
     {
-        $currentAppVersion = $request->input('current_version', '1.0.0');
-        $currentVersionCode = (int)$request->input('version_code', 1);
+        $platform = $request->input('platform', 'android');
+        $versionCode = (int) $request->input('version_code', 1);
+        $versionName = (string) $request->input('current_version', $request->input('version_name', '1.0.0'));
 
-        // Fetch configured latest version or default to config/env
-        $latestVersion = env('MOBILE_LATEST_VERSION', '1.1.0');
-        $latestVersionCode = (int)env('MOBILE_LATEST_VERSION_CODE', 2);
-        $minSupportedVersion = env('MOBILE_MIN_VERSION', '1.0.0');
-        $forceUpdate = env('MOBILE_FORCE_UPDATE', true);
+        $dto = new CheckUpdateDTO(
+            platform: $platform,
+            versionCode: $versionCode,
+            versionName: $versionName
+        );
 
-        // Release notes in Arabic
-        $releaseNotes = [
-            'إضافة نظام القوائم الذكية Action Sheet لجميع الشاشات لتسهيل الاستخدام',
-            'إمكانية إلغاء الفواتير وتعديل العملاء فورياً مع عكس المخزن والحسابات بأمان',
-            'تحسينات كبيرة في سرعة الكاشير وإدارة السلة وتعديل الأوزان',
-            'إصلاحات وتحديثات أمنية وتوافقية شاملة'
-        ];
+        $result = $action->execute($dto);
 
-        $hasUpdate = version_compare($latestVersion, $currentAppVersion, '>');
-        $isForced = $forceUpdate && $hasUpdate;
-
-        // Path of the APK file
-        $apkPath = base_path('../sroor-coffee-erp-v1.0.apk');
-        $fileSizeMb = File::exists($apkPath) ? round(File::size($apkPath) / 1024 / 1024, 1) : 285.0;
-
-        $host = $request->getSchemeAndHttpHost();
-        $downloadUrl = "{$host}/api/v1/app/download-apk";
+        // Map response for standard payload compatibility
+        $latest = $result['latest_version'];
 
         return response()->json([
-            'success'               => true,
-            'has_update'            => $hasUpdate,
-            'force_update'          => $isForced,
-            'current_app_version'   => $currentAppVersion,
-            'latest_version'        => $latestVersion,
-            'latest_version_code'   => $latestVersionCode,
-            'min_supported_version' => $minSupportedVersion,
-            'download_url'          => $downloadUrl,
-            'file_size_mb'          => $fileSizeMb,
-            'release_date'          => now()->toDateString(),
-            'release_notes'         => $releaseNotes,
-            'title'                 => 'تحديث إلزامي جديد متاح 🚀',
-            'message'               => "يتوفر إصدار جديد ({$latestVersion}) من تطبيق سرور كوفي ERP. يرجى التحديث للمتابعة والتمتع بأحدث الميزات والأمان.",
+            'success' => true,
+            'has_update' => $result['has_update'],
+            'force_update' => $result['is_force_update'],
+            'current_app_version' => $versionName,
+            'latest_version' => $latest['version_name'] ?? $versionName,
+            'latest_version_code' => $latest['version_code'] ?? $versionCode,
+            'download_url' => $latest['download_url'] ?? url('/api/v1/app/download-apk'),
+            'file_size' => $latest['file_size'] ?? '18.5 MB',
+            'file_size_bytes' => $latest['file_size_bytes'] ?? 0,
+            'release_notes_ar' => $latest['release_notes_ar'] ?? '',
+            'release_notes' => $latest['release_notes_ar'] ? explode("\n", $latest['release_notes_ar']) : [],
+            'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
+            'title' => $result['is_force_update'] ? 'تحديث إلزامي جديد متاح 🚀' : 'تحديث جديد متاح للتحميل 🚀',
+            'message' => $result['has_update']
+                ? "يتوفر إصدار جديد ({$latest['version_name']}) من تطبيق سرور كوفي ERP."
+                : 'أنت تستخدم أحدث إصدار من التطبيق.',
         ]);
     }
 
     /**
      * Download the latest APK file directly
      */
-    public function downloadApk()
+    public function downloadApk(DownloadLatestApkAction $action)
     {
-        $possiblePaths = [
-            base_path('../sroor-coffee-erp-v1.0.apk'),
-            base_path('../../sroor-coffee-erp-v1.0.apk'),
-            public_path('downloads/sroor-coffee-erp-latest.apk'),
-            'I:/projects/erp-2026/sroor-coffee-erp-v1.0.apk',
-        ];
-
-        foreach ($possiblePaths as $path) {
-            if (File::exists($path)) {
-                return response()->download($path, 'sroor-coffee-erp-latest.apk', [
-                    'Content-Type' => 'application/vnd.android.package-archive',
-                ]);
-            }
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'ملف الـ APK غير موجود حالياً على السيرفر',
-        ], 404);
+        $platform = request('platform', 'android');
+        return $action->execute($platform);
     }
 }

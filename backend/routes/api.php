@@ -19,7 +19,9 @@ use App\Http\Controllers\Api\SystemContextApiController;
 Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
+    Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->name('api.app.check_update');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
+    Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_latest_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
     Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->name('api.system.translations');
 
@@ -191,6 +193,12 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
             Route::post('/tenants/{id}/override-feature', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
             Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
             Route::put('/plans/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
+
+            // App Versions & APK Releases Management
+            Route::get('/app-versions', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'index'])->name('api.super_admin.app_versions.index');
+            Route::post('/app-versions', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'store'])->name('api.super_admin.app_versions.store');
+            Route::patch('/app-versions/{appVersion}/toggle-active', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'toggleActive'])->name('api.super_admin.app_versions.toggle_active');
+            Route::delete('/app-versions/{appVersion}', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'destroy'])->name('api.super_admin.app_versions.destroy');
         });
     });
 });

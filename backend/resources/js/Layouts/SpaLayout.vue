@@ -300,6 +300,15 @@
             <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
             <span>الباقات والأسعار</span>
           </router-link>
+
+          <router-link
+            to="/super-admin/app-versions"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Rocket class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.app_versions') ? 'text-white' : 'text-purple-400'" />
+            <span>إصدارات التطبيق (APK)</span>
+          </router-link>
         </div>
 
         <div class="p-3 border-t border-slate-800/80 text-center">
@@ -721,6 +730,21 @@
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
+
+            <router-link
+              to="/super-admin/app-versions"
+              @click="isSidebarOpen = false"
+              class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+              :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
+            >
+              <div class="flex items-center gap-3.5">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
+                  <Rocket class="w-4 h-4" />
+                </div>
+                <span>إصدارات التطبيق (APK)</span>
+              </div>
+              <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
+            </router-link>
           </div>
 
           <!-- 📱 Mobile App Drawer Bottom Quick Actions Bar -->
@@ -779,6 +803,7 @@ import {
     Crown,
     Building2,
     Layers,
+    Rocket,
     Sun,
     Moon,
     LogOut

@@ -467,6 +467,36 @@
                   </div>
                 </div>
               </div>
+
+              <!-- In-App APK Updater Card -->
+              <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Rocket class="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-sm font-bold text-white">إصدار التطبيق ونظام التحديثات</h3>
+                      <span class="px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 text-[10px] font-mono font-bold">
+                        v{{ currentVersionName }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                      فحص الإصدارات الجديدة وحزم الـ APK المنشورة وتثبيتها تلقائياً
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  @click="checkForUpdates(true)"
+                  :disabled="isChecking"
+                  class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isChecking }" />
+                  <span>{{ isChecking ? 'جاري الفحص...' : 'فحص التحديثات الآن ⚡' }}</span>
+                </button>
+              </div>
             </div>
           </Transition>
         </div>
@@ -480,6 +510,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { useAppUpdate } from '../../Composables/useAppUpdate';
 import {
     Sliders,
     Save,
@@ -494,8 +525,12 @@ import {
     Code2,
     Layers,
     Server,
-    Database
+    Database,
+    Rocket,
+    RefreshCw
 } from 'lucide-vue-next';
+
+const { currentVersionName, isChecking, checkForUpdates } = useAppUpdate();
 
 const windowWidth = ref(window.innerWidth);
 const isMobileView = computed(() => windowWidth.value < 1024);

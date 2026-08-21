@@ -17,6 +17,9 @@
         </transition>
       </router-view>
     </SpaLayout>
+
+    <!-- 3. Global In-App APK Auto-Updater Modal (Renders seamlessly across all views) -->
+    <AppUpdateModal />
   </div>
 </template>
 
@@ -25,11 +28,14 @@ import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
+import { useAppUpdate } from './Composables/useAppUpdate';
 import SpaLayout from './Layouts/SpaLayout.vue';
+import AppUpdateModal from './Components/AppUpdateModal.vue';
 
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
+const { checkForUpdates } = useAppUpdate();
 
 const isGuestRoute = computed(() => {
     return route.meta?.guestOnly || route.name === 'login' || route.name === 'marketing.brochure';
@@ -52,5 +58,8 @@ onMounted(async () => {
         await appConfigStore.fetchTranslations(appConfigStore.locale);
         window.spaTranslations = appConfigStore.translations;
     }
+
+    // 3. Check for app updates in the background (Non-blocking)
+    checkForUpdates(false);
 });
 </script>

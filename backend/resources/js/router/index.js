@@ -320,6 +320,16 @@ const routes = [
         },
     },
     {
+        path: '/super-admin/app-versions',
+        name: 'super_admin.app_versions',
+        component: () => import('../views/SuperAdmin/SuperAdminAppVersionsView.vue'),
+        meta: {
+            title: 'إدارة إصدارات التطبيق وحزم APK',
+            requiresAuth: true,
+            permission: 'roles.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
