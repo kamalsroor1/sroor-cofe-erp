@@ -499,7 +499,43 @@
 
 ---
 
-## 21. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 21. Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/Actions/Settings/UpdateSettingsAction.php` (Single Action لحفظ وتحديث إعدادات النظام وتفريغ كاش الإعدادات).
+2. `[NEW]` `app/Actions/Profile/UpdateProfileAction.php` (Single Action لتحديث الملف الشخصي وتفضيلات الثيم وتغيير كلمة المرور).
+3. `[NEW]` `app/Actions/Trash/GetTrashRecordsAction.php` (Single Action لجلب وتصنيف بيانات سلة المحذوفات للأقسام المختلفة).
+4. `[NEW]` `app/Actions/Trash/RestoreTrashRecordAction.php` (Single Action لاسترجاع السجلات المحذوفة).
+5. `[NEW]` `app/Actions/Trash/ForceDeleteTrashRecordAction.php` (Single Action للحذف النهائي لسجلات سلة المهملات).
+6. `[REFACTORED]` `app/Http/Requests/UpdateSettingsRequest.php` & `app/Http/Requests/UpdateProfileRequest.php` (التحقق الصارم عبر Form Requests ومنع أي `validate()` في الكنترولرز).
+7. `[REFACTORED]` `app/Http/Controllers/Api/SettingController.php` (متحكم API نقي خالي من أي `$request->validate()`).
+8. `[NEW]` `app/Http/Controllers/Api/ProfileController.php` (متحكم API للملف الشخصي).
+9. `[NEW]` `app/Http/Controllers/Api/TrashController.php` (متحكم API لسلة المهملات).
+10. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الإعدادات، الملف الشخصي، وسلة المهملات).
+11. `[NEW]` `tests/Feature/Api/SettingsProfileTrashApiTest.php` (حزمة 3 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Settings/SettingsView.vue` (شاشة إعدادات النظام والمؤسسة، تبويبات الهوية، الطباعة والفواتير الحرارية، ربط بوت تلجرام، ومعلومات الخادم).
+2. `[NEW]` `resources/js/views/Profile/ProfileView.vue` (شاشة الملف الشخصي، تعديل الاسم والهاتف والبريد، تغيير كلمة المرور، وتفضيل المظهر الفاتح/الداكن).
+3. `[NEW]` `resources/js/views/Trash/TrashView.vue` (سلة المهملات الموحدة بـ 6 تبويبات للأصناف والعملاء والموردين والفروع والمصروفات والمرتجعات مع عدادات لحظية واسترجاع وحذف نهائي).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/settings`, `/profile`, `/trash`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل روابط الإعدادات وسلة المهملات والملف الشخصي في القائمة والهيدر).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/settings` — إعدادات النظام والمؤسسة ومعلومات الخادم
+* `POST /api/v1/settings` — حفظ وتحديث إعدادات النظام
+* `POST /api/v1/settings/telegram/test` — اختبار إرسال إشعار تجريبي لبوت تلجرام
+* `GET /api/v1/profile` — بيانات الملف الشخصي للمستخدم الحالي
+* `PUT /api/v1/profile` — تحديث الملف الشخصي وكلمة المرور والمظهر
+* `GET /api/v1/trash` — سجلات سلة المهملات مع الفلترة والترقيم
+* `POST /api/v1/trash/{type}/{id}/restore` — استرجاع سجل محذوف
+* `DELETE /api/v1/trash/{type}/{id}/force` — الحذف النهائي لسجل محذوف
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 22. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -520,10 +556,10 @@
   - [x] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ✅ (2026-08-21)
   - [x] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ✅ (2026-08-21)
   - [x] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ✅ (2026-08-21)
-  - [ ] **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)
+  - [x] **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)** ✅ (2026-08-21)
+  - [ ] **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)** ⏳ (التالي في الترتيب - الموديول الأخير في المرحلة 4)
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)  
-**الموديول التالي المستهدف:** **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)  
+**الموديول التالي المستهدف:** **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)**

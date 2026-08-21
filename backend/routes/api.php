@@ -167,8 +167,18 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         // Activity & Audit Logs
         Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
 
-        // Admin Settings
+        // User Profile & Preferences
+        Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('api.profile.show');
+        Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update'])->name('api.profile.update');
+
+        // Admin Settings & Integrations
         Route::get('/settings', [\App\Http\Controllers\Api\SettingController::class, 'index'])->name('api.settings.index');
         Route::post('/settings', [\App\Http\Controllers\Api\SettingController::class, 'update'])->name('api.settings.update');
+        Route::post('/settings/telegram/test', [\App\Http\Controllers\Api\SettingController::class, 'sendTestTelegram'])->name('api.settings.telegram_test');
+
+        // Trash Bin (Soft-deleted records recovery)
+        Route::get('/trash', [\App\Http\Controllers\Api\TrashController::class, 'index'])->name('api.trash.index');
+        Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\Api\TrashController::class, 'restore'])->name('api.trash.restore');
+        Route::delete('/trash/{type}/{id}/force', [\App\Http\Controllers\Api\TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
     });
 });

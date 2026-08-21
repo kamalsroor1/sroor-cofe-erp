@@ -1,0 +1,204 @@
+<template>
+  <SpaLayout>
+    <div class="space-y-6 max-w-3xl mx-auto font-tajawal">
+      <!-- Page Header -->
+      <div class="flex items-center gap-3 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+          <User class="w-5 h-5" />
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-white">الملف الشخصي والحساب</h1>
+          <p class="text-xs text-slate-400">تعديل بياناتك الشخصية، كلمة المرور، وتفضيلات المظهر</p>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="isLoading" class="p-16 text-center">
+        <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p class="text-xs text-slate-400">جاري تحميل بيانات الملف الشخصي...</p>
+      </div>
+
+      <form v-else @submit.prevent="submitProfile" class="space-y-6">
+        <!-- Personal Information Card -->
+        <div class="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
+          <h2 class="text-sm font-bold text-white mb-2">👤 البيانات الأساسية</h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-400 font-bold mb-1">الاسم بالكامل *</label>
+              <input
+                v-model="form.name"
+                required
+                type="text"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-slate-400 font-bold mb-1">رقم الهاتف *</label>
+              <input
+                v-model="form.phone"
+                required
+                type="text"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-slate-400 font-bold mb-1">البريد الإلكتروني</label>
+              <input
+                v-model="form.email"
+                type="email"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Security / Password Card -->
+        <div class="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
+          <h2 class="text-sm font-bold text-white mb-2">🔐 الأمان وتغيير كلمة المرور</h2>
+          <p class="text-[11px] text-slate-500">اترك هذه الحقول فارغة إذا لم تكن ترغب في تغيير كلمة المرور الحالية.</p>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-slate-400 font-bold mb-1">كلمة المرور الحالية</label>
+              <input
+                v-model="form.current_password"
+                type="password"
+                placeholder="••••••••"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-slate-400 font-bold mb-1">كلمة المرور الجديدة</label>
+                <input
+                  v-model="form.new_password"
+                  type="password"
+                  placeholder="••••••••"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-slate-400 font-bold mb-1">تأكيد كلمة المرور الجديدة</label>
+                <input
+                  v-model="form.new_password_confirmation"
+                  type="password"
+                  placeholder="••••••••"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preferences Card -->
+        <div class="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
+          <h2 class="text-sm font-bold text-white mb-2">🎨 المظهر وتفضيلات العرض</h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              @click="form.theme_preference = 'dark'"
+              class="p-4 rounded-xl border text-center transition cursor-pointer"
+              :class="form.theme_preference === 'dark' ? 'bg-amber-500/10 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-400'"
+            >
+              <div class="text-lg mb-1">🌙</div>
+              <div class="font-bold">الوضع الليلي (Dark Slate)</div>
+            </button>
+
+            <button
+              type="button"
+              @click="form.theme_preference = 'light'"
+              class="p-4 rounded-xl border text-center transition cursor-pointer"
+              :class="form.theme_preference === 'light' ? 'bg-amber-500/10 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-400'"
+            >
+              <div class="text-lg mb-1">☀️</div>
+              <div class="font-bold">الوضع الفاتح (Light Shell)</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            :disabled="isSubmitting"
+            class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer disabled:opacity-50"
+          >
+            {{ isSubmitting ? 'جاري الحفظ...' : 'حفظ التعديلات' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </SpaLayout>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import SpaLayout from '../../Layouts/SpaLayout.vue';
+import api from '../../services/api';
+import Swal from 'sweetalert2';
+import { User } from 'lucide-vue-next';
+
+const isLoading = ref(false);
+const isSubmitting = ref(false);
+
+const form = ref({
+    name: '',
+    phone: '',
+    email: '',
+    current_password: '',
+    new_password: '',
+    new_password_confirmation: '',
+    theme_preference: 'dark',
+});
+
+const fetchProfile = async () => {
+    isLoading.value = true;
+    try {
+        const res = await api.get('/profile');
+        const u = res.data?.data || {};
+        form.value.name = u.name || '';
+        form.value.phone = u.phone || '';
+        form.value.email = u.email || '';
+        form.value.theme_preference = u.theme_preference || 'dark';
+    } catch (e) {
+        console.error('Failed to load profile:', e);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const submitProfile = async () => {
+    isSubmitting.value = true;
+    try {
+        await api.put('/profile', form.value);
+        Swal.fire({
+            icon: 'success',
+            title: 'تم التحديث',
+            text: 'تم تحديث بيانات الملف الشخصي بنجاح ✓',
+            timer: 1500,
+            showConfirmButton: false,
+        });
+        form.value.current_password = '';
+        form.value.new_password = '';
+        form.value.new_password_confirmation = '';
+    } catch (e) {
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: e.response?.data?.message || 'تعذر حفظ البيانات',
+        });
+    } finally {
+        isSubmitting.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchProfile();
+});
+</script>

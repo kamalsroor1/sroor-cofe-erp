@@ -255,6 +255,24 @@
             <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-slate-950' : 'text-cyan-400'" />
             <span class="font-tajawal">سجل النشاطات</span>
           </router-link>
+
+          <router-link
+            to="/settings"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-amber-400'" />
+            <span class="font-tajawal">إعدادات النظام</span>
+          </router-link>
+
+          <router-link
+            to="/trash"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-slate-950' : 'text-rose-400'" />
+            <span class="font-tajawal">سلة المحذوفات</span>
+          </router-link>
         </div>
 
         <!-- Sidebar Footer -->
@@ -293,6 +311,9 @@ import {
     Coffee,
     ShieldCheck,
     Activity,
+    Sliders,
+    Trash2,
+    User,
     Sun,
     Moon,
     LogOut

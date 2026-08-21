@@ -261,6 +261,35 @@ const routes = [
         },
     },
     {
+        path: '/settings',
+        name: 'settings.index',
+        component: () => import('../views/Settings/SettingsView.vue'),
+        meta: {
+            title: 'إعدادات النظام والمؤسسة',
+            requiresAuth: true,
+            permission: 'roles.manage',
+        },
+    },
+    {
+        path: '/profile',
+        name: 'profile.show',
+        component: () => import('../views/Profile/ProfileView.vue'),
+        meta: {
+            title: 'الملف الشخصي والحساب',
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/trash',
+        name: 'trash.index',
+        component: () => import('../views/Trash/TrashView.vue'),
+        meta: {
+            title: 'سلة المحذوفات',
+            requiresAuth: true,
+            permission: 'trash.access',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
