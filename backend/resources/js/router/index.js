@@ -91,6 +91,26 @@ const routes = [
         },
     },
     {
+        path: '/items',
+        name: 'items.index',
+        component: () => import('../views/Items/ItemsView.vue'),
+        meta: {
+            title: 'الأصناف والمخزون',
+            requiresAuth: true,
+            permission: 'items.manage',
+        },
+    },
+    {
+        path: '/items/:id/movements',
+        name: 'items.movements',
+        component: () => import('../views/Items/ItemMovementsView.vue'),
+        meta: {
+            title: 'حركات مخزون الصنف',
+            requiresAuth: true,
+            permission: 'items.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

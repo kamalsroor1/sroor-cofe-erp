@@ -1,105 +1,230 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Items\AdjustItemStockAction;
+use App\Actions\Items\CreateItemAction;
+use App\Actions\Items\DeleteItemAction;
+use App\Actions\Items\GetItemMovementsAction;
+use App\Actions\Items\ToggleItemActiveAction;
+use App\Actions\Items\UpdateItemAction;
+use App\DTOs\Items\AdjustStockDTO;
+use App\DTOs\Items\ItemDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\AdjustStockRequest;
+use App\Http\Requests\StoreItemRequest;
+use App\Http\Requests\UpdateItemRequest;
+use App\Http\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\Store;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ItemController extends Controller
+final class ItemController extends Controller
 {
+    public function __construct(
+        private readonly CreateItemAction $createItemAction,
+        private readonly UpdateItemAction $updateItemAction,
+        private readonly DeleteItemAction $deleteItemAction,
+        private readonly ToggleItemActiveAction $toggleItemActiveAction,
+        private readonly AdjustItemStockAction $adjustItemStockAction,
+        private readonly GetItemMovementsAction $getItemMovementsAction
+    ) {}
+
     /**
-     * List items with stock and price for the active store
+     * List items with stock, filters & valuation metrics
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $search   = trim((string)$request->input('search', ''));
-        $category = $request->input('category', 'all');
-        $storeId  = (int)($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
+        $search = trim((string)$request->input('search', ''));
+        $category = (string)$request->input('category', 'all');
+        $stockStatus = (string)$request->input('stock_status', 'all');
+        $status = (string)$request->input('status', 'all');
+        $perPage = (int)$request->input('per_page', 20);
 
-        $query = Item::query()->active()->with(['storeStocks' => function ($q) use ($storeId) {
-            if ($storeId) {
-                $q->where('store_id', $storeId);
-            }
-        }]);
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        if (!empty($search)) {
+        $query = Item::with(['storeStocks.store']);
+
+        if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%");
+                  ->orWhere('notes', 'like', "%{$search}%");
             });
         }
 
-        if ($category !== 'all' && !empty($category)) {
+        if ($category !== 'all' && $category !== '') {
             $query->where('category', $category);
         }
 
-        $items = $query->orderBy('name')->get()->map(function (Item $item) use ($storeId) {
-            $storeStock = $item->getStockInStore($storeId);
-            $effectivePrice = $item->getEffectivePriceForStore($storeId);
+        if ($stockStatus === 'low') {
+            $query->whereColumn('current_stock', '<=', 'min_stock_level')->where('current_stock', '>', 0);
+        } elseif ($stockStatus === 'out') {
+            $query->where('current_stock', '<=', 0);
+        } elseif ($stockStatus === 'in_stock') {
+            $query->where('current_stock', '>', 0);
+        }
 
-            return [
-                'id'                => $item->id,
-                'code'              => $item->code,
-                'name'              => $item->name,
-                'category'          => $item->category,
-                'unit'              => $item->unit,
-                'selling_price'     => (string)$effectivePrice,
-                'cost_price'        => (string)$item->cost_price,
-                'current_stock'     => (string)$storeStock,
-                'total_stock'       => (string)$item->current_stock,
-                'min_stock_level'   => (string)$item->min_stock_level,
-                'is_low_stock'      => bccomp($storeStock, (string)$item->min_stock_level, 3) <= 0,
-            ];
-        });
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
 
-        // Unique categories list
-        $categories = Item::query()->active()->whereNotNull('category')->distinct()->pluck('category')->filter()->values();
+        $items = $query->latest('id')->paginate($perPage);
+
+        $categories = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->values();
+
+        $totalItemsCount = Item::count();
+        $lowStockCount = Item::whereColumn('current_stock', '<=', 'min_stock_level')->where('is_active', true)->count();
+        $totalStockValue = (float)Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val');
 
         return response()->json([
             'success'    => true,
-            'store_id'   => $storeId,
+            'data'       => ItemResource::collection($items->items())->resolve(),
+            'meta'       => [
+                'current_page' => $items->currentPage(),
+                'last_page'    => $items->lastPage(),
+                'per_page'     => $items->perPage(),
+                'total'        => $items->total(),
+            ],
+            'summary'    => [
+                'total_items'       => $totalItemsCount,
+                'low_stock_count'   => $lowStockCount,
+                'total_stock_value' => $totalStockValue,
+            ],
             'categories' => $categories,
-            'total'      => $items->count(),
-            'data'       => $items,
-        ]);
+            'store_id'   => $storeId,
+        ], 200);
+    }
+
+    /**
+     * Store a newly created item
+     */
+    public function store(StoreItemRequest $request): JsonResponse
+    {
+        $dto = ItemDTO::fromArray($request->validated());
+        $item = $this->createItemAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('inventory.item_added') ?: 'تم إضافة الصنف بنجاح',
+            'data'    => (new ItemResource($item))->resolve(),
+        ], 201);
     }
 
     /**
      * Show single item details
      */
-    public function show(Request $request, $id)
+    public function show(Request $request, int $id): JsonResponse
     {
-        $storeId = (int)($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
-        $item = Item::with(['storeStocks' => function ($q) use ($storeId) {
-            if ($storeId) {
-                $q->where('store_id', $storeId);
-            }
-        }])->findOrFail($id);
+        $item = Item::with(['storeStocks.store'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'id'              => $item->id,
-                'code'            => $item->code,
-                'name'            => $item->name,
-                'category'        => $item->category,
-                'unit'            => $item->unit,
-                'selling_price'   => (string)$item->getEffectivePriceForStore($storeId),
-                'cost_price'      => (string)$item->cost_price,
-                'current_stock'   => (string)$item->getStockInStore($storeId),
-                'total_stock'     => (string)$item->current_stock,
-                'min_stock_level' => (string)$item->min_stock_level,
-            ],
-        ]);
+            'data'    => (new ItemResource($item))->resolve(),
+        ], 200);
     }
 
     /**
-     * Get Low Stock Radar Items
+     * Update existing item
      */
-    public function lowStock(Request $request)
+    public function update(UpdateItemRequest $request, int $id): JsonResponse
+    {
+        $item = Item::findOrFail($id);
+        $dto = ItemDTO::fromArray($request->validated());
+        $updated = $this->updateItemAction->execute($item, $dto);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('inventory.item_updated') ?: 'تم تعديل بيانات الصنف بنجاح',
+            'data'    => (new ItemResource($updated))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Delete an item
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $item = Item::findOrFail($id);
+        $this->deleteItemAction->execute($item);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('inventory.item_deleted') ?: 'تم حذف الصنف بنجاح',
+        ], 200);
+    }
+
+    /**
+     * Toggle Item Active Status
+     */
+    public function toggleActive(int $id): JsonResponse
+    {
+        $item = Item::findOrFail($id);
+        $toggled = $this->toggleItemActiveAction->execute($item);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث حالة الصنف بنجاح',
+            'data'    => (new ItemResource($toggled))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Adjust Item Stock
+     */
+    public function adjustStock(AdjustStockRequest $request, int $id): JsonResponse
+    {
+        $dto = AdjustStockDTO::fromArray($id, $request->validated());
+        $userId = (int)auth()->id();
+
+        $movement = $this->adjustItemStockAction->execute($dto, $userId);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'تم تسجيل تسوية المخزون بنجاح',
+            'movement' => $movement,
+        ], 200);
+    }
+
+    /**
+     * Item stock movements ledger
+     */
+    public function movements(Request $request, int $id): JsonResponse
+    {
+        $item = Item::withTrashed()->findOrFail($id);
+        $fromDate = $request->input('from_date') ?: $request->input('from');
+        $toDate = $request->input('to_date') ?: $request->input('to');
+        $storeId = $request->input('store_id') && $request->input('store_id') !== 'all' ? (int)$request->input('store_id') : null;
+        $type = $request->input('type');
+        $perPage = (int)$request->input('per_page', 20);
+
+        $result = $this->getItemMovementsAction->execute(
+            $item,
+            $fromDate ? (string)$fromDate : null,
+            $toDate ? (string)$toDate : null,
+            $storeId,
+            $type ? (string)$type : null,
+            $perPage
+        );
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result,
+        ], 200);
+    }
+
+    /**
+     * Low stock radar
+     */
+    public function lowStock(Request $request): JsonResponse
     {
         $storeId = (int)($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
 
@@ -117,16 +242,16 @@ class ItemController extends Controller
                 }
 
                 return [
-                    'id'              => $item->id,
-                    'code'            => $item->code,
-                    'name'            => $item->name,
-                    'category'        => $item->category,
-                    'unit'            => $item->unit,
-                    'cost_price'      => (string)$item->cost_price,
-                    'selling_price'   => (string)$item->selling_price,
-                    'current_stock'   => $stock,
-                    'min_stock_level' => $min,
-                    'deficit'         => $deficit,
+                    'id'                    => $item->id,
+                    'code'                  => $item->code,
+                    'name'                  => $item->name,
+                    'category'              => $item->category,
+                    'unit'                  => $item->unit,
+                    'cost_price'            => (string)$item->cost_price,
+                    'selling_price'         => (string)$item->selling_price,
+                    'current_stock'         => $stock,
+                    'min_stock_level'       => $min,
+                    'deficit'               => $deficit,
                     'suggested_reorder_qty' => bccomp($deficit, '0.000', 3) > 0 ? $deficit : '10.000',
                 ];
             });
@@ -135,6 +260,6 @@ class ItemController extends Controller
             'success'   => true,
             'count'     => $items->count(),
             'low_items' => $items,
-        ]);
+        ], 200);
     }
 }

@@ -181,7 +181,45 @@
 
 ---
 
-## 11. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 11. Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Items/ItemDTO.php` (Strictly Typed DTO لبيانات الصنف والأسعار وحدود المخزون).
+2. `[NEW]` `app/DTOs/Items/AdjustStockDTO.php` (Strictly Typed DTO لتسويات وجرد المخزون والهدر).
+3. `[NEW]` `app/Actions/Items/CreateItemAction.php` (Single Action لإنشاء الصنف والباركود وتهيئة أرصدة الفروع تلقائياً داخل Transaction).
+4. `[NEW]` `app/Actions/Items/UpdateItemAction.php` (Single Action لتعديل بيانات الصنف).
+5. `[NEW]` `app/Actions/Items/DeleteItemAction.php` (Single Action لحذف الصنف مع فحص الموانع التشغيلية).
+6. `[NEW]` `app/Actions/Items/ToggleItemActiveAction.php` (Single Action لتفعيل وتعطيل الصنف).
+7. `[NEW]` `app/Actions/Items/AdjustItemStockAction.php` (Single Action لتسوية المخزون مع قفل سطري `lockForUpdate` وحساب `bcmath` وتسجيل حركة المخزون `StockMovement`).
+8. `[NEW]` `app/Actions/Items/GetItemMovementsAction.php` (Single Action لكشف حركات المخزون وحساب مجاميع الوارد والمنصرف وصافي الحركة).
+9. `[NEW]` `app/Http/Resources/ItemResource.php` (تنسيق كروت الأصناف وأسعار وأرصدة الفروع).
+10. `[NEW]` `app/Http/Resources/StockMovementResource.php` (تنسيق سجلات حركات المخزون للـ API).
+11. `[REFACTORED]` `app/Http/Controllers/Api/ItemController.php` (متحكم API متكامل للأصناف والتسويات ورادار النواقص).
+12. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الأصناف، النواقص، التسويات، وكشف الحركات).
+13. `[NEW]` `tests/Feature/Api/ItemsApiTest.php` (حزمة 9 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Items/ItemsView.vue` (شاشة كروت الأصناف، التقييم المالي للمخزون، فلتر النواقص ورصيد الصفر، نافذة الإضافة والتعديل، ونافذة التسوية المخزنية السريعة).
+2. `[NEW]` `resources/js/views/Items/ItemMovementsView.vue` (شاشة كشف حركات الصنف التفصيلي، بطاقات إجمالي الوارد والمنصرف وصافي الرصيد، فلتر الفروع والفترات الزمنية مع الطباعة).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/items` و `/items/:id/movements`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تحويل رابط الأصناف والمخزون إلى router-link نشط).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/items` — قائمة الأصناف مع الفلاتر والبحث والمؤشرات المالية
+* `POST /api/v1/items` — إضافة صنف جديد
+* `GET /api/v1/items/low-stock` — رادار الأصناف الحرجة والنواقص
+* `GET /api/v1/items/{id}` — تفاصيل صنف محدد
+* `PUT /api/v1/items/{id}` — تعديل صنف
+* `DELETE /api/v1/items/{id}` — حذف صنف (مع فحص الموانع)
+* `PATCH /api/v1/items/{id}/toggle-active` — تفعيل/تعطيل الصنف
+* `POST /api/v1/items/{id}/adjust-stock` — تسوية مخزنية وجرد
+* `GET /api/v1/items/{id}/movements` — كشف حركات المخزون
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 12. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -192,8 +230,8 @@
   - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
   - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
   - [x] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ✅ (2026-08-21)
-  - [ ] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)
+  - [x] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ✅ (2026-08-21)
+  - [ ] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ⏳ (التالي في الترتيب)
   - [ ] Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)
   - [ ] Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)
   - [ ] Module 09: مرتجعات المبيعات والمشتريات (`Returns`)
@@ -207,5 +245,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)  
-**الموديول التالي المستهدف:** **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)  
+**الموديول التالي المستهدف:** **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)**

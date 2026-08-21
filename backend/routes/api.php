@@ -74,10 +74,16 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'store'])->name('api.purchases.store');
         Route::post('/purchases/{id}/cancel', [\App\Http\Controllers\Api\PurchaseController::class, 'cancel'])->name('api.purchases.cancel');
 
-        // Items & Stock by Branch & Low Stock Radar
+        // Items & Stock by Branch & Low Stock Radar & Movements
         Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
         Route::get('/items/low-stock', [ItemController::class, 'lowStock'])->name('api.items.low_stock');
         Route::get('/items/{id}', [ItemController::class, 'show'])->name('api.items.show');
+        Route::post('/items', [ItemController::class, 'store'])->name('api.items.store');
+        Route::put('/items/{id}', [ItemController::class, 'update'])->name('api.items.update');
+        Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('api.items.destroy');
+        Route::patch('/items/{id}/toggle-active', [ItemController::class, 'toggleActive'])->name('api.items.toggle_active');
+        Route::post('/items/{id}/adjust-stock', [ItemController::class, 'adjustStock'])->name('api.items.adjust_stock');
+        Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements');
 
         // Audit Trail & Activity Logs
         Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
