@@ -1,20 +1,20 @@
 <template>
   <div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
-    <!-- Top Navigation Header -->
+    <!-- Top Navigation Header (Desktop & Mobile) -->
     <header class="h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
       <!-- Right: Brand Logo & Mobile Toggle -->
       <div class="flex items-center gap-3">
         <button
           type="button"
-          @click="isSidebarOpen = !isSidebarOpen"
-          class="p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-colors md:hidden cursor-pointer"
-          title="القائمة الجانبية"
+          @click="isSidebarOpen = true"
+          class="p-2.5 text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-2xl transition-all md:hidden cursor-pointer active:scale-90"
+          title="القائمة الرئيسية"
         >
-          <Menu class="w-5 h-5" />
+          <Menu class="w-6 h-6" />
         </button>
 
         <router-link to="/" class="flex items-center gap-2.5 group">
-          <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 p-1 flex items-center justify-center shadow-md">
+          <div class="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 p-1.5 flex items-center justify-center shadow-md">
             <img :src="appConfigStore.branding?.logo || '/logo.png'" alt="Logo" class="w-full h-full object-contain">
           </div>
           <div>
@@ -28,7 +28,7 @@
         </router-link>
       </div>
 
-      <!-- Center / Store Context Switcher -->
+      <!-- Center / Store Context Switcher (Desktop) -->
       <div class="hidden sm:flex items-center gap-2">
         <div v-if="authStore.stores?.length > 1" class="relative">
           <select
@@ -49,7 +49,7 @@
         </div>
       </div>
 
-      <!-- Left: Theme, Notifications, User Menu -->
+      <!-- Left: Theme, User Profile, Logout -->
       <div class="flex items-center gap-2">
         <!-- Theme Switcher -->
         <button
@@ -62,7 +62,7 @@
           <Moon v-else class="w-4 h-4" />
         </button>
 
-        <!-- User Profile Dropdown / Logout -->
+        <!-- User Profile -->
         <div class="flex items-center gap-2 pr-2 border-r border-slate-800">
           <div class="text-end hidden lg:block">
             <div class="text-xs font-bold text-slate-200 font-tajawal">{{ authStore.userName }}</div>
@@ -81,265 +81,435 @@
       </div>
     </header>
 
-    <!-- App Body: Sidebar + Main Content -->
+    <!-- App Body: Sidebar / Drawer + Main Content -->
     <div class="flex-1 flex overflow-hidden relative">
-      <!-- Mobile Backdrop Overlay -->
-      <div
-        v-if="isSidebarOpen"
-        @click="isSidebarOpen = false"
-        class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-30 md:hidden"
-      ></div>
+      <!-- 📱 Mobile & Tablet Backdrop Blur Overlay -->
+      <transition name="fade">
+        <div
+          v-if="isSidebarOpen"
+          @click="isSidebarOpen = false"
+          class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 md:hidden select-none"
+        ></div>
+      </transition>
 
-      <!-- Sidebar Navigation -->
+      <!-- 📱 Native-Style Full App Navigation Drawer (Mobile & Tablet) / Desktop Sidebar -->
       <aside
         :class="[
-          'w-64 bg-slate-950 border-l border-slate-800 flex flex-col transition-all duration-300 z-40',
-          'fixed inset-y-0 right-0 pt-16 md:static md:pt-0',
-          isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
+          'bg-slate-950 border-l border-slate-800 flex flex-col transition-transform duration-300 ease-out z-50 font-tajawal',
+          // Desktop Styles (>= md)
+          'hidden md:flex md:w-64 lg:w-72 md:static md:translate-x-0',
+          // Mobile & Tablet Styles (< md)
+          isSidebarOpen ? 'flex fixed inset-y-0 right-0 w-[88vw] max-w-[420px] shadow-2xl translate-x-0' : 'fixed inset-y-0 right-0 w-[88vw] max-w-[420px] translate-x-full'
         ]"
       >
-        <div class="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
+        <!-- 📱 Mobile App Drawer Top Profile Header (Visible on Mobile / Tablet Drawer) -->
+        <div class="p-5 border-b border-slate-800/80 bg-slate-900/90 flex items-start justify-between gap-3 shrink-0 md:hidden">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 shrink-0 flex items-center justify-center text-slate-950 font-black text-lg font-tajawal">
+              {{ authStore.userName?.charAt(0) || 'U' }}
+            </div>
+            <div class="min-w-0">
+              <h2 class="font-black text-sm text-white truncate leading-snug">
+                {{ authStore.userName }}
+              </h2>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
+                  {{ authStore.roles?.[0] || 'كاشير' }}
+                </span>
+                <span class="text-[11px] text-slate-400 truncate">
+                  🏬 {{ authStore.activeStoreName }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tactile Close Button -->
+          <button
+            type="button"
+            @click="isSidebarOpen = false"
+            class="w-10 h-10 rounded-2xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md shrink-0"
+            title="إغلاق القائمة"
+          >
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Scrollable Navigation Groups -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2 custom-scrollbar">
+          <!-- Primary POS Fast Action Button -->
+          <div class="pb-2">
+            <router-link
+              to="/pos"
+              @click="isSidebarOpen = false"
+              class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-sm flex items-center justify-between shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer group"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl bg-slate-950/20 flex items-center justify-center">
+                  <ShoppingCart class="w-4.5 h-4.5 text-slate-950" />
+                </div>
+                <span>نقطة البيع السريعة (POS)</span>
+              </div>
+              <span class="text-xs opacity-75 font-mono">F2 ←</span>
+            </router-link>
+          </div>
+
+          <!-- Section 1: Dashboard -->
           <router-link
             to="/"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <LayoutDashboard class="w-4 h-4" />
-            <span class="font-tajawal">لوحة التحكم الرئيسية</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name === 'dashboard' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                <LayoutDashboard class="w-4 h-4" />
+              </div>
+              <span>لوحة التحكم الرئيسية</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
-          <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
+          <!-- Group Header: Sales -->
+          <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             العمليات ونقاط البيع
           </div>
 
           <router-link
-            to="/pos"
-            @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
-          >
-            <ShoppingCart class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('pos') ? 'text-slate-950' : 'text-emerald-400'" />
-            <span class="font-tajawal">نقطة البيع السريعة (POS)</span>
-          </router-link>
-
-          <router-link
             to="/invoices"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <FileText class="w-4 h-4 text-blue-400" :class="$route.name?.startsWith('invoices') ? 'text-slate-950' : 'text-blue-400'" />
-            <span class="font-tajawal">فواتير المبيعات</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('invoices') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-blue-400'">
+                <FileText class="w-4 h-4" />
+              </div>
+              <span>فواتير المبيعات</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/returns"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <RotateCcw class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('returns') ? 'text-slate-950' : 'text-cyan-400'" />
-            <span class="font-tajawal">مرتجعات المبيعات والمشتريات</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('returns') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
+                <RotateCcw class="w-4 h-4" />
+              </div>
+              <span>مرتجعات المبيعات والمشتريات</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/coffee-blender"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Coffee class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-amber-400'" />
-            <span class="font-tajawal">استوديو وخلاط البن</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('coffee_blender') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                <Coffee class="w-4 h-4" />
+              </div>
+              <span>استوديو وخلاط البن</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
-          <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
+          <!-- Group Header: Inventory -->
+          <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             الفروع والمخزون
           </div>
 
           <router-link
             to="/stores"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <StoreIcon class="w-4 h-4" />
-            <span class="font-tajawal">الفروع والمخازن</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stores') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
+                <StoreIcon class="w-4 h-4" />
+              </div>
+              <span>الفروع والمخازن</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/items"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-slate-950' : 'text-amber-400'" />
-            <span class="font-tajawal">الأصناف والمخزون</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('items') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                <Package class="w-4 h-4" />
+              </div>
+              <span>الأصناف والمخزون</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/stock-transfers"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Truck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('stock_transfers') ? 'text-slate-950' : 'text-purple-400'" />
-            <span class="font-tajawal">التحويلات المخزنية</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stock_transfers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
+                <Truck class="w-4 h-4" />
+              </div>
+              <span>التحويلات المخزنية</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/purchases"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Truck class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('purchases') ? 'text-slate-950' : 'text-emerald-400'" />
-            <span class="font-tajawal">المشتريات والتوريد</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('purchases') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-teal-400'">
+                <Truck class="w-4 h-4" />
+              </div>
+              <span>المشتريات والتوريد</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/customers"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Users class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('customers') ? 'text-slate-950' : 'text-cyan-400'" />
-            <span class="font-tajawal">العملاء وكشوف الحساب</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('customers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-sky-400'">
+                <Users class="w-4 h-4" />
+              </div>
+              <span>العملاء وكشوف الحساب</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/suppliers"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Factory class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('suppliers') ? 'text-slate-950' : 'text-indigo-400'" />
-            <span class="font-tajawal">الموردين وكشوف الحساب</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('suppliers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-indigo-400'">
+                <Factory class="w-4 h-4" />
+              </div>
+              <span>الموردين وكشوف الحساب</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/expenses"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Receipt class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('expenses') ? 'text-slate-950' : 'text-rose-400'" />
-            <span class="font-tajawal">المصروفات والعهد النثرية</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('expenses') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
+                <Receipt class="w-4 h-4" />
+              </div>
+              <span>المصروفات والعهد النثرية</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/daily-journal"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Wallet class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('daily_journal') ? 'text-slate-950' : 'text-emerald-400'" />
-            <span class="font-tajawal">دفتر اليومية والخزينة</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('daily_journal') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
+                <Wallet class="w-4 h-4" />
+              </div>
+              <span>دفتر اليومية والخزينة</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/reports"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <BarChart3 class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('reports') ? 'text-slate-950' : 'text-purple-400'" />
-            <span class="font-tajawal">التقارير والأرباح</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('reports') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
+                <BarChart3 class="w-4 h-4" />
+              </div>
+              <span>التقارير والأرباح</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
-          <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
+          <!-- Group Header: Management -->
+          <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             إدارة النظام والمستخدمين
           </div>
 
           <router-link
             to="/users"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-amber-400'" />
-            <span class="font-tajawal">المستخدمين والموظفين</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('users') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                <Users class="w-4 h-4" />
+              </div>
+              <span>المستخدمين والموظفين</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/roles"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <ShieldCheck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('roles') ? 'text-slate-950' : 'text-purple-400'" />
-            <span class="font-tajawal">مصفوفة الصلاحيات</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('roles') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
+                <ShieldCheck class="w-4 h-4" />
+              </div>
+              <span>مصفوفة الصلاحيات</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/activity-logs"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-slate-950' : 'text-cyan-400'" />
-            <span class="font-tajawal">سجل النشاطات</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('activity_logs') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
+                <Activity class="w-4 h-4" />
+              </div>
+              <span>سجل النشاطات والتدقيق</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/settings"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-amber-400'" />
-            <span class="font-tajawal">إعدادات النظام</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('settings') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                <Sliders class="w-4 h-4" />
+              </div>
+              <span>إعدادات النظام</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/trash"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-slate-950' : 'text-rose-400'" />
-            <span class="font-tajawal">سلة المحذوفات</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('trash') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
+                <Trash2 class="w-4 h-4" />
+              </div>
+              <span>سلة المحذوفات</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
-          <!-- Super Admin Management Section -->
-          <div class="pt-2 pb-1 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-tajawal">
+          <!-- Group Header: Super Admin -->
+          <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             إدارة المنصة والسوبر أدمن
           </div>
 
           <router-link
             to="/super-admin/dashboard"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Crown class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.dashboard') ? 'text-white' : 'text-purple-400'" />
-            <span class="font-tajawal">لوحة السوبر أدمن</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
+                <Crown class="w-4 h-4" />
+              </div>
+              <span>لوحة السوبر أدمن</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/super-admin/tenants"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Building2 class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('super_admin.tenants') ? 'text-white' : 'text-indigo-400'" />
-            <span class="font-tajawal">إدارة المستأجرين</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-indigo-400'">
+                <Building2 class="w-4 h-4" />
+              </div>
+              <span>إدارة المستأجرين</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
 
           <router-link
             to="/super-admin/plans"
             @click="isSidebarOpen = false"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+            :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
           >
-            <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
-            <span class="font-tajawal">الباقات والأسعار</span>
+            <div class="flex items-center gap-3.5">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.plans') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-amber-400'">
+                <Layers class="w-4 h-4" />
+              </div>
+              <span>الباقات والأسعار</span>
+            </div>
+            <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
           </router-link>
         </div>
 
-        <!-- Sidebar Footer -->
-        <div class="p-3 border-t border-slate-800/80 text-center">
-          <div class="text-[10px] text-slate-500 font-mono">Pure API SPA v1.0</div>
+        <!-- 📱 Mobile App Drawer Bottom Quick Actions Bar -->
+        <div class="p-4 border-t border-slate-800/80 bg-slate-900/95 flex items-center justify-between gap-2 shrink-0 pb-safe md:hidden">
+          <button
+            type="button"
+            @click="toggleTheme"
+            class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+          >
+            <Sun v-if="appConfigStore.isDark" class="w-4 h-4 text-amber-400" />
+            <Moon v-else class="w-4 h-4" />
+            <span>{{ appConfigStore.isDark ? 'نهاري' : 'ليلي' }}</span>
+          </button>
+
+          <button
+            type="button"
+            @click="handleLogout"
+            class="py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+          >
+            <LogOut class="w-4 h-4" />
+            <span>خروج</span>
+          </button>
         </div>
       </aside>
 
@@ -362,6 +532,7 @@ import { useAppConfigStore } from '../stores/appConfig';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import {
     Menu,
+    X,
     LayoutDashboard,
     ShoppingCart,
     FileText,
