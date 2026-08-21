@@ -10,7 +10,7 @@ class StoreReturnRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('returns.create') ?? false;
+        return $this->user()?->hasRole('admin') || $this->user()?->can('returns.create') || $this->user()?->can('returns.manage') ?? false;
     }
 
     public function rules(): array

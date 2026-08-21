@@ -171,6 +171,26 @@ const routes = [
         },
     },
     {
+        path: '/returns',
+        name: 'returns.index',
+        component: () => import('../views/Returns/ReturnsView.vue'),
+        meta: {
+            title: 'مرتجعات المبيعات والمشتريات',
+            requiresAuth: true,
+            permission: 'returns.view',
+        },
+    },
+    {
+        path: '/returns/create',
+        name: 'returns.create',
+        component: () => import('../views/Returns/CreateReturnView.vue'),
+        meta: {
+            title: 'تسجيل مرتجع جديد',
+            requiresAuth: true,
+            permission: 'returns.create',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

@@ -131,9 +131,9 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
 
         // Returns (Sales & Purchase Returns)
         Route::get('/returns', [\App\Http\Controllers\Api\ReturnController::class, 'index'])->name('api.returns.index');
-        Route::post('/returns/sales', [\App\Http\Controllers\Api\ReturnController::class, 'storeSalesReturn'])->name('api.returns.sales');
-        Route::post('/returns/purchases', [\App\Http\Controllers\Api\ReturnController::class, 'storePurchaseReturn'])->name('api.returns.purchases');
-        Route::post('/returns/{id}/cancel', [\App\Http\Controllers\Api\ReturnController::class, 'cancel'])->name('api.returns.cancel');
+        Route::get('/returns/{id}', [\App\Http\Controllers\Api\ReturnController::class, 'show'])->name('api.returns.show');
+        Route::post('/returns', [\App\Http\Controllers\Api\ReturnController::class, 'store'])->name('api.returns.store');
+        Route::delete('/returns/{id}', [\App\Http\Controllers\Api\ReturnController::class, 'destroy'])->name('api.returns.destroy');
 
         // Stock Transfers between stores/branches
         Route::get('/transfers', [\App\Http\Controllers\Api\StockTransferController::class, 'index'])->name('api.transfers.index');

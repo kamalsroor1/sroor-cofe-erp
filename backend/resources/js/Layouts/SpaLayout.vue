@@ -122,6 +122,15 @@
             <span class="font-tajawal">فواتير المبيعات</span>
           </router-link>
 
+          <router-link
+            to="/returns"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <RotateCcw class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('returns') ? 'text-slate-950' : 'text-cyan-400'" />
+            <span class="font-tajawal">مرتجعات المبيعات والمشتريات</span>
+          </router-link>
+
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             الفروع والمخزون
           </div>
@@ -230,6 +239,7 @@ import {
     Receipt,
     Wallet,
     BarChart3,
+    RotateCcw,
     Sun,
     Moon,
     LogOut

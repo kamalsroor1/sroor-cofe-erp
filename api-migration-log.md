@@ -322,7 +322,35 @@
 
 ---
 
-## 15. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 15. Module 09: مرتجعات المبيعات والمشتريات (`Returns: Sales & Purchase Returns`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Returns/ReturnDocumentDTO.php` (Strictly Typed DTO لمستندات مرتجعات المبيعات والمشتريات).
+2. `[NEW]` `app/Actions/Returns/CreateReturnAction.php` (Single Action لاعتماد المرتجع وتعديل المخزون وأرصدة العملاء والموردين داخل Transaction).
+3. `[NEW]` `app/Actions/Returns/DeleteReturnAction.php` (Single Action لحذف وأرشفة مستند المرتجع).
+4. `[NEW]` `app/Http/Resources/ReturnResource.php` & `ReturnItemResource.php` (تنسيق بيانات المرتجعات والبنود للـ API).
+5. `[MODIFIED]` `app/Http/Requests/StoreReturnRequest.php` (التحقق الصارم عبر Form Request ومنع أي `$request->validate()` في الكنترولر).
+6. `[REFACTORED]` `app/Http/Controllers/Api/ReturnController.php` (متحكم API متكامل لإدارة واستعلام المرتجعات).
+7. `[MODIFIED]` `routes/api.php` (تسجيل مسارات `/returns` و `/returns/{id}`).
+8. `[NEW]` `tests/Feature/Api/ReturnsApiTest.php` (حزمة 5 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Returns/ReturnsView.vue` (شاشة سجل المرتجعات، بطاقات الإجمالي والعدد وتصنيف المرتجعات، فلاتر البحث والنوع والتواريخ، نافذة التفاصيل، وأرشفة المستندات).
+2. `[NEW]` `resources/js/views/Returns/CreateReturnView.vue` (شاشة تسجيل مرتجع مبيعات أو مشتريات، التبديل السلس بين العملاء والموردين، إضافة بنود المرتجع بالرصيد والأسعار، واحتساب إجمالي المرتجع والنقدية المستردة).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/returns` و `/returns/create`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط المرتجعات في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/returns` — قائمة مستندات المرتجعات مع الفلاتر والمؤشرات الإجمالية
+* `GET /api/v1/returns/{id}` — تفاصيل مستند المرتجع وبنوده
+* `POST /api/v1/returns` — تسجيل واعتماد مرتجع مبيعات أو مشتريات
+* `DELETE /api/v1/returns/{id}` — أرشفة وحذف مستند المرتجع
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 16. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -337,8 +365,8 @@
   - [x] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ✅ (2026-08-21)
   - [x] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ✅ (2026-08-21)
   - [x] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ✅ (2026-08-21)
-  - [ ] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)
+  - [x] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ✅ (2026-08-21)
+  - [ ] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ⏳ (التالي في الترتيب)
   - [ ] Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)
   - [ ] Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)
   - [ ] Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)
@@ -348,5 +376,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)  
-**الموديول التالي المستهدف:** **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 09: مرتجعات المبيعات والمشتريات (`Returns`)  
+**الموديول التالي المستهدف:** **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)**
