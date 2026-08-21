@@ -103,25 +103,31 @@ e2e/screenshots/
 تم تسجيل أوامر التشغيل الاحترافية في `package.json`:
 
 ```bash
-# 1. الزحف والتصوير الشامل لكافة صفحات النظام (Desktop + Mobile)
+# 1. الزحف والتصوير الشامل لكافة صفحات النظام (Desktop + Tablet + Mobile)
 npm run e2e:all
 
 # 2. الزحف على مقاس شاشة سطح المكتب فقط (1920x1080)
 npm run e2e:desktop
 
-# 3. الزحف على مقاس شاشة الهاتف المحمول فقط (390x844)
+# 3. الزحف على مقاس شاشة التابلت واللمس (1024x768 iPad/Android Tablet)
+npm run e2e:tablet
+
+# 4. الزحف على مقاس شاشة الهاتف المحمول فقط (390x844 Pixel 7 / iPhone)
 npm run e2e:mobile
 
-# 4. الزحف على موديول محدد فقط (مثل موديول الـ POS أو المشتريات)
+# 5. تشغيل مقاسي اللمس معاً (تابلت + موبايل)
+npm run e2e:touch
+
+# 6. الزحف على موديول محدد فقط (مثل موديول الـ POS أو المشتريات)
 npm run e2e:module -- pos
 npm run e2e:module -- purchases
 npm run e2e:module -- items
 
-# 5. الزحف والتصوير لصفحة واحدة محددة بالمسار
+# 7. الزحف والتصوير لصفحة واحدة محددة بالمسار
 npm run e2e:page -- /pos
 npm run e2e:page -- /daily-journal
 
-# 6. تشغيل سيناريوهات وتدفقات المستخدم الكاملة (Flows)
+# 8. تشغيل سيناريوهات وتدفقات المستخدم الكاملة (Flows)
 npm run e2e:flow
 ```
 

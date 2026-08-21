@@ -15,9 +15,7 @@ test.describe('E2E Visual Crawler & Interaction Engine', () => {
         const testTitle = `[${pageInfo.module}] ${pageInfo.title} (${pageInfo.route})`;
 
         test(`${testTitle} @${pageInfo.module}`, async ({ page }, testInfo) => {
-            const viewport = page.viewportSize();
-            const isMobile = viewport && viewport.width < 768;
-            const viewportType = isMobile ? 'mobile' : 'desktop';
+            const viewportType = testInfo.project.name || 'desktop';
 
             // 1. Listen for runtime console errors
             page.on('console', msg => {

@@ -60,7 +60,21 @@ export default defineConfig({
       testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
     },
 
-    // 3. Mobile Viewport (390x844 Pixel 7 / Chromium)
+    // 3. Tablet Viewport (iPad Pro 11 / 1024x768 Touch Landscape)
+    {
+      name: 'tablet',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1024, height: 768 },
+        isMobile: true,
+        hasTouch: true,
+        storageState: authStorageFile,
+      },
+      dependencies: ['auth-setup'],
+      testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
+    },
+
+    // 4. Mobile Viewport (390x844 Pixel 7 / iPhone Touch)
     {
       name: 'mobile',
       use: {
