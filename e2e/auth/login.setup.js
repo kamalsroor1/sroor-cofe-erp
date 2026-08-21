@@ -15,7 +15,7 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
     }
 
     const testPhone = process.env.E2E_USER_PHONE || '01012316954';
-    const testPassword = process.env.E2E_USER_PASSWORD || 'password123';
+    const testPassword = process.env.E2E_USER_PASSWORD || 'password';
 
     console.log(`\n🔑 Setting up E2E Auth Session with user: ${testPhone}...`);
 

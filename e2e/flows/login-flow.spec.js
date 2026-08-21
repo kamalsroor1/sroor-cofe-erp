@@ -4,6 +4,9 @@ import fs from 'fs';
 import { getScreenshotRunDir } from '../utils/screenshot-helper.js';
 
 test.describe('Flow: Complete Authentication & Navigation Journey', () => {
+    // Override storage state to start as a fresh guest user for login testing
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test('User Login, Store Context Verification & Navigation Flow', async ({ page }) => {
         const runDir = getScreenshotRunDir();
         const flowDir = path.join(runDir, 'flows', 'login-and-pos-flow');
@@ -12,7 +15,7 @@ test.describe('Flow: Complete Authentication & Navigation Journey', () => {
         }
 
         const testPhone = process.env.E2E_USER_PHONE || '01012316954';
-        const testPassword = process.env.E2E_USER_PASSWORD || 'password123';
+        const testPassword = process.env.E2E_USER_PASSWORD || 'password';
 
         // Step 1: Open Login Page
         await page.goto('/login', { waitUntil: 'domcontentloaded' });

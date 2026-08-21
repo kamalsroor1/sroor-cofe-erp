@@ -3,7 +3,14 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "e2e:all": "npx playwright test --config=../playwright.config.js",
+        "e2e:desktop": "npx playwright test --config=../playwright.config.js --project=desktop",
+        "e2e:mobile": "npx playwright test --config=../playwright.config.js --project=mobile",
+        "e2e:module": "npx playwright test --config=../playwright.config.js --grep",
+        "e2e:page": "npx playwright test --config=../playwright.config.js -g",
+        "e2e:flow": "npx playwright test --config=../playwright.config.js e2e/flows/",
+        "e2e:report": "npx playwright show-report"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

@@ -1,11 +1,18 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname);
+const authStorageFile = path.resolve(rootDir, 'e2e/.auth/user.json');
 
 /**
  * Playwright Configuration for E2E Visual Testing & Crawling System
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: path.resolve(rootDir, 'e2e'),
   timeout: 45000,
   expect: {
     timeout: 8000,
@@ -19,7 +26,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.APP_URL || 'http://localhost:8000',
     trace: 'on-first-retry',
-    screenshot: 'off', // We manage explicit fullPage screenshots in our crawlers & flows
+    screenshot: 'off',
     video: 'off',
     bypassCSP: true,
     locale: 'ar-EG',
@@ -31,6 +38,7 @@ export default defineConfig({
     url: 'http://127.0.0.1:8000',
     reuseExistingServer: true,
     timeout: 30000,
+    cwd: rootDir,
   },
 
   projects: [
@@ -46,21 +54,21 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
-        storageState: 'e2e/.auth/user.json',
+        storageState: authStorageFile,
       },
       dependencies: ['auth-setup'],
       testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
     },
 
-    // 3. Mobile Viewport (390x844)
+    // 3. Mobile Viewport (390x844 Pixel 7 / Chromium)
     {
       name: 'mobile',
       use: {
-        ...devices['iPhone 14 Pro'],
+        ...devices['Pixel 7'],
         viewport: { width: 390, height: 844 },
         isMobile: true,
         hasTouch: true,
-        storageState: 'e2e/.auth/user.json',
+        storageState: authStorageFile,
       },
       dependencies: ['auth-setup'],
       testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
