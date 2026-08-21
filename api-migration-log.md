@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 1 (بناء Auth API Backend) مكتملة ومختبرة بنجاح بنسبة 100%.
+> **الحالة العامة:** المرحلة 2 (Permissions/Policies & System Context API) مكتملة ومختبرة بنجاح بنسبة 100%.
 
 ---
 
@@ -39,42 +39,28 @@
   1. `AuthenticatedSessionController` (تسجيل دخول وخروج مستخدمي المستأجر عبر الويب)
   2. `SuperAdminAuthController` (تسجيل دخول وخروج السوبر أدمن المركزي)
 
-- **Api Controllers الحالية في `app/Http/Controllers/Api/` (19):**
+- **Api Controllers الحالية في `app/Http/Controllers/Api/` (21):**
   1. `AuthController` (تسجيل الدخول، استعلام me، تسجيل الخروج)
-  2. `DashboardApiController` (الملخص اللحظي المالي والتشغيلي)
-  3. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
-  4. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
-  5. `CustomerController` (العملاء، إضافة عميل، كشف الحساب)
-  6. `SupplierController` (الموردين، إضافة مورد، كشف الحساب)
-  7. `PurchaseController` (المشتريات وإلغاؤها)
-  8. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
-  9. `StockTransferController` (التحويلات بين الفروع)
-  10. `StoreController` (قائمة الفروع وتبديل الفرع النشط)
-  11. `ShiftController` (إدارة الورديات، الفتح، الإغلاق، وتقرير Z-Report)
-  12. `PaymentController` (سندات القبض للعملاء وسندات الصرف للموردين)
-  13. `ExpenseController` (المصروفات)
-  14. `TreasuryController` (أرصدة الخزائن والبنوك)
-  15. `ReportController` (ملخص الأرباح وأعلى الأصناف مبيعاً)
-  16. `SettingController` (إعدادات المنشأة وتحديثها)
-  17. `ActivityLogController` (سجل الأنشطة)
-  18. `BlenderController` (توليفات البن)
-  19. `AppUpdateController` (فحص إصدارات التطبيق وتحميل التحديثات)
-
-### ب. حالة الـ API Routes الحالية:
-- يوجد ملف `routes/api.php` معرف به مجموعة endpoints أساسية تحت البادئة `/api/v1` ومحمية بـ `ApiTokenAuth`، وهي مخصصة لتطبيق الموبايل، وتعتمد على حقل نصي `api_token` في جدول `users`.
-
-### ج. فحص نظام الـ Auth الحالي:
-- **في الويب (Inertia):** يعتمد على Session-based Cookie (`web` guard) عبر `Auth::attempt()`.
-- **في الموبايل/API الحالي:** يعتمد على `ApiTokenAuth` بفحص `Bearer <token>` أو هيدر `X-API-TOKEN`.
-
-### د. فحص نظام الـ Multi-Tenancy (`stancl/tenancy`):
-- يتم التعرف على الـ Tenant عبر الـ Subdomain أو الـ Domain المستقل باستخدام:
-  `Stancl\Tenancy\Middleware\InitializeTenancyByDomain`
-- النطاقات المركزية (Central Domains) معرّفة في `config/tenancy.php` لخدمة السوبر أدمن، بينما ينعزل كل مستأجر في قاعدة بيانات SQLite/MySQL خاصة به.
-
-### هـ. فحص نظام الصلاحيات (`spatie/laravel-permission`):
-- مطبق على مستوى الباك إند عبر `can:` middleware وسياسات `Gate`/`Policy`.
-- يُمرر للواجهة حالياً عبر `HandleInertiaRequests` كقائمة `permissions` و `roles` مصفوفية في كائن المستخدم.
+  2. `PermissionApiController` (استعلام مصفوفة وشجرة الصلاحيات والأدوار)
+  3. `SystemContextApiController` (سياق النظام الموحد وقاموس الترجمات للـ SPA)
+  4. `DashboardApiController` (الملخص اللحظي المالي والتشغيلي)
+  5. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
+  6. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
+  7. `CustomerController` (العملاء، إضافة عميل، كشف الحساب)
+  8. `SupplierController` (الموردين، إضافة مورد، كشف الحساب)
+  9. `PurchaseController` (المشتريات وإلغاؤها)
+  10. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
+  11. `StockTransferController` (التحويلات بين الفروع)
+  12. `StoreController` (قائمة الفروع وتبديل الفرع النشط)
+  13. `ShiftController` (إدارة الورديات، الفتح، الإغلاق، وتقرير Z-Report)
+  14. `PaymentController` (سندات القبض للعملاء وسندات الصرف للموردين)
+  15. `ExpenseController` (المصروفات)
+  16. `TreasuryController` (أرصدة الخزائن والبنوك)
+  17. `ReportController` (ملخص الأرباح وأعلى الأصناف مبيعاً)
+  18. `SettingController` (إعدادات المنشأة وتحديثها)
+  19. `ActivityLogController` (سجل الأنشطة)
+  20. `BlenderController` (توليفات البن)
+  21. `AppUpdateController` (فحص إصدارات التطبيق وتحميل التحديثات)
 
 ---
 
@@ -97,7 +83,7 @@
 ## 3. خطة وترتيب ترحيل الوحدات (Modules Migration Roadmap)
 
 ```text
-[المرحلة 0: التخطيط ✅] ──► [المرحلة 1: Auth API ✅] ──► [المرحلة 2: Permissions/Context API] ──► [المرحلة 3: Frontend SPA Core]
+[المرحلة 0: التخطيط ✅] ──► [المرحلة 1: Auth API ✅] ──► [المرحلة 2: Permissions/Context API ✅] ──► [المرحلة 3: Frontend SPA Core]
                                                                                                         │
 ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ▼
@@ -125,102 +111,138 @@
 ---
 
 ## 4. Auth API — بتاريخ 2026-08-21
+* **الملفات المنفذة:** Migrations, `ApiLoginDTO`, `ApiLoginRequest`, `ApiLoginAction`, `ApiLogoutAction`, `ApiMeAction`, `ResolveApiTenancy`, `UserResource`, `AuthController`.
+* **الاختبارات:** `AuthApiTest` (7/7 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 5. Permissions & System Context API — بتاريخ 2026-08-21
 
 ### الملفات التي تم إنشاؤها وتعديلها:
-1. `[NEW]` `database/migrations/2019_12_14_000001_create_personal_access_tokens_table.php` (قاعدة البيانات المركزية)
-2. `[NEW]` `database/migrations/tenant/2019_12_14_000001_create_personal_access_tokens_table.php` (قواعد بيانات المستأجرين)
-3. `[NEW]` `app/DTOs/Auth/ApiLoginDTO.php` (DTO مدقق النوع لاستقبال بيانات تسجيل الدخول والجهاز والمستأجر)
-4. `[NEW]` `app/Http/Requests/Auth/ApiLoginRequest.php` (Form Request محكم التحقق مع حماية Rate Limiter)
-5. `[NEW]` `app/Actions/Auth/ApiLoginAction.php` (Single Action لتسجيل الدخول والتحقق وإصدار توكن Sanctum وسياق المتجر والنظام)
-6. `[NEW]` `app/Actions/Auth/ApiLogoutAction.php` (Single Action لإلغاء وإتلاف توكنات Sanctum وتسجيل النشاط)
-7. `[NEW]` `app/Actions/Auth/ApiMeAction.php` (Single Action لاسترجاع بيانات المستخدم، الصلاحيات، الفروع، والوردية النشطة)
-8. `[NEW]` `app/Http/Middleware/ResolveApiTenancy.php` (Middleware مرن للتعرف على المستأجر عبر Domain أو Header `X-Tenant`)
-9. `[MODIFIED]` `app/Models/User.php` (إضافة Trait `Laravel\Sanctum\HasApiTokens`)
-10. `[MODIFIED]` `app/Http/Resources/UserResource.php` (تنسيق مخرجات المستخدم، الصلاحيات، الأدوار، والفروع)
-11. `[MODIFIED]` `app/Http/Middleware/ApiTokenAuth.php` (دعم مصادقة Sanctum Bearer Tokens وربطها بالـ user context)
-12. `[MODIFIED]` `app/Http/Controllers/Api/AuthController.php` (إعادة بناء بالكامل لتطبيق SOLID وفصل الطبقات)
-13. `[MODIFIED]` `routes/api.php` (تطبيق ResolveApiTenancy على مسارات `/api/v1`)
-14. `[MODIFIED]` `bootstrap/app.php` (معالجة استثناءات التوثيق والتحقق بصيغة JSON موحدة)
-15. `[MODIFIED]` `lang/ar/auth.php` و `lang/en/auth.php` (إضافة مفاتيح الترجمة لكافة رسائل الـ API Auth بدون أي نصوص ثابتة)
-16. `[NEW]` `tests/Feature/Api/AuthApiTest.php` (حزمة اختبارات آلية تغطي كافة حالات Login, Me, Logout, Rate Limit, Inactive Account)
+1. `[NEW]` `app/Actions/Permissions/GetPermissionsTreeAction.php` (Single Action لاستخراج شجرة الصلاحيات التفصيلية، وصلاحيات وأدوار المستخدم الحالي)
+2. `[NEW]` `app/Actions/System/GetTranslationsAction.php` (Single Action لتحميل قواميس الترجمة الكاملة للـ SPA)
+3. `[NEW]` `app/Actions/System/GetSystemContextAction.php` (Single Action لتجميع سياق النظام الكامل: المستخدم، المستأجر، الفرع النشط، الوردية، التنبيهات، الثيم، والهوية)
+4. `[NEW]` `app/Http/Controllers/Api/PermissionApiController.php` (متحكم استعلام الصلاحيات)
+5. `[NEW]` `app/Http/Controllers/Api/SystemContextApiController.php` (متحكم استعلام سياق النظام والترجمات)
+6. `[MODIFIED]` `routes/api.php` (تسجيل مسارات `/api/v1/permissions` و `/api/v1/system/context` و `/api/v1/system/translations`)
+7. `[MODIFIED]` `bootstrap/app.php` (إضافة معالجة موحدة لاستثناءات `Spatie\Permission\Exceptions\UnauthorizedException` بصيغة 403 Forbidden JSON)
+8. `[NEW]` `tests/Feature/Api/PermissionsAndContextApiTest.php` (حزمة اختبارات شاملة تغطي الصلاحيات، سياق النظام، الوردية، والتنبيهات)
 
 ### طريقة الاختبار ونقاط النهاية (API Endpoints & Examples):
 
-#### 1. تسجيل الدخول (Login):
-* **Endpoint:** `POST /api/v1/auth/login`
-* **Headers:** `Accept: application/json`, `X-Tenant: {tenant_id_or_domain}` (اختياري لو عبر دومين عام)
-* **Request Body:**
-```json
-{
-  "login": "01012316954",
-  "password": "password",
-  "device_name": "vue-spa-chrome"
-}
-```
+#### 1. استعلام شجرة وصلاحيات المستخدم (Permissions Catalog & User Roles):
+* **Endpoint:** `GET /api/v1/permissions`
+* **Headers:** `Authorization: Bearer <token>`, `Accept: application/json`
 * **Success Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "تم تسجيل الدخول بنجاح إلى منظومة ERP.",
   "data": {
-    "token": "1|abcdef123456...",
-    "user": {
-      "id": 1,
-      "name": "كمال سرور",
-      "email": "kamal@sroor.test",
-      "phone": "01012316954",
-      "roles": ["admin"],
-      "permissions": ["pos.access", "invoices.view", ...],
-      "theme_preference": "dark",
-      "show_print_subtitle": true,
-      "default_store_id": 1,
-      "is_active": true
+    "user_permissions": ["pos.access", "invoices.view", "items.view"],
+    "user_roles": ["cashier"],
+    "is_admin": false,
+    "permission_modules": {
+      "sales": {
+        "title": "المبيعات ونقاط البيع (POS)",
+        "icon": "shopping-cart",
+        "permissions": {
+          "pos.access": "دخول شاشة الكاشير السريع (POS)",
+          "invoices.view": "عرض سجل الفواتير",
+          "invoices.create": "إنشاء وحفظ فواتير جديدة",
+          "invoices.cancel": "إلغاء الفواتير وعكس المخزون"
+        }
+      },
+      "inventory": { ... },
+      "purchases": { ... },
+      "customers": { ... },
+      "suppliers": { ... },
+      "expenses": { ... },
+      "daily_journal": { ... },
+      "administration": { ... }
     },
-    "store": {
+    "roles": []
+  }
+}
+```
+
+#### 2. استعلام سياق النظام الشامل (Bootstrap Context):
+* **Endpoint:** `GET /api/v1/system/context`
+* **Headers:** `Authorization: Bearer <token>`, `Accept: application/json`, `X-Store-Id: 1`
+* **Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "auth": {
+      "user": {
+        "id": 1,
+        "name": "كمال سرور",
+        "email": "kamal@sroor.test",
+        "roles": ["admin"],
+        "permissions": ["pos.access", "items.create", ...]
+      },
+      "is_impersonating": false
+    },
+    "tenant": {
+      "id": "tenant_sroor",
+      "name": "سرور كوفي",
+      "slug": "sroor"
+    },
+    "active_store": {
       "id": 1,
       "name": "المخزن الرئيسي",
       "code": "MAIN",
+      "type": "main",
       "is_main": true
     },
     "stores": [...],
+    "active_shift": {
+      "id": 12,
+      "shift_number": "SH-012",
+      "opened_at": "2026-08-21 09:00:00",
+      "opening_cash_balance": 500.000
+    },
     "system": {
       "company_name": "سرور كوفي",
       "company_subtitle": "لتوريدات خامات مطاحن البن",
-      "system_theme": "amber",
-      "server_time": "2026-08-21 14:35:00"
-    }
-  }
-}
-```
-
-#### 2. استعلام المستخدم الحالي وسياق المتجر والصلاحيات (Get Current User / Me):
-* **Endpoint:** `GET /api/v1/auth/me`
-* **Headers:** `Authorization: Bearer 1|abcdef123456...`, `Accept: application/json`, `X-Store-Id: 1`
-* **Success Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": 1,
-      "name": "كمال سرور",
-      "roles": ["admin"],
-      "permissions": ["pos.access", ...]
+      "system_theme_color": "amber",
+      "server_time": "2026-08-21 14:40:00"
     },
-    "store": { "id": 1, "name": "المخزن الرئيسي" },
-    "active_shift": { "id": 5, "shift_number": "SH-005", "opened_at": "..." }
+    "branding": {
+      "logo_light": "/logo-light.png?v=1",
+      "logo_dark": "/logo-dark.png?v=1",
+      "logo": "/logo.png?v=1"
+    },
+    "notifications": [
+      {
+        "type": "danger",
+        "icon": "🚨",
+        "title": "نواقص بالمخزن (3 صنف)",
+        "description": "أصناف بلغت أو تجاوزت حد الطلب الأدنى",
+        "link": "/purchases/smart-reorder",
+        "link_label": "إعادة الطلب الذكي"
+      }
+    ],
+    "locale": "ar",
+    "translations": { ... }
   }
 }
 ```
 
-#### 3. تسجيل الخروج وإلغاء التوكن (Logout):
-* **Endpoint:** `POST /api/v1/auth/logout`
-* **Headers:** `Authorization: Bearer 1|abcdef123456...`, `Accept: application/json`
+#### 3. استعلام قاموس الترجمات (Translations Dictionary):
+* **Endpoint:** `GET /api/v1/system/translations?locale=ar`
+* **Headers:** `Accept: application/json`
 * **Success Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "تم تسجيل الخروج بنجاح."
+  "locale": "ar",
+  "data": {
+    "auth": { ... },
+    "pos": { ... },
+    "items": { ... }
+  }
 }
 ```
 
@@ -228,11 +250,11 @@
 
 ---
 
-## 5. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 6. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
-- [ ] **المرحلة 2: بناء Permissions & System Context API (Backend)**
+- [x] **المرحلة 2: بناء Permissions & System Context API (Backend)** ✅ (2026-08-21)
 - [ ] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)**
 - [ ] **المرحلة 4: تحويل الموديولات:**
   - [ ] Module 01: الفروع والمخازن (`Stores`)
@@ -254,5 +276,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 1 (Auth API Backend)  
-**المرحلة التالية المستهدفة:** المرحلة 2 (Permissions/Policies & System Context API)
+**آخر مرحلة مكتملة:** المرحلة 2 (Permissions & System Context API)  
+**المرحلة التالية المستهدفة:** المرحلة 3 (تجهيز الـ Frontend الأساسي: Vue Router + Pinia + API Client + Login Flow)

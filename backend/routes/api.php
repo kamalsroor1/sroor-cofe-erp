@@ -13,17 +13,27 @@ use App\Http\Controllers\Api\AppUpdateController;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\ResolveApiTenancy;
 
+use App\Http\Controllers\Api\PermissionApiController;
+use App\Http\Controllers\Api\SystemContextApiController;
+
 Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
+    Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->name('api.system.translations');
 
     // 2. Protected Endpoints (Requires valid Bearer Token)
     Route::middleware(ApiTokenAuth::class)->group(function () {
         // Auth Profile & Logout
         Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+
+        // System Context (Bootstrap payload replacing Inertia::share)
+        Route::get('/system/context', [SystemContextApiController::class, 'context'])->name('api.system.context');
+
+        // Permissions & Roles Tree
+        Route::get('/permissions', [PermissionApiController::class, 'index'])->name('api.permissions.index');
 
         // High-Performance Consolidated Dashboard Summary
         Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.summary');
