@@ -23,21 +23,39 @@
 
 ---
 
+## `DashboardController` — بتاريخ 2026-08-21
+### الحالة قبل المراجعة
+- **تكرار استدعاءات الـ Action**: استدعاء `GetTenantDashboardAnalyticsAction` بعدد 6 مرات متكررة داخل الـ Deferred Props في واجهة Inertia.
+- **غياب الـ Resources لبيانات الفرع والوردية**: إرجاع مصفوفات يدوية بدون محولات معيارية.
+- **تشتت الـ Defer Groups**: تعدد مجموعات التحميل الكسول مما قد يسبب استعلامات جزئية إضافية.
+
+### التعديلات اللي اتطبقت
+- **تطبيق API Resources**:
+  - إنشاء واستخدام [`StoreResource`](file:///d:/projects/sroor/backend/app/Http/Resources/StoreResource.php) لتوحيد بيانات الفرع النشط المعروض في الهيدر والداشبورد.
+  - استخدام [`CashShiftResource`](file:///d:/projects/sroor/backend/app/Http/Resources/Api/CashShiftResource.php) لتنسيق بيانات الوردية المفتوحة.
+  - استخدام [`InvoiceSummaryResource`](file:///d:/projects/sroor/backend/app/Http/Resources/InvoiceSummaryResource.php) و [`POSItemResource`](file:///d:/projects/sroor/backend/app/Http/Resources/POSItemResource.php).
+- **Request Memoization**: إضافة تخزين مؤقت على مستوى دورة حياة الطلب (Request Lifecycle Memoization) داخل `GetTenantDashboardAnalyticsAction` لمنع تكرار الاستعلامات مهما تعددت الـ Deferred Props.
+- **توحيد الـ Defer Group**: تجميع كافة الخصائص المؤجلة في مجموعة موحدة `'dashboardData'` لفتح الصفحة في أجزاء من الثانية.
+- **Lean Controller**: الكنترولر معزول تماماً ونظيف ويعتمد على الـ Dependency Injection.
+
+### تكرار محتمل مع Controllers تانية
+- توحيد بنية الاستجابة والـ Resources مع `Api\DashboardApiController` لتطبيق الموبايل.
+
+### ملاحظات
+- كافة اختبارات الداشبورد والـ POS تمر بنجاح 100%.
+
+---
+
 ## `Auth\SuperAdminAuthController` — بتاريخ 2026-08-21
 ### الحالة قبل المراجعة
 - **Fat Controller**: احتواء ميثود `login()` على منطق التحقق من كلمات المرور، فحص صلاحيات السوبر أدمن، وتسجيل سجلات النشاط في الكنترولر مباشرة.
 - **غياب نمط Action و DTO مخصص**: تمرير مصفوفات `$credentials` بدلاً من كائن DTO محكم النوع.
-- **تشتت الـ Rate Limiting**: تنفيذ مباشر ومكرر لـ Rate Limiter قبل معالجة الاستثناءات.
 
 ### التعديلات اللي اتطبقت
-- **Single Action Pattern**: إنشاء كلاس [`SuperAdminLoginAction`](file:///d:/projects/sroor/backend/app/Actions/Auth/SuperAdminLoginAction.php) لعزل منطق تسجيل الدخول، التحقق من كلمات المرور المشفرة عبر Hash، فحص الصلاحيات المركزية، وتسجيل الـ Audit Logs تلقائياً.
+- **Single Action Pattern**: إنشاء كلاس [`SuperAdminLoginAction`](file:///d:/projects/sroor/backend/app/Actions/Auth/SuperAdminLoginAction.php).
 - **DTOs**: تمرير بيانات الاعتماد عبر كائن [`LoginDTO`](file:///d:/projects/sroor/backend/app/DTOs/Auth/LoginDTO.php).
-- **Form Request**: استخدام [`LoginRequest`](file:///d:/projects/sroor/backend/app/Http/Requests/Auth/LoginRequest.php) المزود بحماية Rate Limiter لمنع هجمات التخمين Brute-force.
-- **الترجمة الكاملة**: استخراج رسائل تدقيق الدخول وسجلات النشاط إلى `lang/ar/super.php` و `lang/en/super.php` (`login_failed_log`, `unauthorized_attempt_log`, `login_success_log`).
-- **تحويل الكنترولر إلى Lean Controller**: أصبح الكنترولر مسؤولاً فقط عن توجيه تدفق الـ HTTP وإعادة التوجيه (Redirect / Invalidate Session).
-
-### تكرار محتمل مع Controllers تانية
-- توحيد إجراءات تسجيل الدخول مع `AuthenticatedSessionController` الخاص بالمستأجرين عبر DTOs والـ Rate Limiters الموحدة.
+- **Form Request**: استخدام [`LoginRequest`](file:///d:/projects/sroor/backend/app/Http/Requests/Auth/LoginRequest.php) المزود بحماية Rate Limiter.
+- **الترجمة الكاملة**: استخراج رسائل تدقيق الدخول وسجلات النشاط إلى `lang/ar/super.php` و `lang/en/super.php`.
 
 ### ملاحظات
 - اختبارات المصادقة المركزية والـ Multi-tenant تمر بنجاح تام 100%.
@@ -48,8 +66,6 @@
 ### الحالة قبل المراجعة
 - **Fat Controller**: احتواء ميثود `index()` على استعلامات قاعدة بيانات مباشرة متفرقة لحساب الإيرادات والمصروفات والـ COGS وورديات الكاش وسجلات التدقيق.
 - **غياب API Resources**: إرجاع مصفوفات بدائية بدون محولات (Transformers/Resources).
-- **حسابات مالية مبعثرة**: حسابات الـ COGS والإيرادات كانت تعتمد على استعلامات متباينة دون ضبط دقيق لـ `DECIMAL(12,3)`.
-- **نصوص ثابتة (Hardcoded Strings)**: استخدام نصوص مثل `'عميل نقدي'` و `'النظام'`.
 
 ### التعديلات اللي اتطبقت
 - **Single Action Pattern**: استخراج كافة استعلامات وحسابات المؤشرات في كلاس Action مستقل: [`GetDashboardApiOverviewAction`](file:///d:/projects/sroor/backend/app/Actions/Dashboard/GetDashboardApiOverviewAction.php).
@@ -59,11 +75,7 @@
   - إنشاء واستخدام [`ActivityLogResource`](file:///d:/projects/sroor/backend/app/Http/Resources/Api/ActivityLogResource.php).
   - استخدام [`InvoiceSummaryResource`](file:///d:/projects/sroor/backend/app/Http/Resources/InvoiceSummaryResource.php).
 - **الدقة المالية**: تطبيق دوال `bcmath` بدقة 3 خانات عشرية `DECIMAL(12,3)`.
-- **الترجمة الكاملة**: استبدال كافة النصوص الثابتة بمفاتيح `lang/ar/common.php` و `lang/en/common.php`.
-- **Feature Testing**: إنشاء اختبار موجه شامل [`DashboardApiControllerTest`](file:///d:/projects/sroor/backend/tests/Feature/DashboardApiControllerTest.php) يمر بنجاح تام.
-
-### تكرار محتمل مع Controllers تانية
-- توحيد كلاسات الـ Resources مع `DashboardController` الخاص بواجهات Vue/Inertia.
+- **Feature Testing**: إنشاء اختبار موجه شامل [`DashboardApiControllerTest`](file:///d:/projects/sroor/backend/tests/Feature/DashboardApiControllerTest.php).
 
 ### ملاحظات
 - كافة الاختبارات تمر بنجاح بنسبة 100%.
@@ -75,22 +87,16 @@
 - غياب Form Requests مخصصة في عمليات `overrideFeature`, `toggleStatus`, `impersonateTenant`.
 - استدعاء مباشر لـ `env('CENTRAL_DOMAIN')`.
 - تمرير موديلات Eloquent مباشرة في واجهة إنشاء المستأجر دون تنظيف أو تحويل عبر الـ Resources.
-- نصوص استثناء ثابتة داخل `ImpersonateTenantAction`.
 
 ### التعديلات اللي اتطبقت
 - إنشاء وتطبيق Form Requests مخصصة ومحمية بالصلاحيات.
 - استخدام `PlanResource::collection()` لتنسيق الباقات المتاحة للمنصة.
 - استخدام `config('tenancy.central_domains.0')` بدلاً من `env()`.
 - الاعتماد على واجهة `SuperAdminDashboardAnalyticsInterface` و Actions النمط الفردي.
-- استخراج الترجمات بالكامل إلى `lang/ar/super.php` و `lang/en/super.php`.
-
-### تكرار محتمل مع Controllers تانية
-- توحيد قراءة النطاقات المركزية `central_domains` مع `TenantProvisionerService` و `DashboardController`.
-- توحيد تنسيق الباقات والمستأجرين عبر `PlanResource` و `TenantResource`.
 
 ### ملاحظات
 - تم التحقق من كافة اختبارات الـ SOLID لـ SuperAdmin و POS وتمر بنجاح 100%.
 
 ---
-**آخر Controller تمت مراجعته: `Auth\SuperAdminAuthController`**
-**التالي في الترتيب الأبجدي: `DashboardController`**
+**آخر Controller تمت مراجعته: `DashboardController`**
+**التالي في الترتيب الأبجدي: `SuperAdminController`**

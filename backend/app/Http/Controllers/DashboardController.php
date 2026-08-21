@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\Dashboard\GetTenantDashboardAnalyticsAction;
+use App\Http\Resources\StoreResource;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ final class DashboardController extends Controller
     ) {}
 
     /**
-     * Display the rich Inertia Vue 3 Dashboard with Deferred Props
+     * Display the rich Inertia Vue 3 Dashboard with Deferred Props and API Resources
      */
     public function index(Request $request): Response
     {
@@ -34,11 +35,7 @@ final class DashboardController extends Controller
         }
 
         return Inertia::render('Dashboard', [
-            'active_store' => $activeStore ? [
-                'id' => $activeStore->id,
-                'name' => $activeStore->name,
-                'type' => $activeStore->type,
-            ] : null,
+            'active_store' => $activeStore ? (new StoreResource($activeStore))->resolve() : null,
 
             // Heavy calculations & analytics deferred into a single memoized 'dashboardData' group
             'metrics'           => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['metrics'], 'dashboardData'),

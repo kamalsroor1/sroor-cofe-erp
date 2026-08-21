@@ -168,16 +168,8 @@ class GetTenantDashboardAnalyticsAction
                 'total_qty' => (float)$t->total_qty,
                 'total_revenue' => (float)$t->total_revenue,
             ]),
-            'active_shift' => $activeShift ? [
-                'id' => $activeShift->id,
-                'shift_number' => $activeShift->shift_number ?? $activeShift->id,
-                'opened_at' => $activeShift->opened_at,
-            ] : null,
-            'active_store' => $activeStore ? [
-                'id' => $activeStore->id,
-                'name' => $activeStore->name,
-                'type' => $activeStore->type,
-            ] : null,
+            'active_shift' => $activeShift ? (new \App\Http\Resources\Api\CashShiftResource($activeShift))->resolve() : null,
+            'active_store' => $activeStore ? (new \App\Http\Resources\StoreResource($activeStore))->resolve() : null,
         ];
 
         $this->memoized[$cacheKey] = $result;
