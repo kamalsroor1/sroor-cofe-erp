@@ -7,7 +7,8 @@
         <button
           type="button"
           @click="isSidebarOpen = !isSidebarOpen"
-          class="p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-colors md:hidden"
+          class="p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-colors md:hidden cursor-pointer"
+          title="القائمة الجانبية"
         >
           <Menu class="w-5 h-5" />
         </button>
@@ -81,11 +82,18 @@
     </header>
 
     <!-- App Body: Sidebar + Main Content -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden relative">
+      <!-- Mobile Backdrop Overlay -->
+      <div
+        v-if="isSidebarOpen"
+        @click="isSidebarOpen = false"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-30 md:hidden"
+      ></div>
+
       <!-- Sidebar Navigation -->
       <aside
         :class="[
-          'w-64 bg-slate-950 border-l border-slate-800 flex flex-col transition-all duration-300 z-30',
+          'w-64 bg-slate-950 border-l border-slate-800 flex flex-col transition-all duration-300 z-40',
           'fixed inset-y-0 right-0 pt-16 md:static md:pt-0',
           isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         ]"
@@ -93,6 +101,7 @@
         <div class="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
           <router-link
             to="/"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -106,6 +115,7 @@
 
           <router-link
             to="/pos"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -115,6 +125,7 @@
 
           <router-link
             to="/invoices"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -124,6 +135,7 @@
 
           <router-link
             to="/returns"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -133,6 +145,7 @@
 
           <router-link
             to="/coffee-blender"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -146,6 +159,7 @@
 
           <router-link
             to="/stores"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -155,6 +169,7 @@
 
           <router-link
             to="/items"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -164,6 +179,7 @@
 
           <router-link
             to="/stock-transfers"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -173,6 +189,7 @@
 
           <router-link
             to="/purchases"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -182,6 +199,7 @@
 
           <router-link
             to="/customers"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -191,6 +209,7 @@
 
           <router-link
             to="/suppliers"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -200,6 +219,7 @@
 
           <router-link
             to="/expenses"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -209,6 +229,7 @@
 
           <router-link
             to="/daily-journal"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -218,6 +239,7 @@
 
           <router-link
             to="/reports"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -231,6 +253,7 @@
 
           <router-link
             to="/users"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -240,6 +263,7 @@
 
           <router-link
             to="/roles"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -249,6 +273,7 @@
 
           <router-link
             to="/activity-logs"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -258,6 +283,7 @@
 
           <router-link
             to="/settings"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -267,6 +293,7 @@
 
           <router-link
             to="/trash"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -281,6 +308,7 @@
 
           <router-link
             to="/super-admin/dashboard"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -290,6 +318,7 @@
 
           <router-link
             to="/super-admin/tenants"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -299,6 +328,7 @@
 
           <router-link
             to="/super-admin/plans"
+            @click="isSidebarOpen = false"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
@@ -314,9 +344,12 @@
       </aside>
 
       <!-- Main Content Stage -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900/60">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900/60 pb-24 md:pb-8">
         <slot />
       </main>
+
+      <!-- Fixed Mobile Bottom Navigation Bar -->
+      <MobileBottomNav @open-drawer="isSidebarOpen = true" />
     </div>
   </div>
 </template>
@@ -326,6 +359,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
+import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import {
     Menu,
     LayoutDashboard,
@@ -345,7 +379,6 @@ import {
     Activity,
     Sliders,
     Trash2,
-    User,
     Crown,
     Building2,
     Layers,
