@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
         <div class="flex items-center gap-3">
@@ -223,12 +222,10 @@
         </div>
       </div>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import {

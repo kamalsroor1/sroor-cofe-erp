@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
       <!-- Page Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -252,13 +251,11 @@
         </div>
       </form>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import {

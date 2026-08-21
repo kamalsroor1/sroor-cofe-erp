@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
       <PageHeader
         :title="$t('reports.title')"
@@ -366,12 +365,10 @@
         </div>
       </div>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import {

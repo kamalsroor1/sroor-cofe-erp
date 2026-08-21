@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
       <PageHeader
         :title="$t('inventory.blender_title')"
@@ -277,13 +276,11 @@
         </div>
       </div>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';

@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Welcome Header Banner -->
       <div class="p-6 rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -293,12 +292,10 @@
         </div>
       </div>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import SpaLayout from '../Layouts/SpaLayout.vue';
 import { useAuthStore } from '../stores/auth';
 import api from '../services/api';
 import {

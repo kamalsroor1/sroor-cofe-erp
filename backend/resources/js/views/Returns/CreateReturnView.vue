@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="max-w-5xl mx-auto space-y-6 font-tajawal">
+  <div class="max-w-5xl mx-auto space-y-6 font-tajawal">
       <!-- Page Header -->
       <PageHeader
         :title="$t('returns.create_title')"
@@ -251,13 +250,11 @@
         </div>
       </form>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';

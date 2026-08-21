@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
       <!-- Header & Action Bar -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 no-print">
         <div class="space-y-1">
@@ -186,13 +185,11 @@
         />
       </div>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import api from '../../services/api';
 import {

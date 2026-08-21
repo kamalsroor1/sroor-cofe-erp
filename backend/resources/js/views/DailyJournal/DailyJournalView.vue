@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
       <PageHeader
         :title="$t('treasury.journal_title')"
@@ -496,12 +495,10 @@
         </form>
       </AppModal>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';

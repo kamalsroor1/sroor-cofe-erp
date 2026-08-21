@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto">
+  <div class="space-y-6 max-w-7xl mx-auto">
       <!-- Page Header -->
       <PageHeader
         :title="$t('inventory.branch_stocks_balance')"
@@ -183,13 +182,11 @@
         </div>
       </div>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import api from '../../services/api';

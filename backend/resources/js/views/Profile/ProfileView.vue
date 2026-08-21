@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-3xl mx-auto font-tajawal">
+  <div class="space-y-6 max-w-3xl mx-auto font-tajawal">
       <!-- Page Header -->
       <div class="flex items-center gap-3 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
         <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
@@ -134,12 +133,10 @@
         </div>
       </form>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { User } from 'lucide-vue-next';

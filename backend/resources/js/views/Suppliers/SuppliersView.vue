@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="space-y-6 max-w-7xl mx-auto">
+  <div class="space-y-6 max-w-7xl mx-auto">
       <!-- Page Header -->
       <PageHeader
         :title="$t('contacts.suppliers_title')"
@@ -481,12 +480,10 @@
         </form>
       </AppModal>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';

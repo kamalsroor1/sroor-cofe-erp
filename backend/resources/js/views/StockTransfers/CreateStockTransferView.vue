@@ -1,6 +1,5 @@
 <template>
-  <SpaLayout>
-    <div class="max-w-4xl mx-auto space-y-6 font-tajawal">
+  <div class="max-w-4xl mx-auto space-y-6 font-tajawal">
       <!-- Page Header -->
       <PageHeader
         :title="$t('inventory.new_transfer')"
@@ -178,13 +177,11 @@
         </button>
       </form>
     </div>
-  </SpaLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import SpaLayout from '../../Layouts/SpaLayout.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
