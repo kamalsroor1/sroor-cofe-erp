@@ -41,7 +41,33 @@ input, textarea, [contenteditable="true"] {
     user-select: text !important;
 }
 
-/* 🚀 Seamless Native Page Transition Animation */
+/* 🚀 World-Class Fluid Vue Router Page Transition Animation */
+.page-enter-active {
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: opacity, transform, filter;
+}
+
+.page-leave-active {
+    transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1),
+                transform 0.16s cubic-bezier(0.4, 0, 1, 1),
+                filter 0.16s cubic-bezier(0.4, 0, 1, 1) !important;
+    will-change: opacity, transform, filter;
+}
+
+.page-enter-from {
+    opacity: 0 !important;
+    transform: translateY(10px) scale(0.985) !important;
+    filter: blur(4px) !important;
+}
+
+.page-leave-to {
+    opacity: 0 !important;
+    transform: translateY(-8px) scale(0.99) !important;
+    filter: blur(3px) !important;
+}
+
 .page-content-enter {
     animation: nativePageSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
