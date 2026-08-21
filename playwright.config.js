@@ -24,7 +24,7 @@ export default defineConfig({
     ['list'],
   ],
   use: {
-    baseURL: process.env.APP_URL || 'http://localhost:8000',
+    baseURL: process.env.APP_URL || 'http://127.0.0.1:8000',
     trace: 'on-first-retry',
     screenshot: 'off',
     video: 'off',

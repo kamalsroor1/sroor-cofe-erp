@@ -31,15 +31,15 @@ test.describe('E2E Visual Crawler & Interaction Engine', () => {
             });
 
             try {
-                // 2. Navigate to route
+                // 2. Navigate to route with network idle wait
                 await page.goto(pageInfo.route, {
-                    waitUntil: 'domcontentloaded',
-                    timeout: 20000,
+                    waitUntil: 'networkidle',
+                    timeout: 25000,
                 });
 
-                // 3. Wait for app container or main content
-                await page.waitForSelector('#app, main, body', { timeout: 10000 }).catch(() => {});
-                await page.waitForTimeout(600); // Allow Vue reactive transitions to settle
+                // 3. Wait for Vue SPA component to fully mount its template inside #app
+                await page.waitForSelector('#app > *', { timeout: 15000 }).catch(() => {});
+                await page.waitForTimeout(600); // Allow icons, animations and charts to render
 
                 // 4. Capture primary full-page screenshot
                 const baseFileName = `${formattedIndex}-${pageInfo.name}.png`;

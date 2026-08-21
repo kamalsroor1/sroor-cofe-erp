@@ -18,8 +18,8 @@ test.describe('Flow: Complete Authentication & Navigation Journey', () => {
         const testPassword = process.env.E2E_USER_PASSWORD || 'password';
 
         // Step 1: Open Login Page
-        await page.goto('/login', { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 10000 });
+        await page.goto('/login', { waitUntil: 'networkidle' });
+        await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 15000 });
         await page.screenshot({ path: path.join(flowDir, '01-login-screen-initial.png'), fullPage: true });
 
         // Step 2: Enter Credentials
@@ -33,7 +33,8 @@ test.describe('Flow: Complete Authentication & Navigation Journey', () => {
 
         // Step 3: Submit and Verify Dashboard Landing
         await submitButton.click();
-        await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 12000 });
+        await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 });
+        await page.waitForSelector('#app > *', { timeout: 15000 });
         await page.waitForTimeout(600);
         await page.screenshot({ path: path.join(flowDir, '03-dashboard-landing-success.png'), fullPage: true });
 
@@ -42,8 +43,9 @@ test.describe('Flow: Complete Authentication & Navigation Journey', () => {
         await expect(appContainer).toBeVisible();
 
         // Step 4: Navigate to Fast Touch POS
-        await page.goto('/pos', { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(800);
+        await page.goto('/pos', { waitUntil: 'networkidle' });
+        await page.waitForSelector('#app > *', { timeout: 15000 });
+        await page.waitForTimeout(600);
         await page.screenshot({ path: path.join(flowDir, '04-pos-screen-loaded.png'), fullPage: true });
 
         // Assertion: POS screen loaded
