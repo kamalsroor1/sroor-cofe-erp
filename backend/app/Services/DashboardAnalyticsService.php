@@ -67,7 +67,7 @@ class DashboardAnalyticsService
                 'date'     => $date,
                 'label'    => $dayName,
                 'sales'    => (float)$daySales,
-                'sales_formatted' => number_format((float)$daySales, 2) . ' ج.م',
+                'sales_formatted' => number_format((float)$daySales, 2) . ' ' . __('common.currency'),
                 'invoices' => $dayCount,
             ];
         }
@@ -99,7 +99,7 @@ class DashboardAnalyticsService
         foreach ($hourlySales as &$hRow) {
             $hSalesFloat = (float)$hRow['sales'];
             $hRow['intensity'] = $peakSales > 0 ? min(100, max(0, round(($hSalesFloat / $peakSales) * 100))) : 0;
-            $hRow['sales_formatted'] = number_format($hSalesFloat, 2) . ' ج.م';
+            $hRow['sales_formatted'] = number_format($hSalesFloat, 2) . ' ' . __('common.currency');
         }
         unset($hRow);
 

@@ -1,24 +1,27 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\Store;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 final class UserController extends Controller
 {
     public function index(Request $request): Response
     {
         $search = trim((string)$request->input('search', ''));
-        $role = $request->input('role', 'all');
+        $role = (string)$request->input('role', 'all');
 
         $query = User::with(['roles', 'defaultStore']);
 
@@ -40,55 +43,47 @@ final class UserController extends Controller
 
         return Inertia::render('Users/Index', [
             'users' => $users->through(fn($u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-                'phone' => $u->phone,
-                'email' => $u->email,
-                'is_active' => (bool)$u->is_active,
-                'default_store_id' => $u->default_store_id,
-                'default_store_name' => $u->defaultStore?->name,
-                'roles' => $u->roles->pluck('name')->toArray(),
-                'primary_role' => $u->roles->first()?->name ?: 'cashier',
-                'created_at' => $u->created_at ? $u->created_at->toDateString() : '',
+                'id'                => $u->id,
+                'name'              => $u->name,
+                'phone'             => $u->phone,
+                'email'             => $u->email,
+                'is_active'         => (bool)$u->is_active,
+                'default_store_id'  => $u->default_store_id,
+                'default_store_name'=> $u->defaultStore?->name,
+                'roles'             => $u->roles->pluck('name')->toArray(),
+                'primary_role'      => $u->roles->first()?->name ?: 'cashier',
+                'created_at'        => $u->created_at ? $u->created_at->toDateString() : '',
             ]),
             'roles' => $roles->map(fn($r) => [
-                'id' => $r->name,
+                'id'   => $r->name,
                 'name' => match ($r->name) {
-                    'admin' => 'مدير النظام (كامل الصلاحيات) 👑',
-                    'cashier' => 'كاشير مبيعات ونقطة بيع 🛒',
+                    'admin'       => 'مدير النظام (كامل الصلاحيات) 👑',
+                    'cashier'     => 'كاشير مبيعات ونقطة بيع 🛒',
                     'storekeeper' => 'أمين مخزن وتوريدات 📦',
-                    'accountant' => 'محاسب ومدقق مالي 💼',
-                    default => $r->name,
+                    'accountant'  => 'محاسب ومدقق مالي 💼',
+                    default       => $r->name,
                 },
             ]),
             'stores' => $stores,
             'filters' => [
                 'search' => $search,
-                'role' => $role,
+                'role'   => $role,
             ],
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20|unique:users,phone',
-            'email' => 'nullable|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role' => 'required|string|exists:roles,name',
-            'default_store_id' => 'nullable|exists:stores,id',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             $user = User::create([
-                'name' => $validated['name'],
-                'phone' => $validated['phone'],
-                'email' => $validated['email'] ?? null,
-                'password' => Hash::make($validated['password']),
+                'name'             => $validated['name'],
+                'phone'            => $validated['phone'],
+                'email'            => $validated['email'] ?? null,
+                'password'         => Hash::make($validated['password']),
                 'default_store_id' => $validated['default_store_id'] ?? null,
-                'is_active' => $validated['is_active'] ?? true,
+                'is_active'        => $validated['is_active'] ?? true,
             ]);
 
             $user->syncRoles([$validated['role']]);
@@ -97,27 +92,18 @@ final class UserController extends Controller
         return redirect()->back()->with('success', __('auth.user_created_success'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateUserRequest $request, int $id): RedirectResponse
     {
         $user = User::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
-            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => 'nullable|string|min:6',
-            'role' => 'required|string|exists:roles,name',
-            'default_store_id' => 'nullable|exists:stores,id',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($user, $validated) {
             $data = [
-                'name' => $validated['name'],
-                'phone' => $validated['phone'],
-                'email' => $validated['email'] ?? null,
+                'name'             => $validated['name'],
+                'phone'            => $validated['phone'],
+                'email'            => $validated['email'] ?? null,
                 'default_store_id' => $validated['default_store_id'] ?? null,
-                'is_active' => $validated['is_active'] ?? true,
+                'is_active'        => $validated['is_active'] ?? true,
             ];
 
             if (!empty($validated['password'])) {
@@ -131,22 +117,29 @@ final class UserController extends Controller
         return redirect()->back()->with('success', __('auth.user_updated_success'));
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $user = User::findOrFail($id);
         if ($user->id === auth()->id()) {
             return redirect()->back()->with('error', __('auth.cannot_delete_own_account'));
         }
 
-        $user->delete();
+        DB::transaction(function () use ($user) {
+            $user->delete();
+        });
+
         return redirect()->back()->with('success', __('auth.user_deleted_success'));
     }
 
-    public function toggleActive(int $id)
+    public function toggleActive(int $id): RedirectResponse
     {
         $user = User::findOrFail($id);
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', __('auth.cannot_disable_own_account'));
+        }
+
         $user->update(['is_active' => !$user->is_active]);
 
-        return redirect()->back()->with('success', __('auth.user_status_updated_success'));
+        return redirect()->back()->with('success', __('auth.user_status_updated'));
     }
 }

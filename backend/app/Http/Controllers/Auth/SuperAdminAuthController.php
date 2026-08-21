@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\User;
 
 final class SuperAdminAuthController extends Controller
 {
@@ -29,19 +31,21 @@ final class SuperAdminAuthController extends Controller
     /**
      * Authenticate Super Admin into Central Platform
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'phone' => 'required|string',
-            'password' => 'required|string',
-        ]);
+        $request->ensureIsNotRateLimited();
 
-        $user = User::where(function ($q) use ($credentials) {
-            $q->where('phone', $credentials['phone'])
-              ->orWhere('email', $credentials['phone']);
+        $credentials = $request->validated();
+        $phoneOrEmail = (string)$credentials['phone'];
+
+        $user = User::where(function ($q) use ($phoneOrEmail) {
+            $q->where('phone', $phoneOrEmail)
+              ->orWhere('email', $phoneOrEmail);
         })->where('is_active', true)->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (!$user || !Hash::check((string)$credentials['password'], $user->password)) {
+            $request->hitRateLimit();
+
             throw ValidationException::withMessages([
                 'phone' => __('auth.failed'),
             ]);
@@ -49,12 +53,16 @@ final class SuperAdminAuthController extends Controller
 
         // Strict Check: User MUST have admin role or be authorized for Super Admin
         if (!$user->hasRole('admin') && !$user->can('super_admin.access')) {
+            $request->hitRateLimit();
+
             throw ValidationException::withMessages([
-                'phone' => 'هذا الحساب غير مصرح له بالدخول إلى لوحة التحكم المركزية للسوبر أدمن.',
+                'phone' => __('super.unauthorized_super_admin_access'),
             ]);
         }
 
-        Auth::login($user, (bool)$request->input('remember', true));
+        $request->clearRateLimit();
+
+        Auth::login($user, (bool)($credentials['remember'] ?? true));
         $request->session()->regenerate();
 
         return redirect()->intended(route('super.dashboard'));
@@ -63,12 +71,12 @@ final class SuperAdminAuthController extends Controller
     /**
      * Super Admin Logout
      */
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('super.login')->with('success', 'تم تسجيل الخروج من لوحة السوبر أدمن بنجاح');
+        return redirect()->route('super.login')->with('success', __('super.logout_success'));
     }
 }

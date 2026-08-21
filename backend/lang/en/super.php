@@ -58,4 +58,6 @@ return [
     'auto_provision_note' => 'Account automatically provisioned via central provisioner',
     'per_month' => 'month',
     'no_active_user_in_store' => 'No active user found in tenant store (:name) to log in as.',
+    'unauthorized_super_admin_access' => 'This account is not authorized to access the Central Super Admin Dashboard.',
+    'logout_success' => 'Successfully logged out from Super Admin panel.',
 ];

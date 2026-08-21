@@ -1,14 +1,17 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\ReturnDocument;
+use App\Http\Requests\StoreReturnRequest;
 use App\Models\Customer;
-use App\Models\Supplier;
 use App\Models\Item;
+use App\Models\ReturnDocument;
 use App\Models\Store;
+use App\Models\Supplier;
 use App\Services\ReturnService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,11 +21,11 @@ final class ReturnController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string)$request->input('search', ''));
-        $type = $request->input('type', 'all');
+        $type = (string)$request->input('type', 'all');
         $dateFrom = $request->input('from');
         $dateTo = $request->input('to');
 
-        $query = ReturnDocument::with(['customer', 'supplier', 'items.item', 'user', 'store']);
+        $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -45,9 +48,9 @@ final class ReturnController extends Controller
             $query->whereDate('return_date', '<=', $dateTo);
         }
 
-        $returns = $query->latest('id')->paginate(15)->withQueryString();
+        $returns = $query->latest('return_date')->latest('id')->paginate(15)->withQueryString();
 
-        $totalReturns = (float)ReturnDocument::sum('net_total');
+        $totalReturnsValue = (float)ReturnDocument::sum('total_amount');
         $salesReturnsCount = ReturnDocument::where('return_type', 'sales_return')->count();
         $purchaseReturnsCount = ReturnDocument::where('return_type', 'purchase_return')->count();
 
@@ -56,14 +59,16 @@ final class ReturnController extends Controller
                 'id' => $r->id,
                 'return_number' => $r->return_number,
                 'return_type' => $r->return_type,
-                'party_name' => $r->return_type === 'sales_return' ? ($r->customer?->name ?: 'عميل نقدي') : ($r->supplier?->name ?: 'مورد عام'),
-                'return_date' => $r->return_date ? $r->return_date->toDateString() : $r->created_at->toDateString(),
-                'net_total' => (float)$r->net_total,
+                'party_name' => $r->return_type === 'sales_return'
+                    ? ($r->customer?->name ?: __('common.quick_cash_customer', [], 'ar') ?: 'عميل نقدي سريع')
+                    : ($r->supplier?->name ?: 'مورد عام'),
+                'total_amount' => (float)$r->total_amount,
                 'refund_amount' => (float)$r->refund_amount,
-                'items_count' => $r->items->count(),
-                'reason' => $r->reason,
+                'return_date' => $r->return_date ? $r->return_date->toDateString() : $r->created_at->toDateString(),
                 'user_name' => $r->user?->name,
                 'store_name' => $r->store?->name,
+                'reason' => $r->reason,
+                'items_count' => $r->items->count(),
                 'items' => $r->items->map(fn($it) => [
                     'id' => $it->id,
                     'item_name' => $it->item?->name,
@@ -73,9 +78,10 @@ final class ReturnController extends Controller
                 ]),
             ]),
             'metrics' => [
-                'total_returns' => $totalReturns,
-                'sales_returns_count' => $salesReturnsCount,
-                'purchase_returns_count' => $purchaseReturnsCount,
+                'total_value' => $totalReturnsValue,
+                'sales_count' => $salesReturnsCount,
+                'purchase_count' => $purchaseReturnsCount,
+                'total_count' => $salesReturnsCount + $purchaseReturnsCount,
             ],
             'filters' => [
                 'search' => $search,
@@ -102,42 +108,31 @@ final class ReturnController extends Controller
         ]);
     }
 
-    public function store(Request $request, ReturnService $returnService)
+    public function store(StoreReturnRequest $request, ReturnService $returnService): RedirectResponse
     {
-        $validated = $request->validate([
-            'return_type' => 'required|in:sales_return,purchase_return',
-            'customer_id' => 'nullable|required_if:return_type,sales_return|exists:customers,id',
-            'supplier_id' => 'nullable|required_if:return_type,purchase_return|exists:suppliers,id',
-            'return_date' => 'required|date',
-            'refund_amount' => 'nullable|numeric|min:0',
-            'reason' => 'nullable|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.quantity' => 'required|numeric|min:0.001',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
-
+        $validated = $request->validated();
         $storeId = $request->session()->get('active_store_id') ?: Store::first()?->id;
 
         $returnDoc = $returnService->createReturn([
-            'return_type' => $validated['return_type'],
-            'customer_id' => $validated['customer_id'] ?? null,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'store_id' => $storeId,
-            'return_date' => $validated['return_date'],
+            'return_type'   => $validated['return_type'],
+            'customer_id'   => $validated['customer_id'] ?? null,
+            'supplier_id'   => $validated['supplier_id'] ?? null,
+            'store_id'      => $storeId,
+            'return_date'   => $validated['return_date'],
             'refund_amount' => $validated['refund_amount'] ?? '0.000',
-            'reason' => $validated['reason'] ?? null,
-            'items' => $validated['items'],
+            'reason'        => $validated['reason'] ?? null,
+            'items'         => $validated['items'],
         ]);
 
-        return redirect()->route('returns.index')->with('success', "تم تسجيل مستند المرتجع رقم {$returnDoc->return_number} وعكس حركة المخزون بنجاح");
+        return redirect()->route('returns.index')->with('success', __('returns.created_success', ['number' => $returnDoc->return_number]));
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $returnDoc = ReturnDocument::findOrFail($id);
+        $returnNumber = $returnDoc->return_number;
         $returnDoc->delete();
 
-        return redirect()->back()->with('success', 'تم نقل مستند المرتجع إلى سلة المحذوفات بنجاح');
+        return redirect()->back()->with('success', __('returns.deleted_success', ['number' => $returnNumber]));
     }
 }

@@ -1,11 +1,16 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AssignStoreUsersRequest;
+use App\Http\Requests\StoreStoreRequest;
+use App\Http\Requests\UpdateStoreRequest;
 use App\Models\Store;
 use App\Models\StoreStock;
-use App\Models\Item;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -21,40 +26,33 @@ final class StoreController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        $allUsers = \App\Models\User::where('is_active', true)->select('id', 'name', 'email')->get();
+        $allUsers = User::where('is_active', true)->select('id', 'name', 'email')->get();
 
         return Inertia::render('Stores/Index', [
             'stores' => $stores->map(fn($s) => [
-                'id' => $s->id,
-                'name' => $s->name,
-                'code' => $s->code,
-                'type' => $s->type, // retail_shop, wholesale_van, main_warehouse, branch, warehouse, van
-                'address' => $s->address,
-                'phone' => $s->phone,
-                'is_active' => (bool)$s->is_active,
-                'is_main' => (bool)$s->is_main,
-                'stocks_count' => $s->stocks_count,
-                'invoices_count' => $s->invoices_count,
-                'purchases_count' => $s->purchases_count,
+                'id'                => $s->id,
+                'name'              => $s->name,
+                'code'              => $s->code,
+                'type'              => $s->type,
+                'address'           => $s->address,
+                'phone'             => $s->phone,
+                'is_active'         => (bool)$s->is_active,
+                'is_main'           => (bool)$s->is_main,
+                'stocks_count'      => $s->stocks_count,
+                'invoices_count'    => $s->invoices_count,
+                'purchases_count'   => $s->purchases_count,
                 'assigned_user_ids' => $s->users->pluck('id')->toArray(),
-                'assigned_users' => $s->users->map(fn($u) => ['id' => $u->id, 'name' => $u->name]),
-                'can_be_deleted' => $s->canBeDeleted(),
+                'assigned_users'    => $s->users->map(fn($u) => ['id' => $u->id, 'name' => $u->name]),
+                'can_be_deleted'    => $s->canBeDeleted(),
                 'deletion_blockers' => $s->getDeletionBlockers(),
             ]),
             'all_users' => $allUsers,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreStoreRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:stores,code',
-            'type' => 'required|string',
-            'address' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'is_main' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             $isMain = !empty($validated['is_main']);
@@ -63,13 +61,13 @@ final class StoreController extends Controller
             }
 
             $store = Store::create([
-                'name' => $validated['name'],
-                'code' => $validated['code'] ?? strtoupper(substr($validated['type'], 0, 3)) . '-' . rand(100, 999),
-                'type' => $validated['type'],
-                'address' => $validated['address'] ?? null,
-                'phone' => $validated['phone'] ?? null,
+                'name'      => $validated['name'],
+                'code'      => $validated['code'] ?? strtoupper(substr($validated['type'], 0, 3)) . '-' . rand(100, 999),
+                'type'      => $validated['type'],
+                'address'   => $validated['address'] ?? null,
+                'phone'     => $validated['phone'] ?? null,
                 'is_active' => true,
-                'is_main' => $isMain,
+                'is_main'   => $isMain,
             ]);
 
             if (auth()->check()) {
@@ -77,22 +75,13 @@ final class StoreController extends Controller
             }
         });
 
-        return redirect()->back()->with('success', __('inventory.store_added') ?? 'تم إضافة الفرع / عربية التوزيع بنجاح');
+        return redirect()->back()->with('success', __('inventory.store_added') ?: 'تم إضافة الفرع / عربية التوزيع بنجاح');
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateStoreRequest $request, int $id): RedirectResponse
     {
         $store = Store::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:stores,code,' . $store->id,
-            'type' => 'required|string',
-            'address' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'is_active' => 'nullable|boolean',
-            'is_main' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($store, $validated) {
             $isMain = !empty($validated['is_main']);
@@ -101,45 +90,42 @@ final class StoreController extends Controller
             }
 
             $store->update([
-                'name' => $validated['name'],
-                'code' => $validated['code'] ?? $store->code,
-                'type' => $validated['type'],
-                'address' => $validated['address'] ?? null,
-                'phone' => $validated['phone'] ?? null,
+                'name'      => $validated['name'],
+                'code'      => $validated['code'] ?? $store->code,
+                'type'      => $validated['type'],
+                'address'   => $validated['address'] ?? null,
+                'phone'     => $validated['phone'] ?? null,
                 'is_active' => isset($validated['is_active']) ? (bool)$validated['is_active'] : $store->is_active,
-                'is_main' => $isMain,
+                'is_main'   => $isMain,
             ]);
         });
 
-        return redirect()->back()->with('success', __('inventory.store_updated') ?? 'تم تعديل بيانات الفرع بنجاح');
+        return redirect()->back()->with('success', __('inventory.store_updated') ?: 'تم تعديل بيانات الفرع بنجاح');
     }
 
-    public function toggleActive(int $id)
+    public function toggleActive(int $id): RedirectResponse
     {
         $store = Store::findOrFail($id);
         if ($store->is_main && $store->is_active) {
-            return redirect()->back()->with('error', __('inventory.cannot_disable_main_store') ?? 'لا يمكن تعطيل الفرع الرئيسي للمنشأة');
+            return redirect()->back()->with('error', __('inventory.cannot_disable_main_store') ?: 'لا يمكن تعطيل الفرع الرئيسي للمنشأة');
         }
 
         $store->update(['is_active' => !$store->is_active]);
 
-        return redirect()->back()->with('success', __('inventory.store_status_updated') ?? "تم تحديث حالة الفرع ({$store->name}) بنجاح");
+        return redirect()->back()->with('success', __('inventory.store_status_updated') ?: "تم تحديث حالة الفرع ({$store->name}) بنجاح");
     }
 
-    public function assignUsers(Request $request, int $id)
+    public function assignUsers(AssignStoreUsersRequest $request, int $id): RedirectResponse
     {
         $store = Store::findOrFail($id);
-        $validated = $request->validate([
-            'user_ids' => 'nullable|array',
-            'user_ids.*' => 'exists:users,id',
-        ]);
+        $validated = $request->validated();
 
         $store->users()->sync($validated['user_ids'] ?? []);
 
-        return redirect()->back()->with('success', __('inventory.store_users_updated') ?? "تم تحديث تعيينات الموظفين لفرع ({$store->name}) بنجاح");
+        return redirect()->back()->with('success', __('inventory.store_users_updated') ?: "تم تحديث تعيينات الموظفين لفرع ({$store->name}) بنجاح");
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $store = Store::findOrFail($id);
 
@@ -150,14 +136,14 @@ final class StoreController extends Controller
 
         $store->delete();
 
-        return redirect()->back()->with('success', __('inventory.store_deleted') ?? "تم نقل الفرع ({$store->name}) إلى سلة المحذوفات بنجاح");
+        return redirect()->back()->with('success', __('inventory.store_deleted') ?: "تم نقل الفرع ({$store->name}) إلى سلة المحذوفات بنجاح");
     }
 
     public function stocks(Request $request): Response
     {
         $storeId = $request->input('store_id');
         $search = trim((string)$request->input('search', ''));
-        $stockStatus = $request->input('stock_status', 'all');
+        $stockStatus = (string)$request->input('stock_status', 'all');
 
         $stores = Store::where('is_active', true)->select('id', 'name', 'type')->get();
         $selectedStoreId = $storeId ? (int)$storeId : ($stores->first()?->id ?? 1);
@@ -176,21 +162,21 @@ final class StoreController extends Controller
         }
 
         return Inertia::render('Stores/Stocks', [
-            'stores' => $stores,
+            'stores'            => $stores,
             'selected_store_id' => $selectedStoreId,
-            'filters' => [
-                'store_id' => $selectedStoreId,
-                'search' => $search,
+            'filters'           => [
+                'store_id'     => $selectedStoreId,
+                'search'       => $search,
                 'stock_status' => $stockStatus,
             ],
-            'stocks' => Inertia::defer(fn() => $query->paginate(20)->withQueryString()->through(fn($st) => [
-                'id' => $st->id,
-                'item_name' => $st->item?->name,
-                'item_code' => $st->item?->code,
-                'unit' => $st->item?->unit,
-                'quantity' => (float)$st->quantity,
+            'stocks'            => Inertia::defer(fn() => $query->paginate(20)->withQueryString()->through(fn($st) => [
+                'id'              => $st->id,
+                'item_name'       => $st->item?->name,
+                'item_code'       => $st->item?->code,
+                'unit'            => $st->item?->unit,
+                'quantity'        => (float)$st->quantity,
                 'min_stock_level' => (float)$st->item?->min_stock_level,
-                'cost_price' => (float)$st->item?->cost_price,
+                'cost_price'      => (float)$st->item?->cost_price,
                 'total_valuation' => (float)($st->quantity * ($st->item?->cost_price ?? 0)),
             ]), 'storeStocksData'),
         ]);

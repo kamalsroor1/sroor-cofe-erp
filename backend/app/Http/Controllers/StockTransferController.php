@@ -1,12 +1,15 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreStockTransferRequest;
+use App\Models\Item;
 use App\Models\StockTransfer;
 use App\Models\Store;
-use App\Models\Item;
 use App\Services\StockTransferService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -48,28 +51,28 @@ final class StockTransferController extends Controller
 
         return Inertia::render('StockTransfers/Index', [
             'transfers' => $transfers->through(fn($t) => [
-                'id' => $t->id,
+                'id'              => $t->id,
                 'transfer_number' => $t->transfer_number,
                 'from_store_name' => $t->fromStore?->name,
-                'to_store_name' => $t->toStore?->name,
-                'transfer_date' => $t->transfer_date ? $t->transfer_date->toDateString() : $t->created_at->toDateString(),
-                'status' => $t->status,
-                'items_count' => $t->items->count(),
-                'user_name' => $t->user?->name,
-                'notes' => $t->notes,
-                'items' => $t->items->map(fn($it) => [
-                    'id' => $it->id,
+                'to_store_name'   => $t->toStore?->name,
+                'transfer_date'   => $t->transfer_date ? $t->transfer_date->toDateString() : $t->created_at->toDateString(),
+                'status'          => $t->status,
+                'items_count'     => $t->items->count(),
+                'user_name'       => $t->user?->name,
+                'notes'           => $t->notes,
+                'items'           => $t->items->map(fn($it) => [
+                    'id'        => $it->id,
                     'item_name' => $it->item?->name,
-                    'quantity' => (float)$it->quantity,
+                    'quantity'  => (float)$it->quantity,
                 ]),
             ]),
-            'stores' => $stores,
-            'filters' => [
-                'search' => $search,
+            'stores'    => $stores,
+            'filters'   => [
+                'search'        => $search,
                 'from_store_id' => $fromStore,
-                'to_store_id' => $toStore,
-                'from' => $dateFrom,
-                'to' => $dateTo,
+                'to_store_id'   => $toStore,
+                'from'          => $dateFrom,
+                'to'            => $dateTo,
             ],
         ]);
     }
@@ -81,24 +84,15 @@ final class StockTransferController extends Controller
 
         return Inertia::render('StockTransfers/Create', [
             'stores' => $stores,
-            'items' => $items,
+            'items'  => $items,
         ]);
     }
 
-    public function store(Request $request, StockTransferService $transferService)
+    public function store(StoreStockTransferRequest $request, StockTransferService $transferService): RedirectResponse
     {
-        $validated = $request->validate([
-            'from_store_id' => 'required|different:to_store_id|exists:stores,id',
-            'to_store_id' => 'required|different:from_store_id|exists:stores,id',
-            'transfer_date' => 'required|date',
-            'notes' => 'nullable|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.quantity' => 'required|numeric|min:0.001',
-        ]);
-
+        $validated = $request->validated();
         $transfer = $transferService->createTransfer($validated);
 
-        return redirect()->route('stock-transfers.index')->with('success', __('inventory.confirm_transfer') ?? "تم تنفيذ إذن التحويل المخزني رقم {$transfer->transfer_number} بنجاح");
+        return redirect()->route('stock-transfers.index')->with('success', __('inventory.confirm_transfer') ?: "تم تنفيذ إذن التحويل المخزني رقم {$transfer->transfer_number} بنجاح");
     }
 }

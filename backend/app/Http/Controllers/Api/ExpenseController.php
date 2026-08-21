@@ -1,19 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Models\Store;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
     /**
      * List expenses with filters and summary totals
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $search = $request->input('search');
         $category = $request->input('category');
@@ -68,24 +73,16 @@ class ExpenseController extends Controller
     /**
      * Store new expense
      */
-    public function store(Request $request)
+    public function store(StoreExpenseRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'category'       => 'required|string|max:100',
-            'title'          => 'required|string|max:255',
-            'amount'         => 'required|numeric|min:0.01',
-            'expense_date'   => 'required|date',
-            'payment_method' => 'nullable|string|max:50',
-            'notes'          => 'nullable|string|max:1000',
-        ]);
-
+        $validated = $request->validated();
         $storeId = $request->input('store_id') 
             ?? auth()->user()?->getCurrentStore()?->id 
             ?? Store::getMainStore()?->id;
 
         $prefix = 'EXP-' . date('Ymd');
         $count = Expense::whereDate('created_at', now()->toDateString())->count() + 1;
-        $expenseNumber = $prefix . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+        $expenseNumber = $prefix . '-' . str_pad((string)$count, 4, '0', STR_PAD_LEFT);
 
         try {
             $expense = Expense::create([
@@ -102,7 +99,7 @@ class ExpenseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "تم تسجيل المصروف رقم {$expense->expense_number} بنجاح ✓",
+                'message' => __('expenses.recorded_success') ?: "تم تسجيل المصروف رقم {$expense->expense_number} بنجاح ✓",
                 'expense' => $expense,
             ]);
         } catch (Exception $e) {
@@ -116,17 +113,9 @@ class ExpenseController extends Controller
     /**
      * Update existing expense
      */
-    public function update(Request $request, $id)
+    public function update(UpdateExpenseRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'category'       => 'required|string|max:100',
-            'title'          => 'required|string|max:255',
-            'amount'         => 'required|numeric|min:0.01',
-            'expense_date'   => 'required|date',
-            'payment_method' => 'nullable|string|max:50',
-            'notes'          => 'nullable|string|max:1000',
-        ]);
-
+        $validated = $request->validated();
         $expense = Expense::findOrFail($id);
 
         try {
@@ -141,7 +130,7 @@ class ExpenseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "تم تعديل المصروف [{$expense->title}] بنجاح ✓",
+                'message' => __('expenses.updated_success') ?: "تم تعديل المصروف [{$expense->title}] بنجاح ✓",
                 'expense' => $expense,
             ]);
         } catch (Exception $e) {
@@ -155,14 +144,14 @@ class ExpenseController extends Controller
     /**
      * Delete an expense
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         $expense = Expense::findOrFail($id);
         $expense->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'تم حذف المصروف بنجاح ✓',
+            'message' => __('expenses.deleted_success') ?: 'تم حذف المصروف بنجاح ✓',
         ]);
     }
 }

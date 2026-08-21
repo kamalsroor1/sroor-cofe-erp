@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CancelInvoiceRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
+use App\Http\Resources\InvoiceSummaryResource;
 use App\Models\Invoice;
 use App\Models\Store;
-use App\Http\Resources\InvoiceSummaryResource;
+use App\Services\InvoiceService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -209,29 +213,10 @@ final class InvoiceController extends Controller
         ]);
     }
 
-    public function update(Request $request, int $id, \App\Services\InvoiceService $invoiceService)
+    public function update(UpdateInvoiceRequest $request, int $id, InvoiceService $invoiceService): RedirectResponse
     {
         $invoice = Invoice::findOrFail($id);
-
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'invoice_date' => 'required|date',
-            'payment_type' => 'required|in:cash,credit,partial',
-            'discount_type' => 'nullable|in:fixed,percentage',
-            'discount_value' => 'nullable|numeric|min:0',
-            'paid_amount' => 'nullable|numeric|min:0',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:1000',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.quantity' => 'required|numeric|min:0.001',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.discount_amount' => 'nullable|numeric|min:0',
-            'additional_expenses' => 'nullable|array',
-            'additional_expenses.*.title' => 'nullable|string|max:150',
-            'additional_expenses.*.amount' => 'nullable|numeric|min:0',
-        ]);
-
+        $validated = $request->validated();
         $updated = $invoiceService->updateInvoice($invoice, $validated);
 
         return redirect()->route('invoices.show', $updated->id)->with('success', __('invoices.updated_success', ['number' => $updated->invoice_number]));
@@ -240,14 +225,9 @@ final class InvoiceController extends Controller
     /**
      * Cancel an invoice and safely reverse stock and financials.
      */
-    public function cancel(Request $request, int $id, \App\Services\InvoiceService $invoiceService)
+    public function cancel(CancelInvoiceRequest $request, int $id, InvoiceService $invoiceService): RedirectResponse
     {
-        abort_if(!auth()->user()?->can('invoices.cancel'), 403, __('invoices.unauthorized_cancel') ?? 'غير مصرح لك بإلغاء الفواتير');
-
-        $validated = $request->validate([
-            'reason' => 'required|string|min:3|max:500',
-        ]);
-
+        $validated = $request->validated();
         $invoice = Invoice::findOrFail($id);
         $invoiceService->cancelInvoice($invoice, $validated['reason']);
 

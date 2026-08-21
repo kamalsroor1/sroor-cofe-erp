@@ -66,4 +66,6 @@ return [
     'telegram_low_stock_sent' => 'تم إرسال إنذار النواقص إلى تيليجرام بنجاح',
     'telegram_overdue_shift_sent' => 'تم إرسال إنذار الشفتات المفتوحة إلى تيليجرام بنجاح',
     'telegram_backup_sent' => 'تم إرسال النسخة الاحتياطية لقاعدة البيانات إلى تيليجرام بنجاح',
+    'cache_cleared_success' => 'تم تنظيف وتسريع وإعادة بناء الكاش بنجاح',
+    'cache_clear_error' => 'حدث خطأ أثناء تنظيف الكاش: :message',
 ];

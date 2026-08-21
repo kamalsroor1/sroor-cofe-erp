@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePurchaseRequest;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Item;
 use App\Services\PurchaseService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -137,26 +139,9 @@ final class PurchaseController extends Controller
         ]);
     }
 
-    public function store(Request $request, PurchaseService $purchaseService)
+    public function store(StorePurchaseRequest $request, PurchaseService $purchaseService): RedirectResponse
     {
-        $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'purchase_date' => 'required|date',
-            'supplier_invoice_ref' => 'nullable|string|max:100',
-            'paid_amount' => 'nullable|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.quantity' => 'required|numeric|min:0.001',
-            'items.*.unit_cost' => 'required|numeric|min:0',
-            'additional_expenses' => 'nullable|array',
-            'additional_expenses.*.title' => 'nullable|string|max:150',
-            'additional_expenses.*.amount' => 'nullable|numeric|min:0',
-            'additional_expenses.*.allocation_method' => 'nullable|string|in:by_quantity,by_value,equal',
-            'additional_expenses.*.paid_by' => 'nullable|string|in:supplier_account,treasury_cash',
-        ]);
-
+        $validated = $request->validated();
         $purchase = $purchaseService->createPurchase($validated);
 
         return redirect()->route('purchases.index')->with('success', __('purchases.created_success', ['number' => $purchase->purchase_number]));

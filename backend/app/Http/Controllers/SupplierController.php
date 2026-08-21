@@ -1,11 +1,16 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PaySupplierRequest;
+use App\Http\Requests\StoreSupplierRequest;
+use App\Http\Requests\UpdateSupplierRequest;
 use App\Models\Supplier;
-use App\Models\Payment;
-use App\Models\Purchase;
+use App\Services\PaymentService;
+use App\Services\SupplierBalanceService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -16,7 +21,7 @@ final class SupplierController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string)$request->input('search', ''));
-        $debtStatus = $request->input('debt_status', 'all');
+        $debtStatus = (string)$request->input('debt_status', 'all');
 
         $query = Supplier::query();
 
@@ -43,66 +48,52 @@ final class SupplierController extends Controller
 
         return Inertia::render('Suppliers/Index', [
             'suppliers' => $suppliers->through(fn($s) => [
-                'id' => $s->id,
-                'name' => $s->name,
-                'company_name' => $s->company_name,
-                'phone' => $s->phone,
-                'address' => $s->address,
-                'current_balance' => (float)$s->current_balance,
-                'is_active' => (bool)$s->is_active,
-                'notes' => $s->notes,
-                'can_be_deleted' => $s->canBeDeleted(),
+                'id'                => $s->id,
+                'name'              => $s->name,
+                'company_name'      => $s->company_name,
+                'phone'             => $s->phone,
+                'address'           => $s->address,
+                'current_balance'   => (float)$s->current_balance,
+                'is_active'         => (bool)$s->is_active,
+                'notes'             => $s->notes,
+                'can_be_deleted'    => $s->canBeDeleted(),
                 'deletion_blockers' => $s->getDeletionBlockers(),
             ]),
             'metrics' => [
-                'total_payable' => $totalPayable,
+                'total_payable'   => $totalPayable,
                 'creditors_count' => $creditorsCount,
                 'total_suppliers' => $totalSuppliersCount,
             ],
             'filters' => [
-                'search' => $search,
+                'search'      => $search,
                 'debt_status' => $debtStatus,
             ],
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreSupplierRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'company_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'opening_balance' => 'nullable|numeric',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             Supplier::create([
-                'name' => $validated['name'],
-                'company_name' => $validated['company_name'] ?? null,
-                'phone' => $validated['phone'] ?? null,
-                'address' => $validated['address'] ?? null,
+                'name'            => $validated['name'],
+                'company_name'    => $validated['company_name'] ?? null,
+                'phone'           => $validated['phone'] ?? null,
+                'address'         => $validated['address'] ?? null,
                 'current_balance' => $validated['opening_balance'] ?? '0.000',
-                'is_active' => true,
-                'notes' => $validated['notes'] ?? null,
+                'is_active'       => true,
+                'notes'           => $validated['notes'] ?? null,
             ]);
         });
 
         return redirect()->back()->with('success', __('contacts.supplier_added'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateSupplierRequest $request, int $id): RedirectResponse
     {
         $supplier = Supplier::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'company_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($supplier, $validated) {
             $supplier->update($validated);
@@ -111,16 +102,10 @@ final class SupplierController extends Controller
         return redirect()->back()->with('success', __('contacts.supplier_updated'));
     }
 
-    public function pay(Request $request, int $id, \App\Services\PaymentService $paymentService)
+    public function pay(PaySupplierRequest $request, int $id, PaymentService $paymentService): RedirectResponse
     {
         $supplier = Supplier::findOrFail($id);
-
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|string|in:cash,instapay,wallet,bank',
-            'payment_date' => 'required|date',
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         $paymentService->recordSupplierPayment([
             'supplier_id'    => $supplier->id,
@@ -133,7 +118,7 @@ final class SupplierController extends Controller
         return redirect()->back()->with('success', __('contacts.supplier_payment_recorded'));
     }
 
-    public function toggleActive(int $id)
+    public function toggleActive(int $id): RedirectResponse
     {
         $supplier = Supplier::findOrFail($id);
         $supplier->is_active = !$supplier->is_active;
@@ -142,7 +127,7 @@ final class SupplierController extends Controller
         return redirect()->back()->with('success', __('contacts.supplier_status_updated'));
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $supplier = Supplier::findOrFail($id);
 
@@ -157,7 +142,7 @@ final class SupplierController extends Controller
         return redirect()->back()->with('success', __('contacts.supplier_deleted'));
     }
 
-    public function statement(int $id, Request $request, \App\Services\SupplierBalanceService $balanceService): Response
+    public function statement(int $id, Request $request, SupplierBalanceService $balanceService): Response
     {
         $supplier = Supplier::findOrFail($id);
         $dateFrom = $request->input('from');
@@ -165,19 +150,19 @@ final class SupplierController extends Controller
 
         return Inertia::render('Suppliers/Statement', [
             'supplier' => [
-                'id' => $supplier->id,
-                'name' => $supplier->name,
-                'company_name' => $supplier->company_name,
-                'phone' => $supplier->phone,
-                'address' => $supplier->address,
+                'id'              => $supplier->id,
+                'name'            => $supplier->name,
+                'company_name'    => $supplier->company_name,
+                'phone'           => $supplier->phone,
+                'address'         => $supplier->address,
                 'current_balance' => (float)$supplier->current_balance,
                 'initial_balance' => (float)$supplier->initial_balance,
             ],
             'filters' => [
                 'from' => $dateFrom,
-                'to' => $dateTo,
+                'to'   => $dateTo,
             ],
-            'ledger' => Inertia::defer(fn() => $balanceService->getSupplierLedger($supplier, $dateFrom, $dateTo)['ledger'], 'supplierStatement'),
+            'ledger'  => Inertia::defer(fn() => $balanceService->getSupplierLedger($supplier, $dateFrom, $dateTo)['ledger'], 'supplierStatement'),
             'summary' => Inertia::defer(fn() => $balanceService->getSupplierLedger($supplier, $dateFrom, $dateTo)['summary'], 'supplierStatement'),
         ]);
     }

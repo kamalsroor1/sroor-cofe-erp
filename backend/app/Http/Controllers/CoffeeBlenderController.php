@@ -1,12 +1,14 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateBlenderInvoiceRequest;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Services\InvoiceService;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,32 +29,23 @@ final class CoffeeBlenderController extends Controller
             ->get();
 
         return Inertia::render('CoffeeBlender/Index', [
-            'items' => $items,
+            'items'     => $items,
             'customers' => $customers,
         ]);
     }
 
-    public function createInvoice(Request $request, InvoiceService $invoiceService)
+    public function createInvoice(CreateBlenderInvoiceRequest $request, InvoiceService $invoiceService): RedirectResponse
     {
-        $validated = $request->validate([
-            'blend_name' => 'required|string|max:255',
-            'customer_id' => 'required|exists:customers,id',
-            'components' => 'required|array|min:1',
-            'components.*.item_id' => 'required|exists:items,id',
-            'components.*.grams' => 'required|numeric|min:1',
-            'components.*.unit_price' => 'required|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
-        ]);
-
+        $validated = $request->validated();
         $itemsForInvoice = [];
 
         foreach ($validated['components'] as $comp) {
             $kg = bcdiv((string)$comp['grams'], '1000', 4);
             if (bccomp($kg, '0.000', 4) > 0) {
                 $itemsForInvoice[] = [
-                    'item_id' => (int)$comp['item_id'],
-                    'quantity' => $kg,
-                    'unit_price' => (string)$comp['unit_price'],
+                    'item_id'         => (int)$comp['item_id'],
+                    'quantity'        => $kg,
+                    'unit_price'      => (string)$comp['unit_price'],
                     'discount_amount' => '0.000',
                 ];
             }
@@ -61,16 +54,16 @@ final class CoffeeBlenderController extends Controller
         $notesStr = "خلطة وتوليفة مخصوصة: {$validated['blend_name']}" . (!empty($validated['notes']) ? " - {$validated['notes']}" : '');
 
         $invoice = $invoiceService->confirmInvoice([
-            'customer_id' => (int)$validated['customer_id'],
-            'invoice_date' => now()->toDateString(),
-            'items' => $itemsForInvoice,
+            'customer_id'    => (int)$validated['customer_id'],
+            'invoice_date'   => now()->toDateString(),
+            'items'          => $itemsForInvoice,
             'payment_method' => 'cash',
-            'paid_amount' => '0.000',
-            'discount_type' => 'fixed',
+            'paid_amount'    => '0.000',
+            'discount_type'  => 'fixed',
             'discount_value' => '0.000',
-            'notes' => $notesStr,
+            'notes'          => $notesStr,
         ]);
 
-        return redirect()->route('invoices.show', $invoice->id)->with('success', __('inventory.assembly_blends_sub') ?? 'تم إنشاء وتأكيد فاتورة التوليفة بنجاح');
+        return redirect()->route('invoices.show', $invoice->id)->with('success', __('inventory.assembly_blends_sub') ?: 'تم إنشاء وتأكيد فاتورة التوليفة بنجاح');
     }
 }

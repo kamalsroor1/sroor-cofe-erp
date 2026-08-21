@@ -1,74 +1,58 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateSettingsRequest;
 use App\Models\Setting;
-use App\Services\TelegramService;
 use App\Services\DatabaseBackupService;
+use App\Services\TelegramService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class SettingController extends Controller
 {
     public function index(Request $request): Response
     {
-        $tab = $request->input('tab', 'branding');
+        $tab = (string)$request->input('tab', 'branding');
 
         return Inertia::render('Settings/Index', [
             'active_tab' => $tab,
-            'settings' => [
-                'company_name' => Setting::get('company_name', 'سرور كوفي'),
-                'company_subtitle' => Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن'),
-                'company_phone' => Setting::get('company_phone', '01012316954'),
-                'company_address' => Setting::get('company_address', 'القاهرة - مصر'),
-                'invoice_footer_note' => Setting::get('invoice_footer_note', 'شكراً لتعاملكم معنا - البضاعة المباعة ترد وتستبدل خلال 14 يوماً'),
-                'show_print_company_name' => Setting::getBool('show_print_company_name', true),
-                'show_print_subtitle' => Setting::getBool('show_print_subtitle', true),
-                'show_print_logo' => Setting::getBool('show_print_logo', true),
+            'settings'   => [
+                'company_name'                  => Setting::get('company_name', 'سرور كوفي'),
+                'company_subtitle'              => Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن'),
+                'company_phone'                 => Setting::get('company_phone', '01012316954'),
+                'company_address'               => Setting::get('company_address', 'القاهرة - مصر'),
+                'invoice_footer_note'           => Setting::get('invoice_footer_note', 'شكراً لتعاملكم معنا - البضاعة المباعة ترد وتستبدل خلال 14 يوماً'),
+                'show_print_company_name'       => Setting::getBool('show_print_company_name', true),
+                'show_print_subtitle'           => Setting::getBool('show_print_subtitle', true),
+                'show_print_logo'               => Setting::getBool('show_print_logo', true),
                 'thermal_show_customer_balance' => Setting::getBool('thermal_show_customer_balance', true),
-                'print_show_qr' => Setting::getBool('print_show_qr', true),
-                'invoice_primary_color' => Setting::get('invoice_primary_color', 'amber'),
-                'system_theme_color' => Setting::get('system_theme_color', 'amber'),
-                'telegram_bot_token' => Setting::get('telegram_bot_token', config('services.telegram.bot_token', '')),
-                'telegram_chat_id' => Setting::get('telegram_chat_id', config('services.telegram.chat_id', '')),
-                'telegram_notifications_enabled' => Setting::getBool('telegram_notifications_enabled', true),
+                'print_show_qr'                 => Setting::getBool('print_show_qr', true),
+                'invoice_primary_color'         => Setting::get('invoice_primary_color', 'amber'),
+                'system_theme_color'            => Setting::get('system_theme_color', 'amber'),
+                'telegram_bot_token'            => Setting::get('telegram_bot_token', config('services.telegram.bot_token', '')),
+                'telegram_chat_id'              => Setting::get('telegram_chat_id', config('services.telegram.chat_id', '')),
+                'telegram_notifications_enabled'=> Setting::getBool('telegram_notifications_enabled', true),
             ],
             'system_info' => [
-                'php_version' => PHP_VERSION,
+                'php_version'     => PHP_VERSION,
                 'laravel_version' => app()->version(),
-                'environment' => app()->environment(),
-                'db_driver' => config('database.default'),
+                'environment'     => app()->environment(),
+                'db_driver'       => config('database.default'),
                 'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Local/Laragon',
             ],
         ]);
     }
 
-    public function update(Request $request)
+    public function update(UpdateSettingsRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'company_subtitle' => 'nullable|string|max:255',
-            'company_phone' => 'nullable|string|max:50',
-            'company_address' => 'nullable|string|max:255',
-            'invoice_footer_note' => 'nullable|string|max:500',
-            'show_print_company_name' => 'boolean',
-            'show_print_subtitle' => 'boolean',
-            'show_print_logo' => 'boolean',
-            'thermal_show_customer_balance' => 'boolean',
-            'print_show_qr' => 'boolean',
-            'invoice_primary_color' => 'nullable|string|in:amber,emerald,blue,slate',
-            'system_theme_color' => 'nullable|string|max:50',
-            'telegram_bot_token' => 'nullable|string|max:255',
-            'telegram_chat_id' => 'nullable|string|max:255',
-            'telegram_notifications_enabled' => 'boolean',
-            'logo_file' => 'nullable|image|max:4096',
-            'logo_light_file' => 'nullable|image|max:4096',
-            'logo_dark_file' => 'nullable|image|max:4096',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('logo_light_file')) {
             $file = $request->file('logo_light_file');
@@ -116,13 +100,13 @@ final class SettingController extends Controller
         return redirect()->back()->with('success', __('nav.settings_saved_success'));
     }
 
-    public function sendTestTelegram(Request $request, TelegramService $telegramService)
+    public function sendTestTelegram(Request $request, TelegramService $telegramService): RedirectResponse
     {
         $token = $request->input('bot_token');
         $chatId = $request->input('chat_id');
 
-        if ($token) Setting::set('telegram_bot_token', trim($token));
-        if ($chatId) Setting::set('telegram_chat_id', trim($chatId));
+        if ($token) Setting::set('telegram_bot_token', trim((string)$token));
+        if ($chatId) Setting::set('telegram_chat_id', trim((string)$chatId));
 
         $res = $telegramService->sendTestNotification(trim((string)$chatId));
 
@@ -132,7 +116,7 @@ final class SettingController extends Controller
         return redirect()->back()->with('error', $res['message']);
     }
 
-    public function sendDailySummaryTelegram(TelegramService $telegramService)
+    public function sendDailySummaryTelegram(TelegramService $telegramService): RedirectResponse
     {
         $res = $telegramService->sendDailySummaryNotification();
         if ($res['success']) {
@@ -141,7 +125,7 @@ final class SettingController extends Controller
         return redirect()->back()->with('error', $res['message']);
     }
 
-    public function sendLowStockTelegram(TelegramService $telegramService)
+    public function sendLowStockTelegram(TelegramService $telegramService): RedirectResponse
     {
         $res = $telegramService->sendLowStockNotification(previewSample: true);
         if ($res['success']) {
@@ -150,7 +134,7 @@ final class SettingController extends Controller
         return redirect()->back()->with('error', $res['message']);
     }
 
-    public function sendOverdueShiftTelegram(TelegramService $telegramService)
+    public function sendOverdueShiftTelegram(TelegramService $telegramService): RedirectResponse
     {
         $res = $telegramService->sendOverdueShiftNotification(previewSample: true);
         if ($res['success']) {
@@ -159,7 +143,7 @@ final class SettingController extends Controller
         return redirect()->back()->with('error', $res['message']);
     }
 
-    public function sendBackupTelegram(TelegramService $telegramService)
+    public function sendBackupTelegram(TelegramService $telegramService): RedirectResponse
     {
         $res = $telegramService->sendDatabaseBackupNotification();
         if ($res['success']) {
@@ -168,7 +152,7 @@ final class SettingController extends Controller
         return redirect()->back()->with('error', $res['message']);
     }
 
-    public function downloadBackup(DatabaseBackupService $backupService)
+    public function downloadBackup(DatabaseBackupService $backupService): BinaryFileResponse
     {
         $gzPath = $backupService->createSqlGzBackup();
         $fileName = basename($gzPath);
@@ -176,7 +160,7 @@ final class SettingController extends Controller
         return response()->download($gzPath, $fileName)->deleteFileAfterSend(true);
     }
 
-    public function clearCache()
+    public function clearCache(): RedirectResponse
     {
         try {
             Artisan::call('optimize:clear');
@@ -185,9 +169,9 @@ final class SettingController extends Controller
             Artisan::call('view:cache');
             Setting::clearCache();
 
-            return redirect()->back()->with('success', 'تم تنظيف وتسريع وإعادة بناء الكاش بنجاح');
+            return redirect()->back()->with('success', __('nav.cache_cleared_success'));
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'حدث خطأ أثناء تنظيف الكاش: ' . $e->getMessage());
+            return redirect()->back()->with('error', __('nav.cache_clear_error', ['message' => $e->getMessage()]));
         }
     }
 }

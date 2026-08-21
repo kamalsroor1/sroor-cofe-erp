@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Contracts\TenantProvisionerInterface;
@@ -10,7 +12,6 @@ use App\Models\Subscription;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class TenantProvisionerService implements TenantProvisionerInterface
 {
@@ -36,13 +37,13 @@ class TenantProvisionerService implements TenantProvisionerInterface
             'subscription_ends_at' => $dto->trialDays > 0 ? now()->addDays($dto->trialDays) : now()->addMonth(),
             'settings' => [
                 'theme_preference' => 'dark',
-                'currency' => 'ج.م',
+                'currency' => config('app.currency', 'EGP'),
             ],
             'enabled_features' => [],
         ]);
 
         // 2. Provision Primary Subdomain
-        $centralDomain = env('CENTRAL_DOMAIN', 'localhost');
+        $centralDomain = config('tenancy.central_domains.0', 'localhost');
         $primarySubdomain = $dto->slug . '.' . $centralDomain;
         $tenant->domains()->create([
             'domain' => $primarySubdomain,

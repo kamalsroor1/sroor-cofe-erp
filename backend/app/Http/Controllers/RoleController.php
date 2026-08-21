@@ -1,14 +1,17 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
+use App\Http\Requests\UpdateRolePermissionsRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 final class RoleController extends Controller
 {
@@ -22,87 +25,87 @@ final class RoleController extends Controller
 
         $modules = [
             'sales' => [
-                'title' => 'المبيعات ونقاط البيع (POS)',
-                'icon' => '🛒',
+                'title'       => 'المبيعات ونقاط البيع (POS)',
+                'icon'        => '🛒',
                 'permissions' => [
-                    'pos.access' => 'دخول شاشة الكاشير السريع (POS)',
-                    'invoices.view' => 'عرض سجل الفواتير',
+                    'pos.access'      => 'دخول شاشة الكاشير السريع (POS)',
+                    'invoices.view'   => 'عرض سجل الفواتير',
                     'invoices.create' => 'إنشاء وحفظ فواتير جديدة',
                     'invoices.cancel' => 'إلغاء الفواتير وعكس المخزون',
-                    'invoices.print' => 'طباعة إيصالات الفواتير',
+                    'invoices.print'  => 'طباعة إيصالات الفواتير',
                 ],
             ],
             'inventory' => [
-                'title' => 'الأصناف والمخزون وخامات البن',
-                'icon' => '📦',
+                'title'       => 'الأصناف والمخزون وخامات البن',
+                'icon'        => '📦',
                 'permissions' => [
-                    'items.view' => 'عرض دليل الأصناف والأرصدة',
-                    'items.create' => 'إضافة أصناف جديدة وتعديلها',
-                    'items.delete' => 'حذف أو أرشفة الأصناف',
+                    'items.view'      => 'عرض دليل الأصناف والأرصدة',
+                    'items.create'    => 'إضافة أصناف جديدة وتعديلها',
+                    'items.delete'    => 'حذف أو أرشفة الأصناف',
                     'items.cost.view' => 'عرض أسعار التكلفة وهامش الربح',
                 ],
             ],
             'purchases' => [
-                'title' => 'المشتريات والتوريدات',
-                'icon' => '🚚',
+                'title'       => 'المشتريات والتوريدات',
+                'icon'        => '🚚',
                 'permissions' => [
-                    'purchases.view' => 'عرض فواتير المشتريات',
+                    'purchases.view'   => 'عرض فواتير المشتريات',
                     'purchases.create' => 'تسجيل فواتير شراء جديدة',
                     'purchases.delete' => 'إلغاء فواتير المشتريات',
                 ],
             ],
             'customers' => [
-                'title' => 'العملاء والتحصيل النقدي',
-                'icon' => '👥',
+                'title'       => 'العملاء والتحصيل النقدي',
+                'icon'        => '👥',
                 'permissions' => [
-                    'customers.manage' => 'إدارة العملاء وإضافة عميل جديد',
+                    'customers.manage'    => 'إدارة العملاء وإضافة عميل جديد',
                     'customers.statement' => 'عرض كشف حساب العميل والطباعة',
                 ],
             ],
             'suppliers' => [
-                'title' => 'الموردين وسندات السداد',
-                'icon' => '🏭',
+                'title'       => 'الموردين وسندات السداد',
+                'icon'        => '🏭',
                 'permissions' => [
-                    'suppliers.manage' => 'إدارة الموردين وتسجيل سداد للمورد',
+                    'suppliers.manage'    => 'إدارة الموردين وتسجيل سداد للمورد',
                     'suppliers.statement' => 'عرض كشف حساب المورد والطباعة',
                 ],
             ],
             'expenses' => [
-                'title' => 'المصروفات والنثريات',
-                'icon' => '💸',
+                'title'       => 'المصروفات والنثريات',
+                'icon'        => '💸',
                 'permissions' => [
                     'expenses.manage' => 'تسجيل وتعديل المصروفات التشغيلية',
                 ],
             ],
             'reports' => [
-                'title' => 'التقارير المالية والأرباح',
-                'icon' => '📈',
+                'title'       => 'التقارير المالية والأرباح',
+                'icon'        => '📈',
                 'permissions' => [
                     'reports.view' => 'عرض تقارير الأرباح والمبيعات الشاملة',
                 ],
             ],
             'stores' => [
-                'title' => 'الفروع والتحويلات المخزنية',
-                'icon' => '🏬',
+                'title'       => 'الفروع والتحويلات المخزنية',
+                'icon'        => '🏬',
                 'permissions' => [
-                    'stores.manage' => 'إدارة الفروع وعربيات التوزيع',
-                    'transfers.view' => 'عرض أذونات التحويل المخزني',
+                    'stores.manage'   => 'إدارة الفروع وعربيات التوزيع',
+                    'transfers.view'   => 'عرض أذونات التحويل المخزني',
                     'transfers.create' => 'إنشاء تحويلات بين المخازن',
                 ],
             ],
             'daily_journal' => [
-                'title' => 'الورديات والخزينة (Z-Report)',
-                'icon' => '💵',
+                'title'       => 'الورديات والخزينة (Z-Report)',
+                'icon'        => '💵',
                 'permissions' => [
                     'daily_journal.view' => 'فتح وإغلاق الورديات واعتماد Z-Report',
                 ],
             ],
             'roles' => [
-                'title' => 'إدارة النظام والمستخدمين',
-                'icon' => '🛡️',
+                'title'       => 'إدارة النظام والمستخدمين',
+                'icon'        => '🛡️',
                 'permissions' => [
                     'roles.manage' => 'إدارة المستخدمين والأدوار وتعديل الصلاحيات',
-                    'logs.view' => 'عرض سجل التدقيق الأمني والنشاطات',
+                    'logs.view'    => 'عرض سجل التدقيق الأمني والنشاطات',
                     'trash.access' => 'الوصول لسلة المحذوفات واسترجاع البيانات',
                 ],
             ],
@@ -110,27 +113,27 @@ final class RoleController extends Controller
 
         return Inertia::render('Roles/Index', [
             'roles' => $roles->map(fn($r) => [
-                'id' => $r->id,
-                'name' => $r->name,
+                'id'    => $r->id,
+                'name'  => $r->name,
                 'label' => match ($r->name) {
-                    'admin' => 'مدير النظام 👑',
-                    'cashier' => 'كاشير مبيعات 🛒',
+                    'admin'       => 'مدير النظام 👑',
+                    'cashier'     => 'كاشير مبيعات 🛒',
                     'storekeeper' => 'أمين مخزن 📦',
-                    'accountant' => 'محاسب 💼',
-                    default => $r->name,
+                    'accountant'  => 'محاسب 💼',
+                    default       => $r->name,
                 },
                 'permissions_count' => $r->permissions->count(),
             ]),
             'selected_role' => $selectedRole ? [
-                'id' => $selectedRole->id,
-                'name' => $selectedRole->name,
+                'id'          => $selectedRole->id,
+                'name'        => $selectedRole->name,
                 'permissions' => $selectedRole->permissions->pluck('name')->toArray(),
             ] : null,
             'permission_modules' => $modules,
         ]);
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateRolePermissionsRequest $request, int $id): RedirectResponse
     {
         $role = Role::findOrFail($id);
 
@@ -140,7 +143,8 @@ final class RoleController extends Controller
             return redirect()->back()->with('info', __('auth.admin_role_full_access'));
         }
 
-        $permissions = $request->input('permissions', []);
+        $validated = $request->validated();
+        $permissions = $validated['permissions'] ?? [];
         $role->syncPermissions($permissions);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 

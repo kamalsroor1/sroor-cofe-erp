@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
@@ -10,7 +12,7 @@ use App\Models\Subscription;
 class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterface
 {
     /**
-     * حساب وتحليل مؤشرات أداء المنصة المركزية
+     * حساب وتحليل مؤشرات أداء المنصة المركزية بدقة مالية تامة
      */
     public function getPlatformMetrics(): array
     {
@@ -19,23 +21,24 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
         $trialTenants = Tenant::where('status', 'trial')->count();
         $suspendedTenants = Tenant::where('status', 'suspended')->count();
 
-        // Calculate MRR (Monthly Recurring Revenue)
-        $monthlyRevenue = Subscription::where('status', 'active')
+        // Calculate MRR (Monthly Recurring Revenue) with bcmath
+        $monthlyRevenue = (string)(Subscription::where('status', 'active')
             ->where('billing_cycle', 'monthly')
-            ->sum('amount');
+            ->sum('amount') ?: '0.000');
 
-        $yearlyRevenue = Subscription::where('status', 'active')
+        $yearlyRevenue = (string)(Subscription::where('status', 'active')
             ->where('billing_cycle', 'yearly')
-            ->sum('amount');
+            ->sum('amount') ?: '0.000');
 
-        $mrr = (float)$monthlyRevenue + ((float)$yearlyRevenue / 12);
+        $yearlyPortion = bcdiv($yearlyRevenue, '12', 3);
+        $mrr = bcadd($monthlyRevenue, $yearlyPortion, 2);
 
         return [
-            'total_tenants' => $totalTenants,
-            'active_tenants' => $activeTenants,
-            'trial_tenants' => $trialTenants,
+            'total_tenants'     => $totalTenants,
+            'active_tenants'    => $activeTenants,
+            'trial_tenants'     => $trialTenants,
             'suspended_tenants' => $suspendedTenants,
-            'mrr' => round($mrr, 2),
+            'mrr'               => (float)$mrr,
         ];
     }
 
@@ -45,9 +48,9 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
     public function getPlanStatistics(): array
     {
         return Plan::withCount('tenants')->get()->map(fn($p) => [
-            'id' => $p->id,
-            'name' => $p->name,
-            'slug' => $p->slug,
+            'id'            => $p->id,
+            'name'          => $p->name,
+            'slug'          => $p->slug,
             'price_monthly' => (float)$p->price_monthly,
             'tenants_count' => $p->tenants_count,
         ])->toArray();
@@ -58,17 +61,19 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
      */
     public function getRecentTenants(int $limit = 5): array
     {
+        $centralDomain = config('tenancy.central_domains.0', 'sroor-erp.com');
+
         return Tenant::with(['plan', 'domains'])
             ->latest()
             ->take($limit)
             ->get()
             ->map(fn($t) => [
-                'id' => $t->id,
-                'name' => $t->name,
-                'slug' => $t->slug,
-                'domain' => $t->domains->first()?->domain ?? ($t->slug . '.' . config('tenancy.central_domains.2', 'sroor-erp.com')),
-                'plan_name' => $t->plan?->name ?? 'غير محدد',
-                'status' => $t->status,
+                'id'         => $t->id,
+                'name'       => $t->name,
+                'slug'       => $t->slug,
+                'domain'     => $t->domains->first()?->domain ?? ($t->slug . '.' . $centralDomain),
+                'plan_name'  => $t->plan?->name ?? __('common.unspecified', [], 'ar') ?: 'غير محدد',
+                'status'     => $t->status,
                 'created_at' => $t->created_at->diffForHumans(),
             ])
             ->toArray();

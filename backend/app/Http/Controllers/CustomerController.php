@@ -1,12 +1,16 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CollectCustomerPaymentRequest;
+use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
-use App\Models\Payment;
-use App\Models\Invoice;
-use App\Models\ReturnDocument;
+use App\Services\CustomerBalanceService;
+use App\Services\PaymentService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -17,7 +21,7 @@ final class CustomerController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string)$request->input('search', ''));
-        $debtStatus = $request->input('debt_status', 'all');
+        $debtStatus = (string)$request->input('debt_status', 'all');
 
         $query = Customer::query();
 
@@ -46,66 +50,52 @@ final class CustomerController extends Controller
 
         return Inertia::render('Customers/Index', [
             'customers' => $customers->through(fn($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'phone' => $c->phone,
-                'address' => $c->address,
-                'tax_number' => $c->tax_number,
-                'current_balance' => (float)$c->current_balance,
-                'is_active' => (bool)$c->is_active,
-                'notes' => $c->notes,
-                'can_be_deleted' => $c->canBeDeleted(),
+                'id'                => $c->id,
+                'name'              => $c->name,
+                'phone'             => $c->phone,
+                'address'           => $c->address,
+                'tax_number'        => $c->tax_number,
+                'current_balance'   => (float)$c->current_balance,
+                'is_active'         => (bool)$c->is_active,
+                'notes'             => $c->notes,
+                'can_be_deleted'    => $c->canBeDeleted(),
                 'deletion_blockers' => $c->getDeletionBlockers(),
             ]),
             'metrics' => [
-                'total_debt' => $totalDebt,
-                'debtors_count' => $debtorsCount,
+                'total_debt'      => $totalDebt,
+                'debtors_count'   => $debtorsCount,
                 'total_customers' => $totalCustomersCount,
             ],
             'filters' => [
-                'search' => $search,
+                'search'      => $search,
                 'debt_status' => $debtStatus,
             ],
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreCustomerRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'tax_number' => 'nullable|string|max:50',
-            'opening_balance' => 'nullable|numeric',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             Customer::create([
-                'name' => $validated['name'],
-                'phone' => $validated['phone'] ?? null,
-                'address' => $validated['address'] ?? null,
-                'tax_number' => $validated['tax_number'] ?? null,
+                'name'            => $validated['name'],
+                'phone'           => $validated['phone'] ?? null,
+                'address'         => $validated['address'] ?? null,
+                'tax_number'      => $validated['tax_number'] ?? null,
                 'current_balance' => $validated['opening_balance'] ?? '0.000',
-                'is_active' => true,
-                'notes' => $validated['notes'] ?? null,
+                'is_active'       => true,
+                'notes'           => $validated['notes'] ?? null,
             ]);
         });
 
         return redirect()->back()->with('success', __('contacts.customer_added'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateCustomerRequest $request, int $id): RedirectResponse
     {
         $customer = Customer::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'tax_number' => 'nullable|string|max:50',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($customer, $validated) {
             $customer->update($validated);
@@ -114,16 +104,10 @@ final class CustomerController extends Controller
         return redirect()->back()->with('success', __('contacts.customer_updated'));
     }
 
-    public function collectPayment(Request $request, int $id, \App\Services\PaymentService $paymentService)
+    public function collectPayment(CollectCustomerPaymentRequest $request, int $id, PaymentService $paymentService): RedirectResponse
     {
         $customer = Customer::findOrFail($id);
-
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|string|in:cash,instapay,wallet,bank',
-            'payment_date' => 'required|date',
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         $paymentService->recordCustomerPayment([
             'customer_id'    => $customer->id,
@@ -136,7 +120,7 @@ final class CustomerController extends Controller
         return redirect()->back()->with('success', __('contacts.payment_recorded'));
     }
 
-    public function statement(Request $request, int $id, \App\Services\CustomerBalanceService $balanceService): Response
+    public function statement(Request $request, int $id, CustomerBalanceService $balanceService): Response
     {
         $customer = Customer::findOrFail($id);
         $dateFrom = $request->input('from');
@@ -144,27 +128,27 @@ final class CustomerController extends Controller
 
         return Inertia::render('Customers/Statement', [
             'customer' => [
-                'id' => $customer->id,
-                'name' => $customer->name,
-                'phone' => $customer->phone,
-                'address' => $customer->address,
-                'tax_number' => $customer->tax_number,
+                'id'              => $customer->id,
+                'name'            => $customer->name,
+                'phone'           => $customer->phone,
+                'address'         => $customer->address,
+                'tax_number'      => $customer->tax_number,
                 'current_balance' => (float)$customer->current_balance,
             ],
             'filters' => [
                 'from' => $dateFrom,
-                'to' => $dateTo,
+                'to'   => $dateTo,
             ],
             'ledger' => Inertia::defer(function () use ($balanceService, $customer, $dateFrom, $dateTo) {
                 $ledgerData = $balanceService->getCustomerLedger($customer, $dateFrom, $dateTo);
                 return array_map(function ($row) {
                     return [
-                        'date' => $row['date'],
-                        'type' => $row['type'],
-                        'ref_number' => $row['ref_number'],
-                        'debit' => (float)$row['debit'],
-                        'credit' => (float)$row['credit'],
-                        'notes' => $row['notes'],
+                        'date'          => $row['date'],
+                        'type'          => $row['type'],
+                        'ref_number'    => $row['ref_number'],
+                        'debit'         => (float)$row['debit'],
+                        'credit'        => (float)$row['credit'],
+                        'notes'         => $row['notes'],
                         'balance_after' => (float)$row['balance_after'],
                     ];
                 }, $ledgerData['entries']);
@@ -172,15 +156,15 @@ final class CustomerController extends Controller
             'summary' => Inertia::defer(function () use ($balanceService, $customer, $dateFrom, $dateTo) {
                 $ledgerData = $balanceService->getCustomerLedger($customer, $dateFrom, $dateTo);
                 return [
-                    'total_debit' => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['debit']),
-                    'total_credit' => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['credit']),
+                    'total_debit'     => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['debit']),
+                    'total_credit'    => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['credit']),
                     'current_balance' => (float)$customer->current_balance,
                 ];
             }, 'customerStatement'),
         ]);
     }
 
-    public function toggleActive(int $id)
+    public function toggleActive(int $id): RedirectResponse
     {
         $customer = Customer::findOrFail($id);
         $customer->is_active = !$customer->is_active;
@@ -189,7 +173,7 @@ final class CustomerController extends Controller
         return redirect()->back()->with('success', __('contacts.customer_status_updated'));
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $customer = Customer::findOrFail($id);
 

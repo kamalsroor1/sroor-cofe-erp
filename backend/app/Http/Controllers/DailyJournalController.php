@@ -1,13 +1,18 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CloseShiftRequest;
+use App\Http\Requests\OpenShiftRequest;
+use App\Http\Requests\StoreDailyJournalExpenseRequest;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Store;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -17,7 +22,7 @@ final class DailyJournalController extends Controller
 {
     public function index(Request $request): Response
     {
-        $date = $request->input('date', now()->toDateString());
+        $date = (string)$request->input('date', now()->toDateString());
         $storeId = $request->session()->get('active_store_id') ?: Store::first()?->id;
 
         // Current Active Shift
@@ -111,13 +116,9 @@ final class DailyJournalController extends Controller
         ]);
     }
 
-    public function openShift(Request $request)
+    public function openShift(OpenShiftRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'opening_cash_balance' => 'required|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
-        ]);
-
+        $validated = $request->validated();
         $storeId = $request->session()->get('active_store_id') ?: Store::first()?->id;
 
         DB::transaction(function () use ($validated, $storeId) {
@@ -137,14 +138,10 @@ final class DailyJournalController extends Controller
         return redirect()->back()->with('success', __('treasury.shift_opened_success'));
     }
 
-    public function closeShift(Request $request, int $id)
+    public function closeShift(CloseShiftRequest $request, int $id): RedirectResponse
     {
         $shift = CashShift::where('status', 'open')->findOrFail($id);
-
-        $validated = $request->validate([
-            'actual_cash_balance' => 'required|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($shift, $validated) {
             $actual = (string)$validated['actual_cash_balance'];
@@ -186,16 +183,9 @@ final class DailyJournalController extends Controller
         return redirect()->back()->with('success', __('treasury.shift_closed_success'));
     }
 
-    public function storeExpense(Request $request)
+    public function storeExpense(StoreDailyJournalExpenseRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
-            'cost_center' => 'required|string',
-            'payment_method' => 'required|string|in:cash,instapay,wallet,bank',
-            'notes' => 'nullable|string|max:500',
-        ]);
-
+        $validated = $request->validated();
         $storeId = $request->session()->get('active_store_id') ?: Store::first()?->id;
 
         DB::transaction(function () use ($validated, $storeId) {

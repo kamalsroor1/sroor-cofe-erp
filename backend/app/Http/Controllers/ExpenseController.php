@@ -1,12 +1,15 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Models\Store;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,9 +19,9 @@ final class ExpenseController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string)$request->input('search', ''));
-        $category = $request->input('category', 'all');
-        $costCenter = $request->input('cost_center', 'all');
-        $paymentMethod = $request->input('payment_method', 'all');
+        $category = (string)$request->input('category', 'all');
+        $costCenter = (string)$request->input('cost_center', 'all');
+        $paymentMethod = (string)$request->input('payment_method', 'all');
         $dateFrom = $request->input('from');
         $dateTo = $request->input('to');
 
@@ -105,18 +108,9 @@ final class ExpenseController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreExpenseRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'category' => 'required|string|max:100',
-            'cost_center' => 'required|string|max:50',
-            'amount' => 'required|numeric|min:0.01',
-            'expense_date' => 'required|date',
-            'payment_method' => 'required|string|in:cash,instapay,e_wallet,visa,bank_transfer,check',
-            'notes' => 'nullable|string|max:500',
-        ]);
-
+        $validated = $request->validated();
         $storeId = $request->session()->get('active_store_id') ?: Store::first()?->id;
 
         DB::transaction(function () use ($validated, $storeId) {
@@ -136,19 +130,10 @@ final class ExpenseController extends Controller
         return redirect()->back()->with('success', __('expenses.recorded_success'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateExpenseRequest $request, int $id): RedirectResponse
     {
         $expense = Expense::findOrFail($id);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'category' => 'required|string|max:100',
-            'cost_center' => 'required|string|max:50',
-            'amount' => 'required|numeric|min:0.01',
-            'expense_date' => 'required|date',
-            'payment_method' => 'required|string|in:cash,instapay,e_wallet,visa,bank_transfer,check',
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($expense, $validated) {
             $expense->update($validated);
@@ -157,7 +142,7 @@ final class ExpenseController extends Controller
         return redirect()->back()->with('success', __('expenses.updated_success'));
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id): RedirectResponse
     {
         $expense = Expense::findOrFail($id);
         $expense->delete();

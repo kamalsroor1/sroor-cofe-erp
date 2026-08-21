@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreItemRequest;
+use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
 use App\Models\Store;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -94,53 +97,33 @@ final class ItemController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreItemRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100|unique:items,code',
-            'category' => 'nullable|string|max:100',
-            'unit' => 'required|string|max:50',
-            'cost_price' => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
-            'min_stock_level' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated) {
             Item::create([
-                'name' => $validated['name'],
-                'code' => $validated['code'] ?? null,
-                'category' => $validated['category'] ?? null,
-                'unit' => $validated['unit'],
-                'cost_price' => $validated['cost_price'],
+                'name'              => $validated['name'],
+                'code'              => $validated['code'] ?? null,
+                'category'          => $validated['category'] ?? null,
+                'unit'              => $validated['unit'],
+                'cost_price'        => $validated['cost_price'],
                 'weighted_avg_cost' => $validated['cost_price'],
-                'selling_price' => $validated['selling_price'],
-                'min_stock_level' => $validated['min_stock_level'] ?? '0.000',
-                'current_stock' => '0.000',
-                'is_active' => true,
-                'notes' => $validated['notes'] ?? null,
+                'selling_price'     => $validated['selling_price'],
+                'min_stock_level'   => $validated['min_stock_level'] ?? '0.000',
+                'current_stock'     => '0.000',
+                'is_active'         => true,
+                'notes'             => $validated['notes'] ?? null,
             ]);
         });
 
         return redirect()->back()->with('success', __('inventory.item_added'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(UpdateItemRequest $request, int $id): \Illuminate\Http\RedirectResponse
     {
         $item = Item::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100|unique:items,code,' . $item->id,
-            'category' => 'nullable|string|max:100',
-            'unit' => 'required|string|max:50',
-            'cost_price' => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
-            'min_stock_level' => 'nullable|numeric|min:0',
-            'is_active' => 'boolean',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($item, $validated) {
             $item->update($validated);

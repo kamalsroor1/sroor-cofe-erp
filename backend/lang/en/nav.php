@@ -66,4 +66,6 @@ return [
     'telegram_low_stock_sent' => 'Low stock alert sent to Telegram successfully',
     'telegram_overdue_shift_sent' => 'Overdue shift alert sent to Telegram successfully',
     'telegram_backup_sent' => 'Database backup sent to Telegram successfully',
+    'cache_cleared_success' => 'Cache successfully cleared, optimized, and rebuilt',
+    'cache_clear_error' => 'An error occurred while clearing cache: :message',
 ];
