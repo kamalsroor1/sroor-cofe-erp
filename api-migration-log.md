@@ -219,7 +219,41 @@
 
 ---
 
-## 12. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 12. Module 06: الورديات ودفتر اليومية وجرد الدرج والخزينة (`Shifts & Daily Journal`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Shifts/OpenShiftDTO.php` (Strictly Typed DTO لفتح وردية الكاشير والرصيد الافتتاحي).
+2. `[NEW]` `app/DTOs/Shifts/CloseShiftDTO.php` (Strictly Typed DTO لتقفيل وردية الكاشير وجرد النقدية الفعلية).
+3. `[NEW]` `app/Actions/Shifts/GetActiveShiftAction.php` (Single Action لاستعلام الوردية المفتوحة والمؤشرات اللحظية).
+4. `[NEW]` `app/Actions/Shifts/OpenShiftAction.php` (Single Action لفتح وردية العمل وتوليد الكود التسلسلي داخل Transaction).
+5. `[NEW]` `app/Actions/Shifts/CloseShiftAction.php` (Single Action لتقفيل الوردية وجرد النقدية وحساب الفارق بدقة `bcmath`).
+6. `[NEW]` `app/Actions/Shifts/GetShiftZReportAction.php` (Single Action لتجهيز تقرير تقفيل الوردية Z-Report للطباعة الحرارية).
+7. `[NEW]` `app/Actions/Shifts/GetDailyJournalAction.php` (Single Action لحساب دفتر اليومية، المقبوضات والمدفوعات وصافي النقدية ورصيد الدرج المتوقع).
+8. `[NEW]` `app/Http/Resources/CashShiftResource.php` (تنسيق بيانات الورديات والمجاميع المالية للـ API).
+9. `[MODIFIED]` `app/Http/Requests/OpenShiftRequest.php` & `CloseShiftRequest.php` (تحديث الصلاحيات).
+10. `[REFACTORED]` `app/Http/Controllers/Api/ShiftController.php` (متحكم API متكامل للورديات وتقارير Z-Report).
+11. `[NEW]` `app/Http/Controllers/Api/DailyJournalController.php` (متحكم API لدفتر اليومية وحسابات الخزينة اليومية).
+12. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الورديات، تقرير Z، ودفتر اليومية).
+13. `[NEW]` `tests/Feature/Api/ShiftsAndDailyJournalApiTest.php` (حزمة 6 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/DailyJournal/DailyJournalView.vue` (شاشة دفتر اليومية، بطاقة حالة الوردية اللحظية، بطاقات المقبوضات والمدفوعات وصافي النقدية والرصيد المتوقع بالدرج، جدولي فواتير المبيعات والمصروفات، نافذة فتح الوردية، ونافذة التقفيل وحساب الفارق المباشر).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/daily-journal`).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تحويل رابط دفتر اليومية والخزينة إلى router-link نشط).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/shifts/current` — الوردية المفتوحة حالياً والمؤشرات اللحظية
+* `POST /api/v1/shifts/open` — فتح وردية جديدة
+* `POST /api/v1/shifts/close` — تقفيل الوردية وجرد النقدية
+* `GET /api/v1/shifts/{id}/z-report` — بيانات تقرير Z للطباعة الحرارية
+* `GET /api/v1/shifts` — أرشيف وسجل الورديات السابقة
+* `GET /api/v1/daily-journal` — دفتر اليومية وحسابات الخزينة لتاريخ محدد
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 13. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -231,8 +265,8 @@
   - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
   - [x] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ✅ (2026-08-21)
   - [x] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ✅ (2026-08-21)
-  - [ ] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)
+  - [x] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ✅ (2026-08-21)
+  - [ ] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ⏳ (التالي في الترتيب)
   - [ ] Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)
   - [ ] Module 09: مرتجعات المبيعات والمشتريات (`Returns`)
   - [ ] Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)
@@ -245,5 +279,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)  
-**الموديول التالي المستهدف:** **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)  
+**الموديول التالي المستهدف:** **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)**

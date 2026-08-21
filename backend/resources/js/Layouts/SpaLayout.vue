@@ -169,13 +169,14 @@
             <span class="font-tajawal">المصروفات والعهد النثرية</span>
           </router-link>
 
-          <a
-            href="/daily-journal"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"
+          <router-link
+            to="/daily-journal"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
-            <Wallet class="w-4 h-4 text-emerald-400" />
+            <Wallet class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('daily_journal') ? 'text-slate-950' : 'text-emerald-400'" />
             <span class="font-tajawal">دفتر اليومية والخزينة</span>
-          </a>
+          </router-link>
 
           <a
             href="/reports"

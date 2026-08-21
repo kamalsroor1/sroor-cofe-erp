@@ -99,11 +99,13 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/payments/customer-receipt', [PaymentController::class, 'customerReceipt'])->name('api.payments.customer_receipt');
         Route::post('/payments/supplier-voucher', [PaymentController::class, 'supplierVoucher'])->name('api.payments.supplier_voucher');
 
-        // Cashier Shifts & Z-Report
+        // Cashier Shifts & Z-Report & Daily Journal
+        Route::get('/shifts', [\App\Http\Controllers\Api\ShiftController::class, 'index'])->name('api.shifts.index');
         Route::get('/shifts/current', [\App\Http\Controllers\Api\ShiftController::class, 'current'])->name('api.shifts.current');
         Route::post('/shifts/open', [\App\Http\Controllers\Api\ShiftController::class, 'open'])->name('api.shifts.open');
         Route::post('/shifts/close', [\App\Http\Controllers\Api\ShiftController::class, 'close'])->name('api.shifts.close');
         Route::get('/shifts/{id}/z-report', [\App\Http\Controllers\Api\ShiftController::class, 'zReport'])->name('api.shifts.z_report');
+        Route::get('/daily-journal', [\App\Http\Controllers\Api\DailyJournalController::class, 'index'])->name('api.daily_journal.index');
 
         // Expenses & Petty Cash
         Route::get('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'index'])->name('api.expenses.index');

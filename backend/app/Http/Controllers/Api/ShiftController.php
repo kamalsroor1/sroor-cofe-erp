@@ -1,164 +1,150 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Shifts\CloseShiftAction;
+use App\Actions\Shifts\GetActiveShiftAction;
+use App\Actions\Shifts\GetShiftZReportAction;
+use App\Actions\Shifts\OpenShiftAction;
+use App\DTOs\Shifts\CloseShiftDTO;
+use App\DTOs\Shifts\OpenShiftDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\ShiftService;
+use App\Http\Requests\CloseShiftRequest;
+use App\Http\Requests\OpenShiftRequest;
+use App\Http\Resources\CashShiftResource;
 use App\Models\CashShift;
-use Exception;
+use App\Models\Store;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ShiftController extends Controller
+final class ShiftController extends Controller
 {
     public function __construct(
-        protected ShiftService $shiftService
+        private readonly GetActiveShiftAction $getActiveShiftAction,
+        private readonly OpenShiftAction $openShiftAction,
+        private readonly CloseShiftAction $closeShiftAction,
+        private readonly GetShiftZReportAction $getShiftZReportAction
     ) {}
+
+    /**
+     * Get list of historical shifts
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id;
+
+        $query = CashShift::with(['user', 'store']);
+
+        if ($storeId) {
+            $query->where('store_id', (int)$storeId);
+        }
+
+        $shifts = $query->latest('id')->paginate((int)$request->input('per_page', 20));
+
+        return response()->json([
+            'success' => true,
+            'data'    => CashShiftResource::collection($shifts->items())->resolve(),
+            'meta'    => [
+                'current_page' => $shifts->currentPage(),
+                'last_page'    => $shifts->lastPage(),
+                'per_page'     => $shifts->perPage(),
+                'total'        => $shifts->total(),
+            ],
+        ], 200);
+    }
 
     /**
      * Get Current Active Shift & Live Shift Metrics
      */
-    public function current(Request $request)
+    public function current(Request $request): JsonResponse
     {
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? \App\Models\Store::getMainStore()?->id;
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        $shift = $this->shiftService->getActiveShift(storeId: $storeId);
+        $result = $this->getActiveShiftAction->execute($storeId ? (int)$storeId : null);
 
-        if (!$shift) {
+        if (!$result) {
             return response()->json([
                 'success'      => true,
                 'has_active'   => false,
                 'active_shift' => null,
                 'metrics'      => null,
-            ]);
+            ], 200);
         }
-
-        $metrics = $this->shiftService->calculateShiftTotals($shift);
 
         return response()->json([
             'success'      => true,
             'has_active'   => true,
-            'active_shift' => [
-                'id'                   => $shift->id,
-                'shift_number'         => $shift->shift_number,
-                'status'               => $shift->status,
-                'opened_at'            => $shift->opened_at->format('Y-m-d H:i'),
-                'opening_cash_balance' => (string)$shift->opening_cash_balance,
-                'notes'                => $shift->notes,
-                'store_name'           => $shift->store?->name ?? 'الفرع الحالي',
-                'cashier_name'         => $shift->user?->name ?? 'الكاشير',
-            ],
-            'metrics'      => $metrics,
-        ]);
+            'active_shift' => (new CashShiftResource($result['shift']))->resolve(),
+            'metrics'      => $result['metrics'],
+        ], 200);
     }
 
     /**
      * Open a new cashier shift
      */
-    public function open(Request $request)
+    public function open(OpenShiftRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'opening_cash_balance' => 'required|numeric|min:0',
-            'notes'                => 'nullable|string|max:500',
-        ]);
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? \App\Models\Store::getMainStore()?->id;
+        $dto = OpenShiftDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $userId = (int)auth()->id();
 
-        try {
-            $shift = $this->shiftService->openShift(
-                openingCash: (string)$validated['opening_cash_balance'],
-                notes: $validated['notes'] ?? null,
-                storeId: $storeId
-            );
+        $shift = $this->openShiftAction->execute($dto, $userId);
 
-            return response()->json([
-                'success' => true,
-                'message' => "تم فتح وردية العمل رقم {$shift->shift_number} بنجاح ✓",
-                'shift'   => $shift,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => "تم فتح وردية العمل رقم {$shift->shift_number} بنجاح ✓",
+            'data'    => (new CashShiftResource($shift))->resolve(),
+        ], 201);
     }
 
     /**
      * Close the active cashier shift and generate Z-Report
      */
-    public function close(Request $request)
+    public function close(CloseShiftRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'shift_id'            => 'required|integer',
-            'actual_cash_balance' => 'required|numeric|min:0',
-            'notes'               => 'nullable|string|max:500',
-        ]);
-
-        $shift = CashShift::findOrFail($validated['shift_id']);
-
-        if ($shift->status !== 'open') {
-            return response()->json([
-                'success' => false,
-                'message' => 'هذه الوردية مغلقة بالفعل أو غير نشطة',
-            ], 422);
+        $shiftId = (int)($request->input('shift_id') ?: $request->route('id'));
+        if (!$shiftId) {
+            $storeId = $request->header('X-Store-Id')
+                ?: $request->input('store_id')
+                ?: auth()->user()?->getCurrentStore()?->id;
+            $shiftId = (int)CashShift::where('status', 'open')->when($storeId, fn($q) => $q->where('store_id', $storeId))->value('id');
         }
 
-        try {
-            $closedShift = $this->shiftService->closeShift(
-                shift: $shift,
-                actualCash: (string)$validated['actual_cash_balance'],
-                notes: $validated['notes'] ?? null
-            );
+        $dto = CloseShiftDTO::fromArray($shiftId, $request->validated());
+        $closedShift = $this->closeShiftAction->execute($dto);
 
-            $diff = (float)$closedShift->cash_difference;
-            $diffStatus = $diff == 0 ? 'مطابقة للدرج' : ($diff > 0 ? "زيادة بمقدار " . number_format($diff, 2) . " ج.م" : "عجز بمقدار " . number_format(abs($diff), 2) . " ج.م");
+        $diff = (float)$closedShift->cash_difference;
+        $diffStatus = $diff == 0 ? 'مطابقة للدرج' : ($diff > 0 ? "زيادة بمقدار " . number_format($diff, 2) . " ج.م" : "عجز بمقدار " . number_format(abs($diff), 2) . " ج.م");
 
-            return response()->json([
-                'success'     => true,
-                'message'     => "تم إغلاق وتقفيل الوردية رقم {$closedShift->shift_number} بنجاح ({$diffStatus}) ✓",
-                'shift'       => $closedShift,
-                'diff_status' => $diffStatus,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل إغلاق الوردية: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success'     => true,
+            'message'     => "تم إغلاق وتقفيل الوردية رقم {$closedShift->shift_number} بنجاح ({$diffStatus}) ✓",
+            'data'        => (new CashShiftResource($closedShift))->resolve(),
+            'diff_status' => $diffStatus,
+        ], 200);
     }
 
     /**
      * Get Z-Report data for thermal print
      */
-    public function zReport($id)
+    public function zReport(int $id): JsonResponse
     {
-        $shift = CashShift::with(['user', 'store'])->findOrFail($id);
+        $report = $this->getShiftZReportAction->execute($id);
 
         return response()->json([
             'success' => true,
-            'report'  => [
-                'id'                      => $shift->id,
-                'shift_number'            => $shift->shift_number,
-                'status'                  => $shift->status,
-                'store_name'              => $shift->store?->name ?? 'سرور كوفي',
-                'cashier_name'            => $shift->user?->name ?? 'الكاشير',
-                'opened_at'               => $shift->opened_at?->format('Y-m-d H:i:s'),
-                'closed_at'               => $shift->closed_at?->format('Y-m-d H:i:s') ?? now()->format('Y-m-d H:i:s'),
-                'opening_cash_balance'    => (string)$shift->opening_cash_balance,
-                'total_cash_sales'        => (string)$shift->total_cash_sales,
-                'total_credit_sales'      => (string)$shift->total_credit_sales,
-                'total_payments_collected'=> (string)$shift->total_payments_collected,
-                'total_expenses'          => (string)($shift->total_expenses ?? '0.000'),
-                'total_refunds'           => (string)$shift->total_refunds,
-                'expected_cash_balance'   => (string)$shift->expected_cash_balance,
-                'actual_cash_balance'     => (string)$shift->actual_cash_balance,
-                'cash_difference'         => (string)$shift->cash_difference,
-                'notes'                   => $shift->notes,
-            ]
-        ]);
+            'report'  => $report,
+        ], 200);
     }
 }

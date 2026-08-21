@@ -111,6 +111,16 @@ const routes = [
         },
     },
     {
+        path: '/daily-journal',
+        name: 'daily_journal.index',
+        component: () => import('../views/DailyJournal/DailyJournalView.vue'),
+        meta: {
+            title: 'دفتر اليومية والخزينة',
+            requiresAuth: true,
+            permission: 'daily_journal.view',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
