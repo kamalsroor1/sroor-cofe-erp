@@ -17,6 +17,9 @@ foreach ($centralDomains as $centralDomain) {
             }
             return redirect()->route('super.login');
         });
+        Route::get('/spa/{any?}', function () {
+            return view('spa');
+        })->where('any', '.*')->name('super.spa');
     });
 }
 
@@ -33,6 +36,11 @@ Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionControlle
 Route::get('/brochure', function () {
     return view('marketing-brochure');
 })->name('marketing.brochure');
+
+// 🌐 Pure Vue 3 SPA Host Route (Dual-Engine Mode)
+Route::get('/spa/{any?}', function () {
+    return view('spa');
+})->where('any', '.*')->name('spa');
 
 // 3. Protected POS, ERP & Inventory Routes
 Route::middleware('auth')->group(function () {

@@ -1,0 +1,84 @@
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { useAppConfigStore } from '../stores/appConfig';
+
+const routes = [
+    {
+        path: '/login',
+        name: 'login',
+        component: () => import('../views/Auth/LoginView.vue'),
+        meta: {
+            title: 'تسجيل الدخول',
+            guestOnly: true,
+        },
+    },
+    {
+        path: '/',
+        name: 'dashboard',
+        component: () => import('../views/DashboardView.vue'),
+        meta: {
+            title: 'لوحة التحكم الرئيسية',
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'not-found',
+        redirect: '/',
+    },
+];
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes,
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition;
+        } else {
+            return { top: 0, behavior: 'smooth' };
+        }
+    },
+});
+
+// Navigation Guards
+router.beforeEach(async (to, from, next) => {
+    const authStore = useAuthStore();
+    const appConfigStore = useAppConfigStore();
+
+    // 1. If user is authenticated, ensure profile and system context are loaded
+    if (authStore.isAuthenticated && !appConfigStore.isLoaded) {
+        try {
+            await appConfigStore.fetchBootstrapContext();
+            window.spaTranslations = appConfigStore.translations;
+        } catch (e) {
+            console.error('Bootstrap context load error:', e);
+        }
+    }
+
+    // 2. Set document title
+    const appName = appConfigStore.system?.company_name || 'مخزني ERP';
+    document.title = to.meta.title ? `${to.meta.title} - ${appName}` : appName;
+
+    // 3. Guest-only check (e.g. Login page)
+    if (to.meta.guestOnly && authStore.isAuthenticated) {
+        return next({ name: 'dashboard' });
+    }
+
+    // 4. Requires Auth check
+    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+        return next({ name: 'login', query: { redirect: to.fullPath } });
+    }
+
+    // 5. Permission / Role Check
+    if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
+        return next({ name: 'dashboard' });
+    }
+
+    if (to.meta.role && !authStore.hasRole(to.meta.role)) {
+        return next({ name: 'dashboard' });
+    }
+
+    next();
+});
+
+export default router;

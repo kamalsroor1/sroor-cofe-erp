@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 2 (Permissions/Policies & System Context API) مكتملة ومختبرة بنجاح بنسبة 100%.
+> **الحالة العامة:** المرحلة 3 (تجهيز الـ Frontend الأساسي: Vue Router + Pinia + API Client + Login Page) مكتملة ومختبرة بنجاح بنسبة 100%.
 
 ---
 
@@ -83,7 +83,7 @@
 ## 3. خطة وترتيب ترحيل الوحدات (Modules Migration Roadmap)
 
 ```text
-[المرحلة 0: التخطيط ✅] ──► [المرحلة 1: Auth API ✅] ──► [المرحلة 2: Permissions/Context API ✅] ──► [المرحلة 3: Frontend SPA Core]
+[المرحلة 0: التخطيط ✅] ──► [المرحلة 1: Auth API ✅] ──► [المرحلة 2: Permissions/Context API ✅] ──► [المرحلة 3: Frontend SPA Core ✅]
                                                                                                         │
 ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ▼
@@ -118,163 +118,66 @@
 ---
 
 ## 5. Permissions & System Context API — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `GetPermissionsTreeAction`, `GetTranslationsAction`, `GetSystemContextAction`, `PermissionApiController`, `SystemContextApiController`, Routes & Exception handlers.
+* **الاختبارات:** `PermissionsAndContextApiTest` (5/5 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 6. Frontend Core Infrastructure — بتاريخ 2026-08-21
+
+> 💡 **ملاحظة معمارية هامة:** يعمل النظام حاليًا بنظام **المحرك المزدوج (Dual-Engine Mode)**؛ حيث تعمل واجهات **Inertia.js** بكامل كفاءتها على الروابط الأصلية، بالتوازي مع تطبيق **Pure Vue 3 SPA** المتاح عبر مسار `/spa`، دون أي تعارض بينهما حتى اكتمال ترحيل كافة الشاشات واختبارها.
 
 ### الملفات التي تم إنشاؤها وتعديلها:
-1. `[NEW]` `app/Actions/Permissions/GetPermissionsTreeAction.php` (Single Action لاستخراج شجرة الصلاحيات التفصيلية، وصلاحيات وأدوار المستخدم الحالي)
-2. `[NEW]` `app/Actions/System/GetTranslationsAction.php` (Single Action لتحميل قواميس الترجمة الكاملة للـ SPA)
-3. `[NEW]` `app/Actions/System/GetSystemContextAction.php` (Single Action لتجميع سياق النظام الكامل: المستخدم، المستأجر، الفرع النشط، الوردية، التنبيهات، الثيم، والهوية)
-4. `[NEW]` `app/Http/Controllers/Api/PermissionApiController.php` (متحكم استعلام الصلاحيات)
-5. `[NEW]` `app/Http/Controllers/Api/SystemContextApiController.php` (متحكم استعلام سياق النظام والترجمات)
-6. `[MODIFIED]` `routes/api.php` (تسجيل مسارات `/api/v1/permissions` و `/api/v1/system/context` و `/api/v1/system/translations`)
-7. `[MODIFIED]` `bootstrap/app.php` (إضافة معالجة موحدة لاستثناءات `Spatie\Permission\Exceptions\UnauthorizedException` بصيغة 403 Forbidden JSON)
-8. `[NEW]` `tests/Feature/Api/PermissionsAndContextApiTest.php` (حزمة اختبارات شاملة تغطي الصلاحيات، سياق النظام، الوردية، والتنبيهات)
+1. `[NEW]` `resources/js/services/api.js` (عميل Axios المركزي المزود بالـ Interceptors للـ Bearer Token، الفرع النشط `X-Store-Id`، ومعالجة أخطاء 401/403/422).
+2. `[NEW]` `resources/js/stores/auth.js` (Pinia Store لإدارة المستخدم، التوكن، الصلاحيات، الأدوار، وتبديل الفروع).
+3. `[NEW]` `resources/js/stores/appConfig.js` (Pinia Store لإدارة سياق النظام، الوردية، التنبيهات، الترجمات، والثيم).
+4. `[NEW]` `resources/js/router/index.js` (إعدادات Vue Router المزودة بـ Navigation Guards للتحقق من المصادقة والصلاحيات).
+5. `[NEW]` `resources/js/App.vue` (المكون الجذري لتطبيق الـ SPA مع تهيئة الثيم والترجمات).
+6. `[NEW]` `resources/js/Layouts/SpaLayout.vue` (الإطار العام للـ SPA مع القائمة الجانبية وشريط الفروع والورديات والثيم والمستخدم).
+7. `[NEW]` `resources/js/views/Auth/LoginView.vue` (شاشة تسجيل الدخول التفاعلية بنظام Pure API مع حسابات التعبئة السريعة).
+8. `[NEW]` `resources/js/views/DashboardView.vue` (شاشة لوحة التحكم المستقلة المستهلكة لـ `/api/v1/dashboard/summary`).
+9. `[NEW]` `resources/js/spa.js` (نقطة الدخول الرئيسية لـ Vue 3 SPA).
+10. `[NEW]` `resources/views/spa.blade.php` (حاوية Blade للـ SPA لدعم التوجيه من جهة العميل Client-side Routing).
+11. `[MODIFIED]` `resources/js/helpers/trans.js` (دعم الترجمات لـ SPA و Inertia معاً دون تعارض).
+12. `[MODIFIED]` `vite.config.js` (إضافة `resources/js/spa.js` لمدخلات التحزيم).
+13. `[MODIFIED]` `routes/web.php` و `routes/tenant.php` (تسجيل مسار `/spa/{any?}`).
+14. `[NEW]` `tests/Feature/Api/SpaInfrastructureTest.php` (اختبار مسارات استضافة الـ SPA).
 
-### طريقة الاختبار ونقاط النهاية (API Endpoints & Examples):
-
-#### 1. استعلام شجرة وصلاحيات المستخدم (Permissions Catalog & User Roles):
-* **Endpoint:** `GET /api/v1/permissions`
-* **Headers:** `Authorization: Bearer <token>`, `Accept: application/json`
-* **Success Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "user_permissions": ["pos.access", "invoices.view", "items.view"],
-    "user_roles": ["cashier"],
-    "is_admin": false,
-    "permission_modules": {
-      "sales": {
-        "title": "المبيعات ونقاط البيع (POS)",
-        "icon": "shopping-cart",
-        "permissions": {
-          "pos.access": "دخول شاشة الكاشير السريع (POS)",
-          "invoices.view": "عرض سجل الفواتير",
-          "invoices.create": "إنشاء وحفظ فواتير جديدة",
-          "invoices.cancel": "إلغاء الفواتير وعكس المخزون"
-        }
-      },
-      "inventory": { ... },
-      "purchases": { ... },
-      "customers": { ... },
-      "suppliers": { ... },
-      "expenses": { ... },
-      "daily_journal": { ... },
-      "administration": { ... }
-    },
-    "roles": []
-  }
-}
-```
-
-#### 2. استعلام سياق النظام الشامل (Bootstrap Context):
-* **Endpoint:** `GET /api/v1/system/context`
-* **Headers:** `Authorization: Bearer <token>`, `Accept: application/json`, `X-Store-Id: 1`
-* **Success Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "auth": {
-      "user": {
-        "id": 1,
-        "name": "كمال سرور",
-        "email": "kamal@sroor.test",
-        "roles": ["admin"],
-        "permissions": ["pos.access", "items.create", ...]
-      },
-      "is_impersonating": false
-    },
-    "tenant": {
-      "id": "tenant_sroor",
-      "name": "سرور كوفي",
-      "slug": "sroor"
-    },
-    "active_store": {
-      "id": 1,
-      "name": "المخزن الرئيسي",
-      "code": "MAIN",
-      "type": "main",
-      "is_main": true
-    },
-    "stores": [...],
-    "active_shift": {
-      "id": 12,
-      "shift_number": "SH-012",
-      "opened_at": "2026-08-21 09:00:00",
-      "opening_cash_balance": 500.000
-    },
-    "system": {
-      "company_name": "سرور كوفي",
-      "company_subtitle": "لتوريدات خامات مطاحن البن",
-      "system_theme_color": "amber",
-      "server_time": "2026-08-21 14:40:00"
-    },
-    "branding": {
-      "logo_light": "/logo-light.png?v=1",
-      "logo_dark": "/logo-dark.png?v=1",
-      "logo": "/logo.png?v=1"
-    },
-    "notifications": [
-      {
-        "type": "danger",
-        "icon": "🚨",
-        "title": "نواقص بالمخزن (3 صنف)",
-        "description": "أصناف بلغت أو تجاوزت حد الطلب الأدنى",
-        "link": "/purchases/smart-reorder",
-        "link_label": "إعادة الطلب الذكي"
-      }
-    ],
-    "locale": "ar",
-    "translations": { ... }
-  }
-}
-```
-
-#### 3. استعلام قاموس الترجمات (Translations Dictionary):
-* **Endpoint:** `GET /api/v1/system/translations?locale=ar`
-* **Headers:** `Accept: application/json`
-* **Success Response (200 OK):**
-```json
-{
-  "success": true,
-  "locale": "ar",
-  "data": {
-    "auth": { ... },
-    "pos": { ... },
-    "items": { ... }
-  }
-}
-```
+### طريقة الاختبار والمقارنة:
+* **رابط تطبيق Pure Vue 3 SPA الجديد:** `http://localhost/spa` أو `http://{tenant}.localhost/spa`
+* **رابط صفحة تسجيل الدخول الجديدة بالـ SPA:** `http://localhost/spa/login`
+* **رابط تسجيل الدخول القديم بـ Inertia:** `http://localhost/login` (لا يزال يعمل بكفاءة كـ Safety Net)
 
 ### حالة المرحلة: ✅ مكتملة بنجاح 100%
 
 ---
 
-## 6. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 7. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
 - [x] **المرحلة 2: بناء Permissions & System Context API (Backend)** ✅ (2026-08-21)
-- [ ] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)**
-- [ ] **المرحلة 4: تحويل الموديولات:**
-  - [ ] Module 01: الفروع والمخازن (`Stores`)
-  - [ ] Module 02: العملاء وكشوف الحساب (`Customers`)
-  - [ ] Module 03: الموردين وكشوف الحساب (`Suppliers`)
-  - [ ] Module 04: المصروفات والعهد النثرية (`Expenses`)
-  - [ ] Module 05: الأصناف وحركات المخزون والنواقص (`Items`)
+- [x] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)** ✅ (2026-08-21)
+- [ ] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):**
+  - [ ] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ⏳ (التالي في الترتيب)
+  - [ ] Module 02: العملاء وكشوف الحساب (`Customers & Statements`)
+  - [ ] Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)
+  - [ ] Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)
+  - [ ] Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)
   - [ ] Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)
-  - [ ] Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases`)
-  - [ ] Module 08: نقطة البيع السريعة والفواتير (`POS & Invoices`)
+  - [ ] Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)
+  - [ ] Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)
   - [ ] Module 09: مرتجعات المبيعات والمشتريات (`Returns`)
   - [ ] Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)
-  - [ ] Module 11: توليفات البن والتصنيع (`Coffee Blender`)
-  - [ ] Module 12: التقارير المالية والأرباح والخسائر (`Reports`)
-  - [ ] Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard`)
-  - [ ] Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users & Roles`)
-  - [ ] Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings & Profile`)
-  - [ ] Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin`)
+  - [ ] Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)
+  - [ ] Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)
+  - [ ] Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)
+  - [ ] Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)
+  - [ ] Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)
+  - [ ] Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 2 (Permissions & System Context API)  
-**المرحلة التالية المستهدفة:** المرحلة 3 (تجهيز الـ Frontend الأساسي: Vue Router + Pinia + API Client + Login Flow)
+**آخر مرحلة مكتملة:** المرحلة 3 (إعداد الـ Frontend Core)  
+**الموديول التالي المستهدف في المرحلة 4:** Module 01: الفروع والمخازن (`Stores & Stocks`)

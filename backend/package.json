@@ -26,7 +26,9 @@
         "axios": "^1.19.0",
         "flatpickr": "^4.6.13",
         "lucide-vue-next": "^1.0.0",
+        "pinia": "^3.0.4",
         "sweetalert2": "^11.26.25",
-        "vue": "^3.5.41"
+        "vue": "^3.5.41",
+        "vue-router": "^4.6.4"
     }
 }

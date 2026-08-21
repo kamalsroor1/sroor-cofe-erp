@@ -51,6 +51,11 @@ Route::middleware([
     // 2. Logout Route
     Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('logout')->middleware('auth');
 
+    // 🌐 Pure Vue 3 SPA Host Route (Dual-Engine Mode)
+    Route::get('/spa/{any?}', function () {
+        return view('spa');
+    })->where('any', '.*')->name('tenant.spa');
+
     // 3. Protected POS, ERP & Inventory Routes
     Route::middleware('auth')->group(function () {
         // Dashboard (Inertia.js + Vue 3 SPA)
