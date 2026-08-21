@@ -273,6 +273,38 @@
             <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-slate-950' : 'text-rose-400'" />
             <span class="font-tajawal">سلة المحذوفات</span>
           </router-link>
+
+          <!-- Super Admin Management Section -->
+          <div class="pt-2 pb-1 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-tajawal">
+            إدارة المنصة والسوبر أدمن
+          </div>
+
+          <router-link
+            to="/super-admin/dashboard"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Crown class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.dashboard') ? 'text-white' : 'text-purple-400'" />
+            <span class="font-tajawal">لوحة السوبر أدمن</span>
+          </router-link>
+
+          <router-link
+            to="/super-admin/tenants"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Building2 class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('super_admin.tenants') ? 'text-white' : 'text-indigo-400'" />
+            <span class="font-tajawal">إدارة المستأجرين</span>
+          </router-link>
+
+          <router-link
+            to="/super-admin/plans"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
+            <span class="font-tajawal">الباقات والأسعار</span>
+          </router-link>
         </div>
 
         <!-- Sidebar Footer -->
@@ -314,6 +346,9 @@ import {
     Sliders,
     Trash2,
     User,
+    Crown,
+    Building2,
+    Layers,
     Sun,
     Moon,
     LogOut

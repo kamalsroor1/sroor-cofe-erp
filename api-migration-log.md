@@ -535,13 +535,51 @@
 
 ---
 
-## 22. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 22. Module 16: لوحة تحكم السوبر أدمن والمستأجرين والباقات (`SuperAdmin Dashboard, Tenants & Plans`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/Http/Controllers/Api/SuperAdminApiController.php` (متحكم API مركزي للسوبر أدمن خالي تماماً من أي `$request->validate()`).
+2. `[INTEGRATED]` استخدام كلاسات Single Actions القائمة:
+   - `app/Actions/Tenants/ProvisionTenantAction.php`
+   - `app/Actions/Tenants/GetTenantsIndexDataAction.php`
+   - `app/Actions/Tenants/GetTenantDetailsAction.php`
+   - `app/Actions/Tenants/ToggleTenantStatusAction.php`
+   - `app/Actions/Tenants/OverrideTenantFeatureAction.php`
+   - `app/Actions/Plans/GetSuperAdminPlansDataAction.php`
+   - `app/Actions/Plans/UpdatePlanAction.php`
+3. `[INTEGRATED]` `App\Services\SuperAdminAnalyticsService` لحساب الـ MRR بدقة مالية `DECIMAL(12,3)` و `bcmath`.
+4. `[INTEGRATED]` Form Requests الصارمة: `StoreTenantRequest`, `ToggleTenantStatusRequest`, `OverrideTenantFeatureRequest`, `UpdatePlanRequest`.
+5. `[MODIFIED]` `routes/api.php` (تسجيل مسارات السوبر أدمن، المستأجرين، والباقات).
+6. `[NEW]` `tests/Feature/Api/SuperAdminApiTest.php` (حزمة 4 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/SuperAdmin/SuperAdminDashboardView.vue` (لوحة تحكم السوبر أدمن، كروت الـ MRR والمستأجرين، توزيع الباقات، وأحدث المستأجرين).
+2. `[NEW]` `resources/js/views/SuperAdmin/SuperAdminTenantsView.vue` (إدارة المستأجرين، البحث، الفلاتر، مودال تهيئة مستأجر جديد Auto-Provisioning، وتعديل الحالة والاشتراك).
+3. `[NEW]` `resources/js/views/SuperAdmin/SuperAdminPlansView.vue` (إدارة باقات الاشتراك، تعديل الأسعار الشهرية والسنوية، وحدود الموارد والمستخدمين والفروع).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/super-admin/dashboard`, `/super-admin/tenants`, `/super-admin/plans`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل قسم إدارة المنصة والسوبر أدمن في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/super-admin/dashboard` — مؤشرات أداء المنصة، MRR، وإحصائيات الباقات
+* `GET /api/v1/super-admin/tenants` — قائمة المستأجرين مع الفلاتر والبحث والترقيم
+* `POST /api/v1/super-admin/tenants` — إنشاء وتهيئة مستأجر جديد (Auto-Provisioning)
+* `GET /api/v1/super-admin/tenants/{id}` — تفاصيل المستأجر والاشتراك ومصفوفة الميزات
+* `POST /api/v1/super-admin/tenants/{id}/toggle-status` — تعديل حالة المستأجر وتمديد الاشتراك
+* `POST /api/v1/super-admin/tenants/{id}/override-feature` — تعديل صلاحية ميزة مخصصة لمستأجر
+* `GET /api/v1/super-admin/plans` — قائمة باقات الاشتراك والأسعار
+* `PUT /api/v1/super-admin/plans/{id}` — تحديث بيانات وأسعار وحدود الباقة
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 23. مصفوفة تتبع حالة الترحيل الشاملة (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
 - [x] **المرحلة 2: بناء Permissions & System Context API (Backend)** ✅ (2026-08-21)
 - [x] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)** ✅ (2026-08-21)
-- [ ] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):**
+- [x] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):** ✅ (2026-08-21)
   - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
   - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
   - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
@@ -557,9 +595,10 @@
   - [x] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ✅ (2026-08-21)
   - [x] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ✅ (2026-08-21)
   - [x] **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)** ✅ (2026-08-21)
-  - [ ] **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)** ⏳ (التالي في الترتيب - الموديول الأخير في المرحلة 4)
-- [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
+  - [x] **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)** ✅ (2026-08-21)
+- [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل** ⏳ (المرحلة القادمة والأخيرة)
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)  
-**الموديول التالي المستهدف:** **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)**
+**آخر مرحلة مكتملة:** المرحلة 4 بالكامل (الموديولات 01 إلى 16 بنسبة 100%)  
+**المرحلة التالية المستهدفة:** **المرحلة 5: التنظيف النهائي (إزالة Inertia.js وحزمها من composer.json و package.json وتوحيد الواجهة بالكامل على Pure API SPA)**
+

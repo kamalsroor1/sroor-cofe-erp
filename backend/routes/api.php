@@ -180,5 +180,17 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/trash', [\App\Http\Controllers\Api\TrashController::class, 'index'])->name('api.trash.index');
         Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\Api\TrashController::class, 'restore'])->name('api.trash.restore');
         Route::delete('/trash/{type}/{id}/force', [\App\Http\Controllers\Api\TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
+
+        // Super Admin & Multi-Tenant Management
+        Route::prefix('super-admin')->group(function () {
+            Route::get('/dashboard', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'dashboard'])->name('api.super_admin.dashboard');
+            Route::get('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'tenants'])->name('api.super_admin.tenants');
+            Route::post('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'storeTenant'])->name('api.super_admin.tenants.store');
+            Route::get('/tenants/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'showTenant'])->name('api.super_admin.tenants.show');
+            Route::post('/tenants/{id}/toggle-status', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'toggleStatus'])->name('api.super_admin.tenants.toggle_status');
+            Route::post('/tenants/{id}/override-feature', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
+            Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
+            Route::put('/plans/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
+        });
     });
 });

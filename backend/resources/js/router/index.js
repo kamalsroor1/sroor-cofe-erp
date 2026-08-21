@@ -290,6 +290,36 @@ const routes = [
         },
     },
     {
+        path: '/super-admin/dashboard',
+        name: 'super_admin.dashboard',
+        component: () => import('../views/SuperAdmin/SuperAdminDashboardView.vue'),
+        meta: {
+            title: 'لوحة تحكم السوبر أدمن',
+            requiresAuth: true,
+            permission: 'roles.manage',
+        },
+    },
+    {
+        path: '/super-admin/tenants',
+        name: 'super_admin.tenants',
+        component: () => import('../views/SuperAdmin/SuperAdminTenantsView.vue'),
+        meta: {
+            title: 'إدارة المستأجرين',
+            requiresAuth: true,
+            permission: 'roles.manage',
+        },
+    },
+    {
+        path: '/super-admin/plans',
+        name: 'super_admin.plans',
+        component: () => import('../views/SuperAdmin/SuperAdminPlansView.vue'),
+        meta: {
+            title: 'إدارة الباقات والأسعار',
+            requiresAuth: true,
+            permission: 'roles.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
