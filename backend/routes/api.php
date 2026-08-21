@@ -126,6 +126,13 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
 
         // Profit & Loss Reports & Business Analytics
         Route::get('/reports/summary', [\App\Http\Controllers\Api\ReportController::class, 'summary'])->name('api.reports.summary');
+        Route::get('/reports/comprehensive', [\App\Http\Controllers\Api\ReportController::class, 'comprehensive'])->name('api.reports.comprehensive');
+        Route::get('/reports/items', [\App\Http\Controllers\Api\ReportController::class, 'items'])->name('api.reports.items');
+        Route::get('/reports/stores', [\App\Http\Controllers\Api\ReportController::class, 'stores'])->name('api.reports.stores');
+        Route::get('/reports/customers', [\App\Http\Controllers\Api\ReportController::class, 'customers'])->name('api.reports.customers');
+        Route::get('/reports/expenses', [\App\Http\Controllers\Api\ReportController::class, 'expenses'])->name('api.reports.expenses');
+        Route::get('/reports/inventory', [\App\Http\Controllers\Api\ReportController::class, 'inventory'])->name('api.reports.inventory');
+        Route::get('/reports/treasury', [\App\Http\Controllers\Api\ReportController::class, 'treasury'])->name('api.reports.treasury');
         Route::get('/reports/top-items', [\App\Http\Controllers\Api\ReportController::class, 'topItems'])->name('api.reports.top_items');
         Route::get('/reports/items/{id}/card', [\App\Http\Controllers\Api\ReportController::class, 'itemCard'])->name('api.reports.item_card');
 

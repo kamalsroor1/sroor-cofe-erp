@@ -221,6 +221,16 @@ const routes = [
         },
     },
     {
+        path: '/reports',
+        name: 'reports.index',
+        component: () => import('../views/Reports/ReportsView.vue'),
+        meta: {
+            title: 'التقارير المالية والأرباح',
+            requiresAuth: true,
+            permission: 'reports.view',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

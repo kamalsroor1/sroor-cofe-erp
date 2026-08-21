@@ -403,7 +403,44 @@
 
 ---
 
-## 18. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 18. Module 12: التقارير المالية والأرباح والخسائر ومبيعات الأصناف (`Reports & Profit Analytics`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Reports/ReportFilterDTO.php` (Strictly Typed DTO لفلاتر التقارير والفترات الزمنية والفروع).
+2. `[NEW]` `app/Actions/Reports/GetProfitLossReportAction.php` (Single Action لحساب ملخص الأرباح والخسائر التنفيذي ومجمل وصافي الربح وهوامش الربحية بدقة `DECIMAL(12,3)` و `bcmath`).
+3. `[NEW]` `app/Actions/Reports/GetItemsProfitabilityReportAction.php` (Single Action لتحليل مبيعات وربحية وتكاليف وهوامش الأصناف).
+4. `[NEW]` `app/Actions/Reports/GetStoresComparativeReportAction.php` (Single Action للمقارنة التحليلية بين مبيعات وحصص الفروع والمخازن).
+5. `[NEW]` `app/Actions/Reports/GetCustomersSalesReportAction.php` (Single Action لتحليل مسحوبات ومديونيات العملاء).
+6. `[NEW]` `app/Actions/Reports/GetExpensesBreakdownReportAction.php` (Single Action لتبويب وتحليل المصروفات التشغيلية).
+7. `[NEW]` `app/Actions/Reports/GetInventoryValuationReportAction.php` (Single Action لتقييم بضاعة المخزون بسعر التكلفة والبيع والأرباح المتوقعة وتحليل ABC).
+8. `[NEW]` `app/Actions/Reports/GetTreasuryReportAction.php` (Single Action لحركة الخزينة والسيولة والتدفق النقدي).
+9. `[NEW]` `app/Http/Requests/FilterReportRequest.php` (التحقق الصارم عبر Form Request ومنع أي `$request->validate()` في الكنترولر).
+10. `[REFACTORED]` `app/Http/Controllers/Api/ReportController.php` (متحكم API نقي يدعم نقاط النهاية المستقلة والحزمة الشاملة `comprehensive`).
+11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات التقارير المالية المتكاملة).
+12. `[NEW]` `tests/Feature/Api/ReportsApiTest.php` (حزمة 7 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Reports/ReportsView.vue` (شاشة التقارير المالية والتحليلية الشاملة بـ 7 أبعاد تحليلية: المبيعات والأرباح P&L، ربحية الأصناف، مقارنة الفروع، العملاء والآجل، المصروفات، تقييم المخزون، وحركة الخزينة، مع فلاتر فترات سريعة، وإمكانية الطباعة A4).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/reports`).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط التقارير والأرباح في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/reports/summary` — الملخص المالي التنفيذي ومجمل وصافي الأرباح
+* `GET /api/v1/reports/comprehensive` — حزمة التقارير الشاملة للأبعاد السبعة دفعة واحدة
+* `GET /api/v1/reports/items` — مبيعات وربحية وتكاليف الأصناف وحبوب البن
+* `GET /api/v1/reports/stores` — مقارنة أداء وحصص الفروع والمخازن
+* `GET /api/v1/reports/customers` — مسحوبات ومديونيات العملاء في الفترة
+* `GET /api/v1/reports/expenses` — تبويب المصروفات التشغيلية حسب الفئة
+* `GET /api/v1/reports/inventory` — تقييم المخزون بالتكلفة والبيع وتصنيف ABC
+* `GET /api/v1/reports/treasury` — مقبوضات ومدفوعات وصافي التدفق النقدي
+* `GET /api/v1/reports/top-items` — أكثر الأصناف مبيعاً
+* `GET /api/v1/reports/items/{id}/card` — كارت حركة الصنف
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 19. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -421,13 +458,13 @@
   - [x] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ✅ (2026-08-21)
   - [x] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ✅ (2026-08-21)
   - [x] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ✅ (2026-08-21)
-  - [ ] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)
+  - [x] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ✅ (2026-08-21)
+  - [ ] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ⏳ (التالي في الترتيب)
   - [ ] Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)
   - [ ] Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)
   - [ ] Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)  
-**الموديول التالي المستهدف:** **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)  
+**الموديول التالي المستهدف:** **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)**

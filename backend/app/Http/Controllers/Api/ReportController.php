@@ -1,154 +1,195 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Reports\GetCustomersSalesReportAction;
+use App\Actions\Reports\GetExpensesBreakdownReportAction;
+use App\Actions\Reports\GetInventoryValuationReportAction;
+use App\Actions\Reports\GetItemsProfitabilityReportAction;
+use App\Actions\Reports\GetProfitLossReportAction;
+use App\Actions\Reports\GetStoresComparativeReportAction;
+use App\Actions\Reports\GetTreasuryReportAction;
+use App\DTOs\Reports\ReportFilterDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
+use App\Http\Requests\FilterReportRequest;
 use App\Models\Item;
-use App\Models\Expense;
 use App\Models\StockMovement;
 use App\Models\Store;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ReportController extends Controller
+final class ReportController extends Controller
 {
-    /**
-     * Profit & Loss Executive Summary (صافي الربح الحقيقي والمبيعات)
-     */
-    public function summary(Request $request)
+    public function __construct(
+        private readonly GetProfitLossReportAction $getProfitLossReportAction,
+        private readonly GetItemsProfitabilityReportAction $getItemsProfitabilityReportAction,
+        private readonly GetStoresComparativeReportAction $getStoresComparativeReportAction,
+        private readonly GetCustomersSalesReportAction $getCustomersSalesReportAction,
+        private readonly GetExpensesBreakdownReportAction $getExpensesBreakdownReportAction,
+        private readonly GetInventoryValuationReportAction $getInventoryValuationReportAction,
+        private readonly GetTreasuryReportAction $getTreasuryReportAction
+    ) {}
+
+    private function buildDTO(FilterReportRequest|Request $request): ReportFilterDTO
     {
-        $preset = $request->input('preset', 'this_month');
-        $fromDate = $request->input('from_date');
-        $toDate = $request->input('to_date', now()->toDateString());
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+        $headerStoreId = $request->header('X-Store-Id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        if (!$fromDate) {
-            if ($preset === 'today') {
-                $fromDate = now()->toDateString();
-            } elseif ($preset === 'this_week') {
-                $fromDate = now()->startOfWeek()->toDateString();
-            } elseif ($preset === 'this_month') {
-                $fromDate = now()->startOfMonth()->toDateString();
-            } elseif ($preset === 'this_year') {
-                $fromDate = now()->startOfYear()->toDateString();
-            } else {
-                $fromDate = now()->startOfMonth()->toDateString();
-            }
-        }
+        return ReportFilterDTO::fromArray(
+            $request->all(),
+            $headerStoreId ? (int)$headerStoreId : null
+        );
+    }
 
-        // 1. Invoices (Sales & COGS)
-        $invoicesQuery = Invoice::where('status', 'confirmed')
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-            ->whereDate('invoice_date', '>=', $fromDate)
-            ->whereDate('invoice_date', '<=', $toDate);
-
-        $invoices = (clone $invoicesQuery)->get();
-
-        $totalSales     = '0.000';
-        $totalCost      = '0.000'; // COGS
-        $totalPaid      = '0.000';
-        $totalRemaining = '0.000';
-        $invoiceCount   = $invoices->count();
-
-        foreach ($invoices as $inv) {
-            $totalSales     = bcadd($totalSales, $inv->net_total, 3);
-            $totalCost      = bcadd($totalCost, $inv->total_cost, 3);
-            $totalPaid      = bcadd($totalPaid, $inv->paid_amount, 3);
-            $totalRemaining = bcadd($totalRemaining, $inv->remaining_amount, 3);
-        }
-
-        // Gross Profit from sales = Sales - COGS
-        $grossProfit = bcsub($totalSales, $totalCost, 3);
-
-        // 2. Expenses (Operational costs: Bags, Cups, Rent, Utilities, Petty cash)
-        $expensesQuery = Expense::whereDate('expense_date', '>=', $fromDate)
-            ->whereDate('expense_date', '<=', $toDate)
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId));
-
-        $totalExpenses = (string)($expensesQuery->sum('amount') ?: '0.000');
-        $expensesCount = $expensesQuery->count();
-
-        // 3. Net True Profit = Gross Profit - Expenses
-        $netProfit = bcsub($grossProfit, $totalExpenses, 3);
-
-        // Profit Margin %
-        $marginPct = '0.00';
-        if (bccomp($totalSales, '0.000', 3) > 0) {
-            $marginPct = bcmul(bcdiv($grossProfit, $totalSales, 4), '100', 2);
-        }
-
-        $avgTicket = $invoiceCount > 0 ? bcdiv($totalSales, (string)$invoiceCount, 2) : '0.00';
+    /**
+     * Profit & Loss Executive Summary
+     */
+    public function summary(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $result = $this->getProfitLossReportAction->execute($dto);
 
         return response()->json([
             'success' => true,
-            'period'  => [
-                'preset'    => $preset,
-                'from_date' => $fromDate,
-                'to_date'   => $toDate,
-            ],
-            'metrics' => [
-                'total_sales'       => (string)$totalSales,
-                'total_cogs'        => (string)$totalCost,
-                'gross_profit'      => (string)$grossProfit,
-                'total_expenses'    => (string)$totalExpenses,
-                'expenses_count'    => $expensesCount,
-                'net_profit'        => (string)$netProfit,
-                'profit_margin_pct' => (string)$marginPct,
-                'total_paid'        => (string)$totalPaid,
-                'total_remaining'   => (string)$totalRemaining,
-                'invoice_count'     => $invoiceCount,
-                'average_ticket'    => (string)$avgTicket,
-            ]
-        ]);
+            'period'  => $result['period'],
+            'metrics' => $result['summary'],
+            'summary' => $result['summary'],
+        ], 200);
+    }
+
+    /**
+     * Items Profitability & Sales Report
+     */
+    public function items(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $items = $this->getItemsProfitabilityReportAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $items,
+        ], 200);
+    }
+
+    /**
+     * Stores Comparative Performance Report
+     */
+    public function stores(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $stores = $this->getStoresComparativeReportAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $stores,
+        ], 200);
+    }
+
+    /**
+     * Customers Sales & Receivables Report
+     */
+    public function customers(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $customers = $this->getCustomersSalesReportAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $customers,
+        ], 200);
+    }
+
+    /**
+     * Operational Expenses Breakdown Report
+     */
+    public function expenses(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $expenses,
+        ], 200);
+    }
+
+    /**
+     * Inventory Valuation & ABC Analysis Report
+     */
+    public function inventory(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $inventory = $this->getInventoryValuationReportAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $inventory,
+        ], 200);
+    }
+
+    /**
+     * Treasury & Inflows/Outflows Report
+     */
+    public function treasury(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+        $treasury = $this->getTreasuryReportAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $treasury,
+        ], 200);
+    }
+
+    /**
+     * Comprehensive Multi-Dimension Report Bundle
+     */
+    public function comprehensive(FilterReportRequest $request): JsonResponse
+    {
+        $dto = $this->buildDTO($request);
+
+        $summary = $this->getProfitLossReportAction->execute($dto);
+        $items = $this->getItemsProfitabilityReportAction->execute($dto);
+        $stores = $this->getStoresComparativeReportAction->execute($dto);
+        $customers = $this->getCustomersSalesReportAction->execute($dto);
+        $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
+        $inventory = $this->getInventoryValuationReportAction->execute($dto);
+        $treasury = $this->getTreasuryReportAction->execute($dto);
+
+        return response()->json([
+            'success'            => true,
+            'period'             => $summary['period'],
+            'summary'            => $summary['summary'],
+            'item_profits'       => $items,
+            'store_breakdown'    => $stores,
+            'customer_sales'     => $customers,
+            'expenses_breakdown' => $expenses,
+            'inventory_data'     => $inventory,
+            'treasury_data'      => $treasury,
+        ], 200);
     }
 
     /**
      * Top Selling & Most Profitable Coffee Items
      */
-    public function topItems(Request $request)
+    public function topItems(Request $request): JsonResponse
     {
-        $fromDate = $request->input('from_date', now()->startOfMonth()->toDateString());
-        $toDate = $request->input('to_date', now()->toDateString());
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
-
-        $topItems = InvoiceItem::join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
-            ->join('items', 'items.id', '=', 'invoice_items.item_id')
-            ->where('invoices.status', 'confirmed')
-            ->when($storeId, fn($q) => $q->where('invoices.store_id', $storeId))
-            ->whereDate('invoices.invoice_date', '>=', $fromDate)
-            ->whereDate('invoices.invoice_date', '<=', $toDate)
-            ->select(
-                'items.id as item_id',
-                'items.name',
-                'items.code',
-                'items.category',
-                'items.unit',
-                DB::raw('SUM(invoice_items.quantity) as total_qty'),
-                DB::raw('SUM(invoice_items.total_price) as total_sales'),
-                DB::raw('SUM(invoice_items.quantity * invoice_items.cost_price) as total_cost'),
-                DB::raw('SUM(invoice_items.total_price - (invoice_items.quantity * invoice_items.cost_price)) as total_profit')
-            )
-            ->groupBy('items.id', 'items.name', 'items.code', 'items.category', 'items.unit')
-            ->orderByDesc('total_sales')
-            ->limit(20)
-            ->get();
+        $dto = $this->buildDTO($request);
+        $items = $this->getItemsProfitabilityReportAction->execute($dto);
 
         return response()->json([
             'success'   => true,
-            'top_items' => $topItems,
-        ]);
+            'top_items' => array_slice($items, 0, 20),
+        ], 200);
     }
 
     /**
-     * Item Movement Card (كارت حركة الصنف)
+     * Item Movement Card
      */
-    public function itemCard(Request $request, $itemId)
+    public function itemCard(Request $request, int|string $itemId): JsonResponse
     {
         $item = Item::findOrFail($itemId);
         $storeId = $request->input('store_id') 
@@ -165,6 +206,6 @@ class ReportController extends Controller
             'success'   => true,
             'item'      => $item,
             'movements' => $movements,
-        ]);
+        ], 200);
     }
 }
