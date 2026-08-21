@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 const currentVersionName = ref('1.0.0');
 const currentVersionCode = ref(1);
 const isChecking = ref(false);
+const hasCheckedThisSession = ref(false);
 const hasUpdate = ref(false);
 const isForceUpdate = ref(false);
 const latestVersionData = ref(null);
@@ -20,7 +21,12 @@ export function useAppUpdate() {
      */
     const checkForUpdates = async (isManual = false) => {
         if (isChecking.value) return;
+        if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed'))) return;
+        
         isChecking.value = true;
+        if (!isManual) {
+            hasCheckedThisSession.value = true;
+        }
 
         try {
             const res = await api.get('/app/check-update', {
@@ -115,6 +121,7 @@ export function useAppUpdate() {
             isModalOpen.value = false;
             isDownloaded.value = false;
             downloadProgress.value = 0;
+            sessionStorage.setItem('app_update_dismissed', '1');
         }
     };
 

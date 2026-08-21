@@ -24,39 +24,40 @@ test.describe('Flow: In-App APK Auto-Updater & Releases Suite', () => {
             await updateButton.click();
             await page.waitForTimeout(300);
             await page.screenshot({ path: path.join(flowDir, '02-download-progress-active.png'), fullPage: true });
-            await page.waitForTimeout(1200);
-        }
-
-        // Close SweetAlert if open
-        const swalConfirm = page.locator('.swal2-confirm');
-        if (await swalConfirm.isVisible()) {
-            await swalConfirm.click();
-            await page.waitForTimeout(300);
+            
+            // Wait for success screen
+            const doneButton = page.locator('button:has-text("تم وإغلاق النافذة")').first();
+            await doneButton.waitFor({ state: 'visible', timeout: 5000 });
+            await page.screenshot({ path: path.join(flowDir, '03-download-success-state.png'), fullPage: true });
+            
+            // Click to close modal
+            await doneButton.click();
+            await page.waitForTimeout(500);
         }
 
         // Step 3: Navigate to Settings -> System section & Check Updates Button
         await page.goto('/settings', { waitUntil: 'networkidle' });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(800);
 
         // Click on System Information section
-        const systemSectionButton = page.locator('button:has-text("معلومات النظام"), div:has-text("معلومات النظام")').first();
+        const systemSectionButton = page.locator('button:has-text("معلومات النظام")').first();
         if (await systemSectionButton.isVisible()) {
             await systemSectionButton.click();
             await page.waitForTimeout(500);
         }
-        await page.screenshot({ path: path.join(flowDir, '03-settings-system-updates-card.png'), fullPage: true });
+        await page.screenshot({ path: path.join(flowDir, '04-settings-system-updates-card.png'), fullPage: true });
 
         // Step 4: Navigate to Super Admin App Versions Management
         await page.goto('/super-admin/app-versions', { waitUntil: 'networkidle' });
         await page.waitForTimeout(800);
-        await page.screenshot({ path: path.join(flowDir, '04-super-admin-releases-management.png'), fullPage: true });
+        await page.screenshot({ path: path.join(flowDir, '05-super-admin-releases-management.png'), fullPage: true });
 
         // Open Upload Modal
         const publishButton = page.locator('button:has-text("نشر إصدار APK جديد")').first();
         if (await publishButton.isVisible()) {
             await publishButton.click();
             await page.waitForTimeout(500);
-            await page.screenshot({ path: path.join(flowDir, '05-super-admin-upload-apk-modal.png'), fullPage: true });
+            await page.screenshot({ path: path.join(flowDir, '06-super-admin-upload-apk-modal.png'), fullPage: true });
         }
     });
 });
