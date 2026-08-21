@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 4 - Module 01: الفروع والمخازن (`Stores & Stocks`) مكتمل ومختبر بنجاح بنسبة 100%.
+> **الحالة العامة:** المرحلة 4 - Module 02: العملاء وكشوف الحساب (`Customers & Statements`) مكتمل ومختبر بنجاح بنسبة 100%.
 
 ---
 
@@ -45,9 +45,9 @@
   3. `SystemContextApiController` (سياق النظام الموحد وقاموس الترجمات للـ SPA)
   4. `DashboardApiController` (الملخص اللحظي المالي والتشغيلي)
   5. `StoreController` (إدارة الفروع والمخازن، أرصدة المخازن، التعيينات، وتبديل الفروع)
-  6. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
-  7. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
-  8. `CustomerController` (العملاء، إضافة عميل، كشف الحساب)
+  6. `CustomerController` (إدارة العملاء، كشف الحساب التفصيلي، تحصيل المديونيات)
+  7. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
+  8. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
   9. `SupplierController` (الموردين، إضافة مورد، كشف الحساب)
   10. `PurchaseController` (المشتريات وإلغاؤها)
   11. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
@@ -89,8 +89,8 @@
 ▼
 [المرحلة 4: ترحيل الموديولات تدريجياً (Module by Module)]
   ├── 1. الفروع والمخازن (Stores & Stocks) ✅
-  ├── 2. العملاء وكشوف الحساب (Customers & Statements) ⏳
-  ├── 3. الموردين وكشوف الحساب (Suppliers & Statements)
+  ├── 2. العملاء وكشوف الحساب (Customers & Statements) ✅
+  ├── 3. الموردين وكشوف الحساب (Suppliers & Statements) ⏳
   ├── 4. المصروفات والعهد (Expenses & Petty Cash)
   ├── 5. الأصناف وحركة المخزون والنواقص (Items & Low Stock Radar)
   ├── 6. الورديات ودفتر اليومية والخزينة (Cash Shifts & Daily Journal)
@@ -132,43 +132,49 @@
 ---
 
 ## 7. Module 01: الفروع والمخازن والأرصدة (`Stores & Stocks`) — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `StoreDTO`, `CreateStoreAction`, `UpdateStoreAction`, `DeleteStoreAction`, `ToggleStoreActiveAction`, `AssignStoreUsersAction`, `GetStoreStocksAction`, `StoreResource`, `StoreStockResource`, `StoreController`, `StoresView.vue`, `StoreStocksView.vue`.
+* **الاختبارات:** `StoresApiTest` (9/9 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 8. Module 02: العملاء وكشوف الحساب التفصيلية (`Customers & Statements`) — بتاريخ 2026-08-21
 
 ### أ. الـ Backend (Laravel Pure API):
-1. `[NEW]` `app/DTOs/Stores/StoreDTO.php` (Strictly Typed Data Transfer Object لإنشاء وتعديل الفروع).
-2. `[NEW]` `app/Actions/Stores/CreateStoreAction.php` (Single Action لإنشاء الفرع داخل DB Transaction وإدارة الفرع الرئيسي).
-3. `[NEW]` `app/Actions/Stores/UpdateStoreAction.php` (Single Action لتحديث الفرع وتعيين الفرع الرئيسي).
-4. `[NEW]` `app/Actions/Stores/DeleteStoreAction.php` (Single Action لحذف الفرع مع فحص الموانع التشغيلية).
-5. `[NEW]` `app/Actions/Stores/ToggleStoreActiveAction.php` (Single Action لتفعيل/تعطيل الفرع مع حماية الفرع الرئيسي).
-6. `[NEW]` `app/Actions/Stores/AssignStoreUsersAction.php` (Single Action لتعيين ومزامنة الموظفين للفروع).
-7. `[NEW]` `app/Actions/Stores/GetStoreStocksAction.php` (Single Action لاستعلام أرصدة المخزن والنواقص مع الفلترة والترقيم).
-8. `[MODIFIED]` `app/Http/Resources/StoreResource.php` (تنسيق بيانات الفرع والإحصائيات والموظفين وموانع الحذف).
-9. `[NEW]` `app/Http/Resources/StoreStockResource.php` (تنسيق أرصدة الأصناف بدقة bcmath للأوزان والقيم المالية).
-10. `[REFACTORED]` `app/Http/Controllers/Api/StoreController.php` (متحكم API كامل يدعم CRUD، التعيين، التبديل، والأرصدة).
-11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الفروع الكاملة).
-12. `[NEW]` `tests/Feature/Api/StoresApiTest.php` (حزمة 9 اختبارات Feature تغطي كافة العمليات بنسبة نجاح 100%).
+1. `[NEW]` `app/DTOs/Customers/CustomerDTO.php` (Strictly Typed DTO لبيانات العملاء).
+2. `[NEW]` `app/DTOs/Customers/CollectCustomerPaymentDTO.php` (Strictly Typed DTO لتحصيل سداد المديونيات).
+3. `[NEW]` `app/Actions/Customers/CreateCustomerAction.php` (Single Action لإنشاء العميل وإثبات الرصيد الافتتاحي).
+4. `[NEW]` `app/Actions/Customers/UpdateCustomerAction.php` (Single Action لتعديل بيانات العميل).
+5. `[NEW]` `app/Actions/Customers/DeleteCustomerAction.php` (Single Action لحذف العميل مع فحص موانع الحذف والمديونيات).
+6. `[NEW]` `app/Actions/Customers/ToggleCustomerActiveAction.php` (Single Action لتفعيل / تعطيل حساب العميل).
+7. `[NEW]` `app/Actions/Customers/CollectCustomerPaymentAction.php` (Single Action لتحصيل السداد وربطه بـ PaymentService).
+8. `[NEW]` `app/Actions/Customers/GetCustomerStatementAction.php` (Single Action لتوليد كشف الحساب التفصيلي وحساب الرصيد اللحظي التراكمي بدقة bcmath).
+9. `[NEW]` `app/Http/Resources/CustomerResource.php` (تنسيق بيانات العميل، إحصائيات الفواتير والسدادات، وموانع الحذف).
+10. `[REFACTORED]` `app/Http/Controllers/Api/CustomerController.php` (متحكم API متكامل للعملاء وكشف الحساب والتحصيل).
+11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات العملاء والتحصيل وكشف الحساب).
+12. `[NEW]` `tests/Feature/Api/CustomersApiTest.php` (حزمة 7 اختبارات Feature شاملة لكافة العمليات بنسبة نجاح 100%).
 
 ### ب. الـ Frontend (Pure Vue 3 SPA):
-1. `[NEW]` `resources/js/views/Stores/StoresView.vue` (شاشة إدارة الفروع، الإحصائيات، نوافذ الإضافة والتعديل وتعيين الموظفين).
-2. `[NEW]` `resources/js/views/Stores/StoreStocksView.vue` (شاشة متابعة أرصدة ونواقص المخازن والبحث اللحظي مع الترقيم).
-3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/stores` و `/stores/stocks` مع Navigation Guards).
-4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تضمين روابط الفروع في القائمة الجانبية).
+1. `[NEW]` `resources/js/views/Customers/CustomersView.vue` (شاشة إدارة العملاء، بطاقات المؤشرات المالية، فلاتر المديونيات، نوافذ الإضافة والتعديل والتحصيل السريع).
+2. `[NEW]` `resources/js/views/Customers/CustomerStatementView.vue` (شاشة كشف الحساب التفصيلي مع الفلاتر الزمنية السريعة والطباعة والرصيد التراكمي).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/customers` و `/customers/:id/statement` مع حماية الصلاحيات).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (ربط زر العملاء في القائمة الجانبية بالـ Router).
 
 ### ج. نقاط النهاية المعتمدة (API Endpoints):
-* `GET /api/v1/stores` — قائمة الفروع والإحصائيات والفرع النشط
-* `POST /api/v1/stores` — إنشاء فرع / مخزن جديد
-* `GET /api/v1/stores/{id}` — تفاصيل فرع محدد
-* `PUT /api/v1/stores/{id}` — تعديل بيانات فرع
-* `DELETE /api/v1/stores/{id}` — حذف فرع (إذا لم توجد موانع تشغيلية)
-* `PATCH /api/v1/stores/{id}/toggle-active` — تفعيل / تعطيل فرع
-* `POST /api/v1/stores/{id}/assign-users` — تعيين موظفين للفرع
-* `GET /api/v1/stores/stocks` — أرصدة وتقييم المخزن والنواقص
-* `POST /api/v1/stores/switch` — تبديل الفرع النشط للمستخدم
+* `GET /api/v1/customers` — قائمة العملاء مع الفلاتر والبحث والمؤشرات المالية
+* `POST /api/v1/customers` — إضافة عميل جديد
+* `GET /api/v1/customers/{id}` — تفاصيل بروفايل عميل
+* `PUT /api/v1/customers/{id}` — تعديل بيانات العميل
+* `DELETE /api/v1/customers/{id}` — حذف العميل (مع الحماية من حذف العملاء ذوي المديونيات)
+* `PATCH /api/v1/customers/{id}/toggle-active` — تفعيل / تعطيل العميل
+* `POST /api/v1/customers/{id}/collect-payment` — تسجيل سند قبض وتحصيل مديونية
+* `GET /api/v1/customers/{id}/statement` — كشف الحساب التفصيلي والرصيد التراكمي
 
 ### حالة الموديول: ✅ مكتمل بنجاح 100%
 
 ---
 
-## 8. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 9. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -176,8 +182,8 @@
 - [x] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)** ✅ (2026-08-21)
 - [ ] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):**
   - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
-  - [ ] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)
+  - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
+  - [ ] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ⏳ (التالي في الترتيب)
   - [ ] Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)
   - [ ] Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)
   - [ ] Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)
@@ -194,5 +200,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 01: الفروع والمخازن (`Stores & Stocks`)  
-**الموديول التالي المستهدف:** **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 02: العملاء وكشوف الحساب (`Customers & Statements`)  
+**الموديول التالي المستهدف:** **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)**

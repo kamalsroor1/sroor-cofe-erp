@@ -55,6 +55,8 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/customers', [CustomerController::class, 'store'])->name('api.customers.store');
         Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('api.customers.update');
         Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('api.customers.destroy');
+        Route::patch('/customers/{id}/toggle-active', [CustomerController::class, 'toggleActive'])->name('api.customers.toggle_active');
+        Route::post('/customers/{id}/collect-payment', [CustomerController::class, 'collectPayment'])->name('api.customers.collect_payment');
         Route::get('/customers/{id}/statement', [CustomerController::class, 'statement'])->name('api.customers.statement');
 
         // Suppliers & Statements

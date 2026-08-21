@@ -41,6 +41,26 @@ const routes = [
         },
     },
     {
+        path: '/customers',
+        name: 'customers.index',
+        component: () => import('../views/Customers/CustomersView.vue'),
+        meta: {
+            title: 'العملاء وكشوف الحساب',
+            requiresAuth: true,
+            permission: 'customers.manage',
+        },
+    },
+    {
+        path: '/customers/:id/statement',
+        name: 'customers.statement',
+        component: () => import('../views/Customers/CustomerStatementView.vue'),
+        meta: {
+            title: 'كشف حساب عميل',
+            requiresAuth: true,
+            permission: 'customers.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
