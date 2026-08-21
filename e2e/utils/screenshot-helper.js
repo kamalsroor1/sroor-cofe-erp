@@ -9,54 +9,127 @@ const e2eDir = path.resolve(rootDir, 'e2e');
 const screenshotsBaseDir = path.resolve(e2eDir, 'screenshots');
 const runMetaFile = path.resolve(e2eDir, '.run-meta.json');
 
+const MAX_DAYS_RETENTION = 3;
+const MAX_RUNS_PER_DAY = 10;
+
 /**
- * Returns the fixed run timestamp for the current session (YYYY-MM-DD and HH-mm-ss)
+ * Auto-cleans old day folders beyond the last 3 days
+ */
+function cleanupOldDays() {
+    if (!fs.existsSync(screenshotsBaseDir)) return;
+
+    try {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        const dateDirs = fs.readdirSync(screenshotsBaseDir, { withFileTypes: true })
+            .filter(d => d.isDirectory() && dateRegex.test(d.name))
+            .map(d => d.name)
+            .sort(); // Lexicographical sort works for YYYY-MM-DD
+
+        while (dateDirs.length > MAX_DAYS_RETENTION) {
+            const oldestDay = dateDirs.shift();
+            const oldestDayPath = path.join(screenshotsBaseDir, oldestDay);
+            try {
+                fs.rmSync(oldestDayPath, { recursive: true, force: true });
+                console.log(`🧹 Auto-cleanup: Removed oldest day screenshots folder: ${oldestDay}`);
+            } catch (_) {}
+        }
+    } catch (_) {}
+}
+
+/**
+ * Auto-cleans old run folders within a specific day if they exceed max runs
+ * @param {string} dayDir 
+ */
+function cleanupOldRuns(dayDir) {
+    if (!fs.existsSync(dayDir)) return;
+
+    try {
+        const runDirs = fs.readdirSync(dayDir, { withFileTypes: true })
+            .filter(d => d.isDirectory() && d.name.startsWith('run-'))
+            .map(d => ({
+                name: d.name,
+                path: path.join(dayDir, d.name),
+                ctime: fs.statSync(path.join(dayDir, d.name)).ctimeMs,
+            }))
+            .sort((a, b) => a.ctime - b.ctime); // Oldest first
+
+        // Keep at most MAX_RUNS_PER_DAY - 1 before adding the new run
+        while (runDirs.length >= MAX_RUNS_PER_DAY) {
+            const oldestRun = runDirs.shift();
+            try {
+                fs.rmSync(oldestRun.path, { recursive: true, force: true });
+                console.log(`🧹 Auto-cleanup: Removed oldest run folder: ${oldestRun.name}`);
+            } catch (_) {}
+        }
+    } catch (_) {}
+}
+
+/**
+ * Initializes and determines the current run folder with auto-numbering (run-01, run-02, ...)
  */
 export function getRunTimestamp() {
-    if (process.env.E2E_RUN_TIMESTAMP && process.env.E2E_RUN_DATE) {
+    if (process.env.E2E_RUN_ID && process.env.E2E_RUN_DATE) {
         return {
             dateStr: process.env.E2E_RUN_DATE,
-            timeStr: process.env.E2E_RUN_TIMESTAMP,
+            runId: process.env.E2E_RUN_ID,
         };
-    }
-
-    if (fs.existsSync(runMetaFile)) {
-        try {
-            const data = JSON.parse(fs.readFileSync(runMetaFile, 'utf8'));
-            if (data.dateStr && data.timeStr) {
-                // If created less than 2 hours ago, reuse
-                const diff = Date.now() - (data.createdAt || 0);
-                if (diff < 2 * 60 * 60 * 1000) {
-                    process.env.E2E_RUN_DATE = data.dateStr;
-                    process.env.E2E_RUN_TIMESTAMP = data.timeStr;
-                    return { dateStr: data.dateStr, timeStr: data.timeStr };
-                }
-            }
-        } catch (_) {}
     }
 
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-    const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+
+    // Check if an active session run-meta was created recently (within last 3 minutes)
+    if (fs.existsSync(runMetaFile)) {
+        try {
+            const data = JSON.parse(fs.readFileSync(runMetaFile, 'utf8'));
+            if (data.dateStr === dateStr && data.runId) {
+                const diff = Date.now() - (data.createdAt || 0);
+                if (diff < 3 * 60 * 1000) {
+                    process.env.E2E_RUN_DATE = data.dateStr;
+                    process.env.E2E_RUN_ID = data.runId;
+                    return { dateStr: data.dateStr, runId: data.runId };
+                }
+            }
+        } catch (_) {}
+    }
+
+    // Ensure base directory and cleanup days
+    fs.mkdirSync(screenshotsBaseDir, { recursive: true });
+    cleanupOldDays();
+
+    const todayDir = path.join(screenshotsBaseDir, dateStr);
+    fs.mkdirSync(todayDir, { recursive: true });
+
+    // Determine next run number
+    cleanupOldRuns(todayDir);
+
+    const existingRuns = fs.readdirSync(todayDir, { withFileTypes: true })
+        .filter(d => d.isDirectory() && d.name.startsWith('run-'))
+        .map(d => {
+            const num = parseInt(d.name.replace('run-', ''), 10);
+            return isNaN(num) ? 0 : num;
+        });
+
+    const nextRunNum = existingRuns.length > 0 ? Math.max(...existingRuns) + 1 : 1;
+    const runId = `run-${pad(nextRunNum)}`;
 
     process.env.E2E_RUN_DATE = dateStr;
-    process.env.E2E_RUN_TIMESTAMP = timeStr;
+    process.env.E2E_RUN_ID = runId;
 
     try {
-        fs.mkdirSync(e2eDir, { recursive: true });
-        fs.writeFileSync(runMetaFile, JSON.stringify({ dateStr, timeStr, createdAt: Date.now() }), 'utf8');
+        fs.writeFileSync(runMetaFile, JSON.stringify({ dateStr, runId, createdAt: Date.now() }), 'utf8');
     } catch (_) {}
 
-    return { dateStr, timeStr };
+    return { dateStr, runId };
 }
 
 /**
- * Returns the fixed directory for the current test run
+ * Returns the fixed directory for the current test run (e2e/screenshots/[YYYY-MM-DD]/run-XX/)
  */
 export function getScreenshotRunDir() {
-    const { dateStr, timeStr } = getRunTimestamp();
-    const runDir = path.join(screenshotsBaseDir, dateStr, timeStr);
+    const { dateStr, runId } = getRunTimestamp();
+    const runDir = path.join(screenshotsBaseDir, dateStr, runId);
     if (!fs.existsSync(runDir)) {
         fs.mkdirSync(runDir, { recursive: true });
     }

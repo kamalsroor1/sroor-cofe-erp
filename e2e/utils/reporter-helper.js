@@ -59,7 +59,7 @@ class ReportCollector {
     saveReports(registeredRoutes = []) {
         const runDir = getScreenshotRunDir();
         const durationSeconds = ((Date.now() - this.startTime) / 1000).toFixed(1);
-        const { dateStr, timeStr } = getRunTimestamp();
+        const { dateStr, runId } = getRunTimestamp();
 
         // Filter truly new discovered routes not in pages.config.js
         const registeredSet = new Set(registeredRoutes.map(r => r.replace(/\/1\//g, '/:id/')));
@@ -78,7 +78,7 @@ class ReportCollector {
                 totalSkippedSensitiveButtons: this.skippedSensitiveButtons.length,
                 durationSeconds: Number(durationSeconds),
                 runDate: dateStr,
-                runTime: timeStr,
+                runId: runId,
                 runDirectory: runDir,
             },
             successfulPages: this.successfulPages,
@@ -94,7 +94,7 @@ class ReportCollector {
 
         // 2. Save _report.md
         const mdContent = `# 📸 تقرير فحص الشاشات والـ E2E Visual Crawling
-* **تاريخ ووقت التشغيل:** ${dateStr} ${timeStr}
+* **تاريخ التشغيل:** ${dateStr} (${runId})
 * **مدة الفحص:** ${durationSeconds} ثانية
 * **مسار حفظ الصور:** \`${runDir}\`
 
