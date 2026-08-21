@@ -20,17 +20,17 @@ const effectivePrice = computed(() => {
 });
 
 const isWeightBased = computed(() => {
-    return props.line?.unit === 'كجم' || props.item.unit === 'كجم' || props.item.unit === 'جم' || props.item.unit?.includes('كيلو');
+    return props.item.unit === 'كجم' || props.item.unit === 'جم' || props.item.unit?.includes('كيلو');
 });
 
 const stockBadgeClass = computed(() => {
     if (props.item.current_stock > props.item.min_stock_level) {
-        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
     }
     if (props.item.current_stock > 0) {
-        return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
     }
-    return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+    return 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
 });
 
 const onSelect = () => {
@@ -46,41 +46,46 @@ const onAddQty = (qty) => {
 
 <template>
     <div
-        class="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl flex flex-col justify-between transition shadow-xs group overflow-hidden card-native-tap select-none"
+        class="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl flex flex-col justify-between transition-all duration-150 shadow-xs group overflow-hidden card-native-tap select-none min-h-[120px]"
     >
-        <!-- Main Card Area (Tap for Custom Modal / Add 1) -->
+        <!-- Main Card Body (Touch Target >= 48px) -->
         <div
             @click="onSelect"
-            class="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between active:bg-slate-100 dark:active:bg-slate-800/60"
+            role="button"
+            tabindex="0"
+            class="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between active:bg-slate-100 dark:active:bg-slate-800/80 transition-colors"
         >
             <div>
-                <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold mb-1">
-                    <span class="truncate">{{ item.category || $t('common.all') }}</span>
-                    <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold" :class="stockBadgeClass">
+                <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold mb-1.5 gap-1">
+                    <span class="truncate max-w-[65%]">{{ item.category || $t('common.all') }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-black shrink-0" :class="stockBadgeClass">
                         {{ formatQty(item.current_stock, 1) }} {{ item.unit }}
                     </span>
                 </div>
-                <h3 class="font-black text-xs text-slate-900 dark:text-white line-clamp-2 leading-tight group-hover:text-amber-600 dark:group-hover:text-amber-300 transition">
+                <h3 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-amber-600 dark:group-hover:text-amber-300 transition">
                     {{ item.name }}
                 </h3>
             </div>
 
-            <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                <span class="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
-                    {{ formatMoney(effectivePrice) }} <span class="text-[9px] text-slate-400">{{ $t('common.currency') }}</span>
-                </span>
-                <span class="text-[10px] text-slate-400 font-mono">
-                    {{ item.code }}
+            <div class="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-baseline justify-between gap-1">
+                <div class="flex items-baseline gap-1">
+                    <span class="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">
+                        {{ formatMoney(effectivePrice) }}
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-bold">{{ $t('common.currency') }}</span>
+                </div>
+                <span v-if="item.code" class="text-[10px] text-slate-400 font-mono font-bold truncate">
+                    #{{ item.code }}
                 </span>
             </div>
         </div>
 
-        <!-- Direct Quick Weight Steppers Bar (For Coffee & Bulk items) -->
-        <div v-if="isWeightBased" class="p-2 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-4 gap-1.5">
+        <!-- Direct Quick Weight Steppers Bar (For Coffee & Weight Items) -->
+        <div v-if="isWeightBased" class="p-1.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-4 gap-1.5">
             <button
                 @click.stop="onAddQty(0.125)"
                 type="button"
-                class="h-8 sm:h-7 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-[11px] font-mono transition active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_eighth')"
             >
                 1/8
@@ -88,7 +93,7 @@ const onAddQty = (qty) => {
             <button
                 @click.stop="onAddQty(0.250)"
                 type="button"
-                class="h-8 sm:h-7 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-[11px] font-mono transition active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_quarter')"
             >
                 1/4
@@ -96,7 +101,7 @@ const onAddQty = (qty) => {
             <button
                 @click.stop="onAddQty(0.500)"
                 type="button"
-                class="h-8 sm:h-7 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-[11px] font-mono transition active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_half')"
             >
                 1/2
@@ -104,7 +109,7 @@ const onAddQty = (qty) => {
             <button
                 @click.stop="onAddQty(1.000)"
                 type="button"
-                class="h-8 sm:h-7 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] font-mono transition active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_kilo')"
             >
                 1ك

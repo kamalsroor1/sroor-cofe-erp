@@ -394,20 +394,25 @@ useKeyboardShortcuts({
                     </div>
 
                     <!-- Floating Mobile Quick-Cart Bar (on Catalog tab) -->
-                    <div v-if="mobileTab === 'catalog' && cart.length > 0" class="lg:hidden fixed bottom-24 inset-x-4 z-30">
-                        <button
-                            @click="mobileTab = 'cart'"
-                            type="button"
-                            class="w-full h-12 rounded-2xl btn-primary-theme shadow-2xl flex items-center justify-between px-4 font-black text-xs cursor-pointer border-2 border-white dark:border-slate-900 active:scale-95 transition-transform"
-                        >
-                            <span class="flex items-center gap-2">
-                                <span>🛒</span>
-                                <span class="bg-black/20 px-2 py-0.5 rounded-lg">{{ cart.length }} أصناف</span>
-                            </span>
-                            <span class="font-mono text-sm font-black">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
-                            <span>إتمام الدفع ←</span>
-                        </button>
-                    </div>
+                    <Transition name="sheet-slide">
+                        <div v-if="mobileTab === 'catalog' && cart.length > 0" class="lg:hidden fixed bottom-22 inset-x-3 z-30">
+                            <button
+                                @click="triggerHaptic('medium'); mobileTab = 'cart'"
+                                type="button"
+                                class="w-full h-13 rounded-2xl btn-primary-theme shadow-2xl flex items-center justify-between px-4 font-black text-xs cursor-pointer border-2 border-white dark:border-slate-900 active:scale-95 transition-all"
+                            >
+                                <span class="flex items-center gap-2">
+                                    <span class="text-base">🛒</span>
+                                    <span class="bg-black/25 px-2.5 py-1 rounded-xl text-white font-mono font-bold">{{ cart.length }} {{ $t('common.items') || 'أصناف' }}</span>
+                                </span>
+                                <span class="font-mono text-sm font-black text-white drop-shadow-xs">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
+                                <span class="flex items-center gap-1 text-white text-xs font-black">
+                                    <span>{{ $t('invoices.invoices_log') || 'السلة' }}</span>
+                                    <span>←</span>
+                                </span>
+                            </button>
+                        </div>
+                    </Transition>
                 </div>
 
                 <!-- Right Section: Smart Cart & Payment Engine (35% width) -->

@@ -125,12 +125,13 @@ const increaseQty = () => {
                     </div>
                 </div>
 
-                <!-- Qty Steppers (Finger-friendly min 36px) -->
+                <!-- Qty Steppers (Finger-friendly min 40px) -->
                 <div class="flex items-center gap-1.5 shrink-0">
                     <button
                         @click="decreaseQty"
                         type="button"
-                        class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-sm flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
+                        class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
+                        aria-label="Decrease quantity"
                     >
                         -
                     </button>
@@ -141,13 +142,14 @@ const increaseQty = () => {
                         type="number"
                         inputmode="decimal"
                         step="0.001"
-                        class="w-16 h-8 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xs font-mono font-black text-amber-600 dark:text-amber-400 focus:outline-none focus:border-amber-500"
+                        class="w-16 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xs font-mono font-black text-amber-600 dark:text-amber-400 focus:outline-none focus:border-amber-500 shadow-inner"
                     />
 
                     <button
                         @click="increaseQty"
                         type="button"
-                        class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-sm flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
+                        class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
+                        aria-label="Increase quantity"
                     >
                         +
                     </button>
@@ -161,7 +163,7 @@ const increaseQty = () => {
                     <button
                         @click="handleDelete"
                         type="button"
-                        class="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                        class="w-9 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
                         :title="$t('common.delete')"
                     >
                         ✕
