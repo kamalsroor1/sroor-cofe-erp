@@ -57,4 +57,5 @@ return [
     'plan_updated_success' => 'تم تحديث باقة [:name] بنجاح!',
     'auto_provision_note' => 'تم إنشاء الحساب تلقائياً عبر خدمة التجهيز المركزي',
     'per_month' => 'شهر',
+    'no_active_user_in_store' => 'لا يوجد مستخدم نشط في متجر (:name) لتسجيل الدخول إليه.',
 ];

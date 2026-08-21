@@ -57,4 +57,5 @@ return [
     'plan_updated_success' => 'Plan [:name] updated successfully!',
     'auto_provision_note' => 'Account automatically provisioned via central provisioner',
     'per_month' => 'month',
+    'no_active_user_in_store' => 'No active user found in tenant store (:name) to log in as.',
 ];

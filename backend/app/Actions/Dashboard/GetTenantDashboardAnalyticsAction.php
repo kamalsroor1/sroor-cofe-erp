@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
@@ -18,20 +19,31 @@ use Illuminate\Support\Facades\DB;
 
 class GetTenantDashboardAnalyticsAction
 {
+    /**
+     * Cache for memoizing execution results within the same request lifecycle
+     */
+    protected array $memoized = [];
+
     public function __construct(
         protected DashboardAnalyticsService $analyticsService,
         protected ProfitService $profitService
     ) {}
 
     /**
-     * حساب وتجميع مؤشرات أداء الداشبورد لمستأجر ERP
+     * حساب وتجميع مؤشرات أداء الداشبورد لمستأجر ERP مع التخزين المؤقت للطلب
      */
     public function execute(?User $user): array
     {
+        $storeId = session('current_store_id');
+        $cacheKey = ($user?->id ?? 0) . ':' . ($storeId ?? 'all');
+
+        if (isset($this->memoized[$cacheKey])) {
+            return $this->memoized[$cacheKey];
+        }
+
         $today = now()->toDateString();
 
         // 1. Resolve Active Store
-        $storeId = session('current_store_id');
         $activeStore = null;
         if ($storeId) {
             $activeStore = Store::where('id', $storeId)->where('is_active', true)->first();
@@ -131,7 +143,7 @@ class GetTenantDashboardAnalyticsAction
                 ->first();
         }
 
-        return [
+        $result = [
             'metrics' => [
                 'total_sales' => (float)$totalSales,
                 'invoices_count' => $invoicesCount,
@@ -167,5 +179,9 @@ class GetTenantDashboardAnalyticsAction
                 'type' => $activeStore->type,
             ] : null,
         ];
+
+        $this->memoized[$cacheKey] = $result;
+
+        return $result;
     }
 }

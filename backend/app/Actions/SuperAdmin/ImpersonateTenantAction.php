@@ -30,7 +30,7 @@ final class ImpersonateTenantAction
         });
 
         if (!$targetUser) {
-            throw new \RuntimeException("لا يوجد مستخدم نشط في متجر ({$tenant->name}) لتسجيل الدخول إليه.");
+            throw new \RuntimeException(__('super.no_active_user_in_store', ['name' => $tenant->name]));
         }
 
         // 2. Generate Impersonation Token via Stancl
@@ -38,7 +38,8 @@ final class ImpersonateTenantAction
         $token = tenancy()->impersonate($tenant, (string)$targetUser->id, '/');
 
         // 3. Resolve Primary Domain
-        $primaryDomain = $tenant->domains()->first()?->domain ?? ($tenant->slug . '.' . env('CENTRAL_DOMAIN', 'localhost'));
+        $centralDomain = config('tenancy.central_domains.0', 'localhost');
+        $primaryDomain = $tenant->domains()->first()?->domain ?? ($tenant->slug . '.' . $centralDomain);
 
         // Check if port is needed for local dev (e.g. port 8000)
         $hostHeader = request()->header('Host');

@@ -1,25 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\Plans\GetSuperAdminPlansDataAction;
+use App\Actions\Plans\UpdatePlanAction;
+use App\Actions\SuperAdmin\ImpersonateTenantAction;
+use App\Actions\Tenants\GetTenantDetailsAction;
+use App\Actions\Tenants\GetTenantsIndexDataAction;
+use App\Actions\Tenants\OverrideTenantFeatureAction;
+use App\Actions\Tenants\ProvisionTenantAction;
+use App\Actions\Tenants\ToggleTenantStatusAction;
+use App\Contracts\SuperAdminDashboardAnalyticsInterface;
+use App\DTOs\CreateTenantDTO;
+use App\Http\Requests\ImpersonateTenantRequest;
+use App\Http\Requests\OverrideTenantFeatureRequest;
+use App\Http\Requests\StoreTenantRequest;
+use App\Http\Requests\ToggleTenantStatusRequest;
+use App\Http\Requests\UpdatePlanRequest;
+use App\Http\Resources\PlanResource;
+use App\Models\Plan;
+use App\Models\Tenant;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Contracts\SuperAdminDashboardAnalyticsInterface;
-use App\Actions\Tenants\GetTenantsIndexDataAction;
-use App\Actions\Tenants\GetTenantDetailsAction;
-use App\Actions\Tenants\ProvisionTenantAction;
-use App\Actions\Tenants\ToggleTenantStatusAction;
-use App\Actions\Tenants\OverrideTenantFeatureAction;
-use App\Actions\Plans\GetSuperAdminPlansDataAction;
-use App\Actions\Plans\UpdatePlanAction;
-use App\DTOs\CreateTenantDTO;
-use App\Http\Requests\StoreTenantRequest;
-use App\Http\Requests\UpdatePlanRequest;
-use App\Models\Tenant;
-use App\Models\Plan;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
-class SuperAdminController extends Controller
+final class SuperAdminController extends Controller
 {
     public function __construct(
         protected SuperAdminDashboardAnalyticsInterface $analyticsService,
@@ -30,7 +39,7 @@ class SuperAdminController extends Controller
         protected OverrideTenantFeatureAction $overrideFeatureAction,
         protected GetSuperAdminPlansDataAction $getPlansDataAction,
         protected UpdatePlanAction $updatePlanAction,
-        protected \App\Actions\SuperAdmin\ImpersonateTenantAction $impersonateTenantAction
+        protected ImpersonateTenantAction $impersonateTenantAction
     ) {}
 
     /**
@@ -39,8 +48,8 @@ class SuperAdminController extends Controller
     public function dashboard(): Response
     {
         return Inertia::render('SuperAdmin/Dashboard', [
-            'metrics' => Inertia::defer(fn() => $this->analyticsService->getPlatformMetrics(), 'superAdminDashboard'),
-            'plan_stats' => Inertia::defer(fn() => $this->analyticsService->getPlanStatistics(), 'superAdminDashboard'),
+            'metrics'        => Inertia::defer(fn() => $this->analyticsService->getPlatformMetrics(), 'superAdminDashboard'),
+            'plan_stats'     => Inertia::defer(fn() => $this->analyticsService->getPlanStatistics(), 'superAdminDashboard'),
             'recent_tenants' => Inertia::defer(fn() => $this->analyticsService->getRecentTenants(), 'superAdminDashboard'),
         ]);
     }
@@ -53,11 +62,11 @@ class SuperAdminController extends Controller
         $plans = Plan::select('id', 'name', 'slug')->get();
 
         return Inertia::render('SuperAdmin/Tenants/Index', [
-            'plans' => \App\Http\Resources\PlanResource::collection($plans)->resolve(),
+            'plans'   => PlanResource::collection($plans)->resolve(),
             'filters' => [
-                'search' => $request->query('search', ''),
-                'status' => $request->query('status', 'all'),
-                'plan_id' => $request->query('plan_id', 'all'),
+                'search'  => (string)$request->query('search', ''),
+                'status'  => (string)$request->query('status', 'all'),
+                'plan_id' => (string)$request->query('plan_id', 'all'),
             ],
             'tenants' => Inertia::defer(fn() => $this->getTenantsIndexAction->execute($request)['tenants'], 'tenantsData'),
         ]);
@@ -71,15 +80,15 @@ class SuperAdminController extends Controller
         $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
 
         return Inertia::render('SuperAdmin/Tenants/Create', [
-            'plans' => $plans,
-            'central_domain' => env('CENTRAL_DOMAIN', 'makhzani.test'),
+            'plans'          => PlanResource::collection($plans)->resolve(),
+            'central_domain' => config('tenancy.central_domains.0', 'makhzani.test'),
         ]);
     }
 
     /**
      * Store and Auto-Provision New Tenant
      */
-    public function storeTenant(StoreTenantRequest $request)
+    public function storeTenant(StoreTenantRequest $request): RedirectResponse
     {
         $dto = CreateTenantDTO::fromArray($request->validated());
         $tenant = $this->provisionTenantAction->execute($dto);
@@ -101,10 +110,10 @@ class SuperAdminController extends Controller
     /**
      * Toggle Manual Feature Override for Tenant
      */
-    public function overrideFeature(Request $request, string $id)
+    public function overrideFeature(OverrideTenantFeatureRequest $request, string $id): RedirectResponse
     {
         $tenant = Tenant::findOrFail($id);
-        $featureKey = (string)$request->input('feature_key');
+        $featureKey = (string)$request->validated('feature_key');
 
         $this->overrideFeatureAction->execute($tenant, $featureKey);
 
@@ -112,13 +121,13 @@ class SuperAdminController extends Controller
     }
 
     /**
-     * Toggle Tenant Account Status (Active, Suspended, Trial)
+     * Toggle Tenant Account Status (Active, Suspended, Trial, Expired)
      */
-    public function toggleStatus(Request $request, string $id)
+    public function toggleStatus(ToggleTenantStatusRequest $request, string $id): RedirectResponse
     {
         $tenant = Tenant::findOrFail($id);
-        $status = (string)$request->input('status');
-        $extendDays = (int)$request->input('extend_days', 0);
+        $status = (string)$request->validated('status');
+        $extendDays = (int)($request->validated('extend_days') ?? 0);
 
         $this->toggleStatusAction->execute($tenant, $status, $extendDays);
 
@@ -138,7 +147,7 @@ class SuperAdminController extends Controller
     /**
      * Update Plan Details & Features
      */
-    public function updatePlan(UpdatePlanRequest $request, int $id)
+    public function updatePlan(UpdatePlanRequest $request, int $id): RedirectResponse
     {
         $plan = Plan::findOrFail($id);
         $this->updatePlanAction->execute($plan, $request->validated());
@@ -149,10 +158,10 @@ class SuperAdminController extends Controller
     /**
      * Impersonate / Fast Login into a Tenant Account
      */
-    public function impersonateTenant(Request $request, string $id)
+    public function impersonateTenant(ImpersonateTenantRequest $request, string $id): SymfonyResponse|RedirectResponse
     {
         try {
-            $targetUserId = $request->input('user_id') ? (int)$request->input('user_id') : null;
+            $targetUserId = $request->validated('user_id') ? (int)$request->validated('user_id') : null;
             $redirectUrl = $this->impersonateTenantAction->execute($id, $targetUserId);
 
             return Inertia::location($redirectUrl);
