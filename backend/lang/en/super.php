@@ -60,4 +60,7 @@ return [
     'no_active_user_in_store' => 'No active user found in tenant store (:name) to log in as.',
     'unauthorized_super_admin_access' => 'This account is not authorized to access the Central Super Admin Dashboard.',
     'logout_success' => 'Successfully logged out from Super Admin panel.',
+    'login_failed_log' => 'Failed Super Admin login attempt with identifier [:identifier]',
+    'unauthorized_attempt_log' => 'Unauthorized Super Admin access attempt by user [:user]',
+    'login_success_log' => 'Successful Super Admin login for user [:user]',
 ];

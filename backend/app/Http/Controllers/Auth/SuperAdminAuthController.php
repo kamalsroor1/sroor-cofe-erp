@@ -4,26 +4,29 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\SuperAdminLoginAction;
+use App\DTOs\Auth\LoginDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final class SuperAdminAuthController extends Controller
 {
+    public function __construct(
+        protected SuperAdminLoginAction $superAdminLoginAction
+    ) {}
+
     /**
      * Show the Super Admin dedicated login page
      */
     public function showLogin(): Response
     {
         return Inertia::render('SuperAdmin/Auth/Login', [
-            'platform_name' => config('app.name', 'مخزني ERP'),
+            'platform_name'    => config('app.name', 'مخزني ERP'),
             'platform_version' => 'v2.5 Enterprise Hub',
         ]);
     }
@@ -36,36 +39,22 @@ final class SuperAdminAuthController extends Controller
         $request->ensureIsNotRateLimited();
 
         $credentials = $request->validated();
-        $phoneOrEmail = (string)$credentials['phone'];
+        $dto = new LoginDTO(
+            phone: (string)$credentials['phone'],
+            password: (string)$credentials['password'],
+            remember: (bool)($credentials['remember'] ?? true)
+        );
 
-        $user = User::where(function ($q) use ($phoneOrEmail) {
-            $q->where('phone', $phoneOrEmail)
-              ->orWhere('email', $phoneOrEmail);
-        })->where('is_active', true)->first();
+        try {
+            $this->superAdminLoginAction->execute($dto);
+            $request->clearRateLimit();
+            $request->session()->regenerate();
 
-        if (!$user || !Hash::check((string)$credentials['password'], $user->password)) {
+            return redirect()->intended(route('super.dashboard'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $request->hitRateLimit();
-
-            throw ValidationException::withMessages([
-                'phone' => __('auth.failed'),
-            ]);
+            throw $e;
         }
-
-        // Strict Check: User MUST have admin role or be authorized for Super Admin
-        if (!$user->hasRole('admin') && !$user->can('super_admin.access')) {
-            $request->hitRateLimit();
-
-            throw ValidationException::withMessages([
-                'phone' => __('super.unauthorized_super_admin_access'),
-            ]);
-        }
-
-        $request->clearRateLimit();
-
-        Auth::login($user, (bool)($credentials['remember'] ?? true));
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('super.dashboard'));
     }
 
     /**
