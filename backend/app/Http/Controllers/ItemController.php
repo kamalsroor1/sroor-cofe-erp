@@ -237,7 +237,14 @@ final class ItemController extends Controller
                 'cost_price' => (float)$item->cost_price,
                 'selling_price' => (float)$item->selling_price,
             ],
-            'movements' => $movements->through(fn($m) => [
+            'stores' => $stores,
+            'filters' => [
+                'from' => $dateFrom,
+                'to' => $dateTo,
+                'store_id' => $storeId,
+                'type' => $movementType,
+            ],
+            'movements' => Inertia::defer(fn() => $query->latest('id')->paginate(20)->withQueryString()->through(fn($m) => [
                 'id' => $m->id,
                 'movement_type' => $m->movement_type,
                 'quantity' => (float)$m->quantity,
@@ -249,20 +256,13 @@ final class ItemController extends Controller
                 'store_name' => $m->store?->name,
                 'notes' => $m->notes,
                 'created_at' => $m->created_at->format('Y-m-d H:i:s'),
-            ]),
-            'stats' => [
+            ]), 'itemMovementsData'),
+            'stats' => Inertia::defer(fn() => [
                 'total_in' => (float)$totalIn,
                 'total_out' => (float)$totalOut,
                 'net_movement' => (float)$netMovement,
                 'current_scope_stock' => $currentScopeStock,
-            ],
-            'stores' => $stores,
-            'filters' => [
-                'from' => $dateFrom,
-                'to' => $dateTo,
-                'store_id' => $storeId,
-                'type' => $movementType,
-            ],
+            ], 'itemMovementsData'),
         ]);
     }
 }

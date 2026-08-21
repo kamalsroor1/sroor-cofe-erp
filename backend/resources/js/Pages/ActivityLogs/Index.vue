@@ -1,16 +1,19 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import FilterDrawer from '@/Components/FilterDrawer.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
+import CardSkeleton from '@/Components/Common/Skeletons/CardSkeleton.vue';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
-    logs: { type: Object, required: true },
-    stats: { type: Object, default: () => ({}) },
+    logs: { type: Object, default: () => ({ data: [] }) },
+    stats: { type: Object, default: () => null },
     users: { type: Array, default: () => [] },
     stores: { type: Array, default: () => [] },
     modules_list: { type: Object, default: () => ({}) },
@@ -158,28 +161,36 @@ const getModuleBadge = (module) => {
                 </div>
             </div>
 
-            <!-- 4 KPI Summary Cards (Bento 2x2 on Mobile) -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_total') }}</span>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white">{{ stats.today_total || 0 }}</div>
-                </div>
+            <!-- 4 KPI Summary Cards (Bento 2x2 on Mobile, Deferred with Skeleton) -->
+            <Deferred data="stats">
+                <template #fallback>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
+                        <StatCardSkeleton v-for="i in 4" :key="i" />
+                    </div>
+                </template>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_critical') }}</span>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">{{ stats.today_critical || 0 }}</div>
-                </div>
+                <div v-if="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal animate-in fade-in duration-500">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_total') }}</span>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white">{{ stats.today_total || 0 }}</div>
+                    </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_users') }}</span>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">{{ stats.today_users || 0 }}</div>
-                </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_critical') }}</span>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">{{ stats.today_critical || 0 }}</div>
+                    </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_stores') }}</span>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-theme-primary">{{ stats.today_stores || 0 }}</div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_users') }}</span>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">{{ stats.today_users || 0 }}</div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ $t('activity.today_stores') }}</span>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-theme-primary">{{ stats.today_stores || 0 }}</div>
+                    </div>
                 </div>
-            </div>
+            </Deferred>
 
             <!-- Quick Presets Bar & View Switcher -->
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 sm:p-3 rounded-2xl shadow-xs font-tajawal">
@@ -223,157 +234,166 @@ const getModuleBadge = (module) => {
                 </div>
             </div>
 
-            <!-- TIMELINE VIEW -->
-            <div v-if="viewMode === 'timeline'" class="space-y-3 font-tajawal">
-                <div
-                    v-for="log in logs.data"
-                    :key="log.id"
-                    @click="selectedLog = log"
-                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-3xl p-4 sm:p-5 transition cursor-pointer shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 group active:scale-99"
-                >
-                    <div class="flex items-start gap-3 sm:gap-3.5">
-                        <div class="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-lg shrink-0 mt-0.5 group-hover:border-theme-primary shadow-xs">
-                            🛡️
-                        </div>
+            <!-- Activity Logs Content (Deferred with TableSkeleton) -->
+            <Deferred data="logs">
+                <template #fallback>
+                    <TableSkeleton :columns-count="8" :rows-count="8" />
+                </template>
 
-                        <div class="space-y-1">
-                            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(log.action).class">
-                                    {{ getActionBadge(log.action).label }}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                    {{ getModuleBadge(log.module) }}
-                                </span>
-                                <span class="text-xs font-bold text-slate-900 dark:text-white">{{ log.user_name }}</span>
-                                <span class="text-[11px] text-slate-500 dark:text-slate-400">• {{ log.store_name }}</span>
-                            </div>
-
-                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-sans">
-                                {{ log.description }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between md:justify-end gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
-                        <span class="bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300">{{ log.ip_address || '127.0.0.1' }}</span>
-                        <span>{{ log.time_ago }} ({{ log.created_at }})</span>
-                    </div>
-                </div>
-
-                <div v-if="logs.data.length === 0" class="py-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl text-slate-500 dark:text-slate-400 text-xs">
-                    {{ $t('activity.no_logs_filter') }}
-                </div>
-            </div>
-
-            <!-- TABLE VIEW & MOBILE CARDS -->
-            <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs font-tajawal">
-                <DataTable
-                    :columns="logColumns"
-                    :rows="logs.data"
-                    :pagination="logs"
-                    :empty-title="$t('activity.no_logs_data')"
-                    empty-icon="📜"
-                >
-                    <!-- ID -->
-                    <template #cell-id="{ row }">
-                        <span class="font-mono text-slate-400">{{ row.id }}</span>
-                    </template>
-
-                    <!-- Created At -->
-                    <template #cell-created_at="{ row }">
-                        <span class="font-mono text-slate-600 dark:text-slate-300">{{ row.created_at }}</span>
-                    </template>
-
-                    <!-- User -->
-                    <template #cell-user_name="{ row }">
-                        <span class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.user_name }}</span>
-                    </template>
-
-                    <!-- Store -->
-                    <template #cell-store_name="{ row }">
-                        <span class="text-slate-600 dark:text-slate-300 font-tajawal">{{ row.store_name }}</span>
-                    </template>
-
-                    <!-- Module -->
-                    <template #cell-module="{ row }">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
-                            {{ getModuleBadge(row.module) }}
-                        </span>
-                    </template>
-
-                    <!-- Action -->
-                    <template #cell-action="{ row }">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black font-tajawal" :class="getActionBadge(row.action).class">
-                            {{ getActionBadge(row.action).label }}
-                        </span>
-                    </template>
-
-                    <!-- Description -->
-                    <template #cell-description="{ row }">
-                        <span class="text-slate-700 dark:text-slate-200 max-w-xs truncate block" :title="row.description">{{ row.description }}</span>
-                    </template>
-
-                    <!-- IP Address -->
-                    <template #cell-ip_address="{ row }">
-                        <span class="font-mono text-slate-500 dark:text-slate-400">{{ row.ip_address || '—' }}</span>
-                    </template>
-
-                    <!-- Actions -->
-                    <template #cell-actions="{ row }">
-                        <button
-                            @click="selectedLog = row"
-                            class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-bold text-[11px] cursor-pointer transition active:scale-95 font-tajawal"
+                <div class="animate-in fade-in duration-500 space-y-4">
+                    <!-- TIMELINE VIEW -->
+                    <div v-if="viewMode === 'timeline'" class="space-y-3 font-tajawal">
+                        <div
+                            v-for="log in logs.data"
+                            :key="log.id"
+                            @click="selectedLog = log"
+                            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-3xl p-4 sm:p-5 transition cursor-pointer shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 group active:scale-99"
                         >
-                            {{ $t('activity.inspect_btn') }}
-                        </button>
-                    </template>
-
-                    <!-- Mobile Card Custom Slot -->
-                    <template #mobile-card="{ row }">
-                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
-                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(row.action).class">
-                                        {{ getActionBadge(row.action).label }}
-                                    </span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                        {{ getModuleBadge(row.module) }}
-                                    </span>
+                            <div class="flex items-start gap-3 sm:gap-3.5">
+                                <div class="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-lg shrink-0 mt-0.5 group-hover:border-theme-primary shadow-xs">
+                                    🛡️
                                 </div>
-                                <span class="text-[10px] font-mono text-slate-400">{{ row.time_ago }}</span>
+
+                                <div class="space-y-1">
+                                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(log.action).class">
+                                            {{ getActionBadge(log.action).label }}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                            {{ getModuleBadge(log.module) }}
+                                        </span>
+                                        <span class="text-xs font-bold text-slate-900 dark:text-white">{{ log.user_name }}</span>
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400">• {{ log.store_name }}</span>
+                                    </div>
+
+                                    <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-sans">
+                                        {{ log.description }}
+                                    </p>
+                                </div>
                             </div>
 
-                            <p class="text-xs text-slate-800 dark:text-slate-200 font-sans leading-relaxed">
-                                {{ row.description }}
-                            </p>
+                            <div class="flex items-center justify-between md:justify-end gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
+                                <span class="bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300">{{ log.ip_address || '127.0.0.1' }}</span>
+                                <span>{{ log.time_ago }} ({{ log.created_at }})</span>
+                            </div>
+                        </div>
 
-                            <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200 dark:border-slate-800">
-                                <span class="font-bold text-slate-900 dark:text-white">{{ row.user_name }} • <span class="text-slate-500 font-normal">{{ row.store_name }}</span></span>
+                        <div v-if="logs.data.length === 0" class="py-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl text-slate-500 dark:text-slate-400 text-xs">
+                            {{ $t('activity.no_logs_filter') }}
+                        </div>
+                    </div>
+
+                    <!-- TABLE VIEW & MOBILE CARDS -->
+                    <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs font-tajawal">
+                        <DataTable
+                            :columns="logColumns"
+                            :rows="logs.data"
+                            :pagination="logs"
+                            :empty-title="$t('activity.no_logs_data')"
+                            empty-icon="📜"
+                        >
+                            <!-- ID -->
+                            <template #cell-id="{ row }">
+                                <span class="font-mono text-slate-400">{{ row.id }}</span>
+                            </template>
+
+                            <!-- Created At -->
+                            <template #cell-created_at="{ row }">
+                                <span class="font-mono text-slate-600 dark:text-slate-300">{{ row.created_at }}</span>
+                            </template>
+
+                            <!-- User -->
+                            <template #cell-user_name="{ row }">
+                                <span class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.user_name }}</span>
+                            </template>
+
+                            <!-- Store -->
+                            <template #cell-store_name="{ row }">
+                                <span class="text-slate-600 dark:text-slate-300 font-tajawal">{{ row.store_name }}</span>
+                            </template>
+
+                            <!-- Module -->
+                            <template #cell-module="{ row }">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
+                                    {{ getModuleBadge(row.module) }}
+                                </span>
+                            </template>
+
+                            <!-- Action -->
+                            <template #cell-action="{ row }">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black font-tajawal" :class="getActionBadge(row.action).class">
+                                    {{ getActionBadge(row.action).label }}
+                                </span>
+                            </template>
+
+                            <!-- Description -->
+                            <template #cell-description="{ row }">
+                                <span class="text-slate-700 dark:text-slate-200 max-w-xs truncate block" :title="row.description">{{ row.description }}</span>
+                            </template>
+
+                            <!-- IP Address -->
+                            <template #cell-ip_address="{ row }">
+                                <span class="font-mono text-slate-500 dark:text-slate-400">{{ row.ip_address || '—' }}</span>
+                            </template>
+
+                            <!-- Actions -->
+                            <template #cell-actions="{ row }">
                                 <button
                                     @click="selectedLog = row"
-                                    class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-black text-xs cursor-pointer active:scale-95 shadow-xs"
+                                    class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-bold text-[11px] cursor-pointer transition active:scale-95 font-tajawal"
                                 >
                                     {{ $t('activity.inspect_btn') }}
                                 </button>
-                            </div>
-                        </div>
-                    </template>
-                </DataTable>
-            </div>
+                            </template>
+
+                            <!-- Mobile Card Custom Slot -->
+                            <template #mobile-card="{ row }">
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
+                                    <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(row.action).class">
+                                                {{ getActionBadge(row.action).label }}
+                                            </span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                                {{ getModuleBadge(row.module) }}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] font-mono text-slate-400">{{ row.time_ago }}</span>
+                                    </div>
+
+                                    <p class="text-xs text-slate-800 dark:text-slate-200 font-sans leading-relaxed">
+                                        {{ row.description }}
+                                    </p>
+
+                                    <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                                        <span class="font-bold text-slate-900 dark:text-white">{{ row.user_name }} • <span class="text-slate-500 font-normal">{{ row.store_name }}</span></span>
+                                        <button
+                                            @click="selectedLog = row"
+                                            class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-black text-xs cursor-pointer active:scale-95 shadow-xs"
+                                        >
+                                            {{ $t('activity.inspect_btn') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </DataTable>
+                    </div>
 
 
-            <!-- Pagination (Timeline mode) -->
-            <div v-if="viewMode === 'timeline' && logs.links?.length > 3" class="flex flex-wrap justify-center gap-1.5 pt-2 font-sans">
-                <button
-                    v-for="(link, lIdx) in logs.links"
-                    :key="lIdx"
-                    :disabled="!link.url || link.active"
-                    @click="router.visit(link.url)"
-                    v-html="link.label"
-                    class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition font-mono flex items-center justify-center active:scale-95"
-                    :class="link.active ? 'tab-theme-active' : (link.url ? 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs' : 'opacity-40 text-slate-400 dark:text-slate-600')"
-                ></button>
-            </div>
+                    <!-- Pagination (Timeline mode) -->
+                    <div v-if="viewMode === 'timeline' && logs.links?.length > 3" class="flex flex-wrap justify-center gap-1.5 pt-2 font-sans">
+                        <button
+                            v-for="(link, lIdx) in logs.links"
+                            :key="lIdx"
+                            :disabled="!link.url || link.active"
+                            @click="router.visit(link.url)"
+                            v-html="link.label"
+                            class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition font-mono flex items-center justify-center active:scale-95"
+                            :class="link.active ? 'tab-theme-active' : (link.url ? 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs' : 'opacity-40 text-slate-400 dark:text-slate-600')"
+                        ></button>
+                    </div>
+                </div>
+            </Deferred>
 
             <!-- Filter Drawer Component -->
             <FilterDrawer

@@ -1,19 +1,20 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     stores: { type: Array, default: () => [] },
     selected_store_id: { type: [Number, String], required: true },
-    stocks: { type: Object, required: true },
+    stocks: { type: Object, default: () => ({ data: [] }) },
     filters: { type: Object, default: () => ({}) },
 });
 
@@ -175,15 +176,20 @@ const lowStockCount = computed(() => {
                 </div>
             </div>
 
-            <!-- Stocks Data Table -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <DataTable
-                    :columns="stockColumns"
-                    :rows="stocks.data"
-                    :pagination="stocks"
-                    :empty-title="$t('inventory.no_items_found')"
-                    empty-icon="📦"
-                >
+            <!-- Stocks Data Table (Deferred with TableSkeleton) -->
+            <Deferred data="stocks">
+                <template #fallback>
+                    <TableSkeleton :columns-count="6" :rows-count="6" />
+                </template>
+
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal animate-in fade-in duration-500">
+                    <DataTable
+                        :columns="stockColumns"
+                        :rows="stocks.data"
+                        :pagination="stocks"
+                        :empty-title="$t('inventory.no_items_found')"
+                        empty-icon="📦"
+                    >
                     <!-- Item Name -->
                     <template #cell-item_name="{ row }">
                         <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ row.item_name }}</div>
@@ -270,6 +276,7 @@ const lowStockCount = computed(() => {
                     </template>
                 </DataTable>
             </div>
+            </Deferred>
         </div>
     </AppLayout>
 </template>

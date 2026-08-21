@@ -75,7 +75,7 @@ final class DailyJournalController extends Controller
                 'opening_cash_balance' => (float)$activeShift->opening_cash_balance,
                 'user_name' => $activeShift->user?->name,
             ] : null,
-            'summary' => [
+            'summary' => Inertia::defer(fn() => [
                 'total_sales' => $totalSales,
                 'cash_sales' => $cashSales + $partialSales,
                 'credit_sales' => $creditSales,
@@ -87,8 +87,8 @@ final class DailyJournalController extends Controller
                 'net_cash_today' => $netCashToday,
                 'opening_cash_balance' => $openingCashBalance,
                 'expected_cash_in_drawer' => $expectedCashInDrawer,
-            ],
-            'invoices' => $invoices->map(fn($inv) => [
+            ], 'dailyJournalData'),
+            'invoices' => Inertia::defer(fn() => $invoices->map(fn($inv) => [
                 'id' => $inv->id,
                 'invoice_number' => $inv->invoice_number,
                 'customer_name' => $inv->customer?->name ?: 'عميل نقدي سريع',
@@ -98,8 +98,8 @@ final class DailyJournalController extends Controller
                 'payment_method' => $inv->payment_method,
                 'status' => $inv->status,
                 'time' => $inv->created_at->format('H:i A'),
-            ]),
-            'expenses' => $expenses->map(fn($e) => [
+            ]), 'dailyJournalData'),
+            'expenses' => Inertia::defer(fn() => $expenses->map(fn($e) => [
                 'id' => $e->id,
                 'expense_number' => $e->expense_number,
                 'title' => $e->title,
@@ -107,7 +107,7 @@ final class DailyJournalController extends Controller
                 'cost_center_label' => $e->cost_center_label,
                 'amount' => (float)$e->amount,
                 'payment_method' => $e->payment_method,
-            ]),
+            ]), 'dailyJournalData'),
         ]);
     }
 

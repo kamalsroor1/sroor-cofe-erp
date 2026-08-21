@@ -175,12 +175,15 @@ final class StoreController extends Controller
             $query->where('quantity', '<=', 0);
         }
 
-        $stocks = $query->paginate(20)->withQueryString();
-
         return Inertia::render('Stores/Stocks', [
             'stores' => $stores,
             'selected_store_id' => $selectedStoreId,
-            'stocks' => $stocks->through(fn($st) => [
+            'filters' => [
+                'store_id' => $selectedStoreId,
+                'search' => $search,
+                'stock_status' => $stockStatus,
+            ],
+            'stocks' => Inertia::defer(fn() => $query->paginate(20)->withQueryString()->through(fn($st) => [
                 'id' => $st->id,
                 'item_name' => $st->item?->name,
                 'item_code' => $st->item?->code,
@@ -189,12 +192,7 @@ final class StoreController extends Controller
                 'min_stock_level' => (float)$st->item?->min_stock_level,
                 'cost_price' => (float)$st->item?->cost_price,
                 'total_valuation' => (float)($st->quantity * ($st->item?->cost_price ?? 0)),
-            ]),
-            'filters' => [
-                'store_id' => $selectedStoreId,
-                'search' => $search,
-                'stock_status' => $stockStatus,
-            ],
+            ]), 'storeStocksData'),
         ]);
     }
 }

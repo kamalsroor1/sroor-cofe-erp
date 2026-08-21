@@ -1,14 +1,16 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     suggestions: { type: Array, default: () => [] },
-    metrics: { type: Object, default: () => ({}) },
+    metrics: { type: Object, default: () => null },
     stores: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 });
@@ -126,48 +128,56 @@ const createPurchaseFromSelected = () => {
                 </div>
             </div>
 
-            <!-- Top Analytics Metric Cards (Bento Grid on Mobile) -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.critical_stockouts') }}</span>
-                        <span class="text-sm">🚨</span>
+            <!-- 4 Quick Radar Summary KPIs (Bento Grid on Mobile, Deferred with Skeleton) -->
+            <Deferred data="metrics">
+                <template #fallback>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
+                        <StatCardSkeleton v-for="i in 4" :key="i" />
                     </div>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
-                        {{ metrics.critical_count || 0 }}
-                    </div>
-                </div>
+                </template>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.warning_stockouts') }}</span>
-                        <span class="text-sm">⚠️</span>
+                <div v-if="metrics" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal animate-in fade-in duration-500">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.critical_stockouts') }}</span>
+                            <span class="text-sm">🚨</span>
+                        </div>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
+                            {{ metrics.critical_count || 0 }}
+                        </div>
                     </div>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-theme-primary">
-                        {{ metrics.warning_count || 0 }}
-                    </div>
-                </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.safe_stockouts') }}</span>
-                        <span class="text-sm">✅</span>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.warning_stockouts') }}</span>
+                            <span class="text-sm">⚠️</span>
+                        </div>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-theme-primary">
+                            {{ metrics.warning_count || 0 }}
+                        </div>
                     </div>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-                        {{ metrics.safe_count || 0 }}
-                    </div>
-                </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.total_reorder_cost') }}</span>
-                        <span class="text-sm">💰</span>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.safe_stockouts') }}</span>
+                            <span class="text-sm">✅</span>
+                        </div>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                            {{ metrics.safe_count || 0 }}
+                        </div>
                     </div>
-                    <div class="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white">
-                        {{ formatMoney(metrics.total_estimated_cost || 0) }} <span class="text-[11px] text-theme-primary">{{ $t('common.currency') }}</span>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('purchases.total_reorder_cost') }}</span>
+                            <span class="text-sm">💰</span>
+                        </div>
+                        <div class="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white">
+                            {{ formatMoney(metrics.total_estimated_cost || 0) }} <span class="text-[11px] text-theme-primary">{{ $t('common.currency') }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Deferred>
 
             <!-- Filter Controls Bar -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 font-tajawal">
@@ -258,11 +268,16 @@ const createPurchaseFromSelected = () => {
                 </div>
             </div>
 
-            <!-- Reorder Suggestions Data Table -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <DataTable
-                    :columns="reorderColumns"
-                    :rows="suggestions"
+            <!-- Reorder Suggestions Data Table (Deferred with TableSkeleton) -->
+            <Deferred data="suggestions">
+                <template #fallback>
+                    <TableSkeleton :columns-count="8" :rows-count="6" />
+                </template>
+
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal animate-in fade-in duration-500">
+                    <DataTable
+                        :columns="reorderColumns"
+                        :rows="suggestions"
                     :selectable="true"
                     v-model="selectedItemIds"
                     select-key="id"
@@ -411,6 +426,7 @@ const createPurchaseFromSelected = () => {
                     </template>
                 </DataTable>
             </div>
+            </Deferred>
         </div>
     </AppLayout>
 </template>

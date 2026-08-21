@@ -102,21 +102,6 @@ final class ActivityLogController extends Controller
         ];
 
         return Inertia::render('ActivityLogs/Index', [
-            'logs' => $logs->through(fn($log) => [
-                'id' => $log->id,
-                'module' => $log->module,
-                'action' => $log->action,
-                'description' => $log->description,
-                'user_name' => $log->user?->name ?: 'النظام / تلقائي',
-                'user_phone' => $log->user?->phone,
-                'store_name' => $log->store?->name ?: 'الفرع الرئيسي',
-                'ip_address' => $log->ip_address,
-                'user_agent' => $log->user_agent,
-                'payload' => $log->payload,
-                'created_at' => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '',
-                'time_ago' => $log->created_at ? $log->created_at->diffForHumans() : '',
-            ]),
-            'stats' => $stats,
             'users' => $users,
             'stores' => $stores,
             'modules_list' => $modulesList,
@@ -131,6 +116,21 @@ final class ActivityLogController extends Controller
                 'to' => $dateTo,
                 'view' => $viewMode,
             ],
+            'logs' => Inertia::defer(fn() => $logs->through(fn($log) => [
+                'id' => $log->id,
+                'module' => $log->module,
+                'action' => $log->action,
+                'description' => $log->description,
+                'user_name' => $log->user?->name ?: 'النظام / تلقائي',
+                'user_phone' => $log->user?->phone,
+                'store_name' => $log->store?->name ?: 'الفرع الرئيسي',
+                'ip_address' => $log->ip_address,
+                'user_agent' => $log->user_agent,
+                'payload' => $log->payload,
+                'created_at' => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '',
+                'time_ago' => $log->created_at ? $log->created_at->diffForHumans() : '',
+            ]), 'activityLogsData'),
+            'stats' => Inertia::defer(fn() => $stats, 'activityLogsData'),
         ]);
     }
 

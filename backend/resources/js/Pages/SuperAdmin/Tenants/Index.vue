@@ -1,14 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, Deferred } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
-    tenants: Object,
-    plans: Array,
-    filters: Object,
+    tenants: { type: Object, default: () => ({ data: [] }) },
+    plans: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
 });
 
 const tenantColumns = computed(() => [
@@ -107,15 +108,20 @@ const impersonate = (tenantId) => {
                 </div>
             </div>
 
-            <!-- Tenants Data Table -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs font-tajawal">
-                <DataTable
-                    :columns="tenantColumns"
-                    :rows="tenants.data"
-                    :pagination="tenants"
-                    :empty-title="$t('common.no_data')"
-                    empty-icon="🏢"
-                >
+            <!-- Tenants Data Table (Deferred with TableSkeleton) -->
+            <Deferred data="tenants">
+                <template #fallback>
+                    <TableSkeleton :columns-count="6" :rows-count="6" />
+                </template>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs font-tajawal animate-in fade-in duration-500">
+                    <DataTable
+                        :columns="tenantColumns"
+                        :rows="tenants.data"
+                        :pagination="tenants"
+                        :empty-title="$t('common.no_data')"
+                        empty-icon="🏢"
+                    >
                     <!-- Tenant Name -->
                     <template #cell-name="{ row }">
                         <Link :href="`/admin/super/tenants/${row.id}`" class="font-black text-white font-tajawal hover:text-indigo-400 transition">
@@ -216,6 +222,7 @@ const impersonate = (tenantId) => {
                     </template>
                 </DataTable>
             </div>
+            </Deferred>
         </div>
     </SuperAdminLayout>
 </template>

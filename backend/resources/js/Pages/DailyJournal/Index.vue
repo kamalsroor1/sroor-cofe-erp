@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
@@ -9,13 +9,15 @@ import DataTable from '@/Components/Common/DataTable.vue';
 import AppModal from '@/Components/Common/AppModal.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
+import CardSkeleton from '@/Components/Common/Skeletons/CardSkeleton.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     date: { type: String, required: true },
     active_shift: { type: Object, default: null },
-    summary: { type: Object, required: true },
+    summary: { type: Object, default: () => null },
     invoices: { type: Array, default: () => [] },
     expenses: { type: Array, default: () => [] },
 });
@@ -220,121 +222,137 @@ const printJournal = () => {
                 </div>
             </div>
 
-            <!-- Financial Summary Matrix Cards (2x2 Bento on mobile) -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
-                <MetricCard
-                    :title="$t('treasury.inflow_cash')"
-                    :value="formatMoney(summary.total_cash_in)"
-                    :currency="$t('common.currency')"
-                    :subtitle="`${$t('treasury.cash_sales')}: ${formatMoney(summary.cash_sales)}`"
-                    variant="success"
-                />
+            <!-- Financial Summary Matrix Cards (2x2 Bento on mobile, Deferred with Skeleton) -->
+            <Deferred data="summary">
+                <template #fallback>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
+                        <StatCardSkeleton v-for="i in 4" :key="i" />
+                    </div>
+                </template>
 
-                <MetricCard
-                    :title="$t('treasury.outflow_cash')"
-                    :value="formatMoney(summary.total_cash_out)"
-                    :currency="$t('common.currency')"
-                    :subtitle="`${$t('treasury.operating_expenses')}: ${formatMoney(summary.total_expenses)}`"
-                    variant="danger"
-                />
+                <div v-if="summary" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal animate-in fade-in duration-500">
+                    <MetricCard
+                        :title="$t('treasury.inflow_cash')"
+                        :value="formatMoney(summary.total_cash_in)"
+                        :currency="$t('common.currency')"
+                        :subtitle="`${$t('treasury.cash_sales')}: ${formatMoney(summary.cash_sales)}`"
+                        variant="success"
+                    />
 
-                <MetricCard
-                    :title="$t('treasury.net_cash_today')"
-                    :value="formatMoney(summary.net_cash_today)"
-                    :currency="$t('common.currency')"
-                    :subtitle="`${$t('treasury.recorded_credit_sales')}: ${formatMoney(summary.credit_sales)}`"
-                    :variant="summary.net_cash_today >= 0 ? 'primary' : 'danger'"
-                />
+                    <MetricCard
+                        :title="$t('treasury.outflow_cash')"
+                        :value="formatMoney(summary.total_cash_out)"
+                        :currency="$t('common.currency')"
+                        :subtitle="`${$t('treasury.operating_expenses')}: ${formatMoney(summary.total_expenses)}`"
+                        variant="danger"
+                    />
 
-                <MetricCard
-                    :title="$t('treasury.expected_in_drawer_now')"
-                    :value="formatMoney(summary.expected_cash_in_drawer)"
-                    :currency="$t('common.currency')"
-                    :subtitle="`${$t('treasury.including_opening_cash')}: ${formatMoney(summary.opening_cash_balance)}`"
-                    variant="primary"
-                />
-            </div>
+                    <MetricCard
+                        :title="$t('treasury.net_cash_today')"
+                        :value="formatMoney(summary.net_cash_today)"
+                        :currency="$t('common.currency')"
+                        :subtitle="`${$t('treasury.recorded_credit_sales')}: ${formatMoney(summary.credit_sales)}`"
+                        :variant="summary.net_cash_today >= 0 ? 'primary' : 'danger'"
+                    />
 
-            <!-- Two Columns: Invoices of the Day & Expenses of the Day -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-tajawal">
-                <!-- Invoices Log of Date -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                        <div class="flex items-center gap-2">
-                            <span>🧾</span>
-                            <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ $t('treasury.today_invoices') }} ({{ invoices.length }})</h3>
+                    <MetricCard
+                        :title="$t('treasury.expected_in_drawer_now')"
+                        :value="formatMoney(summary.expected_cash_in_drawer)"
+                        :currency="$t('common.currency')"
+                        :subtitle="`${$t('treasury.including_opening_cash')}: ${formatMoney(summary.opening_cash_balance)}`"
+                        variant="primary"
+                    />
+                </div>
+            </Deferred>
+
+            <!-- Two Columns: Invoices of the Day & Expenses of the Day (Deferred with CardSkeleton) -->
+            <Deferred :data="['invoices', 'expenses']">
+                <template #fallback>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-tajawal">
+                        <CardSkeleton v-for="i in 2" :key="i" :rows-count="5" />
+                    </div>
+                </template>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-tajawal animate-in fade-in duration-500">
+                    <!-- Invoices Log of Date -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span>🧾</span>
+                                <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ $t('treasury.today_invoices') }} ({{ invoices.length }})</h3>
+                            </div>
                         </div>
+
+                        <DataTable
+                            :columns="invoiceColumns"
+                            :rows="invoices"
+                            :empty-title="$t('treasury.empty_today_invoices')"
+                            empty-icon="🧾"
+                        >
+                            <!-- Invoice Number -->
+                            <template #cell-invoice_number="{ row }">
+                                <Link :href="`/invoices/${row.id}`" class="text-theme-primary font-mono font-bold hover:underline">
+                                    {{ row.invoice_number }}
+                                </Link>
+                            </template>
+
+                            <!-- Customer -->
+                            <template #cell-customer_name="{ row }">
+                                <span class="text-slate-800 dark:text-slate-200 font-tajawal font-bold">{{ row.customer_name }}</span>
+                            </template>
+
+                            <!-- Net Total -->
+                            <template #cell-net_total="{ row }">
+                                <span class="font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(row.net_total) }} {{ $t('common.currency') }}</span>
+                            </template>
+
+                            <!-- Payment Method -->
+                            <template #cell-payment_method="{ row }">
+                                <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
+                                    {{ row.payment_method === 'cash' ? $t('pos.payment_cash') : (row.payment_method === 'credit' ? $t('pos.payment_credit') : $t('pos.payment_partial')) }}
+                                </span>
+                            </template>
+                        </DataTable>
                     </div>
 
-                    <DataTable
-                        :columns="invoiceColumns"
-                        :rows="invoices"
-                        :empty-title="$t('treasury.empty_today_invoices')"
-                        empty-icon="🧾"
-                    >
-                        <!-- Invoice Number -->
-                        <template #cell-invoice_number="{ row }">
-                            <Link :href="`/invoices/${row.id}`" class="text-theme-primary font-mono font-bold hover:underline">
-                                {{ row.invoice_number }}
-                            </Link>
-                        </template>
-
-                        <!-- Customer -->
-                        <template #cell-customer_name="{ row }">
-                            <span class="text-slate-800 dark:text-slate-200 font-tajawal font-bold">{{ row.customer_name }}</span>
-                        </template>
-
-                        <!-- Net Total -->
-                        <template #cell-net_total="{ row }">
-                            <span class="font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(row.net_total) }} {{ $t('common.currency') }}</span>
-                        </template>
-
-                        <!-- Payment Method -->
-                        <template #cell-payment_method="{ row }">
-                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
-                                {{ row.payment_method === 'cash' ? $t('pos.payment_cash') : (row.payment_method === 'credit' ? $t('pos.payment_credit') : $t('pos.payment_partial')) }}
-                            </span>
-                        </template>
-                    </DataTable>
-                </div>
-
-                <!-- Expenses Log of Date -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                        <div class="flex items-center gap-2">
-                            <span>💸</span>
-                            <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ $t('treasury.today_expenses') }} ({{ expenses.length }})</h3>
+                    <!-- Expenses Log of Date -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span>💸</span>
+                                <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ $t('treasury.today_expenses') }} ({{ expenses.length }})</h3>
+                            </div>
                         </div>
+
+                        <DataTable
+                            :columns="expenseColumns"
+                            :rows="expenses"
+                            :empty-title="$t('treasury.empty_today_expenses')"
+                            empty-icon="💸"
+                        >
+                            <!-- Title -->
+                            <template #cell-title="{ row }">
+                                <span class="font-bold text-slate-800 dark:text-slate-200 font-tajawal">{{ row.title }}</span>
+                            </template>
+
+                            <!-- Cost Center -->
+                            <template #cell-cost_center_label="{ row }">
+                                <span class="text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ row.cost_center_label }}</span>
+                            </template>
+
+                            <!-- Amount -->
+                            <template #cell-amount="{ row }">
+                                <span class="font-mono font-bold text-rose-600 dark:text-rose-400">{{ formatMoney(row.amount) }} {{ $t('common.currency') }}</span>
+                            </template>
+
+                            <!-- Payment Method -->
+                            <template #cell-payment_method="{ row }">
+                                <span class="text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ row.payment_method }}</span>
+                            </template>
+                        </DataTable>
                     </div>
-
-                    <DataTable
-                        :columns="expenseColumns"
-                        :rows="expenses"
-                        :empty-title="$t('treasury.empty_today_expenses')"
-                        empty-icon="💸"
-                    >
-                        <!-- Title -->
-                        <template #cell-title="{ row }">
-                            <span class="font-bold text-slate-800 dark:text-slate-200 font-tajawal">{{ row.title }}</span>
-                        </template>
-
-                        <!-- Cost Center -->
-                        <template #cell-cost_center_label="{ row }">
-                            <span class="text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ row.cost_center_label }}</span>
-                        </template>
-
-                        <!-- Amount -->
-                        <template #cell-amount="{ row }">
-                            <span class="font-mono font-bold text-rose-600 dark:text-rose-400">{{ formatMoney(row.amount) }} {{ $t('common.currency') }}</span>
-                        </template>
-
-                        <!-- Payment Method -->
-                        <template #cell-payment_method="{ row }">
-                            <span class="text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ row.payment_method }}</span>
-                        </template>
-                    </DataTable>
                 </div>
-            </div>
+            </Deferred>
 
         </div>
 

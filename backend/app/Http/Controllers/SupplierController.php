@@ -163,8 +163,6 @@ final class SupplierController extends Controller
         $dateFrom = $request->input('from');
         $dateTo = $request->input('to');
 
-        $ledgerData = $balanceService->getSupplierLedger($supplier, $dateFrom, $dateTo);
-
         return Inertia::render('Suppliers/Statement', [
             'supplier' => [
                 'id' => $supplier->id,
@@ -175,12 +173,12 @@ final class SupplierController extends Controller
                 'current_balance' => (float)$supplier->current_balance,
                 'initial_balance' => (float)$supplier->initial_balance,
             ],
-            'ledger' => $ledgerData['ledger'],
-            'summary' => $ledgerData['summary'],
             'filters' => [
                 'from' => $dateFrom,
                 'to' => $dateTo,
             ],
+            'ledger' => Inertia::defer(fn() => $balanceService->getSupplierLedger($supplier, $dateFrom, $dateTo)['ledger'], 'supplierStatement'),
+            'summary' => Inertia::defer(fn() => $balanceService->getSupplierLedger($supplier, $dateFrom, $dateTo)['summary'], 'supplierStatement'),
         ]);
     }
 }

@@ -1,17 +1,19 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     item: { type: Object, required: true },
-    movements: { type: Object, required: true },
-    stats: { type: Object, default: () => ({ total_in: 0, total_out: 0, net_movement: 0, current_scope_stock: 0 }) },
+    movements: { type: Object, default: () => ({ data: [] }) },
+    stats: { type: Object, default: () => null },
     stores: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 });
@@ -152,44 +154,52 @@ const getMovementBadge = (type) => {
                 </div>
             </div>
 
-            <!-- 4 Top KPI Cards (Bento Grid on Mobile) -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 font-tajawal">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('inventory.quantity_in') }}</span>
-                    <div class="text-lg sm:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                        <span>📥</span>
-                        <span>{{ stats.total_in }}</span>
-                        <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+            <!-- 4 Top KPI Cards (Bento Grid on Mobile, Deferred with Skeleton) -->
+            <Deferred data="stats">
+                <template #fallback>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 font-tajawal">
+                        <StatCardSkeleton v-for="i in 4" :key="i" />
                     </div>
-                </div>
+                </template>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('inventory.quantity_out') }}</span>
-                    <div class="text-lg sm:text-xl font-black font-mono text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                        <span>📤</span>
-                        <span>{{ stats.total_out }}</span>
-                        <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                <div v-if="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 font-tajawal animate-in fade-in duration-500">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('inventory.quantity_in') }}</span>
+                        <div class="text-lg sm:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span>📥</span>
+                            <span>{{ stats.total_in }}</span>
+                            <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.period_net') || 'صافي الحركة للفترة' }}</span>
-                    <div class="text-lg sm:text-xl font-black font-mono flex items-center gap-1.5" :class="stats.net_movement >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                        <span>⚖️</span>
-                        <span>{{ stats.net_movement >= 0 ? '+' : '' }}{{ stats.net_movement }}</span>
-                        <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('inventory.quantity_out') }}</span>
+                        <div class="text-lg sm:text-xl font-black font-mono text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                            <span>📤</span>
+                            <span>{{ stats.total_out }}</span>
+                            <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('inventory.current_stock') }}</span>
-                    <div class="text-lg sm:text-xl font-black font-mono text-theme-primary flex items-center gap-1.5">
-                        <span>📦</span>
-                        <span>{{ stats.current_scope_stock }}</span>
-                        <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.period_net') || 'صافي الحركة للفترة' }}</span>
+                        <div class="text-lg sm:text-xl font-black font-mono flex items-center gap-1.5" :class="stats.net_movement >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                            <span>⚖️</span>
+                            <span>{{ stats.net_movement >= 0 ? '+' : '' }}{{ stats.net_movement }}</span>
+                            <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">{{ $t('inventory.current_stock') }}</span>
+                        <div class="text-lg sm:text-xl font-black font-mono text-theme-primary flex items-center gap-1.5">
+                            <span>📦</span>
+                            <span>{{ stats.current_scope_stock }}</span>
+                            <span class="text-xs font-tajawal text-slate-500 dark:text-slate-400 font-normal">{{ item.unit }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Deferred>
 
             <!-- Filter Controls & Presets -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-4 shadow-xs space-y-3 font-tajawal">
@@ -243,15 +253,20 @@ const getMovementBadge = (type) => {
                 </div>
             </div>
 
-            <!-- Movements Data Table -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <DataTable
-                    :columns="movementColumns"
-                    :rows="movements.data"
-                    :pagination="movements"
-                    :empty-title="$t('inventory.no_movements_found')"
-                    empty-icon="📦"
-                >
+            <!-- Movements Data Table (Deferred with TableSkeleton) -->
+            <Deferred data="movements">
+                <template #fallback>
+                    <TableSkeleton :columns-count="7" :rows-count="6" />
+                </template>
+
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal animate-in fade-in duration-500">
+                    <DataTable
+                        :columns="movementColumns"
+                        :rows="movements.data"
+                        :pagination="movements"
+                        :empty-title="$t('inventory.no_movements_found')"
+                        empty-icon="📦"
+                    >
                     <!-- Date & Time -->
                     <template #cell-created_at="{ row }">
                         <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">
@@ -346,6 +361,7 @@ const getMovementBadge = (type) => {
                     </template>
                 </DataTable>
             </div>
+            </Deferred>
         </div>
     </AppLayout>
 </template>

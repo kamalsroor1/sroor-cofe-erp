@@ -1,16 +1,18 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, useForm, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import DataTable from '@/Components/Common/DataTable.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     supplier: { type: Object, required: true },
     ledger: { type: Array, default: () => [] },
-    summary: { type: Object, default: () => ({}) },
+    summary: { type: Object, default: () => null },
     filters: { type: Object, default: () => ({}) },
 });
 
@@ -195,45 +197,58 @@ const savePayment = () => {
                 </div>
             </div>
 
-            <!-- Financial Summary Cards (Bento Grid on Mobile) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 font-tajawal">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('contacts.period_credit') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-slate-900 dark:text-white">
-                        {{ formatMoney(summary.total_purchases) }} <span class="text-[11px] text-theme-primary">{{ $t('common.currency') }}</span>
+            <!-- 3 Summary KPI Cards for Statement Period (Bento Grid on Mobile, Deferred with Skeleton) -->
+            <Deferred data="summary">
+                <template #fallback>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 font-tajawal">
+                        <StatCardSkeleton v-for="i in 3" :key="i" />
+                    </div>
+                </template>
+
+                <div v-if="summary" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 font-tajawal animate-in fade-in duration-500">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('contacts.period_credit') }}</span>
+                        <div class="text-lg sm:text-2xl font-black font-mono text-slate-900 dark:text-white">
+                            {{ formatMoney(summary.total_purchases) }} <span class="text-[11px] text-theme-primary">{{ $t('common.currency') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('contacts.period_debit') }}</span>
+                        <div class="text-lg sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                            {{ formatMoney(summary.total_payments) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('contacts.closing_balance') }}</span>
+                        <div class="text-lg sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
+                            {{ formatMoney(summary.current_balance) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+                        </div>
                     </div>
                 </div>
+            </Deferred>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('contacts.period_debit') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-                        {{ formatMoney(summary.total_payments) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                </div>
+            <!-- Ledger Statement Data Table (Deferred with TableSkeleton) -->
+            <Deferred data="ledger">
+                <template #fallback>
+                    <TableSkeleton :columns-count="7" :rows-count="6" />
+                </template>
 
-                <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('contacts.closing_balance') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
-                        {{ formatMoney(summary.current_balance) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                </div>
-            </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal animate-in fade-in duration-500">
+                    <DataTable
+                        :columns="statementColumns"
+                        :rows="ledger"
+                        :empty-title="$t('contacts.statement_empty')"
+                        empty-icon="📜"
+                    >
+                        <!-- Date -->
+                        <template #cell-date="{ row }">
+                            <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">{{ row.date }}</span>
+                        </template>
 
-            <!-- Ledger Statement Data Table -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <DataTable
-                    :columns="statementColumns"
-                    :rows="ledger"
-                    :empty-title="$t('contacts.statement_empty')"
-                    empty-icon="📜"
-                >
-                    <!-- Date -->
-                    <template #cell-date="{ row }">
-                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">{{ row.date }}</span>
-                    </template>
-
-                    <!-- Type -->
-                    <template #cell-type="{ row }">
+                        <!-- Type -->
+                        <template #cell-type="{ row }">
                         <div class="font-tajawal font-bold text-slate-900 dark:text-white flex items-center gap-1">
                             <span v-if="row.type && row.type.includes('صرف')" class="text-emerald-500">💸</span>
                             <span v-else class="text-theme-primary">📦</span>
@@ -311,6 +326,7 @@ const savePayment = () => {
                     </template>
                 </DataTable>
             </div>
+            </Deferred>
         </div>
 
         <!-- Quick Payment Modal (Smooth Native Pop) -->

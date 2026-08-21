@@ -46,13 +46,21 @@ class SuperAdminController extends Controller
     }
 
     /**
-     * Tenants Directory
+     * List all Multi-Tenant Instances
      */
     public function tenants(Request $request): Response
     {
-        $data = $this->getTenantsIndexAction->execute($request);
+        $plans = Plan::select('id', 'name', 'slug')->get();
 
-        return Inertia::render('SuperAdmin/Tenants/Index', $data);
+        return Inertia::render('SuperAdmin/Tenants/Index', [
+            'plans' => \App\Http\Resources\PlanResource::collection($plans)->resolve(),
+            'filters' => [
+                'search' => $request->query('search', ''),
+                'status' => $request->query('status', 'all'),
+                'plan_id' => $request->query('plan_id', 'all'),
+            ],
+            'tenants' => Inertia::defer(fn() => $this->getTenantsIndexAction->execute($request)['tenants'], 'tenantsData'),
+        ]);
     }
 
     /**

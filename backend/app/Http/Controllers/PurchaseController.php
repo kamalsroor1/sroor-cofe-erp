@@ -202,13 +202,6 @@ final class PurchaseController extends Controller
         $stores = \App\Models\Store::where('is_active', true)->select('id', 'name')->get();
 
         return Inertia::render('Purchases/SmartReorder', [
-            'suggestions' => $suggestions->values(),
-            'metrics' => [
-                'critical_count' => $data['critical_count'] ?? 0,
-                'warning_count' => $data['warning_count'] ?? 0,
-                'safe_count' => $data['safe_count'] ?? 0,
-                'total_estimated_cost' => (float)$data['total_estimated_cost'],
-            ],
             'stores' => $stores,
             'filters' => [
                 'store_id' => $storeId ?: 'all',
@@ -217,6 +210,13 @@ final class PurchaseController extends Controller
                 'urgency' => $urgency,
                 'search' => $search,
             ],
+            'suggestions' => Inertia::defer(fn() => $suggestions->values(), 'smartReorderData'),
+            'metrics' => Inertia::defer(fn() => [
+                'critical_count' => $data['critical_count'] ?? 0,
+                'warning_count' => $data['warning_count'] ?? 0,
+                'safe_count' => $data['safe_count'] ?? 0,
+                'total_estimated_cost' => (float)$data['total_estimated_cost'],
+            ], 'smartReorderData'),
         ]);
     }
 }

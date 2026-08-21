@@ -7,10 +7,17 @@
 ## مراجعة Skeleton Loading (Inertia Deferred Props) بتاريخ 2026-08-21
 
 ### جرد الصفحات والبيانات
-- `Dashboard.vue` (`DashboardController.php`) - كان يرجع جميع الحسابات المعقدة ومؤشرات المبيعات وتحليلات 7 أيام والفواتير والنواقص دفعة واحدة مع الـ render - تم تحويل `metrics`, `analytics`, `recent_invoices`, `low_stock_items`, `top_selling_items`, `active_shift` إلى `Inertia::defer()` مجمعة في جروب `'dashboardData'`، مع بقاء `active_store` فورياً.
-- `Reports/Index.vue` (`ReportController.php`) - كان يحسب أرباح الأصناف ومبيعات الفروع ومسحوبات العملاء وتصنيفات المصروفات وتقييم المخزون ABC والسيولة النقدية بصورة متزامنة - تم تحويل `summary`, `item_profits`, `store_breakdown`, `customer_sales`, `expenses_breakdown`, `inventory_items`, `abc_data`, `treasury_data` إلى `Inertia::defer()` في جروب `'reportsData'` مع بقاء الفلاتر وقائمة الفروع `stores` فورية.
-- `SuperAdmin/Dashboard.vue` (`SuperAdminController.php`) - كان يستعلم عن إحصائيات المنصة وتوزيع الباقات وأحدث المستأجرين تزامناً - تم تحويل `metrics`, `plan_stats`, `recent_tenants` إلى `Inertia::defer()` في جروب `'superAdminDashboard'`.
-- `Customers/Statement.vue` (`CustomerController.php`) - كان يبني دفتر الأستاذ للعميل وحساب القيود التراكمية بالكامل في الـ initial load - تم تحويل `ledger` و `summary` إلى `Inertia::defer()` مع بقاء بيانات العميل `customer` والفلاتر فورية.
+- `Dashboard.vue` (`DashboardController.php`) - تحويل `metrics`, `analytics`, `recent_invoices`, `low_stock_items`, `top_selling_items`, `active_shift` إلى `Inertia::defer()` في جروب `'dashboardData'`، مع بقاء `active_store` فورياً.
+- `Reports/Index.vue` (`ReportController.php`) - تحويل `summary`, `item_profits`, `store_breakdown`, `customer_sales`, `expenses_breakdown`, `inventory_items`, `abc_data`, `treasury_data` إلى `Inertia::defer()` في جروب `'reportsData'` مع بقاء الفلاتر وقائمة الفروع `stores` فورية.
+- `SuperAdmin/Dashboard.vue` (`SuperAdminController.php`) - تحويل `metrics`, `plan_stats`, `recent_tenants` إلى `Inertia::defer()` في جروب `'superAdminDashboard'`.
+- `SuperAdmin/Tenants/Index.vue` (`SuperAdminController.php`) - تحويل `tenants` إلى `Inertia::defer()` في جروب `'tenantsData'` مع بقاء قائمة الخطط `plans` والفلاتر فورية.
+- `Customers/Statement.vue` (`CustomerController.php`) - تحويل `ledger` و `summary` إلى `Inertia::defer()` في جروب `'customerStatement'` مع بقاء `customer` فورياً.
+- `Suppliers/Statement.vue` (`SupplierController.php`) - تحويل `ledger` و `summary` إلى `Inertia::defer()` في جروب `'supplierStatement'` مع بقاء `supplier` فورياً.
+- `Purchases/SmartReorder.vue` (`PurchaseController.php`) - تحويل اقتراحات إعادة الطلب `suggestions` ومؤشرات الخطورة `metrics` إلى `Inertia::defer()` في جروب `'smartReorderData'` مع بقاء الفروع والفلاتر فورية.
+- `Items/Movements.vue` (`ItemController.php`) - تحويل حركة المخزون `movements` وإحصائيات الفترة `stats` إلى `Inertia::defer()` في جروب `'itemMovementsData'` مع بقاء تفاصيل الصنف `item` فورية.
+- `Stores/Stocks.vue` (`StoreController.php`) - تحويل جدول الأرصدة والتقييم `stocks` إلى `Inertia::defer()` في جروب `'storeStocksData'` مع بقاء قائمة الفروع والفلاتر فورية.
+- `DailyJournal/Index.vue` (`DailyJournalController.php`) - تحويل مصفوفة السيولة النقدية `summary` وفواتير اليوم `invoices` ومصروفات اليوم `expenses` إلى `Inertia::defer()` في جروب `'dailyJournalData'` مع بقاء الوردية النشطة `active_shift` والتاريخ فوريين.
+- `ActivityLogs/Index.vue` (`ActivityLogController.php`) - تحويل سجل الرقابة `logs` وإحصائيات العمليات `stats` إلى `Inertia::defer()` في جروب `'activityLogsData'` مع بقاء قوائم المستخدمين والفروع والأقسام فورية.
 
 ### Skeleton Components جديدة
 - `Components/Common/Skeletons/Skeleton.vue`: البلوك الأساسي للتحميل الهيكلي مع أنيميشن النبض والتدرج الضوئي الشيمر (Shimmer Effect) ودعم أبعاد متغيرة وRounded corners.
