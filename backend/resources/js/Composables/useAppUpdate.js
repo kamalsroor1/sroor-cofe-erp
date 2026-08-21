@@ -11,6 +11,7 @@ const isForceUpdate = ref(false);
 const latestVersionData = ref(null);
 const isModalOpen = ref(false);
 const isDownloading = ref(false);
+const isDownloaded = ref(false);
 const downloadProgress = ref(0);
 
 export function useAppUpdate() {
@@ -36,6 +37,8 @@ export function useAppUpdate() {
 
             if (data.has_update && data.latest_version) {
                 latestVersionData.value = data;
+                isDownloaded.value = false;
+                downloadProgress.value = 0;
                 isModalOpen.value = true;
             } else if (isManual) {
                 Swal.fire({
@@ -67,19 +70,20 @@ export function useAppUpdate() {
     const startDownloadAndInstall = async () => {
         if (isDownloading.value) return;
         isDownloading.value = true;
+        isDownloaded.value = false;
         downloadProgress.value = 0;
 
-        // Smooth simulated chunked download progress for silky UI experience
+        // Smooth simulated chunked download progress
         const interval = setInterval(() => {
             if (downloadProgress.value < 90) {
-                downloadProgress.value += Math.floor(Math.random() * 12) + 5;
+                downloadProgress.value += Math.floor(Math.random() * 14) + 6;
             }
-        }, 200);
+        }, 150);
 
         try {
             const downloadUrl = latestVersionData.value?.download_url || '/api/v1/app/download-latest-apk';
 
-            // Create hidden link or trigger APK download
+            // Create download anchor and trigger
             const link = document.createElement('a');
             link.href = downloadUrl;
             link.setAttribute('download', `sroor-coffee-erp-v${latestVersionData.value?.latest_version || 'latest'}.apk`);
@@ -92,20 +96,12 @@ export function useAppUpdate() {
 
             setTimeout(() => {
                 isDownloading.value = false;
-                if (!isForceUpdate.value) {
-                    isModalOpen.value = false;
-                }
-                Swal.fire({
-                    icon: 'info',
-                    title: 'تم بدء تثبيت التحديث ⚡',
-                    text: 'جاري فتح حزمة التثبيت على جهازك. يرجى الضغط على "تثبيت" أو "Install" لإكمال التحديث.',
-                    confirmButtonText: 'تم',
-                    confirmButtonColor: '#10b981',
-                });
-            }, 600);
+                isDownloaded.value = true;
+            }, 500);
         } catch (e) {
             clearInterval(interval);
             isDownloading.value = false;
+            isDownloaded.value = false;
             Swal.fire({
                 icon: 'error',
                 title: 'فشل التحميل',
@@ -117,6 +113,8 @@ export function useAppUpdate() {
     const closeModal = () => {
         if (!isForceUpdate.value) {
             isModalOpen.value = false;
+            isDownloaded.value = false;
+            downloadProgress.value = 0;
         }
     };
 
@@ -129,6 +127,7 @@ export function useAppUpdate() {
         latestVersionData,
         isModalOpen,
         isDownloading,
+        isDownloaded,
         downloadProgress,
         checkForUpdates,
         startDownloadAndInstall,

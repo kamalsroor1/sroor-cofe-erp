@@ -59,7 +59,9 @@ onMounted(async () => {
         window.spaTranslations = appConfigStore.translations;
     }
 
-    // 3. Check for app updates in the background (Non-blocking)
-    checkForUpdates(false);
+    // 3. Check for app updates in the background (Non-blocking for authenticated users)
+    if (authStore.isAuthenticated) {
+        checkForUpdates(false);
+    }
 });
 </script>
