@@ -29,6 +29,9 @@
     3. استخدام `PlanResource::collection($plans)` في `createTenant()`.
     4. استبدال `env()` بـ `config('tenancy.central_domains.0')`.
     5. استخراج الترجمة إلى `lang/ar/super.php` و `lang/en/super.php` واستخدام `__('super.no_active_user_in_store')`.
+- **`DashboardApiController`**:
+  - *كان فيه إيه*: خطأ في اسم حقل التكلفة `unit_cost` بدلاً من `cost_price` في استعلام `InvoiceItem`.
+  - *اتحل إزاي*: تصحيح اسم العمود إلى `cost_price` مع التأكد من سلامة حسابات الـ COGS واستخدام `DECIMAL(12,3)` و `bcmath`.
 
 ### تكرار منطق بين Dashboard و Super Dashboard اتحل
 - توحيد قراءة النطاقات المركزية `central_domains` عبر `config()` ومنع تشتت القراءات من `env()`.

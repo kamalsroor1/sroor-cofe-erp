@@ -50,7 +50,7 @@ class DashboardApiController extends Controller
         // 4. Today's COGS
         $todayInvoiceIds = $todayInvoices->pluck('id');
         $totalCogs = \App\Models\InvoiceItem::whereIn('invoice_id', $todayInvoiceIds)
-            ->selectRaw('SUM(quantity * unit_cost) as total_cogs')
+            ->selectRaw('SUM(quantity * cost_price) as total_cogs')
             ->value('total_cogs') ?: '0.000';
 
         $grossProfit = bcsub($netSales, (string)$totalCogs, 3);
