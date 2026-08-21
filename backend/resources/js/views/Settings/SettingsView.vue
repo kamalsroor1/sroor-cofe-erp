@@ -56,93 +56,94 @@
 
     <!-- Main Settings Navigation & Sub-Pages Layout -->
     <div v-else>
-      <!-- 📱 Mobile Hub Mode (Grid of Interactive Settings Cards when no section is selected) -->
-      <div v-if="!selectedSection && isMobileView" class="grid grid-cols-1 gap-3.5">
-        <div
-          v-for="sec in sections"
-          :key="sec.id"
-          @click="selectedSection = sec.id"
-          class="p-4.5 rounded-3xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all active:scale-[0.98] cursor-pointer shadow-lg flex items-center justify-between gap-4 group"
-        >
-          <div class="flex items-center gap-4 min-w-0">
-            <div
-              class="w-13 h-13 rounded-2xl flex items-center justify-center shrink-0 shadow-md transition-transform group-hover:scale-105"
-              :class="sec.iconBg"
-            >
-              <component :is="sec.icon" class="w-6 h-6" :class="sec.iconColor" />
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-black text-white group-hover:text-amber-400 transition-colors truncate">
-                  {{ sec.label }}
-                </h3>
-                <span v-if="sec.badge" class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">
-                  {{ sec.badge }}
-                </span>
+      <Transition name="settings-slide" mode="out-in">
+        <!-- 📱 Mobile Hub Mode (Grid of Interactive Settings Cards when no section is selected) -->
+        <div v-if="!selectedSection && isMobileView" key="settings-hub" class="grid grid-cols-1 gap-3.5">
+          <div
+            v-for="sec in sections"
+            :key="sec.id"
+            @click="selectedSection = sec.id"
+            class="p-4.5 rounded-3xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all active:scale-[0.98] cursor-pointer shadow-lg flex items-center justify-between gap-4 group"
+          >
+            <div class="flex items-center gap-4 min-w-0">
+              <div
+                class="w-13 h-13 rounded-2xl flex items-center justify-center shrink-0 shadow-md transition-transform group-hover:scale-105"
+                :class="sec.iconBg"
+              >
+                <component :is="sec.icon" class="w-6 h-6" :class="sec.iconColor" />
               </div>
-              <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                {{ sec.description }}
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-black text-white group-hover:text-amber-400 transition-colors truncate">
+                    {{ sec.label }}
+                  </h3>
+                  <span v-if="sec.badge" class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">
+                    {{ sec.badge }}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                  {{ sec.description }}
+                </p>
+              </div>
+            </div>
+
+            <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-amber-400 group-hover:bg-slate-800 transition-all shrink-0">
+              <ChevronLeft class="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 💻 Desktop Split View & Mobile Drill-Down Active Page -->
+        <div v-else key="settings-detail" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Desktop Sidebar Menu (Col 4 - Hidden on mobile drill-down) -->
+          <div class="hidden lg:block lg:col-span-4 space-y-2.5">
+            <div class="p-3 bg-slate-950/80 rounded-3xl border border-slate-800 shadow-xl space-y-1.5">
+              <div class="px-3.5 py-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                أقسام الإعدادات
+              </div>
+
+              <button
+                v-for="sec in sections"
+                :key="sec.id"
+                type="button"
+                @click="selectedSection = sec.id"
+                class="w-full p-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-between gap-3 text-start cursor-pointer group"
+                :class="selectedSection === sec.id ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900'"
+              >
+                <div class="flex items-center gap-3 min-w-0">
+                  <div
+                    class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    :class="selectedSection === sec.id ? 'bg-slate-950/20 text-slate-950' : sec.iconBg"
+                  >
+                    <component :is="sec.icon" class="w-4.5 h-4.5" :class="selectedSection === sec.id ? 'text-slate-950' : sec.iconColor" />
+                  </div>
+                  <div class="min-w-0">
+                    <div class="truncate">{{ sec.label }}</div>
+                    <div class="text-[10px] font-normal truncate" :class="selectedSection === sec.id ? 'text-slate-900/80' : 'text-slate-400'">
+                      {{ sec.subtitle }}
+                    </div>
+                  </div>
+                </div>
+
+                <ChevronLeft class="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+              </button>
+            </div>
+
+            <!-- Quick Info Box -->
+            <div class="p-4 bg-slate-950/60 rounded-3xl border border-slate-800/80 text-xs text-slate-400 space-y-2">
+              <div class="flex items-center gap-2 text-slate-200 font-bold">
+                <ShieldCheck class="w-4 h-4 text-emerald-400" />
+                <span>إدارة آمنة 100%</span>
+              </div>
+              <p class="text-[11px] leading-relaxed">
+                تنعكس التعديلات على كافة فروع المؤسسة وتطبيق الكاشير والطباعة السريعة فور الضغط على حفظ.
               </p>
             </div>
           </div>
 
-          <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-amber-400 group-hover:bg-slate-800 transition-all shrink-0">
-            <ChevronLeft class="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      <!-- 💻 Desktop Split View & Mobile Drill-Down Active Page -->
-      <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Desktop Sidebar Menu (Col 4 - Hidden on mobile drill-down) -->
-        <div class="hidden lg:block lg:col-span-4 space-y-2.5">
-          <div class="p-3 bg-slate-950/80 rounded-3xl border border-slate-800 shadow-xl space-y-1.5">
-            <div class="px-3.5 py-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              أقسام الإعدادات
-            </div>
-
-            <button
-              v-for="sec in sections"
-              :key="sec.id"
-              type="button"
-              @click="selectedSection = sec.id"
-              class="w-full p-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-between gap-3 text-start cursor-pointer group"
-              :class="selectedSection === sec.id ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900'"
-            >
-              <div class="flex items-center gap-3 min-w-0">
-                <div
-                  class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  :class="selectedSection === sec.id ? 'bg-slate-950/20 text-slate-950' : sec.iconBg"
-                >
-                  <component :is="sec.icon" class="w-4.5 h-4.5" :class="selectedSection === sec.id ? 'text-slate-950' : sec.iconColor" />
-                </div>
-                <div class="min-w-0">
-                  <div class="truncate">{{ sec.label }}</div>
-                  <div class="text-[10px] font-normal truncate" :class="selectedSection === sec.id ? 'text-slate-900/80' : 'text-slate-400'">
-                    {{ sec.subtitle }}
-                  </div>
-                </div>
-              </div>
-
-              <ChevronLeft class="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
-            </button>
-          </div>
-
-          <!-- Quick Info Box -->
-          <div class="p-4 bg-slate-950/60 rounded-3xl border border-slate-800/80 text-xs text-slate-400 space-y-2">
-            <div class="flex items-center gap-2 text-slate-200 font-bold">
-              <ShieldCheck class="w-4 h-4 text-emerald-400" />
-              <span>إدارة آمنة 100%</span>
-            </div>
-            <p class="text-[11px] leading-relaxed">
-              تنعكس التعديلات على كافة فروع المؤسسة وتطبيق الكاشير والطباعة السريعة فور الضغط على حفظ.
-            </p>
-          </div>
-        </div>
-
-        <!-- Settings Sub-Page Content Area (Col 8 on Desktop, Col 12 on Mobile Drill-Down) -->
-        <div class="lg:col-span-8">
-          <Transition name="page" mode="out-in">
+          <!-- Settings Sub-Page Content Area (Col 8 on Desktop, Col 12 on Mobile Drill-Down) -->
+          <div class="lg:col-span-8">
+            <Transition name="settings-crossfade" mode="out-in">
             <!-- 🏢 Sub-Page 1: Branding & Organization Info -->
             <div
               v-if="selectedSection === 'branding'"
@@ -464,13 +465,13 @@
                       <span class="text-cyan-400 font-bold font-mono text-sm">{{ systemInfo.db_driver || 'MySQL' }}</span>
                     </div>
                   </div>
-                  <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 text-[10px] font-bold">متصل</span>
                 </div>
               </div>
             </div>
           </Transition>
         </div>
       </div>
+      </Transition>
     </div>
   </div>
 </template>
