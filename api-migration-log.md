@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 0 (التخطيط والقرارات المعمارية) مكتملة وبانتظار الموافقة لبدء المرحلة 1.
+> **الحالة العامة:** المرحلة 1 (بناء Auth API Backend) مكتملة ومختبرة بنجاح بنسبة 100%.
 
 ---
 
@@ -97,9 +97,9 @@
 ## 3. خطة وترتيب ترحيل الوحدات (Modules Migration Roadmap)
 
 ```text
-[المرحلة 0: التخطيط] ──► [المرحلة 1: Auth API] ──► [المرحلة 2: Permissions/Context API] ──► [المرحلة 3: Frontend SPA Core]
-                                                                                                    │
-┌───────────────────────────────────────────────────────────────────────────────────────────────────┘
+[المرحلة 0: التخطيط ✅] ──► [المرحلة 1: Auth API ✅] ──► [المرحلة 2: Permissions/Context API] ──► [المرحلة 3: Frontend SPA Core]
+                                                                                                        │
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ▼
 [المرحلة 4: ترحيل الموديولات تدريجياً (Module by Module)]
   ├── 1. الفروع والمخازن (Stores & Stocks)
@@ -124,10 +124,114 @@
 
 ---
 
-## 4. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 4. Auth API — بتاريخ 2026-08-21
+
+### الملفات التي تم إنشاؤها وتعديلها:
+1. `[NEW]` `database/migrations/2019_12_14_000001_create_personal_access_tokens_table.php` (قاعدة البيانات المركزية)
+2. `[NEW]` `database/migrations/tenant/2019_12_14_000001_create_personal_access_tokens_table.php` (قواعد بيانات المستأجرين)
+3. `[NEW]` `app/DTOs/Auth/ApiLoginDTO.php` (DTO مدقق النوع لاستقبال بيانات تسجيل الدخول والجهاز والمستأجر)
+4. `[NEW]` `app/Http/Requests/Auth/ApiLoginRequest.php` (Form Request محكم التحقق مع حماية Rate Limiter)
+5. `[NEW]` `app/Actions/Auth/ApiLoginAction.php` (Single Action لتسجيل الدخول والتحقق وإصدار توكن Sanctum وسياق المتجر والنظام)
+6. `[NEW]` `app/Actions/Auth/ApiLogoutAction.php` (Single Action لإلغاء وإتلاف توكنات Sanctum وتسجيل النشاط)
+7. `[NEW]` `app/Actions/Auth/ApiMeAction.php` (Single Action لاسترجاع بيانات المستخدم، الصلاحيات، الفروع، والوردية النشطة)
+8. `[NEW]` `app/Http/Middleware/ResolveApiTenancy.php` (Middleware مرن للتعرف على المستأجر عبر Domain أو Header `X-Tenant`)
+9. `[MODIFIED]` `app/Models/User.php` (إضافة Trait `Laravel\Sanctum\HasApiTokens`)
+10. `[MODIFIED]` `app/Http/Resources/UserResource.php` (تنسيق مخرجات المستخدم، الصلاحيات، الأدوار، والفروع)
+11. `[MODIFIED]` `app/Http/Middleware/ApiTokenAuth.php` (دعم مصادقة Sanctum Bearer Tokens وربطها بالـ user context)
+12. `[MODIFIED]` `app/Http/Controllers/Api/AuthController.php` (إعادة بناء بالكامل لتطبيق SOLID وفصل الطبقات)
+13. `[MODIFIED]` `routes/api.php` (تطبيق ResolveApiTenancy على مسارات `/api/v1`)
+14. `[MODIFIED]` `bootstrap/app.php` (معالجة استثناءات التوثيق والتحقق بصيغة JSON موحدة)
+15. `[MODIFIED]` `lang/ar/auth.php` و `lang/en/auth.php` (إضافة مفاتيح الترجمة لكافة رسائل الـ API Auth بدون أي نصوص ثابتة)
+16. `[NEW]` `tests/Feature/Api/AuthApiTest.php` (حزمة اختبارات آلية تغطي كافة حالات Login, Me, Logout, Rate Limit, Inactive Account)
+
+### طريقة الاختبار ونقاط النهاية (API Endpoints & Examples):
+
+#### 1. تسجيل الدخول (Login):
+* **Endpoint:** `POST /api/v1/auth/login`
+* **Headers:** `Accept: application/json`, `X-Tenant: {tenant_id_or_domain}` (اختياري لو عبر دومين عام)
+* **Request Body:**
+```json
+{
+  "login": "01012316954",
+  "password": "password",
+  "device_name": "vue-spa-chrome"
+}
+```
+* **Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "تم تسجيل الدخول بنجاح إلى منظومة ERP.",
+  "data": {
+    "token": "1|abcdef123456...",
+    "user": {
+      "id": 1,
+      "name": "كمال سرور",
+      "email": "kamal@sroor.test",
+      "phone": "01012316954",
+      "roles": ["admin"],
+      "permissions": ["pos.access", "invoices.view", ...],
+      "theme_preference": "dark",
+      "show_print_subtitle": true,
+      "default_store_id": 1,
+      "is_active": true
+    },
+    "store": {
+      "id": 1,
+      "name": "المخزن الرئيسي",
+      "code": "MAIN",
+      "is_main": true
+    },
+    "stores": [...],
+    "system": {
+      "company_name": "سرور كوفي",
+      "company_subtitle": "لتوريدات خامات مطاحن البن",
+      "system_theme": "amber",
+      "server_time": "2026-08-21 14:35:00"
+    }
+  }
+}
+```
+
+#### 2. استعلام المستخدم الحالي وسياق المتجر والصلاحيات (Get Current User / Me):
+* **Endpoint:** `GET /api/v1/auth/me`
+* **Headers:** `Authorization: Bearer 1|abcdef123456...`, `Accept: application/json`, `X-Store-Id: 1`
+* **Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "كمال سرور",
+      "roles": ["admin"],
+      "permissions": ["pos.access", ...]
+    },
+    "store": { "id": 1, "name": "المخزن الرئيسي" },
+    "active_shift": { "id": 5, "shift_number": "SH-005", "opened_at": "..." }
+  }
+}
+```
+
+#### 3. تسجيل الخروج وإلغاء التوكن (Logout):
+* **Endpoint:** `POST /api/v1/auth/logout`
+* **Headers:** `Authorization: Bearer 1|abcdef123456...`, `Accept: application/json`
+* **Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "تم تسجيل الخروج بنجاح."
+}
+```
+
+### حالة المرحلة: ✅ مكتملة بنجاح 100%
+
+---
+
+## 5. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
-- [ ] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service**
+- [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
 - [ ] **المرحلة 2: بناء Permissions & System Context API (Backend)**
 - [ ] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)**
 - [ ] **المرحلة 4: تحويل الموديولات:**
@@ -150,5 +254,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 0 (التخطيط والقرارات المعمارية)  
-**المرحلة التالية المستهدفة:** المرحلة 1 (بناء الـ Auth API بالباك إند)
+**آخر مرحلة مكتملة:** المرحلة 1 (Auth API Backend)  
+**المرحلة التالية المستهدفة:** المرحلة 2 (Permissions/Policies & System Context API)

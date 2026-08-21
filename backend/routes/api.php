@@ -11,8 +11,9 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TreasuryController;
 use App\Http\Controllers\Api\AppUpdateController;
 use App\Http\Middleware\ApiTokenAuth;
+use App\Http\Middleware\ResolveApiTenancy;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');

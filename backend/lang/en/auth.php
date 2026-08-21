@@ -43,4 +43,8 @@ return [
     'cannot_delete_own_account' => 'You cannot delete your own account',
     'user_deleted_success' => 'User account deleted successfully',
     'user_status_updated_success' => 'User status updated successfully',
+    'account_disabled' => 'This account is disabled, please contact administrator',
+    'unauthorized' => 'Unauthorized - Please sign in first',
+    'session_expired' => 'Session expired, please sign in again',
+    'tenant_not_found' => 'Tenant or organization not found',
 ];

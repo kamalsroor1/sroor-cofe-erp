@@ -1,141 +1,87 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Auth\ApiLoginAction;
+use App\Actions\Auth\ApiLogoutAction;
+use App\Actions\Auth\ApiMeAction;
+use App\DTOs\Auth\ApiLoginDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ApiLoginRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\Setting;
+use Illuminate\Validation\ValidationException;
 
-class AuthController extends Controller
+final class AuthController extends Controller
 {
+    public function __construct(
+        private readonly ApiLoginAction $loginAction,
+        private readonly ApiLogoutAction $logoutAction,
+        private readonly ApiMeAction $meAction,
+    ) {}
+
     /**
-     * Mobile User Login
+     * Authenticate User via API & Issue Sanctum Bearer Token
      */
-    public function login(Request $request)
+    public function login(ApiLoginRequest $request): JsonResponse
     {
-        $request->validate([
-            'login'    => 'required|string',
-            'password' => 'required|string',
-        ]);
+        $request->ensureIsNotRateLimited();
 
-        $login = trim($request->input('login'));
-        $password = $request->input('password');
+        $dto = ApiLoginDTO::fromRequest($request);
 
-        // Find user by phone or email
-        $user = User::where(function ($query) use ($login) {
-            $query->where('phone', $login)
-                  ->orWhere('email', $login);
-        })->first();
+        try {
+            $result = $this->loginAction->execute($dto);
+            $request->clearRateLimit();
 
-        if (!$user || !Hash::check($password, $user->password)) {
             return response()->json([
-                'success' => false,
-                'message' => 'بيانات الدخول غير صحيحة (Invalid credentials)',
-            ], 422);
+                'success' => true,
+                'message' => __('auth.login_success'),
+                'data'    => $result,
+            ], 200);
+        } catch (ValidationException $e) {
+            $request->hitRateLimit();
+            throw $e;
         }
-
-        if (!$user->is_active) {
-            return response()->json([
-                'success' => false,
-                'message' => 'هذا الحساب معطل، يرجى مراجعة الإدارة',
-            ], 403);
-        }
-
-        // Generate persistent/secure API token
-        $token = Str::random(60) . '.' . time();
-        $user->update([
-            'api_token'     => $token,
-            'last_login_at' => now(),
-        ]);
-
-        // Get user permissions & roles
-        $roles = $user->getRoleNames();
-        $permissions = $user->getAllPermissions()->pluck('name');
-
-        // User store context
-        $currentStore = $user->getCurrentStore();
-        $userStores = $user->hasRole('admin') 
-            ? Store::where('is_active', true)->get(['id', 'name', 'code', 'type', 'is_main'])
-            : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
-
-        $companyName = Setting::get('company_name', 'سرور كوفي');
-        $companySubtitle = Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تسجيل الدخول بنجاح',
-            'token'   => $token,
-            'user'    => [
-                'id'                  => $user->id,
-                'name'                => $user->name,
-                'phone'               => $user->phone,
-                'email'               => $user->email,
-                'theme_preference'    => $user->theme_preference ?? 'dark',
-                'show_print_subtitle' => (bool)$user->show_print_subtitle,
-                'roles'               => $roles,
-                'permissions'         => $permissions,
-            ],
-            'store'   => $currentStore ? [
-                'id'      => $currentStore->id,
-                'name'    => $currentStore->name,
-                'code'    => $currentStore->code,
-                'is_main' => (bool)$currentStore->is_main,
-            ] : null,
-            'stores'  => $userStores,
-            'system'  => [
-                'company_name'     => $companyName,
-                'company_subtitle' => $companySubtitle,
-                'server_time'      => now()->toDateTimeString(),
-            ],
-        ]);
     }
 
     /**
-     * Get Current Authenticated User Info
+     * Get Current Authenticated User Profile, Store Context & Permissions
      */
-    public function me(Request $request)
+    public function me(Request $request): JsonResponse
     {
         $user = $request->user();
-        $currentStore = $user->getCurrentStore();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthorized'),
+            ], 401);
+        }
+
+        $result = $this->meAction->execute($user, $request);
 
         return response()->json([
             'success' => true,
-            'user'    => [
-                'id'                  => $user->id,
-                'name'                => $user->name,
-                'phone'               => $user->phone,
-                'email'               => $user->email,
-                'theme_preference'    => $user->theme_preference ?? 'dark',
-                'show_print_subtitle' => (bool)$user->show_print_subtitle,
-                'roles'               => $user->getRoleNames(),
-                'permissions'         => $user->getAllPermissions()->pluck('name'),
-            ],
-            'store'   => $currentStore ? [
-                'id'      => $currentStore->id,
-                'name'    => $currentStore->name,
-                'code'    => $currentStore->code,
-                'is_main' => (bool)$currentStore->is_main,
-            ] : null,
-        ]);
+            'data'    => $result,
+        ], 200);
     }
 
     /**
-     * Logout & Revoke API Token
+     * Logout and Revoke Sanctum Access Token
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
+
         if ($user) {
-            $user->update(['api_token' => null]);
+            $this->logoutAction->execute($user);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'تم تسجيل الخروج بنجاح',
-        ]);
+            'message' => __('auth.logout_success'),
+        ], 200);
     }
 }

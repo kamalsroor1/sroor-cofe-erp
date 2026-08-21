@@ -38,4 +38,8 @@ return [
     'cannot_delete_own_account' => 'لا يمكنك حذف حسابك الشخصي الحالي',
     'user_deleted_success' => 'تم حذف حساب المستخدم بنجاح',
     'user_status_updated_success' => 'تم تحديث حالة حساب المستخدم بنجاح',
+    'account_disabled' => 'هذا الحساب معطل، يرجى مراجعة إدارة النظام',
+    'unauthorized' => 'غير مصرح - يرجى تسجيل الدخول أولاً',
+    'session_expired' => 'انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول',
+    'tenant_not_found' => 'المؤسسة أو المستأجر غير موجود',
 ];
