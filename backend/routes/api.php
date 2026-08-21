@@ -38,9 +38,16 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         // High-Performance Consolidated Dashboard Summary
         Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.summary');
 
-        // Stores & Branches (Multi-Tenancy & Switching)
+        // Stores & Branches (CRUD, Stocks & Switching)
         Route::get('/stores', [StoreController::class, 'index'])->name('api.stores.index');
+        Route::post('/stores', [StoreController::class, 'store'])->name('api.stores.store');
+        Route::get('/stores/stocks', [StoreController::class, 'stocks'])->name('api.stores.stocks');
         Route::post('/stores/switch', [StoreController::class, 'switchStore'])->name('api.stores.switch');
+        Route::get('/stores/{id}', [StoreController::class, 'show'])->name('api.stores.show');
+        Route::put('/stores/{id}', [StoreController::class, 'update'])->name('api.stores.update');
+        Route::delete('/stores/{id}', [StoreController::class, 'destroy'])->name('api.stores.destroy');
+        Route::patch('/stores/{id}/toggle-active', [StoreController::class, 'toggleActive'])->name('api.stores.toggle_active');
+        Route::post('/stores/{id}/assign-users', [StoreController::class, 'assignUsers'])->name('api.stores.assign_users');
 
         // Customers & Statements
         Route::get('/customers', [CustomerController::class, 'index'])->name('api.customers.index');

@@ -121,8 +121,17 @@
           </a>
 
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
-            المخزون والجهات
+            الفروع والمخزون
           </div>
+
+          <router-link
+            to="/stores"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <StoreIcon class="w-4 h-4" />
+            <span class="font-tajawal">الفروع والمخازن</span>
+          </router-link>
 
           <a
             href="/items"
@@ -189,6 +198,7 @@ import {
     LayoutDashboard,
     ShoppingCart,
     FileText,
+    Store as StoreIcon,
     Package,
     Users,
     Factory,

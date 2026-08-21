@@ -22,6 +22,25 @@ const routes = [
         },
     },
     {
+        path: '/stores',
+        name: 'stores.index',
+        component: () => import('../views/Stores/StoresView.vue'),
+        meta: {
+            title: 'إدارة الفروع والمخازن',
+            requiresAuth: true,
+            permission: 'stores.manage',
+        },
+    },
+    {
+        path: '/stores/stocks',
+        name: 'stores.stocks',
+        component: () => import('../views/Stores/StoreStocksView.vue'),
+        meta: {
+            title: 'أرصدة الفروع والمخازن',
+            requiresAuth: true,
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 3 (تجهيز الـ Frontend الأساسي: Vue Router + Pinia + API Client + Login Page) مكتملة ومختبرة بنجاح بنسبة 100%.
+> **الحالة العامة:** المرحلة 4 - Module 01: الفروع والمخازن (`Stores & Stocks`) مكتمل ومختبر بنجاح بنسبة 100%.
 
 ---
 
@@ -44,14 +44,14 @@
   2. `PermissionApiController` (استعلام مصفوفة وشجرة الصلاحيات والأدوار)
   3. `SystemContextApiController` (سياق النظام الموحد وقاموس الترجمات للـ SPA)
   4. `DashboardApiController` (الملخص اللحظي المالي والتشغيلي)
-  5. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
-  6. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
-  7. `CustomerController` (العملاء، إضافة عميل، كشف الحساب)
-  8. `SupplierController` (الموردين، إضافة مورد، كشف الحساب)
-  9. `PurchaseController` (المشتريات وإلغاؤها)
-  10. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
-  11. `StockTransferController` (التحويلات بين الفروع)
-  12. `StoreController` (قائمة الفروع وتبديل الفرع النشط)
+  5. `StoreController` (إدارة الفروع والمخازن، أرصدة المخازن، التعيينات، وتبديل الفروع)
+  6. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
+  7. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
+  8. `CustomerController` (العملاء، إضافة عميل، كشف الحساب)
+  9. `SupplierController` (الموردين، إضافة مورد، كشف الحساب)
+  10. `PurchaseController` (المشتريات وإلغاؤها)
+  11. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
+  12. `StockTransferController` (التحويلات بين الفروع)
   13. `ShiftController` (إدارة الورديات، الفتح، الإغلاق، وتقرير Z-Report)
   14. `PaymentController` (سندات القبض للعملاء وسندات الصرف للموردين)
   15. `ExpenseController` (المصروفات)
@@ -88,8 +88,8 @@
 ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ▼
 [المرحلة 4: ترحيل الموديولات تدريجياً (Module by Module)]
-  ├── 1. الفروع والمخازن (Stores & Stocks)
-  ├── 2. العملاء وكشوف الحساب (Customers & Statements)
+  ├── 1. الفروع والمخازن (Stores & Stocks) ✅
+  ├── 2. العملاء وكشوف الحساب (Customers & Statements) ⏳
   ├── 3. الموردين وكشوف الحساب (Suppliers & Statements)
   ├── 4. المصروفات والعهد (Expenses & Petty Cash)
   ├── 5. الأصناف وحركة المخزون والنواقص (Items & Low Stock Radar)
@@ -125,43 +125,58 @@
 ---
 
 ## 6. Frontend Core Infrastructure — بتاريخ 2026-08-21
-
-> 💡 **ملاحظة معمارية هامة:** يعمل النظام حاليًا بنظام **المحرك المزدوج (Dual-Engine Mode)**؛ حيث تعمل واجهات **Inertia.js** بكامل كفاءتها على الروابط الأصلية، بالتوازي مع تطبيق **Pure Vue 3 SPA** المتاح عبر مسار `/spa`، دون أي تعارض بينهما حتى اكتمال ترحيل كافة الشاشات واختبارها.
-
-### الملفات التي تم إنشاؤها وتعديلها:
-1. `[NEW]` `resources/js/services/api.js` (عميل Axios المركزي المزود بالـ Interceptors للـ Bearer Token، الفرع النشط `X-Store-Id`، ومعالجة أخطاء 401/403/422).
-2. `[NEW]` `resources/js/stores/auth.js` (Pinia Store لإدارة المستخدم، التوكن، الصلاحيات، الأدوار، وتبديل الفروع).
-3. `[NEW]` `resources/js/stores/appConfig.js` (Pinia Store لإدارة سياق النظام، الوردية، التنبيهات، الترجمات، والثيم).
-4. `[NEW]` `resources/js/router/index.js` (إعدادات Vue Router المزودة بـ Navigation Guards للتحقق من المصادقة والصلاحيات).
-5. `[NEW]` `resources/js/App.vue` (المكون الجذري لتطبيق الـ SPA مع تهيئة الثيم والترجمات).
-6. `[NEW]` `resources/js/Layouts/SpaLayout.vue` (الإطار العام للـ SPA مع القائمة الجانبية وشريط الفروع والورديات والثيم والمستخدم).
-7. `[NEW]` `resources/js/views/Auth/LoginView.vue` (شاشة تسجيل الدخول التفاعلية بنظام Pure API مع حسابات التعبئة السريعة).
-8. `[NEW]` `resources/js/views/DashboardView.vue` (شاشة لوحة التحكم المستقلة المستهلكة لـ `/api/v1/dashboard/summary`).
-9. `[NEW]` `resources/js/spa.js` (نقطة الدخول الرئيسية لـ Vue 3 SPA).
-10. `[NEW]` `resources/views/spa.blade.php` (حاوية Blade للـ SPA لدعم التوجيه من جهة العميل Client-side Routing).
-11. `[MODIFIED]` `resources/js/helpers/trans.js` (دعم الترجمات لـ SPA و Inertia معاً دون تعارض).
-12. `[MODIFIED]` `vite.config.js` (إضافة `resources/js/spa.js` لمدخلات التحزيم).
-13. `[MODIFIED]` `routes/web.php` و `routes/tenant.php` (تسجيل مسار `/spa/{any?}`).
-14. `[NEW]` `tests/Feature/Api/SpaInfrastructureTest.php` (اختبار مسارات استضافة الـ SPA).
-
-### طريقة الاختبار والمقارنة:
-* **رابط تطبيق Pure Vue 3 SPA الجديد:** `http://localhost/spa` أو `http://{tenant}.localhost/spa`
-* **رابط صفحة تسجيل الدخول الجديدة بالـ SPA:** `http://localhost/spa/login`
-* **رابط تسجيل الدخول القديم بـ Inertia:** `http://localhost/login` (لا يزال يعمل بكفاءة كـ Safety Net)
-
-### حالة المرحلة: ✅ مكتملة بنجاح 100%
+* **الملفات المنفذة:** `resources/js/services/api.js`, `resources/js/stores/auth.js`, `resources/js/stores/appConfig.js`, `resources/js/router/index.js`, `resources/js/App.vue`, `resources/js/Layouts/SpaLayout.vue`, `resources/js/views/Auth/LoginView.vue`, `resources/js/views/DashboardView.vue`, `resources/js/spa.js`, `resources/views/spa.blade.php`.
+* **الاختبارات:** `SpaInfrastructureTest` (2/2 ناجحة) و `npm run build` ناجح.
+* **الحالة:** ✅ مكتملة.
 
 ---
 
-## 7. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 7. Module 01: الفروع والمخازن والأرصدة (`Stores & Stocks`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Stores/StoreDTO.php` (Strictly Typed Data Transfer Object لإنشاء وتعديل الفروع).
+2. `[NEW]` `app/Actions/Stores/CreateStoreAction.php` (Single Action لإنشاء الفرع داخل DB Transaction وإدارة الفرع الرئيسي).
+3. `[NEW]` `app/Actions/Stores/UpdateStoreAction.php` (Single Action لتحديث الفرع وتعيين الفرع الرئيسي).
+4. `[NEW]` `app/Actions/Stores/DeleteStoreAction.php` (Single Action لحذف الفرع مع فحص الموانع التشغيلية).
+5. `[NEW]` `app/Actions/Stores/ToggleStoreActiveAction.php` (Single Action لتفعيل/تعطيل الفرع مع حماية الفرع الرئيسي).
+6. `[NEW]` `app/Actions/Stores/AssignStoreUsersAction.php` (Single Action لتعيين ومزامنة الموظفين للفروع).
+7. `[NEW]` `app/Actions/Stores/GetStoreStocksAction.php` (Single Action لاستعلام أرصدة المخزن والنواقص مع الفلترة والترقيم).
+8. `[MODIFIED]` `app/Http/Resources/StoreResource.php` (تنسيق بيانات الفرع والإحصائيات والموظفين وموانع الحذف).
+9. `[NEW]` `app/Http/Resources/StoreStockResource.php` (تنسيق أرصدة الأصناف بدقة bcmath للأوزان والقيم المالية).
+10. `[REFACTORED]` `app/Http/Controllers/Api/StoreController.php` (متحكم API كامل يدعم CRUD، التعيين، التبديل، والأرصدة).
+11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الفروع الكاملة).
+12. `[NEW]` `tests/Feature/Api/StoresApiTest.php` (حزمة 9 اختبارات Feature تغطي كافة العمليات بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Stores/StoresView.vue` (شاشة إدارة الفروع، الإحصائيات، نوافذ الإضافة والتعديل وتعيين الموظفين).
+2. `[NEW]` `resources/js/views/Stores/StoreStocksView.vue` (شاشة متابعة أرصدة ونواقص المخازن والبحث اللحظي مع الترقيم).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/stores` و `/stores/stocks` مع Navigation Guards).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تضمين روابط الفروع في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/stores` — قائمة الفروع والإحصائيات والفرع النشط
+* `POST /api/v1/stores` — إنشاء فرع / مخزن جديد
+* `GET /api/v1/stores/{id}` — تفاصيل فرع محدد
+* `PUT /api/v1/stores/{id}` — تعديل بيانات فرع
+* `DELETE /api/v1/stores/{id}` — حذف فرع (إذا لم توجد موانع تشغيلية)
+* `PATCH /api/v1/stores/{id}/toggle-active` — تفعيل / تعطيل فرع
+* `POST /api/v1/stores/{id}/assign-users` — تعيين موظفين للفرع
+* `GET /api/v1/stores/stocks` — أرصدة وتقييم المخزن والنواقص
+* `POST /api/v1/stores/switch` — تبديل الفرع النشط للمستخدم
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 8. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
 - [x] **المرحلة 2: بناء Permissions & System Context API (Backend)** ✅ (2026-08-21)
 - [x] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)** ✅ (2026-08-21)
 - [ ] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module):**
-  - [ ] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 02: العملاء وكشوف الحساب (`Customers & Statements`)
+  - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
+  - [ ] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ⏳ (التالي في الترتيب)
   - [ ] Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)
   - [ ] Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)
   - [ ] Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)
@@ -179,5 +194,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 3 (إعداد الـ Frontend Core)  
-**الموديول التالي المستهدف في المرحلة 4:** Module 01: الفروع والمخازن (`Stores & Stocks`)
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 01: الفروع والمخازن (`Stores & Stocks`)  
+**الموديول التالي المستهدف:** **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)**
