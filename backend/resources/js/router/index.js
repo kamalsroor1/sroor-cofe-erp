@@ -231,6 +231,36 @@ const routes = [
         },
     },
     {
+        path: '/users',
+        name: 'users.index',
+        component: () => import('../views/Users/UsersView.vue'),
+        meta: {
+            title: 'إدارة المستخدمين والموظفين',
+            requiresAuth: true,
+            permission: 'users.manage',
+        },
+    },
+    {
+        path: '/roles',
+        name: 'roles.index',
+        component: () => import('../views/Roles/RolesView.vue'),
+        meta: {
+            title: 'مصفوفة الصلاحيات والأدوار',
+            requiresAuth: true,
+            permission: 'roles.manage',
+        },
+    },
+    {
+        path: '/activity-logs',
+        name: 'activity-logs.index',
+        component: () => import('../views/ActivityLogs/ActivityLogsView.vue'),
+        meta: {
+            title: 'سجل التدقيق الأمني والنشاطات',
+            requiresAuth: true,
+            permission: 'logs.view',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

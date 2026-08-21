@@ -152,6 +152,21 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/coffee-blender/calculate', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate');
         Route::post('/coffee-blender/invoice', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice');
 
+        // Users & Employees Management
+        Route::get('/users', [\App\Http\Controllers\Api\UserController::class, 'index'])->name('api.users.index');
+        Route::get('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'show'])->name('api.users.show');
+        Route::post('/users', [\App\Http\Controllers\Api\UserController::class, 'store'])->name('api.users.store');
+        Route::put('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'update'])->name('api.users.update');
+        Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy'])->name('api.users.destroy');
+        Route::patch('/users/{id}/toggle-active', [\App\Http\Controllers\Api\UserController::class, 'toggleActive'])->name('api.users.toggle_active');
+
+        // Roles & Permissions Matrix
+        Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->name('api.roles.index');
+        Route::put('/roles/{id}/permissions', [\App\Http\Controllers\Api\RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
+
+        // Activity & Audit Logs
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
+
         // Admin Settings
         Route::get('/settings', [\App\Http\Controllers\Api\SettingController::class, 'index'])->name('api.settings.index');
         Route::post('/settings', [\App\Http\Controllers\Api\SettingController::class, 'update'])->name('api.settings.update');

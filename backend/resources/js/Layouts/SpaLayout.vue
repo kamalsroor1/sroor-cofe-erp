@@ -224,6 +224,37 @@
             <BarChart3 class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('reports') ? 'text-slate-950' : 'text-purple-400'" />
             <span class="font-tajawal">التقارير والأرباح</span>
           </router-link>
+
+          <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
+            إدارة النظام والمستخدمين
+          </div>
+
+          <router-link
+            to="/users"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-amber-400'" />
+            <span class="font-tajawal">المستخدمين والموظفين</span>
+          </router-link>
+
+          <router-link
+            to="/roles"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <ShieldCheck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('roles') ? 'text-slate-950' : 'text-purple-400'" />
+            <span class="font-tajawal">مصفوفة الصلاحيات</span>
+          </router-link>
+
+          <router-link
+            to="/activity-logs"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-slate-950' : 'text-cyan-400'" />
+            <span class="font-tajawal">سجل النشاطات</span>
+          </router-link>
         </div>
 
         <!-- Sidebar Footer -->
@@ -260,6 +291,8 @@ import {
     BarChart3,
     RotateCcw,
     Coffee,
+    ShieldCheck,
+    Activity,
     Sun,
     Moon,
     LogOut

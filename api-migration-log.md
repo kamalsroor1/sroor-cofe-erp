@@ -460,7 +460,46 @@
 
 ---
 
-## 20. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 20. Module 14: إدارة المستخدمين والأدوار والأنشطة والصلاحيات (`Users, Roles & Logs`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Users/CreateUserDTO.php` & `app/DTOs/Users/UpdateUserDTO.php` (Strictly Typed DTOs لبيانات الموظفين وتعيين الفروع والأدوار).
+2. `[NEW]` `app/Actions/Users/CreateUserAction.php` (Single Action لإنشاء وتشفير وتعيين أدوار المستخدمين داخل DB Transaction).
+3. `[NEW]` `app/Actions/Users/UpdateUserAction.php` (Single Action لتحديث بيانات وصلاحيات المستخدمين بأمان).
+4. `[NEW]` `app/Actions/Users/DeleteUserAction.php` (Single Action لحذف المستخدمين مع حماية الحساب الشخصي من الحذف الذاتي).
+5. `[NEW]` `app/Actions/Users/ToggleUserActiveAction.php` (Single Action لتبديل حالة تفعيل وتعطيل الحسابات).
+6. `[NEW]` `app/Actions/Roles/GetRolesMatrixAction.php` (Single Action لتنظيم مصفوفة الصلاحيات والأقسام الوظيفية).
+7. `[NEW]` `app/Actions/Roles/UpdateRolePermissionsAction.php` (Single Action لتحديث صلاحيات الأدوار وإبطال كاش Spatie).
+8. `[NEW]` `app/Actions/Logs/GetActivityLogsAction.php` (Single Action لجلب وفلترة سجلات التدقيق الأمني والإحصائيات).
+9. `[REFACTORED]` `app/Http/Controllers/Api/UserController.php` (متحكم API نقي خالي تماماً من أي `$request->validate()`).
+10. `[NEW]` `app/Http/Controllers/Api/RoleController.php` (متحكم API لإدارة مصفوفة الأدوار والصلاحيات).
+11. `[REFACTORED]` `app/Http/Controllers/Api/ActivityLogController.php` (متحكم API لسجلات التدقيق الأمني).
+12. `[MODIFIED]` `routes/api.php` (تسجيل مسارات المستخدمين، الأدوار، وسجل النشاطات).
+13. `[NEW]` `tests/Feature/Api/UsersAndRolesApiTest.php` (حزمة 8 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Users/UsersView.vue` (شاشة إدارة الموظفين، البحث والفلترة بالأدوار، مودال الإضافة والتعديل، وتفعيل وتعطيل الحسابات).
+2. `[NEW]` `resources/js/views/Roles/RolesView.vue` (مصفوفة الصلاحيات والأدوار، تبديل التابات، تحديد وإلغاء الكل للأقسام، وحفظ التعديلات فوري).
+3. `[NEW]` `resources/js/views/ActivityLogs/ActivityLogsView.vue` (سجل التدقيق الأمني والنشاطات، كروت إحصائيات النشاط، فلاتر بالقسم والموظف والتواريخ، وعارض تفاصيل الـ Payload و IP).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/users`, `/roles`, `/activity-logs`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل قسم "إدارة النظام والمستخدمين" في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/users` — قائمة المستخدمين والموظفين مع الفلاتر والترقيم
+* `GET /api/v1/users/{id}` — تفاصيل المستخدم
+* `POST /api/v1/users` — إنشاء مستخدم وموظف جديد
+* `PUT /api/v1/users/{id}` — تحديث بيانات الموظف والدور
+* `DELETE /api/v1/users/{id}` — حذف حساب المستخدم
+* `PATCH /api/v1/users/{id}/toggle-active` — تفعيل / تعطيل الحساب
+* `GET /api/v1/roles` — مصفوفة الأدوار والأقسام والصلاحيات
+* `PUT /api/v1/roles/{id}/permissions` — تحديث وتعيين صلاحيات الدور
+* `GET /api/v1/activity-logs` — سجل الأنشطة والتدقيق الأمني وإحصائيات اليوم
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 21. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -480,11 +519,11 @@
   - [x] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ✅ (2026-08-21)
   - [x] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ✅ (2026-08-21)
   - [x] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ✅ (2026-08-21)
-  - [ ] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)
+  - [x] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ✅ (2026-08-21)
+  - [ ] **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)** ⏳ (التالي في الترتيب)
   - [ ] Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)  
-**الموديول التالي المستهدف:** **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)  
+**الموديول التالي المستهدف:** **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)**
