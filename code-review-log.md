@@ -4,6 +4,41 @@
 
 ---
 
+## مراجعة Skeleton Loading (Inertia Deferred Props) بتاريخ 2026-08-21
+
+### جرد الصفحات والبيانات
+- `Dashboard.vue` (`DashboardController.php`) - كان يرجع جميع الحسابات المعقدة ومؤشرات المبيعات وتحليلات 7 أيام والفواتير والنواقص دفعة واحدة مع الـ render - تم تحويل `metrics`, `analytics`, `recent_invoices`, `low_stock_items`, `top_selling_items`, `active_shift` إلى `Inertia::defer()` مجمعة في جروب `'dashboardData'`، مع بقاء `active_store` فورياً.
+- `Reports/Index.vue` (`ReportController.php`) - كان يحسب أرباح الأصناف ومبيعات الفروع ومسحوبات العملاء وتصنيفات المصروفات وتقييم المخزون ABC والسيولة النقدية بصورة متزامنة - تم تحويل `summary`, `item_profits`, `store_breakdown`, `customer_sales`, `expenses_breakdown`, `inventory_items`, `abc_data`, `treasury_data` إلى `Inertia::defer()` في جروب `'reportsData'` مع بقاء الفلاتر وقائمة الفروع `stores` فورية.
+- `SuperAdmin/Dashboard.vue` (`SuperAdminController.php`) - كان يستعلم عن إحصائيات المنصة وتوزيع الباقات وأحدث المستأجرين تزامناً - تم تحويل `metrics`, `plan_stats`, `recent_tenants` إلى `Inertia::defer()` في جروب `'superAdminDashboard'`.
+- `Customers/Statement.vue` (`CustomerController.php`) - كان يبني دفتر الأستاذ للعميل وحساب القيود التراكمية بالكامل في الـ initial load - تم تحويل `ledger` و `summary` إلى `Inertia::defer()` مع بقاء بيانات العميل `customer` والفلاتر فورية.
+
+### Skeleton Components جديدة
+- `Components/Common/Skeletons/Skeleton.vue`: البلوك الأساسي للتحميل الهيكلي مع أنيميشن النبض والتدرج الضوئي الشيمر (Shimmer Effect) ودعم أبعاد متغيرة وRounded corners.
+- `Components/Common/Skeletons/StatCardSkeleton.vue`: هيكل مطابق بنسبة 100% لكروت الـ KPIs والـ Bento Grid (`MetricCard.vue`).
+- `Components/Common/Skeletons/CardSkeleton.vue`: هيكل للكروت العامة والرسوم البيانية وقوائم الـ Widgets مع دعم الرسوم التخطيطية (`hasChart: true`).
+- `Components/Common/Skeletons/TableRowSkeleton.vue`: أسطر هيكلية لخلايا الجداول.
+- `Components/Common/Skeletons/TableSkeleton.vue`: هيكل كامل للجداول مع دعم التحويل التلقائي لكروت الموبايل الهيكلية على الشاشات الصغيرة.
+
+### التعديلات Backend + Frontend
+- **Backend:**
+  - `app/Http/Controllers/DashboardController.php`: استخدام `Inertia::defer(fn() => ..., 'dashboardData')`.
+  - `app/Http/Controllers/ReportController.php`: استخدام `Inertia::defer(fn() => ..., 'reportsData')`.
+  - `app/Http/Controllers/SuperAdminController.php`: استخدام `Inertia::defer(fn() => ..., 'superAdminDashboard')`.
+  - `app/Http/Controllers/CustomerController.php`: استخدام `Inertia::defer(fn() => ..., 'customerStatement')`.
+- **Frontend:**
+  - `resources/js/Pages/Dashboard.vue`: دمج `<Deferred>` مع `StatCardSkeleton` و `CardSkeleton` وتفعيل `usePoll(30000)`.
+  - `resources/js/Pages/Reports/Index.vue`: دمج `<Deferred>` عبر تبويبات التقارير الـ 7 مع `TableSkeleton` و `StatCardSkeleton`.
+  - `resources/js/Pages/SuperAdmin/Dashboard.vue`: دمج `<Deferred>` مع كروت ومصفوفات السوبر أدمن وتفعيل `usePoll(60000)`.
+  - `resources/js/Pages/Customers/Statement.vue`: دمج `<Deferred>` مع كروت وكشف الحساب الهيكلي.
+  - `resources/js/app.js`: ضبط مؤشر التقدم والتنقل (Progress Bar) بلون الزمردي `#10b981`.
+
+### ملاحظات لسه محتاجة متابعة (Polling, grouping props, إلخ)
+- استخدام ميزة Grouping في الـ Deferred Props جعل كل صفحة تقوم بطلب خلفي واحد خفيف (Single Batched Request) بدلاً من إرسال طلب منفصل لكل خاصية مؤجلة.
+- تم ضبط الـ Transitions عبر `animate-in fade-in duration-500` لظهور المحتوى بنعومة فور اكتمال البيانات.
+- تم فحص البناء النهائي بـ `npm run build` بنجاح كامل بـ 0 أخطاء ورفعه على GitHub.
+
+---
+
 ## مراجعة Shared DataTable Component بتاريخ 2026-08-21
 
 ### جرد الجداول الأصلي
