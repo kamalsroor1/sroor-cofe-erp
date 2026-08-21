@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DatePicker from '@/Components/DatePicker.vue';
-import { useMoney } from '@/Composables/useMoney';
+import PageHeader from '@/Components/Common/PageHeader.vue';
+import InvoiceLineItemsTable from '@/Components/Common/InvoiceLineItemsTable.vue';
+import InvoiceFinancialSummary from '@/Components/Common/InvoiceFinancialSummary.vue';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
@@ -13,10 +15,8 @@ const props = defineProps({
     items: { type: Array, default: () => [] },
 });
 
-const { formatMoney } = useMoney();
-
 const form = useForm({
-    return_type: 'sales_return', // sales_return or purchase_return
+    return_type: 'sales_return',
     customer_id: props.customers[0]?.id || null,
     supplier_id: props.suppliers[0]?.id || null,
     return_date: new Date().toISOString().split('T')[0],
@@ -25,26 +25,26 @@ const form = useForm({
     items: [],
 });
 
-const customerOptions = computed(() => {
-    return props.customers.map(c => ({
+const customerOptions = computed(() =>
+    props.customers.map(c => ({
         id: c.id,
         name: `${c.name} ${c.phone ? '(' + c.phone + ')' : ''}`,
-    }));
-});
+    }))
+);
 
-const supplierOptions = computed(() => {
-    return props.suppliers.map(s => ({
+const supplierOptions = computed(() =>
+    props.suppliers.map(s => ({
         id: s.id,
         name: `${s.name} ${s.phone ? '(' + s.phone + ')' : ''}`,
-    }));
-});
+    }))
+);
 
-const availableItemOptions = computed(() => {
-    return props.items.map(item => ({
+const availableItemOptions = computed(() =>
+    props.items.map(item => ({
         id: item.id,
         name: `${item.name} (${item.unit || ''}) - ${trans('inventory.selling_price') || 'سعر البيع'}: ${item.selling_price} | ${trans('inventory.cost_price') || 'التكلفة'}: ${item.cost_price}`,
-    }));
-});
+    }))
+);
 
 const selectedItemToAdd = ref(null);
 
@@ -75,18 +75,20 @@ const removeItemRow = (index) => {
     form.items.splice(index, 1);
 };
 
-const netTotal = computed(() => {
-    return form.items.reduce((sum, it) => sum + ((Number(it.quantity) || 0) * (Number(it.unit_price) || 0)), 0);
-});
+const updateItem = ({ index, field, value }) => {
+    form.items[index][field] = Number(value);
+};
+
+const netTotal = computed(() =>
+    form.items.reduce((sum, it) => sum + ((Number(it.quantity) || 0) * (Number(it.unit_price) || 0)), 0)
+);
 
 const submitReturn = () => {
     if (form.items.length === 0) {
         alert(trans('returns.add_at_least_one_item') || 'يرجى إضافة صنف واحد على الأقل للمرتجع');
         return;
     }
-    form.post('/returns', {
-        preserveScroll: true,
-    });
+    form.post('/returns', { preserveScroll: true });
 };
 </script>
 
@@ -96,21 +98,11 @@ const submitReturn = () => {
     <AppLayout>
         <div class="max-w-5xl mx-auto space-y-6 font-tajawal">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-3">
-                        <Link href="/returns" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-200 dark:border-transparent">
-                            →
-                        </Link>
-                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                            {{ $t('returns.create_title') }}
-                        </h1>
-                    </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">
-                        {{ $t('returns.create_subtitle') }}
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                :title="$t('returns.create_title')"
+                :subtitle="$t('returns.create_subtitle')"
+                back-href="/returns"
+            />
 
             <form @submit.prevent="submitReturn" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Left 2 Cols: Form Info & Items Table -->
@@ -125,20 +117,20 @@ const submitReturn = () => {
                         <!-- Type Selector Pill -->
                         <div class="grid grid-cols-2 gap-3">
                             <button
-                                @click="form.return_type = 'sales_return'"
                                 type="button"
                                 class="h-12 px-4 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-xs"
                                 :class="form.return_type === 'sales_return' ? 'bg-rose-500 text-white font-black border-rose-400 shadow-md shadow-rose-500/20' : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                                @click="form.return_type = 'sales_return'"
                             >
                                 <span>↩️</span>
                                 <span>{{ $t('returns.sales_return') }}</span>
                             </button>
 
                             <button
-                                @click="form.return_type = 'purchase_return'"
                                 type="button"
                                 class="h-12 px-4 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-xs"
                                 :class="form.return_type === 'purchase_return' ? 'btn-primary-theme font-black shadow-theme-primary' : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                                @click="form.return_type = 'purchase_return'"
                             >
                                 <span>↪️</span>
                                 <span>{{ $t('returns.purchase_return') }}</span>
@@ -188,180 +180,35 @@ const submitReturn = () => {
                             <span>{{ $t('returns.return_items') }}</span>
                         </h2>
 
-                        <!-- Add Item Row Selector -->
-                        <div class="flex flex-col sm:flex-row items-center gap-2">
-                            <div class="w-full flex-1">
-                                <SearchableSelect
-                                    v-model="selectedItemToAdd"
-                                    :options="availableItemOptions"
-                                    :placeholder="$t('returns.select_item_to_add')"
-                                />
-                            </div>
-                            <button
-                                @click="addItemRow"
-                                type="button"
-                                class="w-full sm:w-auto h-11 px-5 rounded-2xl btn-primary-theme text-xs font-black transition active:scale-95 cursor-pointer shadow-theme-primary"
-                            >
-                                + {{ $t('common.add') }}
-                            </button>
-                        </div>
-
-                        <!-- Items Desktop Table (Hidden on Mobile) -->
-                        <div class="hidden md:block overflow-x-auto pt-2">
-                            <table class="w-full text-right text-xs">
-                                <thead>
-                                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                        <th class="pb-2">{{ $t('inventory.item_name') }}</th>
-                                        <th class="pb-2 w-28">{{ $t('common.quantity') }}</th>
-                                        <th class="pb-2 w-28">{{ $t('invoices.unit_price') }}</th>
-                                        <th class="pb-2 font-mono">{{ $t('common.total') }}</th>
-                                        <th class="pb-2 text-center w-10">✕</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                                    <tr v-for="(it, itIdx) in form.items" :key="it.item_id">
-                                        <td class="py-2.5 font-bold text-slate-900 dark:text-white font-tajawal">
-                                            {{ it.name }}
-                                            <span class="text-[10px] text-slate-400 dark:text-slate-500 mr-1">({{ it.unit }})</span>
-                                        </td>
-
-                                        <td class="py-2.5">
-                                            <input
-                                                v-model.number="it.quantity"
-                                                type="number"
-                                                step="0.001"
-                                                min="0.001"
-                                                required
-                                                class="w-24 h-10 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-theme-primary focus:outline-none shadow-inner"
-                                            >
-                                        </td>
-
-                                        <td class="py-2.5">
-                                            <input
-                                                v-model.number="it.unit_price"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                required
-                                                class="w-24 h-10 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none shadow-inner"
-                                            >
-                                        </td>
-
-                                        <td class="py-2.5 font-mono font-black text-emerald-600 dark:text-emerald-400">
-                                            {{ formatMoney((it.quantity || 0) * (it.unit_price || 0)) }} {{ $t('common.currency') }}
-                                        </td>
-
-                                        <td class="py-2.5 text-center">
-                                            <button
-                                                @click="removeItemRow(itIdx)"
-                                                type="button"
-                                                class="w-9 h-9 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-500 dark:text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer"
-                                            >
-                                                ✕
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Items Mobile Cards (Visible on Small Screens) -->
-                        <div class="md:hidden space-y-3 font-tajawal">
-                            <div
-                                v-for="(it, itIdx) in form.items"
-                                :key="it.item_id"
-                                class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs"
-                            >
-                                <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                                    <div>
-                                        <div class="font-bold text-xs text-slate-900 dark:text-white">{{ it.name }}</div>
-                                        <div class="text-[10px] text-slate-400 font-mono">({{ it.unit }})</div>
-                                    </div>
-                                    <button
-                                        @click="removeItemRow(itIdx)"
-                                        type="button"
-                                        class="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-500 dark:text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer shrink-0"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div class="space-y-1">
-                                        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ $t('common.quantity') }}</label>
-                                        <input
-                                            v-model.number="it.quantity"
-                                            type="number"
-                                            step="0.001"
-                                            min="0.001"
-                                            required
-                                            class="w-full h-10 px-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-theme-primary text-center focus:outline-none shadow-inner"
-                                        >
-                                    </div>
-
-                                    <div class="space-y-1">
-                                        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ $t('invoices.unit_price') }}</label>
-                                        <input
-                                            v-model.number="it.unit_price"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            required
-                                            class="w-full h-10 px-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white text-center focus:outline-none shadow-inner"
-                                        >
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between text-xs font-mono pt-2 border-t border-slate-200 dark:border-slate-800">
-                                    <span class="text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('common.total') }}:</span>
-                                    <span class="font-black text-sm text-emerald-600 dark:text-emerald-400">
-                                        {{ formatMoney((it.quantity || 0) * (it.unit_price || 0)) }} {{ $t('common.currency') }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="form.items.length === 0" class="py-8 text-center text-slate-400 text-xs font-bold font-tajawal">
-                            {{ $t('returns.empty_return_items') }}
-                        </div>
+                        <InvoiceLineItemsTable
+                            :items="form.items"
+                            :item-options="availableItemOptions"
+                            :selected-item="selectedItemToAdd"
+                            :price-label="$t('invoices.unit_price')"
+                            price-field="unit_price"
+                            :search-placeholder="$t('returns.select_item_to_add')"
+                            :empty-message="$t('returns.empty_return_items')"
+                            :add-label="$t('common.add')"
+                            @update:selected-item="selectedItemToAdd = $event"
+                            @add="addItemRow"
+                            @remove="removeItemRow"
+                            @update:item="updateItem"
+                        />
                     </div>
                 </div>
 
-                <!-- Right Col: Financial Summary & Confirmation -->
-                <div class="space-y-5">
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xl space-y-4 sticky top-20">
-                        <h2 class="text-base font-black text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">{{ $t('returns.summary_title') }}</h2>
-
-                        <div class="space-y-3 font-mono">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-600 dark:text-slate-300 font-bold font-tajawal">{{ $t('returns.total_returns_val') }}:</span>
-                                <span class="text-xl font-black text-theme-primary">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
-                            </div>
-
-                            <div class="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ $t('returns.refund_amount_cash') }}</label>
-                                <input
-                                    v-model.number="form.refund_amount"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
-                                >
-                                <p class="text-[10px] text-slate-400 font-tajawal mt-0.5">
-                                    {{ $t('returns.refund_hint') }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            :disabled="form.processing || form.items.length === 0"
-                            class="w-full h-12 rounded-2xl btn-primary-theme text-xs font-black flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
-                        >
-                            <span>🔄</span>
-                            <span>{{ form.processing ? '...' : $t('returns.confirm_return_save') }}</span>
-                        </button>
-                    </div>
+                <!-- Right Col: Financial Summary -->
+                <div>
+                    <InvoiceFinancialSummary
+                        :title="$t('returns.summary_title')"
+                        :net-total="netTotal"
+                        :refund-amount="form.refund_amount"
+                        :is-processing="form.processing"
+                        :is-disabled="form.items.length === 0"
+                        :submit-label="$t('returns.confirm_return_save')"
+                        submit-icon="🔄"
+                        @update:refund-amount="form.refund_amount = $event"
+                    />
                 </div>
             </form>
         </div>

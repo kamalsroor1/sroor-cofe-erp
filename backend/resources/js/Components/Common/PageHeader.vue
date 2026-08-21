@@ -1,7 +1,7 @@
 <script setup>
-import { computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
 
-const props = defineProps({
+defineProps({
     title: {
         type: String,
         required: true
@@ -17,7 +17,11 @@ const props = defineProps({
     badge: {
         type: String,
         default: ''
-    }
+    },
+    backHref: {
+        type: String,
+        default: ''
+    },
 });
 </script>
 
@@ -25,8 +29,17 @@ const props = defineProps({
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-tajawal">
         <div class="space-y-1">
             <div class="flex items-center gap-2.5 flex-wrap">
+                <!-- Back button -->
+                <Link
+                    v-if="backHref"
+                    :href="backHref"
+                    class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-200 dark:border-transparent shrink-0"
+                >
+                    →
+                </Link>
+
                 <div
-                    v-if="icon"
+                    v-else-if="icon"
                     class="w-10 h-10 rounded-2xl bg-theme-light border border-theme-primary/20 flex items-center justify-center text-theme-primary shadow-xs shrink-0"
                 >
                     <component v-if="typeof icon === 'object' || typeof icon === 'function'" :is="icon" class="w-5 h-5" />
@@ -58,3 +71,4 @@ const props = defineProps({
         </div>
     </div>
 </template>
+

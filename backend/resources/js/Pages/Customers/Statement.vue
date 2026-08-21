@@ -1,16 +1,30 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DatePicker from '@/Components/DatePicker.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
 import { useMoney } from '@/Composables/useMoney';
+import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     customer: { type: Object, required: true },
     ledger: { type: Array, default: () => [] },
-    summary: { type: Object, default: () => ({ total_debit: 0, total_credit: 0, current_balance: 0 }) },
+    summary: { type: Object, default: () => null },
     filters: { type: Object, default: () => ({}) },
 });
+
+const statementColumns = computed(() => [
+    { key: 'date', label: trans('common.date'), mono: true },
+    { key: 'type', label: trans('contacts.transaction_type') },
+    { key: 'ref_number', label: trans('contacts.reference_no'), mono: true },
+    { key: 'debit', label: trans('contacts.period_debit'), mono: true },
+    { key: 'credit', label: trans('contacts.period_credit'), mono: true },
+    { key: 'balance_after', label: trans('contacts.closing_balance'), mono: true },
+    { key: 'notes', label: trans('common.notes') },
+]);
 
 const { formatMoney } = useMoney();
 
@@ -181,130 +195,141 @@ const printStatement = () => {
                 </div>
             </div>
 
-            <!-- 3 Summary KPI Cards for Statement Period (Bento Grid on Mobile) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 font-tajawal">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.period_debit') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
-                        {{ formatMoney(summary.total_debit) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+            <!-- 3 Summary KPI Cards for Statement Period (Bento Grid on Mobile, Deferred with Skeleton) -->
+            <Deferred data="summary">
+                <template #fallback>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 font-tajawal">
+                        <StatCardSkeleton v-for="i in 3" :key="i" />
+                    </div>
+                </template>
+
+                <div v-if="summary" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 font-tajawal animate-in fade-in duration-500">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.period_debit') }}</span>
+                        <div class="text-lg sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
+                            {{ formatMoney(summary.total_debit) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.period_credit') }}</span>
+                        <div class="text-lg sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                            {{ formatMoney(summary.total_credit) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.closing_balance') }}</span>
+                        <div class="text-lg sm:text-2xl font-black font-mono text-theme-primary">
+                            {{ formatMoney(summary.current_balance) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+                        </div>
                     </div>
                 </div>
+            </Deferred>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.period_credit') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-                        {{ formatMoney(summary.total_credit) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                </div>
+            <!-- Ledger Data Table (Deferred with TableSkeleton) -->
+            <Deferred data="ledger">
+                <template #fallback>
+                    <TableSkeleton :columns-count="7" :rows-count="6" />
+                </template>
 
-                <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('contacts.closing_balance') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-theme-primary">
-                        {{ formatMoney(summary.current_balance) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                </div>
-            </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal animate-in fade-in duration-500">
+                    <DataTable
+                        :columns="statementColumns"
+                        :rows="ledger"
+                        :empty-title="$t('contacts.statement_empty')"
+                        empty-icon="📜"
+                    >
+                    <!-- Date -->
+                    <template #cell-date="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">{{ row.date }}</span>
+                    </template>
 
-            <!-- Ledger Table & Mobile Cards -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('common.date') }}</th>
-                                <th class="pb-3">{{ $t('contacts.transaction_type') }}</th>
-                                <th class="pb-3">{{ $t('contacts.reference_no') }}</th>
-                                <th class="pb-3 font-mono text-rose-600 dark:text-rose-400">{{ $t('contacts.period_debit') }}</th>
-                                <th class="pb-3 font-mono text-emerald-600 dark:text-emerald-400">{{ $t('contacts.period_credit') }}</th>
-                                <th class="pb-3 font-mono text-theme-primary">{{ $t('contacts.closing_balance') }}</th>
-                                <th class="pb-3">{{ $t('common.notes') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="(row, idx) in ledger" :key="idx" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3 font-mono text-slate-500 dark:text-slate-400 text-[11px]">{{ row.date }}</td>
+                    <!-- Type -->
+                    <template #cell-type="{ row }">
+                        <span
+                            class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold border font-tajawal"
+                            :class="row.type.includes('فاتورة') ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' : (row.type.includes('قبض') ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30')"
+                        >
+                            {{ row.type }}
+                        </span>
+                    </template>
 
-                                <td class="py-3 font-bold font-tajawal">
+                    <!-- Ref Number -->
+                    <template #cell-ref_number="{ row }">
+                        <span class="font-mono text-slate-900 dark:text-white font-bold">
+                            {{ row.ref_number || '—' }}
+                        </span>
+                    </template>
+
+                    <!-- Debit -->
+                    <template #cell-debit="{ row }">
+                        <span class="font-mono font-bold text-rose-600 dark:text-rose-400">
+                            {{ row.debit > 0 ? formatMoney(row.debit) : '—' }}
+                        </span>
+                    </template>
+
+                    <!-- Credit -->
+                    <template #cell-credit="{ row }">
+                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {{ row.credit > 0 ? formatMoney(row.credit) : '—' }}
+                        </span>
+                    </template>
+
+                    <!-- Balance After -->
+                    <template #cell-balance_after="{ row }">
+                        <span class="font-mono font-black text-theme-primary text-sm">
+                            {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
+
+                    <!-- Notes -->
+                    <template #cell-notes="{ row }">
+                        <span class="text-slate-500 dark:text-slate-400 text-[11px] font-tajawal">
+                            {{ row.notes || '—' }}
+                        </span>
+                    </template>
+
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
+                            <div class="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
+                                <div class="flex items-center gap-2">
                                     <span
                                         class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold border"
                                         :class="row.type.includes('فاتورة') ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' : (row.type.includes('قبض') ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30')"
                                     >
                                         {{ row.type }}
                                     </span>
-                                </td>
-
-                                <td class="py-3 font-mono text-slate-900 dark:text-white font-bold">
-                                    {{ row.ref_number || '—' }}
-                                </td>
-
-                                <td class="py-3 font-mono font-bold text-rose-600 dark:text-rose-400">
-                                    {{ row.debit > 0 ? formatMoney(row.debit) : '—' }}
-                                </td>
-
-                                <td class="py-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                                    {{ row.credit > 0 ? formatMoney(row.credit) : '—' }}
-                                </td>
-
-                                <td class="py-3 font-mono font-black text-theme-primary text-sm">
-                                    {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
-                                </td>
-
-                                <td class="py-3 text-slate-500 dark:text-slate-400 text-[11px] font-tajawal">
-                                    {{ row.notes || '—' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="(row, idx) in ledger"
-                        :key="idx"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal"
-                    >
-                        <!-- Top Row: Type + Reference + Date -->
-                        <div class="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span
-                                    class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold border"
-                                    :class="row.type.includes('فاتورة') ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' : (row.type.includes('قبض') ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30')"
-                                >
-                                    {{ row.type }}
-                                </span>
-                                <span v-if="row.ref_number" class="font-mono text-xs font-black text-slate-900 dark:text-white">#{{ row.ref_number }}</span>
+                                    <span v-if="row.ref_number" class="font-mono text-xs font-black text-slate-900 dark:text-white">#{{ row.ref_number }}</span>
+                                </div>
+                                <span class="font-mono text-[11px] text-slate-400">{{ row.date }}</span>
                             </div>
-                            <span class="font-mono text-[11px] text-slate-400">{{ row.date }}</span>
-                        </div>
 
-                        <!-- Amounts Matrix -->
-                        <div class="grid grid-cols-3 gap-2 text-xs font-mono py-1">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('contacts.period_debit') }}</span>
-                                <span class="font-bold text-rose-600 dark:text-rose-400">{{ row.debit > 0 ? formatMoney(row.debit) : '—' }}</span>
+                            <div class="grid grid-cols-3 gap-2 text-xs font-mono py-1">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('contacts.period_debit') }}</span>
+                                    <span class="font-bold text-rose-600 dark:text-rose-400">{{ row.debit > 0 ? formatMoney(row.debit) : '—' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('contacts.period_credit') }}</span>
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ row.credit > 0 ? formatMoney(row.credit) : '—' }}</span>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('contacts.closing_balance') }}</span>
+                                    <span class="font-black text-theme-primary">{{ formatMoney(row.balance_after) }}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('contacts.period_credit') }}</span>
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ row.credit > 0 ? formatMoney(row.credit) : '—' }}</span>
-                            </div>
-                            <div class="text-left">
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('contacts.closing_balance') }}</span>
-                                <span class="font-black text-theme-primary">{{ formatMoney(row.balance_after) }}</span>
+
+                            <div v-if="row.notes" class="text-[11px] text-slate-500 dark:text-slate-400 font-tajawal border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
+                                📝 {{ row.notes }}
                             </div>
                         </div>
-
-                        <div v-if="row.notes" class="text-[11px] text-slate-500 dark:text-slate-400 font-tajawal border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
-                            📝 {{ row.notes }}
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="ledger.length === 0" class="py-12 text-center text-slate-400 text-xs font-bold font-tajawal">
-                    {{ $t('contacts.statement_empty') }}
-                </div>
+                    </template>
+                </DataTable>
             </div>
+            </Deferred>
         </div>
     </AppLayout>
 </template>
+

@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DatePicker from '@/Components/DatePicker.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
@@ -14,6 +15,16 @@ const props = defineProps({
     stores: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 });
+
+const movementColumns = computed(() => [
+    { key: 'created_at', label: `${trans('common.date')} & ${trans('common.time')}`, mono: true },
+    { key: 'movement_type', label: trans('inventory.movement_type') },
+    { key: 'document_number', label: trans('contacts.reference_no'), mono: true },
+    { key: 'quantity', label: trans('common.quantity'), mono: true },
+    { key: 'stock_before', label: `${trans('inventory.current_stock')} (${trans('inventory.balance_before') || 'قبل'})`, mono: true },
+    { key: 'stock_after', label: trans('inventory.balance_after'), mono: true },
+    { key: 'store_and_user', label: `${trans('common.store')} / ${trans('common.user')}` },
+]);
 
 const { formatMoney } = useMoney();
 
@@ -232,136 +243,108 @@ const getMovementBadge = (type) => {
                 </div>
             </div>
 
-            <!-- Movements Table & Mobile Cards -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('common.date') }} & {{ $t('common.time') }}</th>
-                                <th class="pb-3">{{ $t('inventory.movement_type') }}</th>
-                                <th class="pb-3">{{ $t('contacts.reference_no') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('common.quantity') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.current_stock') }} ({{ $t('inventory.balance_before') || 'قبل' }})</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.balance_after') }}</th>
-                                <th class="pb-3">{{ $t('common.store') }} / {{ $t('common.user') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="m in movements.data" :key="m.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3.5 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
-                                    {{ m.created_at }}
-                                </td>
+            <!-- Movements Data Table -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
+                <DataTable
+                    :columns="movementColumns"
+                    :rows="movements.data"
+                    :pagination="movements"
+                    :empty-title="$t('inventory.no_movements_found')"
+                    empty-icon="📦"
+                >
+                    <!-- Date & Time -->
+                    <template #cell-created_at="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">
+                            {{ row.created_at }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-tajawal font-bold">
+                    <!-- Movement Type -->
+                    <template #cell-movement_type="{ row }">
+                        <span
+                            class="px-2.5 py-1 rounded-xl text-[10px] font-black border font-tajawal"
+                            :class="getMovementBadge(row.movement_type).class"
+                        >
+                            {{ getMovementBadge(row.movement_type).label }}
+                        </span>
+                    </template>
+
+                    <!-- Document Number -->
+                    <template #cell-document_number="{ row }">
+                        <span class="font-mono text-theme-primary font-bold">
+                            {{ row.document_number || '—' }}
+                        </span>
+                    </template>
+
+                    <!-- Quantity -->
+                    <template #cell-quantity="{ row }">
+                        <span class="font-mono font-black text-sm" :class="row.quantity > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                            {{ row.quantity > 0 ? '+' : '' }}{{ row.quantity }} {{ item.unit }}
+                        </span>
+                    </template>
+
+                    <!-- Stock Before -->
+                    <template #cell-stock_before="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400">
+                            {{ row.stock_before }}
+                        </span>
+                    </template>
+
+                    <!-- Stock After -->
+                    <template #cell-stock_after="{ row }">
+                        <span class="font-mono font-bold text-slate-900 dark:text-white">
+                            {{ row.stock_after }}
+                        </span>
+                    </template>
+
+                    <!-- Store & User -->
+                    <template #cell-store_and_user="{ row }">
+                        <div class="font-tajawal text-slate-700 dark:text-slate-300">
+                            <div>{{ row.store_name || $t('inventory.store_type_main') }}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-slate-500">{{ row.user_name }}</div>
+                        </div>
+                    </template>
+
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
+                            <div class="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
+                                <div class="flex items-center gap-1.5">
                                     <span
-                                        class="px-2.5 py-1 rounded-xl text-[10px] font-black border"
-                                        :class="getMovementBadge(m.movement_type).class"
+                                        class="px-2 py-0.5 rounded-lg text-[10px] font-black border"
+                                        :class="getMovementBadge(row.movement_type).class"
                                     >
-                                        {{ getMovementBadge(m.movement_type).label }}
+                                        {{ getMovementBadge(row.movement_type).label }}
                                     </span>
-                                </td>
-
-                                <td class="py-3.5 font-mono text-theme-primary font-bold">
-                                    {{ m.document_number || '—' }}
-                                </td>
-
-                                <td class="py-3.5 font-mono font-black text-sm" :class="m.quantity > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                                    {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }} {{ item.unit }}
-                                </td>
-
-                                <td class="py-3.5 font-mono text-slate-500 dark:text-slate-400">
-                                    {{ m.stock_before }}
-                                </td>
-
-                                <td class="py-3.5 font-mono font-bold text-slate-900 dark:text-white">
-                                    {{ m.stock_after }}
-                                </td>
-
-                                <td class="py-3.5 font-tajawal text-slate-700 dark:text-slate-300">
-                                    <div>{{ m.store_name || $t('inventory.store_type_main') }}</div>
-                                    <div class="text-[10px] text-slate-400 dark:text-slate-500">{{ m.user_name }}</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3 font-tajawal">
-                    <div
-                        v-for="m in movements.data"
-                        :key="m.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs"
-                    >
-                        <!-- Top: Type Badge + Doc # + Date -->
-                        <div class="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
-                            <div class="flex items-center gap-1.5">
-                                <span
-                                    class="px-2 py-0.5 rounded-lg text-[10px] font-black border"
-                                    :class="getMovementBadge(m.movement_type).class"
-                                >
-                                    {{ getMovementBadge(m.movement_type).label }}
-                                </span>
-                                <span v-if="m.document_number" class="font-mono text-xs font-bold text-theme-primary">#{{ m.document_number }}</span>
+                                    <span v-if="row.document_number" class="font-mono text-xs font-bold text-theme-primary">#{{ row.document_number }}</span>
+                                </div>
+                                <span class="font-mono text-[11px] text-slate-400">{{ row.created_at }}</span>
                             </div>
-                            <span class="font-mono text-[11px] text-slate-400">{{ m.created_at }}</span>
-                        </div>
 
-                        <!-- Quantity and Stocks Matrix -->
-                        <div class="grid grid-cols-3 gap-2 text-xs font-mono py-1">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('common.quantity') }}</span>
-                                <span class="font-black" :class="m.quantity > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                                    {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }}
-                                </span>
+                            <div class="grid grid-cols-3 gap-2 text-xs font-mono py-1">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('common.quantity') }}</span>
+                                    <span class="font-black" :class="row.quantity > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                        {{ row.quantity > 0 ? '+' : '' }}{{ row.quantity }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.balance_before') || 'الرصيد قبل' }}</span>
+                                    <span class="font-bold text-slate-600 dark:text-slate-400">{{ row.stock_before }}</span>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.balance_after') || 'الرصيد بعد' }}</span>
+                                    <span class="font-black text-slate-900 dark:text-white">{{ row.stock_after }}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.balance_before') || 'الرصيد قبل' }}</span>
-                                <span class="font-bold text-slate-600 dark:text-slate-400">{{ m.stock_before }}</span>
-                            </div>
-                            <div class="text-left">
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.balance_after') || 'الرصيد بعد' }}</span>
-                                <span class="font-black text-slate-900 dark:text-white">{{ m.stock_after }}</span>
+
+                            <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-tajawal border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
+                                <span>🏬 {{ row.store_name || $t('inventory.store_type_main') }}</span>
+                                <span>👤 {{ row.user_name || '—' }}</span>
                             </div>
                         </div>
-
-                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-tajawal border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
-                            <span>🏬 {{ m.store_name || $t('inventory.store_type_main') }}</span>
-                            <span>👤 {{ m.user_name || '—' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="!movements.data || movements.data.length === 0" class="py-16 text-center space-y-2">
-                    <span class="text-3xl">📦</span>
-                    <p class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('inventory.no_movements_found') }}</p>
-                </div>
-
-                <!-- Pagination -->
-                <div v-if="movements.links && movements.links.length > 3" class="pt-4 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 font-sans">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-tajawal">
-                        {{ `عرض ${movements.from || 0} إلى ${movements.to || 0} من إجمالي ${movements.total || 0} حركة` }}
-                    </span>
-
-                    <div class="flex flex-wrap items-center justify-center gap-1">
-                        <template v-for="(link, lIdx) in movements.links" :key="lIdx">
-                            <Link
-                                v-if="link.url"
-                                :href="link.url"
-                                class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center active:scale-95 shadow-xs"
-                                :class="link.active ? 'btn-primary-theme text-slate-950 font-black' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'"
-                                v-html="link.label"
-                            />
-                            <span
-                                v-else
-                                class="h-9 min-w-[36px] px-3 rounded-xl text-xs text-slate-400 dark:text-slate-600 font-bold flex items-center justify-center"
-                                v-html="link.label"
-                            />
-                        </template>
-                    </div>
-                </div>
+                    </template>
+                </DataTable>
             </div>
         </div>
     </AppLayout>

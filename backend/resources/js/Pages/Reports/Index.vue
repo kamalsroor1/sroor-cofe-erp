@@ -1,8 +1,13 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, Deferred } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Common/PageHeader.vue';
+
+// Skeleton Components
+import TableSkeleton from '@/Components/Common/Skeletons/TableSkeleton.vue';
+import CardSkeleton from '@/Components/Common/Skeletons/CardSkeleton.vue';
+import StatCardSkeleton from '@/Components/Common/Skeletons/StatCardSkeleton.vue';
 
 // Atomic Sub-Components
 import ReportFilterBar from '@/Components/Reports/ReportFilterBar.vue';
@@ -16,14 +21,14 @@ import ReportTreasuryTab from '@/Components/Reports/ReportTreasuryTab.vue';
 
 const props = defineProps({
     active_tab: { type: String, default: 'sales' },
-    summary: { type: Object, required: true },
+    summary: { type: Object, default: () => null },
     item_profits: { type: Array, default: () => [] },
     store_breakdown: { type: Array, default: () => [] },
     customer_sales: { type: Array, default: () => [] },
     expenses_breakdown: { type: Array, default: () => [] },
     inventory_items: { type: Array, default: () => [] },
-    abc_data: { type: Object, default: () => ({}) },
-    treasury_data: { type: Object, default: () => ({}) },
+    abc_data: { type: Object, default: () => null },
+    treasury_data: { type: Object, default: () => null },
     stores: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 });
@@ -161,50 +166,117 @@ const printReport = () => {
             </div>
 
             <!-- Tab 1: Sales & P&L -->
-            <ReportSalesTab
-                v-if="currentTab === 'sales'"
-                :summary="summary"
-            />
+            <Deferred v-if="currentTab === 'sales'" data="summary">
+                <template #fallback>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <StatCardSkeleton v-for="i in 4" :key="i" />
+                        </div>
+                        <CardSkeleton :rows="6" />
+                    </div>
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportSalesTab
+                        v-if="summary"
+                        :summary="summary"
+                    />
+                </div>
+            </Deferred>
 
             <!-- Tab 2: Item Profits -->
-            <ReportItemsTab
-                v-if="currentTab === 'items'"
-                :item-profits="item_profits"
-            />
+            <Deferred v-if="currentTab === 'items'" data="item_profits">
+                <template #fallback>
+                    <TableSkeleton :columns-count="7" :rows-count="6" />
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportItemsTab
+                        :item-profits="item_profits"
+                    />
+                </div>
+            </Deferred>
 
             <!-- Tab 3: Store Comparison -->
-            <ReportStoresTab
-                v-if="currentTab === 'stores'"
-                :store-breakdown="store_breakdown"
-            />
+            <Deferred v-if="currentTab === 'stores'" data="store_breakdown">
+                <template #fallback>
+                    <TableSkeleton :columns-count="8" :rows-count="4" />
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportStoresTab
+                        :store-breakdown="store_breakdown"
+                    />
+                </div>
+            </Deferred>
 
             <!-- Tab 4: Customer Sales -->
-            <ReportCustomersTab
-                v-if="currentTab === 'customers'"
-                :customer-sales="customer_sales"
-                :total-customers-debt="summary.total_customers_debt"
-            />
+            <Deferred v-if="currentTab === 'customers'" :data="['customer_sales', 'summary']">
+                <template #fallback>
+                    <TableSkeleton :columns-count="7" :rows-count="5" />
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportCustomersTab
+                        v-if="summary"
+                        :customer-sales="customer_sales"
+                        :total-customers-debt="summary.total_customers_debt"
+                    />
+                </div>
+            </Deferred>
 
             <!-- Tab 5: Expenses Breakdown -->
-            <ReportExpensesTab
-                v-if="currentTab === 'expenses'"
-                :expenses-breakdown="expenses_breakdown"
-                :total-expenses="summary.total_expenses"
-            />
+            <Deferred v-if="currentTab === 'expenses'" :data="['expenses_breakdown', 'summary']">
+                <template #fallback>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <StatCardSkeleton v-for="i in 3" :key="i" />
+                        </div>
+                        <TableSkeleton :columns-count="4" :rows-count="5" />
+                    </div>
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportExpensesTab
+                        v-if="summary"
+                        :expenses-breakdown="expenses_breakdown"
+                        :total-expenses="summary.total_expenses"
+                    />
+                </div>
+            </Deferred>
 
             <!-- Tab 6: Inventory Valuation & ABC -->
-            <ReportInventoryTab
-                v-if="currentTab === 'inventory'"
-                :summary="summary"
-                :abc-data="abc_data"
-                @export-abc="exportAbc"
-            />
+            <Deferred v-if="currentTab === 'inventory'" :data="['abc_data', 'summary']">
+                <template #fallback>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <StatCardSkeleton v-for="i in 3" :key="i" />
+                        </div>
+                        <CardSkeleton :rows="5" />
+                    </div>
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportInventoryTab
+                        v-if="summary && abc_data"
+                        :summary="summary"
+                        :abc-data="abc_data"
+                        @export-abc="exportAbc"
+                    />
+                </div>
+            </Deferred>
 
             <!-- Tab 7: Treasury Liquidity -->
-            <ReportTreasuryTab
-                v-if="currentTab === 'treasury'"
-                :treasury-data="treasury_data"
-            />
+            <Deferred v-if="currentTab === 'treasury'" data="treasury_data">
+                <template #fallback>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <StatCardSkeleton v-for="i in 3" :key="i" />
+                        </div>
+                        <CardSkeleton :rows="6" />
+                    </div>
+                </template>
+                <div class="animate-in fade-in duration-500">
+                    <ReportTreasuryTab
+                        v-if="treasury_data"
+                        :treasury-data="treasury_data"
+                    />
+                </div>
+            </Deferred>
         </div>
     </AppLayout>
 </template>

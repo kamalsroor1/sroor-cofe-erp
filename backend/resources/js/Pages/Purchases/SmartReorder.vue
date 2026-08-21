@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
@@ -13,6 +14,17 @@ const props = defineProps({
 });
 
 const { formatMoney } = useMoney();
+
+const reorderColumns = computed(() => [
+    { key: 'name', label: trans('inventory.item_name'), sortable: true },
+    { key: 'current_stock', label: trans('inventory.current_stock'), mono: true },
+    { key: 'analysis_sales', label: trans('purchases.sales_period', { days: analysisDays.value }), mono: true },
+    { key: 'daily_consumption', label: trans('purchases.daily_usage'), mono: true },
+    { key: 'days_remaining', label: trans('purchases.days_of_stock'), mono: true },
+    { key: 'suggested_quantity', label: trans('purchases.suggested_qty'), mono: true },
+    { key: 'estimated_cost', label: trans('purchases.estimated_cost'), mono: true },
+    { key: 'urgency', label: trans('common.status'), align: 'center' },
+]);
 
 const search = ref(props.filters.search || '');
 const selectedStoreId = ref(props.filters.store_id || 'all');
@@ -246,175 +258,160 @@ const createPurchaseFromSelected = () => {
                 </div>
             </div>
 
-            <!-- Reorder Suggestions Table & Mobile Cards -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3 text-center w-10">
+            <!-- Reorder Suggestions Data Table -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
+                <DataTable
+                    :columns="reorderColumns"
+                    :rows="suggestions"
+                    :selectable="true"
+                    v-model="selectedItemIds"
+                    select-key="id"
+                    :empty-title="$t('purchases.empty_reorder_title')"
+                    :empty-message="$t('purchases.empty_reorder_subtitle')"
+                    empty-icon="✨"
+                >
+                    <!-- Name -->
+                    <template #cell-name="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ row.name }}</div>
+                        <div class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ row.code }}</div>
+                    </template>
+
+                    <!-- Current Stock -->
+                    <template #cell-current_stock="{ row }">
+                        <span
+                            class="px-2.5 py-1 rounded-xl text-xs border font-mono font-black"
+                            :class="[
+                                Number(row.current_stock) <= 0 ? 'bg-rose-500/20 border-rose-500/30 text-rose-600 dark:text-rose-400' :
+                                (row.urgency === 'critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-300' :
+                                (row.urgency === 'warning' ? 'bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'))
+                            ]"
+                        >
+                            {{ row.current_stock }} {{ row.unit || $t('inventory.unit_kg') || 'كجم' }}
+                        </span>
+                    </template>
+
+                    <!-- Analysis Sales -->
+                    <template #cell-analysis_sales="{ row }">
+                        <span class="font-mono text-slate-700 dark:text-slate-300 font-bold">
+                            {{ row.analysis_sales }} {{ row.unit || $t('inventory.unit_kg') || 'كجم' }}
+                        </span>
+                    </template>
+
+                    <!-- Daily Consumption -->
+                    <template #cell-daily_consumption="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400">
+                            {{ row.daily_consumption }} / {{ $t('common.day') || 'يوم' }}
+                        </span>
+                    </template>
+
+                    <!-- Days Remaining -->
+                    <template #cell-days_remaining="{ row }">
+                        <span class="font-mono font-bold" :class="row.days_remaining <= 3 ? 'text-rose-600 dark:text-rose-400 font-black' : (row.days_remaining <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')">
+                            {{ row.days_remaining === 999 ? $t('purchases.unlimited_days') : $t('purchases.days_count', { count: row.days_remaining }) }}
+                        </span>
+                    </template>
+
+                    <!-- Suggested Quantity -->
+                    <template #cell-suggested_quantity="{ row }">
+                        <span class="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                            {{ row.suggested_quantity }} {{ row.unit || $t('inventory.unit_kg') || 'كجم' }}
+                        </span>
+                    </template>
+
+                    <!-- Estimated Cost -->
+                    <template #cell-estimated_cost="{ row }">
+                        <span class="font-mono font-bold text-slate-900 dark:text-white">
+                            {{ formatMoney(row.estimated_cost) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
+
+                    <!-- Urgency Status -->
+                    <template #cell-urgency="{ row }">
+                        <span
+                            v-if="row.urgency === 'critical'"
+                            class="px-2.5 py-1 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-[11px] font-tajawal"
+                        >
+                            {{ $t('purchases.status_critical') }} 🚨
+                        </span>
+                        <span
+                            v-else-if="row.urgency === 'warning'"
+                            class="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold text-[11px] font-tajawal"
+                        >
+                            {{ $t('purchases.status_warning') }} ⚠️
+                        </span>
+                        <span
+                            v-else
+                            class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold text-[11px] font-tajawal"
+                        >
+                            {{ $t('purchases.status_safe') }} ✅
+                        </span>
+                    </template>
+
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
+                                <div class="flex items-center gap-2">
                                     <input
                                         type="checkbox"
-                                        @change="toggleSelectAll"
-                                        class="rounded accent-amber-500 w-4 h-4 cursor-pointer"
-                                    >
-                                </th>
-                                <th class="pb-3">{{ $t('inventory.item_name') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.current_stock') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('purchases.sales_period', { days: analysisDays }) }}</th>
-                                <th class="pb-3 font-mono">{{ $t('purchases.daily_usage') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('purchases.days_of_stock') }}</th>
-                                <th class="pb-3 font-mono text-theme-primary">{{ $t('purchases.suggested_qty') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('purchases.estimated_cost') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.status') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="it in suggestions" :key="it.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3 text-center">
-                                    <input
-                                        type="checkbox"
-                                        :value="it.id"
+                                        :value="row.id"
                                         v-model="selectedItemIds"
                                         class="rounded accent-amber-500 w-4 h-4 cursor-pointer"
                                     >
-                                </td>
+                                    <div>
+                                        <div class="font-black text-xs text-slate-900 dark:text-white">{{ row.name }}</div>
+                                        <div class="text-[10px] text-slate-400 font-mono">{{ row.code || '—' }}</div>
+                                    </div>
+                                </div>
 
-                                <td class="py-3">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ it.name }}</div>
-                                    <div class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ it.code }}</div>
-                                </td>
-
-                                <td class="py-3 font-mono font-black">
-                                    <span
-                                        class="px-2.5 py-1 rounded-xl text-xs border"
-                                        :class="[
-                                            Number(it.current_stock) <= 0 ? 'bg-rose-500/20 border-rose-500/30 text-rose-600 dark:text-rose-400' :
-                                            (it.urgency === 'critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-300' :
-                                            (it.urgency === 'warning' ? 'bg-amber-500/20 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'))
-                                        ]"
-                                    >
-                                        {{ it.current_stock }} {{ it.unit || $t('inventory.unit_kg') || 'كجم' }}
-                                    </span>
-                                </td>
-
-                                <td class="py-3 font-mono text-slate-700 dark:text-slate-300 font-bold">
-                                    {{ it.analysis_sales }} {{ it.unit || $t('inventory.unit_kg') || 'كجم' }}
-                                </td>
-
-                                <td class="py-3 font-mono text-slate-500 dark:text-slate-400">
-                                    {{ it.daily_consumption }} / {{ $t('common.day') || 'يوم' }}
-                                </td>
-
-                                <td class="py-3 font-mono font-bold">
-                                    <span :class="it.days_remaining <= 3 ? 'text-rose-600 dark:text-rose-400 font-black' : (it.days_remaining <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')">
-                                        {{ it.days_remaining === 999 ? $t('purchases.unlimited_days') : $t('purchases.days_count', { count: it.days_remaining }) }}
-                                    </span>
-                                </td>
-
-                                <td class="py-3 font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                                    {{ it.suggested_quantity }} {{ it.unit || $t('inventory.unit_kg') || 'كجم' }}
-                                </td>
-
-                                <td class="py-3 font-mono font-bold text-slate-900 dark:text-white">
-                                    {{ formatMoney(it.estimated_cost) }} {{ $t('common.currency') }}
-                                </td>
-
-                                <td class="py-3 text-center font-tajawal">
-                                    <span
-                                        v-if="it.urgency === 'critical'"
-                                        class="px-2.5 py-1 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-[11px]"
-                                    >
-                                        {{ $t('purchases.status_critical') }} 🚨
-                                    </span>
-                                    <span
-                                        v-else-if="it.urgency === 'warning'"
-                                        class="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold text-[11px]"
-                                    >
-                                        {{ $t('purchases.status_warning') }} ⚠️
-                                    </span>
-                                    <span
-                                        v-else
-                                        class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold text-[11px]"
-                                    >
-                                        {{ $t('purchases.status_safe') }} ✅
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3 font-tajawal">
-                    <div
-                        v-for="it in suggestions"
-                        :key="it.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs"
-                    >
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
-                            <div class="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    :value="it.id"
-                                    v-model="selectedItemIds"
-                                    class="rounded accent-amber-500 w-4 h-4 cursor-pointer"
+                                <span
+                                    v-if="row.urgency === 'critical'"
+                                    class="px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-[10px]"
                                 >
+                                    {{ $t('purchases.status_critical') }} 🚨
+                                </span>
+                                <span
+                                    v-else-if="row.urgency === 'warning'"
+                                    class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold text-[10px]"
+                                >
+                                    {{ $t('purchases.status_warning') }} ⚠️
+                                </span>
+                                <span
+                                    v-else
+                                    class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold text-[10px]"
+                                >
+                                    {{ $t('purchases.status_safe') }} ✅
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
                                 <div>
-                                    <div class="font-black text-xs text-slate-900 dark:text-white">{{ it.name }}</div>
-                                    <div class="text-[10px] text-slate-400 font-mono">{{ it.code || '—' }}</div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.current_stock') }}</span>
+                                    <span class="font-bold text-slate-900 dark:text-white">{{ row.current_stock }} {{ row.unit }}</span>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('purchases.days_of_stock') }}</span>
+                                    <span class="font-black" :class="row.days_remaining <= 3 ? 'text-rose-600' : 'text-slate-900 dark:text-white'">
+                                        {{ row.days_remaining === 999 ? '∞' : `${row.days_remaining} ${$t('common.day')}` }}
+                                    </span>
                                 </div>
                             </div>
 
-                            <span
-                                v-if="it.urgency === 'critical'"
-                                class="px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-[10px]"
-                            >
-                                {{ $t('purchases.status_critical') }} 🚨
-                            </span>
-                            <span
-                                v-else-if="it.urgency === 'warning'"
-                                class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold text-[10px]"
-                            >
-                                {{ $t('purchases.status_warning') }} ⚠️
-                            </span>
-                            <span
-                                v-else
-                                class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold text-[10px]"
-                            >
-                                {{ $t('purchases.status_safe') }} ✅
-                            </span>
-                        </div>
-
-                        <!-- Metrics Matrix -->
-                        <div class="grid grid-cols-3 gap-2 text-xs font-mono py-1">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.current_stock') }}</span>
-                                <span class="font-bold text-slate-900 dark:text-white">{{ it.current_stock }} {{ it.unit || 'كجم' }}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('purchases.suggested_qty') }}</span>
-                                <span class="font-black text-emerald-600 dark:text-emerald-400">{{ it.suggested_quantity }} {{ it.unit || 'كجم' }}</span>
-                            </div>
-                            <div class="text-left">
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('purchases.estimated_cost') }}</span>
-                                <span class="font-black text-theme-primary">{{ formatMoney(it.estimated_cost) }}</span>
+                            <div class="flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 pt-2 text-xs font-mono">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('purchases.suggested_qty') }}</span>
+                                    <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm">{{ row.suggested_quantity }} {{ row.unit }}</span>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('purchases.estimated_cost') }}</span>
+                                    <span class="font-black text-slate-900 dark:text-white">{{ formatMoney(row.estimated_cost) }}</span>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono border-t border-slate-200 dark:border-slate-800/80 pt-1.5 font-tajawal">
-                            <span>الاستهلاك اليومي: <b class="font-mono">{{ it.daily_consumption }}</b></span>
-                            <span>الرصيد يكفي: <b class="font-mono text-theme-primary">{{ it.days_remaining === 999 ? $t('purchases.unlimited_days') : $t('purchases.days_count', { count: it.days_remaining }) }}</b></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="suggestions.length === 0" class="py-16 text-center space-y-2">
-                    <span class="text-3xl">🎉</span>
-                    <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-tajawal">{{ $t('purchases.no_reorder_needed') }}</p>
-                </div>
+                    </template>
+                </DataTable>
             </div>
         </div>
     </AppLayout>
 </template>
+

@@ -2,10 +2,10 @@
 import { ref, computed, watch } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import SearchableSelect from '@/Components/SearchableSelect.vue';
 import PageHeader from '@/Components/Common/PageHeader.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
@@ -14,6 +14,15 @@ const props = defineProps({
     stores: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 });
+
+const userColumns = computed(() => [
+    { key: 'name', label: trans('auth.name'), sortable: true },
+    { key: 'phone', label: trans('auth.phone'), mono: true },
+    { key: 'primary_role', label: trans('common.user') },
+    { key: 'default_store_name', label: trans('common.store') },
+    { key: 'status', label: trans('common.status'), align: 'center' },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 const search = ref(props.filters.search || '');
 const roleFilter = ref(props.filters.role || 'all');
@@ -171,99 +180,140 @@ const deleteUser = (u) => {
                 </div>
             </div>
 
-            <!-- Users Table -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('auth.name') }}</th>
-                                <th class="pb-3">{{ $t('auth.phone') }}</th>
-                                <th class="pb-3">{{ $t('common.user') }}</th>
-                                <th class="pb-3">{{ $t('common.store') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.status') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="u in users.data" :key="u.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3.5">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal text-sm">{{ u.name }}</div>
-                                    <div v-if="u.email" class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ u.email }}</div>
-                                </td>
+            <!-- Users Data Table -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
+                <DataTable
+                    :columns="userColumns"
+                    :rows="users.data"
+                    :pagination="users"
+                    :empty-title="$t('users.empty_users')"
+                    empty-icon="👥"
+                >
+                    <!-- Name -->
+                    <template #cell-name="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal text-sm">{{ row.name }}</div>
+                        <div v-if="row.email" class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ row.email }}</div>
+                    </template>
 
-                                <td class="py-3.5 font-mono font-bold text-slate-700 dark:text-slate-300 text-xs">
-                                    {{ u.phone }}
-                                </td>
+                    <!-- Phone -->
+                    <template #cell-phone="{ row }">
+                        <span class="font-mono font-bold text-slate-700 dark:text-slate-300 text-xs">
+                            {{ row.phone }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-tajawal">
-                                    <span
-                                        class="px-2.5 py-1 rounded-xl text-xs font-bold"
-                                        :class="[
-                                            u.primary_role === 'admin' ? 'bg-theme-light text-theme-primary border-theme-primary' :
-                                            (u.primary_role === 'cashier' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent')
-                                        ]"
-                                    >
-                                        {{ u.primary_role === 'admin' ? $t('users.role_admin') : (u.primary_role === 'cashier' ? $t('users.role_cashier') : (u.primary_role === 'storekeeper' ? $t('users.role_storekeeper') : $t('users.role_accountant'))) }}
-                                    </span>
-                                </td>
+                    <!-- Role -->
+                    <template #cell-primary_role="{ row }">
+                        <span
+                            class="px-2.5 py-1 rounded-xl text-xs font-bold"
+                            :class="[
+                                row.primary_role === 'admin' ? 'bg-theme-light text-theme-primary border-theme-primary' :
+                                (row.primary_role === 'cashier' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent')
+                            ]"
+                        >
+                            {{ row.primary_role === 'admin' ? $t('users.role_admin') : (row.primary_role === 'cashier' ? $t('users.role_cashier') : (row.primary_role === 'storekeeper' ? $t('users.role_storekeeper') : $t('users.role_accountant'))) }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-tajawal text-slate-700 dark:text-slate-300">
-                                    {{ u.default_store_name || $t('users.all_stores_option') }}
-                                </td>
+                    <!-- Store -->
+                    <template #cell-default_store_name="{ row }">
+                        <span class="font-tajawal text-slate-700 dark:text-slate-300">
+                            {{ row.default_store_name || $t('users.all_stores_option') }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 text-center">
-                                    <button
-                                        @click="toggleUser(u)"
-                                        type="button"
-                                        class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal transition cursor-pointer"
-                                        :class="u.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'"
-                                    >
-                                        {{ u.is_active ? $t('users.status_active') : $t('users.status_inactive') }}
-                                    </button>
-                                </td>
+                    <!-- Status -->
+                    <template #cell-status="{ row }">
+                        <button
+                            @click="toggleUser(row)"
+                            type="button"
+                            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal transition cursor-pointer"
+                            :class="row.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'"
+                        >
+                            {{ row.is_active ? $t('users.status_active') : $t('users.status_inactive') }}
+                        </button>
+                    </template>
 
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5 font-tajawal">
-                                        <button
-                                            @click="openEditModal(u)"
-                                            type="button"
-                                            class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-transparent"
-                                        >
-                                            {{ $t('common.edit') }} ✏️
-                                        </button>
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
+                            <button
+                                @click="openEditModal(row)"
+                                type="button"
+                                class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-transparent"
+                            >
+                                {{ $t('common.edit') }} ✏️
+                            </button>
 
-                                        <button
-                                            @click="deleteUser(u)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                            <button
+                                @click="deleteUser(row)"
+                                type="button"
+                                class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </template>
 
-                    <!-- Empty State -->
-                    <EmptyState
-                        v-if="!users.data || users.data.length === 0"
-                        icon="👥"
-                        :title="$t('users.empty_users')"
-                        :action-label="$t('users.create_btn')"
-                        @action="openCreateModal"
-                    />
-                </div>
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                                <div class="space-y-0.5">
+                                    <div class="font-black text-sm text-slate-900 dark:text-white">{{ row.name }}</div>
+                                    <p v-if="row.email" class="text-[10px] text-slate-400 font-mono">{{ row.email }}</p>
+                                </div>
 
-                <!-- Pagination -->
-                <Pagination
-                    :links="users.links"
-                    :from="users.from"
-                    :to="users.to"
-                    :total="users.total"
-                />
+                                <button
+                                    @click="toggleUser(row)"
+                                    type="button"
+                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal transition cursor-pointer"
+                                    :class="row.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'"
+                                >
+                                    {{ row.is_active ? $t('users.status_active') : $t('users.status_inactive') }}
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-mono text-slate-600 dark:text-slate-400">{{ row.phone }}</span>
+                                <span
+                                    class="px-2 py-0.5 rounded-xl text-[10px] font-bold"
+                                    :class="[
+                                        row.primary_role === 'admin' ? 'bg-theme-light text-theme-primary' :
+                                        (row.primary_role === 'cashier' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300')
+                                    ]"
+                                >
+                                    {{ row.primary_role === 'admin' ? $t('users.role_admin') : (row.primary_role === 'cashier' ? $t('users.role_cashier') : (row.primary_role === 'storekeeper' ? $t('users.role_storekeeper') : $t('users.role_accountant'))) }}
+                                </span>
+                            </div>
+
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                🏬 {{ row.default_store_name || $t('users.all_stores_option') }}
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                                <button
+                                    @click="openEditModal(row)"
+                                    type="button"
+                                    class="flex-1 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs border border-slate-200 dark:border-slate-700"
+                                >
+                                    <span>✏️</span>
+                                    <span>{{ $t('common.edit') }}</span>
+                                </button>
+
+                                <button
+                                    @click="deleteUser(row)"
+                                    type="button"
+                                    class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </DataTable>
             </div>
+
         </div>
 
         <!-- Add / Edit User Modal (Smooth Native Pop) -->

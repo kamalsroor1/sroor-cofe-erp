@@ -4,7 +4,131 @@
 
 ---
 
+## مراجعة Shared DataTable Component بتاريخ 2026-08-21
+
+### جرد الجداول الأصلي
+- `Pages/Invoices/Index.vue` - جدول فواتير المبيعات - رقم الفاتورة، العميل، طريقة الدفع، الإجمالي، المدفوع، المتبقي، الحالة، الإجراءات (عرض، طباعة، إلغاء) - ترقيم وفرز وبحث.
+- `Pages/Expenses/Index.vue` - جدول المصروفات - رقم السند، التصنيف، المبلغ، طريقة الدفع، التاريخ، المنشئ، الإجراءات (تعديل، حذف) - ترقيم وبحث.
+- `Pages/Customers/Index.vue` - جدول العملاء - الاسم، الهاتف، العنوان، الرصيد، الإجراءات (كشف حساب، تعديل، حذف) - ترقيم وبحث وفلاتر.
+- `Pages/Suppliers/Index.vue` - جدول الموردين - الاسم، الشركة، الهاتف، الرصيد، الحالة، الإجراءات (كشف حساب، تعديل، حذف) - ترقيم وبحث.
+- `Pages/Purchases/Index.vue` - جدول فواتير المشتريات - رقم الفاتورة، المورد، المخزن، التاريخ، الإجمالي، المدفوع، المتبقي، الحالة، الإجراءات - ترقيم وفلاتر.
+- `Pages/Returns/Index.vue` - جدول المرتجعات - رقم المرتجع، النوع، الطرف، التاريخ، الإجمالي، السبب، الإجراءات - ترقيم وفلاتر.
+- `Pages/StockTransfers/Index.vue` - جدول التحويلات المخزنية - رقم التحويل، من، إلى، التاريخ، عدد الأصناف، الحالة، الإجراءات - ترقيم وفلاتر.
+- `Pages/Users/Index.vue` - جدول المستخدمين والموظفين - الاسم، الهاتف، الدور، الفرع الافتراضي، الحالة، الإجراءات - ترقيم وبحث.
+- `Pages/Trash/Index.vue` - جدول سلة المحذوفات - الاسم/النوع، تاريخ الحذف، تفاصيل إضافية، الإجراءات (استرجاع، حذف نهائي) - ترقيم وبحث.
+- `Pages/Stores/Stocks.vue` - جدول أرصدة وتقييم المخزن - الصنف، الرصيد، حد الطلب، سعر الشراء، القيمة الإجمالية، الحالة - ترقيم وفرز وبحث.
+- `Pages/Items/Movements.vue` - جدول حركات المخزون للصنف - التاريخ، نوع الحركة، المرجع، الكمية، قبل، بعد، المخزن والمستخدم - ترقيم وفلاتر.
+- `Pages/Customers/Statement.vue` - كشف حساب العميل - التاريخ، نوع الحركة، المرجع، مدين (+)، دائن (-)، الرصيد، ملاحظات - فلاتر تاريخ مخصصة.
+- `Pages/Suppliers/Statement.vue` - كشف حساب المورد - التاريخ، نوع الحركة، المرجع، دائن (+)، مدين (-)، الرصيد، ملاحظات - فلاتر تاريخ مخصصة.
+- `Pages/Purchases/SmartReorder.vue` - جدول اقتراحات إعادة الطلب الذكي - تحديد صفوف (Select All Checkbox)، اسم الصنف، الرصيد، المبيعات، الاستهلاك، كفاية الرصيد، الكمية المقترحة، التكلفة، الحالة - تحديد متعدد وفلاتر.
+- `Pages/SuperAdmin/Tenants/Index.vue` - قائمة المتاجر والمستأجرين - الاسم، النطاق الفرعي، بريد المسؤول، الباقة، الحالة، إجراء الدخول للمتجر والعرض - ترقيم وبحث.
+- `Pages/SuperAdmin/Dashboard.vue` - جدول أحدث المتاجر المشتركة - الاسم، النطاق، الباقة، الحالة، تاريخ التسجيل.
+- `Pages/ActivityLogs/Index.vue` - جدول سجل العمليات والرقابة - المعرف، التاريخ والوقت، المستخدم، الفرع، القسم، العملية، الوصف، IP، إجراء الفحص - ترقيم وبحث وفلاتر.
+- `Pages/DailyJournal/Index.vue` - جداول فواتير ومصروفات اليومية - رقم الفاتورة/المصروف، الطرف/مركز التكلفة، المبلغ، طريقة الدفع.
+- `Components/Dashboard/DashboardRecentInvoices.vue` - جدول أحدث فواتير لوحة التحكم - رقم الفاتورة، العميل، طريقة الدفع، الإجمالي، المدفوع، الوقت.
+- `Components/Reports/ReportItemsTab.vue` - تقرير أرباح وهوامش الأصناف - الصنف، القسم، الكمية، المبيعات، التكلفة، الربح، الهامش.
+- `Components/Reports/ReportStoresTab.vue` - تقرير مقارنة مبيعات وأرباح الفروع - الفرع، عدد الفواتير، المبيعات، المدفوع، المتبقي، الربح، الهامش، الحصة %.
+- `Components/Reports/ReportCustomersTab.vue` - تقرير كبار العملاء والمسحوبات - العميل، الهاتف، الفواتير، الإجمالي، المدفوع، المتبقي، الرصيد التراكمي.
+
+### الـ Component الجديد
+- **المسار:** `backend/resources/js/Components/Common/DataTable.vue`
+- **الـ Props المدعومة:**
+  - `columns`: مصفوفة تعريف الأعمدة `{ key, label, sortable, align, width, hideOnMobile, mono, class }`.
+  - `rows`: مصفوفة السجلات والبيانات.
+  - `pagination`: كائن الترقيم القادم من Laravel Inertia (روابط، إجمالي، من، إلى).
+  - `loading`: حالة التحميل الهيكلي (Skeleton Loader).
+  - `selectable`: تفعيل التحديد السطري والمحدد الكل بـ Checkboxes.
+  - `modelValue`: مصفوفة المعرفات المحددة (`v-model`).
+  - `selectKey`: اسم مفتاح المعرف للصف (افتراضي `'id'`).
+  - `emptyTitle`, `emptyMessage`, `emptyIcon`: تخصيص حالة الفراغ المدمجة مع `EmptyState.vue`.
+  - `tableClass`, `rowClass`: تخصيص كلاسات CSS.
+- **الـ Slots المدعومة:**
+  - `#cell-[key]="{ row, value, index }"`: تخصيص محتوى أي خلية لسطح المكتب.
+  - `#header-[key]="{ column }"`: تخصيص ترويسة أي عمود.
+  - `#mobile-card="{ row, index }"`: تخصيص بطاقة الموبايل بالكامل (مع وجود بطاقة افتراضية نظيفة إذا لم يتم التمرير).
+  - `#empty`: تخصيص كامل لحالة الفراغ.
+- **الـ Events:**
+  - `@sort`: إطلاق حدث فرز الأعمدة `{ column, direction }`.
+  - `@row-click`: إطلاق حدث النقر على الصف `{ row, index }`.
+  - `@update:modelValue`: مزامنة التحديد المتعدد.
+
+### الجداول اللي اتحولت
+- `Invoices/Index.vue` -> تم استبدال الجدول التقليدي بـ `<DataTable :columns="invoiceColumns" :rows="invoices.data" :pagination="invoices">` مع تخصيص `#cell-status` و `#cell-actions`.
+- `Expenses/Index.vue` -> تم ترحيله إلى `DataTable` مع slots للفئات والإجراءات.
+- `Customers/Index.vue` -> تم ترحيله إلى `DataTable` مع بطاقات موبايل مخصصة وعمود الأرصدة.
+- `Suppliers/Index.vue` -> تم ترحيله إلى `DataTable` مع بطاقات موبايل وعمود كشوف الحسابات.
+- `Purchases/Index.vue` -> تم ترحيله إلى `DataTable` مع slots لحالة الفاتورة والمدفوعات.
+- `Returns/Index.vue` -> تم ترحيله إلى `DataTable` مع slots لنوع المرتجع والأطراف.
+- `StockTransfers/Index.vue` -> تم ترحيله إلى `DataTable` مع ترقيم كامل ومحددات الحالات.
+- `Users/Index.vue` -> تم ترحيله إلى `DataTable` مع شارات الأدوار والصلاحيات.
+- `Trash/Index.vue` -> تم ترحيله إلى `DataTable` مع إجراءات الاسترجاع والحذف النهائي.
+- `Stores/Stocks.vue` -> تم ترحيله إلى `DataTable` مع ألوان تحذير نقص المخزون.
+- `Items/Movements.vue` -> تم ترحيله إلى `DataTable` مع شارات أنواع الحركات المخزنية.
+- `Customers/Statement.vue` -> تم ترحيله إلى `DataTable` مع مصفوفة المبالغ (مدين، دائن، رصيد).
+- `Suppliers/Statement.vue` -> تم ترحيله إلى `DataTable` مع مصفوفة المبالغ (دائن، مدين، رصيد).
+- `Purchases/SmartReorder.vue` -> تم ترحيله إلى `DataTable` مع `:selectable="true"` لتحديد الأصناف تلقائياً لإنشاء فاتورة الشراء.
+- `SuperAdmin/Tenants/Index.vue` -> تم ترحيله إلى `DataTable` مع زر التسجيل السريع كمسؤول متجر (Impersonate).
+- `SuperAdmin/Dashboard.vue` -> تم ترحيله إلى `DataTable` لعرض أحدث المشتركين.
+- `ActivityLogs/Index.vue` -> تم ترحيل وضع الجدول (Table Mode) إلى `DataTable` مع المحافظة على وضع التايملاين (Timeline Mode).
+- `DailyJournal/Index.vue` -> تم ترحيل جدولي الفواتير والمصروفات إلى نسختين من `DataTable`.
+- `DashboardRecentInvoices.vue` -> تم ترحيل جدول أحدث الفواتير إلى `DataTable`.
+- `ReportItemsTab.vue` -> تم ترحيل جدول ربحية الأصناف إلى `DataTable`.
+- `ReportStoresTab.vue` -> تم ترحيل جدول مقارنة الفروع إلى `DataTable`.
+- `ReportCustomersTab.vue` -> تم ترحيل جدول كبار العملاء إلى `DataTable`.
+
+### حالات خاصة اتسابت زي ما هي ولية
+1. **`InvoiceLineItemsTable.vue` (جدول إدخال سطور الفاتورة التفاعلي في المشتريات والمرتجعات):**
+   - **السبب:** هذا ليس جدول عرض (Data Table) بل هو شبكة إدخال حية (Live Editable Grid) تحتوي على حقول كميات وأسعار مربوطة باتجاهين `v-model` مع شريط بحث حركي وزر إضافة فوري، لذا تم فصله كمكون متخصص في الجلسة السابقة ليبقى نظيفاً وخفيفاً.
+2. **`Invoices/Edit.vue` و `StockTransfers/Create.vue`:**
+   - **السبب:** تتبع نفس نمط الـ Live Form Input Grid الخاص بإدخال بنود وتعديل كميات التحويل والفواتير.
+3. **`ReportSalesTab.vue` (جدول قائمة الدخل وتوزيع الأرباح):**
+   - **السبب:** جدول ملخص محاسبي ثابت بـ 5 أسطر حسابية (إجمالي المبيعات، تكلفة البضاعة، مجمل الربح، المصروفات، صافي الربح) بدون Headers أو أسطر متكررة ديناميكية.
+
+### ملاحظات لسه محتاجة متابعة
+- كافة الجداول متوافقة 100% مع البناء وتم اختباره بـ `npm run build` مع 0 أخطاء.
+- النظام بالكامل خالٍ بنسبة 100% من النصوص الثابتة ويدعم RTL والوضعين الفاتح والداكن.
+
+## مراجعة Code Quality بتاريخ 2026-08-21 (الجلسة الرابعة: استخراج مكونات الفواتير المشتركة)
+
+### الملفات اللي اتراجعت
+- `backend/resources/js/Pages/Purchases/Create.vue`
+- `backend/resources/js/Pages/Returns/Create.vue`
+- `backend/resources/js/Components/Common/PageHeader.vue`
+- `backend/resources/js/Components/Common/InvoiceLineItemsTable.vue` ← جديد
+- `backend/resources/js/Components/Common/InvoiceFinancialSummary.vue` ← جديد
+
+---
+
+### Components/Composables جديدة اتعملت
+
+1. **`Components/Common/InvoiceLineItemsTable.vue`**
+   - **الغرض منه:** جدول عناصر الفاتورة/المرتجع الموحد. يعرض سطر البحث + زر الإضافة، جدول الأصناف (ديسك توب مع Inputs للكمية والسعر وزر حذف)، وبطاقات الموبايل، وحالة فارغة.
+   - يقبل `priceField` كـ prop لتبديل حقل السعر بين `unit_cost` (مشتريات) و`unit_price` (مرتجعات).
+   - **الملفات التي تستخدمه:** `Purchases/Create.vue`، `Returns/Create.vue`.
+
+2. **`Components/Common/InvoiceFinancialSummary.vue`**
+   - **الغرض منه:** لوحة الملخص المالي الجانبية (إجمالي، خصم، صافي، مدفوع/مسترد، متبقي، زر الإرسال). كل حقل اختياري عبر props.
+   - **الملفات التي تستخدمه:** `Purchases/Create.vue`، `Returns/Create.vue`.
+
+3. **تحديث `Components/Common/PageHeader.vue`**
+   - إضافة prop اختياري `backHref` لعرض زر الرجوع (← Back) في صفحات الإنشاء والتعديل بدلاً من إعادة كتابته في كل صفحة.
+
+---
+
+### تكرارات SOLID اتحلت
+- **تكرار جدول العناصر:** كان مكرر بالكامل في `Purchases/Create.vue` و`Returns/Create.vue` (نفس الـ thead، الـ rows، الـ inputs). تم توحيده في `InvoiceLineItemsTable.vue` قابل للتعديل عبر props فقط.
+- **تكرار ملخص الفاتورة:** نفس لوحة البطاقة المالية الجانبية (Sticky Panel) كانت مكررة. تم توحيدها في `InvoiceFinancialSummary.vue` مع إخفاء/إظهار الحقول بالـ props.
+- **تكرار زر الرجوع:** كان مُكرر في كل صفحة Create/Edit كـ inline HTML. أصبح موحداً داخل `PageHeader.vue`.
+
+---
+
+### ملاحظات SOLID لسه محتاجة شغل (مستقبلاً)
+- **`Invoices/Create.vue` أو `Invoices/Show.vue`:** لو موجود، يمكن إعادة استخدام `InvoiceLineItemsTable` مع اختلاف طفيف في الـ columns.
+
+---
+
 ## مراجعة Code Quality بتاريخ 2026-08-21 (الجلسة الثالثة: تفكيك التقارير ولوحة التحكم ودفتر اليومية والمخازن)
+
 
 ### الملفات اللي اتراجعت
 - `backend/resources/js/Pages/Reports/Index.vue`

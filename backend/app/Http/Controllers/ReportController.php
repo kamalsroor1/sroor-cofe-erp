@@ -297,12 +297,22 @@ final class ReportController extends Controller
             fromDate: $dateFrom,
             toDate: $dateTo,
             storeId: $storeFilter,
-            selectedMethod: $treasuryMethod
-        );
-
         return Inertia::render('Reports/Index', [
+            // Fast immediate layout metadata
             'active_tab' => $activeTab,
-            'summary' => [
+            'stores' => $stores,
+            'filters' => [
+                'tab' => $activeTab,
+                'period' => $dateFilter,
+                'from' => $dateFrom,
+                'to' => $dateTo,
+                'store_id' => $storeId,
+                'treasury_method' => $treasuryMethod,
+                'stock_filter' => $inventoryStockFilter,
+            ],
+
+            // Deferred Heavy Calculations
+            'summary' => Inertia::defer(fn() => [
                 'total_sales' => (float)$totalSales,
                 'invoices_count' => $invoicesCount,
                 'total_paid' => (float)$totalPaid,
@@ -317,28 +327,19 @@ final class ReportController extends Controller
                 'stock_cost_valuation' => (float)$stockCostValuation,
                 'stock_selling_valuation' => (float)$stockSellingValuation,
                 'expected_stock_profit' => (float)$expectedStockProfit,
-            ],
-            'item_profits' => $itemProfits,
-            'store_breakdown' => $storeBreakdown,
-            'customer_sales' => $customerSales,
-            'expenses_breakdown' => $expensesByCategory->map(fn($e) => [
+            ], 'reportsData'),
+
+            'item_profits' => Inertia::defer(fn() => $itemProfits, 'reportsData'),
+            'store_breakdown' => Inertia::defer(fn() => $storeBreakdown, 'reportsData'),
+            'customer_sales' => Inertia::defer(fn() => $customerSales, 'reportsData'),
+            'expenses_breakdown' => Inertia::defer(fn() => $expensesByCategory->map(fn($e) => [
                 'category' => $e->category,
                 'amount' => (float)$e->total_amount,
                 'count' => (int)$e->count,
-            ]),
-            'inventory_items' => $inventoryItems,
-            'abc_data' => $abcData,
-            'treasury_data' => $treasuryData,
-            'stores' => $stores,
-            'filters' => [
-                'tab' => $activeTab,
-                'period' => $dateFilter,
-                'from' => $dateFrom,
-                'to' => $dateTo,
-                'store_id' => $storeId,
-                'treasury_method' => $treasuryMethod,
-                'stock_filter' => $inventoryStockFilter,
-            ],
+            ]), 'reportsData'),
+            'inventory_items' => Inertia::defer(fn() => $inventoryItems, 'reportsData'),
+            'abc_data' => Inertia::defer(fn() => $abcData, 'reportsData'),
+            'treasury_data' => Inertia::defer(fn() => $treasuryData, 'reportsData'),
         ]);
     }
 

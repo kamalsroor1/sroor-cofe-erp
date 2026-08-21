@@ -9,7 +9,9 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
+import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     suppliers: { type: Object, required: true },
@@ -19,8 +21,14 @@ const props = defineProps({
 
 const { formatMoney } = useMoney();
 
-// Search & Filter state
-import { trans } from '@/helpers/trans';
+const supplierColumns = computed(() => [
+    { key: 'name', label: trans('purchases.supplier'), sortable: true },
+    { key: 'company_name', label: trans('contacts.company_name') },
+    { key: 'phone', label: trans('contacts.phone'), mono: true },
+    { key: 'current_balance', label: trans('contacts.payable_balance_label'), sortable: true, mono: true },
+    { key: 'status', label: trans('common.status'), align: 'center' },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 const search = ref(props.filters.search || '');
 const debtStatus = ref(props.filters.debt_status || 'all');
@@ -269,213 +277,178 @@ const toggleActive = (s) => {
                 </div>
             </div>
 
-            <!-- Suppliers Table & Mobile Cards -->
+            <!-- Suppliers Data Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('purchases.supplier') }}</th>
-                                <th class="pb-3">{{ $t('contacts.company_name') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('contacts.phone') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('contacts.payable_balance_label') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.status') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="s in suppliers.data" :key="s.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <!-- Supplier Name + Code -->
-                                <td class="py-3.5">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ s.name }}</div>
-                                    <div class="font-mono text-[10px] text-slate-500 dark:text-slate-400">{{ s.code }}</div>
-                                </td>
+                <DataTable
+                    :columns="supplierColumns"
+                    :rows="suppliers.data"
+                    :pagination="suppliers"
+                    :empty-title="$t('contacts.no_suppliers_found')"
+                    empty-icon="🏢"
+                >
+                    <!-- Supplier Name + Code -->
+                    <template #cell-name="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ row.name }}</div>
+                        <div class="font-mono text-[10px] text-slate-500 dark:text-slate-400">{{ row.code }}</div>
+                    </template>
 
-                                <!-- Company -->
-                                <td class="py-3.5 text-slate-600 dark:text-slate-400 font-tajawal">
-                                    {{ s.company_name || '—' }}
-                                </td>
+                    <!-- Company -->
+                    <template #cell-company_name="{ row }">
+                        <span class="text-slate-600 dark:text-slate-400 font-tajawal">
+                            {{ row.company_name || '—' }}
+                        </span>
+                    </template>
 
-                                <!-- Phone -->
-                                <td class="py-3.5 font-mono text-slate-500 dark:text-slate-400 text-[11px]" dir="ltr">
-                                    {{ s.phone || '—' }}
-                                </td>
+                    <!-- Phone -->
+                    <template #cell-phone="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]" dir="ltr">
+                            {{ row.phone || '—' }}
+                        </span>
+                    </template>
 
-                                <!-- Current Balance -->
-                                <td class="py-3.5 font-mono font-black text-sm">
-                                    <span :class="s.current_balance > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'">
-                                        {{ formatMoney(s.current_balance) }} {{ $t('common.currency') }}
-                                    </span>
-                                </td>
+                    <!-- Current Balance -->
+                    <template #cell-current_balance="{ row }">
+                        <span class="font-mono font-black text-sm" :class="row.current_balance > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'">
+                            {{ formatMoney(row.current_balance) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
 
-                                <!-- Status Badge -->
-                                <td class="py-3.5 text-center">
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal"
-                                        :class="s.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-transparent'"
-                                    >
-                                        {{ s.is_active ? $t('common.active') : $t('common.inactive') }}
-                                    </span>
-                                </td>
+                    <!-- Status -->
+                    <template #cell-status="{ row }">
+                        <span
+                            class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal"
+                            :class="row.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-transparent'"
+                        >
+                            {{ row.is_active ? $t('common.active') : $t('common.inactive') }}
+                        </span>
+                    </template>
 
-                                <!-- Actions -->
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5 font-tajawal">
-                                        <!-- Pay to Supplier Voucher -->
-                                        <button
-                                            @click="openPaymentModal(s)"
-                                            type="button"
-                                            class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                            :title="$t('contacts.record_disbursement_voucher')"
-                                        >
-                                            <span>💸</span>
-                                            <span>{{ $t('contacts.record_disbursement_voucher') }}</span>
-                                        </button>
-
-                                        <!-- Statement -->
-                                        <Link
-                                            :href="`/suppliers/${s.id}/statement`"
-                                            class="p-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition"
-                                            :title="$t('contacts.statement_title')"
-                                        >
-                                            📜
-                                        </Link>
-
-                                        <!-- Edit -->
-                                        <button
-                                            @click="openEditModal(s)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 transition cursor-pointer"
-                                            :title="$t('common.edit')"
-                                        >
-                                            ✏️
-                                        </button>
-
-                                        <!-- Toggle Active -->
-                                        <button
-                                            @click="toggleActive(s)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl transition cursor-pointer"
-                                            :class="s.is_active ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500'"
-                                            :title="s.is_active ? $t('common.active') : $t('common.inactive')"
-                                        >
-                                            {{ s.is_active ? '🟢' : '⚪' }}
-                                        </button>
-
-                                        <!-- Delete -->
-                                        <button
-                                            @click="deleteSupplier(s)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
-                                            :class="!s.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
-                                            :title="s.can_be_deleted ? $t('common.delete') : s.deletion_blockers.join(', ')"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="s in suppliers.data"
-                        :key="s.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal"
-                    >
-                        <!-- Top Row: Name + Balance -->
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                            <div class="space-y-0.5">
-                                <div class="font-black text-sm text-slate-900 dark:text-white">{{ s.name }}</div>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{{ s.code }} <span v-if="s.company_name">• {{ s.company_name }}</span></p>
-                            </div>
-
-                            <span
-                                class="font-mono font-black text-sm px-2.5 py-1 rounded-xl"
-                                :class="s.current_balance > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'"
-                            >
-                                {{ formatMoney(s.current_balance) }} {{ $t('common.currency') }}
-                            </span>
-                        </div>
-
-                        <!-- Phone & Status -->
-                        <div class="flex items-center justify-between text-xs">
-                            <span class="font-mono text-slate-600 dark:text-slate-400" dir="ltr">{{ s.phone || '—' }}</span>
-                            <span
-                                class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                :class="s.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'"
-                            >
-                                {{ s.is_active ? $t('common.active') : $t('common.inactive') }}
-                            </span>
-                        </div>
-
-                        <!-- Mobile Action Bar -->
-                        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
-                            <!-- Disbursement Voucher Button -->
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
+                            <!-- Pay to Supplier Voucher -->
                             <button
-                                @click="openPaymentModal(s)"
+                                @click="openPaymentModal(row)"
                                 type="button"
-                                class="flex-1 h-10 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                                class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                                :title="$t('contacts.record_disbursement_voucher')"
                             >
                                 <span>💸</span>
                                 <span>{{ $t('contacts.record_disbursement_voucher') }}</span>
                             </button>
 
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <!-- Statement -->
-                                <Link
-                                    :href="`/suppliers/${s.id}/statement`"
-                                    class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center justify-center transition active:scale-90 shadow-xs"
-                                    :title="$t('contacts.statement_title')"
-                                >
-                                    📜
-                                </Link>
+                            <!-- Statement -->
+                            <Link
+                                :href="`/suppliers/${row.id}/statement`"
+                                class="p-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition"
+                                :title="$t('contacts.statement_title')"
+                            >
+                                📜
+                            </Link>
 
-                                <!-- Edit -->
-                                <button
-                                    @click="openEditModal(s)"
-                                    type="button"
-                                    class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
-                                    :title="$t('common.edit')"
+                            <!-- Edit -->
+                            <button
+                                @click="openEditModal(row)"
+                                type="button"
+                                class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 transition cursor-pointer"
+                                :title="$t('common.edit')"
+                            >
+                                ✏️
+                            </button>
+
+                            <!-- Toggle Active -->
+                            <button
+                                @click="toggleActive(row)"
+                                type="button"
+                                class="p-1.5 rounded-xl transition cursor-pointer"
+                                :class="row.is_active ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500'"
+                                :title="row.is_active ? $t('common.active') : $t('common.inactive')"
+                            >
+                                {{ row.is_active ? '🟢' : '⚪' }}
+                            </button>
+
+                            <!-- Delete -->
+                            <button
+                                @click="deleteSupplier(row)"
+                                type="button"
+                                class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
+                                :class="!row.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
+                                :title="row.can_be_deleted ? $t('common.delete') : row.deletion_blockers.join(', ')"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                                <div class="space-y-0.5">
+                                    <div class="font-black text-sm text-slate-900 dark:text-white">{{ row.name }}</div>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{{ row.code }} <span v-if="row.company_name">• {{ row.company_name }}</span></p>
+                                </div>
+
+                                <span
+                                    class="font-mono font-black text-sm px-2.5 py-1 rounded-xl"
+                                    :class="row.current_balance > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'"
                                 >
-                                    ✏️
+                                    {{ formatMoney(row.current_balance) }} {{ $t('common.currency') }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-mono text-slate-600 dark:text-slate-400" dir="ltr">{{ row.phone || '—' }}</span>
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                    :class="row.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'"
+                                >
+                                    {{ row.is_active ? $t('common.active') : $t('common.inactive') }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                                <button
+                                    @click="openPaymentModal(row)"
+                                    type="button"
+                                    class="flex-1 h-10 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                                >
+                                    <span>💸</span>
+                                    <span>{{ $t('contacts.record_disbursement_voucher') }}</span>
                                 </button>
 
-                                <!-- Delete -->
-                                <button
-                                    @click="deleteSupplier(s)"
-                                    type="button"
-                                    class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
-                                    :class="!s.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
-                                    :title="s.can_be_deleted ? $t('common.delete') : s.deletion_blockers.join(', ')"
-                                >
-                                    🗑️
-                                </button>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <Link
+                                        :href="`/suppliers/${row.id}/statement`"
+                                        class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center justify-center transition active:scale-90 shadow-xs"
+                                        :title="$t('contacts.statement_title')"
+                                    >
+                                        📜
+                                    </Link>
+
+                                    <button
+                                        @click="openEditModal(row)"
+                                        type="button"
+                                        class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                        :title="$t('common.edit')"
+                                    >
+                                        ✏️
+                                    </button>
+
+                                    <button
+                                        @click="deleteSupplier(row)"
+                                        type="button"
+                                        class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                        :class="!row.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
+                                        :title="row.can_be_deleted ? $t('common.delete') : row.deletion_blockers.join(', ')"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Empty State -->
-                <EmptyState
-                    v-if="!suppliers.data || suppliers.data.length === 0"
-                    icon="🏭"
-                    :title="$t('contacts.no_suppliers_found')"
-                    :action-label="$t('contacts.add_new_supplier')"
-                    @action="openCreateModal"
-                />
-
-                <!-- Pagination -->
-                <Pagination
-                    :links="suppliers.links"
-                    :from="suppliers.from"
-                    :to="suppliers.to"
-                    :total="suppliers.total"
-                />
+                    </template>
+                </DataTable>
             </div>
         </div>
 

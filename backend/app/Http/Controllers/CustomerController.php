@@ -142,8 +142,6 @@ final class CustomerController extends Controller
         $dateFrom = $request->input('from');
         $dateTo = $request->input('to');
 
-        $ledgerData = $balanceService->getCustomerLedger($customer, $dateFrom, $dateTo);
-
         return Inertia::render('Customers/Statement', [
             'customer' => [
                 'id' => $customer->id,
@@ -153,26 +151,32 @@ final class CustomerController extends Controller
                 'tax_number' => $customer->tax_number,
                 'current_balance' => (float)$customer->current_balance,
             ],
-            'ledger' => array_map(function ($row) {
-                return [
-                    'date' => $row['date'],
-                    'type' => $row['type'],
-                    'ref_number' => $row['ref_number'],
-                    'debit' => (float)$row['debit'],
-                    'credit' => (float)$row['credit'],
-                    'notes' => $row['notes'],
-                    'balance_after' => (float)$row['balance_after'],
-                ];
-            }, $ledgerData['entries']),
-            'summary' => [
-                'total_debit' => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['debit']),
-                'total_credit' => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['credit']),
-                'current_balance' => (float)$customer->current_balance,
-            ],
             'filters' => [
                 'from' => $dateFrom,
                 'to' => $dateTo,
             ],
+            'ledger' => Inertia::defer(function () use ($balanceService, $customer, $dateFrom, $dateTo) {
+                $ledgerData = $balanceService->getCustomerLedger($customer, $dateFrom, $dateTo);
+                return array_map(function ($row) {
+                    return [
+                        'date' => $row['date'],
+                        'type' => $row['type'],
+                        'ref_number' => $row['ref_number'],
+                        'debit' => (float)$row['debit'],
+                        'credit' => (float)$row['credit'],
+                        'notes' => $row['notes'],
+                        'balance_after' => (float)$row['balance_after'],
+                    ];
+                }, $ledgerData['entries']);
+            }, 'customerStatement'),
+            'summary' => Inertia::defer(function () use ($balanceService, $customer, $dateFrom, $dateTo) {
+                $ledgerData = $balanceService->getCustomerLedger($customer, $dateFrom, $dateTo);
+                return [
+                    'total_debit' => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['debit']),
+                    'total_credit' => (float)collect($ledgerData['entries'])->sum(fn($r) => (float)$r['credit']),
+                    'current_balance' => (float)$customer->current_balance,
+                ];
+            }, 'customerStatement'),
         ]);
     }
 

@@ -14,12 +14,36 @@ class DashboardController extends Controller
     ) {}
 
     /**
-     * Display the rich Inertia Vue 3 Dashboard
+     * Display the rich Inertia Vue 3 Dashboard with Deferred Props
      */
     public function index(Request $request): Response
     {
-        $dashboardData = $this->getDashboardAnalyticsAction->execute($request->user());
+        $user = $request->user();
 
-        return Inertia::render('Dashboard', $dashboardData);
+        // 1. Fast Immediate metadata (Active Store)
+        $storeId = session('current_store_id');
+        $activeStore = null;
+        if ($storeId) {
+            $activeStore = \App\Models\Store::where('id', $storeId)->where('is_active', true)->first();
+        }
+        if (!$activeStore && $user) {
+            $activeStore = $user->getCurrentStore();
+        }
+
+        return Inertia::render('Dashboard', [
+            'active_store' => $activeStore ? [
+                'id' => $activeStore->id,
+                'name' => $activeStore->name,
+                'type' => $activeStore->type,
+            ] : null,
+
+            // 2. Heavy calculations & analytics deferred into a single 'dashboardData' group
+            'metrics' => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['metrics'], 'dashboardData'),
+            'analytics' => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['analytics'], 'dashboardData'),
+            'recent_invoices' => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['recent_invoices'], 'dashboardData'),
+            'low_stock_items' => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['low_stock_items'], 'dashboardData'),
+            'top_selling_items' => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['top_selling_items'], 'dashboardData'),
+            'active_shift' => Inertia::defer(fn() => $this->getDashboardAnalyticsAction->execute($user)['active_shift'], 'dashboardData'),
+        ]);
     }
 }

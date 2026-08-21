@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import FilterDrawer from '@/Components/FilterDrawer.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DatePicker from '@/Components/DatePicker.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
@@ -15,6 +16,18 @@ const props = defineProps({
     modules_list: { type: Object, default: () => ({}) },
     filters: { type: Object, default: () => ({}) },
 });
+
+const logColumns = computed(() => [
+    { key: 'id', label: '#', mono: true, width: '60px' },
+    { key: 'created_at', label: `${trans('common.date')} & ${trans('common.time')}`, mono: true },
+    { key: 'user_name', label: trans('common.user') },
+    { key: 'store_name', label: trans('common.store') },
+    { key: 'module', label: trans('inventory.category') },
+    { key: 'action', label: trans('common.actions') },
+    { key: 'description', label: trans('common.notes') },
+    { key: 'ip_address', label: trans('activity.ip_address'), mono: true },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 const isFilterOpen = ref(false);
 const viewMode = ref(props.filters.view || 'timeline');
@@ -254,95 +267,103 @@ const getModuleBadge = (module) => {
 
             <!-- TABLE VIEW & MOBILE CARDS -->
             <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs font-tajawal">
-                <!-- Desktop Table -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3 font-mono">#</th>
-                                <th class="pb-3">{{ $t('common.date') }} & {{ $t('common.time') }}</th>
-                                <th class="pb-3">{{ $t('common.user') }}</th>
-                                <th class="pb-3">{{ $t('common.store') }}</th>
-                                <th class="pb-3">{{ $t('inventory.category') }}</th>
-                                <th class="pb-3">{{ $t('common.actions') }}</th>
-                                <th class="pb-3">{{ $t('common.notes') }}</th>
-                                <th class="pb-3">{{ $t('activity.ip_address') }}</th>
-                                <th class="pb-3 text-left">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="log in logs.data" :key="log.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                <td class="py-3 font-mono text-slate-400">{{ log.id }}</td>
-                                <td class="py-3 font-mono text-slate-600 dark:text-slate-300">{{ log.created_at }}</td>
-                                <td class="py-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ log.user_name }}</td>
-                                <td class="py-3 text-slate-600 dark:text-slate-300 font-tajawal">{{ log.store_name }}</td>
-                                <td class="py-3 font-tajawal">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                        {{ getModuleBadge(log.module) }}
-                                    </span>
-                                </td>
-                                <td class="py-3 font-tajawal">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(log.action).class">
-                                        {{ getActionBadge(log.action).label }}
-                                    </span>
-                                </td>
-                                <td class="py-3 text-slate-700 dark:text-slate-200 max-w-xs truncate">{{ log.description }}</td>
-                                <td class="py-3 font-mono text-slate-500 dark:text-slate-400">{{ log.ip_address || '-' }}</td>
-                                <td class="py-3 text-left font-tajawal">
-                                    <button
-                                        @click="selectedLog = log"
-                                        class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-bold text-[11px] cursor-pointer transition active:scale-95"
-                                    >
-                                        {{ $t('activity.inspect_btn') }}
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable
+                    :columns="logColumns"
+                    :rows="logs.data"
+                    :pagination="logs"
+                    :empty-title="$t('activity.no_logs_data')"
+                    empty-icon="📜"
+                >
+                    <!-- ID -->
+                    <template #cell-id="{ row }">
+                        <span class="font-mono text-slate-400">{{ row.id }}</span>
+                    </template>
 
-                <!-- Mobile Cards -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="log in logs.data"
-                        :key="log.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs"
-                    >
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(log.action).class">
-                                    {{ getActionBadge(log.action).label }}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                    {{ getModuleBadge(log.module) }}
-                                </span>
+                    <!-- Created At -->
+                    <template #cell-created_at="{ row }">
+                        <span class="font-mono text-slate-600 dark:text-slate-300">{{ row.created_at }}</span>
+                    </template>
+
+                    <!-- User -->
+                    <template #cell-user_name="{ row }">
+                        <span class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.user_name }}</span>
+                    </template>
+
+                    <!-- Store -->
+                    <template #cell-store_name="{ row }">
+                        <span class="text-slate-600 dark:text-slate-300 font-tajawal">{{ row.store_name }}</span>
+                    </template>
+
+                    <!-- Module -->
+                    <template #cell-module="{ row }">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
+                            {{ getModuleBadge(row.module) }}
+                        </span>
+                    </template>
+
+                    <!-- Action -->
+                    <template #cell-action="{ row }">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black font-tajawal" :class="getActionBadge(row.action).class">
+                            {{ getActionBadge(row.action).label }}
+                        </span>
+                    </template>
+
+                    <!-- Description -->
+                    <template #cell-description="{ row }">
+                        <span class="text-slate-700 dark:text-slate-200 max-w-xs truncate block" :title="row.description">{{ row.description }}</span>
+                    </template>
+
+                    <!-- IP Address -->
+                    <template #cell-ip_address="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400">{{ row.ip_address || '—' }}</span>
+                    </template>
+
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <button
+                            @click="selectedLog = row"
+                            class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-bold text-[11px] cursor-pointer transition active:scale-95 font-tajawal"
+                        >
+                            {{ $t('activity.inspect_btn') }}
+                        </button>
+                    </template>
+
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getActionBadge(row.action).class">
+                                        {{ getActionBadge(row.action).label }}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                        {{ getModuleBadge(row.module) }}
+                                    </span>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-400">{{ row.time_ago }}</span>
                             </div>
-                            <span class="text-[10px] font-mono text-slate-400">{{ log.time_ago }}</span>
+
+                            <p class="text-xs text-slate-800 dark:text-slate-200 font-sans leading-relaxed">
+                                {{ row.description }}
+                            </p>
+
+                            <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                                <span class="font-bold text-slate-900 dark:text-white">{{ row.user_name }} • <span class="text-slate-500 font-normal">{{ row.store_name }}</span></span>
+                                <button
+                                    @click="selectedLog = row"
+                                    class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-black text-xs cursor-pointer active:scale-95 shadow-xs"
+                                >
+                                    {{ $t('activity.inspect_btn') }}
+                                </button>
+                            </div>
                         </div>
-
-                        <p class="text-xs text-slate-800 dark:text-slate-200 font-sans leading-relaxed">
-                            {{ log.description }}
-                        </p>
-
-                        <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-200 dark:border-slate-800">
-                            <span class="font-bold text-slate-900 dark:text-white">{{ log.user_name }} • <span class="text-slate-500 font-normal">{{ log.store_name }}</span></span>
-                            <button
-                                @click="selectedLog = log"
-                                class="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary font-black text-xs cursor-pointer active:scale-95 shadow-xs"
-                            >
-                                {{ $t('activity.inspect_btn') }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="logs.data.length === 0" class="py-12 text-center text-slate-500 text-xs font-bold">
-                    {{ $t('activity.no_logs_data') }}
-                </div>
+                    </template>
+                </DataTable>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="logs.links?.length > 3" class="flex flex-wrap justify-center gap-1.5 pt-2 font-sans">
+
+            <!-- Pagination (Timeline mode) -->
+            <div v-if="viewMode === 'timeline' && logs.links?.length > 3" class="flex flex-wrap justify-center gap-1.5 pt-2 font-sans">
                 <button
                     v-for="(link, lIdx) in logs.links"
                     :key="lIdx"

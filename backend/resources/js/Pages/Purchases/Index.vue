@@ -9,6 +9,7 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
@@ -20,6 +21,18 @@ const props = defineProps({
 });
 
 const { formatMoney } = useMoney();
+
+const purchaseColumns = computed(() => [
+    { key: 'purchase_number', label: trans('invoices.invoice_number'), sortable: true, mono: true },
+    { key: 'supplier_name', label: trans('contacts.supplier_title'), sortable: true },
+    { key: 'store_name', label: trans('inventory.store') },
+    { key: 'purchase_date', label: trans('common.date'), mono: true },
+    { key: 'net_total', label: trans('invoices.grand_total'), mono: true },
+    { key: 'paid_amount', label: trans('invoices.paid'), mono: true },
+    { key: 'remaining_amount', label: trans('invoices.remaining'), mono: true },
+    { key: 'status', label: trans('common.status'), align: 'center' },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 const search = ref(props.filters.search || '');
 const status = ref(props.filters.status || 'all');
@@ -216,180 +229,152 @@ const cancelPurchase = (p) => {
                 </div>
             </div>
 
-            <!-- Purchases Table & Mobile Cards -->
+            <!-- Purchases Data Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('invoices.invoice_number') }}</th>
-                                <th class="pb-3">{{ $t('contacts.supplier_title') }}</th>
-                                <th class="pb-3">{{ $t('inventory.store') }}</th>
-                                <th class="pb-3">{{ $t('common.date') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('invoices.grand_total') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('invoices.paid') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('invoices.remaining') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.status') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="p in purchases.data" :key="p.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <!-- Number -->
-                                <td class="py-3.5 font-mono font-black text-theme-primary">
-                                    <Link :href="`/purchases/${p.id}`" class="hover:underline">
-                                        #{{ p.purchase_number }}
-                                    </Link>
-                                </td>
+                <DataTable
+                    :columns="purchaseColumns"
+                    :rows="purchases.data"
+                    :pagination="purchases"
+                    :empty-title="$t('purchases.no_purchases_found')"
+                    empty-icon="📦"
+                >
+                    <!-- Number -->
+                    <template #cell-purchase_number="{ row }">
+                        <Link :href="`/purchases/${row.id}`" class="font-mono font-black text-theme-primary hover:underline">
+                            #{{ row.purchase_number }}
+                        </Link>
+                    </template>
 
-                                <!-- Supplier -->
-                                <td class="py-3.5">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ p.supplier_name }}</div>
-                                    <div v-if="p.company_name" class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal">{{ p.company_name }}</div>
-                                </td>
+                    <!-- Supplier -->
+                    <template #cell-supplier_name="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ row.supplier_name }}</div>
+                        <div v-if="row.company_name" class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal">{{ row.company_name }}</div>
+                    </template>
 
-                                <!-- Store -->
-                                <td class="py-3.5 text-slate-600 dark:text-slate-400 font-tajawal">
-                                    {{ p.store_name || '—' }}
-                                </td>
+                    <!-- Store -->
+                    <template #cell-store_name="{ row }">
+                        <span class="text-slate-600 dark:text-slate-400 font-tajawal">
+                            {{ row.store_name || '—' }}
+                        </span>
+                    </template>
 
-                                <!-- Date -->
-                                <td class="py-3.5 font-mono text-slate-600 dark:text-slate-300 text-[11px]">
-                                    {{ p.purchase_date }}
-                                </td>
+                    <!-- Date -->
+                    <template #cell-purchase_date="{ row }">
+                        <span class="font-mono text-slate-600 dark:text-slate-300 text-[11px]">
+                            {{ row.purchase_date }}
+                        </span>
+                    </template>
 
-                                <!-- Net Total -->
-                                <td class="py-3.5 font-mono font-black text-slate-900 dark:text-white">
-                                    {{ formatMoney(p.net_total) }} {{ $t('common.currency') }}
-                                </td>
+                    <!-- Net Total -->
+                    <template #cell-net_total="{ row }">
+                        <span class="font-mono font-black text-slate-900 dark:text-white">
+                            {{ formatMoney(row.net_total) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
 
-                                <!-- Paid -->
-                                <td class="py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                                    {{ formatMoney(p.paid_amount) }}
-                                </td>
+                    <!-- Paid -->
+                    <template #cell-paid_amount="{ row }">
+                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {{ formatMoney(row.paid_amount) }}
+                        </span>
+                    </template>
 
-                                <!-- Remaining -->
-                                <td class="py-3.5 font-mono font-bold text-rose-600 dark:text-rose-400">
-                                    {{ p.remaining_amount > 0 ? formatMoney(p.remaining_amount) : '—' }}
-                                </td>
+                    <!-- Remaining -->
+                    <template #cell-remaining_amount="{ row }">
+                        <span class="font-mono font-bold text-rose-600 dark:text-rose-400">
+                            {{ row.remaining_amount > 0 ? formatMoney(row.remaining_amount) : '—' }}
+                        </span>
+                    </template>
 
-                                <!-- Status -->
-                                <td class="py-3.5 text-center">
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal"
-                                        :class="p.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30'"
-                                    >
-                                        {{ p.status === 'confirmed' ? $t('invoices.status_confirmed') : $t('invoices.status_cancelled') }}
-                                    </span>
-                                </td>
+                    <!-- Status -->
+                    <template #cell-status="{ row }">
+                        <span
+                            class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal"
+                            :class="row.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30'"
+                        >
+                            {{ row.status === 'confirmed' ? $t('invoices.status_confirmed') : $t('invoices.status_cancelled') }}
+                        </span>
+                    </template>
 
-                                <!-- Actions -->
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5 font-tajawal">
-                                        <!-- View Details -->
-                                        <button
-                                            @click="openDetailsModal(p)"
-                                            type="button"
-                                            class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-transparent"
-                                        >
-                                            {{ $t('common.details') }} ({{ p.items_count }})
-                                        </button>
-
-                                        <!-- Cancel -->
-                                        <button
-                                            v-if="p.status === 'confirmed'"
-                                            @click="cancelPurchase(p)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
-                                            :title="$t('purchases.cancel_btn_title')"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="p in purchases.data"
-                        :key="p.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal"
-                    >
-                        <!-- Top Row: Invoice Number + Total -->
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                            <div class="space-y-0.5">
-                                <Link :href="`/purchases/${p.id}`" class="font-mono font-black text-sm text-theme-primary hover:underline">
-                                    #{{ p.purchase_number }}
-                                </Link>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">{{ p.supplier_name }} <span v-if="p.company_name">({{ p.company_name }})</span></p>
-                            </div>
-
-                            <div class="text-left font-mono">
-                                <div class="font-black text-sm text-slate-900 dark:text-white">
-                                    {{ formatMoney(p.net_total) }} {{ $t('common.currency') }}
-                                </div>
-                                <div v-if="p.remaining_amount > 0" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold">
-                                    متبقي: {{ formatMoney(p.remaining_amount) }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Store & Date -->
-                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                            <span>🏬 {{ p.store_name || '—' }} • {{ p.purchase_date }}</span>
-                            <span
-                                class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                :class="p.status === 'confirmed' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'"
-                            >
-                                {{ p.status === 'confirmed' ? $t('invoices.status_confirmed') : $t('invoices.status_cancelled') }}
-                            </span>
-                        </div>
-
-                        <!-- Mobile Action Bar -->
-                        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
+                            <!-- View Details -->
                             <button
-                                @click="openDetailsModal(p)"
+                                @click="openDetailsModal(row)"
                                 type="button"
-                                class="flex-1 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs border border-slate-200 dark:border-slate-700"
+                                class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-transparent"
                             >
-                                <span>📋</span>
-                                <span>{{ $t('common.details') }} ({{ p.items_count }})</span>
+                                {{ $t('common.details') }} ({{ row.items_count }})
                             </button>
 
+                            <!-- Cancel -->
                             <button
-                                v-if="p.status === 'confirmed'"
-                                @click="cancelPurchase(p)"
+                                v-if="row.status === 'confirmed'"
+                                @click="cancelPurchase(row)"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
+                                class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
                                 :title="$t('purchases.cancel_btn_title')"
                             >
                                 ✕
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </template>
 
-                <!-- Empty State -->
-                <EmptyState
-                    v-if="!purchases.data || purchases.data.length === 0"
-                    icon="📦"
-                    :title="$t('purchases.empty_purchases_search')"
-                    :action-label="$t('purchases.create_po_title')"
-                    action-href="/purchases/create"
-                />
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                                <div class="space-y-0.5">
+                                    <Link :href="`/purchases/${row.id}`" class="font-mono font-black text-sm text-theme-primary hover:underline">
+                                        #{{ row.purchase_number }}
+                                    </Link>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">{{ row.supplier_name }} <span v-if="row.company_name">({{ row.company_name }})</span></p>
+                                </div>
 
-                <!-- Pagination -->
-                <Pagination
-                    :links="purchases.links"
-                    :from="purchases.from"
-                    :to="purchases.to"
-                    :total="purchases.total"
-                />
+                                <div class="text-left font-mono">
+                                    <div class="font-black text-sm text-slate-900 dark:text-white">
+                                        {{ formatMoney(row.net_total) }} {{ $t('common.currency') }}
+                                    </div>
+                                    <div v-if="row.remaining_amount > 0" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold">
+                                        متبقي: {{ formatMoney(row.remaining_amount) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                <span>🏬 {{ row.store_name || '—' }} • {{ row.purchase_date }}</span>
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                    :class="row.status === 'confirmed' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'"
+                                >
+                                    {{ row.status === 'confirmed' ? $t('invoices.status_confirmed') : $t('invoices.status_cancelled') }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                                <button
+                                    @click="openDetailsModal(row)"
+                                    type="button"
+                                    class="flex-1 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs border border-slate-200 dark:border-slate-700"
+                                >
+                                    <span>📋</span>
+                                    <span>{{ $t('common.details') }} ({{ row.items_count }})</span>
+                                </button>
+
+                                <button
+                                    v-if="row.status === 'confirmed'"
+                                    @click="cancelPurchase(row)"
+                                    type="button"
+                                    class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
+                                    :title="$t('purchases.cancel_btn_title')"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </DataTable>
             </div>
         </div>
 

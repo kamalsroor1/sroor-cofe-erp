@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Common/PageHeader.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
@@ -14,6 +15,13 @@ const props = defineProps({
     counts: { type: Object, default: () => ({}) },
     filters: { type: Object, default: () => ({}) },
 });
+
+const trashColumns = computed(() => [
+    { key: 'name', label: trans('trash.record_name_col') },
+    { key: 'deleted_at', label: trans('trash.deleted_at_col'), mono: true },
+    { key: 'additional_info', label: trans('trash.additional_info_col') },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 const { formatMoney } = useMoney();
 
@@ -117,72 +125,59 @@ const forceDeleteRecord = (id) => {
                     </span>
                 </div>
 
-                <!-- Table Content -->
-                <div class="overflow-x-auto">
-                    <table v-if="records.data && records.data.length > 0" class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('trash.record_name_col') }}</th>
-                                <th class="pb-3">{{ $t('trash.deleted_at_col') }}</th>
-                                <th class="pb-3">{{ $t('trash.additional_info_col') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="r in records.data" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3.5 font-black text-slate-900 dark:text-white font-tajawal">
-                                    {{ r.name || r.title || r.invoice_number || r.transfer_number || `#${r.id}` }}
-                                </td>
+                <!-- DataTable Content -->
+                <DataTable
+                    :columns="trashColumns"
+                    :rows="records.data"
+                    :pagination="records"
+                    :empty-title="$t('trash.empty_trash')"
+                    empty-icon="🎉"
+                >
+                    <!-- Record Name -->
+                    <template #cell-name="{ row }">
+                        <span class="font-black text-slate-900 dark:text-white font-tajawal">
+                            {{ row.name || row.title || row.invoice_number || row.transfer_number || `#${row.id}` }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono text-rose-500 text-[11px]">
-                                    {{ r.deleted_at }}
-                                </td>
+                    <!-- Deleted At -->
+                    <template #cell-deleted_at="{ row }">
+                        <span class="font-mono text-rose-500 text-[11px]">
+                            {{ row.deleted_at }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 text-slate-500 dark:text-slate-400 font-tajawal">
-                                    <span v-if="r.sku" class="font-mono text-xs">SKU: {{ r.sku }}</span>
-                                    <span v-else-if="r.phone" class="font-mono text-xs">{{ r.phone }}</span>
-                                    <span v-else-if="r.amount" class="font-mono text-xs font-bold">{{ formatMoney(r.amount) }} {{ $t('common.currency') }}</span>
-                                    <span v-else>-</span>
-                                </td>
+                    <!-- Additional Info -->
+                    <template #cell-additional_info="{ row }">
+                        <span class="text-slate-500 dark:text-slate-400 font-tajawal">
+                            <span v-if="row.sku" class="font-mono text-xs">SKU: {{ row.sku }}</span>
+                            <span v-else-if="row.phone" class="font-mono text-xs">{{ row.phone }}</span>
+                            <span v-else-if="row.amount" class="font-mono text-xs font-bold">{{ formatMoney(row.amount) }} {{ $t('common.currency') }}</span>
+                            <span v-else>—</span>
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-2 font-tajawal">
-                                        <button
-                                            @click="restoreRecord(r.id)"
-                                            type="button"
-                                            class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold transition cursor-pointer"
-                                        >
-                                            {{ $t('trash.restore_btn') }}
-                                        </button>
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-2 font-tajawal">
+                            <button
+                                @click="restoreRecord(row.id)"
+                                type="button"
+                                class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold transition cursor-pointer text-xs"
+                            >
+                                {{ $t('trash.restore_btn') }}
+                            </button>
 
-                                        <button
-                                            @click="forceDeleteRecord(r.id)"
-                                            type="button"
-                                            class="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold transition cursor-pointer"
-                                        >
-                                            {{ $t('trash.force_delete_btn') }}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Empty State -->
-                    <EmptyState
-                        v-if="!records.data || records.data.length === 0"
-                        icon="🎉"
-                        :title="$t('trash.empty_trash')"
-                    />
-                </div>
-
-                <!-- Pagination -->
-                <Pagination
-                    :links="records.links"
-                    :from="records.from"
-                    :to="records.to"
-                    :total="records.total"
-                />
+                            <button
+                                @click="forceDeleteRecord(row.id)"
+                                type="button"
+                                class="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold transition cursor-pointer text-xs"
+                            >
+                                {{ $t('trash.force_delete_btn') }}
+                            </button>
+                        </div>
+                    </template>
+                </DataTable>
             </div>
         </div>
     </AppLayout>

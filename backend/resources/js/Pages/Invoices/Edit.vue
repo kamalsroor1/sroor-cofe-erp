@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/Common/PageHeader.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import { useMoney } from '@/Composables/useMoney';
@@ -124,24 +125,11 @@ const submitUpdate = () => {
     <AppLayout>
         <div class="space-y-6 font-tajawal">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-3">
-                        <Link :href="`/invoices/${invoice.id}`" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-200 dark:border-transparent">
-                            →
-                        </Link>
-                        <div>
-                            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                <span>{{ $t('invoices.edit_invoice') }}:</span>
-                                <span class="text-theme-primary font-mono">#{{ invoice.invoice_number }}</span>
-                            </h1>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">
-                                {{ $t('invoices.subtitle') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                :title="`${$t('invoices.edit_invoice')}: #${invoice.invoice_number}`"
+                :subtitle="$t('invoices.subtitle')"
+                :back-href="`/invoices/${invoice.id}`"
+            />
 
             <form @submit.prevent="submitUpdate" class="space-y-6">
                 <!-- Top Details Grid -->

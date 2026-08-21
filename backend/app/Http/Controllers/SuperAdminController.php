@@ -39,9 +39,9 @@ class SuperAdminController extends Controller
     public function dashboard(): Response
     {
         return Inertia::render('SuperAdmin/Dashboard', [
-            'metrics' => $this->analyticsService->getPlatformMetrics(),
-            'plan_stats' => $this->analyticsService->getPlanStatistics(),
-            'recent_tenants' => $this->analyticsService->getRecentTenants(),
+            'metrics' => Inertia::defer(fn() => $this->analyticsService->getPlatformMetrics(), 'superAdminDashboard'),
+            'plan_stats' => Inertia::defer(fn() => $this->analyticsService->getPlanStatistics(), 'superAdminDashboard'),
+            'recent_tenants' => Inertia::defer(fn() => $this->analyticsService->getRecentTenants(), 'superAdminDashboard'),
         ]);
     }
 

@@ -9,7 +9,9 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
+import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     customers: { type: Object, required: true },
@@ -19,7 +21,13 @@ const props = defineProps({
 
 const { formatMoney } = useMoney();
 
-import { trans } from '@/helpers/trans';
+const customerColumns = computed(() => [
+    { key: 'name', label: trans('invoices.customer'), sortable: true },
+    { key: 'phone', label: trans('contacts.phone'), mono: true },
+    { key: 'address', label: trans('contacts.address') },
+    { key: 'current_balance', label: trans('contacts.current_balance'), sortable: true, mono: true },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 // Search & Filter state
 const search = ref(props.filters.search || '');
@@ -269,204 +277,171 @@ const toggleActive = (c) => {
                 </div>
             </div>
 
-            <!-- Customers Table & Mobile Cards -->
+            <!-- Customers Data Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('invoices.customer') }}</th>
-                                <th class="pb-3">{{ $t('contacts.phone') }}</th>
-                                <th class="pb-3">{{ $t('contacts.address') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('contacts.current_balance') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="c in customers.data" :key="c.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <!-- Name -->
-                                <td class="py-3.5">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal text-sm">{{ c.name }}</div>
-                                    <div v-if="c.notes" class="text-[10px] text-slate-500 font-tajawal">{{ c.notes }}</div>
-                                </td>
-
-                                <!-- Phone -->
-                                <td class="py-3.5 font-mono text-slate-600 dark:text-slate-300" dir="ltr">
-                                    {{ c.phone || '—' }}
-                                </td>
-
-                                <!-- Address -->
-                                <td class="py-3.5 font-tajawal text-slate-500 dark:text-slate-400">
-                                    {{ c.address || '—' }}
-                                </td>
-
-                                <!-- Balance -->
-                                <td class="py-3.5 font-mono font-black text-sm">
-                                    <span
-                                        class="px-2.5 py-1 rounded-xl border"
-                                        :class="[
-                                            c.current_balance > 0 ? 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400' :
-                                            (c.current_balance < 0 ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400')
-                                        ]"
-                                    >
-                                        {{ formatMoney(c.current_balance) }} {{ $t('common.currency') }}
-                                    </span>
-                                </td>
-
-                                <!-- Actions -->
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5 font-tajawal">
-                                        <!-- Quick Payment Voucher -->
-                                        <button
-                                            @click="openPaymentModal(c)"
-                                            type="button"
-                                            class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                            :title="$t('contacts.record_receipt_voucher')"
-                                        >
-                                            <span>💵</span>
-                                            <span>{{ $t('contacts.record_receipt_voucher') }}</span>
-                                        </button>
-
-                                        <!-- Statement -->
-                                        <Link
-                                            :href="`/customers/${c.id}/statement`"
-                                            class="p-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition"
-                                            :title="$t('contacts.statement_title')"
-                                        >
-                                            📜
-                                        </Link>
-
-                                        <!-- Edit -->
-                                        <button
-                                            @click="openEditModal(c)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 transition cursor-pointer"
-                                            :title="$t('common.edit')"
-                                        >
-                                            ✏️
-                                        </button>
-
-                                        <!-- Toggle Active -->
-                                        <button
-                                            @click="toggleActive(c)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl transition cursor-pointer"
-                                            :class="c.is_active ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500'"
-                                            :title="c.is_active ? $t('common.active') : $t('common.inactive')"
-                                        >
-                                            {{ c.is_active ? '🟢' : '⚪' }}
-                                        </button>
-
-                                        <!-- Delete -->
-                                        <button
-                                            @click="deleteCustomer(c)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
-                                            :class="!c.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
-                                            :title="c.can_be_deleted ? $t('common.delete') : c.deletion_blockers.join(', ')"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="c in customers.data"
-                        :key="c.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal"
-                    >
-                        <!-- Top Row: Name + Phone -->
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                            <div class="space-y-0.5">
-                                <div class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                                    <span>{{ c.name }}</span>
-                                    <span :class="c.is_active ? 'text-emerald-500' : 'text-slate-400'" class="text-xs">●</span>
-                                </div>
-                                <p v-if="c.phone" class="text-xs text-slate-400 font-mono" dir="ltr">{{ c.phone }}</p>
-                            </div>
-
-                            <span
-                                class="px-2.5 py-1 rounded-xl border font-mono font-black text-xs"
-                                :class="[
-                                    c.current_balance > 0 ? 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400' :
-                                    (c.current_balance < 0 ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400')
-                                ]"
-                            >
-                                {{ formatMoney(c.current_balance) }} {{ $t('common.currency') }}
-                            </span>
+                <DataTable
+                    :columns="customerColumns"
+                    :rows="customers.data"
+                    :pagination="customers"
+                    :empty-title="$t('contacts.no_customers_found')"
+                    empty-icon="👥"
+                >
+                    <!-- Name -->
+                    <template #cell-name="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal text-sm flex items-center gap-1.5">
+                            <span>{{ row.name }}</span>
+                            <span :class="row.is_active ? 'text-emerald-500' : 'text-slate-400'" class="text-xs" :title="row.is_active ? $t('common.active') : $t('common.inactive')">●</span>
                         </div>
+                        <div v-if="row.notes" class="text-[10px] text-slate-500 font-tajawal">{{ row.notes }}</div>
+                    </template>
 
-                        <!-- Address if present -->
-                        <div v-if="c.address" class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                            <span>📍</span>
-                            <span>{{ c.address }}</span>
-                        </div>
+                    <!-- Phone -->
+                    <template #cell-phone="{ row }">
+                        <span class="font-mono text-slate-600 dark:text-slate-300" dir="ltr">
+                            {{ row.phone || '—' }}
+                        </span>
+                    </template>
 
-                        <!-- Mobile Action Bar -->
-                        <div class="flex items-center justify-between pt-1 gap-2">
-                            <!-- Quick Payment Button -->
+                    <!-- Address -->
+                    <template #cell-address="{ row }">
+                        <span class="font-tajawal text-slate-500 dark:text-slate-400">
+                            {{ row.address || '—' }}
+                        </span>
+                    </template>
+
+                    <!-- Balance -->
+                    <template #cell-current_balance="{ row }">
+                        <span
+                            class="px-2.5 py-1 rounded-xl border font-mono font-black text-sm"
+                            :class="[
+                                row.current_balance > 0 ? 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400' :
+                                (row.current_balance < 0 ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400')
+                            ]"
+                        >
+                            {{ formatMoney(row.current_balance) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
+
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
                             <button
-                                @click="openPaymentModal(c)"
+                                @click="openPaymentModal(row)"
                                 type="button"
-                                class="flex-1 h-10 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                                class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                                :title="$t('contacts.record_receipt_voucher')"
                             >
                                 <span>💵</span>
                                 <span>{{ $t('contacts.record_receipt_voucher') }}</span>
                             </button>
 
                             <Link
-                                :href="`/customers/${c.id}/statement`"
-                                class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                :href="`/customers/${row.id}/statement`"
+                                class="p-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition"
                                 :title="$t('contacts.statement_title')"
                             >
                                 📜
                             </Link>
 
                             <button
-                                @click="openEditModal(c)"
+                                @click="openEditModal(row)"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 transition cursor-pointer"
                                 :title="$t('common.edit')"
                             >
                                 ✏️
                             </button>
 
                             <button
-                                @click="deleteCustomer(c)"
+                                @click="toggleActive(row)"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
-                                :class="!c.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
-                                :title="c.can_be_deleted ? $t('common.delete') : c.deletion_blockers.join(', ')"
+                                class="p-1.5 rounded-xl transition cursor-pointer"
+                                :class="row.is_active ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500'"
+                                :title="row.is_active ? $t('common.active') : $t('common.inactive')"
+                            >
+                                {{ row.is_active ? '🟢' : '⚪' }}
+                            </button>
+
+                            <button
+                                @click="deleteCustomer(row)"
+                                type="button"
+                                class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
+                                :class="!row.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
+                                :title="row.can_be_deleted ? $t('common.delete') : row.deletion_blockers.join(', ')"
                             >
                                 🗑️
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </template>
 
-                <!-- Empty State -->
-                <EmptyState
-                    v-if="!customers.data || customers.data.length === 0"
-                    icon="👥"
-                    :title="$t('contacts.no_customers_found')"
-                    :action-label="$t('contacts.add_new_customer')"
-                    @action="openCreateModal"
-                />
+                    <!-- Custom Mobile Card -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                                <div class="space-y-0.5">
+                                    <div class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span>{{ row.name }}</span>
+                                        <span :class="row.is_active ? 'text-emerald-500' : 'text-slate-400'" class="text-xs">●</span>
+                                    </div>
+                                    <p v-if="row.phone" class="text-xs text-slate-400 font-mono" dir="ltr">{{ row.phone }}</p>
+                                </div>
 
-                <!-- Pagination -->
-                <Pagination
-                    :links="customers.links"
-                    :from="customers.from"
-                    :to="customers.to"
-                    :total="customers.total"
-                />
+                                <span
+                                    class="px-2.5 py-1 rounded-xl border font-mono font-black text-xs"
+                                    :class="[
+                                        row.current_balance > 0 ? 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400' :
+                                        (row.current_balance < 0 ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400')
+                                    ]"
+                                >
+                                    {{ formatMoney(row.current_balance) }} {{ $t('common.currency') }}
+                                </span>
+                            </div>
+
+                            <div v-if="row.address" class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                                <span>📍</span>
+                                <span>{{ row.address }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1 gap-2">
+                                <button
+                                    @click="openPaymentModal(row)"
+                                    type="button"
+                                    class="flex-1 h-10 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                                >
+                                    <span>💵</span>
+                                    <span>{{ $t('contacts.record_receipt_voucher') }}</span>
+                                </button>
+
+                                <Link
+                                    :href="`/customers/${row.id}/statement`"
+                                    class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                    :title="$t('contacts.statement_title')"
+                                >
+                                    📜
+                                </Link>
+
+                                <button
+                                    @click="openEditModal(row)"
+                                    type="button"
+                                    class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                    :title="$t('common.edit')"
+                                >
+                                    ✏️
+                                </button>
+
+                                <button
+                                    @click="deleteCustomer(row)"
+                                    type="button"
+                                    class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                    :class="!row.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
+                                    :title="row.can_be_deleted ? $t('common.delete') : row.deletion_blockers.join(', ')"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </DataTable>
             </div>
         </div>
 

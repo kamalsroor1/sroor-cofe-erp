@@ -9,6 +9,7 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
@@ -54,6 +55,16 @@ const paymentMethodOptions = computed(() => [
     { id: 'visa', name: `${trans('treasury.visa') || 'فيزا وبطاقة بنكية'} 💳` },
     { id: 'bank_transfer', name: `${trans('treasury.bank_transfer') || 'تحويل بنكي'} 🏦` },
     { id: 'check', name: 'شيك 📄' },
+]);
+
+const expenseColumns = computed(() => [
+    { key: 'expense_number', label: trans('invoices.invoice_number'), sortable: true, mono: true },
+    { key: 'title', label: trans('expenses.expense_item') },
+    { key: 'cost_center', label: `${trans('expenses.cost_center')} & ${trans('expenses.category')}` },
+    { key: 'expense_date', label: trans('common.date'), mono: true },
+    { key: 'amount', label: trans('common.amount'), mono: true },
+    { key: 'payment_method', label: trans('invoices.payment_method') },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
 ]);
 
 const activeFiltersCount = computed(() => {
@@ -244,151 +255,129 @@ const deleteExpense = (e) => {
                 </div>
             </div>
 
-            <!-- Expenses Table & Mobile Cards -->
+            <!-- Expenses Data Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('invoices.invoice_number') }}</th>
-                                <th class="pb-3">{{ $t('expenses.expense_item') }}</th>
-                                <th class="pb-3">{{ $t('expenses.cost_center') }} & {{ $t('expenses.category') }}</th>
-                                <th class="pb-3">{{ $t('common.date') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('common.amount') }}</th>
-                                <th class="pb-3">{{ $t('invoices.payment_method') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="e in expenses.data" :key="e.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3.5 font-mono font-bold text-theme-primary">
-                                    {{ e.expense_number }}
-                                </td>
+                <DataTable
+                    :columns="expenseColumns"
+                    :rows="expenses.data"
+                    :pagination="expenses"
+                    :empty-title="$t('expenses.no_expenses')"
+                    empty-icon="💸"
+                >
+                    <!-- Expense Number -->
+                    <template #cell-expense_number="{ row }">
+                        <span class="font-mono font-bold text-theme-primary">
+                            {{ row.expense_number }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ e.title }}</div>
-                                    <div v-if="e.notes" class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal">{{ e.notes }}</div>
-                                </td>
+                    <!-- Title -->
+                    <template #cell-title="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ row.title }}</div>
+                        <div v-if="row.notes" class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal">{{ row.notes }}</div>
+                    </template>
 
-                                <td class="py-3.5 font-tajawal">
-                                    <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold border border-slate-200 dark:border-transparent">
-                                        {{ e.cost_center_label }}
-                                    </span>
-                                    <div class="text-[10px] text-theme-primary font-bold mt-0.5">{{ e.category }}</div>
-                                </td>
+                    <!-- Cost Center & Category -->
+                    <template #cell-cost_center="{ row }">
+                        <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold border border-slate-200 dark:border-transparent">
+                            {{ row.cost_center_label }}
+                        </span>
+                        <div class="text-[10px] text-theme-primary font-bold mt-0.5">{{ row.category }}</div>
+                    </template>
 
-                                <td class="py-3.5 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
-                                    {{ e.expense_date }}
-                                </td>
+                    <!-- Date -->
+                    <template #cell-expense_date="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">
+                            {{ row.expense_date }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono font-black text-rose-600 dark:text-rose-400 text-sm">
-                                    {{ formatMoney(e.amount) }} {{ $t('common.currency') }}
-                                </td>
+                    <!-- Amount -->
+                    <template #cell-amount="{ row }">
+                        <span class="font-mono font-black text-rose-600 dark:text-rose-400 text-sm">
+                            {{ formatMoney(row.amount) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-tajawal">
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent">
-                                        {{ e.payment_method === 'cash' ? `${$t('treasury.cash_drawer')} 💵` : e.payment_method }}
-                                    </span>
-                                </td>
+                    <!-- Payment Method -->
+                    <template #cell-payment_method="{ row }">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent font-tajawal">
+                            {{ row.payment_method === 'cash' ? `${$t('treasury.cash_drawer')} 💵` : row.payment_method }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5 font-tajawal">
-                                        <button
-                                            @click="openEditModal(e)"
-                                            type="button"
-                                            class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-transparent"
-                                        >
-                                            {{ $t('common.edit') }} ✏️
-                                        </button>
-
-                                        <button
-                                            @click="deleteExpense(e)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="e in expenses.data"
-                        :key="e.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal"
-                    >
-                        <!-- Top Row: Title + Amount -->
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                            <div class="space-y-0.5">
-                                <div class="font-black text-sm text-slate-900 dark:text-white">{{ e.title }}</div>
-                                <p class="text-[11px] text-slate-400 font-mono">{{ e.expense_number }} • {{ e.expense_date }}</p>
-                            </div>
-
-                            <span class="font-mono font-black text-sm text-rose-600 dark:text-rose-400">
-                                {{ formatMoney(e.amount) }} {{ $t('common.currency') }}
-                            </span>
-                        </div>
-
-                        <!-- Category & Payment Info -->
-                        <div class="flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-1.5">
-                                <span class="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
-                                    {{ e.cost_center_label }}
-                                </span>
-                                <span class="text-theme-primary font-bold text-[11px]">{{ e.category }}</span>
-                            </div>
-
-                            <span class="text-[10px] font-bold text-slate-500">
-                                {{ e.payment_method === 'cash' ? '💵 كاش' : e.payment_method }}
-                            </span>
-                        </div>
-
-                        <!-- Mobile Action Bar -->
-                        <div class="flex items-center justify-end gap-2 pt-1">
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
                             <button
-                                @click="openEditModal(e)"
+                                @click="openEditModal(row)"
                                 type="button"
-                                class="h-10 px-4 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-xs"
+                                class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-transparent"
                             >
-                                <span>✏️</span>
-                                <span>{{ $t('common.edit') }}</span>
+                                {{ $t('common.edit') }} ✏️
                             </button>
 
                             <button
-                                @click="deleteExpense(e)"
+                                @click="deleteExpense(row)"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
-                                :title="$t('common.delete')"
+                                class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
                             >
                                 🗑️
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </template>
 
-                <!-- Empty State -->
-                <EmptyState
-                    v-if="!expenses.data || expenses.data.length === 0"
-                    icon="💸"
-                    :title="$t('expenses.no_expenses')"
-                    :action-label="$t('expenses.add_expense')"
-                    @action="openCreateModal"
-                />
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                                <div class="space-y-0.5">
+                                    <div class="font-black text-sm text-slate-900 dark:text-white">{{ row.title }}</div>
+                                    <p class="text-[11px] text-slate-400 font-mono">{{ row.expense_number }} • {{ row.expense_date }}</p>
+                                </div>
 
-                <!-- Pagination -->
-                <Pagination
-                    :links="expenses.links"
-                    :from="expenses.from"
-                    :to="expenses.to"
-                    :total="expenses.total"
-                />
+                                <span class="font-mono font-black text-sm text-rose-600 dark:text-rose-400">
+                                    {{ formatMoney(row.amount) }} {{ $t('common.currency') }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                                        {{ row.cost_center_label }}
+                                    </span>
+                                    <span class="text-theme-primary font-bold text-[11px]">{{ row.category }}</span>
+                                </div>
+
+                                <span class="text-[10px] font-bold text-slate-500">
+                                    {{ row.payment_method === 'cash' ? '💵 كاش' : row.payment_method }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2 pt-1">
+                                <button
+                                    @click="openEditModal(row)"
+                                    type="button"
+                                    class="h-10 px-4 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-xs"
+                                >
+                                    <span>✏️</span>
+                                    <span>{{ $t('common.edit') }}</span>
+                                </button>
+
+                                <button
+                                    @click="deleteExpense(row)"
+                                    type="button"
+                                    class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                                    :title="$t('common.delete')"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </DataTable>
             </div>
+
         </div>
 
         <!-- Filter Slide-Over Drawer -->

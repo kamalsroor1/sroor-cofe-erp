@@ -6,7 +6,9 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
+import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     stores: { type: Array, default: () => [] },
@@ -14,6 +16,15 @@ const props = defineProps({
     stocks: { type: Object, required: true },
     filters: { type: Object, default: () => ({}) },
 });
+
+const stockColumns = computed(() => [
+    { key: 'item_name', label: trans('inventory.item_name') || 'اسم الصنف', sortable: true },
+    { key: 'quantity', label: trans('inventory.current_stock') || 'الرصيد الحالي', sortable: true, mono: true },
+    { key: 'min_stock_level', label: trans('inventory.min_stock_level') || 'حد الطلب', mono: true },
+    { key: 'purchase_price', label: trans('inventory.purchase_price') || 'سعر الشراء', mono: true },
+    { key: 'total_valuation', label: trans('inventory.total_inventory_value') || 'القيمة الإجمالية', mono: true },
+    { key: 'status', label: trans('common.status') || 'الحالة', align: 'center' },
+]);
 
 const { formatMoney } = useMoney();
 
@@ -164,116 +175,102 @@ const lowStockCount = computed(() => {
                 </div>
             </div>
 
-            <!-- Stocks Table & Mobile Cards -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table -->
-                <div v-if="stocks.data && stocks.data.length > 0" class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('inventory.item_name') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.current_stock') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.min_stock_level') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.purchase_price') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('inventory.total_inventory_value') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.status') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="st in stocks.data" :key="st.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3.5">
-                                    <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ st.item_name }}</div>
-                                    <div class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ st.item_code }}</div>
-                                </td>
+            <!-- Stocks Data Table -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
+                <DataTable
+                    :columns="stockColumns"
+                    :rows="stocks.data"
+                    :pagination="stocks"
+                    :empty-title="$t('inventory.no_items_found')"
+                    empty-icon="📦"
+                >
+                    <!-- Item Name -->
+                    <template #cell-item_name="{ row }">
+                        <div class="font-black text-slate-900 dark:text-white font-tajawal">{{ row.item_name }}</div>
+                        <div class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ row.item_code }}</div>
+                    </template>
 
-                                <td class="py-3.5 font-mono font-black text-sm">
-                                    <span
-                                        class="px-2.5 py-1 rounded-xl border text-xs"
-                                        :class="[
-                                            st.quantity <= 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30' :
-                                             (st.quantity <= st.min_stock_level ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700')
-                                        ]"
-                                    >
-                                        {{ st.quantity }} {{ st.unit || 'كجم' }}
-                                    </span>
-                                </td>
+                    <!-- Quantity -->
+                    <template #cell-quantity="{ row }">
+                        <span
+                            class="px-2.5 py-1 rounded-xl border text-xs font-mono font-black"
+                            :class="[
+                                row.quantity <= 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30' :
+                                 (row.quantity <= row.min_stock_level ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700')
+                            ]"
+                        >
+                            {{ row.quantity }} {{ row.unit || 'كجم' }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono text-slate-500 dark:text-slate-400 font-bold">
-                                    {{ st.min_stock_level }} {{ st.unit || 'كجم' }}
-                                </td>
+                    <!-- Min Stock Level -->
+                    <template #cell-min_stock_level="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400 font-bold">
+                            {{ row.min_stock_level }} {{ row.unit || 'كجم' }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono text-slate-900 dark:text-white font-bold">
-                                    {{ formatMoney(st.purchase_price) }} {{ $t('common.currency') }}
-                                </td>
+                    <!-- Purchase Price -->
+                    <template #cell-purchase_price="{ row }">
+                        <span class="font-mono text-slate-900 dark:text-white font-bold">
+                            {{ formatMoney(row.purchase_price) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono font-black text-emerald-600 dark:text-emerald-400">
-                                    {{ formatMoney(st.total_valuation) }} {{ $t('common.currency') }}
-                                </td>
+                    <!-- Total Valuation -->
+                    <template #cell-total_valuation="{ row }">
+                        <span class="font-mono font-black text-emerald-600 dark:text-emerald-400">
+                            {{ formatMoney(row.total_valuation) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 text-center">
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                        :class="[
-                                            st.quantity <= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' :
-                                             (st.quantity <= st.min_stock_level ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400')
-                                        ]"
-                                    >
-                                        {{ st.quantity <= 0 ? '🔴 نافد' : (st.quantity <= st.min_stock_level ? '⚠️ منخفض' : '🟢 متوفر') }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Status -->
+                    <template #cell-status="{ row }">
+                        <span
+                            class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="[
+                                row.quantity <= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' :
+                                 (row.quantity <= row.min_stock_level ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400')
+                            ]"
+                        >
+                            {{ row.quantity <= 0 ? '🔴 نافد' : (row.quantity <= row.min_stock_level ? '⚠️ منخفض' : '🟢 متوفر') }}
+                        </span>
+                    </template>
 
-                <!-- Mobile Cards -->
-                <div v-if="stocks.data && stocks.data.length > 0" class="md:hidden space-y-3">
-                    <div
-                        v-for="st in stocks.data"
-                        :key="st.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs"
-                    >
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                            <div>
-                                <div class="font-black text-xs text-slate-900 dark:text-white">{{ st.item_name }}</div>
-                                <div class="text-[10px] text-slate-400 font-mono">{{ st.item_code }}</div>
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                                <div>
+                                    <div class="font-black text-xs text-slate-900 dark:text-white">{{ row.item_name }}</div>
+                                    <div class="text-[10px] text-slate-400 font-mono">{{ row.item_code }}</div>
+                                </div>
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-black"
+                                    :class="[
+                                        row.quantity <= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' :
+                                         (row.quantity <= row.min_stock_level ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400')
+                                    ]"
+                                >
+                                    {{ row.quantity <= 0 ? 'نافد' : (row.quantity <= row.min_stock_level ? 'منخفض' : 'متوفر') }}
+                                </span>
                             </div>
-                            <span
-                                class="px-2 py-0.5 rounded-full text-[10px] font-black"
-                                :class="[
-                                    st.quantity <= 0 ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' :
-                                     (st.quantity <= st.min_stock_level ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400')
-                                ]"
-                            >
-                                {{ st.quantity <= 0 ? 'نافد' : (st.quantity <= st.min_stock_level ? 'منخفض' : 'متوفر') }}
-                            </span>
-                        </div>
 
-                        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.current_stock') }}</span>
-                                <span class="font-black text-slate-900 dark:text-white">{{ st.quantity }} {{ st.unit }}</span>
-                            </div>
-                            <div class="text-left">
-                                <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.total_inventory_value') }}</span>
-                                <span class="font-black text-emerald-600 dark:text-emerald-400">{{ formatMoney(st.total_valuation) }}</span>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.current_stock') }}</span>
+                                    <span class="font-black text-slate-900 dark:text-white">{{ row.quantity }} {{ row.unit }}</span>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('inventory.total_inventory_value') }}</span>
+                                    <span class="font-black text-emerald-600 dark:text-emerald-400">{{ formatMoney(row.total_valuation) }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <EmptyState
-                    v-if="!stocks.data || stocks.data.length === 0"
-                    :title="$t('inventory.no_items_found')"
-                    icon="📦"
-                />
-
-                <Pagination
-                    v-if="stocks.links"
-                    :links="stocks.links"
-                    :meta="stocks"
-                />
+                    </template>
+                </DataTable>
             </div>
         </div>
     </AppLayout>
 </template>
+

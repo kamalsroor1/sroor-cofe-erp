@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import AppModal from '@/Components/Common/AppModal.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
@@ -20,6 +21,20 @@ const props = defineProps({
 });
 
 const { formatMoney } = useMoney();
+
+const invoiceColumns = computed(() => [
+    { key: 'invoice_number', label: trans('invoices.invoice_number'), mono: true },
+    { key: 'customer_name', label: trans('invoices.customer') },
+    { key: 'net_total', label: trans('common.total'), mono: true },
+    { key: 'payment_method', label: trans('pos.payment_method') },
+]);
+
+const expenseColumns = computed(() => [
+    { key: 'title', label: trans('expenses.expense_item') },
+    { key: 'cost_center_label', label: trans('expenses.cost_center') },
+    { key: 'amount', label: trans('common.amount'), mono: true },
+    { key: 'payment_method', label: trans('pos.payment_method') },
+]);
 
 const selectedDate = ref(props.date);
 
@@ -241,7 +256,7 @@ const printJournal = () => {
             </div>
 
             <!-- Two Columns: Invoices of the Day & Expenses of the Day -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-tajawal">
                 <!-- Invoices Log of Date -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -251,40 +266,36 @@ const printJournal = () => {
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table v-if="invoices.length > 0" class="w-full text-right text-xs">
-                            <thead>
-                                <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                    <th class="pb-2">{{ $t('invoices.invoice_number') }}</th>
-                                    <th class="pb-2">{{ $t('invoices.customer') }}</th>
-                                    <th class="pb-2 font-mono">{{ $t('common.total') }}</th>
-                                    <th class="pb-2">{{ $t('pos.payment_method') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                    <td class="py-2.5 font-mono font-bold">
-                                        <Link :href="`/invoices/${inv.id}`" class="text-theme-primary hover:underline">
-                                            {{ inv.invoice_number }}
-                                        </Link>
-                                    </td>
-                                    <td class="py-2.5 text-slate-800 dark:text-slate-200 font-tajawal">{{ inv.customer_name }}</td>
-                                    <td class="py-2.5 font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(inv.net_total) }}</td>
-                                    <td class="py-2.5">
-                                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
-                                            {{ inv.payment_method === 'cash' ? $t('pos.payment_cash') : (inv.payment_method === 'credit' ? $t('pos.payment_credit') : $t('pos.payment_partial')) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <DataTable
+                        :columns="invoiceColumns"
+                        :rows="invoices"
+                        :empty-title="$t('treasury.empty_today_invoices')"
+                        empty-icon="🧾"
+                    >
+                        <!-- Invoice Number -->
+                        <template #cell-invoice_number="{ row }">
+                            <Link :href="`/invoices/${row.id}`" class="text-theme-primary font-mono font-bold hover:underline">
+                                {{ row.invoice_number }}
+                            </Link>
+                        </template>
 
-                        <EmptyState
-                            v-else
-                            :title="$t('treasury.empty_today_invoices')"
-                            icon="🧾"
-                        />
-                    </div>
+                        <!-- Customer -->
+                        <template #cell-customer_name="{ row }">
+                            <span class="text-slate-800 dark:text-slate-200 font-tajawal font-bold">{{ row.customer_name }}</span>
+                        </template>
+
+                        <!-- Net Total -->
+                        <template #cell-net_total="{ row }">
+                            <span class="font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(row.net_total) }} {{ $t('common.currency') }}</span>
+                        </template>
+
+                        <!-- Payment Method -->
+                        <template #cell-payment_method="{ row }">
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-tajawal">
+                                {{ row.payment_method === 'cash' ? $t('pos.payment_cash') : (row.payment_method === 'credit' ? $t('pos.payment_credit') : $t('pos.payment_partial')) }}
+                            </span>
+                        </template>
+                    </DataTable>
                 </div>
 
                 <!-- Expenses Log of Date -->
@@ -296,34 +307,35 @@ const printJournal = () => {
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table v-if="expenses.length > 0" class="w-full text-right text-xs">
-                            <thead>
-                                <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                    <th class="pb-2">{{ $t('expenses.expense_item') }}</th>
-                                    <th class="pb-2">{{ $t('expenses.cost_center') }}</th>
-                                    <th class="pb-2 font-mono">{{ $t('common.amount') }}</th>
-                                    <th class="pb-2">{{ $t('pos.payment_method') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                                <tr v-for="exp in expenses" :key="exp.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                    <td class="py-2.5 font-bold text-slate-800 dark:text-slate-200 font-tajawal">{{ exp.title }}</td>
-                                    <td class="py-2.5 text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ exp.cost_center_label }}</td>
-                                    <td class="py-2.5 font-mono font-bold text-rose-600 dark:text-rose-400">{{ formatMoney(exp.amount) }} {{ $t('common.currency') }}</td>
-                                    <td class="py-2.5 text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ exp.payment_method }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <DataTable
+                        :columns="expenseColumns"
+                        :rows="expenses"
+                        :empty-title="$t('treasury.empty_today_expenses')"
+                        empty-icon="💸"
+                    >
+                        <!-- Title -->
+                        <template #cell-title="{ row }">
+                            <span class="font-bold text-slate-800 dark:text-slate-200 font-tajawal">{{ row.title }}</span>
+                        </template>
 
-                        <EmptyState
-                            v-else
-                            :title="$t('treasury.empty_today_expenses')"
-                            icon="💸"
-                        />
-                    </div>
+                        <!-- Cost Center -->
+                        <template #cell-cost_center_label="{ row }">
+                            <span class="text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ row.cost_center_label }}</span>
+                        </template>
+
+                        <!-- Amount -->
+                        <template #cell-amount="{ row }">
+                            <span class="font-mono font-bold text-rose-600 dark:text-rose-400">{{ formatMoney(row.amount) }} {{ $t('common.currency') }}</span>
+                        </template>
+
+                        <!-- Payment Method -->
+                        <template #cell-payment_method="{ row }">
+                            <span class="text-slate-500 dark:text-slate-400 font-tajawal text-[11px]">{{ row.payment_method }}</span>
+                        </template>
+                    </DataTable>
                 </div>
             </div>
+
         </div>
 
         <!-- Open Shift Modal -->

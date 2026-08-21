@@ -9,6 +9,7 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 
@@ -19,6 +20,16 @@ const props = defineProps({
 });
 
 const { formatMoney } = useMoney();
+
+const returnColumns = computed(() => [
+    { key: 'return_number', label: trans('returns.return_number'), sortable: true, mono: true },
+    { key: 'return_type', label: trans('returns.return_type') },
+    { key: 'party_name', label: trans('returns.party_name'), sortable: true },
+    { key: 'return_date', label: trans('common.date'), mono: true },
+    { key: 'net_total', label: trans('common.total'), mono: true },
+    { key: 'reason', label: trans('returns.reason') },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
+]);
 
 const search = ref(props.filters.search || '');
 const type = ref(props.filters.type || 'all');
@@ -195,148 +206,130 @@ const deleteReturn = (r) => {
                 </div>
             </div>
 
-            <!-- Returns Table & Mobile Cards -->
+            <!-- Returns Data Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-4 overflow-hidden font-tajawal">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('returns.return_number') }}</th>
-                                <th class="pb-3">{{ $t('returns.return_type') }}</th>
-                                <th class="pb-3">{{ $t('returns.party_name') }}</th>
-                                <th class="pb-3">{{ $t('common.date') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('common.total') }}</th>
-                                <th class="pb-3">{{ $t('returns.reason') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="r in returns.data" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                                <td class="py-3.5 font-mono font-black text-theme-primary">
-                                    {{ r.return_number }}
-                                </td>
+                <DataTable
+                    :columns="returnColumns"
+                    :rows="returns.data"
+                    :pagination="returns"
+                    :empty-title="$t('returns.no_returns_found')"
+                    empty-icon="🔄"
+                >
+                    <!-- Number -->
+                    <template #cell-return_number="{ row }">
+                        <span class="font-mono font-black text-theme-primary">
+                            {{ row.return_number }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5">
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal"
-                                        :class="r.return_type === 'sales_return' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'"
-                                    >
-                                        {{ r.return_type === 'sales_return' ? $t('returns.sales_return') : $t('returns.purchase_return') }}
-                                    </span>
-                                </td>
+                    <!-- Type -->
+                    <template #cell-return_type="{ row }">
+                        <span
+                            class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal"
+                            :class="row.return_type === 'sales_return' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'"
+                        >
+                            {{ row.return_type === 'sales_return' ? $t('returns.sales_return') : $t('returns.purchase_return') }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-bold text-slate-900 dark:text-white font-tajawal">
-                                    {{ r.party_name }}
-                                </td>
+                    <!-- Party Name -->
+                    <template #cell-party_name="{ row }">
+                        <span class="font-bold text-slate-900 dark:text-white font-tajawal">
+                            {{ row.party_name }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
-                                    {{ r.return_date }}
-                                </td>
+                    <!-- Date -->
+                    <template #cell-return_date="{ row }">
+                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]">
+                            {{ row.return_date }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-mono font-black text-slate-900 dark:text-white text-sm">
-                                    {{ formatMoney(r.net_total) }} {{ $t('common.currency') }}
-                                </td>
+                    <!-- Total -->
+                    <template #cell-net_total="{ row }">
+                        <span class="font-mono font-black text-slate-900 dark:text-white text-sm">
+                            {{ formatMoney(row.net_total) }} {{ $t('common.currency') }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 font-tajawal text-slate-500 dark:text-slate-400 text-[11px]">
-                                    {{ r.reason || '—' }}
-                                </td>
+                    <!-- Reason -->
+                    <template #cell-reason="{ row }">
+                        <span class="font-tajawal text-slate-500 dark:text-slate-400 text-[11px]">
+                            {{ row.reason || '—' }}
+                        </span>
+                    </template>
 
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5 font-tajawal">
-                                        <button
-                                            @click="openDetailsModal(r)"
-                                            type="button"
-                                            class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
-                                        >
-                                            {{ $t('returns.details_btn', { count: r.items_count }) }}
-                                        </button>
-
-                                        <button
-                                            @click="deleteReturn(r)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
-                                            :title="$t('common.delete')"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="r in returns.data"
-                        :key="r.id"
-                        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal"
-                    >
-                        <!-- Top Row: Return Number + Total -->
-                        <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                            <div class="space-y-0.5">
-                                <div class="font-mono font-black text-sm text-theme-primary">{{ r.return_number }}</div>
-                                <p class="text-[11px] text-slate-900 dark:text-white font-bold">{{ r.party_name }}</p>
-                            </div>
-
-                            <span class="font-mono font-black text-sm text-slate-900 dark:text-white">
-                                {{ formatMoney(r.net_total) }} {{ $t('common.currency') }}
-                            </span>
-                        </div>
-
-                        <!-- Return Type & Date -->
-                        <div class="flex items-center justify-between text-xs">
-                            <span
-                                class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                :class="r.return_type === 'sales_return' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'"
-                            >
-                                {{ r.return_type === 'sales_return' ? $t('returns.sales_return') : $t('returns.purchase_return') }}
-                            </span>
-                            <span class="text-[11px] text-slate-400 font-mono">{{ r.return_date }}</span>
-                        </div>
-
-                        <!-- Mobile Action Bar -->
-                        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
                             <button
-                                @click="openDetailsModal(r)"
+                                @click="openDetailsModal(row)"
                                 type="button"
-                                class="flex-1 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs border border-slate-200 dark:border-slate-700"
+                                class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
                             >
-                                <span>📋</span>
-                                <span>{{ $t('returns.details_btn', { count: r.items_count }) }}</span>
+                                {{ $t('returns.details_btn', { count: row.items_count }) }}
                             </button>
 
                             <button
-                                @click="deleteReturn(r)"
+                                @click="deleteReturn(row)"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
+                                class="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 transition cursor-pointer"
                                 :title="$t('common.delete')"
                             >
                                 🗑️
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </template>
 
-                <!-- Empty State -->
-                <EmptyState
-                    v-if="!returns.data || returns.data.length === 0"
-                    icon="🔄"
-                    :title="$t('returns.no_returns_found')"
-                    :action-label="$t('returns.new_return_btn')"
-                    action-href="/returns/create"
-                />
+                    <!-- Mobile Card Custom Slot -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                                <div class="space-y-0.5">
+                                    <div class="font-mono font-black text-sm text-theme-primary">{{ row.return_number }}</div>
+                                    <p class="text-[11px] text-slate-900 dark:text-white font-bold">{{ row.party_name }}</p>
+                                </div>
 
-                <!-- Pagination -->
-                <Pagination
-                    :links="returns.links"
-                    :from="returns.from"
-                    :to="returns.to"
-                    :total="returns.total"
-                />
+                                <span class="font-mono font-black text-sm text-slate-900 dark:text-white">
+                                    {{ formatMoney(row.net_total) }} {{ $t('common.currency') }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs">
+                                <span
+                                    class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                    :class="row.return_type === 'sales_return' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'"
+                                >
+                                    {{ row.return_type === 'sales_return' ? $t('returns.sales_return') : $t('returns.purchase_return') }}
+                                </span>
+                                <span class="text-[11px] text-slate-400 font-mono">{{ row.return_date }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                                <button
+                                    @click="openDetailsModal(row)"
+                                    type="button"
+                                    class="flex-1 h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs border border-slate-200 dark:border-slate-700"
+                                >
+                                    <span>📋</span>
+                                    <span>{{ $t('returns.details_btn', { count: row.items_count }) }}</span>
+                                </button>
+
+                                <button
+                                    @click="deleteReturn(row)"
+                                    type="button"
+                                    class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
+                                    :title="$t('common.delete')"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </DataTable>
             </div>
+
         </div>
 
         <!-- Filter Slide-Over Drawer -->

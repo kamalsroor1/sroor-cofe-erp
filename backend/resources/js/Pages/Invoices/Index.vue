@@ -10,6 +10,7 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import Pagination from '@/Components/Common/Pagination.vue';
+import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
 import {
@@ -143,6 +144,19 @@ const statusOptions = computed(() => [
     { id: 'confirmed', name: trans('invoices.confirmed_only') || 'الفواتير المعتمدة فقط' },
     { id: 'cancelled', name: trans('invoices.cancelled_only') || 'الفواتير الملغاة' },
     { id: 'trash', name: trans('invoices.trash_invoices') || 'سلة المحذوفات' },
+]);
+
+const invoiceColumns = computed(() => [
+    { key: 'invoice_number', label: trans('invoices.invoice_number'), sortable: true, mono: true },
+    { key: 'customer', label: trans('invoices.customer') },
+    { key: 'store', label: trans('invoices.store') },
+    { key: 'date', label: trans('common.date'), mono: true },
+    { key: 'payment_type', label: trans('invoices.payment_type') },
+    { key: 'net_total', label: trans('invoices.net_total'), mono: true },
+    { key: 'paid', label: trans('invoices.paid'), mono: true },
+    { key: 'remaining', label: trans('invoices.remaining'), mono: true },
+    { key: 'status', label: trans('common.status') },
+    { key: 'actions', label: trans('common.actions'), align: 'center' },
 ]);
 
 // Apply Filters to Inertia
@@ -412,238 +426,199 @@ const printA4 = (id) => {
                 </div>
             </div>
 
-            <!-- Invoices Data Table & Mobile Cards -->
+            <!-- Invoices Data Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4 font-tajawal overflow-hidden">
-                <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                                <th class="pb-3">{{ $t('invoices.invoice_number') }}</th>
-                                <th class="pb-3">{{ $t('invoices.customer') }}</th>
-                                <th class="pb-3">{{ $t('invoices.store') }}</th>
-                                <th class="pb-3">{{ $t('common.date') }}</th>
-                                <th class="pb-3">{{ $t('invoices.payment_type') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('invoices.net_total') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('invoices.paid') }}</th>
-                                <th class="pb-3 font-mono">{{ $t('invoices.remaining') }}</th>
-                                <th class="pb-3">{{ $t('common.status') }}</th>
-                                <th class="pb-3 text-center">{{ $t('common.actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-                            <tr v-for="inv in invoices.data" :key="inv.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                <!-- Invoice Number -->
-                                <td class="py-3.5 font-mono font-black text-slate-900 dark:text-white">
-                                    <Link :href="`/invoices/${inv.id}`" class="hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-1">
-                                        <span>#{{ inv.invoice_number }}</span>
-                                    </Link>
-                                </td>
+                <DataTable
+                    :columns="invoiceColumns"
+                    :rows="invoices.data"
+                    :pagination="invoices"
+                    :empty-title="$t('invoices.no_invoices_found')"
+                    :empty-icon="Receipt"
+                >
+                    <!-- Invoice Number -->
+                    <template #cell-invoice_number="{ row }">
+                        <Link :href="`/invoices/${row.id}`" class="font-mono font-black text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-1">
+                            <span>#{{ row.invoice_number }}</span>
+                        </Link>
+                    </template>
 
-                                <!-- Customer -->
-                                <td class="py-3.5">
-                                    <div class="font-bold text-slate-900 dark:text-slate-200 font-tajawal">{{ inv.customer_name }}</div>
-                                    <div v-if="inv.customer_phone" class="text-[10px] text-slate-500 font-mono" dir="ltr">{{ inv.customer_phone }}</div>
-                                </td>
+                    <!-- Customer -->
+                    <template #cell-customer="{ row }">
+                        <div class="font-bold text-slate-900 dark:text-slate-200 font-tajawal">{{ row.customer_name }}</div>
+                        <div v-if="row.customer_phone" class="text-[10px] text-slate-500 font-mono" dir="ltr">{{ row.customer_phone }}</div>
+                    </template>
 
-                                <!-- Store -->
-                                <td class="py-3.5">
-                                    <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-tajawal inline-flex items-center gap-1">
-                                        <Store class="w-3 h-3 text-slate-400" />
-                                        <span>{{ inv.store_name }}</span>
-                                    </span>
-                                </td>
+                    <!-- Store -->
+                    <template #cell-store="{ row }">
+                        <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[11px] font-tajawal inline-flex items-center gap-1">
+                            <Store class="w-3 h-3 text-slate-400" />
+                            <span>{{ row.store_name }}</span>
+                        </span>
+                    </template>
 
-                                <!-- Date -->
-                                <td class="py-3.5 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                                    {{ inv.formatted_created_at || inv.created_at }}
-                                </td>
+                    <!-- Date -->
+                    <template #cell-date="{ row }">
+                        <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                            {{ row.formatted_created_at || row.created_at }}
+                        </span>
+                    </template>
 
-                                <!-- Payment Badge -->
-                                <td class="py-3.5 font-tajawal">
-                                    <span class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold border" :class="getPaymentBadge(inv).class">
-                                        {{ getPaymentBadge(inv).label }}
-                                    </span>
-                                </td>
+                    <!-- Payment Type Badge -->
+                    <template #cell-payment_type="{ row }">
+                        <span class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold border font-tajawal" :class="getPaymentBadge(row).class">
+                            {{ getPaymentBadge(row).label }}
+                        </span>
+                    </template>
 
-                                <!-- Net Total -->
-                                <td class="py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                                    {{ formatMoney(inv.net_total) }}
-                                </td>
+                    <!-- Net Total -->
+                    <template #cell-net_total="{ row }">
+                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                            {{ formatMoney(row.net_total) }}
+                        </span>
+                    </template>
 
-                                <!-- Paid -->
-                                <td class="py-3.5 font-mono font-bold text-slate-900 dark:text-slate-200">
-                                    {{ formatMoney(inv.paid_amount) }}
-                                </td>
+                    <!-- Paid -->
+                    <template #cell-paid="{ row }">
+                        <span class="font-mono font-bold text-slate-900 dark:text-slate-200">
+                            {{ formatMoney(row.paid_amount) }}
+                        </span>
+                    </template>
 
-                                <!-- Remaining -->
-                                <td class="py-3.5 font-mono font-bold">
-                                    <span :class="Number(inv.remaining_amount) > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20' : 'text-slate-400'">
-                                        {{ formatMoney(inv.remaining_amount) }}
-                                    </span>
-                                </td>
+                    <!-- Remaining -->
+                    <template #cell-remaining="{ row }">
+                        <span class="font-mono font-bold" :class="Number(row.remaining_amount) > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20' : 'text-slate-400'">
+                            {{ formatMoney(row.remaining_amount) }}
+                        </span>
+                    </template>
 
-                                <!-- Status -->
-                                <td class="py-3.5 font-tajawal">
-                                    <span class="px-2 py-0.5 rounded-lg text-[10px] font-black border" :class="getStatusBadge(inv.status).class">
-                                        {{ getStatusBadge(inv.status).label }}
-                                    </span>
-                                </td>
+                    <!-- Status -->
+                    <template #cell-status="{ row }">
+                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-black border font-tajawal" :class="getStatusBadge(row.status).class">
+                            {{ getStatusBadge(row.status).label }}
+                        </span>
+                    </template>
 
-                                <!-- Actions in Desktop Table -->
-                                <td class="py-3.5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        <Link
-                                            :href="`/invoices/${inv.id}`"
-                                            class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition cursor-pointer"
-                                            :title="$t('invoices.view_invoice')"
-                                        >
-                                            <Eye class="w-3.5 h-3.5" />
-                                        </Link>
-
-                                        <button
-                                            @click="printThermal(inv.id)"
-                                            type="button"
-                                            class="p-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 transition cursor-pointer"
-                                            :title="$t('invoices.print_thermal')"
-                                        >
-                                            <Printer class="w-3.5 h-3.5" />
-                                        </button>
-
-                                        <ActionMenu
-                                            :items="getInvoiceActions(inv)"
-                                            :title="`#${inv.invoice_number}`"
-                                            align="start"
-                                        />
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Mobile Cards View (Visible on Small Screens) -->
-                <div class="md:hidden space-y-3">
-                    <div
-                        v-for="inv in invoices.data"
-                        :key="inv.id"
-                        class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs"
-                    >
-                        <!-- Card Header: Row 1 (Number + Status + Action Menu •••) -->
-                        <div class="flex items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-2.5">
-                            <Link :href="`/invoices/${inv.id}`" class="font-mono font-black text-xs sm:text-sm text-theme-primary hover:underline truncate" dir="ltr">
-                                #{{ inv.invoice_number }}
+                    <!-- Actions -->
+                    <template #cell-actions="{ row }">
+                        <div class="flex items-center justify-center gap-1.5 font-tajawal">
+                            <Link
+                                :href="`/invoices/${row.id}`"
+                                class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition cursor-pointer"
+                                :title="$t('invoices.view_invoice')"
+                            >
+                                <Eye class="w-3.5 h-3.5" />
                             </Link>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <span class="px-2.5 py-0.5 rounded-xl text-[10px] font-black border shrink-0" :class="getStatusBadge(inv.status).class">
-                                    {{ getStatusBadge(inv.status).label }}
-                                </span>
-                                <!-- Action Menu ••• (Header Action Button) -->
-                                <ActionMenu
-                                    :items="getInvoiceActions(inv)"
-                                    :title="`#${inv.invoice_number}`"
-                                    align="start"
-                                    buttonClass="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black shadow-xs hover:border-theme-primary shrink-0"
-                                />
-                            </div>
+
+                            <button
+                                @click="printThermal(row.id)"
+                                type="button"
+                                class="p-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 transition cursor-pointer"
+                                :title="$t('invoices.print_thermal')"
+                            >
+                                <Printer class="w-3.5 h-3.5" />
+                            </button>
+
+                            <ActionMenu
+                                :items="getInvoiceActions(row)"
+                                :title="`#${row.invoice_number}`"
+                                align="start"
+                            />
                         </div>
+                    </template>
 
-                        <!-- Card Meta: Store & Date -->
-                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
-                            <span class="px-2 py-0.5 rounded-lg bg-slate-200/60 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-bold inline-flex items-center gap-1.5 truncate max-w-[60%]">
-                                <Store class="w-3.5 h-3.5 text-theme-primary shrink-0" />
-                                <span class="truncate">{{ inv.store_name }}</span>
-                            </span>
-                            <span class="font-mono text-[10.5px] shrink-0 text-slate-400">
-                                {{ inv.formatted_created_at || inv.created_at }}
-                            </span>
-                        </div>
-
-                        <!-- Customer Details Block -->
-                        <div class="space-y-0.5 bg-white dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200/70 dark:border-slate-800/60">
-                            <div class="flex items-center justify-between gap-2">
-                                <p class="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
-                                    {{ inv.customer_name }}
-                                </p>
-                                <span v-if="inv.customer_phone" class="text-[11px] text-slate-400 font-mono shrink-0" dir="ltr">
-                                    📱 {{ inv.customer_phone }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Financials 3-Column Bento Row -->
-                        <div class="grid grid-cols-3 gap-2 p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center font-mono">
-                            <div class="space-y-0.5">
-                                <span class="text-[10px] text-slate-400 font-tajawal font-bold block">{{ $t('invoices.net_total') }}</span>
-                                <span class="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 block truncate">{{ formatMoney(inv.net_total) }}</span>
-                            </div>
-                            <div class="space-y-0.5">
-                                <span class="text-[10px] text-slate-400 font-tajawal font-bold block">{{ $t('invoices.paid') }}</span>
-                                <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 block truncate">{{ formatMoney(inv.paid_amount) }}</span>
-                            </div>
-                            <div class="space-y-0.5">
-                                <span class="text-[10px] text-slate-400 font-tajawal font-bold block">{{ $t('invoices.remaining') }}</span>
-                                <span class="text-xs sm:text-sm font-bold block truncate" :class="Number(inv.remaining_amount) > 0 ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-400'">
-                                    {{ formatMoney(inv.remaining_amount) }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Mobile Card Action Bar: Payment Badge + View CTA + Quick Thermal Print + ActionMenu Dropdown (•••) -->
-                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
-                            <span class="px-2.5 py-1.5 rounded-xl text-[11px] font-black border shrink-0" :class="getPaymentBadge(inv).class">
-                                {{ getPaymentBadge(inv).label }}
-                            </span>
-
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <!-- Quick View Link -->
-                                <Link
-                                    :href="`/invoices/${inv.id}`"
-                                    class="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs shrink-0"
-                                >
-                                    <Eye class="w-4 h-4 text-theme-primary shrink-0" />
-                                    <span>{{ $t('invoices.view_invoice') || 'عرض' }}</span>
+                    <!-- Custom Mobile Card Layout -->
+                    <template #mobile-card="{ row }">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs font-tajawal">
+                            <div class="flex items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-2.5">
+                                <Link :href="`/invoices/${row.id}`" class="font-mono font-black text-xs sm:text-sm text-theme-primary hover:underline truncate" dir="ltr">
+                                    #{{ row.invoice_number }}
                                 </Link>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <span class="px-2.5 py-0.5 rounded-xl text-[10px] font-black border shrink-0" :class="getStatusBadge(row.status).class">
+                                        {{ getStatusBadge(row.status).label }}
+                                    </span>
+                                    <ActionMenu
+                                        :items="getInvoiceActions(row)"
+                                        :title="`#${row.invoice_number}`"
+                                        align="start"
+                                        buttonClass="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black shadow-xs hover:border-theme-primary shrink-0"
+                                    />
+                                </div>
+                            </div>
 
-                                <!-- Quick Thermal Print Button -->
-                                <button
-                                    @click="printThermal(inv.id)"
-                                    type="button"
-                                    class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
-                                    :title="$t('invoices.print_thermal') || 'طباعة حراري'"
-                                >
-                                    <Printer class="w-4 h-4" />
-                                </button>
+                            <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                <span class="px-2 py-0.5 rounded-lg bg-slate-200/60 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-bold inline-flex items-center gap-1.5 truncate max-w-[60%]">
+                                    <Store class="w-3.5 h-3.5 text-theme-primary shrink-0" />
+                                    <span class="truncate">{{ row.store_name }}</span>
+                                </span>
+                                <span class="font-mono text-[10.5px] shrink-0 text-slate-400">
+                                    {{ row.formatted_created_at || row.created_at }}
+                                </span>
+                            </div>
 
-                                <!-- Action Menu ••• (Dropdown with all actions) -->
-                                <ActionMenu
-                                    :items="getInvoiceActions(inv)"
-                                    :title="`#${inv.invoice_number}`"
-                                    align="start"
-                                    buttonClass="w-9 h-9 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 font-black shadow-xs shrink-0"
-                                />
+                            <div class="space-y-0.5 bg-white dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200/70 dark:border-slate-800/60">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                                        {{ row.customer_name }}
+                                    </p>
+                                    <span v-if="row.customer_phone" class="text-[11px] text-slate-400 font-mono shrink-0" dir="ltr">
+                                        📱 {{ row.customer_phone }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center font-mono">
+                                <div class="space-y-0.5">
+                                    <span class="text-[10px] text-slate-400 font-tajawal font-bold block">{{ $t('invoices.net_total') }}</span>
+                                    <span class="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 block truncate">{{ formatMoney(row.net_total) }}</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <span class="text-[10px] text-slate-400 font-tajawal font-bold block">{{ $t('invoices.paid') }}</span>
+                                    <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 block truncate">{{ formatMoney(row.paid_amount) }}</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <span class="text-[10px] text-slate-400 font-tajawal font-bold block">{{ $t('invoices.remaining') }}</span>
+                                    <span class="text-xs sm:text-sm font-bold block truncate" :class="Number(row.remaining_amount) > 0 ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-400'">
+                                        {{ formatMoney(row.remaining_amount) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
+                                <span class="px-2.5 py-1.5 rounded-xl text-[11px] font-black border shrink-0" :class="getPaymentBadge(row).class">
+                                    {{ getPaymentBadge(row).label }}
+                                </span>
+
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <Link
+                                        :href="`/invoices/${row.id}`"
+                                        class="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs shrink-0"
+                                    >
+                                        <Eye class="w-4 h-4 text-theme-primary shrink-0" />
+                                        <span>{{ $t('invoices.view_invoice') || 'عرض' }}</span>
+                                    </Link>
+
+                                    <button
+                                        @click="printThermal(row.id)"
+                                        type="button"
+                                        class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs shrink-0"
+                                        :title="$t('invoices.print_thermal') || 'طباعة حراري'"
+                                    >
+                                        <Printer class="w-4 h-4" />
+                                    </button>
+
+                                    <ActionMenu
+                                        :items="getInvoiceActions(row)"
+                                        :title="`#${row.invoice_number}`"
+                                        align="start"
+                                        buttonClass="w-9 h-9 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 font-black shadow-xs shrink-0"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </template>
+                </DataTable>
 
-                <!-- Empty State -->
-                <EmptyState
-                    v-if="!invoices.data || invoices.data.length === 0"
-                    :icon="Receipt"
-                    :title="$t('invoices.no_invoices_found')"
-                    :action-label="$t('invoices.new_sale_invoice')"
-                    action-href="/pos"
-                    :action-icon="Plus"
-                />
-
-                <!-- Pagination Links -->
-                <Pagination
-                    :links="invoices.links"
-                    :from="invoices.from"
-                    :to="invoices.to"
-                    :total="invoices.total"
-                />
             </div>
         </div>
 
