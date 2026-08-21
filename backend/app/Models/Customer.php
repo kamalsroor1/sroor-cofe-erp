@@ -16,6 +16,7 @@ class Customer extends Model
         'phone',
         'address',
         'tax_number',
+        'price_tier',
         'current_balance',
         'is_active',
         'notes',

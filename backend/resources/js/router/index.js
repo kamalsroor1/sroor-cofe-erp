@@ -151,6 +151,26 @@ const routes = [
         },
     },
     {
+        path: '/invoices',
+        name: 'invoices.index',
+        component: () => import('../views/Invoices/InvoicesView.vue'),
+        meta: {
+            title: 'فواتير المبيعات',
+            requiresAuth: true,
+            permission: 'invoices.view',
+        },
+    },
+    {
+        path: '/pos',
+        name: 'pos.index',
+        component: () => import('../views/POS/PosView.vue'),
+        meta: {
+            title: 'نقطة البيع السريعة (POS)',
+            requiresAuth: true,
+            permission: 'pos.access',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

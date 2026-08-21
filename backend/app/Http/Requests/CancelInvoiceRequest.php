@@ -10,13 +10,13 @@ class CancelInvoiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('invoices.cancel') ?? false;
+        return $this->user()?->hasRole('admin') || $this->user()?->can('invoices.cancel') ?? false;
     }
 
     public function rules(): array
     {
         return [
-            'reason' => ['required', 'string', 'min:3', 'max:500'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

@@ -104,21 +104,23 @@
             العمليات ونقاط البيع
           </div>
 
-          <a
-            href="/pos"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"
+          <router-link
+            to="/pos"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
-            <ShoppingCart class="w-4 h-4 text-emerald-400" />
+            <ShoppingCart class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('pos') ? 'text-slate-950' : 'text-emerald-400'" />
             <span class="font-tajawal">نقطة البيع السريعة (POS)</span>
-          </a>
+          </router-link>
 
-          <a
-            href="/invoices"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"
+          <router-link
+            to="/invoices"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
-            <FileText class="w-4 h-4 text-blue-400" />
+            <FileText class="w-4 h-4 text-blue-400" :class="$route.name?.startsWith('invoices') ? 'text-slate-950' : 'text-blue-400'" />
             <span class="font-tajawal">فواتير المبيعات</span>
-          </a>
+          </router-link>
 
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider font-tajawal">
             الفروع والمخزون

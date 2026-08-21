@@ -90,10 +90,16 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
 
         // POS & Sales Invoices & WhatsApp
-        Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index');
-        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show');
-        Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store');
-        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel');
+        Route::get('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'index'])->name('api.invoices.index');
+        Route::get('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'show'])->name('api.invoices.show');
+        Route::post('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'store'])->name('api.invoices.store');
+        Route::post('/invoices/{id}/cancel', [\App\Http\Controllers\Api\InvoiceController::class, 'cancel'])->name('api.invoices.cancel');
+
+        // POS Fast Operations
+        Route::get('/pos/bootstrap', [\App\Http\Controllers\Api\PosController::class, 'bootstrap'])->name('api.pos.bootstrap');
+        Route::post('/pos/checkout', [\App\Http\Controllers\Api\PosController::class, 'checkout'])->name('api.pos.checkout');
+        Route::post('/pos/quick-customer', [\App\Http\Controllers\Api\PosController::class, 'quickCustomer'])->name('api.pos.quick_customer');
+        Route::get('/pos/last-price', [\App\Http\Controllers\Api\PosController::class, 'lastPrice'])->name('api.pos.last_price');
 
         // Payments & Vouchers (Customer Receipts / Supplier Disbursements)
         Route::get('/payments', [PaymentController::class, 'index'])->name('api.payments.index');

@@ -286,7 +286,43 @@
 
 ---
 
-## 14. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 14. Module 08: نقطة البيع السريعة وفواتير المبيعات (`POS & Sales Invoices`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Invoices/CreateInvoiceDTO.php` (Strictly Typed DTO لفواتير المبيعات ونقاط البيع السريعة).
+2. `[NEW]` `app/DTOs/Invoices/CancelInvoiceDTO.php` (Strictly Typed DTO لإلغاء فواتير المبيعات وعكس المخزون والمديونية).
+3. `[NEW]` `app/Actions/Invoices/CreateSalesInvoiceAction.php` (Single Action لتسجيل واعتماد فاتورة المبيعات وخصم المخزون بقفل سطري `lockForUpdate` وتحديث رصيد العميل).
+4. `[NEW]` `app/Actions/Invoices/CancelSalesInvoiceAction.php` (Single Action لإلغاء فاتورة المبيعات وإرجاع البضاعة للمخزن وعكس رصيد العميل).
+5. `[NEW]` `app/Actions/Invoices/GetInvoiceDetailsAction.php` (Single Action لجلب تفاصيل الفاتورة وصياغة رسالة الواتساب المهيأة للعميل).
+6. `[NEW]` `app/Http/Resources/InvoiceResource.php` (تنسيق تفاصيل فواتير المبيعات والبنود والدفعات للـ API).
+7. `[NEW]` `app/Http/Requests/StoreSalesInvoiceRequest.php` (Form Request مخصص للتحقق من فواتير المبيعات ومنع `$request->validate()` في الكنترولر).
+8. `[MODIFIED]` `app/Http/Requests/CancelInvoiceRequest.php` (تحديث الصلاحيات).
+9. `[REFACTORED]` `app/Http/Controllers/Api/InvoiceController.php` (متحكم API متكامل لفواتير المبيعات).
+10. `[NEW]` `app/Http/Controllers/Api/PosController.php` (متحكم API متكامل لعمليات الكاشير السريعة `bootstrap` و `checkout` و `quick-customer` و `last-price`).
+11. `[MODIFIED]` `routes/api.php` (تسجيل كافة مسارات فواتير المبيعات وعمليات الـ POS).
+12. `[NEW]` `tests/Feature/Api/InvoicesAndPosApiTest.php` (حزمة 7 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Invoices/InvoicesView.vue` (شاشة سجل فواتير المبيعات، بطاقات الإجمالي والمحصل والآجل، فلاتر نوع السداد والحالة والتواريخ، نافذة التفاصيل، مشاركة الواتساب المباشرة والطباعة).
+2. `[NEW]` `resources/js/views/POS/PosView.vue` (شاشة كاشير فائقة السرعة، رادار تصنيفات، كروت أصناف بالرصيد والأسعار، سلة بيع سريعة مع عداد الكميات والخصم وأنواع السداد، نافذة إضافة عميل سريع، واختصارات لوحة المفاتيح F9/F2).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/invoices` و `/pos`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تحويل روابط POS وفواتير المبيعات إلى router-link نشط).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/invoices` — قائمة فواتير المبيعات مع الفلاتر والمجاميع المالية
+* `GET /api/v1/invoices/{id}` — تفاصيل الفاتورة وبنودها ورابط مشاركة الواتساب
+* `POST /api/v1/invoices` — تسجيل واعتماد فاتورة مبيعات جديدة
+* `POST /api/v1/invoices/{id}/cancel` — إلغاء الفاتورة وعكس المخزون ورصيد العميل
+* `GET /api/v1/pos/bootstrap` — تجميع بيانات كاشير POS (الأصناف، الرصيد، التصنيفات، العملاء، الوردية)
+* `POST /api/v1/pos/checkout` — اعتماد وتأكيد بيع POS فوري
+* `POST /api/v1/pos/quick-customer` — تسجيل عميل سريع من شاشة POS
+* `GET /api/v1/pos/last-price` — سعر آخر بيع للعميل على الصنف المحدد
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 15. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -300,8 +336,8 @@
   - [x] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ✅ (2026-08-21)
   - [x] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ✅ (2026-08-21)
   - [x] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ✅ (2026-08-21)
-  - [ ] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 09: مرتجعات المبيعات والمشتريات (`Returns`)
+  - [x] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ✅ (2026-08-21)
+  - [ ] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ⏳ (التالي في الترتيب)
   - [ ] Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)
   - [ ] Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)
   - [ ] Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)
@@ -312,5 +348,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)  
-**الموديول التالي المستهدف:** **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)  
+**الموديول التالي المستهدف:** **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)**
