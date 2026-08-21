@@ -440,7 +440,27 @@
 
 ---
 
-## 19. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 19. Module 13: لوحة التحكم والتحليلات اللحظية ومؤشرات الأداء (`Dashboard Analytics`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/Actions/Dashboard/GetDashboardOverviewAction.php` (Single Action لحساب وتجميع مؤشرات أداء لوحة التحكم، مبيعات اليوم، نقدية الدرج، أرباح الشهر، النواقص، اتجاه المبيعات لـ 7 أيام، أحدث الفواتير، والأصناف الأكثر مبيعاً بدقة `DECIMAL(12,3)` و `bcmath`).
+2. `[REFACTORED]` `app/Http/Controllers/Api/DashboardApiController.php` (متحكم API نقي وخفيف لمعالجة طلبات لوحة التحكم).
+3. `[MODIFIED]` `routes/api.php` (تسجيل مسار `/dashboard/summary`).
+4. `[NEW]` `tests/Feature/Api/DashboardApiTest.php` (اختبار Feature شامل لمؤشرات لوحة التحكم بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/DashboardView.vue` (لوحة تحكم تنفيذية لحظية ذكية، كروت المؤشرات الأربعة، شريط بياني لحركة المبيعات لـ 7 أيام، ودجت الوردية المفتوحة، رادار النواقص وحد الطلب، أحدث فواتير المبيعات، والأصناف الأكثر مبيعاً، مع تحديث تلقائي بالخلفية كل 30 ثانية).
+2. `[MODIFIED]` `resources/js/router/index.js` (توجيه المسار الرئيسي `/` إلى لوحة التحكم).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط الرئيسية ولوحة التحكم).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/dashboard/summary` — المؤشرات والتحليلات اللحظية المتكاملة للفرع النشط
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 20. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -459,12 +479,12 @@
   - [x] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ✅ (2026-08-21)
   - [x] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ✅ (2026-08-21)
   - [x] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ✅ (2026-08-21)
-  - [ ] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)
+  - [x] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ✅ (2026-08-21)
+  - [ ] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ⏳ (التالي في الترتيب)
   - [ ] Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)
   - [ ] Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)  
-**الموديول التالي المستهدف:** **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)  
+**الموديول التالي المستهدف:** **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)**
