@@ -191,6 +191,26 @@ const routes = [
         },
     },
     {
+        path: '/stock-transfers',
+        name: 'stock_transfers.index',
+        component: () => import('../views/StockTransfers/StockTransfersView.vue'),
+        meta: {
+            title: 'التحويلات المخزنية',
+            requiresAuth: true,
+            permission: 'stores.view',
+        },
+    },
+    {
+        path: '/stock-transfers/create',
+        name: 'stock_transfers.create',
+        component: () => import('../views/StockTransfers/CreateStockTransferView.vue'),
+        meta: {
+            title: 'إذن تحويل مخزني جديد',
+            requiresAuth: true,
+            permission: 'stores.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

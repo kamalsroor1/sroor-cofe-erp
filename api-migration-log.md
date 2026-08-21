@@ -350,7 +350,36 @@
 
 ---
 
-## 16. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 16. Module 10: التحويلات المخزنية بين الفروع والمخازن (`Stock Transfers`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Transfers/CreateTransferDTO.php` (Strictly Typed DTO لبيانات التحويل المخزني).
+2. `[NEW]` `app/DTOs/Transfers/CancelTransferDTO.php` (Strictly Typed DTO لإلغاء التحويل المخزني).
+3. `[NEW]` `app/Actions/Transfers/CreateStockTransferAction.php` (Single Action لاعتماد التحويل المخزني ونقل الأرصدة وتسجيل حركات `transfer_out` و `transfer_in` داخل Transaction).
+4. `[NEW]` `app/Actions/Transfers/CancelStockTransferAction.php` (Single Action لإلغاء التحويل وعكس حركة المخزون بأمان للمخزن المصدر).
+5. `[NEW]` `app/Http/Resources/StockTransferResource.php` & `StockTransferItemResource.php` (تنسيق بيانات أذونات التحويل والبنود للـ API).
+6. `[NEW]` `app/Http/Requests/CancelStockTransferRequest.php` & `[MODIFIED]` `StoreStockTransferRequest.php` (التحقق الصارم عبر Form Requests ومنع أي `$request->validate()` في الكنترولر).
+7. `[REFACTORED]` `app/Http/Controllers/Api/StockTransferController.php` (متحكم API متكامل لإدارة واستعلام أذونات التحويل).
+8. `[MODIFIED]` `routes/api.php` (تسجيل مسارات التحويل المخزني `/transfers` و `/transfers/{id}` و `/transfers/{id}/cancel`).
+9. `[NEW]` `tests/Feature/Api/StockTransfersApiTest.php` (حزمة 4 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/StockTransfers/StockTransfersView.vue` (شاشة سجل أذونات التحويل، كروت الإجمالي والمنفذ والملغي، فلاتر المخازن والتواريخ، نافذة المعاينة، وإلغاء وعكس التحويل).
+2. `[NEW]` `resources/js/views/StockTransfers/CreateStockTransferView.vue` (شاشة إنشاء إذن تحويل مخزني، اختيار المخزن المصدر والمستلم، إضافة بنود الأصناف بالرصيد والكميات، والتنفيذ الفوري).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/stock-transfers` و `/stock-transfers/create`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط التحويلات المخزنية في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/transfers` — قائمة أذونات التحويل المخزني مع الفلاتر والمؤشرات الإجمالية
+* `GET /api/v1/transfers/{id}` — تفاصيل إذن التحويل وبنوده
+* `POST /api/v1/transfers` — تسجيل واعتماد تحويل مخزني ونقل الرصيد فوراً
+* `POST /api/v1/transfers/{id}/cancel` — إلغاء إذن التحويل وعكس رصيد الأصناف للمخزن المصدر
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 17. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -366,8 +395,8 @@
   - [x] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ✅ (2026-08-21)
   - [x] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ✅ (2026-08-21)
   - [x] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ✅ (2026-08-21)
-  - [ ] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)
+  - [x] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ✅ (2026-08-21)
+  - [ ] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ⏳ (التالي في الترتيب)
   - [ ] Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)
   - [ ] Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)
   - [ ] Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)
@@ -376,5 +405,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 09: مرتجعات المبيعات والمشتريات (`Returns`)  
-**الموديول التالي المستهدف:** **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)  
+**الموديول التالي المستهدف:** **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)**

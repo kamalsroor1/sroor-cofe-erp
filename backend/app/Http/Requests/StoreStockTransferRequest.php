@@ -10,7 +10,7 @@ class StoreStockTransferRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('stores.manage') ?? false;
+        return $this->user()?->hasRole('admin') || $this->user()?->can('stores.manage') || $this->user()?->can('stores.view') ?? false;
     }
 
     public function rules(): array
