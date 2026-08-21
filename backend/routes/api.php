@@ -68,8 +68,9 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::patch('/suppliers/{id}/toggle-active', [SupplierController::class, 'toggleActive'])->name('api.suppliers.toggle_active');
         Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('api.suppliers.pay');
         Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->name('api.suppliers.statement');
-        // Purchases & Coffee Bean Inbound
+        // Purchases & Coffee Bean Inbound & Smart Reorder
         Route::get('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'index'])->name('api.purchases.index');
+        Route::get('/purchases/smart-reorder', [\App\Http\Controllers\Api\PurchaseController::class, 'smartReorder'])->name('api.purchases.smart_reorder');
         Route::get('/purchases/{id}', [\App\Http\Controllers\Api\PurchaseController::class, 'show'])->name('api.purchases.show');
         Route::post('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'store'])->name('api.purchases.store');
         Route::post('/purchases/{id}/cancel', [\App\Http\Controllers\Api\PurchaseController::class, 'cancel'])->name('api.purchases.cancel');

@@ -253,7 +253,40 @@
 
 ---
 
-## 13. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 13. Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Purchases/PurchaseDTO.php` (Strictly Typed DTO لفواتير المشتريات وتوريد الخامات والمصاريف المحملة).
+2. `[NEW]` `app/DTOs/Purchases/CancelPurchaseDTO.php` (Strictly Typed DTO لإلغاء فواتير الشراء وعكس المخزون).
+3. `[NEW]` `app/Actions/Purchases/CreatePurchaseAction.php` (Single Action لتسجيل واعتماد فاتورة المشتريات وتوزيع التكاليف وتحديث المخزون والـ WAC).
+4. `[NEW]` `app/Actions/Purchases/CancelPurchaseAction.php` (Single Action لإلغاء الفاتورة وفحص كفاية الرصيد وعكس المخزون والمديونية).
+5. `[NEW]` `app/Actions/Purchases/GetSmartReorderSuggestionsAction.php` (Single Action لمحرك ورادار إعادة الطلب التنبؤي ومعدلات السحب اليومي).
+6. `[NEW]` `app/Http/Resources/PurchaseResource.php` (تنسيق بيانات فواتير المشتريات والمجاميع المالية).
+7. `[NEW]` `app/Http/Resources/PurchaseItemResource.php` (تنسيق بنود وأصناف التوريد والتكاليف المحملة).
+8. `[MODIFIED]` `app/Http/Requests/StorePurchaseRequest.php` (تحديث الصلاحيات والأدوار وقواعد التحقق).
+9. `[REFACTORED]` `app/Http/Controllers/Api/PurchaseController.php` (متحكم API متكامل للمشتريات وإعادة الطلب الذكي).
+10. `[MODIFIED]` `routes/api.php` (تسجيل مسارات المشتريات، رادار إعادة الطلب الذكي، والإلغاء).
+11. `[NEW]` `tests/Feature/Api/PurchasesApiTest.php` (حزمة 5 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Purchases/PurchasesView.vue` (شاشة سجل فواتير المشتريات، بطاقات إجمالي المشتريات والمديونية الآجلة، فلاتر الموردين والحالات والتواريخ، نافذة المعاينة التفصيلية، وإلغاء الفواتير).
+2. `[NEW]` `resources/js/views/Purchases/CreatePurchaseView.vue` (شاشة إنشاء فاتورة مشتريات جديدة، اختيار الموردين، جدول البنود الديناميكي، حساب التكاليف والخصومات والمدفوع والمتبقي الآجل، ودعم الـ Prefill من الرادار).
+3. `[NEW]` `resources/js/views/Purchases/SmartReorderView.vue` (شاشة رادار إعادة الطلب الذكي بالذكاء الاصطناعي، بطاقات مستويات الخطورة، جدول النواقص ومعدلات الاستهلاك اليومي وفترة نفاد الرصيد، والتصدير المباشر لأمر شراء مجمع).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/purchases` و `/purchases/create` و `/purchases/smart-reorder`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط المشتريات والتوريد في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/purchases` — قائمة فواتير المشتريات مع الفلاتر والمجاميع المالية
+* `GET /api/v1/purchases/smart-reorder` — رادار واقتراحات إعادة الطلب الذكي
+* `GET /api/v1/purchases/{id}` — تفاصيل فاتورة المشتريات وبنودها
+* `POST /api/v1/purchases` — تسجيل واعتماد فاتورة مشتريات جديدة
+* `POST /api/v1/purchases/{id}/cancel` — إلغاء الفاتورة وعكس المخزون
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 14. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -266,8 +299,8 @@
   - [x] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ✅ (2026-08-21)
   - [x] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ✅ (2026-08-21)
   - [x] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ✅ (2026-08-21)
-  - [ ] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)
+  - [x] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ✅ (2026-08-21)
+  - [ ] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ⏳ (التالي في الترتيب)
   - [ ] Module 09: مرتجعات المبيعات والمشتريات (`Returns`)
   - [ ] Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)
   - [ ] Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)
@@ -279,5 +312,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)  
-**الموديول التالي المستهدف:** **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)  
+**الموديول التالي المستهدف:** **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)**

@@ -121,6 +121,36 @@ const routes = [
         },
     },
     {
+        path: '/purchases',
+        name: 'purchases.index',
+        component: () => import('../views/Purchases/PurchasesView.vue'),
+        meta: {
+            title: 'المشتريات والتوريد',
+            requiresAuth: true,
+            permission: 'purchases.view',
+        },
+    },
+    {
+        path: '/purchases/create',
+        name: 'purchases.create',
+        component: () => import('../views/Purchases/CreatePurchaseView.vue'),
+        meta: {
+            title: 'فاتورة مشتريات جديدة',
+            requiresAuth: true,
+            permission: 'purchases.create',
+        },
+    },
+    {
+        path: '/purchases/smart-reorder',
+        name: 'purchases.smart_reorder',
+        component: () => import('../views/Purchases/SmartReorderView.vue'),
+        meta: {
+            title: 'رادار إعادة الطلب الذكي',
+            requiresAuth: true,
+            permission: 'purchases.view',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

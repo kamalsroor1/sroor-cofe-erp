@@ -1,140 +1,177 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Purchases\CancelPurchaseAction;
+use App\Actions\Purchases\CreatePurchaseAction;
+use App\Actions\Purchases\GetSmartReorderSuggestionsAction;
+use App\DTOs\Purchases\CancelPurchaseDTO;
+use App\DTOs\Purchases\PurchaseDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StorePurchaseRequest;
+use App\Http\Resources\PurchaseResource;
 use App\Models\Purchase;
 use App\Models\Store;
-use App\Services\PurchaseService;
-use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class PurchaseController extends Controller
+final class PurchaseController extends Controller
 {
     public function __construct(
-        protected PurchaseService $purchaseService
+        private readonly CreatePurchaseAction $createPurchaseAction,
+        private readonly CancelPurchaseAction $cancelPurchaseAction,
+        private readonly GetSmartReorderSuggestionsAction $getSmartReorderSuggestionsAction
     ) {}
 
     /**
      * List Purchases with filters and totals
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $search = $request->input('search');
+        $search = trim((string)$request->input('search', ''));
+        $status = (string)$request->input('status', 'all');
         $supplierId = $request->input('supplier_id');
-        $fromDate = $request->input('from_date', now()->startOfMonth()->toDateString());
-        $toDate = $request->input('to_date', now()->toDateString());
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+        $fromDate = $request->input('from_date') ?: $request->input('from');
+        $toDate = $request->input('to_date') ?: $request->input('to');
+        $perPage = (int)$request->input('per_page', 15);
 
-        $query = Purchase::with(['supplier', 'user', 'store'])
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('purchase_number', 'like', "%{$search}%")
-                        ->orWhere('supplier_invoice_ref', 'like', "%{$search}%")
-                        ->orWhere('notes', 'like', "%{$search}%")
-                        ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
-                });
-            })
-            ->when($supplierId && $supplierId !== 'all', fn($q) => $q->where('supplier_id', $supplierId))
-            ->when($fromDate, fn($q) => $q->whereDate('purchase_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('purchase_date', '<=', $toDate));
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        $totalPurchases = (clone $query)->where('status', 'confirmed')->sum('net_total') ?: 0;
-        $totalRemaining = (clone $query)->where('status', 'confirmed')->sum('remaining_amount') ?: 0;
-        $totalCount = (clone $query)->count();
+        $query = Purchase::with(['supplier', 'user', 'store', 'items.item']);
 
-        $purchases = $query->latest('purchase_date')->latest('id')->paginate(30);
+        if ($storeId) {
+            $query->where('store_id', (int)$storeId);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('purchase_number', 'like', "%{$search}%")
+                  ->orWhere('supplier_invoice_ref', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status !== 'all' && $status !== '') {
+            $query->where('status', $status);
+        }
+
+        if ($supplierId && $supplierId !== 'all') {
+            $query->where('supplier_id', (int)$supplierId);
+        }
+
+        if ($fromDate) {
+            $query->whereDate('purchase_date', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate('purchase_date', '<=', $toDate);
+        }
+
+        $totalPurchases = (float)(clone $query)->where('status', 'confirmed')->sum('net_total');
+        $unpaidTotal = (float)(clone $query)->where('status', 'confirmed')->sum('remaining_amount');
+        $confirmedCount = (int)(clone $query)->where('status', 'confirmed')->count();
+
+        $purchases = $query->latest('purchase_date')->latest('id')->paginate($perPage);
 
         return response()->json([
-            'success'         => true,
-            'purchases'       => $purchases->items(),
-            'total_purchases' => (string)$totalPurchases,
-            'total_remaining' => (string)$totalRemaining,
-            'total_count'     => $totalCount,
-            'pagination'      => [
+            'success' => true,
+            'data'    => PurchaseResource::collection($purchases->items())->resolve(),
+            'meta'    => [
                 'current_page' => $purchases->currentPage(),
                 'last_page'    => $purchases->lastPage(),
+                'per_page'     => $purchases->perPage(),
                 'total'        => $purchases->total(),
-            ]
-        ]);
+            ],
+            'summary' => [
+                'total_purchases' => $totalPurchases,
+                'unpaid_total'    => $unpaidTotal,
+                'confirmed_count' => $confirmedCount,
+            ],
+        ], 200);
     }
 
     /**
      * Show single purchase with items
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
-        $purchase = Purchase::with(['supplier', 'user', 'store', 'items.item'])->findOrFail($id);
+        $purchase = Purchase::with(['supplier', 'user', 'store', 'items.item', 'additionalExpenses'])->findOrFail($id);
 
         return response()->json([
-            'success'  => true,
-            'purchase' => $purchase,
-        ]);
+            'success' => true,
+            'data'    => (new PurchaseResource($purchase))->resolve(),
+        ], 200);
     }
 
     /**
      * Store new purchase invoice
      */
-    public function store(Request $request)
+    public function store(StorePurchaseRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'supplier_id'          => 'required|integer|exists:suppliers,id',
-            'purchase_date'        => 'required|date',
-            'paid_amount'          => 'nullable|numeric|min:0',
-            'discount_amount'      => 'nullable|numeric|min:0',
-            'supplier_invoice_ref' => 'nullable|string|max:100',
-            'notes'                => 'nullable|string|max:1000',
-            'items'                => 'required|array|min:1',
-            'items.*.item_id'      => 'required|integer|exists:items,id',
-            'items.*.quantity'     => 'required|numeric|min:0.001',
-            'items.*.cost_price'   => 'required|numeric|min:0',
-        ]);
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+        $dto = PurchaseDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $purchase = $this->createPurchaseAction->execute($dto);
 
-        $validated['store_id'] = $storeId;
-
-        try {
-            $purchase = $this->purchaseService->createPurchase($validated);
-
-            return response()->json([
-                'success'  => true,
-                'message'  => "تم تسجيل فاتورة المشتريات رقم {$purchase->purchase_number} وتوريد الخامات للمخزن بنجاح ✓",
-                'purchase' => $purchase,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل تسجيل فاتورة المشتريات: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => __('purchases.created_success', ['number' => $purchase->purchase_number]) ?: "تم تسجيل وتأكيد فاتورة المشتريات رقم {$purchase->purchase_number} وتوريد الخامات للمخزن بنجاح ✓",
+            'data'    => (new PurchaseResource($purchase))->resolve(),
+        ], 201);
     }
 
     /**
      * Cancel / Void purchase invoice
      */
-    public function cancel(Request $request, $id)
+    public function cancel(Request $request, int $id): JsonResponse
     {
-        $purchase = Purchase::findOrFail($id);
-        $reason = $request->input('reason', 'إلغاء من تطبيق الموبايل');
+        $dto = CancelPurchaseDTO::fromArray($id, [
+            'reason' => $request->input('reason', 'إلغاء من النظام'),
+        ]);
 
-        try {
-            $this->purchaseService->cancelPurchase($purchase, $reason);
+        $purchase = $this->cancelPurchaseAction->execute($dto);
 
-            return response()->json([
-                'success' => true,
-                'message' => "تم إلغاء فاتورة المشتريات رقم {$purchase->purchase_number} وعكس المخزن والمديونية بنجاح ✓",
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل إلغاء فاتورة المشتريات: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => __('purchases.cancelled_success', ['number' => $purchase->purchase_number]) ?: "تم إلغاء فاتورة المشتريات رقم {$purchase->purchase_number} وعكس المخزن والمديونية بنجاح ✓",
+            'data'    => (new PurchaseResource($purchase))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Smart Reorder AI Suggestions
+     */
+    public function smartReorder(Request $request): JsonResponse
+    {
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id');
+        $storeFilter = ($storeId && $storeId !== 'all') ? (int)$storeId : null;
+
+        $analysisDays = (int)$request->input('analysis_days', 14);
+        $targetCoverDays = (int)$request->input('target_cover_days', 15);
+        $urgency = (string)$request->input('urgency', 'all');
+        $search = trim((string)$request->input('search', ''));
+
+        $result = $this->getSmartReorderSuggestionsAction->execute(
+            storeId: $storeFilter,
+            analysisDays: $analysisDays,
+            targetCoverDays: $targetCoverDays,
+            urgency: $urgency,
+            search: $search
+        );
+
+        return response()->json([
+            'success' => true,
+            'data'    => $result,
+        ], 200);
     }
 }
