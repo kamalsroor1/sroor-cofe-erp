@@ -9,6 +9,9 @@ return [
     'pos_short' => 'POS',
     'invoices_log' => 'Sales Invoices',
     'invoices_short' => 'Invoices',
+    'items_short' => 'Items',
+    'shift_short' => 'Shift',
+    'more_short' => 'More',
     'returns_adjustments' => 'Returns Registry',
     
     'group_inventory' => 'Inventory & Branches',

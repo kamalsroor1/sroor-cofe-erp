@@ -9,6 +9,9 @@ return [
     'pos_short' => 'الكاشير',
     'invoices_log' => 'فواتير المبيعات',
     'invoices_short' => 'الفواتير',
+    'items_short' => 'الأصناف',
+    'shift_short' => 'الوردية',
+    'more_short' => 'المزيد',
     'returns_adjustments' => 'سجل المرتجعات',
     
     'group_inventory' => 'المخزون والفروع والتوزيع',

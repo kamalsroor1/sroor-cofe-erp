@@ -356,3 +356,28 @@
 4. **تطوير رسائل وتنبيهات SweetAlert2:**
    - كتابة Keyframes مخصصة في `app.css` لتنبيهات SweetAlert2 والـ Toasts لتعمل بحركة ارتداد نابضة سلسة بدون فلاش أبيض أو قفزة فجائية.
    - خلفيات زجاجية معتمة `backdrop-filter: blur(8px)` وزوايا دائرية فاخرة `rounded-3xl` وظلال عميقة.
+
+---
+
+## Mobile Design System — المرحلة 1: Bottom Navigation Bar — بتاريخ 2026-08-21
+### المرحلة المنفذة
+- **المرحلة 1: Bottom Navigation Bar**
+
+### الملفات/الـ Components اللي اتعدلت أو اتعملت
+- `[NEW]` [`backend/resources/js/Components/Navigation/MobileBottomNav.vue`](file:///d:/projects/sroor/backend/resources/js/Components/Navigation/MobileBottomNav.vue): شريط تنقل سفلي عائم وثابت مخصص للموبايل بتقنية Glassmorphism ودعم كامل لـ Safe Area Insets ومؤشرات تفاعلية للقسم النشط مع Haptic Feedback.
+- `[MODIFIED]` [`backend/resources/js/Layouts/AppLayout.vue`](file:///d:/projects/sroor/backend/resources/js/Layouts/AppLayout.vue): استبدال شريط التنقل المضمن بالمكون الجديد وفصل الـ Sidebar المكتبي ليعمل فقط على الشاشات الكبيرة (`lg:flex`) مع إخفائه على شاشات الموبايل وظهور الـ Bottom Navigation Bar بدلاً منه.
+- `[MODIFIED]` [`backend/lang/ar/nav.php`](file:///d:/projects/sroor/backend/lang/ar/nav.php) & [`backend/lang/en/nav.php`](file:///d:/projects/sroor/backend/lang/en/nav.php): تسجيل مفاتيح الترجمة للأقسام الرئيسية (`items_short`, `shift_short`, `more_short`).
+
+### حالة المرحلة
+- ✅ **مكتملة 100%**:
+  - 5 أقسام رئيسية واضحة ومباشرة: (1. الرئيسية `Dashboard`، 2. الفواتير `Invoices`، 3. زر كاشير POS المركزي البارز `Fast POS Action`، 4. الأصناف والمخزون `Items`، 5. الوردية والخزينة `Daily Journal & Shift` مع نقطة نبض خضراء ذكية في حال كانت الوردية مفتوحة) + زر قائمة المزيد `More`.
+  - تمييز القسم النشط بخط مؤشر علوي نابض ولون الثيم الأساسي `text-theme-primary font-black`.
+  - الـ Sidebar الأصلي معزول لسطح المكتب فقط (`hidden lg:flex`) والـ Bottom Nav معزول للموبايل (`lg:hidden`).
+  - تم التحقق من بناء الواجهات `npm run build` بنجاح واختبارات الـ Backend بنسبة 100%.
+
+### ملاحظات لسه محتاجة متابعة
+- جاهز للبدء في **المرحلة 2: POS Touch Grid** في الجلسة القادمة.
+
+---
+**آخر مرحلة منفذة: المرحلة 1: Bottom Navigation Bar**
+**المرحلة التالية: المرحلة 2: POS Touch Grid**

@@ -6,6 +6,7 @@ import { trans } from '@/helpers/trans';
 import { useTheme } from '@/Composables/useTheme';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 import { notifySuccess, notifyError } from '@/helpers/alert';
+import MobileBottomNav from '@/Components/Navigation/MobileBottomNav.vue';
 import {
     LayoutDashboard,
     Receipt,
@@ -691,71 +692,7 @@ const getUserRoleLabel = computed(() => {
             </main>
 
             <!-- Fixed Mobile Bottom Navigation Bar (Visible only on screens < lg) -->
-            <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-t border-slate-200/90 dark:border-slate-800/90 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] flex items-center justify-between font-tajawal shadow-2xl select-none">
-                <!-- 1. Home / Dashboard -->
-                <Link
-                    href="/"
-                    @click="triggerHaptic('light')"
-                    class="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 active:scale-90"
-                    :class="page.url === '/' ? 'text-theme-primary font-black scale-105' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white'"
-                >
-                    <LayoutDashboard class="w-5 h-5 mb-0.5" />
-                    <span class="text-[10px] tracking-tight">{{ $t('nav.dashboard_short') }}</span>
-                </Link>
-
-                <!-- 2. Invoices / Sales -->
-                <FeatureGate feature="invoices.create">
-                    <Link
-                        href="/invoices"
-                        @click="triggerHaptic('light')"
-                        class="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 active:scale-90"
-                        :class="page.url.startsWith('/invoices') && !page.url.startsWith('/invoices/create') ? 'text-theme-primary font-black scale-105' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white'"
-                    >
-                        <Receipt class="w-5 h-5 mb-0.5" />
-                        <span class="text-[10px] tracking-tight">{{ $t('nav.invoices_short') }}</span>
-                    </Link>
-                </FeatureGate>
-
-                <!-- 3. Primary Center Action: Fast POS (Raised Circle with Ring & Haptic) -->
-                <FeatureGate feature="pos.access">
-                    <Link
-                        href="/pos"
-                        @click="triggerHaptic('medium')"
-                        class="relative -top-5 w-14 h-14 rounded-2xl btn-primary-theme flex items-center justify-center shadow-theme-primary transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-900"
-                        :title="$t('nav.pos_fast')"
-                    >
-                        <Zap class="w-6 h-6 fill-current text-white" />
-                    </Link>
-                </FeatureGate>
-
-                <!-- 4. Notifications with Badge -->
-                <button
-                    @click="triggerHaptic('light'); showNotificationsSheet = true;"
-                    type="button"
-                    class="flex-1 relative flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 active:scale-90 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
-                >
-                    <div class="relative">
-                        <Bell class="w-5 h-5 mb-0.5" />
-                        <span
-                            v-if="notifications.length > 0"
-                            class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white font-black text-[8px] flex items-center justify-center animate-pulse"
-                        >
-                            {{ notifications.length }}
-                        </span>
-                    </div>
-                    <span class="text-[10px] tracking-tight">{{ $t('nav.notifications_title') }}</span>
-                </button>
-
-                <!-- 5. More / Sidebar Drawer Toggle -->
-                <button
-                    @click="triggerHaptic('light'); isSidebarOpen = true;"
-                    type="button"
-                    class="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 active:scale-90 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
-                >
-                    <Menu class="w-5 h-5 mb-0.5" />
-                    <span class="text-[10px] tracking-tight">{{ $t('common.more') }}</span>
-                </button>
-            </nav>
+            <MobileBottomNav :active-shift="activeShift" @open-drawer="isSidebarOpen = true" />
         </div>
 
         <!-- Mobile Notifications Bottom Sheet Modal (Smooth Slide Up) -->
