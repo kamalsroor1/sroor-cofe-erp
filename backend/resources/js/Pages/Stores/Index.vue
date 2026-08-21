@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/Common/PageHeader.vue';
+import EmptyState from '@/Components/Common/EmptyState.vue';
+import AppModal from '@/Components/Common/AppModal.vue';
 import { trans } from '@/helpers/trans';
 
 const props = defineProps({
@@ -116,41 +119,35 @@ const saveUserAssignment = () => {
     <AppLayout>
         <div class="space-y-6 font-tajawal">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-2xl">🏬</span>
-                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                            {{ $t('inventory.stores_title') }}
-                        </h1>
+            <PageHeader
+                :title="$t('inventory.stores_title')"
+                :subtitle="$t('inventory.stores_subtitle')"
+                icon="🏬"
+            >
+                <template #actions>
+                    <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                        <Link
+                            href="/store-stocks"
+                            class="flex-1 sm:flex-none h-11 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
+                        >
+                            <span>📊</span>
+                            <span>{{ $t('inventory.store_stocks') }}</span>
+                        </Link>
+
+                        <button
+                            type="button"
+                            class="flex-1 sm:flex-none h-11 px-5 rounded-2xl btn-primary-theme font-bold text-xs flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer shadow-theme-primary"
+                            @click="openCreateModal"
+                        >
+                            <span class="text-base font-black">+</span>
+                            <span>{{ $t('inventory.add_new_store') }}</span>
+                        </button>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">
-                        {{ $t('inventory.stores_subtitle') }}
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                    <Link
-                        href="/store-stocks"
-                        class="flex-1 sm:flex-none h-11 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
-                    >
-                        <span>📊</span>
-                        <span>{{ $t('inventory.store_stocks') }}</span>
-                    </Link>
-
-                    <button
-                        @click="openCreateModal"
-                        type="button"
-                        class="flex-1 sm:flex-none h-11 px-5 rounded-2xl btn-primary-theme font-bold text-xs flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer shadow-theme-primary"
-                    >
-                        <span class="text-base font-black">+</span>
-                        <span>{{ $t('inventory.add_new_store') }}</span>
-                    </button>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
             <!-- Stores Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <div v-if="stores.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 <div
                     v-for="s in stores"
                     :key="s.id"
@@ -180,11 +177,11 @@ const saveUserAssignment = () => {
                             </div>
 
                             <button
-                                @click="toggleActive(s)"
                                 type="button"
                                 class="px-2.5 py-1 rounded-full text-[10px] font-bold transition cursor-pointer active:scale-95"
                                 :class="s.is_active ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30' : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/30'"
                                 :title="s.is_active ? $t('common.active') : $t('common.inactive')"
+                                @click="toggleActive(s)"
                             >
                                 {{ s.is_active ? '🟢 ' + $t('common.active') : '⚪ ' + $t('common.inactive') }}
                             </button>
@@ -214,9 +211,9 @@ const saveUserAssignment = () => {
                             <div class="flex items-center justify-between text-[11px]">
                                 <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('users.title') || 'الموظفون المعينون' }}:</span>
                                 <button
-                                    @click="openUserAssignmentModal(s)"
                                     type="button"
                                     class="text-theme-primary hover:underline text-[10px] font-black cursor-pointer"
+                                    @click="openUserAssignmentModal(s)"
                                 >
                                     + {{ $t('common.edit') || 'إدارة الموظفين' }}
                                 </button>
@@ -248,20 +245,19 @@ const saveUserAssignment = () => {
 
                         <div class="flex items-center gap-2">
                             <button
-                                @click="openEditModal(s)"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-xs font-bold transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent flex items-center justify-center"
+                                class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center border border-slate-200 dark:border-transparent active:scale-95 cursor-pointer shadow-xs"
                                 :title="$t('common.edit')"
+                                @click="openEditModal(s)"
                             >
                                 ✏️
                             </button>
-
                             <button
-                                @click="deleteStore(s)"
+                                v-if="!s.is_main"
                                 type="button"
-                                class="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 text-xs transition active:scale-90 cursor-pointer flex items-center justify-center"
-                                :class="!s.can_be_deleted ? 'opacity-40 cursor-not-allowed' : ''"
-                                :title="s.can_be_deleted ? $t('common.delete') : s.deletion_blockers.join(', ')"
+                                class="w-10 h-10 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition flex items-center justify-center border border-rose-200 dark:border-rose-900 active:scale-95 cursor-pointer shadow-xs"
+                                :title="$t('common.delete')"
+                                @click="deleteStore(s)"
                             >
                                 🗑️
                             </button>
@@ -269,186 +265,170 @@ const saveUserAssignment = () => {
                     </div>
                 </div>
             </div>
+
+            <EmptyState
+                v-else
+                :title="$t('inventory.no_stores_found')"
+                :action-text="$t('inventory.add_new_store')"
+                icon="🏬"
+                @action="openCreateModal"
+            />
         </div>
 
-        <!-- Add / Edit Store Modal (Smooth Native Pop) -->
-        <Teleport to="body">
-            <Transition name="modal-zoom">
-                <div
-                    v-if="showStoreModal"
-                    @click="showStoreModal = false"
-                    class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 font-tajawal select-none"
-                    dir="rtl"
-                >
-                    <div @click.stop class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-black text-base text-slate-900 dark:text-white">
-                                {{ editingStore ? $t('inventory.store_updated') : $t('inventory.add_new_store') }}
-                            </h3>
-                            <button
-                                @click="showStoreModal = false"
-                                class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 text-xs hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-center transition active:scale-90 shadow-xs"
-                            >
-                                <X class="w-4 h-4" />
-                            </button>
-                        </div>
+        <!-- Create / Edit Store Modal -->
+        <AppModal
+            :show="showStoreModal"
+            :title="editingStore ? $t('inventory.edit_store') : $t('inventory.add_new_store')"
+            :icon="editingStore ? '✏️' : '🏬'"
+            max-width="lg"
+            @close="showStoreModal = false"
+        >
+            <form id="storeForm" @submit.prevent="saveStore" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_name') }} *</label>
+                        <input
+                            v-model="storeForm.name"
+                            type="text"
+                            required
+                            placeholder="مثال: فرع وسط البلد"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                        >
+                    </div>
 
-                        <form @submit.prevent="saveStore" class="space-y-4">
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_name') }} *</label>
-                                <input
-                                    v-model="storeForm.name"
-                                    type="text"
-                                    required
-                                    :placeholder="$t('inventory.store_name')"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="space-y-1.5">
-                                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_type') }} *</label>
-                                    <select
-                                        v-model="storeForm.type"
-                                        class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner font-bold"
-                                    >
-                                        <option value="retail_shop">{{ $t('inventory.store_type_branch') }} 🏬</option>
-                                        <option value="wholesale_van">عربية توزيع جملة 🚚</option>
-                                        <option value="main_warehouse">{{ $t('inventory.store_type_main') }} 🏭</option>
-                                    </select>
-                                </div>
-
-                                <div class="space-y-1.5">
-                                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_code') }}</label>
-                                    <input
-                                        v-model="storeForm.code"
-                                        type="text"
-                                        placeholder="STR-001"
-                                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
-                                    >
-                                </div>
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('common.address') }}</label>
-                                <input
-                                    v-model="storeForm.address"
-                                    type="text"
-                                    :placeholder="$t('common.address')"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('common.phone') }}</label>
-                                <input
-                                    v-model="storeForm.phone"
-                                    type="tel"
-                                    inputmode="tel"
-                                    placeholder="01xxxxxxxxx"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="flex items-center gap-2 pt-1">
-                                <input
-                                    id="is_main_check"
-                                    v-model="storeForm.is_main"
-                                    type="checkbox"
-                                    class="rounded accent-theme-primary w-4 h-4 cursor-pointer"
-                                >
-                                <label for="is_main_check" class="text-xs font-bold text-theme-primary cursor-pointer">
-                                    {{ $t('inventory.store_type_main') }} 👑
-                                </label>
-                            </div>
-
-                            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <button
-                                    @click="showStoreModal = false"
-                                    type="button"
-                                    class="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
-                                >
-                                    {{ $t('common.cancel') }}
-                                </button>
-                                <button
-                                    type="submit"
-                                    :disabled="storeForm.processing"
-                                    class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
-                                >
-                                    {{ storeForm.processing ? '...' : $t('common.save') }}
-                                </button>
-                            </div>
-                        </form>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_code') }} *</label>
+                        <input
+                            v-model="storeForm.code"
+                            type="text"
+                            required
+                            placeholder="STR-001"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono uppercase placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                        >
                     </div>
                 </div>
-            </Transition>
-        </Teleport>
 
-        <!-- Staff Assignment Modal (Smooth Native Pop) -->
-        <Teleport to="body">
-            <Transition name="modal-zoom">
-                <div
-                    v-if="showUserModal"
-                    @click="showUserModal = false"
-                    class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 font-tajawal select-none"
-                    dir="rtl"
-                >
-                    <div @click.stop class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-                                <span>👥 {{ $t('users.title') || 'تعيين موظفي الفرع' }}:</span>
-                                <span class="text-theme-primary">{{ targetStore?.name }}</span>
-                            </h3>
-                            <button
-                                @click="showUserModal = false"
-                                class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 text-xs hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-center transition active:scale-90 shadow-xs"
-                            >
-                                <X class="w-4 h-4" />
-                            </button>
-                        </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_type') }}</label>
+                    <select
+                        v-model="storeForm.type"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
+                        <option value="retail_shop">🏬 {{ $t('inventory.store_type_branch') }}</option>
+                        <option value="main_warehouse">🏭 {{ $t('inventory.store_type_main') }}</option>
+                        <option value="warehouse">🏢 مخزن تخزين وسيط</option>
+                        <option value="wholesale_van">🚚 عربية / مندوب توزيع جملة</option>
+                    </select>
+                </div>
 
-                        <form @submit.prevent="saveUserAssignment" class="space-y-4">
-                            <p class="text-xs text-slate-500 dark:text-slate-400">حدد الموظفين والكاشيرات وسائقي التوزيع المسموح لهم بالعمل على هذا الفرع:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.store_address') }}</label>
+                        <input
+                            v-model="storeForm.address"
+                            type="text"
+                            placeholder="العنوان التفصيلي"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                        >
+                    </div>
 
-                            <div class="max-h-60 overflow-y-auto space-y-2 pr-1">
-                                <label
-                                    v-for="u in all_users"
-                                    :key="u.id"
-                                    class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98"
-                                >
-                                    <div class="flex items-center gap-2.5">
-                                        <input
-                                            type="checkbox"
-                                            :value="u.id"
-                                            v-model="userAssignmentForm.user_ids"
-                                            class="rounded accent-theme-primary w-4 h-4 cursor-pointer"
-                                        >
-                                        <span class="text-xs font-bold text-slate-900 dark:text-white">{{ u.name }}</span>
-                                    </div>
-                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ u.email }}</span>
-                                </label>
-                            </div>
-
-                            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <button
-                                    @click="showUserModal = false"
-                                    type="button"
-                                    class="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
-                                >
-                                    {{ $t('common.cancel') }}
-                                </button>
-                                <button
-                                    type="submit"
-                                    :disabled="userAssignmentForm.processing"
-                                    class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
-                                >
-                                    {{ userAssignmentForm.processing ? '...' : $t('common.save') }}
-                                </button>
-                            </div>
-                        </form>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('contacts.phone') }}</label>
+                        <input
+                            v-model="storeForm.phone"
+                            type="text"
+                            placeholder="010xxxxxxxx"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                        >
                     </div>
                 </div>
-            </Transition>
-        </Teleport>
+
+                <div class="flex items-center gap-6 pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" v-model="storeForm.is_active" class="w-4 h-4 rounded accent-theme-primary">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ $t('common.active') }}</span>
+                    </label>
+
+                    <label v-if="!editingStore?.is_main" class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" v-model="storeForm.is_main" class="w-4 h-4 rounded accent-theme-primary">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ $t('inventory.store_type_main') }} (افتراضي)</span>
+                    </label>
+                </div>
+            </form>
+
+            <template #footer>
+                <div class="flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
+                        @click="showStoreModal = false"
+                    >
+                        {{ $t('common.cancel') }}
+                    </button>
+                    <button
+                        type="submit"
+                        form="storeForm"
+                        :disabled="storeForm.processing"
+                        class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
+                    >
+                        {{ storeForm.processing ? $t('common.save') + '...' : $t('common.save') }}
+                    </button>
+                </div>
+            </template>
+        </AppModal>
+
+        <!-- Assign Users Modal -->
+        <AppModal
+            :show="showUserModal"
+            :title="`${$t('inventory.edit_store')}: ${targetStore?.name}`"
+            icon="👥"
+            max-width="md"
+            @close="showUserModal = false"
+        >
+            <form id="userAssignmentForm" @submit.prevent="saveUserAssignment" class="space-y-3">
+                <div
+                    v-for="u in all_users"
+                    :key="u.id"
+                    class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 hover:border-theme-primary transition cursor-pointer"
+                    @click="userAssignmentForm.user_ids.includes(u.id) ? userAssignmentForm.user_ids = userAssignmentForm.user_ids.filter(id => id !== u.id) : userAssignmentForm.user_ids.push(u.id)"
+                >
+                    <div class="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            :value="u.id"
+                            v-model="userAssignmentForm.user_ids"
+                            class="w-4 h-4 rounded accent-theme-primary pointer-events-none"
+                        >
+                        <div>
+                            <div class="font-black text-xs text-slate-900 dark:text-white">{{ u.name }}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">{{ u.email || u.phone }}</div>
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                        {{ u.role_label || u.role }}
+                    </span>
+                </div>
+            </form>
+
+            <template #footer>
+                <div class="flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
+                        @click="showUserModal = false"
+                    >
+                        {{ $t('common.cancel') }}
+                    </button>
+                    <button
+                        type="submit"
+                        form="userAssignmentForm"
+                        :disabled="userAssignmentForm.processing"
+                        class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
+                    >
+                        {{ userAssignmentForm.processing ? $t('common.save') + '...' : $t('common.save') }}
+                    </button>
+                </div>
+            </template>
+        </AppModal>
     </AppLayout>
 </template>

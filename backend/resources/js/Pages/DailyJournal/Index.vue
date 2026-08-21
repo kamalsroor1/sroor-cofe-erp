@@ -2,6 +2,10 @@
 import { ref, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/Common/PageHeader.vue';
+import MetricCard from '@/Components/Common/MetricCard.vue';
+import EmptyState from '@/Components/Common/EmptyState.vue';
+import AppModal from '@/Components/Common/AppModal.vue';
 import DatePicker from '@/Components/DatePicker.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { useMoney } from '@/Composables/useMoney';
@@ -102,80 +106,71 @@ const submitExpense = () => {
 };
 
 const printJournal = () => {
-    window.print();
+    window.open(`/daily-journal/print?date=${selectedDate.value}`, '_blank');
 };
 </script>
 
 <template>
-    <Head :title="$t('treasury.daily_journal')" />
+    <Head :title="`${$t('treasury.daily_journal')} - ${selectedDate}`" />
 
     <AppLayout>
         <div class="space-y-6 font-tajawal">
-            <!-- Header Section -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 no-print">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-2xl">📒</span>
-                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                            {{ $t('treasury.daily_journal') }}
-                        </h1>
+            <!-- Header Banner -->
+            <PageHeader
+                :title="$t('treasury.daily_journal')"
+                :subtitle="$t('treasury.live_balances')"
+                icon="💵"
+            >
+                <template #actions>
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <div class="w-44">
+                            <DatePicker v-model="selectedDate" :placeholder="$t('treasury.select_date_placeholder')" />
+                        </div>
+
+                        <button
+                            type="button"
+                            class="h-11 px-4 rounded-2xl bg-rose-600/90 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 transition active:scale-95 cursor-pointer"
+                            @click="showExpenseModal = true"
+                        >
+                            <span>💸</span>
+                            <span>{{ $t('treasury.record_expense_modal') }}</span>
+                        </button>
+
+                        <button
+                            v-if="!active_shift"
+                            type="button"
+                            class="h-11 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition active:scale-95 cursor-pointer"
+                            @click="showOpenShiftModal = true"
+                        >
+                            <span>🟢</span>
+                            <span>{{ $t('treasury.open_shift') }}</span>
+                        </button>
+                        <button
+                            v-else
+                            type="button"
+                            class="h-11 px-4 rounded-2xl btn-primary-theme font-black text-xs flex items-center gap-1.5 transition transform active:scale-95 cursor-pointer"
+                            @click="showCloseShiftModal = true"
+                        >
+                            <span>🔒</span>
+                            <span>{{ $t('treasury.close_shift') }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="h-11 px-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer border border-slate-200 dark:border-transparent"
+                            @click="printJournal"
+                        >
+                            <span>🖨️</span>
+                            <span>{{ $t('reports.print_report') }}</span>
+                        </button>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">
-                        {{ $t('treasury.live_balances') }}
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <!-- Date Picker -->
-                    <div class="w-44">
-                        <DatePicker v-model="selectedDate" :placeholder="$t('treasury.select_date_placeholder')" />
-                    </div>
-
-                    <!-- Add Expense Button -->
-                    <button
-                        @click="showExpenseModal = true"
-                        type="button"
-                        class="h-11 px-4 rounded-2xl bg-rose-600/90 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 transition active:scale-95 cursor-pointer"
-                    >
-                        <span>💸</span>
-                        <span>{{ $t('treasury.record_expense_modal') }}</span>
-                    </button>
-
-                    <!-- Shift Control Button -->
-                    <button
-                        v-if="!active_shift"
-                        @click="showOpenShiftModal = true"
-                        type="button"
-                        class="h-11 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition active:scale-95 cursor-pointer"
-                    >
-                        <span>🟢</span>
-                        <span>{{ $t('treasury.open_shift') }}</span>
-                    </button>
-                    <button
-                        v-else
-                        @click="showCloseShiftModal = true"
-                        type="button"
-                        class="h-11 px-4 rounded-2xl btn-primary-theme font-black text-xs flex items-center gap-1.5 transition transform active:scale-95 cursor-pointer"
-                    >
-                        <span>🔒</span>
-                        <span>{{ $t('treasury.close_shift') }}</span>
-                    </button>
-
-                    <button
-                        @click="printJournal"
-                        type="button"
-                        class="h-11 px-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer border border-slate-200 dark:border-transparent"
-                    >
-                        <span>🖨️</span>
-                        <span>{{ $t('reports.print_report') }}</span>
-                    </button>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
             <!-- Active Shift Card -->
             <div
-                class="rounded-3xl p-3.5 sm:p-5 border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4 shadow-xs font-tajawal"
-                :class="active_shift ? 'bg-white dark:bg-slate-900 border-emerald-500/30' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'"
+                class="rounded-3xl p-3.5 sm:p-5 border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4 shadow-xs font-tajawal bg-white dark:bg-slate-900"
+                :class="active_shift ? 'border-emerald-500/30' : 'border-slate-200 dark:border-slate-800'"
             >
                 <div class="flex items-center gap-3 sm:gap-4">
                     <div
@@ -212,54 +207,37 @@ const printJournal = () => {
 
             <!-- Financial Summary Matrix Cards (2x2 Bento on mobile) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
-                <!-- Total Inflow -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
-                    <span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">{{ $t('treasury.inflow_cash') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-                        {{ formatMoney(summary.total_cash_in) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                    <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-bold space-y-0.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 hidden sm:block">
-                        <div>{{ $t('treasury.cash_sales') }}: <span class="font-mono text-slate-900 dark:text-white">{{ formatMoney(summary.cash_sales) }}</span></div>
-                        <div>{{ $t('treasury.customer_collections') }}: <span class="font-mono text-slate-900 dark:text-white">{{ formatMoney(summary.customer_payments) }}</span></div>
-                    </div>
-                </div>
+                <MetricCard
+                    :title="$t('treasury.inflow_cash')"
+                    :value="formatMoney(summary.total_cash_in)"
+                    :currency="$t('common.currency')"
+                    :subtitle="`${$t('treasury.cash_sales')}: ${formatMoney(summary.cash_sales)}`"
+                    variant="success"
+                />
 
-                <!-- Total Outflow -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
-                    <span class="text-xs text-rose-600 dark:text-rose-400 font-bold">{{ $t('treasury.outflow_cash') }}</span>
-                    <div class="text-lg sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400">
-                        {{ formatMoney(summary.total_cash_out) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                    <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-bold space-y-0.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 hidden sm:block">
-                        <div>{{ $t('treasury.supplier_payments') }}: <span class="font-mono text-slate-900 dark:text-white">{{ formatMoney(summary.supplier_payments) }}</span></div>
-                        <div>{{ $t('treasury.operating_expenses') }}: <span class="font-mono text-slate-900 dark:text-white">{{ formatMoney(summary.total_expenses) }}</span></div>
-                    </div>
-                </div>
+                <MetricCard
+                    :title="$t('treasury.outflow_cash')"
+                    :value="formatMoney(summary.total_cash_out)"
+                    :currency="$t('common.currency')"
+                    :subtitle="`${$t('treasury.operating_expenses')}: ${formatMoney(summary.total_expenses)}`"
+                    variant="danger"
+                />
 
-                <!-- Net Day Cash -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-1.5">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('treasury.net_cash_today') }}</span>
-                    <div
-                        class="text-lg sm:text-2xl font-black font-mono"
-                        :class="summary.net_cash_today >= 0 ? 'text-theme-primary' : 'text-rose-600 dark:text-rose-400'"
-                    >
-                        {{ formatMoney(summary.net_cash_today) }} <span class="text-[11px] text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                    <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-bold pt-1 border-t border-slate-100 dark:border-slate-800/80 hidden sm:block">
-                        {{ $t('treasury.recorded_credit_sales') }}: <span class="font-mono text-theme-primary font-bold">{{ formatMoney(summary.credit_sales) }}</span>
-                    </div>
-                </div>
+                <MetricCard
+                    :title="$t('treasury.net_cash_today')"
+                    :value="formatMoney(summary.net_cash_today)"
+                    :currency="$t('common.currency')"
+                    :subtitle="`${$t('treasury.recorded_credit_sales')}: ${formatMoney(summary.credit_sales)}`"
+                    :variant="summary.net_cash_today >= 0 ? 'primary' : 'danger'"
+                />
 
-                <!-- Expected Drawer Balance -->
-                <div class="bg-white dark:bg-slate-900 border border-theme-primary rounded-3xl p-5 shadow-xs space-y-2">
-                    <span class="text-xs text-theme-primary font-black">{{ $t('treasury.expected_in_drawer_now') }}</span>
-                    <div class="text-3xl font-black font-mono text-theme-primary">
-                        {{ formatMoney(summary.expected_cash_in_drawer) }} <span class="text-xs text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                        {{ $t('treasury.including_opening_cash') }}: <span class="font-mono text-slate-900 dark:text-white">{{ formatMoney(summary.opening_cash_balance) }}</span>
-                    </div>
-                </div>
+                <MetricCard
+                    :title="$t('treasury.expected_in_drawer_now')"
+                    :value="formatMoney(summary.expected_cash_in_drawer)"
+                    :currency="$t('common.currency')"
+                    :subtitle="`${$t('treasury.including_opening_cash')}: ${formatMoney(summary.opening_cash_balance)}`"
+                    variant="primary"
+                />
             </div>
 
             <!-- Two Columns: Invoices of the Day & Expenses of the Day -->
@@ -274,7 +252,7 @@ const printJournal = () => {
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs">
+                        <table v-if="invoices.length > 0" class="w-full text-right text-xs">
                             <thead>
                                 <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
                                     <th class="pb-2">{{ $t('invoices.invoice_number') }}</th>
@@ -301,9 +279,11 @@ const printJournal = () => {
                             </tbody>
                         </table>
 
-                        <div v-if="invoices.length === 0" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs font-bold font-tajawal">
-                            {{ $t('treasury.empty_today_invoices') }}
-                        </div>
+                        <EmptyState
+                            v-else
+                            :title="$t('treasury.empty_today_invoices')"
+                            icon="🧾"
+                        />
                     </div>
                 </div>
 
@@ -317,7 +297,7 @@ const printJournal = () => {
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-right text-xs">
+                        <table v-if="expenses.length > 0" class="w-full text-right text-xs">
                             <thead>
                                 <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
                                     <th class="pb-2">{{ $t('expenses.expense_item') }}</th>
@@ -336,248 +316,212 @@ const printJournal = () => {
                             </tbody>
                         </table>
 
-                        <div v-if="expenses.length === 0" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs font-bold font-tajawal">
-                            {{ $t('treasury.empty_today_expenses') }}
-                        </div>
+                        <EmptyState
+                            v-else
+                            :title="$t('treasury.empty_today_expenses')"
+                            icon="💸"
+                        />
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Open Shift Modal (Smooth Native Pop) -->
-        <Teleport to="body">
-            <Transition name="modal-zoom">
-                <div
-                    v-if="showOpenShiftModal"
-                    @click="showOpenShiftModal = false"
-                    class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 font-tajawal select-none"
-                    dir="rtl"
-                >
-                    <div @click.stop class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-black text-base text-slate-900 dark:text-white">{{ $t('treasury.open_shift_modal_title') }}</h3>
-                            <button
-                                @click="showOpenShiftModal = false"
-                                class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 text-xs hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-center transition active:scale-90 shadow-xs"
-                            >
-                                <X class="w-4 h-4" />
-                            </button>
-                        </div>
+        <!-- Open Shift Modal -->
+        <AppModal
+            :show="showOpenShiftModal"
+            :title="$t('treasury.open_shift_modal_title')"
+            icon="🟢"
+            max-width="md"
+            @close="showOpenShiftModal = false"
+        >
+            <form id="openShiftForm" @submit.prevent="submitOpenShift" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.opening_cash_field') }}</label>
+                    <input
+                        v-model="openShiftForm.opening_cash_balance"
+                        type="number"
+                        step="0.01"
+                        required
+                        placeholder="0.00"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
+                </div>
 
-                        <form @submit.prevent="submitOpenShift" class="space-y-4">
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.opening_cash_field') }}</label>
-                                <input
-                                    v-model="openShiftForm.opening_cash_balance"
-                                    type="number"
-                                    step="0.01"
-                                    required
-                                    placeholder="0.00"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.open_notes_field') }}</label>
+                    <input
+                        v-model="openShiftForm.notes"
+                        type="text"
+                        :placeholder="$t('invoices.notes')"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
+                </div>
+            </form>
 
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.open_notes_field') }}</label>
-                                <input
-                                    v-model="openShiftForm.notes"
-                                    type="text"
-                                    :placeholder="$t('invoices.notes')"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
+            <template #footer>
+                <div class="flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
+                        @click="showOpenShiftModal = false"
+                    >
+                        {{ $t('common.cancel') }}
+                    </button>
+                    <button
+                        type="submit"
+                        form="openShiftForm"
+                        :disabled="openShiftForm.processing"
+                        class="h-11 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/20 transition transform active:scale-95 cursor-pointer disabled:opacity-50"
+                    >
+                        {{ openShiftForm.processing ? $t('common.save') + '...' : $t('treasury.start_shift_btn') }}
+                    </button>
+                </div>
+            </template>
+        </AppModal>
 
-                            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <button
-                                    @click="showOpenShiftModal = false"
-                                    type="button"
-                                    class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
-                                >
-                                    {{ $t('common.cancel') }}
-                                </button>
-                                <button
-                                    type="submit"
-                                    :disabled="openShiftForm.processing"
-                                    class="h-11 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/20 transition transform active:scale-95 cursor-pointer disabled:opacity-50"
-                                >
-                                    {{ openShiftForm.processing ? $t('common.save') + '...' : $t('treasury.start_shift_btn') }}
-                                </button>
-                            </div>
-                        </form>
+        <!-- Close Shift Modal (Z-Report) -->
+        <AppModal
+            :show="showCloseShiftModal"
+            :title="$t('treasury.close_shift_modal_title')"
+            :subtitle="active_shift?.shift_number"
+            icon="🔒"
+            max-width="md"
+            @close="showCloseShiftModal = false"
+        >
+            <div class="bg-slate-50 dark:bg-slate-950/90 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-2 mb-4">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-500 dark:text-slate-400">{{ $t('treasury.expected_cash_calculated') }}:</span>
+                    <span class="font-mono font-black text-theme-primary">{{ formatMoney(summary.expected_cash_in_drawer) }} {{ $t('common.currency') }}</span>
+                </div>
+            </div>
+
+            <form id="closeShiftForm" @submit.prevent="submitCloseShift" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.actual_cash_field') }}</label>
+                    <input
+                        v-model="closeShiftForm.actual_cash_balance"
+                        type="number"
+                        step="0.01"
+                        required
+                        placeholder="0.00"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.close_notes_field') }}</label>
+                    <input
+                        v-model="closeShiftForm.notes"
+                        type="text"
+                        :placeholder="$t('invoices.notes')"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
+                </div>
+            </form>
+
+            <template #footer>
+                <div class="flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
+                        @click="showCloseShiftModal = false"
+                    >
+                        {{ $t('common.cancel') }}
+                    </button>
+                    <button
+                        type="submit"
+                        form="closeShiftForm"
+                        :disabled="closeShiftForm.processing"
+                        class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
+                    >
+                        {{ closeShiftForm.processing ? $t('common.save') + '...' : $t('treasury.confirm_close_shift_btn') }}
+                    </button>
+                </div>
+            </template>
+        </AppModal>
+
+        <!-- Quick Expense Modal -->
+        <AppModal
+            :show="showExpenseModal"
+            :title="$t('treasury.record_expense_modal')"
+            icon="💸"
+            max-width="md"
+            @close="showExpenseModal = false"
+        >
+            <form id="expenseForm" @submit.prevent="submitExpense" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.expense_title_field') }}</label>
+                    <input
+                        v-model="expenseForm.title"
+                        type="text"
+                        required
+                        placeholder="مثال: فاتورة كهرباء / بوفيه ومشروبات..."
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('expenses.amount') }} *</label>
+                        <input
+                            v-model="expenseForm.amount"
+                            type="number"
+                            step="0.01"
+                            required
+                            placeholder="0.00"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-rose-600 dark:text-rose-400 font-mono font-black focus:border-theme-primary focus:outline-none shadow-inner"
+                        >
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.payment_method_field') }}</label>
+                        <SearchableSelect
+                            v-model="expenseForm.payment_method"
+                            :options="paymentMethodOptions"
+                            :placeholder="$t('treasury.payment_method')"
+                        />
                     </div>
                 </div>
-            </Transition>
-        </Teleport>
 
-        <!-- Close Shift Modal (Z-Report) (Smooth Native Pop) -->
-        <Teleport to="body">
-            <Transition name="modal-zoom">
-                <div
-                    v-if="showCloseShiftModal"
-                    @click="showCloseShiftModal = false"
-                    class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 font-tajawal select-none"
-                    dir="rtl"
-                >
-                    <div @click.stop class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <div>
-                                <h3 class="font-black text-base text-slate-900 dark:text-white">{{ $t('treasury.close_shift_modal_title') }}</h3>
-                                <p class="text-xs text-theme-primary font-mono font-bold mt-0.5">{{ active_shift?.shift_number }}</p>
-                            </div>
-                            <button
-                                @click="showCloseShiftModal = false"
-                                class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 text-xs hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-center transition active:scale-90 shadow-xs"
-                            >
-                                <X class="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        <div class="bg-slate-50 dark:bg-slate-950/90 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-500 dark:text-slate-400">{{ $t('treasury.expected_cash_calculated') }}:</span>
-                                <span class="font-mono font-black text-theme-primary">{{ formatMoney(summary.expected_cash_in_drawer) }} {{ $t('common.currency') }}</span>
-                            </div>
-                        </div>
-
-                        <form @submit.prevent="submitCloseShift" class="space-y-4">
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.actual_cash_field') }}</label>
-                                <input
-                                    v-model="closeShiftForm.actual_cash_balance"
-                                    type="number"
-                                    step="0.01"
-                                    required
-                                    placeholder="0.00"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.close_notes_field') }}</label>
-                                <input
-                                    v-model="closeShiftForm.notes"
-                                    type="text"
-                                    :placeholder="$t('invoices.notes')"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <button
-                                    @click="showCloseShiftModal = false"
-                                    type="button"
-                                    class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
-                                >
-                                    {{ $t('common.cancel') }}
-                                </button>
-                                <button
-                                    type="submit"
-                                    :disabled="closeShiftForm.processing"
-                                    class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
-                                >
-                                    {{ closeShiftForm.processing ? $t('common.save') + '...' : $t('treasury.confirm_close_shift_btn') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.cost_center_field') }}</label>
+                    <SearchableSelect
+                        v-model="expenseForm.cost_center"
+                        :options="costCenterOptions"
+                        :placeholder="$t('expenses.cost_center')"
+                    />
                 </div>
-            </Transition>
-        </Teleport>
 
-        <!-- Quick Expense Modal (Smooth Native Pop) -->
-        <Teleport to="body">
-            <Transition name="modal-zoom">
-                <div
-                    v-if="showExpenseModal"
-                    @click="showExpenseModal = false"
-                    class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 font-tajawal select-none"
-                    dir="rtl"
-                >
-                    <div @click.stop class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                            <h3 class="font-black text-base text-slate-900 dark:text-white">{{ $t('treasury.record_expense_modal') }}</h3>
-                            <button
-                                @click="showExpenseModal = false"
-                                class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 text-xs hover:text-slate-900 dark:hover:text-white cursor-pointer flex items-center justify-center transition active:scale-90 shadow-xs"
-                            >
-                                <X class="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        <form @submit.prevent="submitExpense" class="space-y-4">
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.expense_title_field') }}</label>
-                                <input
-                                    v-model="expenseForm.title"
-                                    type="text"
-                                    required
-                                    placeholder="مثال: فاتورة كهرباء / بوفيه ومشروبات..."
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="space-y-1.5">
-                                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('expenses.amount') }} *</label>
-                                    <input
-                                        v-model="expenseForm.amount"
-                                        type="number"
-                                        step="0.01"
-                                        required
-                                        placeholder="0.00"
-                                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-rose-600 dark:text-rose-400 font-mono font-black focus:border-theme-primary focus:outline-none shadow-inner"
-                                    >
-                                </div>
-
-                                <div class="space-y-1.5">
-                                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.payment_method_field') }}</label>
-                                    <SearchableSelect
-                                        v-model="expenseForm.payment_method"
-                                        :options="paymentMethodOptions"
-                                        :placeholder="$t('treasury.payment_method')"
-                                    />
-                                </div>
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('treasury.cost_center_field') }}</label>
-                                <SearchableSelect
-                                    v-model="expenseForm.cost_center"
-                                    :options="costCenterOptions"
-                                    :placeholder="$t('expenses.cost_center')"
-                                />
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('invoices.notes') }}</label>
-                                <input
-                                    v-model="expenseForm.notes"
-                                    type="text"
-                                    :placeholder="$t('invoices.notes')"
-                                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                                >
-                            </div>
-
-                            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                                <button
-                                    @click="showExpenseModal = false"
-                                    type="button"
-                                    class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
-                                >
-                                    {{ $t('common.cancel') }}
-                                </button>
-                                <button
-                                    type="submit"
-                                    :disabled="expenseForm.processing"
-                                    class="h-11 px-6 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-lg shadow-rose-600/20 transition transform active:scale-95 cursor-pointer disabled:opacity-50"
-                                >
-                                    {{ expenseForm.processing ? $t('common.save') + '...' : $t('treasury.record_expense_modal') }}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('invoices.notes') }}</label>
+                    <input
+                        v-model="expenseForm.notes"
+                        type="text"
+                        :placeholder="$t('invoices.notes')"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                    >
                 </div>
-            </Transition>
-        </Teleport>
+            </form>
+
+            <template #footer>
+                <div class="flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        class="h-11 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
+                        @click="showExpenseModal = false"
+                    >
+                        {{ $t('common.cancel') }}
+                    </button>
+                    <button
+                        type="submit"
+                        form="expenseForm"
+                        :disabled="expenseForm.processing"
+                        class="h-11 px-6 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-lg shadow-rose-600/20 transition transform active:scale-95 cursor-pointer disabled:opacity-50"
+                    >
+                        {{ expenseForm.processing ? $t('common.save') + '...' : $t('treasury.record_expense_modal') }}
+                    </button>
+                </div>
+            </template>
+        </AppModal>
     </AppLayout>
 </template>
