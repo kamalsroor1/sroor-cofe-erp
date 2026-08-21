@@ -13,6 +13,14 @@ use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\ReturnDocument;
 use App\Services\ReturnService;
+use App\Http\Requests\StoreReturnRequest;
+use App\Http\Requests\OpenShiftRequest;
+use App\Http\Requests\CloseShiftRequest;
+use App\Http\Requests\StoreDailyJournalExpenseRequest;
+use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
+use App\Http\Requests\StoreStoreRequest;
+use App\Http\Requests\AssignStoreUsersRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -30,6 +38,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         parent::setUp();
 
         Permission::firstOrCreate(['name' => 'returns.manage', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'returns.create', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'daily_journal.view', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'daily_journal.close_shift', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'expenses.manage', 'guard_name' => 'web']);
@@ -56,6 +65,17 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $req = Request::create($uri, $method, $parameters);
         $req->setLaravelSession(app('session')->driver());
         $req->setUserResolver(fn() => $this->admin);
+        return $req;
+    }
+
+    protected function makeFormRequest(string $formRequestClass, string $uri, string $method = 'GET', array $parameters = []): \Illuminate\Foundation\Http\FormRequest
+    {
+        $req = $formRequestClass::create($uri, $method, $parameters);
+        $req->setContainer(app());
+        $req->setRedirector(app('redirect'));
+        $req->setLaravelSession(app('session')->driver());
+        $req->setUserResolver(fn() => $this->admin);
+        $req->validateResolved();
         return $req;
     }
 
@@ -96,7 +116,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $controller = new \App\Http\Controllers\ReturnController();
 
         // 1. Create Sales Return
-        $storeReq = $this->makeRequest('/returns', 'POST', [
+        $storeReq = $this->makeFormRequest(StoreReturnRequest::class, '/returns', 'POST', [
             'return_type' => 'sales_return',
             'customer_id' => $customer->id,
             'return_date' => now()->toDateString(),
@@ -131,7 +151,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $controller = new \App\Http\Controllers\DailyJournalController();
 
         // 1. Open Shift
-        $openReq = $this->makeRequest('/daily-journal/open-shift', 'POST', [
+        $openReq = $this->makeFormRequest(OpenShiftRequest::class, '/daily-journal/open-shift', 'POST', [
             'opening_cash_balance' => '500.000',
             'notes'                => 'عهدة بداية الوردية الصباحية',
         ]);
@@ -141,7 +161,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $this->assertEquals('500.000', $shift->opening_cash_balance);
 
         // 2. Add Quick Expense
-        $expReq = $this->makeRequest('/daily-journal/expense', 'POST', [
+        $expReq = $this->makeFormRequest(StoreDailyJournalExpenseRequest::class, '/daily-journal/expense', 'POST', [
             'title'          => 'شراء أدوات نظافة وضيافة',
             'amount'         => '75.000',
             'cost_center'    => 'hospitality',
@@ -156,7 +176,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         ]);
 
         // 3. Close Shift (Z-Report)
-        $closeReq = $this->makeRequest("/daily-journal/close-shift/{$shift->id}", 'POST', [
+        $closeReq = $this->makeFormRequest(CloseShiftRequest::class, "/daily-journal/close-shift/{$shift->id}", 'POST', [
             'actual_cash_balance' => '425.000',
             'notes'               => 'مطابقة تامة',
         ]);
@@ -176,7 +196,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $controller = new \App\Http\Controllers\ExpenseController();
 
         // 1. Create Expense
-        $createReq = $this->makeRequest('/expenses', 'POST', [
+        $createReq = $this->makeFormRequest(StoreExpenseRequest::class, '/expenses', 'POST', [
             'title'          => 'إيجار فرع مصر الجديدة',
             'category'       => 'إيجار وكهرباء ومرافق',
             'cost_center'    => 'rent',
@@ -191,7 +211,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $this->assertEquals('3000.000', $expense->amount);
 
         // 2. Update Expense
-        $updateReq = $this->makeRequest("/expenses/{$expense->id}", 'PUT', [
+        $updateReq = $this->makeFormRequest(UpdateExpenseRequest::class, "/expenses/{$expense->id}", 'PUT', [
             'title'          => 'إيجار فرع مصر الجديدة بعد التخفيض',
             'category'       => 'إيجار وكهرباء ومرافق',
             'cost_center'    => 'rent',
@@ -218,7 +238,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
         $controller = new \App\Http\Controllers\StoreController();
 
         // 1. Create Van Store
-        $storeReq = $this->makeRequest('/stores', 'POST', [
+        $storeReq = $this->makeFormRequest(StoreStoreRequest::class, '/stores', 'POST', [
             'name'    => 'عربية توزيع خط الجيزة',
             'code'    => 'VAN-GIZA-01',
             'type'    => 'wholesale_van',
@@ -232,7 +252,7 @@ class ReturnsDailyJournalExpenseStoreInertiaTest extends TestCase
 
         // 2. Assign Staff
         $staffUser = User::factory()->create(['name' => 'كابتن التوزيع']);
-        $assignReq = $this->makeRequest("/stores/{$van->id}/assign-users", 'POST', [
+        $assignReq = $this->makeFormRequest(AssignStoreUsersRequest::class, "/stores/{$van->id}/assign-users", 'POST', [
             'user_ids' => [$staffUser->id],
         ]);
         $controller->assignUsers($assignReq, $van->id);

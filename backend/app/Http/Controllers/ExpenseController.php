@@ -114,16 +114,19 @@ final class ExpenseController extends Controller
         $storeId = $request->session()->get('active_store_id') ?: Store::first()?->id;
 
         DB::transaction(function () use ($validated, $storeId) {
+            $expCount = Expense::whereDate('created_at', now()->toDateString())->count() + 1;
+
             Expense::create([
-                'title' => $validated['title'],
-                'category' => $validated['category'],
-                'cost_center' => $validated['cost_center'],
-                'amount' => $validated['amount'],
-                'expense_date' => $validated['expense_date'],
+                'expense_number' => 'EXP-' . date('ymd') . '-' . str_pad((string)$expCount, 3, '0', STR_PAD_LEFT),
+                'title'          => $validated['title'],
+                'category'       => $validated['category'],
+                'cost_center'    => $validated['cost_center'],
+                'amount'         => $validated['amount'],
+                'expense_date'   => $validated['expense_date'],
                 'payment_method' => $validated['payment_method'],
-                'created_by' => auth()->id(),
-                'store_id' => $storeId,
-                'notes' => $validated['notes'] ?? null,
+                'created_by'     => auth()->id(),
+                'store_id'       => $storeId,
+                'notes'          => $validated['notes'] ?? null,
             ]);
         });
 

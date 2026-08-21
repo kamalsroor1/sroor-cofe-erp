@@ -59,6 +59,17 @@ class TrashSettingsAuthNotificationsInertiaTest extends TestCase
         return $req;
     }
 
+    protected function makeFormRequest(string $formRequestClass, string $uri, string $method = 'GET', array $parameters = []): \Illuminate\Foundation\Http\FormRequest
+    {
+        $req = $formRequestClass::create($uri, $method, $parameters);
+        $req->setContainer(app());
+        $req->setRedirector(app('redirect'));
+        $req->setLaravelSession(app('session')->driver());
+        $req->setUserResolver(fn() => $this->admin);
+        $req->validateResolved();
+        return $req;
+    }
+
     public function test_trash_index_restore_and_force_delete(): void
     {
         $this->actingAs($this->admin);
@@ -107,7 +118,7 @@ class TrashSettingsAuthNotificationsInertiaTest extends TestCase
         $this->assertEquals('سرور كوفي', $page['props']['settings']['company_name']);
 
         // 2. Update Settings
-        $updateReq = $this->makeRequest('/settings', 'POST', [
+        $updateReq = $this->makeFormRequest(\App\Http\Requests\UpdateSettingsRequest::class, '/settings', 'POST', [
             'company_name'            => 'سرور كوفي جروب',
             'company_subtitle'        => 'لتوريدات البن والخلطات',
             'company_phone'           => '01011112222',

@@ -297,6 +297,8 @@ final class ReportController extends Controller
             fromDate: $dateFrom,
             toDate: $dateTo,
             storeId: $storeFilter,
+        );
+
         return Inertia::render('Reports/Index', [
             // Fast immediate layout metadata
             'active_tab' => $activeTab,
