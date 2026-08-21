@@ -8,7 +8,6 @@ const props = defineProps({
     items: {
         type: Array,
         default: () => []
-        // Each item: { label: string, icon?: any, href?: string, onClick?: () => void, variant?: 'default'|'danger'|'warning'|'success', show?: boolean, description?: string }
     },
     title: {
         type: String,
@@ -24,7 +23,7 @@ const props = defineProps({
     },
     mode: {
         type: String,
-        default: 'dropdown' // 'dropdown' | 'sheet'
+        default: 'auto' // 'auto' (dropdown on desktop, sheet on mobile) | 'dropdown' | 'sheet'
     },
     orientation: {
         type: String,
@@ -36,13 +35,21 @@ const isOpen = ref(false);
 const menuRef = ref(null);
 const { triggerHaptic } = useNativeBridge();
 
+// Touch Drag State for Mobile Bottom Action Sheet
+const touchStartY = ref(0);
+const touchCurrentY = ref(0);
+const dragOffset = ref(0);
+const isDragging = ref(false);
+
 const toggleMenu = () => {
     triggerHaptic('light');
     isOpen.value = !isOpen.value;
+    dragOffset.value = 0;
 };
 
 const closeMenu = () => {
     isOpen.value = false;
+    dragOffset.value = 0;
 };
 
 const handleItemClick = (item) => {
@@ -57,6 +64,33 @@ const handleClickOutside = (e) => {
     if (menuRef.value && !menuRef.value.contains(e.target)) {
         closeMenu();
     }
+};
+
+// Touch handlers for drag-to-close on mobile sheet
+const onTouchStart = (e) => {
+    touchStartY.value = e.touches[0].clientY;
+    touchCurrentY.value = e.touches[0].clientY;
+    isDragging.value = true;
+};
+
+const onTouchMove = (e) => {
+    if (!isDragging.value) return;
+    touchCurrentY.value = e.touches[0].clientY;
+    const diff = touchCurrentY.value - touchStartY.value;
+    if (diff > 0) {
+        dragOffset.value = diff;
+    }
+};
+
+const onTouchEnd = () => {
+    if (!isDragging.value) return;
+    if (dragOffset.value > 65) {
+        triggerHaptic('medium');
+        closeMenu();
+    } else {
+        dragOffset.value = 0;
+    }
+    isDragging.value = false;
 };
 
 onMounted(() => {
@@ -83,11 +117,11 @@ onUnmounted(() => {
             <slot name="trigger" />
         </button>
 
-        <!-- Dropdown Menu (Opens directly below the button with smooth native pop animation) -->
+        <!-- Desktop Dropdown (Hidden on mobile when mode is auto) -->
         <Transition name="dropdown-pop">
             <div
-                v-if="isOpen && mode === 'dropdown'"
-                class="absolute z-50 mt-1.5 w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 space-y-1 select-none"
+                v-if="isOpen && (mode === 'dropdown' || mode === 'auto')"
+                class="hidden sm:block absolute z-50 mt-1.5 w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 space-y-1 select-none"
                 :class="align === 'start' ? 'left-0' : 'right-0'"
             >
                 <div v-if="title" class="px-3 py-1.5 text-[11px] font-black text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/80 truncate">
@@ -96,7 +130,6 @@ onUnmounted(() => {
 
                 <template v-for="(item, idx) in items" :key="idx">
                     <template v-if="item.show !== false">
-                        <!-- Link Item -->
                         <Link
                             v-if="item.href"
                             :href="item.href"
@@ -120,7 +153,6 @@ onUnmounted(() => {
                             </div>
                         </Link>
 
-                        <!-- Button Action Item -->
                         <button
                             v-else
                             @click="handleItemClick(item)"
@@ -148,34 +180,48 @@ onUnmounted(() => {
             </div>
         </Transition>
 
-        <!-- Optional Bottom Action Sheet mode (if explicitly requested) -->
-        <Teleport to="body" v-if="mode === 'sheet'">
+        <!-- Mobile Native Bottom Action Sheet (Auto on mobile or when mode === 'sheet') -->
+        <Teleport to="body">
             <Transition name="sheet-slide">
                 <div
-                    v-if="isOpen"
-                    class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end justify-center font-tajawal select-none"
+                    v-if="isOpen && (mode === 'sheet' || mode === 'auto')"
+                    class="sm:hidden fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-end justify-center font-tajawal select-none"
+                    dir="rtl"
                     @click="closeMenu"
                 >
                     <div
                         @click.stop
-                        class="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col text-slate-900 dark:text-white safe-bottom"
+                        class="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col text-slate-900 dark:text-white transition-transform duration-150 ease-out pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))]"
+                        :style="dragOffset > 0 ? { transform: `translateY(${dragOffset}px)` } : {}"
                     >
-                        <!-- Handle & Header -->
-                        <div class="space-y-3">
-                            <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto"></div>
-                            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                                <div>
-                                    <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ title || $t('common.actions') || 'إجراءات الفاتورة' }}</h3>
-                                    <p class="text-[11px] text-slate-400 font-bold">اختر الإجراء المطلوب تنفيذه</p>
-                                </div>
-                                <button
-                                    @click="closeMenu"
-                                    type="button"
-                                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center active:scale-90 cursor-pointer"
-                                >
-                                    <X class="w-4 h-4" />
-                                </button>
+                        <!-- Native Drag Handle (Drag-to-Close) -->
+                        <div
+                            class="flex flex-col items-center justify-center -mt-2 -mb-1 py-1 cursor-grab active:cursor-grabbing shrink-0"
+                            @touchstart="onTouchStart"
+                            @touchmove="onTouchMove"
+                            @touchend="onTouchEnd"
+                        >
+                            <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                        </div>
+
+                        <!-- Sheet Header -->
+                        <div
+                            class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 shrink-0"
+                            @touchstart="onTouchStart"
+                            @touchmove="onTouchMove"
+                            @touchend="onTouchEnd"
+                        >
+                            <div>
+                                <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ title || $t('common.actions') || 'خيارات الإجراءات' }}</h3>
+                                <p class="text-[11px] text-slate-400 font-bold">حدد الإجراء المطلوب تنفيذه</p>
                             </div>
+                            <button
+                                @click="closeMenu"
+                                type="button"
+                                class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center active:scale-90 cursor-pointer shadow-xs"
+                            >
+                                <X class="w-4 h-4" />
+                            </button>
                         </div>
 
                         <!-- Action List -->
@@ -233,13 +279,13 @@ onUnmounted(() => {
                             </template>
                         </div>
 
-                        <!-- Cancel / Close Button -->
+                        <!-- Close Button -->
                         <button
                             @click="closeMenu"
                             type="button"
-                            class="w-full h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center transition active:scale-95 cursor-pointer shadow-xs"
+                            class="w-full h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center transition active:scale-95 cursor-pointer shadow-xs shrink-0"
                         >
-                            {{ $t('common.cancel') || 'إغلاق القائمة' }}
+                            {{ $t('common.cancel') || 'إلغاء' }}
                         </button>
                     </div>
                 </div>

@@ -405,4 +405,29 @@
 
 ---
 **آخر مرحلة منفذة: المرحلة 2: POS Touch Grid**
-**المرحلة التالية: المرحلة 3: Native Bottom Sheets**
+
+---
+
+## Mobile Design System — المرحلة 3: Native Bottom Sheets — بتاريخ 2026-08-21
+### المرحلة المنفذة
+- **المرحلة 3: Native Bottom Sheets**
+
+### الملفات/الـ Components اللي اتعدلت أو اتعملت
+- `[MODIFIED]` [`backend/resources/js/Components/Common/AppModal.vue`](file:///d:/projects/sroor/backend/resources/js/Components/Common/AppModal.vue): تحويل كافة النوافذ والحوارات المشتركة لتتحول تلقائياً على الموبايل إلى **Native Bottom Sheet** ترتفع من الأسفل مع مقبض سحب لمسي (`Drag Handle`) ودعم إيماءة السحب لأسفل بالإبهام للإغلاق السريع (`Drag-to-Close Touch Gesture`) مع اهتزاز لمسي ناعم، وبقاء التصميم المتمركز الأنيق لسطح المكتب.
+- `[MODIFIED]` [`backend/resources/js/Components/ActionMenu.vue`](file:///d:/projects/sroor/backend/resources/js/Components/ActionMenu.vue): ترقية قوائم الإجراءات (`Action Menus`) لتفتح كـ **Native Action Sheet** عريضة من أسفل الشاشة على الهواتف مع مقبض سحب وارتفاعات لمس مريحة `min-h-[48px]` بدلاً من القوائم المنسدلة الضيقة التي تقتطعها حواف الشاشات.
+- `[MODIFIED]` [`backend/resources/js/Components/POS/POSWeightPickerModal.vue`](file:///d:/projects/sroor/backend/resources/js/Components/POS/POSWeightPickerModal.vue): ترقية نافذة اختيار أوزان البن لتفتح كـ Bottom Sheet مريحة للإبهام مع دعم كامل للسحب للإغلاق (`Drag-to-Close`) ومراعاة مساحة الأمان السفلية `pb-safe`.
+- `[MODIFIED]` [`backend/resources/js/Components/POS/POSCustomerPickerModal.vue`](file:///d:/projects/sroor/backend/resources/js/Components/POS/POSCustomerPickerModal.vue): ترقية نافذة اختيار العملاء السريعة لتفتح من أسفل الشاشة مع مقبض سحب وحقول لمسية مريحة.
+
+### حالة المرحلة
+- ✅ **مكتملة 100%**:
+  - الفلاتر، تفاصيل الفواتير، ونوافذ الإدخال، وقوائم الإجراءات أصبحت تفتح من أسفل الشاشة بنعومة فائقة (`sheet-slide` animation).
+  - دعم إيماءة السحب لأسفل بالإبهام للإغلاق الفيزيائي (`drag-to-close`).
+  - التوافق التام مع مناطق الأمان (`env(safe-area-inset-bottom)`).
+  - تم التحقق من بناء الواجهات `npm run build` بنجاح واختبارات الـ Backend بنسبة 100%.
+
+### ملاحظات لسه محتاجة متابعة
+- جاهز للبدء في **المرحلة 4: Touch Feedback حقيقي (إزالة سلوكيات المتصفح)** في الجلسة القادمة.
+
+---
+**آخر مرحلة منفذة: المرحلة 3: Native Bottom Sheets**
+**المرحلة التالية: المرحلة 4: Touch Feedback حقيقي (إزالة سلوكيات المتصفح)**
