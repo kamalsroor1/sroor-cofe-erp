@@ -159,6 +159,15 @@
             <span class="font-tajawal">الموردين وكشوف الحساب</span>
           </router-link>
 
+          <router-link
+            to="/expenses"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+            :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          >
+            <Receipt class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('expenses') ? 'text-slate-950' : 'text-rose-400'" />
+            <span class="font-tajawal">المصروفات والعهد النثرية</span>
+          </router-link>
+
           <a
             href="/daily-journal"
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-all"
@@ -204,6 +213,7 @@ import {
     Package,
     Users,
     Factory,
+    Receipt,
     Wallet,
     BarChart3,
     Sun,

@@ -101,6 +101,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
 
         // Expenses & Petty Cash
         Route::get('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'index'])->name('api.expenses.index');
+        Route::get('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'show'])->name('api.expenses.show');
         Route::post('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'store'])->name('api.expenses.store');
         Route::put('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'update'])->name('api.expenses.update');
         Route::delete('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'destroy'])->name('api.expenses.destroy');

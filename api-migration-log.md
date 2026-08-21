@@ -2,7 +2,7 @@
 
 > **تاريخ الإنشاء:** 2026-08-21  
 > **الفرع البرمجي (Git Branch):** `feature/api-migration`  
-> **الحالة العامة:** المرحلة 4 - Module 03: الموردين وكشوف الحساب وسندات الصرف (`Suppliers & Statements`) مكتمل ومختبر بنجاح بنسبة 100%.
+> **الحالة العامة:** المرحلة 4 - Module 04: المصروفات والعهد النثرية وتصنيفاتها (`Expenses & Petty Cash`) مكتمل ومختبر بنجاح بنسبة 100%.
 
 ---
 
@@ -47,14 +47,14 @@
   5. `StoreController` (إدارة الفروع والمخازن، أرصدة المخازن، التعيينات، وتبديل الفروع)
   6. `CustomerController` (إدارة العملاء، كشف الحساب التفصيلي، تحصيل المديونيات)
   7. `SupplierController` (إدارة الموردين، كشف الحساب التفصيلي، وسندات صرف مستحقات الموردين)
-  8. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
-  9. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
-  10. `PurchaseController` (المشتريات وإلغاؤها)
-  11. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
-  12. `StockTransferController` (التحويلات بين الفروع)
-  13. `ShiftController` (إدارة الورديات، الفتح، الإغلاق، وتقرير Z-Report)
-  14. `PaymentController` (سندات القبض للعملاء وسندات الصرف للموردين)
-  15. `ExpenseController` (المصروفات)
+  8. `ExpenseController` (تسجيل وإدارة المصروفات والعهد ومراكز التكلفة)
+  9. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
+  10. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
+  11. `PurchaseController` (المشتريات وإلغاؤها)
+  12. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
+  13. `StockTransferController` (التحويلات بين الفروع)
+  14. `ShiftController` (إدارة الورديات، الفتح، الإغلاق، وتقرير Z-Report)
+  15. `PaymentController` (سندات القبض للعملاء وسندات الصرف للموردين)
   16. `TreasuryController` (أرصدة الخزائن والبنوك)
   17. `ReportController` (ملخص الأرباح وأعلى الأصناف مبيعاً)
   18. `SettingController` (إعدادات المنشأة وتحديثها)
@@ -91,8 +91,8 @@
   ├── 1. الفروع والمخازن (Stores & Stocks) ✅
   ├── 2. العملاء وكشوف الحساب (Customers & Statements) ✅
   ├── 3. الموردين وكشوف الحساب (Suppliers & Statements) ✅
-  ├── 4. المصروفات والعهد (Expenses & Petty Cash) ⏳
-  ├── 5. الأصناف وحركة المخزون والنواقص (Items & Low Stock Radar)
+  ├── 4. المصروفات والعهد (Expenses & Petty Cash) ✅
+  ├── 5. الأصناف وحركة المخزون والنواقص (Items & Low Stock Radar) ⏳
   ├── 6. الورديات ودفتر اليومية والخزينة (Cash Shifts & Daily Journal)
   ├── 7. المشتريات والتوريدات وإعادة الطلب الذكي (Purchases & Smart Reorder)
   ├── 8. نقطة البيع السريعة وفواتير المبيعات (POS Engine & Invoices)
@@ -146,42 +146,42 @@
 ---
 
 ## 9. Module 03: الموردين وكشوف الحساب وسندات الصرف (`Suppliers & Statements`) — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `SupplierDTO`, `PaySupplierDTO`, `CreateSupplierAction`, `UpdateSupplierAction`, `DeleteSupplierAction`, `ToggleSupplierActiveAction`, `PaySupplierAction`, `GetSupplierStatementAction`, `SupplierResource`, `SupplierController`, `SuppliersView.vue`, `SupplierStatementView.vue`.
+* **الاختبارات:** `SuppliersApiTest` (7/7 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 10. Module 04: المصروفات والعهد النثرية وتصنيفاتها (`Expenses & Petty Cash`) — بتاريخ 2026-08-21
 
 ### أ. الـ Backend (Laravel Pure API):
-1. `[NEW]` `app/DTOs/Suppliers/SupplierDTO.php` (Strictly Typed DTO لبيانات الموردين والشركات).
-2. `[NEW]` `app/DTOs/Suppliers/PaySupplierDTO.php` (Strictly Typed DTO لسندات الصرف وسداد الموردين).
-3. `[NEW]` `app/Actions/Suppliers/CreateSupplierAction.php` (Single Action لإنشاء المورد وإثبات الرصيد الافتتاحي داخل Transaction).
-4. `[NEW]` `app/Actions/Suppliers/UpdateSupplierAction.php` (Single Action لتعديل بيانات المورد).
-5. `[NEW]` `app/Actions/Suppliers/DeleteSupplierAction.php` (Single Action لحذف المورد مع التحقق الصارم من موانع الحذف والمستحقات).
-6. `[NEW]` `app/Actions/Suppliers/ToggleSupplierActiveAction.php` (Single Action لتفعيل / تعطيل حساب المورد).
-7. `[NEW]` `app/Actions/Suppliers/PaySupplierAction.php` (Single Action لسداد المورد وربطه بـ PaymentService).
-8. `[NEW]` `app/Actions/Suppliers/GetSupplierStatementAction.php` (Single Action لتوليد كشف الحساب التفصيلي وحساب الرصيد اللحظي التراكمي بدقة bcmath).
-9. `[NEW]` `app/Http/Resources/SupplierResource.php` (تنسيق بيانات المورد، إحصائيات المشتريات والسدادات، وموانع الحذف).
-10. `[REFACTORED]` `app/Http/Controllers/Api/SupplierController.php` (متحكم API متكامل للموردين وكشف الحساب وسندات الصرف).
-11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الموردين وسندات الصرف وكشف الحساب).
-12. `[NEW]` `tests/Feature/Api/SuppliersApiTest.php` (حزمة 7 اختبارات Feature شاملة لكافة العمليات بنسبة نجاح 100%).
+1. `[NEW]` `app/DTOs/Expenses/ExpenseDTO.php` (Strictly Typed DTO لبيانات المصروفات والعهد).
+2. `[NEW]` `app/Actions/Expenses/CreateExpenseAction.php` (Single Action لإنشاء المصروف وتوليد الكود التسلسلي EXP-ymd-0001 داخل Transaction).
+3. `[NEW]` `app/Actions/Expenses/UpdateExpenseAction.php` (Single Action لتعديل بيانات المصروف).
+4. `[NEW]` `app/Actions/Expenses/DeleteExpenseAction.php` (Single Action لحذف المصروف مع دعم الحذف الناعم SoftDeletes).
+5. `[NEW]` `app/Actions/Expenses/GetExpensesSummaryAction.php` (Single Action لحساب إجمالي مصروفات الشهر، المصروفات النقدية، وإجمالي الفلترة بدقة bcmath).
+6. `[NEW]` `app/Http/Resources/ExpenseResource.php` (تنسيق بيانات المصروف ومراكز التكلفة).
+7. `[REFACTORED]` `app/Http/Controllers/Api/ExpenseController.php` (متحكم API متكامل للمصروفات مع الفلاتر والمؤشرات المالية).
+8. `[MODIFIED]` `routes/api.php` (تسجيل مسارات المصروفات).
+9. `[NEW]` `tests/Feature/Api/ExpensesApiTest.php` (حزمة 5 اختبارات Feature شاملة بنسبة نجاح 100%).
 
 ### ب. الـ Frontend (Pure Vue 3 SPA):
-1. `[NEW]` `resources/js/views/Suppliers/SuppliersView.vue` (شاشة إدارة الموردين، بطاقات المؤشرات المالية، فلاتر المستحقات، نوافذ الإضافة والتعديل وسندات الصرف السريع).
-2. `[NEW]` `resources/js/views/Suppliers/SupplierStatementView.vue` (شاشة كشف حساب المورد التفصيلي مع الفلاتر الزمنية السريعة والطباعة والرصيد التراكمي).
-3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/suppliers` و `/suppliers/:id/statement` مع حماية الصلاحيات).
-4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (ربط زر الموردين في القائمة الجانبية بالـ Router).
+1. `[NEW]` `resources/js/views/Expenses/ExpensesView.vue` (شاشة إدارة المصروفات، بطاقات إجمالي مصروفات الشهر والنثريات النقدية، الفلترة حسب مركز التكلفة والتاريخ، والشرائح السريعة).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/expenses` مع حماية الصلاحيات).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (إضافة رابط المصروفات والعهد في القائمة الجانبية).
 
 ### ج. نقاط النهاية المعتمدة (API Endpoints):
-* `GET /api/v1/suppliers` — قائمة الموردين مع الفلاتر والبحث والمؤشرات المالية
-* `POST /api/v1/suppliers` — إضافة مورد جديد
-* `GET /api/v1/suppliers/{id}` — تفاصيل بروفايل مورد
-* `PUT /api/v1/suppliers/{id}` — تعديل بيانات المورد
-* `DELETE /api/v1/suppliers/{id}` — حذف المورد (مع الحماية من حذف الموردين المرتبطين بمشتريات أو مستحقات)
-* `PATCH /api/v1/suppliers/{id}/toggle-active` — تفعيل / تعطيل المورد
-* `POST /api/v1/suppliers/{id}/pay` — تسجيل سند صرف وسداد مستحقات للمورد
-* `GET /api/v1/suppliers/{id}/statement` — كشف الحساب التفصيلي والرصيد التراكمي
+* `GET /api/v1/expenses` — قائمة المصروفات مع الفلاتر والبحث والمؤشرات المالية
+* `POST /api/v1/expenses` — تسجيل مصروف جديد
+* `GET /api/v1/expenses/{id}` — تفاصيل مصروف محدد
+* `PUT /api/v1/expenses/{id}` — تعديل مصروف
+* `DELETE /api/v1/expenses/{id}` — حذف مصروف
 
 ### حالة الموديول: ✅ مكتمل بنجاح 100%
 
 ---
 
-## 10. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
+## 11. مصفوفة تتبع حالة الترحيل (Migration Tracking Matrix)
 
 - [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
 - [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
@@ -191,8 +191,8 @@
   - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
   - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
   - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
-  - [ ] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ⏳ (التالي في الترتيب)
-  - [ ] Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)
+  - [x] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ✅ (2026-08-21)
+  - [ ] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ⏳ (التالي في الترتيب)
   - [ ] Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)
   - [ ] Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)
   - [ ] Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)
@@ -207,5 +207,5 @@
 - [ ] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل**
 
 ---
-**آخر مرحلة مكتملة:** المرحلة 4 — Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)  
-**الموديول التالي المستهدف:** **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)**
+**آخر مرحلة مكتملة:** المرحلة 4 — Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)  
+**الموديول التالي المستهدف:** **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)**

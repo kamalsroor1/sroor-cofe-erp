@@ -81,6 +81,16 @@ const routes = [
         },
     },
     {
+        path: '/expenses',
+        name: 'expenses.index',
+        component: () => import('../views/Expenses/ExpensesView.vue'),
+        meta: {
+            title: 'المصروفات والعهد',
+            requiresAuth: true,
+            permission: 'expenses.manage',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
