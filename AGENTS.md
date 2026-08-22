@@ -7,7 +7,7 @@
 
 ## 1. نبذة عن المشروع والمعايير غير القابلة للتفاوض (Non-Negotiable Rules)
 
-أنت تعمل على تطوير نظام الفواتير والمخزون وإدارة المؤسسات متعددة الفروع والمستأجرين **"سرور كوفي ERP"** وتطبيق الموبايل المصاحب **"NativePHP Mobile ERP"** المبني باستخدام **Laravel Multi-Tenancy (Stancl)** و **Inertia.js + Vue 3 (Composition API)** و **Tailwind CSS**.
+أنت تعمل على تطوير نظام الفواتير والمخزون وإدارة المؤسسات متعددة الفروع والمستأجرين **"سرور كوفي ERP"** وتطبيق الموبايل المصاحب **"NativePHP Mobile ERP"** المبني باستخدام **Laravel Multi-Tenancy (Stancl)**، مع واجهة أمامية **Pure Vue 3 SPA (Composition API) + Pinia + Vue Router + Tailwind CSS** و **NativePHP Mobile v4 Bridge**.
 
 ### 🚫 المحظورات والقواعد المعمارية الصارمة (Strict Prohibitions & Architectural Rules):
 1. **ممنوع استخدام `FLOAT` أو `DOUBLE` نهائيًا:** كافة القيم المالية والكميات والأوزان والخصومات والأسعار يجب أن تكون **`DECIMAL(12,3)`** وتُعالج بدوال `bcmath` في PHP لضمان الدقة المالية بنسبة 100%.
@@ -19,25 +19,27 @@
 7. **كائنات نقل البيانات (DTOs - `app/DTOs/`):** تمرير البيانات بين الطلب و الـ Action يتم عبر كائنات DTO محكمة النوع (Strictly Typed).
 8. **المراقبون (Observers - `app/Observers/`):** معالجة الآثار الجانبية وسجلات التدقيق والأحداث التلقائية للموديلات عبر Observers.
 9. **الموديلات النقية (Lean Models - `app/Models/`):** الموديلات مخصصة فقط للعلاقات (Relationships)، الـ Scopes، والـ Casts.
-10. **الاعتماد التقني لواجهات المنصة والموبايل:** **Inertia.js + Vue 3 (Composition API) + Tailwind CSS + NativePHP Mobile v4 Bridge**.
-11. **ممنوع كسر التوافق مع الهوية البصرية والعربية (RTL):** النظام يعمل بـ `dir="rtl"`، خطوط Cairo/Tajawal، ومحاذاة منطقية بـ Tailwind (`ms-*`, `me-*`, `text-start`, `text-end`).
-12. **الالتزام بهوية الألوان والوضعين الفاتح والداكن:**
-    * **الأخضر الزمردي (Emerald):** `#10b981` / `#059669` (الأساسي والتحصيل)
-    * **الذهبي/العنبري (Amber/Gold):** `#f59e0b` / `#d97706` (التمييز والتنبيهات)
-    * **الوضع الداكن الفاخر (Dark Slate):** `#020617` / `#0f172a` / `#1e293b`
-    * **الوضع الفاتح الصافي (Light Shell):** `#f8fafc` / `#ffffff` / `#e2e8f0`
-13. **إلزامية الترجمة التامة ومنع النصوص الثابتة (Zero Hardcoded Strings & Mandatory Localization Gate):**
-    * **ممنوع كتابة نصوص ثابتة (Static / Hardcoded Strings) داخل أي سطر كود نهائيًا:** سواء في رسائل الخطأ، الاستجابات (API Responses)، الفلاش ميسدجز (Flash Messages)، مسميات الحقول والجداول، أو شاشات Vue 3 و Blade.
-    * **ممنوع رفع أو إنشاء أو تعديل أي ملف دون هندلة ترجمته بنسبة 100%:** أي نص جديد يجب أن يُسجل فوراً في ملفات الترجمة الرسمية للغتين (`lang/ar/` و `lang/en/`).
+10. **الربط المركزي للموديلات المركزية (`Central Models Connection`):** أي موديل يخص قاعدة البيانات المركزية (مثل `AppVersion`, `Tenant`, `Domain`, `Plan`, `CentralUser`) يُستعلم عنه عبر روابط المستأجرين يجب أن يحتوي على دالة `getConnectionName()` لضمان توجيهه لقاعدة البيانات المركزية ومنع أخطاء الجداول المفقودة.
+11. **الفصل التام لهياكل التصميم (Complete Layout Separation):**
+    * **قالب المستأجرين والـ POS (`SpaLayout.vue`):** مخصص حصرياً للعمليات التشغيلية والفروع والورديات وشاشات الكاشير.
+    * **قالب السوبر أدمن (`SuperAdminLayout.vue`):** مخصص حصرياً لإدارة المنصة المركزية والمستأجرين والباقات ومراقبة النظام، ومفصول تماماً داخل `App.vue`.
+    * **قالب الزوار (`Guest Views`):** شاشات الدخول والبروشور التسويقي بدون أي شريط جانبي.
+12. **إدارة سياق الفرع واللغة (`X-Store-Id` & `X-Locale`):**
+    * كافة طلبات الـ API ترسل ترويسة `X-Store-Id` لتحديد الفرع والمخزن النشط، وترويسة `X-Locale` لتحديد لغة الاستجابة.
+13. **نظام الألوان الديناميكي بمتغيرات CSS (`Theme CSS Variables`):**
+    * استخدام متغيرات CSS الأساسية (`var(--color-primary)`, `var(--color-primary-light)`, `var(--color-primary-border)`) لضمان تكيف الواجهة مع اللون المختار من إعدادات المؤسسة.
+14. **تصغير القائمة التلقائي في الـ POS:**
+    * شاشة الـ POS تُجبر القائمة الجانبية على التصغير لوضع الـ Mini Mode (`w-20`) لتوفير أقصى مساحة للكاشير.
+15. **مراقبة النظام المحمية (Laravel Telescope Access Bridge):**
+    * الوصول لـ Telescope محصور حصراً بالسوبر أدمن عبر مسار الجسر الآمن `/telescope-access?token=...` المرتبط بتصريح `Gate::define('viewTelescope')`.
+16. **إلزامية الترجمة التامة ومنع النصوص الثابتة (Zero Hardcoded Strings & Mandatory Localization Gate):**
+    * **ممنوع كتابة نصوص ثابتة داخل الكود نهائيًا:** سواء في رسائل الخطأ، الاستجابات (API Responses)، أو شاشات Vue 3 و Blade.
+    * تسجيل كافة النصوص في ملفات الترجمة الرسمية للغتين (`lang/ar/` و `lang/en/`).
     * دوال الترجمة الإلزامية:
-      * في PHP / Laravel: `__('file.key')` أو `trans('file.key')`.
-      * في Vue 3 / Inertia: استخدام `$t('file.key')` أو `trans('file.key')` أو دوال `useTrans()`.
-14. **نمط محولات البيانات (Data Transformers / JsonResources - `app/Http/Resources/`):**
-    * **ممنوع تمرير موديلات Eloquent مباشرة لواجهات Inertia:** يجب تغليف وتمرير كافة البيانات عبر كلاسات `JsonResource` لتنظيف وتنسيق البيانات، وحماية الحقول الحساسة، وتزويد الواجهة بالصلاحيات (`can_edit`, `can_delete`).
-15. **نمط دوال التركيب القابلة لإعادة الاستخدام في Vue 3 (Composables Pattern - `resources/js/Composables/`):**
-    * سحب أي منطق برمجي تفاعلي متكرر (مثل إدارة السلة `usePOSCart`، التنسيق المالي `useMoney`، الثيم `useTheme`، الحذف والتأكيد `useDeleteHandler`) داخل كلاسات Composables مستقلة.
-16. **نمط التحميل الكسول للبيانات الثقيلة (Inertia Lazy Props Pattern - `Inertia::lazy()`):**
-    * البيانات التحليلية والرسوم البيانية والتقارير الثقيلة يجب تأجيلها عبر `Inertia::lazy(fn() => ...)` لضمان سرعة فتح الصفحة الأولية في أجزاء من الثانية.
+      * في PHP: `__('file.key')` أو `trans('file.key')`.
+      * في Vue 3: `$t('file.key')` أو `trans('file.key')`.
+17. **بروتوكول النشر المركزي:**
+    * النشر يتم حصراً عبر اسكريبت النشر الآمن `python deploy_root_baraa.py` الموجه لخادم `baraa-solutions.com` ومستأجريه.
 
 ---
 
@@ -52,7 +54,7 @@
 │    - الحظر: لا يكتب أكواد تصميم CSS أو واجهات تفاعلية داخل الكنترولرز.     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. Frontend / UI Agent                                                      │
-│    - المسؤولية: Vue 3 Components, Inertia Pages, Composables, Tailwind CSS │
+│    - المسؤولية: Vue 3 Components, Pinia Stores, Composables, Tailwind CSS  │
 │    - الحظر: لا يكتب منطق مالي أو استعلامات SQL معقدة داخل الـ Components.  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. QA & Testing Agent                                                       │
