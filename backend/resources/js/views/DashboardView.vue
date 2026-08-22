@@ -3,14 +3,14 @@
       <!-- Welcome Header Banner -->
       <div class="p-6 rounded-3xl bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-bold text-amber-400 mb-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-theme-light border border-theme-border rounded-full text-xs font-bold text-theme-primary mb-2">
             <span>{{ $t('dashboard.app_badge_sub') }}</span>
           </div>
           <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {{ $t('dashboard.welcome_user', { name: authStore.userName }) }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-400 font-bold mt-1">
-            {{ $t('dashboard.active_branch_label') }} <span class="text-amber-400 font-mono">{{ dashboardData?.active_store?.name || authStore.activeStoreName || $t('common.main_branch') }}</span>
+            {{ $t('dashboard.active_branch_label') }} <span class="text-theme-primary font-mono">{{ dashboardData?.active_store?.name || authStore.activeStoreName || $t('common.main_branch') }}</span>
           </p>
         </div>
 
@@ -25,7 +25,7 @@
 
           <router-link
             to="/coffee-blender"
-            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
           >
             <Layers class="w-4 h-4" />
             <span>{{ $t('dashboard.coffee_blend_btn') }}</span>
@@ -62,11 +62,11 @@
           <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.monthly_gross_profit_card') }}</span>
-              <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
                 <BarChart3 class="w-4 h-4" />
               </div>
             </div>
-            <div class="text-2xl font-black text-amber-400 font-mono">
+            <div class="text-2xl font-black text-theme-primary font-mono">
               {{ formatMoney(metrics.monthly_gross_profit || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
             </div>
             <div class="text-[11px] text-slate-500">
@@ -144,7 +144,7 @@
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Wallet class="w-4 h-4 text-amber-400" />
+                <Wallet class="w-4 h-4 text-theme-primary" />
                 <span>{{ $t('dashboard.active_shift_widget_title') }}</span>
               </h2>
               <span
@@ -158,7 +158,7 @@
             <div v-if="dashboardData?.active_shift" class="space-y-3 font-mono text-xs">
               <div class="flex justify-between text-slate-400 font-sans">
                 <span>{{ $t('treasury.shift_number', { number: '' }) }}</span>
-                <span class="text-amber-400 font-bold font-mono">{{ dashboardData.active_shift.shift_number }}</span>
+                <span class="text-theme-primary font-bold font-mono">{{ dashboardData.active_shift.shift_number }}</span>
               </div>
               <div class="flex justify-between text-slate-400 font-sans">
                 <span>{{ $t('dashboard.responsible_cashier') }}</span>
@@ -241,7 +241,7 @@
                 class="p-2.5 bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
-                  <div class="font-bold text-amber-400 font-mono">{{ inv.invoice_number }}</div>
+                  <div class="font-bold text-theme-primary font-mono">{{ inv.invoice_number }}</div>
                   <div class="text-[10px] text-slate-300 font-sans">{{ inv.customer_name }}</div>
                 </div>
                 <div class="text-end font-mono">
