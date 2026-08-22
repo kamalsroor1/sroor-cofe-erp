@@ -97,6 +97,16 @@ export const useAppConfigStore = defineStore('appConfig', {
         },
 
         /**
+         * Change primary accent color
+         */
+        setThemeColor(color) {
+            if (!color) return;
+            this.system.system_theme_color = color;
+            localStorage.setItem('system_theme_color', color);
+            document.documentElement.setAttribute('data-theme-color', color);
+        },
+
+        /**
          * Reactive translation helper
          */
         t(key, replace = {}) {

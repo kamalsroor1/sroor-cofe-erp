@@ -44,11 +44,25 @@ final class SuperAdminApiController extends Controller
      */
     public function dashboard(): JsonResponse
     {
+        $mysqlVersion = '8.0';
+        try {
+            $mysqlVersion = \Illuminate\Support\Facades\DB::select("SELECT VERSION() as v")[0]->v ?? '8.0';
+        } catch (\Throwable $e) {}
+
         return response()->json([
             'success'        => true,
             'metrics'        => $this->analyticsService->getPlatformMetrics(),
             'plan_stats'     => $this->analyticsService->getPlanStatistics(),
             'recent_tenants' => $this->analyticsService->getRecentTenants(),
+            'system_info'    => [
+                'php_version'     => PHP_VERSION,
+                'laravel_version' => app()->version(),
+                'environment'     => app()->environment(),
+                'db_driver'       => config('database.default'),
+                'mysql_version'   => $mysqlVersion,
+                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Hostinger Cloud / LiteSpeed',
+                'storage_writable'=> is_writable(storage_path()),
+            ],
         ]);
     }
 
