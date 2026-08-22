@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-tajawal selection:bg-amber-500 selection:text-slate-950" dir="rtl">
+  <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-amber-500 selection:text-slate-950" dir="rtl">
     <!-- POS Top Header -->
-    <header class="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0">
+    <header class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-xs">
       <!-- Right: Back to Invoices & Brand -->
       <div class="flex items-center gap-3">
         <router-link
           to="/invoices"
-          class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition border border-slate-700"
+          class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition border border-slate-200 dark:border-slate-700"
           :title="$t('pos.back_to_invoices')"
         >
           <ArrowRight class="w-4 h-4" />
@@ -17,8 +17,8 @@
             ⚡
           </div>
           <div>
-            <h1 class="text-sm font-black text-white leading-none">{{ $t('pos.pos_fast_title') }}</h1>
-            <span class="text-[10px] text-slate-400 font-bold font-mono">{{ activeStore?.name || $t('common.main_branch') }}</span>
+            <h1 class="text-sm font-black text-slate-900 dark:text-white leading-none">{{ $t('pos.pos_fast_title') }}</h1>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold font-mono">{{ activeStore?.name || $t('common.main_branch') }}</span>
           </div>
         </div>
       </div>
@@ -40,7 +40,7 @@
           type="button"
           @click="clearCart"
           :disabled="cart.length === 0"
-          class="px-3 py-1.5 bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 border border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-30 cursor-pointer flex items-center gap-1"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-rose-500/20 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-30 cursor-pointer flex items-center gap-1"
         >
           <RotateCcw class="w-3.5 h-3.5" />
           <span>{{ $t('pos.clear_cart') }}</span>
@@ -51,7 +51,7 @@
     <!-- POS Main Split Body -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
       <!-- Right: Product Catalog Grid (col-span-7) -->
-      <div class="lg:col-span-7 flex flex-col border-b lg:border-b-0 lg:border-e border-slate-800 bg-slate-900/40 p-4 space-y-3 overflow-y-auto">
+      <div class="lg:col-span-7 flex flex-col border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4 space-y-3 overflow-y-auto">
         <!-- Search & Barcode Scan Input -->
         <div class="flex items-center gap-2">
           <div class="relative flex-1">
@@ -60,7 +60,7 @@
               v-model="searchQuery"
               @keydown.enter="handleBarcodeScan"
               type="text"
-              class="w-full h-11 pr-10 pl-4 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-11 pr-10 pl-4 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-xs"
               :placeholder="$t('pos.search_scan_placeholder')"
               autofocus
             >
@@ -74,7 +74,7 @@
             type="button"
             @click="selectedCategory = 'all'"
             class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer"
-            :class="selectedCategory === 'all' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
+            :class="selectedCategory === 'all' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
           >
             {{ $t('common.all') }} ({{ items.length }})
           </button>
@@ -84,7 +84,7 @@
             type="button"
             @click="selectedCategory = cat"
             class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer"
-            :class="selectedCategory === cat ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'"
+            :class="selectedCategory === cat ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
           >
             {{ cat }}
           </button>
@@ -102,7 +102,7 @@
             :key="item.id"
             type="button"
             @click="addToCart(item)"
-            class="p-3 bg-slate-950/80 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/50 rounded-2xl text-start transition active:scale-95 flex flex-col justify-between space-y-2 cursor-pointer group shadow-md"
+            class="p-3 bg-white dark:bg-slate-950/80 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl text-start transition active:scale-95 flex flex-col justify-between space-y-2 cursor-pointer group shadow-xs dark:shadow-md"
           >
             <div>
               <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
@@ -114,12 +114,12 @@
                   {{ item.current_stock }} {{ item.unit }}
                 </span>
               </div>
-              <div class="font-bold text-white text-xs group-hover:text-amber-400 transition-colors line-clamp-2">
+              <div class="font-bold text-slate-900 dark:text-white text-xs group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors line-clamp-2">
                 {{ item.name }}
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
+            <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60">
               <span class="text-sm font-black text-amber-400 font-mono">
                 {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] text-slate-400 font-normal">{{ $t('common.currency') }}</span>
               </span>
@@ -136,9 +136,9 @@
       </div>
 
       <!-- Left: Active Cart Drawer (col-span-5) -->
-      <div class="lg:col-span-5 flex flex-col bg-slate-950 p-4 space-y-3 justify-between h-full">
+      <div class="lg:col-span-5 flex flex-col bg-white dark:bg-slate-950 p-4 space-y-3 justify-between h-full border-s border-slate-200 dark:border-slate-800 shadow-sm">
         <!-- Customer & Price Tier Header -->
-        <div class="space-y-2 pb-2 border-b border-slate-800">
+        <div class="space-y-2 pb-2 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2">
             <!-- Customer Select -->
             <div class="flex-1">
@@ -157,7 +157,7 @@
             <button
               type="button"
               @click="showQuickCustomerModal = true"
-              class="px-2.5 h-10 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+              class="px-2.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
               :title="$t('pos.quick_add_customer')"
             >
               <UserPlus class="w-4 h-4" />
@@ -168,7 +168,7 @@
               type="button"
               @click="togglePriceTier"
               class="px-3 h-10 rounded-xl text-xs font-black transition cursor-pointer shrink-0 border"
-              :class="activePriceTier === 'wholesale' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-slate-900 text-slate-300 border-slate-700'"
+              :class="activePriceTier === 'wholesale' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700'"
             >
               {{ activePriceTier === 'wholesale' ? `📦 ${$t('pos.wholesale')}` : `🛍️ ${$t('pos.retail')}` }}
             </button>
@@ -188,7 +188,7 @@
             class="p-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-2 text-xs"
           >
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-white truncate">{{ item.name }}</div>
+              <div class="font-bold text-slate-900 dark:text-white truncate">{{ item.name }}</div>
               <div class="text-[10px] text-slate-400 font-mono">
                 {{ formatMoney(item.unit_price) }} {{ $t('common.currency') }} × {{ item.quantity }} = <span class="font-bold text-amber-400">{{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}</span>
               </div>
@@ -199,7 +199,7 @@
               <button
                 type="button"
                 @click="decrementQty(idx)"
-                class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm cursor-pointer"
+                class="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-sm cursor-pointer"
               >
                 -
               </button>
@@ -208,12 +208,12 @@
                 type="number"
                 step="0.1"
                 min="0.001"
-                class="w-12 h-7 text-center bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white focus:outline-none"
+                class="w-12 h-7 text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
               >
               <button
                 type="button"
                 @click="incrementQty(idx)"
-                class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm cursor-pointer"
+                class="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-sm cursor-pointer"
               >
                 +
               </button>
@@ -231,12 +231,12 @@
         </div>
 
         <!-- Checkout Bottom Area -->
-        <div class="space-y-3 pt-2 border-t border-slate-800 bg-slate-950">
+        <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <!-- Discount & Totals -->
           <div class="space-y-1.5 font-mono text-xs">
             <div class="flex justify-between text-slate-400 font-sans">
               <span>{{ $t('common.total') }}:</span>
-              <span class="font-mono text-white">{{ formatMoney(cartSubtotal) }} {{ $t('common.currency') }}</span>
+              <span class="font-mono text-slate-900 dark:text-white font-bold">{{ formatMoney(cartSubtotal) }} {{ $t('common.currency') }}</span>
             </div>
 
             <div class="flex items-center justify-between gap-2">
@@ -260,7 +260,7 @@
               </div>
             </div>
 
-            <div class="flex justify-between text-sm font-black text-white pt-1 border-t border-slate-800 font-sans">
+            <div class="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-800 font-sans">
               <span>{{ $t('invoices.net_total') }}:</span>
               <span class="font-mono text-emerald-400 text-base">{{ formatMoney(cartNetTotal) }} {{ $t('common.currency') }}</span>
             </div>
@@ -272,7 +272,7 @@
               type="button"
               @click="setPaymentType('cash')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'cash' ? 'bg-emerald-500 text-slate-950 font-black border-emerald-400 shadow-md' : 'bg-slate-900 text-slate-400 border-slate-800'"
+              :class="paymentType === 'cash' ? 'bg-emerald-500 text-slate-950 font-black border-emerald-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               💵 {{ $t('invoices.cash') }}
             </button>
@@ -280,7 +280,7 @@
               type="button"
               @click="setPaymentType('bank_transfer')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'bank_transfer' ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-md' : 'bg-slate-900 text-slate-400 border-slate-800'"
+              :class="paymentType === 'bank_transfer' ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               ⚡ {{ $t('contacts.instapay') }}
             </button>
@@ -288,7 +288,7 @@
               type="button"
               @click="setPaymentType('partial')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'partial' ? 'bg-cyan-500 text-slate-950 font-black border-cyan-400 shadow-md' : 'bg-slate-900 text-slate-400 border-slate-800'"
+              :class="paymentType === 'partial' ? 'bg-cyan-500 text-slate-950 font-black border-cyan-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               ⚖️ {{ $t('invoices.partial') }}
             </button>
@@ -296,7 +296,7 @@
               type="button"
               @click="setPaymentType('credit')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'credit' ? 'bg-rose-500 text-white font-black border-rose-400 shadow-md' : 'bg-slate-900 text-slate-400 border-slate-800'"
+              :class="paymentType === 'credit' ? 'bg-rose-500 text-white font-black border-rose-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               📝 {{ $t('invoices.credit') }}
             </button>
