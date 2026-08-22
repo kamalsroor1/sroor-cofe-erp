@@ -1,5 +1,7 @@
 <script setup>
 import { Send, BarChart3, AlertTriangle, RotateCcw, HardDrive, Save } from 'lucide-vue-next';
+import BaseInput from '@/Components/Form/BaseInput.vue';
+import BaseCheckbox from '@/Components/Form/BaseCheckbox.vue';
 
 defineProps({
     form: {
@@ -38,25 +40,19 @@ defineEmits([
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.bot_token') }}</label>
-                        <input
-                            v-model="form.telegram_bot_token"
-                            type="text"
-                            placeholder="123456789:ABCdef..."
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.telegram_bot_token"
+                        :label="$t('settings.bot_token')"
+                        placeholder="123456789:ABCdef..."
+                        dir="ltr"
+                    />
 
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.chat_id') }}</label>
-                        <input
-                            v-model="form.telegram_chat_id"
-                            type="text"
-                            :placeholder="$t('settings.chat_id_placeholder')"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.telegram_chat_id"
+                        :label="$t('settings.chat_id')"
+                        :placeholder="$t('settings.chat_id_placeholder')"
+                        dir="ltr"
+                    />
                 </div>
 
                 <!-- Live Action Testing Triggers -->

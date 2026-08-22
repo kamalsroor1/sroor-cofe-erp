@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 import { Building2, Sun, Moon, Save } from 'lucide-vue-next';
+import BaseInput from '@/Components/Form/BaseInput.vue';
+import BaseTextarea from '@/Components/Form/BaseTextarea.vue';
+import BaseCheckbox from '@/Components/Form/BaseCheckbox.vue';
 
 const props = defineProps({
     form: {
@@ -96,50 +99,35 @@ const handleLogoDarkChange = (e) => {
 
                 <!-- Basic Information -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.company_name') }}</label>
-                        <input
-                            v-model="form.company_name"
-                            type="text"
-                            required
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.company_name"
+                        :label="$t('settings.company_name')"
+                        :required="true"
+                    />
 
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.company_subtitle') }}</label>
-                        <input
-                            v-model="form.company_subtitle"
-                            type="text"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.company_subtitle"
+                        :label="$t('settings.company_subtitle')"
+                    />
 
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.company_phone') }}</label>
-                        <input
-                            v-model="form.company_phone"
-                            type="text"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.company_phone"
+                        type="tel"
+                        dir="ltr"
+                        :label="$t('settings.company_phone')"
+                    />
 
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.company_address') }}</label>
-                        <input
-                            v-model="form.company_address"
-                            type="text"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.company_address"
+                        :label="$t('settings.company_address')"
+                    />
 
-                    <div class="sm:col-span-2 space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.invoice_footer') }}</label>
-                        <textarea
+                    <div class="sm:col-span-2">
+                        <BaseTextarea
                             v-model="form.invoice_footer_note"
-                            rows="2"
-                            class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        ></textarea>
+                            :label="$t('settings.invoice_footer')"
+                            :rows="2"
+                        />
                     </div>
                 </div>
 
