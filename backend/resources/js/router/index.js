@@ -310,6 +310,16 @@ const routes = [
         },
     },
     {
+        path: '/super-admin/tenants/:id',
+        name: 'super_admin.tenants.show',
+        component: () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue'),
+        meta: {
+            title: 'تفاصيل المستأجر والتحكم',
+            requiresAuth: true,
+            superAdminOnly: true,
+        },
+    },
+    {
         path: '/super-admin/plans',
         name: 'super_admin.plans',
         component: () => import('../views/SuperAdmin/SuperAdminPlansView.vue'),

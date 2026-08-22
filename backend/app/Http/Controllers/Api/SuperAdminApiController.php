@@ -172,6 +172,75 @@ final class SuperAdminApiController extends Controller
     }
 
     /**
+     * Update allowed units for a specific tenant
+     */
+    public function updateTenantUnits(Request $request, string $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'units'   => ['required', 'array', 'min:1'],
+                'units.*' => ['required', 'string', 'max:50'],
+            ]);
+
+            $tenant = Tenant::findOrFail($id);
+            $unitsList = $request->input('units');
+            $unitsStr = implode(',', $unitsList);
+
+            // 1. Save in tenant custom data
+            $data = $tenant->data ?? [];
+            $data['allowed_units'] = $unitsList;
+            $tenant->data = $data;
+            $tenant->save();
+
+            // 2. Initialize tenant and sync to settings table
+            try {
+                \Stancl\Tenancy\Facades\Tenancy::initialize($tenant);
+                \App\Models\Setting::set('inventory_units', $unitsStr);
+                \App\Models\Setting::clearCache();
+                \Stancl\Tenancy\Facades\Tenancy::end();
+            } catch (\Throwable $te) {
+                \Illuminate\Support\Facades\Log::warning("Tenant units sync exception: " . $te->getMessage());
+            }
+
+            return response()->json([
+                'success'       => true,
+                'message'       => 'تم حفظ وتخصيص وحدات القياس للمستأجر بنجاح ✓',
+                'allowed_units' => $unitsList,
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذر تحديث الوحدات للمستأجر: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Run migrations specifically for this tenant
+     */
+    public function runTenantMigrations(string $id): JsonResponse
+    {
+        try {
+            $tenant = Tenant::findOrFail($id);
+            \Illuminate\Support\Facades\Artisan::call('tenants:migrate', [
+                '--tenants' => [$tenant->id],
+            ]);
+            $output = \Illuminate\Support\Facades\Artisan::output();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تشغيل وتحديث ميجريشن المستأجر بنجاح ✓',
+                'output'  => $output,
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل تشغيل الميجريشن: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
      * Delete / Destroy Tenant and all domains
      */
     public function destroyTenant(string $id, \App\Actions\Tenants\DeleteTenantAction $action): JsonResponse

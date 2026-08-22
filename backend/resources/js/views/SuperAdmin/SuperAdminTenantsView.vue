@@ -94,12 +94,15 @@
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
               <tr v-for="t in tenants" :key="t.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40 transition">
                 <td class="p-4 font-sans font-bold text-slate-900 dark:text-white font-tajawal">
-                  <div class="text-sm">{{ t.name }}</div>
+                  <router-link :to="`/super-admin/tenants/${t.id}`" class="text-sm hover:text-purple-500 hover:underline flex items-center gap-1.5 font-black">
+                    <span>{{ t.name }}</span>
+                    <span class="text-xs text-purple-400">↗</span>
+                  </router-link>
                   <div class="text-[10px] text-slate-400 font-mono">ID: {{ t.id }}</div>
                 </td>
 
                 <td class="p-4 text-cyan-400 font-mono">
-                  <a :href="`http://${t.domain}`" target="_blank" class="hover:underline flex items-center gap-1">
+                  <a :href="`http://${t.domain}`" target="_blank" class="hover:underline flex items-center gap-1 font-bold">
                     <span>{{ t.domain }}</span>
                     <ExternalLink class="w-3 h-3" />
                   </a>
@@ -111,7 +114,7 @@
                   </span>
                 </td>
 
-                <td class="p-4 text-slate-300 font-mono">
+                <td class="p-4 text-slate-700 dark:text-slate-300 font-mono">
                   <div>{{ t.email }}</div>
                   <div class="text-[10px] text-slate-500">{{ t.phone || $t('super.no_phone') }}</div>
                 </td>
@@ -128,16 +131,25 @@
 
                 <td class="p-4 text-end font-sans">
                   <div class="flex items-center justify-end gap-2">
+                    <router-link
+                      :to="`/super-admin/tenants/${t.id}`"
+                      class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white rounded-lg text-xs font-bold transition font-tajawal cursor-pointer shadow-sm flex items-center gap-1"
+                    >
+                      <span>🔍</span>
+                      <span>عرض وتحكم</span>
+                    </router-link>
+
                     <button
                       @click="openStatusModal(t)"
-                      class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
+                      class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-amber-500 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
+                      title="تعديل الحالة"
                     >
-                      {{ $t('super.edit_status_and_sub_btn') }}
+                      ⚙️
                     </button>
 
                     <button
                       @click="confirmDeleteTenant(t)"
-                      class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer"
+                      class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer"
                       title="حذف المستأجر"
                     >
                       <Trash2 class="w-4 h-4" />

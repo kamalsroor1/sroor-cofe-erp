@@ -193,6 +193,8 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
             Route::post('/tenants/{id}/update-db-config', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateDatabaseConfig'])->name('api.super_admin.tenants.update_db_config');
             Route::post('/tenants/{id}/toggle-status', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'toggleStatus'])->name('api.super_admin.tenants.toggle_status');
             Route::post('/tenants/{id}/override-feature', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
+            Route::post('/tenants/{id}/update-units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateTenantUnits'])->name('api.super_admin.tenants.update_units');
+            Route::post('/tenants/{id}/run-migrations', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'runTenantMigrations'])->name('api.super_admin.tenants.run_migrations');
             Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
             Route::put('/plans/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
 
