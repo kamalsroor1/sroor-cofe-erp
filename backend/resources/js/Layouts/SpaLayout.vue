@@ -228,45 +228,69 @@
     <!-- 🖥️ MAIN BODY: SIDEBAR + CONTENT                             -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="flex-1 flex overflow-hidden relative">
-      <!-- 💻 DESKTOP SIDEBAR (Collapsible, Sticky Header, Sticky Footer, Tooltips on Mini Mode) -->
+      <!-- 💻 DESKTOP SIDEBAR (Collapsible, Sticky Header, Sticky Footer, Non-Clipped Teleported Tooltips) -->
       <aside
         class="hidden md:flex bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-sm"
         :class="isSidebarCollapsed ? 'w-20' : 'w-72'"
       >
-        <!-- 📌 1. STICKY TOP HEADER OF SIDEBAR -->
-        <div class="p-4 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 sticky top-0 bg-white dark:bg-slate-950 z-20">
-          <div class="flex items-center gap-3 overflow-hidden">
+        <!-- 📌 1. STICKY TOP HEADER OF SIDEBAR (Fixed overlap in mini mode) -->
+        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 shrink-0 sticky top-0 bg-white dark:bg-slate-950 z-20">
+          <!-- Expanded Mode Top Header -->
+          <div v-if="!isSidebarCollapsed" class="flex items-center justify-between">
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div
+                class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-colors"
+                :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
+              >
+                ☕
+              </div>
+              <div class="min-w-0">
+                <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
+                  {{ appConfigStore.companyName || 'سرور كوفي' }}
+                </h2>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+                  {{ appConfigStore.companySubtitle || 'توزيع خامات ومطاحن البن' }}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              @click="toggleSidebarCollapse"
+              class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer text-xs font-mono"
+              title="تصغير القائمة"
+            >
+              «
+            </button>
+          </div>
+
+          <!-- Collapsed Mode Top Header (Centered Logo + Expand Button Stacked) -->
+          <div v-else class="flex flex-col items-center gap-2">
             <div
               class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-colors"
               :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
             >
               ☕
             </div>
-            <div v-if="!isSidebarCollapsed" class="min-w-0">
-              <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
-                {{ appConfigStore.companyName || 'سرور كوفي' }}
-              </h2>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
-                {{ appConfigStore.companySubtitle || 'توزيع خامات ومطاحن البن' }}
-              </p>
-            </div>
+            <button
+              type="button"
+              @click="toggleSidebarCollapse"
+              class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer text-xs font-mono"
+              title="توسيع القائمة"
+            >
+              »
+            </button>
           </div>
-
-          <!-- Collapse Toggle Button -->
-          <button
-            type="button"
-            @click="toggleSidebarCollapse"
-            class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer text-xs font-mono"
-            :title="isSidebarCollapsed ? 'توسيع القائمة' : 'تصغير القائمة'"
-          >
-            {{ isSidebarCollapsed ? '»' : '«' }}
-          </button>
         </div>
 
         <!-- 📌 2. SCROLLABLE NAVIGATION LIST -->
         <div class="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
-          <!-- 🌟 Big Dynamic Theme Action Button: New Invoice (F2) -->
-          <div class="relative group">
+          <!-- 🌟 Big Action Button: New Invoice (F2) -->
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, '+ فاتورة بيع جديدة (F2)')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/pos"
               class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-black text-xs text-slate-950 transition-all active:scale-95 cursor-pointer mb-3 shadow-md"
@@ -276,18 +300,14 @@
               <Plus class="w-4 h-4 stroke-[3] shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">+ فاتورة بيع جديدة (F2)</span>
             </router-link>
-
-            <!-- Mini Sidebar Tooltip -->
-            <div
-              v-if="isSidebarCollapsed"
-              class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50"
-            >
-              + فاتورة بيع جديدة (F2)
-            </div>
           </div>
 
           <!-- 🏠 Dashboard Active Tab -->
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'لوحة التحكم (Dashboard)')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -303,13 +323,6 @@
               <LayoutDashboard class="w-4 h-4 shrink-0" :style="$route.name === 'dashboard' ? { color: 'var(--color-primary, #f59e0b)' } : {}" />
               <span v-if="!isSidebarCollapsed" class="truncate">لوحة التحكم (Dashboard)</span>
             </router-link>
-
-            <div
-              v-if="isSidebarCollapsed"
-              class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50"
-            >
-              لوحة التحكم (Dashboard)
-            </div>
           </div>
 
           <!-- 📂 Section 1: المبيعات والفواتير -->
@@ -318,7 +331,11 @@
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'فواتير المبيعات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/invoices"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -334,12 +351,13 @@
               <FileText class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">فواتير المبيعات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              فواتير المبيعات
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'اليومية وحركة الدرج')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/daily-journal"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -355,9 +373,6 @@
               <Wallet class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">اليومية وحركة الدرج</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              اليومية وحركة الدرج
-            </div>
           </div>
 
           <!-- 📂 Section 2: العملاء والحسابات -->
@@ -366,7 +381,11 @@
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'العملاء والشركات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/customers"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -382,9 +401,6 @@
               <Users class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">العملاء والشركات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              العملاء والشركات
-            </div>
           </div>
 
           <!-- 📂 Section 3: المخزون والفروع والتوزيع -->
@@ -393,7 +409,11 @@
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'الأصناف والأسعار')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/items"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -409,12 +429,13 @@
               <Package class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">الأصناف والأسعار</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              الأصناف والأسعار
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'فواتير المشتريات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/purchases"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -430,12 +451,13 @@
               <ShoppingCart class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">فواتير المشتريات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              فواتير المشتريات
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'الموردون والشركات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/suppliers"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -451,12 +473,13 @@
               <Building2 class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">الموردون والشركات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              الموردون والشركات
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'المخازن والفروع')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/stores"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -472,12 +495,13 @@
               <StoreIcon class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">المخازن والفروع</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              المخازن والفروع
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'صانع الخلطات والبن')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/coffee-blender"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -493,9 +517,6 @@
               <Layers class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">صانع الخلطات والبن</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              صانع الخلطات والبن
-            </div>
           </div>
 
           <!-- 📂 Section 4: المرتجعات والمصروفات والتقارير -->
@@ -504,7 +525,11 @@
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'المصروفات والنثريات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/expenses"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -520,12 +545,13 @@
               <Receipt class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">المصروفات والنثريات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              المصروفات والنثريات
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'سجل المرتجعات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/returns"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -541,12 +567,13 @@
               <RotateCcw class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">سجل المرتجعات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              سجل المرتجعات
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'التقارير المالية والأرباح')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/reports"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -562,9 +589,6 @@
               <BarChart3 class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">التقارير المالية والأرباح</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              التقارير المالية والأرباح
-            </div>
           </div>
 
           <!-- 📂 Section 5: إدارة النظام والمستخدمين -->
@@ -573,7 +597,11 @@
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'المستخدمون والكاشير')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/users"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -589,12 +617,13 @@
               <Users class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">المستخدمون والكاشير</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              المستخدمون والكاشير
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'الأدوار والصلاحيات')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/roles"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -610,12 +639,13 @@
               <ShieldCheck class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">الأدوار والصلاحيات</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              الأدوار والصلاحيات
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'سجل العمليات والرقابة')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/activity-logs"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -631,12 +661,13 @@
               <Activity class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">سجل العمليات والرقابة</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              سجل العمليات والرقابة
-            </div>
           </div>
 
-          <div class="relative group">
+          <div
+            class="relative"
+            @mouseenter="handleItemHover($event, 'إعدادات المؤسسة')"
+            @mouseleave="handleItemLeave"
+          >
             <router-link
               to="/settings"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -652,9 +683,6 @@
               <Sliders class="w-4 h-4 shrink-0" />
               <span v-if="!isSidebarCollapsed" class="truncate">إعدادات المؤسسة</span>
             </router-link>
-            <div v-if="isSidebarCollapsed" class="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-950 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-2xl border border-slate-800 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50">
-              إعدادات المؤسسة
-            </div>
           </div>
         </div>
 
@@ -692,6 +720,20 @@
       <!-- Fixed Mobile Bottom Navigation Bar -->
       <MobileBottomNav @open-drawer="isSidebarOpen = true" />
     </div>
+
+    <!-- 🌟 Teleported Non-Clipped Animated Tooltip for Collapsed Sidebar -->
+    <Teleport to="body">
+      <Transition name="tooltip-fade">
+        <div
+          v-if="hoveredTooltip.show && isSidebarCollapsed"
+          class="fixed z-[99999] pointer-events-none -translate-y-1/2 px-3 py-1.5 bg-slate-950 text-white text-xs font-black rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2 font-tajawal whitespace-nowrap"
+          :style="{ top: `${hoveredTooltip.top}px`, right: `${hoveredTooltip.right}px` }"
+        >
+          <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"></span>
+          <span>{{ hoveredTooltip.text }}</span>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Mobile Drawer Sidebar (When opened on phone/tablet) -->
     <Teleport to="body">
@@ -860,6 +902,29 @@ const notificationsRef = ref(null);
 const currentTimeStr = ref('');
 let clockInterval = null;
 
+// Floating tooltip for collapsed sidebar (Teleported directly into <body>)
+const hoveredTooltip = ref({
+    show: false,
+    text: '',
+    top: 0,
+    right: 0,
+});
+
+const handleItemHover = (e, text) => {
+    if (!isSidebarCollapsed.value) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    hoveredTooltip.value = {
+        show: true,
+        text,
+        top: rect.top + (rect.height / 2),
+        right: window.innerWidth - rect.left + 14,
+    };
+};
+
+const handleItemLeave = () => {
+    hoveredTooltip.value.show = false;
+};
+
 const notificationsList = computed(() => [
     { icon: '📦', title: 'تنبيه نواقص المخزون', desc: 'صنف جيهان أخضر وصل للحد الأدنى (5 كجم)' },
     { icon: '🧾', title: 'فاتورة مبيعات جديدة', desc: 'تم اعتماد فاتورة للعميل بن الأصيل بقيمة 4,495 ج.م' },
@@ -877,6 +942,7 @@ const canAccessSuperAdmin = computed(() => {
 const toggleSidebarCollapse = () => {
     isSidebarCollapsed.value = !isSidebarCollapsed.value;
     localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? 'true' : 'false');
+    hoveredTooltip.value.show = false;
 };
 
 const updateLiveClock = () => {
@@ -962,5 +1028,15 @@ onUnmounted(() => {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+.tooltip-fade-enter-active,
+.tooltip-fade-leave-active {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.tooltip-fade-enter-from,
+.tooltip-fade-leave-to {
+    opacity: 0;
+    transform: translate(6px, -50%);
 }
 </style>
