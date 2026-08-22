@@ -414,7 +414,19 @@ input, textarea, [contenteditable="true"] {
 }
 
 /* 🖨️ Comprehensive Global Print Engine Rules */
+@page {
+    size: 80mm auto;
+    margin: 0mm !important;
+}
+
 @media print {
+    :root, html, body, #app, div, main, .print-wrapper, .receipt-card, #receipt-print-area {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        color-scheme: light !important;
+    }
+
     nav,
     aside,
     header,
@@ -436,16 +448,11 @@ input, textarea, [contenteditable="true"] {
         overflow: hidden !important;
     }
 
-    body, html, #app, main {
-        background: #ffffff !important;
-        background-color: #ffffff !important;
-        color: #000000 !important;
+    html, body, #app {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
         padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        min-height: auto !important;
-        box-shadow: none !important;
-        border: none !important;
     }
 
     * {

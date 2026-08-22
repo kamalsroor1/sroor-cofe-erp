@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-slate-900 py-6 px-4 font-tajawal text-slate-900 select-none flex flex-col items-center justify-start" dir="rtl">
+  <div class="print-wrapper min-h-screen bg-slate-200 dark:bg-slate-950 py-6 px-2 font-tajawal text-slate-900 select-none flex flex-col items-center justify-start print:bg-white print:p-0 print:m-0 print:min-h-0" dir="rtl">
     
     <!-- Action Bar (Hidden on Print) -->
-    <div class="no-print w-full max-w-sm mb-4 flex items-center justify-between gap-2 bg-slate-800/90 border border-slate-700/80 p-3 rounded-2xl shadow-xl backdrop-blur-md">
+    <div class="no-print w-full max-w-[80mm] mb-4 flex items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 p-2.5 rounded-2xl shadow-lg">
       <button
         type="button"
         @click="triggerPrint"
-        class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md active:scale-95"
+        class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
       >
         <Printer class="w-4 h-4" />
         <span>طباعة الإيصال (F9)</span>
@@ -15,7 +15,7 @@
       <button
         type="button"
         @click="goBack"
-        class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+        class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
       >
         <ArrowRight class="w-4 h-4" />
         <span>عودة</span>
@@ -23,22 +23,22 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="no-print p-12 text-center text-slate-300 font-bold">
-      <div class="w-10 h-10 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-      <p class="text-sm font-black">جاري تجهيز إيصال الفاتورة للطباعة...</p>
+    <div v-if="isLoading" class="no-print p-8 text-center text-slate-600 dark:text-slate-300 font-bold">
+      <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+      <p class="text-xs font-bold">جاري تجهيز إيصال الفاتورة...</p>
     </div>
 
     <!-- 80mm Thermal Receipt Container -->
     <div
       v-else-if="invoice"
       id="receipt-print-area"
-      class="receipt-card bg-white text-black p-4 shadow-2xl rounded-xl border border-slate-200"
+      class="receipt-card bg-white text-black p-3.5 shadow-xl rounded-lg border border-slate-300 print:shadow-none print:border-none print:rounded-none print:p-1"
     >
       <!-- 1. Header / Company Info -->
       <div class="text-center space-y-1 pb-2 border-b-2 border-dashed border-black">
-        <h1 class="text-xl font-black tracking-tight leading-tight text-black">{{ companyName }}</h1>
-        <p v-if="companySubtitle" class="text-xs font-bold text-black">{{ companySubtitle }}</p>
-        <div class="text-[11px] font-bold text-black font-mono mt-0.5">
+        <h1 class="text-lg font-black tracking-tight leading-tight text-black">{{ companyName }}</h1>
+        <p v-if="companySubtitle" class="text-[11px] font-bold text-black">{{ companySubtitle }}</p>
+        <div class="text-[10px] font-bold text-black font-mono mt-0.5">
           {{ invoice.store_name || activeStoreName }}
         </div>
       </div>
@@ -47,7 +47,7 @@
       <div class="py-2 border-b-2 border-dashed border-black text-xs space-y-1 font-mono text-black">
         <div class="flex justify-between items-center">
           <span class="font-bold">رقم الفاتورة:</span>
-          <span class="font-black text-sm">{{ invoice.invoice_number }}</span>
+          <span class="font-black text-xs">{{ invoice.invoice_number }}</span>
         </div>
         <div class="flex justify-between items-center">
           <span><strong>التاريخ:</strong> {{ invoice.invoice_date }}</span>
@@ -73,14 +73,14 @@
           <thead>
             <tr class="border-b-2 border-black text-xs font-black">
               <th class="text-start py-1">الصنف</th>
-              <th class="text-center py-1 w-10">الكمية</th>
+              <th class="text-center py-1 w-9">الكمية</th>
               <th class="text-center py-1 w-14">السعر</th>
               <th class="text-end py-1 w-16">الإجمالي</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-black/30">
             <tr v-for="item in invoiceItems" :key="item.id" class="py-1">
-              <td class="py-1.5 font-bold leading-tight">
+              <td class="py-1.5 font-bold leading-tight text-[11px]">
                 {{ item.name }}
               </td>
               <td class="text-center font-mono font-bold py-1.5">{{ formatMoney(item.quantity) }}</td>
@@ -92,7 +92,7 @@
       </div>
 
       <!-- 4. Financial Totals -->
-      <div class="py-2 border-b-2 border-dashed border-black text-xs space-y-1.5 text-black">
+      <div class="py-2 border-b-2 border-dashed border-black text-xs space-y-1 text-black">
         <div class="flex justify-between items-center">
           <span class="font-bold">المجموع الفرعي:</span>
           <span class="font-mono font-bold">{{ formatMoney(calculatedSubtotal) }} ج.م</span>
@@ -110,8 +110,8 @@
 
         <!-- GIANT NET TOTAL -->
         <div class="flex justify-between items-center text-sm font-black pt-1.5 border-t-2 border-black">
-          <span class="text-base font-black">الصافي المطلوب:</span>
-          <span class="font-mono text-lg font-black">{{ formatMoney(calculatedNetTotal) }} ج.م</span>
+          <span class="text-sm font-black">الصافي المطلوب:</span>
+          <span class="font-mono text-base font-black">{{ formatMoney(calculatedNetTotal) }} ج.م</span>
         </div>
 
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
@@ -131,17 +131,17 @@
       </div>
 
       <!-- 5. Footer -->
-      <div class="pt-3 text-center text-xs space-y-1 font-bold text-black">
-        <p class="text-sm font-black">شكراً لتعاملكم معنا!</p>
-        <p class="text-[10px]">البضاعة المباعة ترد وتستبدل خلال 14 يوم بالفاتورة</p>
-        <div class="pt-1 text-[9px] font-mono text-slate-700">تمت الطباعة بواسطة منظومة سـرور ERP</div>
+      <div class="pt-2 text-center text-xs space-y-1 font-bold text-black">
+        <p class="text-xs font-black">شكراً لتعاملكم معنا!</p>
+        <p class="text-[9px]">البضاعة المباعة ترد وتستبدل خلال 14 يوم بالفاتورة</p>
+        <div class="pt-0.5 text-[8px] font-mono text-slate-800">تمت الطباعة بواسطة منظومة سـرور ERP</div>
       </div>
 
     </div>
 
     <!-- Error State -->
-    <div v-else class="no-print p-8 text-center text-rose-400 font-bold bg-slate-800 rounded-2xl border border-rose-500/30 max-w-sm">
-      <p class="text-sm">تعذر العثور على بيانات الفاتورة رقم #{{ invoiceId }}</p>
+    <div v-else class="no-print p-8 text-center text-rose-400 font-bold bg-white dark:bg-slate-900 rounded-2xl border border-rose-500/30 max-w-sm">
+      <p class="text-xs">تعذر العثور على بيانات الفاتورة رقم #{{ invoiceId }}</p>
       <button type="button" @click="goBack" class="mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold">
         العودة للـ POS
       </button>
@@ -286,34 +286,50 @@ onMounted(() => {
 
 <style scoped>
 .receipt-card {
-  width: 80mm;
-  max-width: 80mm;
-  min-height: 100mm;
+  width: 78mm;
+  max-width: 78mm;
+  min-height: 80mm;
   font-family: 'Cairo', 'Tajawal', sans-serif !important;
 }
 
 @media print {
-  body, html {
-    background: #ffffff !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
+  @page {
+    size: 80mm auto;
+    margin: 0mm !important;
+    padding: 0mm !important;
   }
+  
+  html, body, #app, .print-wrapper {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-height: auto !important;
+  }
+  
   .no-print {
     display: none !important;
   }
+  
   .receipt-card {
-    width: 78mm !important;
-    max-width: 78mm !important;
-    padding: 2mm !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
+    padding: 1mm !important;
     margin: 0 auto !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
+  
   * {
     color: #000000 !important;
     text-shadow: none !important;
+    background-color: transparent !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
