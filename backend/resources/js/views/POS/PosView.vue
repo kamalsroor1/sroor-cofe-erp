@@ -119,13 +119,13 @@
         </div>
 
         <div v-else-if="filteredItems.length > 0" class="overflow-y-auto max-h-[calc(100vh-210px)] pr-0.5 custom-scrollbar space-y-4" @scroll="onGridScroll">
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             <button
               v-for="item in visibleItems"
               :key="item.id"
               type="button"
               @click="addToCart(item)"
-              class="p-3.5 sm:p-4 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl text-start transition-all duration-200 active:scale-[0.98] flex flex-col justify-between space-y-3 cursor-pointer group shadow-xs hover:shadow-md min-h-[140px]"
+              class="p-4 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl text-start transition-all duration-200 active:scale-[0.98] flex flex-col justify-between space-y-3.5 cursor-pointer group shadow-xs hover:shadow-md min-h-[145px]"
             >
               <!-- Top Row: Code & Stock Badge -->
               <div class="space-y-1.5 w-full">
