@@ -22,7 +22,7 @@
         <div class="lg:col-span-8 space-y-5">
           <!-- Blend Settings Card -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
+            <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>⚙️</span>
               <span>{{ $t('inventory.blend_specs_title') }}</span>
             </h2>
@@ -30,7 +30,7 @@
             <div class="space-y-3">
               <!-- Blend Name -->
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.blend_name') }}</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.blend_name') }}</label>
                 <input
                   v-model="blendName"
                   type="text"
@@ -41,7 +41,7 @@
 
               <!-- Target Weight Presets -->
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.target_weight') }}</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.target_weight') }}</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     v-for="w in presetWeights"
@@ -49,7 +49,7 @@
                     type="button"
                     @click="setTargetWeight(w.value)"
                     class="py-2.5 px-3 rounded-xl border text-xs font-bold transition cursor-pointer text-center"
-                    :class="targetWeightGrams === w.value ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-md' : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'"
+                    :class="targetWeightGrams === w.value ? 'bg-theme-primary text-white font-black border-theme-primary shadow-md' : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800'"
                   >
                     {{ w.label }}
                   </button>
@@ -59,18 +59,18 @@
               <!-- Custom Weight, Roast, Grind -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.custom_weight') }}</label>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-400">{{ $t('inventory.custom_weight') }}</label>
                   <input
                     v-model.number="targetWeightGrams"
                     type="number"
                     min="1"
                     step="1"
-                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-amber-400 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   >
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.roast_type') }}</label>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-400">{{ $t('inventory.roast_type') }}</label>
                   <select
                     v-model="roastType"
                     class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
@@ -83,7 +83,7 @@
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.grind_level') }}</label>
+                  <label class="block text-xs font-bold text-slate-700 dark:text-slate-400">{{ $t('inventory.grind_level') }}</label>
                   <select
                     v-model="grindLevel"
                     class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
@@ -100,8 +100,8 @@
 
           <!-- Components Formulation Card -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 flex items-center gap-2">
                 <span>🫘</span>
                 <span>{{ $t('inventory.raw_beans_components') }}</span>
               </h2>
@@ -129,7 +129,7 @@
                 type="button"
                 @click="addComponentRow"
                 :disabled="!selectedItemIdToAdd"
-                class="px-4 h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black transition disabled:opacity-30 cursor-pointer shrink-0"
+                class="px-4 h-10 bg-theme-primary hover:bg-theme-hover text-white rounded-xl text-xs font-black transition disabled:opacity-30 cursor-pointer shrink-0 shadow-sm"
               >
                 + {{ $t('common.add') }}
               </button>
@@ -192,7 +192,7 @@
             <!-- Extra Spices (Cardamom) -->
             <div class="pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.cardamom_spices') }}</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.cardamom_spices') }}</label>
                 <input
                   v-model.number="cardamomGrams"
                   type="number"
@@ -204,7 +204,7 @@
               </div>
 
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.blend_notes') }}</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.blend_notes') }}</label>
                 <input
                   v-model="notes"
                   type="text"
@@ -219,7 +219,7 @@
         <!-- Right: Financial Breakdown & Direct Cashier (Col span 4) -->
         <div class="lg:col-span-4 space-y-5">
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4 sticky top-6">
-            <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
+            <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
               <span>{{ $t('inventory.blend_cost_summary') }}</span>
             </h2>
@@ -248,7 +248,7 @@
 
             <!-- Customer Selection -->
             <div class="space-y-1.5 pt-3 border-t border-slate-800">
-              <label class="block text-xs font-bold text-slate-300 font-sans">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-sans">
                 {{ $t('contacts.customer') }} <span class="text-rose-500">*</span>
               </label>
               <select

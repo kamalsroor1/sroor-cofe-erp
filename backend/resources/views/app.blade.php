@@ -25,7 +25,19 @@
                 }
 
                 const storedColor = localStorage.getItem('system_theme_color') || 'amber';
-                document.documentElement.setAttribute('data-theme-color', storedColor);
+                const presets = {
+                    amber: '#f59e0b', emerald: '#10b981', blue: '#3b82f6', purple: '#a855f7',
+                    rose: '#f43f5e', orange: '#f97316', teal: '#14b8a6', indigo: '#6366f1'
+                };
+                if (presets[storedColor]) {
+                    document.documentElement.setAttribute('data-theme-color', storedColor);
+                    document.documentElement.style.setProperty('--color-primary', presets[storedColor]);
+                } else if (storedColor.startsWith('#')) {
+                    document.documentElement.setAttribute('data-theme-color', 'custom');
+                    document.documentElement.style.setProperty('--color-primary', storedColor);
+                } else {
+                    document.documentElement.setAttribute('data-theme-color', 'amber');
+                }
             } catch (e) {
                 document.documentElement.classList.add('dark');
             }

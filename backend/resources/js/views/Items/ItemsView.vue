@@ -103,7 +103,7 @@
             type="button"
             @click="setStockStatus('all')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="stockStatus === 'all' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             {{ $t('common.all') }}
           </button>
@@ -170,7 +170,7 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
                 </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
                   {{ item.code || '—' }}
                 </td>
                 <td class="py-3.5 px-4">

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
+import { applyThemeColor } from '../helpers/themeHelper';
 
 export const useAppConfigStore = defineStore('appConfig', {
     state: () => ({
@@ -55,7 +56,7 @@ export const useAppConfigStore = defineStore('appConfig', {
 
                     // Apply theme color
                     if (data.system?.system_theme_color) {
-                        document.documentElement.setAttribute('data-theme-color', data.system.system_theme_color);
+                        applyThemeColor(data.system.system_theme_color);
                     }
                 }
                 return data;
@@ -102,8 +103,7 @@ export const useAppConfigStore = defineStore('appConfig', {
         setThemeColor(color) {
             if (!color) return;
             this.system.system_theme_color = color;
-            localStorage.setItem('system_theme_color', color);
-            document.documentElement.setAttribute('data-theme-color', color);
+            applyThemeColor(color);
         },
 
         /**

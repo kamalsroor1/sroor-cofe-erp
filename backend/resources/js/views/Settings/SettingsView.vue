@@ -107,14 +107,14 @@
                 type="button"
                 @click="selectedSection = sec.id"
                 class="w-full p-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-between gap-3 text-start cursor-pointer group"
-                :class="selectedSection === sec.id ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900'"
+                :class="selectedSection === sec.id ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
               >
                 <div class="flex items-center gap-3 min-w-0">
                   <div
                     class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    :class="selectedSection === sec.id ? 'bg-slate-950/20 text-slate-950' : sec.iconBg"
+                    :class="selectedSection === sec.id ? 'bg-white/20 text-white' : sec.iconBg"
                   >
-                    <component :is="sec.icon" class="w-4.5 h-4.5" :class="selectedSection === sec.id ? 'text-slate-950' : sec.iconColor" />
+                    <component :is="sec.icon" class="w-4.5 h-4.5" :class="selectedSection === sec.id ? 'text-white' : sec.iconColor" />
                   </div>
                   <div class="min-w-0">
                     <div class="truncate">{{ sec.label }}</div>
@@ -226,7 +226,7 @@
                 <!-- Theme Color Palette Grid -->
                 <div class="space-y-3">
                   <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                    اختر اللون الأساسي للسيستم (Theme Accent Color):
+                    اختر من الباليتات الجاهزة (Preset Palettes):
                   </label>
                   
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -236,13 +236,71 @@
                       type="button"
                       @click="selectThemeColor(color.id)"
                       class="p-3.5 rounded-2xl border transition-all flex flex-col items-center gap-2.5 cursor-pointer relative"
-                      :class="form.system_theme_color === color.id ? 'border-theme-primary bg-theme-light ring-2 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'"
+                      :class="form.system_theme_color === color.id ? 'border-theme-primary bg-theme-light ring-2 ring-theme-primary shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'"
                     >
                       <div class="w-8 h-8 rounded-full shadow-md flex items-center justify-center" :style="{ backgroundColor: color.hex }">
                         <span v-if="form.system_theme_color === color.id" class="text-white text-xs font-black">✓</span>
                       </div>
                       <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ color.name }}</span>
                     </button>
+                  </div>
+
+                  <!-- 🎨 Custom Color Picker (من اللوجو أو كود HEX) -->
+                  <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-3">
+                    <div class="flex items-center gap-3">
+                      <div class="relative flex items-center justify-center">
+                        <input
+                          type="color"
+                          v-model="customHexColor"
+                          @input="onCustomColorChange"
+                          class="w-11 h-11 rounded-2xl cursor-pointer border-2 border-slate-300 dark:border-slate-700 p-0.5 bg-transparent overflow-hidden shadow-md"
+                          title="اختر لون مخصص"
+                        />
+                      </div>
+                      <div>
+                        <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>لون مخصص من اللوجو أو الهوية (Custom Color):</span>
+                          <span v-if="form.system_theme_color.startsWith('#')" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-theme-light border border-theme-border text-theme-primary">
+                            مفعل حالياً
+                          </span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                          اختر أي درجة لون بدقة أو استخدم أداة القطارة لسحب اللون من الشعار
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                      <div class="relative flex-1 sm:w-32">
+                        <input
+                          type="text"
+                          v-model="customHexColor"
+                          @input="onCustomColorChange"
+                          placeholder="#10b981"
+                          maxlength="7"
+                          dir="ltr"
+                          class="w-full h-10 px-3 font-mono font-bold text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        @click="pickFromScreen"
+                        class="px-3.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                        title="سحب اللون من الشاشة أو اللوجو"
+                      >
+                        <Pipette class="w-4 h-4 text-theme-primary" />
+                        <span class="hidden sm:inline">قطارة اللوجو</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="onCustomColorChange"
+                        class="px-4 h-10 bg-theme-primary hover:bg-theme-hover text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
+                      >
+                        تطبيق
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -587,6 +645,40 @@ const form = ref({
     telegram_chat_id: '',
 });
 
+const customHexColor = ref('#10b981');
+
+const onCustomColorChange = () => {
+    let hex = customHexColor.value;
+    if (hex) {
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            form.value.system_theme_color = hex;
+            appConfigStore.setThemeColor(hex);
+        }
+    }
+};
+
+const pickFromScreen = async () => {
+    if ('EyeDropper' in window) {
+        try {
+            const eyeDropper = new window.EyeDropper();
+            const result = await eyeDropper.open();
+            if (result?.sRGBHex) {
+                customHexColor.value = result.sRGBHex;
+                onCustomColorChange();
+            }
+        } catch (e) {
+            console.log('EyeDropper cancelled or failed', e);
+        }
+    } else {
+        Swal.fire({
+            icon: 'info',
+            title: 'أداة القطارة',
+            text: 'يمكنك إدخال كود اللون السداسي في الحقل (مثل #10b981) أو الضغط على مربع الألوان لاختياره',
+        });
+    }
+};
+
 const selectThemeColor = (colorId) => {
     form.value.system_theme_color = colorId;
     appConfigStore.setThemeColor(colorId);
@@ -621,6 +713,7 @@ const fetchSettings = async () => {
             telegram_chat_id: s.telegram_chat_id || '',
         };
         if (s.system_theme_color) {
+            if (s.system_theme_color.startsWith('#')) customHexColor.value = s.system_theme_color;
             appConfigStore.setThemeColor(s.system_theme_color);
         }
     } catch (e) {
