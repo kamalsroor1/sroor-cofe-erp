@@ -32,7 +32,7 @@ const emit = defineEmits(['apply', 'set-period']);
                     :key="p.id"
                     type="button"
                     class="h-9 px-3 rounded-xl font-bold transition active:scale-95 cursor-pointer text-xs"
-                    :class="filterForm.period === p.id ? 'tab-theme-active' : 'bg-slate-100 text-slate-600 border border-slate-200 hover:text-slate-900 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800 dark:hover:text-white'"
+                    :class="filterForm.period === p.id ? 'tab-theme-active' : 'bg-slate-100 text-slate-600 border border-slate-200 hover:text-slate-900 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:text-white'"
                     @click="$emit('set-period', p.id)"
                 >
                     {{ p.label }}
@@ -44,7 +44,7 @@ const emit = defineEmits(['apply', 'set-period']);
                 <span class="text-slate-500 dark:text-slate-400 font-bold text-xs hidden sm:inline">{{ $t('inventory.store') }}:</span>
                 <select
                     v-model="filterForm.store_id"
-                    class="w-full sm:w-auto h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
+                    class="w-full sm:w-auto h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
                     @change="$emit('apply')"
                 >
                     <option value="all">{{ $t('common.all_stores') }}</option>

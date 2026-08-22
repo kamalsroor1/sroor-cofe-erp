@@ -23,7 +23,7 @@
 
       <form @submit.prevent="submitPurchase" class="space-y-6">
         <!-- Supplier & Metadata Card -->
-        <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
+        <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
           <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
             <Factory class="w-4 h-4" />
             <span>{{ $t('purchases.supplier_po_section') }}</span>
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Items Table Card -->
-        <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
+        <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
               <Package class="w-4 h-4" />
@@ -165,7 +165,7 @@
         </div>
 
         <!-- Financial Summary Card -->
-        <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="space-y-3">
             <div>
               <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">

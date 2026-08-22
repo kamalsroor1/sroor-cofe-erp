@@ -28,7 +28,7 @@ const emit = defineEmits(['close', 'submit']);
                     type="text"
                     required
                     :placeholder="$t('inventory.item_name')"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
+                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
                 >
                 <p v-if="form.errors?.name" class="text-rose-400 text-[10px]">{{ form.errors.name }}</p>
             </div>
@@ -41,7 +41,7 @@ const emit = defineEmits(['close', 'submit']);
                         v-model="form.code"
                         type="text"
                         :placeholder="$t('inventory.barcode_placeholder')"
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
                     >
                 </div>
 
@@ -51,7 +51,7 @@ const emit = defineEmits(['close', 'submit']);
                         v-model="form.category"
                         type="text"
                         :placeholder="$t('inventory.category_placeholder')"
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
                     >
                 </div>
             </div>
@@ -62,7 +62,7 @@ const emit = defineEmits(['close', 'submit']);
                     <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.unit') }} *</label>
                     <select
                         v-model="form.unit"
-                        class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner font-bold"
+                        class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner font-bold"
                     >
                         <option value="كجم">{{ $t('inventory.unit_weight_short') }} (كجم)</option>
                         <option value="جرام">{{ $t('inventory.unit_gram') }}</option>
@@ -78,7 +78,7 @@ const emit = defineEmits(['close', 'submit']);
                         type="number"
                         step="0.001"
                         required
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
                     >
                 </div>
 
@@ -89,7 +89,7 @@ const emit = defineEmits(['close', 'submit']);
                         type="number"
                         step="0.001"
                         required
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
+                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
                     >
                 </div>
             </div>
@@ -101,7 +101,7 @@ const emit = defineEmits(['close', 'submit']);
                     v-model="form.min_stock_level"
                     type="number"
                     step="0.001"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
+                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-theme-primary focus:outline-none shadow-inner"
                 >
             </div>
 
@@ -111,7 +111,7 @@ const emit = defineEmits(['close', 'submit']);
                 <textarea
                     v-model="form.notes"
                     rows="2"
-                    class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
+                    class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
                 ></textarea>
             </div>
         </form>

@@ -74,7 +74,7 @@ const onPaidAmountInput = (e) => {
 </script>
 
 <template>
-    <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0 font-tajawal">
+    <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0 font-tajawal">
         <!-- Subtotal & Discount -->
         <div class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
             <div class="flex items-center justify-between">

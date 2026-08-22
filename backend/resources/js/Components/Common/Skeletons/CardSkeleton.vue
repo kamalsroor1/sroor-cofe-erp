@@ -29,7 +29,7 @@ defineProps({
         </div>
 
         <!-- Optional Chart Placeholder -->
-        <div v-if="hasChart" class="h-44 sm:h-52 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 p-4 flex items-end gap-3 justify-between">
+        <div v-if="hasChart" class="h-44 sm:h-52 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800/80 p-4 flex items-end gap-3 justify-between">
             <Skeleton v-for="i in 7" :key="i" width="w-full" :height="`h-${(i % 4 + 2) * 8}`" rounded="rounded-t-lg" />
         </div>
 

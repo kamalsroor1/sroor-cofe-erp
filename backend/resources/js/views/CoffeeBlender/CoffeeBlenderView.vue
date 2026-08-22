@@ -21,7 +21,7 @@
         <!-- Left: Blender Studio Workspace (Col span 8) -->
         <div class="lg:col-span-8 space-y-5">
           <!-- Blend Settings Card -->
-          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>⚙️</span>
               <span>{{ $t('inventory.blend_specs_title') }}</span>
@@ -99,7 +99,7 @@
           </div>
 
           <!-- Components Formulation Card -->
-          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 flex items-center gap-2">
                 <span>🫘</span>
@@ -165,7 +165,7 @@
                       type="number"
                       min="0"
                       max="100"
-                      class="w-12 h-7 text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-theme-primary focus:outline-none"
+                      class="w-12 h-7 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-theme-primary focus:outline-none"
                     >
                     <span class="text-slate-500 dark:text-slate-400 text-[10px]">%</span>
                   </div>
@@ -218,7 +218,7 @@
 
         <!-- Right: Financial Breakdown & Direct Cashier (Col span 4) -->
         <div class="lg:col-span-4 space-y-5">
-          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4 sticky top-6">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4 sticky top-6">
             <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
               <span>{{ $t('inventory.blend_cost_summary') }}</span>

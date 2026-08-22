@@ -290,7 +290,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 v-if="loading"
                 v-for="n in skeletonRows"
                 :key="`msk-${n}`"
-                class="animate-pulse p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3"
+                class="animate-pulse p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3"
             >
                 <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
                     <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/3"></div>
@@ -309,7 +309,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 <div
                     v-for="(row, index) in rows"
                     :key="row[selectKey] ?? index"
-                    class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs transition"
+                    class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs transition"
                     :class="[
                         rowClickable ? 'cursor-pointer active:scale-99' : '',
                         selectable && isRowSelected(row) ? 'ring-2 ring-amber-500 bg-amber-500/5 dark:bg-amber-500/10' : '',

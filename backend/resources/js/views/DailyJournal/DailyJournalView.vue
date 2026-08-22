@@ -9,7 +9,7 @@
         <template #actions>
           <div class="flex items-center gap-2 flex-wrap">
             <!-- Date Filter Picker -->
-            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
+            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
               <Calendar class="w-4 h-4 text-amber-400" />
               <input
                 v-model="selectedDate"
@@ -114,7 +114,7 @@
       <!-- Financial Metrics Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <!-- Total Inflow -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.total_receipts_in') }}</span>
           <div class="text-xl font-black text-emerald-400 font-mono">
             +{{ formatMoney(summary.total_cash_in || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
@@ -123,7 +123,7 @@
         </div>
 
         <!-- Total Outflow -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.total_disbursements_out') }}</span>
           <div class="text-xl font-black text-rose-400 font-mono">
             -{{ formatMoney(summary.total_cash_out || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
@@ -132,7 +132,7 @@
         </div>
 
         <!-- Net Cash Today -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.net_cash_flow') }}</span>
           <div
             class="text-xl font-black font-mono"
@@ -154,7 +154,7 @@
       </div>
 
       <!-- Journal Tabs (Invoices vs Expenses) -->
-      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Tabs Header -->
         <div class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/60 p-1.5 rounded-xl gap-2">
           <button

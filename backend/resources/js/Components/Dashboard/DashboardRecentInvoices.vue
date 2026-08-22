@@ -87,7 +87,7 @@ const invoiceColumns = computed(() => [
 
             <!-- Mobile Card Custom Slot -->
             <template #mobile-card="{ row }">
-                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
                     <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                         <router-link :to="`/invoices/${row.id}`" class="font-mono font-black text-sm text-theme-primary hover:underline">
                             #{{ row.invoice_number }}

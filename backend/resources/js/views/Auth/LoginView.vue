@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 selection:bg-amber-500 selection:text-white relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 sm:p-6 selection:bg-amber-500 selection:text-white relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
     <!-- Theme Switcher floating button on top left -->
     <div class="absolute top-4 left-4 z-20">
       <button
@@ -56,7 +56,7 @@
               autofocus
               dir="ltr"
               :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
-              class="w-full h-11 pr-10 pl-4 bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-inner"
+              class="w-full h-11 pr-10 pl-4 bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
             <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -78,7 +78,7 @@
               required
               dir="ltr"
               :placeholder="$t('auth.password_placeholder')"
-              class="w-full h-11 pr-10 pl-11 bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-inner"
+              class="w-full h-11 pr-10 pl-11 bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
             <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -101,7 +101,7 @@
             <input
               v-model="form.remember"
               type="checkbox"
-              class="w-4 h-4 rounded-lg bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-amber-500 focus:ring-theme-primary/20 focus:ring-offset-0 transition-all cursor-pointer"
+              class="w-4 h-4 rounded-lg bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-amber-500 focus:ring-theme-primary/20 focus:ring-offset-0 transition-all cursor-pointer"
             >
             <span class="text-xs text-slate-600 dark:text-slate-400 font-bold font-tajawal">{{ $t('auth.remember_me') }}</span>
           </label>
@@ -138,7 +138,7 @@
           <button
             type="button"
             @click="fillAccount('01012316954', 'password')"
-            class="p-2.5 bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
+            class="p-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
           >
             <div class="flex items-center gap-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform shrink-0" />
@@ -150,7 +150,7 @@
           <button
             type="button"
             @click="fillAccount('01140003020', 'password')"
-            class="p-2.5 bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
+            class="p-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
           >
             <div class="flex items-center gap-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform shrink-0" />

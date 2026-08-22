@@ -30,7 +30,7 @@ const maxDailySales = computed(() => {
                     </h3>
                     <p class="text-xs lg:text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">{{ $t('dashboard.seven_days_trend_desc') }}</p>
                 </div>
-                <div class="text-start sm:text-left bg-slate-50 dark:bg-slate-950/80 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div class="text-start sm:text-left bg-slate-50 dark:bg-slate-900/90 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
                     <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{ $t('dashboard.avg_invoice_val') }}</span>
                     <span class="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
                         {{ formatMoney(analytics?.period?.basket_size) }} {{ $t('common.currency') }}

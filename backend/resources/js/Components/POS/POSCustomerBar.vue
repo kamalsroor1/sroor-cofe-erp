@@ -14,7 +14,7 @@ const { formatMoney } = useMoney();
 </script>
 
 <template>
-    <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-950/60 shrink-0 font-tajawal">
+    <div class="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 shrink-0 font-tajawal">
         <div
             class="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 cursor-pointer transition shadow-xs"
             @click="$emit('open-customer-modal')"

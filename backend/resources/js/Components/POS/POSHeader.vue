@@ -45,7 +45,7 @@ defineEmits(['toggle-numpad']);
             <button
                 type="button"
                 class="h-9 px-3 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                :class="showNumpad ? 'bg-theme-primary text-white font-bold font-black border-amber-400 shadow-md' : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                :class="showNumpad ? 'bg-theme-primary text-white font-bold font-black border-amber-400 shadow-md' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
                 @click="$emit('toggle-numpad')"
             >
                 <span>🔢</span>
@@ -54,7 +54,7 @@ defineEmits(['toggle-numpad']);
 
             <router-link
                 to="/invoices"
-                class="h-9 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5 transition"
+                class="h-9 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5 transition"
             >
                 <span>🧾</span>
                 <span>{{ $t('pos.invoices_list') }}</span>

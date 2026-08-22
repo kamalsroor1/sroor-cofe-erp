@@ -24,7 +24,7 @@
       </div>
 
       <!-- Center: Active Shift Indicator -->
-      <div class="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl text-xs">
+      <div class="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl text-xs">
         <div class="w-2 h-2 rounded-full" :class="activeShift ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"></div>
         <span v-if="activeShift" class="font-bold text-slate-700 dark:text-slate-300">
           {{ $t('pos.shift_label') }} <span class="font-mono text-theme-primary">{{ activeShift.shift_number }}</span>
@@ -60,7 +60,7 @@
               v-model="searchQuery"
               @keydown.enter="handleBarcodeScan"
               type="text"
-              class="w-full h-11 pr-10 pl-4 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none shadow-xs"
+              class="w-full h-11 pr-10 pl-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none shadow-xs"
               :placeholder="$t('pos.search_scan_placeholder')"
               autofocus
             >
@@ -102,7 +102,7 @@
             :key="item.id"
             type="button"
             @click="addToCart(item)"
-            class="p-3 bg-white dark:bg-slate-950/80 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl text-start transition active:scale-95 flex flex-col justify-between space-y-2 cursor-pointer group shadow-xs dark:shadow-md"
+            class="p-3 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl text-start transition active:scale-95 flex flex-col justify-between space-y-2 cursor-pointer group shadow-xs dark:shadow-md"
           >
             <div>
               <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
@@ -136,7 +136,7 @@
       </div>
 
       <!-- Left: Active Cart Drawer (col-span-5) -->
-      <div class="lg:col-span-5 flex flex-col bg-white dark:bg-slate-950 p-4 space-y-3 justify-between h-full border-s border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="lg:col-span-5 flex flex-col bg-white dark:bg-slate-900 p-4 space-y-3 justify-between h-full border-s border-slate-200 dark:border-slate-800 shadow-sm">
         <!-- Customer & Price Tier Header -->
         <div class="space-y-2 pb-2 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2">
@@ -237,7 +237,7 @@
                 type="number"
                 :step="isDiscreteUnit(item.unit) ? '1' : '0.001'"
                 :min="isDiscreteUnit(item.unit) ? '1' : '0.001'"
-                class="w-14 h-7 text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-black text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
+                class="w-14 h-7 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-black text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
               >
               <button
                 type="button"
@@ -260,7 +260,7 @@
         </div>
 
         <!-- Checkout Bottom Area -->
-        <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <!-- Discount & Totals -->
           <div class="space-y-1.5 font-mono text-xs">
             <div class="flex justify-between text-slate-400 font-sans">

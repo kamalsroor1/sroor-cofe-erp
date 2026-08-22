@@ -44,7 +44,7 @@ defineProps({
             <div
                 v-for="r in rowsCount"
                 :key="r"
-                class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs"
+                class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs"
             >
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2">
                     <Skeleton width="w-32" height="h-4" rounded="rounded-md" />

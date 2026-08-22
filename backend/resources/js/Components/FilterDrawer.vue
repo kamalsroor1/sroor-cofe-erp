@@ -32,7 +32,7 @@ onUnmounted(() => {
                 <!-- Backdrop -->
                 <div
                     @click="emit('close')"
-                    class="fixed inset-0 bg-white dark:bg-slate-950/80 backdrop-blur-xs transition-opacity"
+                    class="fixed inset-0 bg-white dark:bg-slate-900/90 backdrop-blur-xs transition-opacity"
                 />
 
                 <!-- Slide-Over Drawer Container -->
@@ -72,7 +72,7 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Drawer Footer (Sticky Actions) -->
-                        <div class="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between gap-3 shrink-0">
+                        <div class="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shrink-0">
                             <button
                                 @click="emit('reset')"
                                 type="button"

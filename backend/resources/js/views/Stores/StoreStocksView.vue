@@ -18,7 +18,7 @@
       </PageHeader>
 
       <!-- Filters Bar -->
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Store Selector Dropdown -->
         <div class="flex items-center gap-2">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap font-tajawal">
@@ -82,7 +82,7 @@
       </div>
 
       <!-- Stocks Table -->
-      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Loading State -->
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>

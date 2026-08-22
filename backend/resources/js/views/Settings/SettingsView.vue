@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-6xl mx-auto font-tajawal pb-12">
     <!-- Page Header (Master Level) -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl backdrop-blur-md">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl backdrop-blur-md">
       <div class="flex items-center gap-3.5">
         <!-- Back to Hub Button on Mobile when inside a sub-page -->
         <button
@@ -48,7 +48,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="p-16 text-center bg-white dark:bg-slate-950/60 rounded-3xl border border-slate-200 dark:border-slate-800">
+    <div v-if="isLoading" class="p-16 text-center bg-white dark:bg-slate-800/60 rounded-3xl border border-slate-200 dark:border-slate-800">
       <div class="w-12 h-12 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p class="text-xs text-slate-500 dark:text-slate-300 font-bold">{{ $t('common.loading') }}</p>
     </div>
@@ -62,7 +62,7 @@
             v-for="sec in sections"
             :key="sec.id"
             @click="selectedSection = sec.id"
-            class="p-4.5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all active:scale-[0.98] cursor-pointer shadow-sm dark:shadow-lg flex items-center justify-between gap-4 group"
+            class="p-4.5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all active:scale-[0.98] cursor-pointer shadow-sm dark:shadow-lg flex items-center justify-between gap-4 group"
           >
             <div class="flex items-center gap-4 min-w-0">
               <div
@@ -96,7 +96,7 @@
         <div v-else key="settings-detail" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <!-- Desktop Sidebar Menu (Col 4 - Hidden on mobile drill-down) -->
           <div class="hidden lg:block lg:col-span-4 space-y-2.5">
-            <div class="p-3 bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-1.5">
+            <div class="p-3 bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-1.5">
               <div class="px-3.5 py-2 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 {{ $t('settings.settings_sections_title') }}
               </div>
@@ -129,7 +129,7 @@
             </div>
 
             <!-- Quick Info Box -->
-            <div class="p-4 bg-white dark:bg-slate-950/60 rounded-3xl border border-slate-200 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 space-y-2 shadow-xs">
+            <div class="p-4 bg-white dark:bg-slate-800/60 rounded-3xl border border-slate-200 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 space-y-2 shadow-xs">
               <div class="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold">
                 <ShieldCheck class="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                 <span>{{ $t('settings.secure_management_title') }}</span>
@@ -147,7 +147,7 @@
               <div
                 v-if="selectedSection === 'branding'"
                 key="branding"
-                class="bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
+                class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
               >
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div class="flex items-center gap-3">
@@ -209,7 +209,7 @@
               <div
                 v-else-if="selectedSection === 'appearance'"
                 key="appearance"
-                class="bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
+                class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
               >
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div class="flex items-center gap-3">
@@ -279,7 +279,7 @@
                           placeholder="#10b981"
                           maxlength="7"
                           dir="ltr"
-                          class="w-full h-10 px-3 font-mono font-bold text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                          class="w-full h-10 px-3 font-mono font-bold text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                         />
                       </div>
 
@@ -338,7 +338,7 @@
               <div
                 v-else-if="selectedSection === 'printing'"
                 key="printing"
-                class="bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
+                class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
               >
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div class="flex items-center gap-3">
@@ -447,7 +447,7 @@
               <div
                 v-else-if="selectedSection === 'telegram'"
                 key="telegram"
-                class="bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
+                class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6"
               >
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div class="flex items-center gap-3">

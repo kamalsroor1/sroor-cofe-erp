@@ -242,7 +242,7 @@ const getUserRoleLabel = computed(() => {
 </script>
 
 <template>
-    <div class="h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-amber-500 selection:text-white transition-colors duration-200" dir="rtl">
+    <div class="h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-amber-500 selection:text-white transition-colors duration-200" dir="rtl">
         <!-- Desktop Sidebar Navigation (Static in Flow on lg) -->
         <aside
             id="main-sidebar"
@@ -447,7 +447,7 @@ const getUserRoleLabel = computed(() => {
         </Transition>
 
         <!-- Main Wrapper: Impersonation Banner + Header + Page Content -->
-        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
             <!-- Super Admin Impersonation Alert Banner -->
             <div v-if="$page.props.auth?.is_impersonating" class="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-900 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs font-bold font-tajawal z-40 border-b border-purple-500/30 shadow-md shrink-0">
                 <div class="flex items-center gap-2">
@@ -583,7 +583,7 @@ const getUserRoleLabel = computed(() => {
                                     <div
                                         v-for="(n, nIdx) in notifications"
                                         :key="nIdx"
-                                        class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                                        class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition"
                                     >
                                         <div class="flex items-center gap-2">
                                             <Bell class="w-3.5 h-3.5 text-theme-primary shrink-0" />
@@ -727,7 +727,7 @@ const getUserRoleLabel = computed(() => {
                         <div
                             v-for="(n, nIdx) in notifications"
                             :key="nIdx"
-                            class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                            class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition"
                         >
                             <div class="flex items-center gap-2.5">
                                 <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="n.type === 'danger' ? 'bg-rose-500 animate-pulse' : (n.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500')"></span>
@@ -760,7 +760,7 @@ const getUserRoleLabel = computed(() => {
             <div
                 v-if="showStoreModal"
                 @click="showStoreModal = false"
-                class="fixed inset-0 z-50 bg-white dark:bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+                class="fixed inset-0 z-50 bg-white dark:bg-slate-800/60 backdrop-blur-xs flex items-center justify-center p-4"
             >
                 <div @click.stop class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl space-y-3 font-tajawal text-slate-900 dark:text-white">
                     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">

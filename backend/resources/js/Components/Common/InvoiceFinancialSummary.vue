@@ -47,7 +47,7 @@ const formatMoney = (val) => {
                     type="number"
                     step="0.01"
                     min="0"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-theme-primary font-mono font-bold focus:outline-none shadow-inner"
+                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-theme-primary font-mono font-bold focus:outline-none shadow-inner"
                     @input="$emit('update:discountAmount', $event.target.value)"
                 >
             </div>
@@ -66,7 +66,7 @@ const formatMoney = (val) => {
                     type="number"
                     step="0.01"
                     min="0"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
+                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
                     @input="$emit('update:paidAmount', $event.target.value)"
                 >
             </div>
@@ -79,7 +79,7 @@ const formatMoney = (val) => {
                     type="number"
                     step="0.01"
                     min="0"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
+                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-mono font-black focus:outline-none shadow-inner"
                     @input="$emit('update:refundAmount', $event.target.value)"
                 >
                 <p class="text-[10px] text-slate-400 font-tajawal mt-0.5">

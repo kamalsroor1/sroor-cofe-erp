@@ -4,7 +4,7 @@
       <div
         v-if="isModalOpen"
         @click.self="closeModal"
-        class="fixed inset-0 bg-white dark:bg-slate-950/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 select-none font-tajawal"
+        class="fixed inset-0 bg-white dark:bg-slate-900/90 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 select-none font-tajawal"
         dir="rtl"
       >
         <Transition name="modal-zoom">
@@ -101,7 +101,7 @@
                 </div>
 
                 <!-- Metadata Chips -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-400 text-[11px]">
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-slate-400 text-[11px]">
                   <div class="flex items-center gap-1.5">
                     <HardDrive class="w-4 h-4 text-amber-400" />
                     <span>{{ $t('app_update.file_size') }}</span>
@@ -155,7 +155,7 @@
               </div>
 
               <!-- Footer Action Buttons -->
-              <div class="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 flex items-center gap-3">
+              <div class="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex items-center gap-3">
                 <button
                   type="button"
                   @click="startDownloadAndInstall"

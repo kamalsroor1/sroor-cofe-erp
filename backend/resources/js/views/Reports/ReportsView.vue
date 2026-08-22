@@ -19,7 +19,7 @@
       </PageHeader>
 
       <!-- Global Filter Bar -->
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
         <!-- Preset Periods -->
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-1.5">
@@ -109,28 +109,28 @@
         <!-- 9 Metrics Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Total Sales -->
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.total_sales_revenue') }}</span>
             <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">{{ formatMoney(summary.total_sales) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.invoices_count_label', { count: summary.invoices_count }) }}</span>
           </div>
 
           <!-- Total COGS -->
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.total_cogs_label') }}</span>
             <div class="text-2xl font-black text-rose-400 font-mono">{{ formatMoney(summary.total_cogs) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.total_cogs_desc') }}</span>
           </div>
 
           <!-- Gross Profit & Margin -->
-          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
             <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{ $t('reports.gross_profit_label') }}</span>
             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(summary.gross_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-emerald-500 font-bold">{{ $t('reports.gross_margin_label', { pct: summary.margin_percentage }) }}</span>
           </div>
 
           <!-- Operating Expenses -->
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.operating_expenses_label') }}</span>
             <div class="text-2xl font-black text-amber-400 font-mono">{{ formatMoney(summary.total_expenses) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.expenses_count_label', { count: summary.expenses_count }) }}</span>
@@ -149,14 +149,14 @@
           </div>
 
           <!-- Cash Collected -->
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.cash_collected_treasury') }}</span>
             <div class="text-xl font-black text-cyan-400 font-mono">{{ formatMoney(summary.total_paid) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.cash_collected_sub') }}</span>
           </div>
 
           <!-- Receivables in Period -->
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.remaining_receivables_period') }}</span>
             <div class="text-xl font-black text-amber-400 font-mono">{{ formatMoney(summary.total_remaining) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.total_customers_debt_sub', { amount: formatMoney(summary.total_customers_debt) }) }}</span>
@@ -165,7 +165,7 @@
       </div>
 
       <!-- TAB 2: Items Profitability -->
-      <div v-else-if="activeTab === 'items'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div v-else-if="activeTab === 'items'" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.items_profitability_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.items_count_badge', { count: itemProfits.length }) }}</span>
@@ -201,7 +201,7 @@
       </div>
 
       <!-- TAB 3: Stores Comparison -->
-      <div v-else-if="activeTab === 'stores'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div v-else-if="activeTab === 'stores'" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.stores_comparison_sub') }}</h3>
         </div>
@@ -236,7 +236,7 @@
       </div>
 
       <!-- TAB 4: Customers Analytics -->
-      <div v-else-if="activeTab === 'customers'" :key="activeTab" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div v-else-if="activeTab === 'customers'" :key="activeTab" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.top_customers_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.top_50_customers_sub') }}</span>
@@ -272,7 +272,7 @@
       </div>
 
       <!-- TAB 5: Operational Expenses -->
-      <div v-else-if="activeTab === 'expenses'" :key="activeTab" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div v-else-if="activeTab === 'expenses'" :key="activeTab" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.expenses_breakdown_by_cat') }}</h3>
         </div>
@@ -297,22 +297,22 @@
       <div v-else-if="activeTab === 'inventory'" :key="activeTab" class="space-y-6">
         <!-- Stock Valuation Top Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.stock_cost_val_label') }}</span>
             <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">{{ formatMoney(inventoryData.stock_cost_valuation) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.stock_sell_val_label') }}</span>
             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(inventoryData.stock_selling_valuation) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
-          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
             <span class="text-xs font-bold text-emerald-400">{{ $t('reports.expected_profit_val') }}</span>
             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(inventoryData.expected_stock_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
           </div>
         </div>
 
         <!-- Inventory Table -->
-        <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
           <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.items_stock_valuation_title') }}</h3>
             <span class="text-xs text-slate-500 font-mono">{{ $t('reports.items_count_badge', { count: inventoryData.items?.length || 0 }) }}</span>
@@ -351,15 +351,15 @@
       <!-- TAB 7: Treasury Cash Flow -->
       <div v-else-if="activeTab === 'treasury'" :key="activeTab" class="space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.total_inflow_label') }}</span>
             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(treasuryData.total_inflow || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.total_outflow_label') }}</span>
             <div class="text-2xl font-black text-rose-400 font-mono">{{ formatMoney(treasuryData.total_outflow || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.net_cash_flow_label') }}</span>
             <div class="text-2xl font-black text-cyan-400 font-mono">{{ formatMoney(treasuryData.net_cash_flow || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>

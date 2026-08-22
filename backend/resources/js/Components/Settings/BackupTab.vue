@@ -16,7 +16,7 @@ defineEmits(['send-backup-telegram']);
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 flex flex-col justify-between shadow-xs">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 flex flex-col justify-between shadow-xs">
                     <div class="space-y-2">
                         <h3 class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
                             <HardDrive class="w-4 h-4 text-indigo-500" />
@@ -36,7 +36,7 @@ defineEmits(['send-backup-telegram']);
                     </a>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 flex flex-col justify-between shadow-xs">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 flex flex-col justify-between shadow-xs">
                     <div class="space-y-2">
                         <h3 class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
                             <Send class="w-4 h-4 text-sky-500" />

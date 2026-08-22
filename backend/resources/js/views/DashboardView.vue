@@ -145,7 +145,7 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
               <span>إجمالي الأسبوع:</span>
               <span class="text-emerald-500 font-black">{{ formatMoney(periodAnalytics.sales || 0) }} ج.م</span>
             </div>
@@ -255,7 +255,7 @@
           </div>
 
           <!-- Active Cash Shift Summary Box -->
-          <div v-if="activeShift" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs mt-2">
+          <div v-if="activeShift" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs mt-2">
             <div class="flex items-center gap-2">
               <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
               <span class="font-bold text-slate-700 dark:text-slate-300">الوردية المفتوحة (#{{ activeShift.shift_number }}):</span>
@@ -439,7 +439,7 @@
               <div
                 v-for="item in lowStockItems"
                 :key="item.id"
-                class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-rose-500/30 transition flex items-center justify-between gap-3 group"
+                class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/30 transition flex items-center justify-between gap-3 group"
               >
                 <!-- Right: Name & Code -->
                 <div class="min-w-0 flex-1">

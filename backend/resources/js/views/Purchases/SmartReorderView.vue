@@ -39,7 +39,7 @@
       <!-- Urgency & Financial Radar Metrics -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Critical Items -->
-        <div class="p-4 rounded-2xl bg-rose-50/60 dark:bg-slate-950/80 border border-rose-200 dark:border-rose-500/30 shadow-sm dark:shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-rose-50/60 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.critical_shortage_range') }}</span>
             <AlertTriangle class="w-4 h-4 text-rose-400" />
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Warning Items -->
-        <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-950/80 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.warning_supply_range') }}</span>
             <Clock class="w-4 h-4 text-amber-400" />
@@ -63,7 +63,7 @@
         </div>
 
         <!-- Safe Items -->
-        <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.safe_stock_range') }}</span>
             <ShieldCheck class="w-4 h-4 text-emerald-400" />
@@ -75,7 +75,7 @@
         </div>
 
         <!-- Estimated Total Cost -->
-        <div class="p-4 rounded-2xl bg-purple-50/60 dark:bg-slate-950/80 border border-purple-200 dark:border-purple-500/30 shadow-sm dark:shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-purple-50/60 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.estimated_reorder_cost') }}</span>
             <Sparkles class="w-4 h-4 text-purple-400" />
@@ -88,7 +88,7 @@
       </div>
 
       <!-- Filter Controls Bar -->
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search -->
         <div class="relative flex-1">
           <input
@@ -145,7 +145,7 @@
       </div>
 
       <!-- Reorder Suggestions Table -->
-      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>

@@ -41,7 +41,7 @@
       <!-- Item Financial & Movement Summary Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Total In (الوارد) -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_in') }} {{ $t('inventory.total_in_sub') }}</div>
           <div class="text-xl font-black text-emerald-400 font-mono">
             +{{ formatQty(stats.total_in || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Total Out (المنصرف) -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_out') }} {{ $t('inventory.total_out_sub') }}</div>
           <div class="text-xl font-black text-rose-400 font-mono">
             -{{ formatQty(stats.total_out || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Net Movement (صافي الحركة) -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.net_movement') }}</div>
           <div
             class="text-xl font-black font-mono"
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Current Stock (الرصيد الفعلي) -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.current_stock') }}</div>
           <div class="text-xl font-black text-slate-900 dark:text-white font-mono">
             {{ formatQty(stats.current_scope_stock || item?.current_stock || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
@@ -77,7 +77,7 @@
       </div>
 
       <!-- Date Range & Movement Type Filter Bar -->
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
         <!-- Date Inputs -->
         <div class="flex items-center gap-2 flex-wrap">
           <div class="flex items-center gap-1.5">
@@ -135,7 +135,7 @@
       </div>
 
       <!-- Movements Ledger Table -->
-      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>

@@ -102,7 +102,7 @@ const onHexTextInput = (val) => {
                             :style="form.system_theme_color === p.id ? { borderColor: p.hex, backgroundColor: `${p.hex}15`, boxShadow: `0 0 0 2px ${p.hex}30` } : {}"
                             :class="form.system_theme_color === p.id
                                 ? ''
-                                : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 hover:border-slate-300 dark:hover:border-slate-700'"
+                                : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700'"
                         >
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2.5">
@@ -123,7 +123,7 @@ const onHexTextInput = (val) => {
                 </div>
 
                 <!-- 🎨 Custom Color Picker & Color Swatches -->
-                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                         <div>
                             <h3 class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -191,7 +191,7 @@ const onHexTextInput = (val) => {
                 </div>
 
                 <!-- Live Real-Time Preview Card -->
-                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-4">
                     <h3 class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
                         <Eye class="w-4 h-4 text-theme-primary" />
                         <span>{{ $t('settings.live_preview_title') }}</span>

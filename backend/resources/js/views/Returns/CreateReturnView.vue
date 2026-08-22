@@ -21,7 +21,7 @@
         <!-- Main Form (Col Span 2) -->
         <div class="lg:col-span-2 space-y-5">
           <!-- Return Type & Party Info -->
-          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>🔄</span>
               <span>{{ $t('returns.type_and_party_section') }}</span>
@@ -111,7 +111,7 @@
           </div>
 
           <!-- Items Selection Table -->
-          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
                 <span>📦</span>
@@ -202,7 +202,7 @@
 
         <!-- Sidebar Summary (Col Span 1) -->
         <div class="space-y-4">
-          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
               <span>{{ $t('returns.document_financial_summary') }}</span>

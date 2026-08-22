@@ -147,7 +147,7 @@ const handleLogout = async () => {
                     </template>
                 </div>
 
-                <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
+                <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
                     <div class="font-black text-slate-900 dark:text-white flex items-center gap-1.5 text-xs">
                         <span>⚡</span>
                         <span>{{ $t('super.multi_db_engine_title') }}</span>
@@ -191,7 +191,7 @@ const handleLogout = async () => {
                     </template>
                 </div>
 
-                <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
+                <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
                     <div class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>⚡</span>
                         <span>{{ $t('super.multi_db_arch_title') }}</span>

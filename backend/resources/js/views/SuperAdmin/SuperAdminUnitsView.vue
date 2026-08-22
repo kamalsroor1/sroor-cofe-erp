@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl">
           ⚖️
@@ -34,7 +34,7 @@
     </div>
 
     <!-- Active Units Container -->
-    <div class="bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl space-y-6">
+    <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl space-y-6">
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-black text-slate-900 dark:text-white">الوحدات المفعلة حالياً بالنظام ({{ units.length }})</h2>
@@ -84,7 +84,7 @@
               @keyup.enter="addCustomUnit"
               type="text"
               placeholder="مثال: باليتة، طقم، زوج، باكت، صندوق..."
-              class="flex-1 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
             <button
               type="button"

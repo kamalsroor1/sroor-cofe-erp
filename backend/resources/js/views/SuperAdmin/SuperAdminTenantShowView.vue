@@ -1,14 +1,14 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Loading State -->
-    <div v-if="isLoading" class="p-20 text-center bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+    <div v-if="isLoading" class="p-20 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
       <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p class="text-sm font-bold text-slate-700 dark:text-slate-300">جاري تحميل بيانات المستأجر وإحصائيات المنشأة...</p>
     </div>
 
     <template v-else-if="tenant">
       <!-- Executive Header -->
-      <div class="bg-white dark:bg-slate-950/80 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div class="bg-white dark:bg-slate-900/90 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
           <router-link
             to="/super-admin/tenants"
@@ -85,7 +85,7 @@
 
       <!-- Live Operational Stats Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>المستخدمين</span>
             <span class="text-base">👥</span>
@@ -96,7 +96,7 @@
           <div class="text-[10px] text-slate-400 mt-1 font-sans">مستخدمين نشطين</div>
         </div>
 
-        <div class="bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>الفروع والمخازن</span>
             <span class="text-base">🏪</span>
@@ -107,7 +107,7 @@
           <div class="text-[10px] text-slate-400 mt-1 font-sans">فروع تشغيلية</div>
         </div>
 
-        <div class="bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>الأصناف</span>
             <span class="text-base">📦</span>
@@ -118,7 +118,7 @@
           <div class="text-[10px] text-slate-400 mt-1 font-sans">أصناف مسجلة بالمخزون</div>
         </div>
 
-        <div class="bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>فواتير المبيعات</span>
             <span class="text-base">🧾</span>
@@ -129,7 +129,7 @@
           <div class="text-[10px] text-slate-400 mt-1 font-sans">فاتورة صادرة</div>
         </div>
 
-        <div class="bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1">
+        <div class="bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
             <span>إجمالي المبيعات</span>
             <span class="text-base">💰</span>
@@ -144,7 +144,7 @@
       <!-- Main Columns Grid: Units Customization & Features Overrides -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- ⚖️ Left Column: Allowed Units for This Tenant (6 Cols) -->
-        <div class="lg:col-span-6 bg-white dark:bg-slate-950/80 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
+        <div class="lg:col-span-6 bg-white dark:bg-slate-900/90 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl">
@@ -214,7 +214,7 @@
               @keyup.enter="addCustomUnitDirect"
               type="text"
               placeholder="إضافة وحدة مخصصة أخرى..."
-              class="flex-1 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
             <button
               type="button"
@@ -227,7 +227,7 @@
         </div>
 
         <!-- 🚀 Right Column: Feature Overrides & Configuration (6 Cols) -->
-        <div class="lg:col-span-6 bg-white dark:bg-slate-950/80 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
+        <div class="lg:col-span-6 bg-white dark:bg-slate-900/90 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl">

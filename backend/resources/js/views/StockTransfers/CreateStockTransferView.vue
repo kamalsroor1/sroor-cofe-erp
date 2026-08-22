@@ -19,7 +19,7 @@
 
       <form @submit.prevent="submitTransfer" class="space-y-6">
         <!-- Stores & Date Selection Card -->
-        <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
           <h2 class="text-xs font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
             <span>🏢</span>
             <span>{{ $t('inventory.branches_and_date_section') }}</span>
@@ -87,7 +87,7 @@
         </div>
 
         <!-- Items Selection Card -->
-        <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
               <span>📦</span>

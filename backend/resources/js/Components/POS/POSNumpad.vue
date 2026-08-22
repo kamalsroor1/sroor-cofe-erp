@@ -10,7 +10,7 @@ defineEmits(['press', 'set-target', 'quick-exact']);
 </script>
 
 <template>
-    <div class="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2 font-tajawal">
+    <div class="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2 font-tajawal">
         <div class="flex items-center justify-between text-xs">
             <span class="text-slate-600 dark:text-slate-400 font-bold">{{ $t('pos.numpad_title') }}</span>
             <div class="flex items-center gap-2">

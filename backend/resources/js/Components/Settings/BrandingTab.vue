@@ -47,7 +47,7 @@ const handleLogoDarkChange = (e) => {
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- ☀️ Light Mode Logo Card -->
-                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4 shadow-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4 shadow-xs">
                             <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200 p-2 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
                                 <img
                                     :src="logoLightPreview || '/logo-light.png'"
@@ -70,7 +70,7 @@ const handleLogoDarkChange = (e) => {
                         </div>
 
                         <!-- 🌙 Dark Mode Logo Card -->
-                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4 shadow-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4 shadow-xs">
                             <div class="w-20 h-20 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
                                 <img
                                     :src="logoDarkPreview || '/logo-dark.png'"
@@ -102,7 +102,7 @@ const handleLogoDarkChange = (e) => {
                             v-model="form.company_name"
                             type="text"
                             required
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
                         >
                     </div>
 
@@ -111,7 +111,7 @@ const handleLogoDarkChange = (e) => {
                         <input
                             v-model="form.company_subtitle"
                             type="text"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
                         >
                     </div>
 
@@ -120,7 +120,7 @@ const handleLogoDarkChange = (e) => {
                         <input
                             v-model="form.company_phone"
                             type="text"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
                         >
                     </div>
 
@@ -129,7 +129,7 @@ const handleLogoDarkChange = (e) => {
                         <input
                             v-model="form.company_address"
                             type="text"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
                         >
                     </div>
 
@@ -138,7 +138,7 @@ const handleLogoDarkChange = (e) => {
                         <textarea
                             v-model="form.invoice_footer_note"
                             rows="2"
-                            class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
+                            class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
                         ></textarea>
                     </div>
                 </div>
@@ -147,22 +147,22 @@ const handleLogoDarkChange = (e) => {
                 <div class="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <h3 class="text-xs font-black text-theme-primary">{{ $t('settings.print_options_title') }}</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
                             <input type="checkbox" v-model="form.show_print_logo" class="w-4 h-4 rounded accent-theme-primary focus:ring-0">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.show_print_logo') }}</span>
                         </label>
 
-                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
                             <input type="checkbox" v-model="form.show_print_company_name" class="w-4 h-4 rounded accent-theme-primary focus:ring-0">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.show_print_name') }}</span>
                         </label>
 
-                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
                             <input type="checkbox" v-model="form.thermal_show_customer_balance" class="w-4 h-4 rounded accent-theme-primary focus:ring-0">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.show_thermal_balance') }}</span>
                         </label>
 
-                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]">
                             <input type="checkbox" v-model="form.print_show_qr" class="w-4 h-4 rounded accent-theme-primary focus:ring-0">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.show_qr') }}</span>
                         </label>

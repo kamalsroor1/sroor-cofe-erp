@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal pb-12">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl backdrop-blur-md">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl backdrop-blur-md">
       <div class="flex items-center gap-3.5">
         <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 p-0.5 shadow-lg shadow-purple-500/20 text-white flex items-center justify-center shrink-0">
           <Rocket class="w-6 h-6" />
@@ -31,7 +31,7 @@
 
     <!-- KPI Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
+      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.current_active_version') }}</span>
           <span class="text-xl font-black text-emerald-400 mt-1 block font-mono">
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
+      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.total_inapp_downloads') }}</span>
           <span class="text-xl font-black text-amber-400 mt-1 block font-mono">
@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <div class="p-5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
+      <div class="p-5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.published_releases_count') }}</span>
           <span class="text-xl font-black text-purple-400 mt-1 block font-mono">
@@ -69,7 +69,7 @@
     </div>
 
     <!-- Releases List -->
-    <div class="bg-white dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl space-y-4">
+    <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-sm font-black text-white flex items-center gap-2">
           <HardDrive class="w-4.5 h-4.5 text-purple-400" />

@@ -39,7 +39,7 @@
         <div
           v-for="store in stores"
           :key="store.id"
-          class="bg-white dark:bg-slate-950/80 border rounded-2xl p-5 transition-all relative overflow-hidden flex flex-col justify-between group shadow-sm dark:shadow-lg"
+          class="bg-white dark:bg-slate-900/90 border rounded-2xl p-5 transition-all relative overflow-hidden flex flex-col justify-between group shadow-sm dark:shadow-lg"
           :class="[
             store.is_main ? 'border-theme-primary shadow-theme-primary ring-1 ring-theme-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
             !store.is_active ? 'opacity-60 grayscale-[50%]' : ''
@@ -335,7 +335,7 @@
                   type="checkbox"
                   :value="user.id"
                   v-model="assignedUserIds"
-                  class="w-4 h-4 rounded bg-white dark:bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
+                  class="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
                 >
                 <div>
                   <div class="text-xs font-bold text-slate-900 dark:text-white font-tajawal">{{ user.name }}</div>

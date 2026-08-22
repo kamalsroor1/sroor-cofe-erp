@@ -120,7 +120,7 @@ const onTouchEnd = () => {
                             v-model="customerSearch"
                             type="text"
                             :placeholder="$t('pos.search_customer_placeholder')"
-                            class="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary shadow-inner"
+                            class="w-full h-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary shadow-inner"
                         />
                     </div>
 

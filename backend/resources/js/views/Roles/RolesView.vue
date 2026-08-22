@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
             <ShieldCheck class="w-5 h-5" />
@@ -47,7 +47,7 @@
             :key="r.id"
             @click="selectRole(r)"
             class="p-4 rounded-2xl border text-start transition cursor-pointer"
-            :class="selectedRole?.id === r.id ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30 shadow-md' : 'bg-white dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'"
+            :class="selectedRole?.id === r.id ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30 shadow-md' : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'"
           >
             <div class="text-sm font-bold mb-1" :class="selectedRole?.id === r.id ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-900 dark:text-white'">{{ r.label }}</div>
             <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
@@ -67,7 +67,7 @@
           <div
             v-for="(mod, modKey) in permissionModules"
             :key="modKey"
-            class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3"
+            class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3"
           >
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <div class="flex items-center gap-2">

@@ -105,7 +105,7 @@ const increaseQty = () => {
             @touchstart="onTouchStart"
             @touchmove="onTouchMove"
             @touchend="onTouchEnd"
-            class="relative z-10 p-3 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-2.5 group hover:border-slate-300 dark:hover:border-slate-700 transition-transform duration-150 ease-out shadow-xs"
+            class="relative z-10 p-3 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5 group hover:border-slate-300 dark:hover:border-slate-700 transition-transform duration-150 ease-out shadow-xs"
             :style="swipeOffset > 0 ? { transform: `translateX(-${swipeOffset}px)` } : {}"
         >
             <div class="flex items-center justify-between gap-2">

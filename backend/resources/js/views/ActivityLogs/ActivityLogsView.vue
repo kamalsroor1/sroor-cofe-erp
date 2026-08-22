@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
             <Activity class="w-5 h-5" />
@@ -25,25 +25,25 @@
 
       <!-- 4 Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-slate-400 text-xs font-bold">{{ $t('activity.today_total') }}</div>
           <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">{{ stats.today_total || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_total_desc') }}</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-rose-400 text-xs font-bold">{{ $t('activity.today_critical') }}</div>
           <div class="text-2xl font-black text-rose-400 font-mono">{{ stats.today_critical || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_critical_desc') }}</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-amber-400 text-xs font-bold">{{ $t('activity.today_users') }}</div>
           <div class="text-2xl font-black text-amber-400 font-mono">{{ stats.today_users || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_users_desc') }}</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-cyan-400 text-xs font-bold">{{ $t('activity.today_stores') }}</div>
           <div class="text-2xl font-black text-cyan-400 font-mono">{{ stats.today_stores || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_stores_desc') }}</div>
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Filter Controls -->
-      <div class="p-4 bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-3">
+      <div class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Search -->
           <div class="relative">
@@ -98,7 +98,7 @@
       </div>
 
       <!-- Logs Timeline / List -->
-      <div class="bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+      <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
           <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p class="text-xs text-slate-400">{{ $t('activity.loading_logs') }}</p>
@@ -175,7 +175,7 @@
 
       <!-- Payload Details Modal -->
       <div v-if="selectedLog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <Activity class="w-4 h-4 text-cyan-400" />

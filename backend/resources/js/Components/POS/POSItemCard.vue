@@ -81,7 +81,7 @@ const onAddQty = (qty) => {
         </div>
 
         <!-- Direct Quick Weight Steppers Bar (For Coffee & Weight Items) -->
-        <div v-if="isWeightBased" class="p-1.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-4 gap-1.5">
+        <div v-if="isWeightBased" class="p-1.5 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-4 gap-1.5">
             <button
                 @click.stop="onAddQty(0.125)"
                 type="button"

@@ -31,7 +31,7 @@ const { formatMoney } = useMoney();
                         </p>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs space-y-2 font-mono">
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-xs space-y-2 font-mono">
                         <div class="flex items-center justify-between text-slate-700 dark:text-slate-300">
                             <span class="font-tajawal">{{ $t('common.total') }}:</span>
                             <span class="font-black text-emerald-600 dark:text-emerald-400 text-sm">{{ formatMoney(invoice.net_total) }} {{ $t('common.currency') }}</span>

@@ -127,7 +127,7 @@ onUnmounted(() => {
         <!-- Trigger Button -->
         <div
             @click="toggleDropdown"
-            class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-theme-primary/50 shadow-inner"
+            class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-theme-primary/50 shadow-inner"
             :class="[
                 isOpen ? 'border-amber-500 ring-2 ring-amber-500/20' : '',
                 selectedOption ? 'font-bold' : 'text-slate-500 dark:text-slate-400'
@@ -166,7 +166,7 @@ onUnmounted(() => {
             class="absolute z-50 right-0 left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         >
             <!-- Search Bar in Dropdown -->
-            <div v-if="searchable" class="p-2 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/50">
+            <div v-if="searchable" class="p-2 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/50">
                 <div class="relative">
                     <input
                         ref="searchInputRef"
