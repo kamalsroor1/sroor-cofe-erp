@@ -193,16 +193,23 @@ final class GetDashboardOverviewAction
         }
 
         // 12. Recent Invoices
-        $recentInvoices = $todayInvoices->take(6)->map(fn($inv) => [
-            'id'             => $inv->id,
-            'invoice_number' => $inv->invoice_number,
-            'customer_name'  => $inv->customer?->name ?? 'عميل نقدي',
-            'net_total'      => (float)$inv->net_total,
-            'paid_amount'    => (float)$inv->paid_amount,
-            'payment_type'   => $inv->payment_type,
-            'status'         => $inv->status,
-            'created_at'     => $inv->created_at?->toTimeString(),
-        ]);
+        $recentInvoices = Invoice::with(['customer', 'store'])
+            ->where('status', '!=', 'cancelled')
+            ->when($storeFilter, fn($q) => $q->where('store_id', $storeFilter))
+            ->latest('id')
+            ->take(8)
+            ->get()
+            ->map(fn($inv) => [
+                'id'               => $inv->id,
+                'invoice_number'   => $inv->invoice_number,
+                'customer_name'    => $inv->customer?->name ?? 'عميل نقدي',
+                'invoice_date'     => $inv->invoice_date?->toDateString() ?? $inv->created_at?->toDateString(),
+                'net_total'        => (float)$inv->net_total,
+                'paid_amount'      => (float)$inv->paid_amount,
+                'remaining_amount' => (float)$inv->remaining_amount,
+                'payment_type'     => $inv->payment_type,
+                'status'           => $inv->status,
+            ]);
 
         return [
             'active_store' => $activeStore ? [

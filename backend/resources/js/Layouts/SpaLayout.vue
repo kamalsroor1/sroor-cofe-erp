@@ -28,8 +28,12 @@
         </router-link>
       </div>
 
-      <!-- Center / Store Context Switcher (Desktop) - Only on Tenant Mode -->
-      <div v-if="!isSuperAdminPanel" class="hidden sm:flex items-center gap-2">
+      <!-- Center / Live Clock & Store Switcher -->
+      <div v-if="!isSuperAdminPanel" class="hidden sm:flex items-center gap-3">
+        <!-- Live Date & Clock -->
+        <div class="hidden xl:flex items-center text-xs font-bold text-slate-600 dark:text-slate-300 font-mono px-3 py-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+          <span>{{ currentTimeStr }}</span>
+        </div>
         <div v-if="authStore.stores?.length > 1" class="relative">
           <select
             :value="authStore.currentStore?.id"
