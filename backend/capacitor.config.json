@@ -1,6 +1,6 @@
 {
-  "appId": "com.sroor.cofe.erp",
-  "appName": "سرور كوفي ERP",
+  "appId": "com.sroor.cloud.erp",
+  "appName": "منظومة ERP | Cloud POS",
   "webDir": "public",
   "bundledWebRuntime": false,
   "server": {

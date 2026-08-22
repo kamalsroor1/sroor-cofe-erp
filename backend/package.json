@@ -4,6 +4,9 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "cap:sync": "npx cap sync android",
+        "cap:build": "vite build && npx cap sync android",
+        "cap:open": "npx cap open android",
         "e2e:all": "npx playwright test --config=../playwright.config.js",
         "e2e:desktop": "npx playwright test --config=../playwright.config.js --project=desktop",
         "e2e:tablet": "npx playwright test --config=../playwright.config.js --project=tablet",
