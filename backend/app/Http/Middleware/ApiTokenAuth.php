@@ -69,8 +69,14 @@ class ApiTokenAuth
             ], 401);
         }
 
-        // Set authenticated user for this request
+        // Set authenticated user for this request across guards
         Auth::setUser($user);
+        if (function_exists('tenant') && tenant()) {
+            Auth::guard('tenant')->setUser($user);
+        } else {
+            Auth::guard('super_admin')->setUser($user);
+            Auth::guard('central')->setUser($user);
+        }
         $request->setUserResolver(fn () => $user);
 
         // Set store context from header
