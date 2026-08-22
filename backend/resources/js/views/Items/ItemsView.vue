@@ -375,8 +375,8 @@
             </div>
           </div>
 
-          <!-- Cost Price, Selling Price & Min Stock Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Cost Price, Retail Price, Min Selling Price (Wholesale) & Min Stock Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.cost_price') }} <span class="text-rose-500">*</span>
@@ -393,14 +393,27 @@
 
             <div>
               <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.selling_price') }} <span class="text-rose-500">*</span>
+                {{ $t('inventory.selling_price') }} (تجزئة) <span class="text-rose-500">*</span>
               </label>
               <input
                 v-model="form.selling_price"
                 type="number"
                 step="0.001"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-400 font-bold font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-500 font-bold font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                placeholder="0.00"
+              >
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                أقل سعر بيع (الجملة)
+              </label>
+              <input
+                v-model="form.min_selling_price"
+                type="number"
+                step="0.001"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-purple-400 font-bold font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 placeholder="0.00"
               >
             </div>
@@ -592,6 +605,7 @@ const form = reactive({
     unit: 'كجم',
     cost_price: '0.000',
     selling_price: '0.000',
+    min_selling_price: '0.000',
     min_stock_level: '0.000',
     notes: '',
 });
@@ -671,6 +685,7 @@ const openCreateModal = () => {
     form.unit = 'كجم';
     form.cost_price = '0.000';
     form.selling_price = '0.000';
+    form.min_selling_price = '0.000';
     form.min_stock_level = '0.000';
     form.notes = '';
     showItemModal.value = true;
@@ -684,6 +699,7 @@ const openEditModal = (item) => {
     form.unit = item.unit || 'كجم';
     form.cost_price = item.cost_price;
     form.selling_price = item.selling_price;
+    form.min_selling_price = item.min_selling_price || item.cost_price || '0.000';
     form.min_stock_level = item.min_stock_level;
     form.notes = item.notes || '';
     showItemModal.value = true;

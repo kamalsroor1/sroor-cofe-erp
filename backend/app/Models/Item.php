@@ -18,6 +18,7 @@ class Item extends Model
         'unit',
         'current_stock',
         'cost_price',
+        'min_selling_price',
         'weighted_avg_cost',
         'selling_price',
         'min_stock_level',
@@ -30,6 +31,7 @@ class Item extends Model
         return [
             'current_stock'     => 'decimal:3',
             'cost_price'        => 'decimal:3',
+            'min_selling_price' => 'decimal:3',
             'weighted_avg_cost' => 'decimal:3',
             'selling_price'     => 'decimal:3',
             'min_stock_level'   => 'decimal:3',

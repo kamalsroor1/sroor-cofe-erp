@@ -203,35 +203,45 @@
           <div
             v-for="(item, idx) in cart"
             :key="item.item_id"
-            class="p-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-2 text-xs"
+            class="p-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-2.5 text-xs shadow-2xs group"
           >
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-slate-900 dark:text-white truncate">{{ item.name }}</div>
-              <div class="text-[10px] text-slate-400 font-mono">
-                {{ formatMoney(item.unit_price) }} {{ $t('common.currency') }} × {{ item.quantity }} = <span class="font-bold text-theme-primary">{{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}</span>
+              <div class="flex items-center gap-1.5">
+                <span class="font-black text-slate-900 dark:text-white truncate">{{ item.name }}</span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {{ item.unit }}
+                </span>
+              </div>
+              <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                {{ formatMoney(item.unit_price) }} × {{ item.quantity }} = <span class="font-black text-theme-primary">{{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}</span>
+              </div>
+              <div v-if="item.cost_price" class="text-[9px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
+                <span>التكلفة: {{ formatMoney(item.cost_price) }}</span>
+                <span v-if="item.min_selling_price && item.min_selling_price > item.cost_price">أقل بيع: {{ formatMoney(item.min_selling_price) }}</span>
               </div>
             </div>
 
-            <!-- Quantity Stepper -->
+            <!-- Quantity Stepper with Discrete Enforcement -->
             <div class="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 @click="decrementQty(idx)"
-                class="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-sm cursor-pointer"
+                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-black text-sm cursor-pointer transition active:scale-90"
               >
                 -
               </button>
               <input
-                v-model="item.quantity"
+                :value="item.quantity"
+                @input="onCartQtyInput(idx, $event.target.value)"
                 type="number"
-                step="0.1"
-                min="0.001"
-                class="w-12 h-7 text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
+                :step="isDiscreteUnit(item.unit) ? '1' : '0.001'"
+                :min="isDiscreteUnit(item.unit) ? '1' : '0.001'"
+                class="w-14 h-7 text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-black text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
               >
               <button
                 type="button"
                 @click="incrementQty(idx)"
-                class="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-sm cursor-pointer"
+                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center font-black text-sm cursor-pointer transition active:scale-90"
               >
                 +
               </button>
@@ -241,9 +251,9 @@
             <button
               type="button"
               @click="removeFromCart(idx)"
-              class="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg transition cursor-pointer"
+              class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
             >
-              <Trash2 class="w-3.5 h-3.5" />
+              <Trash2 class="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -632,12 +642,33 @@ const loadPOSBootstrap = async () => {
     }
 };
 
+const isDiscreteUnit = (unit) => {
+    if (!unit) return true;
+    const u = unit.toString().trim().toLowerCase();
+    const discrete = ['قطعة', 'حبة', 'علبة', 'باكت', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'جوال', 'piece', 'pcs', 'box', 'carton', 'pack', 'unit', 'item'];
+    return discrete.includes(u);
+};
+
+const onCartQtyInput = (idx, rawVal) => {
+    let val = parseFloat(rawVal);
+    if (isNaN(val) || val <= 0) val = 1;
+    if (isDiscreteUnit(cart.value[idx].unit)) {
+        val = Math.max(1, Math.round(val));
+    } else {
+        val = parseFloat(val.toFixed(3));
+    }
+    cart.value[idx].quantity = val;
+};
+
 const addToCart = (item) => {
     const existing = cart.value.find(c => c.item_id === item.id);
     const unitPrice = getItemPrice(item);
+    const isDiscrete = isDiscreteUnit(item.unit);
 
     if (existing) {
-        existing.quantity = parseFloat((existing.quantity + 1).toFixed(3));
+        existing.quantity = isDiscrete
+            ? Math.round(existing.quantity + 1)
+            : parseFloat((existing.quantity + 1).toFixed(3));
     } else {
         cart.value.push({
             item_id: item.id,
@@ -646,17 +677,27 @@ const addToCart = (item) => {
             unit: item.unit,
             quantity: 1,
             unit_price: unitPrice,
+            cost_price: parseFloat(item.cost_price) || 0,
+            min_selling_price: parseFloat(item.min_selling_price || item.price_wholesale || item.cost_price) || 0,
         });
     }
 };
 
 const incrementQty = (idx) => {
-    cart.value[idx].quantity = parseFloat((cart.value[idx].quantity + 1).toFixed(3));
+    const isDiscrete = isDiscreteUnit(cart.value[idx].unit);
+    const step = 1;
+    cart.value[idx].quantity = isDiscrete
+        ? Math.round(cart.value[idx].quantity + step)
+        : parseFloat((cart.value[idx].quantity + step).toFixed(3));
 };
 
 const decrementQty = (idx) => {
-    if (cart.value[idx].quantity > 1) {
-        cart.value[idx].quantity = parseFloat((cart.value[idx].quantity - 1).toFixed(3));
+    const isDiscrete = isDiscreteUnit(cart.value[idx].unit);
+    const step = 1;
+    if (cart.value[idx].quantity > step) {
+        cart.value[idx].quantity = isDiscrete
+            ? Math.round(cart.value[idx].quantity - step)
+            : parseFloat((cart.value[idx].quantity - step).toFixed(3));
     } else {
         removeFromCart(idx);
     }

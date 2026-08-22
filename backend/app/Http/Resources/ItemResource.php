@@ -25,6 +25,7 @@ class ItemResource extends JsonResource
             'category'          => $this->category,
             'unit'              => $this->unit ?? 'كجم',
             'cost_price'        => (float)$this->cost_price,
+            'min_selling_price' => (float)($this->min_selling_price ?? $this->cost_price ?? 0),
             'selling_price'     => $effectivePrice,
             'current_stock'     => $storeStock,
             'total_stock'       => (float)$this->current_stock,
