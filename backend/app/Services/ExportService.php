@@ -44,7 +44,15 @@ class ExportService
      */
     public function exportCustomerStatement(Customer $customer): StreamedResponse
     {
-        $headers = ['التاريخ', 'نوع الحركة', 'رقم السند / الفاتورة', 'المستحق على العميل (مدين)', 'المسدد من العميل (دائن)', 'الرصيد بعد الحركة', 'البيان والملاحظات'];
+        $headers = [
+            __('common.date'),
+            __('inventory.movement_type'),
+            __('inventory.document_number'),
+            __('contacts.statement_debit_col'),
+            __('contacts.statement_credit_col'),
+            __('contacts.statement_balance_col'),
+            __('inventory.notes_and_statement')
+        ];
 
         $entries = collect();
 
@@ -53,11 +61,11 @@ class ExportService
         foreach ($invoices as $inv) {
             $entries->push([
                 'date'       => $inv->invoice_date->format('Y-m-d'),
-                'type'       => 'فاتورة مبيعات',
+                'type'       => __('invoices.sales_invoice'),
                 'ref'        => $inv->invoice_number,
                 'debit'      => $inv->net_total,
                 'credit'     => '0.000',
-                'notes'      => $inv->notes ?? 'فاتورة مبيعات معتمدة',
+                'notes'      => $inv->notes ?? __('invoices.status_confirmed'),
                 'timestamp'  => $inv->created_at->timestamp,
             ]);
         }
@@ -67,11 +75,11 @@ class ExportService
         foreach ($payments as $pay) {
             $entries->push([
                 'date'       => $pay->payment_date->format('Y-m-d'),
-                'type'       => 'سند تحصيل نقدي',
+                'type'       => __('contacts.collect_cash_payment'),
                 'ref'        => $pay->payment_number,
                 'debit'      => '0.000',
                 'credit'     => $pay->amount,
-                'notes'      => $pay->notes ?? 'دفعة نقدية مسددة',
+                'notes'      => $pay->notes ?? __('contacts.cash_receipt_voucher'),
                 'timestamp'  => $pay->created_at->timestamp,
             ]);
         }
@@ -81,11 +89,11 @@ class ExportService
         foreach ($returns as $ret) {
             $entries->push([
                 'date'       => $ret->return_date->format('Y-m-d'),
-                'type'       => 'مرتجع مبيعات',
+                'type'       => __('returns.sales_return'),
                 'ref'        => $ret->return_number,
                 'debit'      => '0.000',
                 'credit'     => $ret->total_amount,
-                'notes'      => $ret->reason ?? 'بضاعة مرتجعة',
+                'notes'      => $ret->reason ?? __('returns.returned_goods'),
                 'timestamp'  => $ret->created_at->timestamp,
             ]);
         }
@@ -109,7 +117,7 @@ class ExportService
             ];
         }
 
-        $filename = "كشف_حساب_عميل_{$customer->name}_" . date('Y-m-d') . ".csv";
+        $filename = "statement_{$customer->id}_" . date('Y-m-d') . ".csv";
         return $this->streamCsv($filename, $headers, $rows);
     }
 
@@ -118,7 +126,15 @@ class ExportService
      */
     public function exportSupplierStatement(Supplier $supplier): StreamedResponse
     {
-        $headers = ['التاريخ', 'نوع الحركة', 'رقم الفاتورة / السند', 'مستحق للمورد (توريد)', 'سداد للمورد (صرف)', 'الرصيد بعد الحركة', 'الملاحظات'];
+        $headers = [
+            __('common.date'),
+            __('inventory.movement_type'),
+            __('inventory.document_number'),
+            __('contacts.statement_debit_col'),
+            __('contacts.statement_credit_col'),
+            __('contacts.statement_balance_col'),
+            __('inventory.notes_and_statement')
+        ];
 
         $entries = collect();
 
@@ -126,11 +142,11 @@ class ExportService
         foreach ($purchases as $pur) {
             $entries->push([
                 'date'       => $pur->purchase_date->format('Y-m-d'),
-                'type'       => 'فاتورة توريد وشراء',
+                'type'       => __('purchases.title'),
                 'ref'        => $pur->purchase_number,
                 'debit'      => $pur->net_total,
                 'credit'     => '0.000',
-                'notes'      => $pur->notes ?? 'توريد بضاعة للمخزن',
+                'notes'      => $pur->notes ?? __('purchases.status_confirmed'),
                 'timestamp'  => $pur->created_at->timestamp,
             ]);
         }
@@ -139,11 +155,11 @@ class ExportService
         foreach ($payments as $pay) {
             $entries->push([
                 'date'       => $pay->payment_date->format('Y-m-d'),
-                'type'       => 'سند صرف نقدي',
+                'type'       => __('contacts.disburse_cash_payment'),
                 'ref'        => $pay->payment_number,
                 'debit'      => '0.000',
                 'credit'     => $pay->amount,
-                'notes'      => $pay->notes ?? 'سداد مستحقات المورد',
+                'notes'      => $pay->notes ?? __('contacts.cash_disbursement_voucher'),
                 'timestamp'  => $pay->created_at->timestamp,
             ]);
         }
@@ -152,11 +168,11 @@ class ExportService
         foreach ($returns as $ret) {
             $entries->push([
                 'date'       => $ret->return_date->format('Y-m-d'),
-                'type'       => 'مرتجع مشتريات',
+                'type'       => __('returns.purchase_return'),
                 'ref'        => $ret->return_number,
                 'debit'      => '0.000',
                 'credit'     => $ret->total_amount,
-                'notes'      => $ret->reason ?? 'مرتجع للمورد',
+                'notes'      => $ret->reason ?? __('returns.returned_goods'),
                 'timestamp'  => $ret->created_at->timestamp,
             ]);
         }
@@ -180,7 +196,7 @@ class ExportService
             ];
         }
 
-        $filename = "كشف_حساب_مورد_{$supplier->name}_" . date('Y-m-d') . ".csv";
+        $filename = "supplier_statement_{$supplier->id}_" . date('Y-m-d') . ".csv";
         return $this->streamCsv($filename, $headers, $rows);
     }
 
@@ -189,7 +205,18 @@ class ExportService
      */
     public function exportInventory(): StreamedResponse
     {
-        $headers = ['كود الصنف', 'اسم الصنف', 'القسم', 'الوحدة', 'الرصيد الحالي بالمخزن', 'سعر التكلفة للوحدة', 'سعر البيع للوحدة', 'إجمالي قيمة المخزون بالتكلفة', 'إجمالي قيمة المخزون بالبيع', 'الربح المتوقع'];
+        $headers = [
+            __('inventory.code'),
+            __('inventory.item_name'),
+            __('inventory.category'),
+            __('inventory.unit'),
+            __('inventory.current_stock'),
+            __('inventory.cost_price'),
+            __('inventory.selling_price'),
+            __('reports.stock_cost_val_label'),
+            __('reports.stock_sell_val_label'),
+            __('reports.expected_profit_val')
+        ];
 
         $items = Item::active()->orderBy('category')->orderBy('name')->get();
         $rows = [];
@@ -202,7 +229,7 @@ class ExportService
             $rows[] = [
                 $itm->code,
                 $itm->name,
-                $itm->category ?? 'عام',
+                $itm->category ?? __('inventory.general_category'),
                 $itm->unit,
                 number_format((float)$itm->current_stock, 3),
                 number_format((float)$itm->cost_price, 2),
@@ -213,7 +240,7 @@ class ExportService
             ];
         }
 
-        $filename = "جرد_وتقييم_المخزون_" . date('Y-m-d') . ".csv";
+        $filename = "inventory_valuation_" . date('Y-m-d') . ".csv";
         return $this->streamCsv($filename, $headers, $rows);
     }
 
@@ -227,17 +254,17 @@ class ExportService
         ?int $storeId = null,
         ?string $filterType = null
     ): StreamedResponse {
-        $filename = "حركة_صنف_{$item->name}_" . date('Y-m-d') . ".csv";
+        $filename = "item_movements_{$item->id}_" . date('Y-m-d') . ".csv";
         $headers = [
-            'التاريخ والوقت',
-            'نوع الحركة',
-            'رقم المستند',
-            'الفرع / المخزن',
-            'الوارد (+)',
-            'المنصرف (-)',
-            'الرصيد بعد الحركة',
-            'المسؤول',
-            'البيان والملاحظات'
+            __('inventory.movement_date_time'),
+            __('inventory.movement_type'),
+            __('inventory.document_number'),
+            __('common.store'),
+            __('inventory.inbound_plus'),
+            __('inventory.outbound_minus'),
+            __('inventory.balance_after_movement'),
+            __('common.user'),
+            __('inventory.notes_and_statement')
         ];
 
         $inTypes = [
@@ -266,17 +293,17 @@ class ExportService
         foreach ($query->get() as $row) {
             $isIn = in_array($row->movement_type, $inTypes);
             $typeLabel = match ($row->movement_type) {
-                'sales_out'            => 'فاتورة بيع',
-                'purchase_in'          => 'توريد مشتريات',
-                'purchase_cancel_out'  => 'إلغاء فاتورة شراء',
-                'purchase_restore_in'  => 'استعادة فاتورة شراء',
-                'cancellation_in'      => 'إلغاء فاتورة بيع',
-                'stock_adjustment_in'  => 'تسوية جرد (زيادة +)',
-                'stock_adjustment_out' => 'تسوية جرد (عجز/هالك -)',
-                'stock_deposit_in'     => 'إيداع / رصيد افتتاحي',
-                'transfer_in'          => 'تحويل وارد',
-                'transfer_out'         => 'تحويل صادر',
-                'sales_return_in'      => 'مرتجع مبيعات',
+                'sales_out'            => __('invoices.sales_invoice'),
+                'purchase_in'          => __('purchases.title'),
+                'purchase_cancel_out'  => __('purchases.cancel_purchase'),
+                'purchase_restore_in'  => __('purchases.title'),
+                'cancellation_in'      => __('invoices.cancel_invoice'),
+                'stock_adjustment_in'  => __('inventory.movement_adj_in'),
+                'stock_adjustment_out' => __('inventory.movement_adj_out'),
+                'stock_deposit_in'     => __('inventory.movement_deposit'),
+                'transfer_in'          => __('inventory.transfers_title'),
+                'transfer_out'         => __('inventory.transfers_title'),
+                'sales_return_in'      => __('returns.sales_return'),
                 default                => $row->movement_type,
             };
 
@@ -284,11 +311,11 @@ class ExportService
                 $row->created_at->format('Y-m-d H:i'),
                 $typeLabel,
                 $row->document_number ?: '—',
-                $row->store?->name ?? 'المخزن الرئيسي',
+                $row->store?->name ?? __('common.main_store_default'),
                 $isIn ? number_format((float)$row->quantity, 3) : '0.000',
                 !$isIn ? number_format((float)$row->quantity, 3) : '0.000',
                 number_format((float)$row->stock_after, 3) . ' ' . $item->unit,
-                $row->user?->name ?? 'النظام',
+                $row->user?->name ?? __('common.system'),
                 $row->notes ?: '—',
             ];
         }
@@ -302,18 +329,18 @@ class ExportService
     public function exportAbcAnalysis(array $abcData, string $filename = 'abc-inventory-analysis.csv'): StreamedResponse
     {
         $headers = [
-            'تصنيف ABC',
-            'كود الصنف',
-            'اسم الصنف',
-            'الرصيد الحالي بالمخزن',
-            'الوحدة',
-            'معدل السحب اليومي',
-            'الكمية المباعة في الفترة',
-            'إجمالي الإيراد (ج.م)',
-            'تكلفة البضاعة المباعة (ج.م)',
-            'مجمل الربح (ج.م)',
-            'هامش الربح %',
-            'نسبة المساهمة في الأرباح %',
+            'ABC Class',
+            __('inventory.code'),
+            __('inventory.item_name'),
+            __('inventory.current_stock'),
+            __('inventory.unit'),
+            __('reports.daily_velocity'),
+            __('reports.sold_quantity'),
+            __('reports.total_revenue_egp'),
+            __('reports.cogs_egp'),
+            __('reports.gross_profit_egp'),
+            __('reports.profit_margin_pct'),
+            __('reports.profit_contribution_pct'),
         ];
 
         $rows = [];

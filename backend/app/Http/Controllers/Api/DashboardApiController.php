@@ -4,28 +4,36 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Actions\Dashboard\GetDashboardApiOverviewAction;
+use App\Actions\Dashboard\GetDashboardOverviewAction;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\DashboardOverviewResource;
+use App\Models\Store;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class DashboardApiController extends Controller
 {
     public function __construct(
-        protected GetDashboardApiOverviewAction $getDashboardOverviewAction
+        private readonly GetDashboardOverviewAction $getDashboardOverviewAction
     ) {}
 
     /**
-     * Get complete consolidated dashboard data in 1 single fast action using API Resources
+     * Get real-time consolidated dashboard analytics
      */
     public function index(Request $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id');
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: $request->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
+
         $storeId = $storeId ? (int)$storeId : null;
 
-        $data = $this->getDashboardOverviewAction->execute($storeId);
+        $data = $this->getDashboardOverviewAction->execute($request->user(), $storeId);
 
-        return (new DashboardOverviewResource($data))->response();
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+            'metrics' => $data['metrics'],
+        ], 200);
     }
 }

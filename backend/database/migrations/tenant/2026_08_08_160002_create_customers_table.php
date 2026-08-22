@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('phone', 50)->nullable()->index();
             $table->string('address')->nullable();
             $table->string('tax_number', 50)->nullable();
+            $table->string('price_tier', 20)->default('retail')->index();
             $table->decimal('current_balance', 12, 3)->default(0.000);
             $table->boolean('is_active')->default(true)->index();
             $table->text('notes')->nullable();

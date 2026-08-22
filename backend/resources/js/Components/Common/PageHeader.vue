@@ -1,6 +1,4 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
-
 defineProps({
     title: {
         type: String,
@@ -30,13 +28,13 @@ defineProps({
         <div class="space-y-1">
             <div class="flex items-center gap-2.5 flex-wrap">
                 <!-- Back button -->
-                <Link
+                <router-link
                     v-if="backHref"
-                    :href="backHref"
+                    :to="backHref"
                     class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-200 dark:border-transparent shrink-0"
                 >
                     →
-                </Link>
+                </router-link>
 
                 <div
                     v-else-if="icon"

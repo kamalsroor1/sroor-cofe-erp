@@ -14,7 +14,7 @@ const emit = defineEmits(['close', 'submit']);
 <template>
     <AppModal
         :show="show"
-        :title="editingItem ? $t('inventory.item_updated') : $t('inventory.add_new_item')"
+        :title="editingItem ? $t('inventory.edit_item') : $t('inventory.add_new_item')"
         :icon="Package"
         max-width="lg"
         @close="$emit('close')"
@@ -65,9 +65,9 @@ const emit = defineEmits(['close', 'submit']);
                         class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none shadow-inner font-bold"
                     >
                         <option value="كجم">{{ $t('inventory.unit_weight_short') }} (كجم)</option>
-                        <option value="جرام">جرام</option>
+                        <option value="جرام">{{ $t('inventory.unit_gram') }}</option>
                         <option value="قطعة">{{ $t('inventory.unit_piece_short') }}</option>
-                        <option value="شيكارة">شيكارة / كرتونة</option>
+                        <option value="شيكارة">{{ $t('inventory.unit_bag_box') }}</option>
                     </select>
                 </div>
 

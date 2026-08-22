@@ -1,20 +1,16 @@
-import { usePage } from '@inertiajs/vue3';
-
 /**
- * Global translation helper for Vue 3 Inertia Components
- * Usage: trans('pos.title') or trans('super.dashboard')
+ * Universal translation helper for Vue 3 Pure SPA (Pinia Store & window.spaTranslations)
+ * Usage in template: $t('pos.title') or trans('auth.login_button')
+ * Usage in script setup: const { t } = useTrans(); t('common.save');
  */
 export function trans(key, replace = {}) {
     if (!key || typeof key !== 'string') return '';
 
     let translations = {};
-    try {
-        const page = usePage();
-        if (page && page.props && page.props.translations) {
-            translations = page.props.translations;
-        }
-    } catch (e) {
-        // Fallback if called outside setup context
+
+    // 1. Get global SPA translations from window / Pinia store
+    if (typeof window !== 'undefined' && window.spaTranslations && Object.keys(window.spaTranslations).length > 0) {
+        translations = window.spaTranslations;
     }
 
     const parts = key.split('.');
@@ -30,7 +26,7 @@ export function trans(key, replace = {}) {
 
     if (typeof value === 'string') {
         Object.keys(replace).forEach((placeholder) => {
-            value = value.replace(`:${placeholder}`, replace[placeholder]);
+            value = value.replace(new RegExp(`:${placeholder}`, 'g'), replace[placeholder]);
         });
         return value;
     }

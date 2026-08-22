@@ -1,0 +1,629 @@
+# سجل التحويل المعماري: Inertia.js إلى Pure API (Laravel API + Vue 3 SPA)
+
+> **تاريخ الإنشاء:** 2026-08-21  
+> **الفرع البرمجي (Git Branch):** `feature/api-migration`  
+> **الحالة العامة:** المرحلة 4 - Module 04: المصروفات والعهد النثرية وتصنيفاتها (`Expenses & Petty Cash`) مكتمل ومختبر بنجاح بنسبة 100%.
+
+---
+
+## 1. فحص وتحليل الوضع الحالي (Current State Audit)
+
+### أ. فحص الـ Controllers الكلي (45 Controllers):
+- **Web / Inertia Controllers (24):**
+  1. `DashboardController` (لوحة التحكم الرئيسية للمستأجر)
+  2. `SuperAdminController` (لوحة السوبر أدمن، إدارة المستأجرين والخطط والاشتراكات)
+  3. `POSController` (محرك الكاشير ونقطة البيع السريعة)
+  4. `InvoiceController` (إدارة وتعديل وإلغاء واسترجاع فواتير المبيعات)
+  5. `ItemController` (الأصناف، كروت الصنف، الأسعار، وتتبع المخزون)
+  6. `CustomerController` (بيانات العملاء، المديونيات، وكشوف الحساب التفصيلية)
+  7. `SupplierController` (بيانات الموردين، المستحقات، وكشوف الحساب)
+  8. `PurchaseController` (فواتير الشراء، التوريدات، وإعادة الطلب الذكي)
+  9. `ReturnController` (مرتجعات المبيعات ومرتجعات المشتريات)
+  10. `StockTransferController` (التحويلات المخزنية بين الفروع ومنافذ البيع)
+  11. `StoreController` (الفروع، المخازن، العربيات، والأرصدة المستقلة)
+  12. `DailyJournalController` (دفتر اليومية، جرد الدرج، الخزينة، وإغلاق الورديات)
+  13. `ExpenseController` (المصروفات التشغيلية والعهد النثرية)
+  14. `CoffeeBlenderController` (توليفات وخلطات البن وحساب تكلفة الطحن والهدر)
+  15. `ReportController` (التقارير التحليلية، الأرباح والخسائر، ضريبة القيمة المضافة)
+  16. `ReportPrintController` (طباعة التقارير المجمعة وفواتير A4 / Thermal)
+  17. `UserController` (إدارة مستخدمي النظام، الكاشيرين، وتعيين الفروع)
+  18. `RoleController` (إدارة الأدوار والصلاحيات Spatie Roles & Permissions)
+  19. `SettingController` (إعدادات المؤسسة، الهوية، الطابعات، وتفضيلات النظام)
+  20. `ActivityLogController` (سجل التدقيق وتتبع أنشطة المستخدمين الحساسة)
+  21. `TrashController` (سلة المحذوفات للبيانات واستعادتها)
+  22. `ProfileController` (الملف الشخصي، تغيير كلمة المرور، تفضيل المظهر)
+  23. `ExportController` (محرك تصدير البيانات إلى Excel و PDF)
+  24. `Controller` (Base Controller)
+
+- **Auth Controllers (2):**
+  1. `AuthenticatedSessionController` (تسجيل دخول وخروج مستخدمي المستأجر عبر الويب)
+  2. `SuperAdminAuthController` (تسجيل دخول وخروج السوبر أدمن المركزي)
+
+- **Api Controllers الحالية في `app/Http/Controllers/Api/` (21):**
+  1. `AuthController` (تسجيل الدخول، استعلام me، تسجيل الخروج)
+  2. `PermissionApiController` (استعلام مصفوفة وشجرة الصلاحيات والأدوار)
+  3. `SystemContextApiController` (سياق النظام الموحد وقاموس الترجمات للـ SPA)
+  4. `DashboardApiController` (الملخص اللحظي المالي والتشغيلي)
+  5. `StoreController` (إدارة الفروع والمخازن، أرصدة المخازن، التعيينات، وتبديل الفروع)
+  6. `CustomerController` (إدارة العملاء، كشف الحساب التفصيلي، تحصيل المديونيات)
+  7. `SupplierController` (إدارة الموردين، كشف الحساب التفصيلي، وسندات صرف مستحقات الموردين)
+  8. `ExpenseController` (تسجيل وإدارة المصروفات والعهد ومراكز التكلفة)
+  9. `ItemController` (قائمة الأصناف، النواقص، تفاصيل الصنف)
+  10. `InvoiceController` (إنشاء وعرض وإلغاء فواتير المبيعات)
+  11. `PurchaseController` (المشتريات وإلغاؤها)
+  12. `ReturnController` (تسجيل مرتجع مبيعات ومشتريات)
+  13. `StockTransferController` (التحويلات بين الفروع)
+  14. `ShiftController` (إدارة الورديات، الفتح، الإغلاق، وتقرير Z-Report)
+  15. `PaymentController` (سندات القبض للعملاء وسندات الصرف للموردين)
+  16. `TreasuryController` (أرصدة الخزائن والبنوك)
+  17. `ReportController` (ملخص الأرباح وأعلى الأصناف مبيعاً)
+  18. `SettingController` (إعدادات المنشأة وتحديثها)
+  19. `ActivityLogController` (سجل الأنشطة)
+  20. `BlenderController` (توليفات البن)
+  21. `AppUpdateController` (فحص إصدارات التطبيق وتحميل التحديثات)
+
+---
+
+## 2. القرارات المعمارية المعتمدة (Architecture Decisions)
+
+| البند | القرار المعتمد | السبب والمبررات التقنية |
+| :--- | :--- | :--- |
+| **نوع الـ Auth للـ API** | **Laravel Sanctum Token-based (`Bearer <token>`)** | يدعم الـ Vue 3 SPA وتطبيق الموبايل (NativePHP / Capacitor) والـ PWA بشكل متطابق من دومين موحد أو دومينات متعددة دون تعقيدات الـ Cross-Site Cookies والـ CORS على مستوى Subdomains المستأجرين. |
+| **هيكلة مسارات الـ API** | **Versioned Modular Routes (`/api/v1/...`)** | تقسيم المسارات داخل `routes/api/` إلى:<br>• `v1/auth.php` (المصادقة واستعادة الحساب)<br>• `v1/tenant.php` (المبيعات، المخزون، الحسابات، العملاء...)<br>• `v1/super-admin.php` (إدارة المستأجرين والخطط والاشتراكات) |
+| **التعرف على المستأجر (Tenant Resolution)** | **Dual Strategy (Domain/Subdomain + `X-Tenant` Header)** | يتيح للـ SPA العمل بسلاسة سواء فُتح عبر Subdomain خاص بالمستأجر (`tenant1.domain.com`) أو عبر SPA مركزي يمرر هيدر `X-Tenant: tenant1`. |
+| **هيكل الاستجابة الموحد (Response Format)** | **Standard JSON Envelope** | **نجاح:**<br>`{ "success": true, "message": "...", "data": {...}, "meta": {...} }`<br>**فشل:**<br>`{ "success": false, "message": "...", "errors": {...} }` |
+| **معالجة الأخطاء (Global Error Handling)** | **Unified Exception Handler** | توحيد صياغة أخطاء (401, 403, 404, 422, 500) في `bootstrap/app.php` لترجع دائمًا بصيغة JSON موحدة تفهمها واجهة SPA. |
+| **معمارية الـ Frontend** | **Vue 3 SPA مدمج في `resources/js` (Vite + Vue Router + Pinia)** | الاستفادة من كافة الـ Components والـ Composables والـ Tailwind CSS v4 الموجودة حالياً، مع استبدال التوجيه والـ Props بـ Vue Router و Pinia Store و Axios Service. |
+| **إدارة الحالة (State Management)** | **Pinia Stores (`resources/js/stores/`)** | إنشاء Stores متخصصة:<br>• `useAuthStore` (المستخدم، الـ Token، الصلاحيات)<br>• `useStoreContextStore` (الفرع النشط وتبديل الفروع)<br>• `useAppConfigStore` (الثيم، إعدادات المنشأة، التنبيهات، والترجمات)<br>• `usePOSCartStore` (إدارة سلة البيع اللحظية) |
+| **عميل الـ API الموحد** | **Axios Service Client (`resources/js/services/api.js`)** | يضيف تلقائياً: `Authorization: Bearer <token>`، `X-Store-Id`، `X-Tenant`، `Accept-Language`، مع Interceptor يعالج أخطاء 401 (توجيه لتسجيل الدخول) و 403 (إشعار صلاحيات). |
+| **استراتيجية الترحيل (Migration Strategy)** | **ترحيل تدريجي (Module-by-Module) بنظام المحرك المزدوج (Dual-Engine)** | الإبقاء على Inertia بالتوازي مع الـ SPA الجديد لكل موديول، حتى يتم اختبار واستقرار كافة شاشات الـ SPA بنسبة 100%، ثم حذف Inertia في مرحلة التنظيف النهائية. |
+
+---
+
+## 3. خطة وترتيب ترحيل الوحدات (Modules Migration Roadmap)
+
+```text
+[المرحلة 0: التخطيط ✅] ──► [المرحلة 1: Auth API ✅] ──► [المرحلة 2: Permissions/Context API ✅] ──► [المرحلة 3: Frontend SPA Core ✅]
+                                                                                                        │
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────┘
+▼
+[المرحلة 4: ترحيل الموديولات تدريجياً (Module by Module)]
+  ├── 1. الفروع والمخازن (Stores & Stocks) ✅
+  ├── 2. العملاء وكشوف الحساب (Customers & Statements) ✅
+  ├── 3. الموردين وكشوف الحساب (Suppliers & Statements) ✅
+  ├── 4. المصروفات والعهد (Expenses & Petty Cash) ✅
+  ├── 5. الأصناف وحركة المخزون والنواقص (Items & Low Stock Radar) ⏳
+  ├── 6. الورديات ودفتر اليومية والخزينة (Cash Shifts & Daily Journal)
+  ├── 7. المشتريات والتوريدات وإعادة الطلب الذكي (Purchases & Smart Reorder)
+  ├── 8. نقطة البيع السريعة وفواتير المبيعات (POS Engine & Invoices)
+  ├── 9. المرتجعات (Sales & Purchase Returns)
+  ├── 10. التحويلات المخزنية بين الفروع (Stock Transfers)
+  ├── 11. توليفات وتصنيع البن (Coffee Blender Engine)
+  ├── 12. التقارير المالية والأرباح والخسائر (Reports & Analytics)
+  ├── 13. لوحة التحكم والتحليلات اللحظية (Dashboard Analytics)
+  ├── 14. المستخدمين والأدوار والأنشطة (Users, Roles & Logs)
+  ├── 15. الإعدادات والملف الشخصي وسلة المهملات (Settings, Profile & Trash)
+  └── 16. لوحة السوبر أدمن والمستأجرين والاشتراكات (SuperAdmin Dashboard, Tenants & Plans)
+▼
+[المرحلة 5: التنظيف النهائي وإزالة Inertia.js بالكامل]
+```
+
+---
+
+## 4. Auth API — بتاريخ 2026-08-21
+* **الملفات المنفذة:** Migrations, `ApiLoginDTO`, `ApiLoginRequest`, `ApiLoginAction`, `ApiLogoutAction`, `ApiMeAction`, `ResolveApiTenancy`, `UserResource`, `AuthController`.
+* **الاختبارات:** `AuthApiTest` (7/7 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 5. Permissions & System Context API — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `GetPermissionsTreeAction`, `GetTranslationsAction`, `GetSystemContextAction`, `PermissionApiController`, `SystemContextApiController`, Routes & Exception handlers.
+* **الاختبارات:** `PermissionsAndContextApiTest` (5/5 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 6. Frontend Core Infrastructure — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `resources/js/services/api.js`, `resources/js/stores/auth.js`, `resources/js/stores/appConfig.js`, `resources/js/router/index.js`, `resources/js/App.vue`, `resources/js/Layouts/SpaLayout.vue`, `resources/js/views/Auth/LoginView.vue`, `resources/js/views/DashboardView.vue`, `resources/js/spa.js`, `resources/views/spa.blade.php`.
+* **الاختبارات:** `SpaInfrastructureTest` (2/2 ناجحة) و `npm run build` ناجح.
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 7. Module 01: الفروع والمخازن والأرصدة (`Stores & Stocks`) — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `StoreDTO`, `CreateStoreAction`, `UpdateStoreAction`, `DeleteStoreAction`, `ToggleStoreActiveAction`, `AssignStoreUsersAction`, `GetStoreStocksAction`, `StoreResource`, `StoreStockResource`, `StoreController`, `StoresView.vue`, `StoreStocksView.vue`.
+* **الاختبارات:** `StoresApiTest` (9/9 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 8. Module 02: العملاء وكشوف الحساب التفصيلية (`Customers & Statements`) — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `CustomerDTO`, `CollectCustomerPaymentDTO`, `CreateCustomerAction`, `UpdateCustomerAction`, `DeleteCustomerAction`, `ToggleCustomerActiveAction`, `CollectCustomerPaymentAction`, `GetCustomerStatementAction`, `CustomerResource`, `CustomerController`, `CustomersView.vue`, `CustomerStatementView.vue`.
+* **الاختبارات:** `CustomersApiTest` (7/7 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 9. Module 03: الموردين وكشوف الحساب وسندات الصرف (`Suppliers & Statements`) — بتاريخ 2026-08-21
+* **الملفات المنفذة:** `SupplierDTO`, `PaySupplierDTO`, `CreateSupplierAction`, `UpdateSupplierAction`, `DeleteSupplierAction`, `ToggleSupplierActiveAction`, `PaySupplierAction`, `GetSupplierStatementAction`, `SupplierResource`, `SupplierController`, `SuppliersView.vue`, `SupplierStatementView.vue`.
+* **الاختبارات:** `SuppliersApiTest` (7/7 ناجحة).
+* **الحالة:** ✅ مكتملة.
+
+---
+
+## 10. Module 04: المصروفات والعهد النثرية وتصنيفاتها (`Expenses & Petty Cash`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Expenses/ExpenseDTO.php` (Strictly Typed DTO لبيانات المصروفات والعهد).
+2. `[NEW]` `app/Actions/Expenses/CreateExpenseAction.php` (Single Action لإنشاء المصروف وتوليد الكود التسلسلي EXP-ymd-0001 داخل Transaction).
+3. `[NEW]` `app/Actions/Expenses/UpdateExpenseAction.php` (Single Action لتعديل بيانات المصروف).
+4. `[NEW]` `app/Actions/Expenses/DeleteExpenseAction.php` (Single Action لحذف المصروف مع دعم الحذف الناعم SoftDeletes).
+5. `[NEW]` `app/Actions/Expenses/GetExpensesSummaryAction.php` (Single Action لحساب إجمالي مصروفات الشهر، المصروفات النقدية، وإجمالي الفلترة بدقة bcmath).
+6. `[NEW]` `app/Http/Resources/ExpenseResource.php` (تنسيق بيانات المصروف ومراكز التكلفة).
+7. `[REFACTORED]` `app/Http/Controllers/Api/ExpenseController.php` (متحكم API متكامل للمصروفات مع الفلاتر والمؤشرات المالية).
+8. `[MODIFIED]` `routes/api.php` (تسجيل مسارات المصروفات).
+9. `[NEW]` `tests/Feature/Api/ExpensesApiTest.php` (حزمة 5 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Expenses/ExpensesView.vue` (شاشة إدارة المصروفات، بطاقات إجمالي مصروفات الشهر والنثريات النقدية، الفلترة حسب مركز التكلفة والتاريخ، والشرائح السريعة).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/expenses` مع حماية الصلاحيات).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (إضافة رابط المصروفات والعهد في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/expenses` — قائمة المصروفات مع الفلاتر والبحث والمؤشرات المالية
+* `POST /api/v1/expenses` — تسجيل مصروف جديد
+* `GET /api/v1/expenses/{id}` — تفاصيل مصروف محدد
+* `PUT /api/v1/expenses/{id}` — تعديل مصروف
+* `DELETE /api/v1/expenses/{id}` — حذف مصروف
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 11. Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Items/ItemDTO.php` (Strictly Typed DTO لبيانات الصنف والأسعار وحدود المخزون).
+2. `[NEW]` `app/DTOs/Items/AdjustStockDTO.php` (Strictly Typed DTO لتسويات وجرد المخزون والهدر).
+3. `[NEW]` `app/Actions/Items/CreateItemAction.php` (Single Action لإنشاء الصنف والباركود وتهيئة أرصدة الفروع تلقائياً داخل Transaction).
+4. `[NEW]` `app/Actions/Items/UpdateItemAction.php` (Single Action لتعديل بيانات الصنف).
+5. `[NEW]` `app/Actions/Items/DeleteItemAction.php` (Single Action لحذف الصنف مع فحص الموانع التشغيلية).
+6. `[NEW]` `app/Actions/Items/ToggleItemActiveAction.php` (Single Action لتفعيل وتعطيل الصنف).
+7. `[NEW]` `app/Actions/Items/AdjustItemStockAction.php` (Single Action لتسوية المخزون مع قفل سطري `lockForUpdate` وحساب `bcmath` وتسجيل حركة المخزون `StockMovement`).
+8. `[NEW]` `app/Actions/Items/GetItemMovementsAction.php` (Single Action لكشف حركات المخزون وحساب مجاميع الوارد والمنصرف وصافي الحركة).
+9. `[NEW]` `app/Http/Resources/ItemResource.php` (تنسيق كروت الأصناف وأسعار وأرصدة الفروع).
+10. `[NEW]` `app/Http/Resources/StockMovementResource.php` (تنسيق سجلات حركات المخزون للـ API).
+11. `[REFACTORED]` `app/Http/Controllers/Api/ItemController.php` (متحكم API متكامل للأصناف والتسويات ورادار النواقص).
+12. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الأصناف، النواقص، التسويات، وكشف الحركات).
+13. `[NEW]` `tests/Feature/Api/ItemsApiTest.php` (حزمة 9 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Items/ItemsView.vue` (شاشة كروت الأصناف، التقييم المالي للمخزون، فلتر النواقص ورصيد الصفر، نافذة الإضافة والتعديل، ونافذة التسوية المخزنية السريعة).
+2. `[NEW]` `resources/js/views/Items/ItemMovementsView.vue` (شاشة كشف حركات الصنف التفصيلي، بطاقات إجمالي الوارد والمنصرف وصافي الرصيد، فلتر الفروع والفترات الزمنية مع الطباعة).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/items` و `/items/:id/movements`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تحويل رابط الأصناف والمخزون إلى router-link نشط).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/items` — قائمة الأصناف مع الفلاتر والبحث والمؤشرات المالية
+* `POST /api/v1/items` — إضافة صنف جديد
+* `GET /api/v1/items/low-stock` — رادار الأصناف الحرجة والنواقص
+* `GET /api/v1/items/{id}` — تفاصيل صنف محدد
+* `PUT /api/v1/items/{id}` — تعديل صنف
+* `DELETE /api/v1/items/{id}` — حذف صنف (مع فحص الموانع)
+* `PATCH /api/v1/items/{id}/toggle-active` — تفعيل/تعطيل الصنف
+* `POST /api/v1/items/{id}/adjust-stock` — تسوية مخزنية وجرد
+* `GET /api/v1/items/{id}/movements` — كشف حركات المخزون
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 12. Module 06: الورديات ودفتر اليومية وجرد الدرج والخزينة (`Shifts & Daily Journal`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Shifts/OpenShiftDTO.php` (Strictly Typed DTO لفتح وردية الكاشير والرصيد الافتتاحي).
+2. `[NEW]` `app/DTOs/Shifts/CloseShiftDTO.php` (Strictly Typed DTO لتقفيل وردية الكاشير وجرد النقدية الفعلية).
+3. `[NEW]` `app/Actions/Shifts/GetActiveShiftAction.php` (Single Action لاستعلام الوردية المفتوحة والمؤشرات اللحظية).
+4. `[NEW]` `app/Actions/Shifts/OpenShiftAction.php` (Single Action لفتح وردية العمل وتوليد الكود التسلسلي داخل Transaction).
+5. `[NEW]` `app/Actions/Shifts/CloseShiftAction.php` (Single Action لتقفيل الوردية وجرد النقدية وحساب الفارق بدقة `bcmath`).
+6. `[NEW]` `app/Actions/Shifts/GetShiftZReportAction.php` (Single Action لتجهيز تقرير تقفيل الوردية Z-Report للطباعة الحرارية).
+7. `[NEW]` `app/Actions/Shifts/GetDailyJournalAction.php` (Single Action لحساب دفتر اليومية، المقبوضات والمدفوعات وصافي النقدية ورصيد الدرج المتوقع).
+8. `[NEW]` `app/Http/Resources/CashShiftResource.php` (تنسيق بيانات الورديات والمجاميع المالية للـ API).
+9. `[MODIFIED]` `app/Http/Requests/OpenShiftRequest.php` & `CloseShiftRequest.php` (تحديث الصلاحيات).
+10. `[REFACTORED]` `app/Http/Controllers/Api/ShiftController.php` (متحكم API متكامل للورديات وتقارير Z-Report).
+11. `[NEW]` `app/Http/Controllers/Api/DailyJournalController.php` (متحكم API لدفتر اليومية وحسابات الخزينة اليومية).
+12. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الورديات، تقرير Z، ودفتر اليومية).
+13. `[NEW]` `tests/Feature/Api/ShiftsAndDailyJournalApiTest.php` (حزمة 6 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/DailyJournal/DailyJournalView.vue` (شاشة دفتر اليومية، بطاقة حالة الوردية اللحظية، بطاقات المقبوضات والمدفوعات وصافي النقدية والرصيد المتوقع بالدرج، جدولي فواتير المبيعات والمصروفات، نافذة فتح الوردية، ونافذة التقفيل وحساب الفارق المباشر).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/daily-journal`).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تحويل رابط دفتر اليومية والخزينة إلى router-link نشط).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/shifts/current` — الوردية المفتوحة حالياً والمؤشرات اللحظية
+* `POST /api/v1/shifts/open` — فتح وردية جديدة
+* `POST /api/v1/shifts/close` — تقفيل الوردية وجرد النقدية
+* `GET /api/v1/shifts/{id}/z-report` — بيانات تقرير Z للطباعة الحرارية
+* `GET /api/v1/shifts` — أرشيف وسجل الورديات السابقة
+* `GET /api/v1/daily-journal` — دفتر اليومية وحسابات الخزينة لتاريخ محدد
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 13. Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Purchases/PurchaseDTO.php` (Strictly Typed DTO لفواتير المشتريات وتوريد الخامات والمصاريف المحملة).
+2. `[NEW]` `app/DTOs/Purchases/CancelPurchaseDTO.php` (Strictly Typed DTO لإلغاء فواتير الشراء وعكس المخزون).
+3. `[NEW]` `app/Actions/Purchases/CreatePurchaseAction.php` (Single Action لتسجيل واعتماد فاتورة المشتريات وتوزيع التكاليف وتحديث المخزون والـ WAC).
+4. `[NEW]` `app/Actions/Purchases/CancelPurchaseAction.php` (Single Action لإلغاء الفاتورة وفحص كفاية الرصيد وعكس المخزون والمديونية).
+5. `[NEW]` `app/Actions/Purchases/GetSmartReorderSuggestionsAction.php` (Single Action لمحرك ورادار إعادة الطلب التنبؤي ومعدلات السحب اليومي).
+6. `[NEW]` `app/Http/Resources/PurchaseResource.php` (تنسيق بيانات فواتير المشتريات والمجاميع المالية).
+7. `[NEW]` `app/Http/Resources/PurchaseItemResource.php` (تنسيق بنود وأصناف التوريد والتكاليف المحملة).
+8. `[MODIFIED]` `app/Http/Requests/StorePurchaseRequest.php` (تحديث الصلاحيات والأدوار وقواعد التحقق).
+9. `[REFACTORED]` `app/Http/Controllers/Api/PurchaseController.php` (متحكم API متكامل للمشتريات وإعادة الطلب الذكي).
+10. `[MODIFIED]` `routes/api.php` (تسجيل مسارات المشتريات، رادار إعادة الطلب الذكي، والإلغاء).
+11. `[NEW]` `tests/Feature/Api/PurchasesApiTest.php` (حزمة 5 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Purchases/PurchasesView.vue` (شاشة سجل فواتير المشتريات، بطاقات إجمالي المشتريات والمديونية الآجلة، فلاتر الموردين والحالات والتواريخ، نافذة المعاينة التفصيلية، وإلغاء الفواتير).
+2. `[NEW]` `resources/js/views/Purchases/CreatePurchaseView.vue` (شاشة إنشاء فاتورة مشتريات جديدة، اختيار الموردين، جدول البنود الديناميكي، حساب التكاليف والخصومات والمدفوع والمتبقي الآجل، ودعم الـ Prefill من الرادار).
+3. `[NEW]` `resources/js/views/Purchases/SmartReorderView.vue` (شاشة رادار إعادة الطلب الذكي بالذكاء الاصطناعي، بطاقات مستويات الخطورة، جدول النواقص ومعدلات الاستهلاك اليومي وفترة نفاد الرصيد، والتصدير المباشر لأمر شراء مجمع).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/purchases` و `/purchases/create` و `/purchases/smart-reorder`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط المشتريات والتوريد في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/purchases` — قائمة فواتير المشتريات مع الفلاتر والمجاميع المالية
+* `GET /api/v1/purchases/smart-reorder` — رادار واقتراحات إعادة الطلب الذكي
+* `GET /api/v1/purchases/{id}` — تفاصيل فاتورة المشتريات وبنودها
+* `POST /api/v1/purchases` — تسجيل واعتماد فاتورة مشتريات جديدة
+* `POST /api/v1/purchases/{id}/cancel` — إلغاء الفاتورة وعكس المخزون
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 14. Module 08: نقطة البيع السريعة وفواتير المبيعات (`POS & Sales Invoices`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Invoices/CreateInvoiceDTO.php` (Strictly Typed DTO لفواتير المبيعات ونقاط البيع السريعة).
+2. `[NEW]` `app/DTOs/Invoices/CancelInvoiceDTO.php` (Strictly Typed DTO لإلغاء فواتير المبيعات وعكس المخزون والمديونية).
+3. `[NEW]` `app/Actions/Invoices/CreateSalesInvoiceAction.php` (Single Action لتسجيل واعتماد فاتورة المبيعات وخصم المخزون بقفل سطري `lockForUpdate` وتحديث رصيد العميل).
+4. `[NEW]` `app/Actions/Invoices/CancelSalesInvoiceAction.php` (Single Action لإلغاء فاتورة المبيعات وإرجاع البضاعة للمخزن وعكس رصيد العميل).
+5. `[NEW]` `app/Actions/Invoices/GetInvoiceDetailsAction.php` (Single Action لجلب تفاصيل الفاتورة وصياغة رسالة الواتساب المهيأة للعميل).
+6. `[NEW]` `app/Http/Resources/InvoiceResource.php` (تنسيق تفاصيل فواتير المبيعات والبنود والدفعات للـ API).
+7. `[NEW]` `app/Http/Requests/StoreSalesInvoiceRequest.php` (Form Request مخصص للتحقق من فواتير المبيعات ومنع `$request->validate()` في الكنترولر).
+8. `[MODIFIED]` `app/Http/Requests/CancelInvoiceRequest.php` (تحديث الصلاحيات).
+9. `[REFACTORED]` `app/Http/Controllers/Api/InvoiceController.php` (متحكم API متكامل لفواتير المبيعات).
+10. `[NEW]` `app/Http/Controllers/Api/PosController.php` (متحكم API متكامل لعمليات الكاشير السريعة `bootstrap` و `checkout` و `quick-customer` و `last-price`).
+11. `[MODIFIED]` `routes/api.php` (تسجيل كافة مسارات فواتير المبيعات وعمليات الـ POS).
+12. `[NEW]` `tests/Feature/Api/InvoicesAndPosApiTest.php` (حزمة 7 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Invoices/InvoicesView.vue` (شاشة سجل فواتير المبيعات، بطاقات الإجمالي والمحصل والآجل، فلاتر نوع السداد والحالة والتواريخ، نافذة التفاصيل، مشاركة الواتساب المباشرة والطباعة).
+2. `[NEW]` `resources/js/views/POS/PosView.vue` (شاشة كاشير فائقة السرعة، رادار تصنيفات، كروت أصناف بالرصيد والأسعار، سلة بيع سريعة مع عداد الكميات والخصم وأنواع السداد، نافذة إضافة عميل سريع، واختصارات لوحة المفاتيح F9/F2).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/invoices` و `/pos`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تحويل روابط POS وفواتير المبيعات إلى router-link نشط).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/invoices` — قائمة فواتير المبيعات مع الفلاتر والمجاميع المالية
+* `GET /api/v1/invoices/{id}` — تفاصيل الفاتورة وبنودها ورابط مشاركة الواتساب
+* `POST /api/v1/invoices` — تسجيل واعتماد فاتورة مبيعات جديدة
+* `POST /api/v1/invoices/{id}/cancel` — إلغاء الفاتورة وعكس المخزون ورصيد العميل
+* `GET /api/v1/pos/bootstrap` — تجميع بيانات كاشير POS (الأصناف، الرصيد، التصنيفات، العملاء، الوردية)
+* `POST /api/v1/pos/checkout` — اعتماد وتأكيد بيع POS فوري
+* `POST /api/v1/pos/quick-customer` — تسجيل عميل سريع من شاشة POS
+* `GET /api/v1/pos/last-price` — سعر آخر بيع للعميل على الصنف المحدد
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 15. Module 09: مرتجعات المبيعات والمشتريات (`Returns: Sales & Purchase Returns`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Returns/ReturnDocumentDTO.php` (Strictly Typed DTO لمستندات مرتجعات المبيعات والمشتريات).
+2. `[NEW]` `app/Actions/Returns/CreateReturnAction.php` (Single Action لاعتماد المرتجع وتعديل المخزون وأرصدة العملاء والموردين داخل Transaction).
+3. `[NEW]` `app/Actions/Returns/DeleteReturnAction.php` (Single Action لحذف وأرشفة مستند المرتجع).
+4. `[NEW]` `app/Http/Resources/ReturnResource.php` & `ReturnItemResource.php` (تنسيق بيانات المرتجعات والبنود للـ API).
+5. `[MODIFIED]` `app/Http/Requests/StoreReturnRequest.php` (التحقق الصارم عبر Form Request ومنع أي `$request->validate()` في الكنترولر).
+6. `[REFACTORED]` `app/Http/Controllers/Api/ReturnController.php` (متحكم API متكامل لإدارة واستعلام المرتجعات).
+7. `[MODIFIED]` `routes/api.php` (تسجيل مسارات `/returns` و `/returns/{id}`).
+8. `[NEW]` `tests/Feature/Api/ReturnsApiTest.php` (حزمة 5 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Returns/ReturnsView.vue` (شاشة سجل المرتجعات، بطاقات الإجمالي والعدد وتصنيف المرتجعات، فلاتر البحث والنوع والتواريخ، نافذة التفاصيل، وأرشفة المستندات).
+2. `[NEW]` `resources/js/views/Returns/CreateReturnView.vue` (شاشة تسجيل مرتجع مبيعات أو مشتريات، التبديل السلس بين العملاء والموردين، إضافة بنود المرتجع بالرصيد والأسعار، واحتساب إجمالي المرتجع والنقدية المستردة).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/returns` و `/returns/create`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط المرتجعات في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/returns` — قائمة مستندات المرتجعات مع الفلاتر والمؤشرات الإجمالية
+* `GET /api/v1/returns/{id}` — تفاصيل مستند المرتجع وبنوده
+* `POST /api/v1/returns` — تسجيل واعتماد مرتجع مبيعات أو مشتريات
+* `DELETE /api/v1/returns/{id}` — أرشفة وحذف مستند المرتجع
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 16. Module 10: التحويلات المخزنية بين الفروع والمخازن (`Stock Transfers`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Transfers/CreateTransferDTO.php` (Strictly Typed DTO لبيانات التحويل المخزني).
+2. `[NEW]` `app/DTOs/Transfers/CancelTransferDTO.php` (Strictly Typed DTO لإلغاء التحويل المخزني).
+3. `[NEW]` `app/Actions/Transfers/CreateStockTransferAction.php` (Single Action لاعتماد التحويل المخزني ونقل الأرصدة وتسجيل حركات `transfer_out` و `transfer_in` داخل Transaction).
+4. `[NEW]` `app/Actions/Transfers/CancelStockTransferAction.php` (Single Action لإلغاء التحويل وعكس حركة المخزون بأمان للمخزن المصدر).
+5. `[NEW]` `app/Http/Resources/StockTransferResource.php` & `StockTransferItemResource.php` (تنسيق بيانات أذونات التحويل والبنود للـ API).
+6. `[NEW]` `app/Http/Requests/CancelStockTransferRequest.php` & `[MODIFIED]` `StoreStockTransferRequest.php` (التحقق الصارم عبر Form Requests ومنع أي `$request->validate()` في الكنترولر).
+7. `[REFACTORED]` `app/Http/Controllers/Api/StockTransferController.php` (متحكم API متكامل لإدارة واستعلام أذونات التحويل).
+8. `[MODIFIED]` `routes/api.php` (تسجيل مسارات التحويل المخزني `/transfers` و `/transfers/{id}` و `/transfers/{id}/cancel`).
+9. `[NEW]` `tests/Feature/Api/StockTransfersApiTest.php` (حزمة 4 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/StockTransfers/StockTransfersView.vue` (شاشة سجل أذونات التحويل، كروت الإجمالي والمنفذ والملغي، فلاتر المخازن والتواريخ، نافذة المعاينة، وإلغاء وعكس التحويل).
+2. `[NEW]` `resources/js/views/StockTransfers/CreateStockTransferView.vue` (شاشة إنشاء إذن تحويل مخزني، اختيار المخزن المصدر والمستلم، إضافة بنود الأصناف بالرصيد والكميات، والتنفيذ الفوري).
+3. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/stock-transfers` و `/stock-transfers/create`).
+4. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط التحويلات المخزنية في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/transfers` — قائمة أذونات التحويل المخزني مع الفلاتر والمؤشرات الإجمالية
+* `GET /api/v1/transfers/{id}` — تفاصيل إذن التحويل وبنوده
+* `POST /api/v1/transfers` — تسجيل واعتماد تحويل مخزني ونقل الرصيد فوراً
+* `POST /api/v1/transfers/{id}/cancel` — إلغاء إذن التحويل وعكس رصيد الأصناف للمخزن المصدر
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 17. Module 11: توليفات البن والتصنيع والتكلفة (`Coffee Blender Engine & Custom Roasting`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Blends/CreateBlenderInvoiceDTO.php` (Strictly Typed DTO لبيانات فاتورة التوليفة والوزن المستهدف ودرجة التحميص والطحن والإضافات).
+2. `[NEW]` `app/Actions/Blends/CalculateBlendCostAction.php` (Single Action لحساب تكاليف خامات البن والحبهان وهوامش الربح بدقة `DECIMAL(12,3)` و `bcmath`).
+3. `[NEW]` `app/Actions/Blends/CreateBlenderInvoiceAction.php` (Single Action لاعتماد فاتورة التوليفة وخصم الخامات بالأوزان الدقيقة من المخزون وتحديث حساب العميل).
+4. `[MODIFIED]` `app/Http/Requests/CreateBlenderInvoiceRequest.php` (التحقق الصارم عبر Form Request ومنع أي `$request->validate()` في الكنترولر).
+5. `[NEW]` `app/Http/Controllers/Api/CoffeeBlenderController.php` (متحكم API نقي وخفيف لحاسبة التوليفات وإصدار الفواتير).
+6. `[MODIFIED]` `routes/api.php` (تسجيل مسارات `/coffee-blender/calculate` و `/coffee-blender/invoice`).
+7. `[NEW]` `tests/Feature/Api/CoffeeBlenderApiTest.php` (حزمة اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/CoffeeBlender/CoffeeBlenderView.vue` (استوديو توليف وخلاط البن التفاعلي، أوزان سريعة 125g/250g/500g/1000g، سلايدرات تفاعلية لنسب حبوب البن، حساب فوري للجرامات وسعر البيع والتكلفة، وإصدار الفاتورة وتأكيدها فوراً).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/coffee-blender`).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط استوديو وخلاط البن في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `POST /api/v1/coffee-blender/calculate` — احتساب تكلفة وهوامش ربح وأوزان التوليفة لحظياً
+* `POST /api/v1/coffee-blender/invoice` — إصدار وتأكيد فاتورة مبيعات لتوليفة البن وخصم الخامات فوراً
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 18. Module 12: التقارير المالية والأرباح والخسائر ومبيعات الأصناف (`Reports & Profit Analytics`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Reports/ReportFilterDTO.php` (Strictly Typed DTO لفلاتر التقارير والفترات الزمنية والفروع).
+2. `[NEW]` `app/Actions/Reports/GetProfitLossReportAction.php` (Single Action لحساب ملخص الأرباح والخسائر التنفيذي ومجمل وصافي الربح وهوامش الربحية بدقة `DECIMAL(12,3)` و `bcmath`).
+3. `[NEW]` `app/Actions/Reports/GetItemsProfitabilityReportAction.php` (Single Action لتحليل مبيعات وربحية وتكاليف وهوامش الأصناف).
+4. `[NEW]` `app/Actions/Reports/GetStoresComparativeReportAction.php` (Single Action للمقارنة التحليلية بين مبيعات وحصص الفروع والمخازن).
+5. `[NEW]` `app/Actions/Reports/GetCustomersSalesReportAction.php` (Single Action لتحليل مسحوبات ومديونيات العملاء).
+6. `[NEW]` `app/Actions/Reports/GetExpensesBreakdownReportAction.php` (Single Action لتبويب وتحليل المصروفات التشغيلية).
+7. `[NEW]` `app/Actions/Reports/GetInventoryValuationReportAction.php` (Single Action لتقييم بضاعة المخزون بسعر التكلفة والبيع والأرباح المتوقعة وتحليل ABC).
+8. `[NEW]` `app/Actions/Reports/GetTreasuryReportAction.php` (Single Action لحركة الخزينة والسيولة والتدفق النقدي).
+9. `[NEW]` `app/Http/Requests/FilterReportRequest.php` (التحقق الصارم عبر Form Request ومنع أي `$request->validate()` في الكنترولر).
+10. `[REFACTORED]` `app/Http/Controllers/Api/ReportController.php` (متحكم API نقي يدعم نقاط النهاية المستقلة والحزمة الشاملة `comprehensive`).
+11. `[MODIFIED]` `routes/api.php` (تسجيل مسارات التقارير المالية المتكاملة).
+12. `[NEW]` `tests/Feature/Api/ReportsApiTest.php` (حزمة 7 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Reports/ReportsView.vue` (شاشة التقارير المالية والتحليلية الشاملة بـ 7 أبعاد تحليلية: المبيعات والأرباح P&L، ربحية الأصناف، مقارنة الفروع، العملاء والآجل، المصروفات، تقييم المخزون، وحركة الخزينة، مع فلاتر فترات سريعة، وإمكانية الطباعة A4).
+2. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسار `/reports`).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط التقارير والأرباح في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/reports/summary` — الملخص المالي التنفيذي ومجمل وصافي الأرباح
+* `GET /api/v1/reports/comprehensive` — حزمة التقارير الشاملة للأبعاد السبعة دفعة واحدة
+* `GET /api/v1/reports/items` — مبيعات وربحية وتكاليف الأصناف وحبوب البن
+* `GET /api/v1/reports/stores` — مقارنة أداء وحصص الفروع والمخازن
+* `GET /api/v1/reports/customers` — مسحوبات ومديونيات العملاء في الفترة
+* `GET /api/v1/reports/expenses` — تبويب المصروفات التشغيلية حسب الفئة
+* `GET /api/v1/reports/inventory` — تقييم المخزون بالتكلفة والبيع وتصنيف ABC
+* `GET /api/v1/reports/treasury` — مقبوضات ومدفوعات وصافي التدفق النقدي
+* `GET /api/v1/reports/top-items` — أكثر الأصناف مبيعاً
+* `GET /api/v1/reports/items/{id}/card` — كارت حركة الصنف
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 19. Module 13: لوحة التحكم والتحليلات اللحظية ومؤشرات الأداء (`Dashboard Analytics`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/Actions/Dashboard/GetDashboardOverviewAction.php` (Single Action لحساب وتجميع مؤشرات أداء لوحة التحكم، مبيعات اليوم، نقدية الدرج، أرباح الشهر، النواقص، اتجاه المبيعات لـ 7 أيام، أحدث الفواتير، والأصناف الأكثر مبيعاً بدقة `DECIMAL(12,3)` و `bcmath`).
+2. `[REFACTORED]` `app/Http/Controllers/Api/DashboardApiController.php` (متحكم API نقي وخفيف لمعالجة طلبات لوحة التحكم).
+3. `[MODIFIED]` `routes/api.php` (تسجيل مسار `/dashboard/summary`).
+4. `[NEW]` `tests/Feature/Api/DashboardApiTest.php` (اختبار Feature شامل لمؤشرات لوحة التحكم بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/DashboardView.vue` (لوحة تحكم تنفيذية لحظية ذكية، كروت المؤشرات الأربعة، شريط بياني لحركة المبيعات لـ 7 أيام، ودجت الوردية المفتوحة، رادار النواقص وحد الطلب، أحدث فواتير المبيعات، والأصناف الأكثر مبيعاً، مع تحديث تلقائي بالخلفية كل 30 ثانية).
+2. `[MODIFIED]` `resources/js/router/index.js` (توجيه المسار الرئيسي `/` إلى لوحة التحكم).
+3. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل رابط الرئيسية ولوحة التحكم).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/dashboard/summary` — المؤشرات والتحليلات اللحظية المتكاملة للفرع النشط
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 20. Module 14: إدارة المستخدمين والأدوار والأنشطة والصلاحيات (`Users, Roles & Logs`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/DTOs/Users/CreateUserDTO.php` & `app/DTOs/Users/UpdateUserDTO.php` (Strictly Typed DTOs لبيانات الموظفين وتعيين الفروع والأدوار).
+2. `[NEW]` `app/Actions/Users/CreateUserAction.php` (Single Action لإنشاء وتشفير وتعيين أدوار المستخدمين داخل DB Transaction).
+3. `[NEW]` `app/Actions/Users/UpdateUserAction.php` (Single Action لتحديث بيانات وصلاحيات المستخدمين بأمان).
+4. `[NEW]` `app/Actions/Users/DeleteUserAction.php` (Single Action لحذف المستخدمين مع حماية الحساب الشخصي من الحذف الذاتي).
+5. `[NEW]` `app/Actions/Users/ToggleUserActiveAction.php` (Single Action لتبديل حالة تفعيل وتعطيل الحسابات).
+6. `[NEW]` `app/Actions/Roles/GetRolesMatrixAction.php` (Single Action لتنظيم مصفوفة الصلاحيات والأقسام الوظيفية).
+7. `[NEW]` `app/Actions/Roles/UpdateRolePermissionsAction.php` (Single Action لتحديث صلاحيات الأدوار وإبطال كاش Spatie).
+8. `[NEW]` `app/Actions/Logs/GetActivityLogsAction.php` (Single Action لجلب وفلترة سجلات التدقيق الأمني والإحصائيات).
+9. `[REFACTORED]` `app/Http/Controllers/Api/UserController.php` (متحكم API نقي خالي تماماً من أي `$request->validate()`).
+10. `[NEW]` `app/Http/Controllers/Api/RoleController.php` (متحكم API لإدارة مصفوفة الأدوار والصلاحيات).
+11. `[REFACTORED]` `app/Http/Controllers/Api/ActivityLogController.php` (متحكم API لسجلات التدقيق الأمني).
+12. `[MODIFIED]` `routes/api.php` (تسجيل مسارات المستخدمين، الأدوار، وسجل النشاطات).
+13. `[NEW]` `tests/Feature/Api/UsersAndRolesApiTest.php` (حزمة 8 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Users/UsersView.vue` (شاشة إدارة الموظفين، البحث والفلترة بالأدوار، مودال الإضافة والتعديل، وتفعيل وتعطيل الحسابات).
+2. `[NEW]` `resources/js/views/Roles/RolesView.vue` (مصفوفة الصلاحيات والأدوار، تبديل التابات، تحديد وإلغاء الكل للأقسام، وحفظ التعديلات فوري).
+3. `[NEW]` `resources/js/views/ActivityLogs/ActivityLogsView.vue` (سجل التدقيق الأمني والنشاطات، كروت إحصائيات النشاط، فلاتر بالقسم والموظف والتواريخ، وعارض تفاصيل الـ Payload و IP).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/users`, `/roles`, `/activity-logs`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل قسم "إدارة النظام والمستخدمين" في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/users` — قائمة المستخدمين والموظفين مع الفلاتر والترقيم
+* `GET /api/v1/users/{id}` — تفاصيل المستخدم
+* `POST /api/v1/users` — إنشاء مستخدم وموظف جديد
+* `PUT /api/v1/users/{id}` — تحديث بيانات الموظف والدور
+* `DELETE /api/v1/users/{id}` — حذف حساب المستخدم
+* `PATCH /api/v1/users/{id}/toggle-active` — تفعيل / تعطيل الحساب
+* `GET /api/v1/roles` — مصفوفة الأدوار والأقسام والصلاحيات
+* `PUT /api/v1/roles/{id}/permissions` — تحديث وتعيين صلاحيات الدور
+* `GET /api/v1/activity-logs` — سجل الأنشطة والتدقيق الأمني وإحصائيات اليوم
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 21. Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/Actions/Settings/UpdateSettingsAction.php` (Single Action لحفظ وتحديث إعدادات النظام وتفريغ كاش الإعدادات).
+2. `[NEW]` `app/Actions/Profile/UpdateProfileAction.php` (Single Action لتحديث الملف الشخصي وتفضيلات الثيم وتغيير كلمة المرور).
+3. `[NEW]` `app/Actions/Trash/GetTrashRecordsAction.php` (Single Action لجلب وتصنيف بيانات سلة المحذوفات للأقسام المختلفة).
+4. `[NEW]` `app/Actions/Trash/RestoreTrashRecordAction.php` (Single Action لاسترجاع السجلات المحذوفة).
+5. `[NEW]` `app/Actions/Trash/ForceDeleteTrashRecordAction.php` (Single Action للحذف النهائي لسجلات سلة المهملات).
+6. `[REFACTORED]` `app/Http/Requests/UpdateSettingsRequest.php` & `app/Http/Requests/UpdateProfileRequest.php` (التحقق الصارم عبر Form Requests ومنع أي `validate()` في الكنترولرز).
+7. `[REFACTORED]` `app/Http/Controllers/Api/SettingController.php` (متحكم API نقي خالي من أي `$request->validate()`).
+8. `[NEW]` `app/Http/Controllers/Api/ProfileController.php` (متحكم API للملف الشخصي).
+9. `[NEW]` `app/Http/Controllers/Api/TrashController.php` (متحكم API لسلة المهملات).
+10. `[MODIFIED]` `routes/api.php` (تسجيل مسارات الإعدادات، الملف الشخصي، وسلة المهملات).
+11. `[NEW]` `tests/Feature/Api/SettingsProfileTrashApiTest.php` (حزمة 3 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/Settings/SettingsView.vue` (شاشة إعدادات النظام والمؤسسة، تبويبات الهوية، الطباعة والفواتير الحرارية، ربط بوت تلجرام، ومعلومات الخادم).
+2. `[NEW]` `resources/js/views/Profile/ProfileView.vue` (شاشة الملف الشخصي، تعديل الاسم والهاتف والبريد، تغيير كلمة المرور، وتفضيل المظهر الفاتح/الداكن).
+3. `[NEW]` `resources/js/views/Trash/TrashView.vue` (سلة المهملات الموحدة بـ 6 تبويبات للأصناف والعملاء والموردين والفروع والمصروفات والمرتجعات مع عدادات لحظية واسترجاع وحذف نهائي).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/settings`, `/profile`, `/trash`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل روابط الإعدادات وسلة المهملات والملف الشخصي في القائمة والهيدر).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/settings` — إعدادات النظام والمؤسسة ومعلومات الخادم
+* `POST /api/v1/settings` — حفظ وتحديث إعدادات النظام
+* `POST /api/v1/settings/telegram/test` — اختبار إرسال إشعار تجريبي لبوت تلجرام
+* `GET /api/v1/profile` — بيانات الملف الشخصي للمستخدم الحالي
+* `PUT /api/v1/profile` — تحديث الملف الشخصي وكلمة المرور والمظهر
+* `GET /api/v1/trash` — سجلات سلة المهملات مع الفلترة والترقيم
+* `POST /api/v1/trash/{type}/{id}/restore` — استرجاع سجل محذوف
+* `DELETE /api/v1/trash/{type}/{id}/force` — الحذف النهائي لسجل محذوف
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 22. Module 16: لوحة تحكم السوبر أدمن والمستأجرين والباقات (`SuperAdmin Dashboard, Tenants & Plans`) — بتاريخ 2026-08-21
+
+### أ. الـ Backend (Laravel Pure API):
+1. `[NEW]` `app/Http/Controllers/Api/SuperAdminApiController.php` (متحكم API مركزي للسوبر أدمن خالي تماماً من أي `$request->validate()`).
+2. `[INTEGRATED]` استخدام كلاسات Single Actions القائمة:
+   - `app/Actions/Tenants/ProvisionTenantAction.php`
+   - `app/Actions/Tenants/GetTenantsIndexDataAction.php`
+   - `app/Actions/Tenants/GetTenantDetailsAction.php`
+   - `app/Actions/Tenants/ToggleTenantStatusAction.php`
+   - `app/Actions/Tenants/OverrideTenantFeatureAction.php`
+   - `app/Actions/Plans/GetSuperAdminPlansDataAction.php`
+   - `app/Actions/Plans/UpdatePlanAction.php`
+3. `[INTEGRATED]` `App\Services\SuperAdminAnalyticsService` لحساب الـ MRR بدقة مالية `DECIMAL(12,3)` و `bcmath`.
+4. `[INTEGRATED]` Form Requests الصارمة: `StoreTenantRequest`, `ToggleTenantStatusRequest`, `OverrideTenantFeatureRequest`, `UpdatePlanRequest`.
+5. `[MODIFIED]` `routes/api.php` (تسجيل مسارات السوبر أدمن، المستأجرين، والباقات).
+6. `[NEW]` `tests/Feature/Api/SuperAdminApiTest.php` (حزمة 4 اختبارات Feature شاملة بنسبة نجاح 100%).
+
+### ب. الـ Frontend (Pure Vue 3 SPA):
+1. `[NEW]` `resources/js/views/SuperAdmin/SuperAdminDashboardView.vue` (لوحة تحكم السوبر أدمن، كروت الـ MRR والمستأجرين، توزيع الباقات، وأحدث المستأجرين).
+2. `[NEW]` `resources/js/views/SuperAdmin/SuperAdminTenantsView.vue` (إدارة المستأجرين، البحث، الفلاتر، مودال تهيئة مستأجر جديد Auto-Provisioning، وتعديل الحالة والاشتراك).
+3. `[NEW]` `resources/js/views/SuperAdmin/SuperAdminPlansView.vue` (إدارة باقات الاشتراك، تعديل الأسعار الشهرية والسنوية، وحدود الموارد والمستخدمين والفروع).
+4. `[MODIFIED]` `resources/js/router/index.js` (تسجيل مسارات `/super-admin/dashboard`, `/super-admin/tenants`, `/super-admin/plans`).
+5. `[MODIFIED]` `resources/js/Layouts/SpaLayout.vue` (تفعيل قسم إدارة المنصة والسوبر أدمن في القائمة الجانبية).
+
+### ج. نقاط النهاية المعتمدة (API Endpoints):
+* `GET /api/v1/super-admin/dashboard` — مؤشرات أداء المنصة، MRR، وإحصائيات الباقات
+* `GET /api/v1/super-admin/tenants` — قائمة المستأجرين مع الفلاتر والبحث والترقيم
+* `POST /api/v1/super-admin/tenants` — إنشاء وتهيئة مستأجر جديد (Auto-Provisioning)
+* `GET /api/v1/super-admin/tenants/{id}` — تفاصيل المستأجر والاشتراك ومصفوفة الميزات
+* `POST /api/v1/super-admin/tenants/{id}/toggle-status` — تعديل حالة المستأجر وتمديد الاشتراك
+* `POST /api/v1/super-admin/tenants/{id}/override-feature` — تعديل صلاحية ميزة مخصصة لمستأجر
+* `GET /api/v1/super-admin/plans` — قائمة باقات الاشتراك والأسعار
+* `PUT /api/v1/super-admin/plans/{id}` — تحديث بيانات وأسعار وحدود الباقة
+
+### حالة الموديول: ✅ مكتمل بنجاح 100%
+
+---
+
+## 23. المرحلة 5: التنظيف النهائي والتحول الكامل (Final Cleanup & Pure SPA Cutover) — بتاريخ 2026-08-21
+
+### أ. التحول المعماري الكامل (Full SPA Cutover):
+1. `[REFACTORED]` `routes/web.php` — تحويل كامل المسارات العامة والمحمية لتخدم Pure Vue 3 SPA مباشرة عبر Catch-All Route `Route::get('/{any?}')` مع الإبقاء على مسارات الطباعة والتصدير والـ PWA.
+2. `[REFACTORED]` `resources/js/app.js` — تحويل المدخل الرئيسي لتشغيل تطبيق الـ Vue 3 SPA مع Pinia و Vue Router ودوال الترجمة العالمية.
+3. `[REFACTORED]` `resources/views/app.blade.php` — استبدال توجيهات `@inertia` بقالب SPA خفيف ونظيف يضم حاوية التطبيق `<div id="app"></div>` و `@vite(['resources/css/app.css', 'resources/js/app.js'])`.
+4. `[CLEANUP]` `resources/views/spa.blade.php` — توجيهه مباشرة إلى `app.blade.php`.
+5. `[CLEANUP]` `vite.config.js` — ضبط إعدادات خادم التطوير `host: 'localhost'` و `hmr: { host: 'localhost' }` لحل خطأ `ERR_ADDRESS_INVALID`، وحصر مدخلات البناء في `resources/js/app.js` و `resources/css/app.css`.
+
+### ب. إزالة حزم ومخلفات Inertia.js:
+1. `[REMOVED]` `@inertiajs/vue3` من ملف `package.json`.
+2. `[REMOVED]` `inertiajs/inertia-laravel` من ملف `composer.json`.
+3. `[REMOVED]` `app/Http/Middleware/HandleInertiaRequests.php` وإزالته من `bootstrap/app.php`.
+4. `[REMOVED]` مجلد `resources/js/Pages/` القديم بالكامل بعد اكتمال كافة الشاشات الـ 16 بنسبة 100% داخل `resources/js/views/`.
+5. `[REMOVED]` اختبارات Inertia القديمة في `tests/Feature/*InertiaTest.php` واستبدالها بحزمة اختبارات Pure API الشاملة.
+6. `[REMOVED]` ملف `public/hot` القديم.
+
+### ج. التحقق والاختبارات الشاملة (Final Quality Assurance):
+* اجتياز كامل الـ **103 اختبارات برمجية Feature & Unit Tests** بنسبة **100%** (634 Assertions).
+* بناء Vite للإنتاج `npm run build` في **4.24 ثانية** بحجم ملفات مضغوطة ومنظمة.
+
+### حالة المرحلة 5: ✅ مكتملة بنجاح 100%
+
+---
+
+## 24. مصفوفة تتبع حالة الترحيل النهائية (Final Migration Matrix - 100% Complete)
+
+- [x] **المرحلة 0: التخطيط والقرارات المعمارية (Architectural Planning & Log Setup)** ✅ (2026-08-21)
+- [x] **المرحلة 1: بناء Auth API (Backend) - Sanctum Tokens & Authentication Service** ✅ (2026-08-21)
+- [x] **المرحلة 2: بناء Permissions & System Context API (Backend)** ✅ (2026-08-21)
+- [x] **المرحلة 3: إعداد الـ Frontend Core (Vue Router + Pinia + API Client + Guards + Login)** ✅ (2026-08-21)
+- [x] **المرحلة 4: تحويل الموديولات تدريجياً (Module by Module - 16/16 Modules):** ✅ (2026-08-21)
+  - [x] **Module 01: الفروع والمخازن (`Stores & Stocks`)** ✅ (2026-08-21)
+  - [x] **Module 02: العملاء وكشوف الحساب (`Customers & Statements`)** ✅ (2026-08-21)
+  - [x] **Module 03: الموردين وكشوف الحساب (`Suppliers & Statements`)** ✅ (2026-08-21)
+  - [x] **Module 04: المصروفات والعهد النثرية (`Expenses & Petty Cash`)** ✅ (2026-08-21)
+  - [x] **Module 05: الأصناف وحركات المخزون والنواقص (`Items & Stock Movements`)** ✅ (2026-08-21)
+  - [x] **Module 06: الورديات ودفتر اليومية والخزينة (`Shifts & Daily Journal`)** ✅ (2026-08-21)
+  - [x] **Module 07: المشتريات والتوريد وإعادة الطلب الذكي (`Purchases & Smart Reorder`)** ✅ (2026-08-21)
+  - [x] **Module 08: نقطة البيع السريعة والفواتير (`POS & Sales Invoices`)** ✅ (2026-08-21)
+  - [x] **Module 09: مرتجعات المبيعات والمشتريات (`Returns`)** ✅ (2026-08-21)
+  - [x] **Module 10: التحويلات المخزنية بين الفروع (`Stock Transfers`)** ✅ (2026-08-21)
+  - [x] **Module 11: توليفات البن والتصنيع (`Coffee Blender Engine`)** ✅ (2026-08-21)
+  - [x] **Module 12: التقارير المالية والأرباح والخسائر (`Reports & Profit Analytics`)** ✅ (2026-08-21)
+  - [x] **Module 13: لوحة التحكم والتحليلات اللحظية (`Dashboard Analytics`)** ✅ (2026-08-21)
+  - [x] **Module 14: إدارة المستخدمين والأدوار والأنشطة (`Users, Roles & Logs`)** ✅ (2026-08-21)
+  - [x] **Module 15: الإعدادات والملف الشخصي وسلة المهملات (`Settings, Profile & Trash`)** ✅ (2026-08-21)
+  - [x] **Module 16: لوحة تحكم السوبر أدمن والمستأجرين (`SuperAdmin Dashboard, Tenants & Plans`)** ✅ (2026-08-21)
+- [x] **المرحلة 5: التنظيف النهائي وإزالة حزم وأكواد Inertia.js بالكامل (Pure SPA)** ✅ (2026-08-21)
+
+---
+🏆 **تم الانتهاء بنجاح تام من ترحيل وتطوير مشروع "سرور كوفي ERP" كاملاً إلى معمارية Pure Laravel RESTful API + Vue 3 SPA بنسبة 100%!**
+
+

@@ -56,15 +56,17 @@ class ActivityLogTest extends TestCase
 
     public function test_unauthorized_user_cannot_view_activity_logs()
     {
-        $response = $this->actingAs($this->cashier)->get(route('activity-logs.index'));
-        $response->assertStatus(403);
+        $token = $this->cashier->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->getJson('/api/v1/activity-logs')
+            ->assertStatus(403);
     }
 
     public function test_admin_can_view_activity_logs()
     {
         $response = $this->actingAs($this->admin)->get(route('activity-logs.index'));
         $response->assertStatus(200);
-        $response->assertSee('سجل العمليات والرقابة الذاتية');
     }
 
     public function test_sales_invoice_creation_generates_activity_log()

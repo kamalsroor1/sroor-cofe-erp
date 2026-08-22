@@ -41,7 +41,33 @@ input, textarea, [contenteditable="true"] {
     user-select: text !important;
 }
 
-/* 🚀 Seamless Native Page Transition Animation */
+/* 🚀 Option 3: Seamless RTL Horizontal Swipe Page Transition Animation */
+.page-enter-active {
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: opacity, transform, filter;
+}
+
+.page-leave-active {
+    transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1),
+                transform 0.16s cubic-bezier(0.4, 0, 1, 1),
+                filter 0.16s cubic-bezier(0.4, 0, 1, 1) !important;
+    will-change: opacity, transform, filter;
+}
+
+.page-enter-from {
+    opacity: 0 !important;
+    transform: translateX(28px) scale(0.99) !important;
+    filter: blur(3px) !important;
+}
+
+.page-leave-to {
+    opacity: 0 !important;
+    transform: translateX(-20px) scale(0.99) !important;
+    filter: blur(2px) !important;
+}
+
 .page-content-enter {
     animation: nativePageSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -57,16 +83,21 @@ input, textarea, [contenteditable="true"] {
     }
 }
 
-/* 📱 Native Vue UI Component Transitions */
 /* 1. Sidebar Drawer Slide (RTL Right to Left) */
 .sidebar-drawer-enter-active,
 .sidebar-drawer-leave-active {
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+    will-change: transform, opacity;
 }
 .sidebar-drawer-enter-from,
 .sidebar-drawer-leave-to {
     transform: translateX(100%) !important;
-    opacity: 0.95 !important;
+    opacity: 0.4 !important;
+}
+.sidebar-drawer-enter-to,
+.sidebar-drawer-leave-from {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
 }
 
 /* 2. Dropdown Menu Spring Pop */
@@ -97,6 +128,56 @@ input, textarea, [contenteditable="true"] {
 .sheet-slide-enter-from > div,
 .sheet-slide-leave-to > div {
     transform: translateY(100%) !important;
+}
+
+/* ⚙️ Dedicated Fluid Settings Hub & Sub-Pages Navigation Transitions */
+.settings-slide-enter-active {
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: opacity, transform, filter;
+}
+
+.settings-slide-leave-active {
+    transition: opacity 0.15s cubic-bezier(0.4, 0, 1, 1),
+                transform 0.15s cubic-bezier(0.4, 0, 1, 1),
+                filter 0.15s cubic-bezier(0.4, 0, 1, 1) !important;
+    will-change: opacity, transform, filter;
+}
+
+.settings-slide-enter-from {
+    opacity: 0 !important;
+    transform: translateX(24px) scale(0.985) !important;
+    filter: blur(3px) !important;
+}
+
+.settings-slide-leave-to {
+    opacity: 0 !important;
+    transform: translateX(-16px) scale(0.99) !important;
+    filter: blur(2px) !important;
+}
+
+.settings-crossfade-enter-active {
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.settings-crossfade-leave-active {
+    transition: opacity 0.14s ease,
+                transform 0.14s ease !important;
+}
+
+.settings-crossfade-enter-from {
+    opacity: 0 !important;
+    transform: translateY(8px) scale(0.99) !important;
+    filter: blur(3px) !important;
+}
+
+.settings-crossfade-leave-to {
+    opacity: 0 !important;
+    transform: translateY(-6px) scale(0.99) !important;
+    filter: blur(2px) !important;
 }
 
 /* 4. Global Smooth Fade */

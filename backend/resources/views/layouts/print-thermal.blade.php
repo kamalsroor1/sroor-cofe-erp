@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>إيصال - {{ $invoice->invoice_number }}</title>
+    <title>{{ __('invoices.receipt_title', ['number' => $invoice->invoice_number]) }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
         @page {
@@ -53,9 +53,9 @@
 <body>
 
     <div class="no-print" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center;">
-        <button onclick="window.print()" style="padding: 7px 14px; font-family: 'Cairo'; background: #10b981; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-size: 12px;">🖨️ طباعة الإيصال</button>
-        <button onclick="downloadReceiptAsImage()" id="btn-thermal-img" style="padding: 7px 14px; font-family: 'Cairo'; background: #d97706; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-size: 12px;">📸 تحميل صورة</button>
-        <button onclick="window.history.back()" style="padding: 7px 12px; font-family: 'Cairo'; background: #475569; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 12px;">رجوع</button>
+        <button onclick="window.print()" style="padding: 7px 14px; font-family: 'Cairo'; background: #10b981; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-size: 12px;">🖨️ {{ __('invoices.print_receipt') }}</button>
+        <button onclick="downloadReceiptAsImage()" id="btn-thermal-img" style="padding: 7px 14px; font-family: 'Cairo'; background: #d97706; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-size: 12px;">📸 {{ __('invoices.download_image') }}</button>
+        <button onclick="window.history.back()" style="padding: 7px 12px; font-family: 'Cairo'; background: #475569; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 12px;">{{ __('common.back') }}</button>
     </div>
 
     <div id="receipt-container" style="background: #ffffff; padding: 4px;">
@@ -85,14 +85,14 @@
 
     <div class="border-t border-b py-1 my-2">
         <div style="display: flex; justify-content: space-between;">
-            <span><strong>رقم الفاتورة:</strong> {{ $invoice->invoice_number }}</span>
+            <span><strong>{{ __('invoices.invoice_number') }}:</strong> {{ $invoice->invoice_number }}</span>
         </div>
         <div style="display: flex; justify-content: space-between;">
-            <span><strong>التاريخ:</strong> {{ $invoice->invoice_date->format('Y-m-d') }}</span>
-            <span><strong>الوقت:</strong> {{ $invoice->created_at->format('H:i') }}</span>
+            <span><strong>{{ __('common.date') }}:</strong> {{ $invoice->invoice_date->format('Y-m-d') }}</span>
+            <span><strong>{{ __('common.time') }}:</strong> {{ $invoice->created_at->format('H:i') }}</span>
         </div>
         <div>
-            <span><strong>العميل:</strong> {{ $invoice->customer->name }}</span>
+            <span><strong>{{ __('invoices.customer') }}:</strong> {{ $invoice->customer->name }}</span>
         </div>
     </div>
 
@@ -100,7 +100,7 @@
     <table>
         <thead>
             <tr class="border-b">
-                <th class="text-right">{{ __('common.actions') ? 'الصنف' : 'Item' }}</th>
+                <th class="text-right">{{ __('inventory.item_name') }}</th>
                 <th class="text-center">{{ __('common.quantity') }}</th>
                 <th class="text-center">{{ __('common.unit_price') }}</th>
                 <th class="text-left">{{ __('common.total') }}</th>
@@ -146,7 +146,7 @@
             @endforeach
         @elseif(bccomp($invoice->shipping_cost, '0.000', 3) > 0)
             <div style="display: flex; justify-content: space-between;">
-                <span>+ الشحن / التوصيل:</span>
+                <span>+ {{ __('invoices.shipping_delivery') }}:</span>
                 <span style="font-weight: 800;">+{{ number_format($invoice->shipping_cost, 2) }} {{ __('common.currency') }}</span>
             </div>
         @endif
@@ -166,7 +166,7 @@
 
         @php
             $showCustomerBalance = \App\Models\Setting::getBool('thermal_show_customer_balance', true);
-            $footerNote = \App\Models\Setting::get('invoice_footer_note', 'شكراً لتعاملكم معنا');
+            $footerNote = \App\Models\Setting::get('invoice_footer_note', __('invoices.default_thank_you_note'));
             $showQr = \App\Models\Setting::getBool('print_show_qr', true);
             $customer = $invoice->customer;
         @endphp
@@ -174,8 +174,8 @@
         @if($showCustomerBalance && $customer && $customer->id != 1)
         <div style="margin-top: 5px; padding-top: 4px; border-top: 1px dashed #000; font-size: 11px;">
             <div style="display: flex; justify-content: space-between;">
-                <span>الرصيد الإجمالي على العميل:</span>
-                <span style="font-weight: 900;">{{ number_format($customer->current_balance, 2) }} ج.م</span>
+                <span>{{ __('contacts.payable_balance_label') }}:</span>
+                <span style="font-weight: 900;">{{ number_format($customer->current_balance, 2) }} {{ __('common.currency') }}</span>
             </div>
         </div>
         @endif
@@ -184,16 +184,16 @@
     @if($showQr)
     <div class="text-center py-1" style="margin-top: 6px;">
         <img 
-            src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data={{ urlencode(route('invoices.show', $invoice->id)) }}" 
+            src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data={{ urlencode(url('/invoices/' . $invoice->id)) }}" 
             alt="QR Code" 
             style="width: 75px; height: 75px; margin: 0 auto; display: block;"
         >
-        <span style="font-size: 9px; color: #555; display: block; margin-top: 2px;">امسح للتحقق من الفاتورة</span>
+        <span style="font-size: 9px; color: #555; display: block; margin-top: 2px;">{{ __('invoices.scan_qr_to_verify') }}</span>
     </div>
     @endif
 
     <div class="text-center py-2 border-t" style="margin-top: 6px;">
-        <p style="margin: 0; font-size: 11px; font-weight: 800;">{{ $footerNote ?: 'شكراً لتعاملكم معنا' }}</p>
+        <p style="margin: 0; font-size: 11px; font-weight: 800;">{{ $footerNote ?: __('invoices.default_thank_you_note') }}</p>
     </div>
 
     </div>
@@ -202,7 +202,7 @@
         function downloadReceiptAsImage() {
             const btn = document.getElementById('btn-thermal-img');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<span>جاري التجهيز... ⏳</span>';
+            btn.innerHTML = '<span>{{ __("invoices.preparing") }}</span>';
             btn.style.opacity = '0.7';
 
             const element = document.getElementById('receipt-container');
@@ -214,11 +214,11 @@
                 logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'إيصال-كاشير-{{ $invoice->invoice_number }}.png';
+                link.download = 'إيصال-{{ $invoice->invoice_number }}.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 
-                btn.innerHTML = '<span>تم التحميل ✅</span>';
+                btn.innerHTML = '<span>{{ __("invoices.downloaded_success") }}</span>';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.style.opacity = '1';
@@ -227,7 +227,7 @@
                 console.error('Error generating receipt image:', err);
                 btn.innerHTML = originalText;
                 btn.style.opacity = '1';
-                alert('حدث خطأ أثناء تحميل الإيصال كصورة.');
+                alert('{{ __("common.error") }}');
             });
         }
     </script>

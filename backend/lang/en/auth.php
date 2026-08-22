@@ -19,7 +19,7 @@ return [
 
     // Vue 3 Login Page Localization
     'title' => 'Sign in to ERP System',
-    'app_name' => 'Sroor ERP & Inventory Management',
+    'app_name' => 'Cloud ERP & Inventory Management',
     'subtitle' => 'Sign in with your phone number and password to continue',
     'phone' => 'Phone / Mobile Number',
     'phone_placeholder' => '01012316954',
@@ -30,7 +30,7 @@ return [
     'logging_in' => 'Authenticating...',
     'quick_accounts' => 'Authorized Accounts (Super Admin):',
     'click_to_fill' => 'Click to quick-fill',
-    'super_admin_1' => 'Kamal Sroor (Super Admin 1)',
+    'super_admin_1' => 'System Administrator 1 (Super Admin 1)',
     'super_admin_2' => 'General Manager 2 (Super Admin 2)',
     'login_success' => 'Logged in successfully to ERP System.',
     'logout_success' => 'Logged out successfully.',
@@ -43,4 +43,8 @@ return [
     'cannot_delete_own_account' => 'You cannot delete your own account',
     'user_deleted_success' => 'User account deleted successfully',
     'user_status_updated_success' => 'User status updated successfully',
+    'account_disabled' => 'This account is disabled, please contact administrator',
+    'unauthorized' => 'Unauthorized - Please sign in first',
+    'session_expired' => 'Session expired, please sign in again',
+    'tenant_not_found' => 'Tenant or organization not found',
 ];

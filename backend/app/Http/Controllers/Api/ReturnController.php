@@ -1,157 +1,137 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Returns\CreateReturnAction;
+use App\Actions\Returns\DeleteReturnAction;
+use App\DTOs\Returns\ReturnDocumentDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreReturnRequest;
+use App\Http\Resources\ReturnResource;
 use App\Models\ReturnDocument;
 use App\Models\Store;
-use App\Services\ReturnService;
-use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ReturnController extends Controller
+final class ReturnController extends Controller
 {
     public function __construct(
-        protected ReturnService $returnService
+        private readonly CreateReturnAction $createReturnAction,
+        private readonly DeleteReturnAction $deleteReturnAction
     ) {}
 
     /**
-     * List Return Documents (Sales & Purchases)
+     * List returns with filters and totals
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $type = $request->input('type'); // 'sales_return', 'purchase_return', 'all'
-        $search = $request->input('search');
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+        $search = trim((string)$request->input('search', ''));
+        $type = (string)$request->input('type', 'all');
+        $fromDate = $request->input('from_date') ?: $request->input('from');
+        $toDate = $request->input('to_date') ?: $request->input('to');
+        $perPage = (int)$request->input('per_page', 15);
 
-        $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-            ->when($type && $type !== 'all', fn($q) => $q->where('return_type', $type))
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('return_number', 'like', "%{$search}%")
-                        ->orWhere('reason', 'like', "%{$search}%")
-                        ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
-                });
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
+
+        $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item']);
+
+        if ($storeId) {
+            $query->where('store_id', (int)$storeId);
+        }
+
+        if ($type !== 'all' && $type !== '') {
+            $query->where('return_type', $type);
+        }
+
+        if ($fromDate) {
+            $query->whereDate('return_date', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate('return_date', '<=', $toDate);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('return_number', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%")
+                  ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
             });
+        }
 
-        $totalReturns = (clone $query)->sum('total_amount') ?: 0;
-        $totalCount = (clone $query)->count();
+        $totalReturnsValue = (float)(clone $query)->sum('total_amount');
+        $salesReturnsCount = (int)(clone $query)->where('return_type', 'sales_return')->count();
+        $purchaseReturnsCount = (int)(clone $query)->where('return_type', 'purchase_return')->count();
 
-        $returns = $query->latest('return_date')->latest('id')->paginate(30);
+        $returns = $query->latest('return_date')->latest('id')->paginate($perPage);
 
         return response()->json([
-            'success'       => true,
-            'returns'       => $returns->items(),
-            'total_returns' => (string)$totalReturns,
-            'total_count'   => $totalCount,
-            'pagination'    => [
+            'success' => true,
+            'data'    => ReturnResource::collection($returns->items())->resolve(),
+            'meta'    => [
                 'current_page' => $returns->currentPage(),
                 'last_page'    => $returns->lastPage(),
+                'per_page'     => $returns->perPage(),
                 'total'        => $returns->total(),
-            ]
-        ]);
+            ],
+            'summary' => [
+                'total_value'    => $totalReturnsValue,
+                'sales_count'    => $salesReturnsCount,
+                'purchase_count' => $purchaseReturnsCount,
+                'total_count'    => $salesReturnsCount + $purchaseReturnsCount,
+            ],
+        ], 200);
     }
 
     /**
-     * Store new Sales Return from Customer
+     * Show single return document with item lines
      */
-    public function storeSalesReturn(Request $request)
+    public function show(int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'customer_id'        => 'required|integer|exists:customers,id',
-            'invoice_id'         => 'nullable|integer|exists:invoices,id',
-            'return_date'        => 'required|date',
-            'reason'             => 'nullable|string|max:255',
-            'items'              => 'required|array|min:1',
-            'items.*.item_id'    => 'required|integer|exists:items,id',
-            'items.*.quantity'   => 'required|numeric|min:0.001',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        $returnDoc = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])->findOrFail($id);
 
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
-
-        $validated['store_id'] = $storeId;
-
-        try {
-            $returnDoc = $this->returnService->createSalesReturn($validated);
-
-            return response()->json([
-                'success' => true,
-                'message' => "تم تسجيل مرتجع المبيعات رقم {$returnDoc->return_number} وإعادة البضاعة للمخزن وتعديل الحساب بنجاح ✓",
-                'return'  => $returnDoc,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل تسجيل مرتجع المبيعات: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'data'    => (new ReturnResource($returnDoc))->resolve(),
+        ], 200);
     }
 
     /**
-     * Store new Purchase Return to Supplier
+     * Create and confirm return document via Form Request
      */
-    public function storePurchaseReturn(Request $request)
+    public function store(StoreReturnRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'supplier_id'        => 'required|integer|exists:suppliers,id',
-            'purchase_id'        => 'nullable|integer|exists:purchases,id',
-            'return_date'        => 'required|date',
-            'reason'             => 'nullable|string|max:255',
-            'items'              => 'required|array|min:1',
-            'items.*.item_id'    => 'required|integer|exists:items,id',
-            'items.*.quantity'   => 'required|numeric|min:0.001',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
 
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+        $dto = ReturnDocumentDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $returnDoc = $this->createReturnAction->execute($dto);
 
-        $validated['store_id'] = $storeId;
-
-        try {
-            $returnDoc = $this->returnService->createPurchaseReturn($validated);
-
-            return response()->json([
-                'success' => true,
-                'message' => "تم تسجيل مرتجع المشتريات رقم {$returnDoc->return_number} وخصم البضاعة من المخزن بنجاح ✓",
-                'return'  => $returnDoc,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل تسجيل مرتجع المشتريات: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => "تم تسجيل مستند المرتجع رقم {$returnDoc->return_number} بنجاح ✓",
+            'data'    => (new ReturnResource($returnDoc))->resolve(),
+        ], 201);
     }
 
     /**
-     * Cancel Return Document
+     * Delete/archive return document
      */
-    public function cancel(Request $request, $id)
+    public function destroy(int $id): JsonResponse
     {
-        $returnDoc = ReturnDocument::findOrFail($id);
-        $reason = $request->input('reason', 'إلغاء من تطبيق الموبايل');
+        $this->deleteReturnAction->execute($id);
 
-        try {
-            $this->returnService->cancelReturn($returnDoc, $reason);
-
-            return response()->json([
-                'success' => true,
-                'message' => "تم إلغاء مستند المرتجع رقم {$returnDoc->return_number} وعكس أثره بنجاح ✓",
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل إلغاء المرتجع: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حذف مستند المرتجع بنجاح ✓',
+        ], 200);
     }
 }

@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import { Receipt } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
@@ -41,9 +40,9 @@ const invoiceColumns = computed(() => [
                 <Receipt class="w-5 h-5 text-theme-primary" />
                 <h2 class="text-base lg:text-lg font-black text-slate-900 dark:text-white">{{ $t('dashboard.recent_invoices_title') }}</h2>
             </div>
-            <Link href="/invoices" class="text-xs font-black text-theme-primary hover:underline transition active:scale-95">
+            <router-link to="/invoices" class="text-xs font-black text-theme-primary hover:underline transition active:scale-95">
                 {{ $t('dashboard.view_all') }}
-            </Link>
+            </router-link>
         </div>
 
         <DataTable
@@ -54,9 +53,9 @@ const invoiceColumns = computed(() => [
         >
             <!-- Number -->
             <template #cell-invoice_number="{ row }">
-                <Link :href="`/invoices/${row.id}`" class="font-mono font-black text-theme-primary hover:underline">
+                <router-link :to="`/invoices/${row.id}`" class="font-mono font-black text-theme-primary hover:underline">
                     #{{ row.invoice_number }}
-                </Link>
+                </router-link>
             </template>
 
             <!-- Customer -->
@@ -90,9 +89,9 @@ const invoiceColumns = computed(() => [
             <template #mobile-card="{ row }">
                 <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-2.5 shadow-xs font-tajawal">
                     <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                        <Link :href="`/invoices/${row.id}`" class="font-mono font-black text-sm text-theme-primary hover:underline">
+                        <router-link :to="`/invoices/${row.id}`" class="font-mono font-black text-sm text-theme-primary hover:underline">
                             #{{ row.invoice_number }}
-                        </Link>
+                        </router-link>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="getPaymentTypeBadge(row.payment_type).class">
                             {{ getPaymentTypeBadge(row.payment_type).label }}
                         </span>

@@ -23,11 +23,11 @@ const emit = defineEmits(['apply', 'set-period']);
                 <span class="text-slate-500 dark:text-slate-400 font-bold text-[11px] px-1">{{ $t('common.date') }}:</span>
                 <button
                     v-for="p in [
-                        { id: 'today', label: $t('common.today') || 'اليوم' },
-                        { id: 'yesterday', label: $t('common.yesterday') || 'أمس' },
-                        { id: 'this_week', label: $t('common.this_week') || 'هذا الأسبوع' },
-                        { id: 'this_month', label: $t('common.this_month') || 'هذا الشهر' },
-                        { id: 'this_year', label: $t('common.this_year') || 'هذا العام' },
+                        { id: 'today', label: $t('common.today') },
+                        { id: 'yesterday', label: $t('common.yesterday') },
+                        { id: 'this_week', label: $t('common.this_week') },
+                        { id: 'this_month', label: $t('common.this_month') },
+                        { id: 'this_year', label: $t('common.this_year') },
                     ]"
                     :key="p.id"
                     type="button"

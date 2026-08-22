@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#020617">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title inertia>{{ config('app.name', 'مخزني ERP') }}</title>
+    <title>{{ \App\Models\Setting::get('platform_name') ?: \App\Models\Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية') }}</title>
 
     <!-- Early Anti-Flicker Theme Script -->
     <script>
@@ -42,9 +42,8 @@
     <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
-    <!-- Vite Scripts & Inertia -->
+    <!-- Vite Scripts (Vue 3 Pure SPA) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @inertiaHead
 
     <style>
         * {
@@ -57,6 +56,6 @@
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-amber-500 selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
-    @inertia
+    <div id="app"></div>
 </body>
 </html>

@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import { PackageOpen } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -55,14 +54,14 @@ const handleAction = () => {
         <!-- Custom or Pre-defined Action Button -->
         <div v-if="$slots.default || (actionLabel && (actionHref || $attrs.onAction))" class="pt-2 flex items-center justify-center gap-2">
             <slot>
-                <Link
+                <router-link
                     v-if="actionHref"
-                    :href="actionHref"
+                    :to="actionHref"
                     class="h-10 px-5 rounded-2xl btn-primary-theme text-xs font-black flex items-center gap-1.5 transition active:scale-95 shadow-theme-sm cursor-pointer"
                 >
                     <component v-if="actionIcon" :is="actionIcon" class="w-4 h-4" />
                     <span>{{ actionLabel }}</span>
-                </Link>
+                </router-link>
                 <button
                     v-else-if="actionLabel"
                     @click="handleAction"

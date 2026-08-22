@@ -16,4 +16,11 @@ return [
     'confirm_new_password'      => 'Confirm New Password',
     'save_profile_btn'          => 'Save Profile Settings',
     'saving_profile'            => 'Saving...',
+    'profile_loading'           => 'Loading profile data...',
+    'security_password_title'   => 'Security & Change Password',
+    'password_leave_blank_hint' => 'Leave these fields empty if you do not want to change your current password.',
+    'theme_dark_slate'          => 'Dark Mode (Dark Slate)',
+    'theme_light_shell'         => 'Light Mode (Light Shell)',
+    'profile_updated_success'   => 'Profile updated successfully ✓',
+    'save_changes'              => 'Save Changes',
 ];

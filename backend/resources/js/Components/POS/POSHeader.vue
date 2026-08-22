@@ -1,6 +1,4 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
-
 defineProps({
     activeStore: {
         type: Object,
@@ -54,13 +52,13 @@ defineEmits(['toggle-numpad']);
                 <span>{{ $t('pos.numpad') }}</span>
             </button>
 
-            <Link
-                href="/invoices"
+            <router-link
+                to="/invoices"
                 class="h-9 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5 transition"
             >
                 <span>🧾</span>
                 <span>{{ $t('pos.invoices_list') }}</span>
-            </Link>
+            </router-link>
         </div>
     </div>
 </template>

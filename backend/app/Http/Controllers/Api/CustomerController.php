@@ -1,259 +1,200 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Customers\CollectCustomerPaymentAction;
+use App\Actions\Customers\CreateCustomerAction;
+use App\Actions\Customers\DeleteCustomerAction;
+use App\Actions\Customers\GetCustomerStatementAction;
+use App\Actions\Customers\ToggleCustomerActiveAction;
+use App\Actions\Customers\UpdateCustomerAction;
+use App\DTOs\Customers\CollectCustomerPaymentDTO;
+use App\DTOs\Customers\CustomerDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\CollectCustomerPaymentRequest;
+use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Requests\UpdateCustomerRequest;
+use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\ReturnDocument;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class CustomerController extends Controller
+final class CustomerController extends Controller
 {
-    /**
-     * List / Search Customers
-     */
-    public function index(Request $request)
-    {
-        $search = trim($request->input('search', ''));
-        $status = $request->input('status', 'all'); // all, active, inactive, with_debt
+    public function __construct(
+        private readonly CreateCustomerAction $createCustomerAction,
+        private readonly UpdateCustomerAction $updateCustomerAction,
+        private readonly DeleteCustomerAction $deleteCustomerAction,
+        private readonly ToggleCustomerActiveAction $toggleCustomerActiveAction,
+        private readonly CollectCustomerPaymentAction $collectCustomerPaymentAction,
+        private readonly GetCustomerStatementAction $getCustomerStatementAction
+    ) {}
 
-        $query = Customer::query();
+    /**
+     * List / Search Customers with filters & metrics
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $search = trim((string)$request->input('search', ''));
+        $debtStatus = (string)$request->input('debt_status', 'all');
+        $status = (string)$request->input('status', 'all');
+        $perPage = (int)$request->input('per_page', 20);
+
+        $query = Customer::withCount(['invoices', 'payments']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
                   ->orWhere('tax_number', 'like', "%{$search}%");
             });
+        }
+
+        if ($debtStatus === 'debtor') {
+            $query->where('current_balance', '>', 0);
+        } elseif ($debtStatus === 'zero') {
+            $query->where('current_balance', '=', 0);
+        } elseif ($debtStatus === 'creditor') {
+            $query->where('current_balance', '<', 0);
         }
 
         if ($status === 'active') {
             $query->where('is_active', true);
         } elseif ($status === 'inactive') {
             $query->where('is_active', false);
-        } elseif ($status === 'with_debt') {
-            $query->where('current_balance', '>', 0);
         }
 
-        $perPage = (int)$request->input('per_page', 25);
         $customers = $query->latest('id')->paginate($perPage);
+
+        $totalDebt = (float)Customer::where('current_balance', '>', 0)->sum('current_balance');
+        $debtorsCount = Customer::where('current_balance', '>', 0)->count();
+        $totalCustomersCount = Customer::count();
 
         return response()->json([
             'success' => true,
-            'data'    => $customers->items(),
-            'pagination' => [
-                'total'        => $customers->total(),
+            'data'    => CustomerResource::collection($customers->items())->resolve(),
+            'meta'    => [
                 'current_page' => $customers->currentPage(),
                 'last_page'    => $customers->lastPage(),
                 'per_page'     => $customers->perPage(),
+                'total'        => $customers->total(),
             ],
             'summary' => [
-                'total_customers'  => Customer::count(),
-                'total_receivable' => (string)(Customer::where('current_balance', '>', 0)->sum('current_balance') ?: '0.000'),
-            ]
-        ]);
+                'total_debt'          => $totalDebt,
+                'debtors_count'       => $debtorsCount,
+                'total_customers'     => $totalCustomersCount,
+            ],
+        ], 200);
     }
 
     /**
-     * Get Customer Profile
+     * Store a newly created customer
      */
-    public function show($id)
+    public function store(StoreCustomerRequest $request): JsonResponse
     {
-        $customer = Customer::withCount(['invoices', 'payments'])->findOrFail($id);
-
-        $totalSales = (string)($customer->invoices()->where('status', 'confirmed')->sum('net_total') ?: '0.000');
-        $totalPaid = (string)($customer->payments()->sum('amount') ?: '0.000');
+        $dto = CustomerDTO::fromArray($request->validated());
+        $customer = $this->createCustomerAction->execute($dto);
 
         return response()->json([
-            'success'  => true,
-            'customer' => $customer,
-            'stats'    => [
-                'total_sales'      => $totalSales,
-                'total_paid'       => $totalPaid,
-                'current_balance'  => (string)$customer->current_balance,
-                'invoices_count'   => $customer->invoices_count,
-                'payments_count'   => $customer->payments_count,
-            ]
-        ]);
-    }
-
-    /**
-     * Create New Customer
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name'            => 'required|string|max:255',
-            'phone'           => 'nullable|string|max:50',
-            'address'         => 'nullable|string|max:255',
-            'tax_number'      => 'nullable|string|max:50',
-            'credit_limit'    => 'nullable|numeric|min:0',
-            'opening_balance' => 'nullable|numeric',
-            'notes'           => 'nullable|string',
-        ]);
-
-        $openingBalance = (string)($validated['opening_balance'] ?? '0.000');
-
-        $customer = Customer::create([
-            'name'            => $validated['name'],
-            'phone'           => $validated['phone'] ?? null,
-            'address'         => $validated['address'] ?? null,
-            'tax_number'      => $validated['tax_number'] ?? null,
-            'current_balance' => $openingBalance,
-            'is_active'       => true,
-            'notes'           => $validated['notes'] ?? null,
-        ]);
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'تم إضافة العميل بنجاح',
-            'customer' => $customer,
+            'success' => true,
+            'message' => __('contacts.customer_added') ?: 'تم إضافة العميل بنجاح',
+            'data'    => (new CustomerResource($customer))->resolve(),
         ], 201);
     }
 
     /**
-     * Update Customer
+     * Display the specified customer
      */
-    public function update(Request $request, $id)
+    public function show(int $id): JsonResponse
     {
-        $customer = Customer::findOrFail($id);
-
-        $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'phone'        => 'nullable|string|max:50',
-            'address'      => 'nullable|string|max:255',
-            'tax_number'   => 'nullable|string|max:50',
-            'is_active'    => 'nullable|boolean',
-            'notes'        => 'nullable|string',
-        ]);
-
-        $customer->update($validated);
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'تم تحديث بيانات العميل بنجاح',
-            'customer' => $customer,
-        ]);
-    }
-
-    /**
-     * Statement of Account (كشف حساب عميل)
-     */
-    public function statement(Request $request, $id)
-    {
-        $customer = Customer::findOrFail($id);
-
-        $fromDate = $request->input('from_date');
-        $toDate = $request->input('to_date', now()->toDateString());
-
-        // 1. Invoices
-        $invoicesQuery = Invoice::where('customer_id', $id)
-            ->where('status', 'confirmed');
-        if ($fromDate) {
-            $invoicesQuery->whereDate('invoice_date', '>=', $fromDate);
-        }
-        if ($toDate) {
-            $invoicesQuery->whereDate('invoice_date', '<=', $toDate);
-        }
-        $invoices = $invoicesQuery->latest('invoice_date')->get();
-
-        // 2. Payments (Direct collections)
-        $paymentsQuery = Payment::where('customer_id', $id);
-        if ($fromDate) {
-            $paymentsQuery->whereDate('payment_date', '>=', $fromDate);
-        }
-        if ($toDate) {
-            $paymentsQuery->whereDate('payment_date', '<=', $toDate);
-        }
-        $payments = $paymentsQuery->latest('payment_date')->get();
-
-        // 3. Combine chronological ledger
-        $ledger = collect();
-
-        foreach ($invoices as $inv) {
-            $ledger->push([
-                'id'             => $inv->id,
-                'type'           => 'invoice',
-                'type_label'     => 'فاتورة مبيعات',
-                'document_number'=> $inv->invoice_number,
-                'date'           => $inv->invoice_date,
-                'debit'          => (string)$inv->net_total,
-                'credit'         => (string)($inv->paid_amount ?: '0.000'),
-                'payment_type'   => $inv->payment_type,
-                'notes'          => $inv->notes,
-                'items_count'    => $inv->items()->count(),
-            ]);
-        }
-
-        foreach ($payments as $pay) {
-            $ledger->push([
-                'id'             => $pay->id,
-                'type'           => 'payment',
-                'type_label'     => 'سند قبض / تحصيل',
-                'document_number'=> $pay->payment_number ?? ('PAY-' . $pay->id),
-                'date'           => $pay->payment_date,
-                'debit'          => '0.000',
-                'credit'         => (string)$pay->amount,
-                'payment_type'   => $pay->payment_type ?? 'cash',
-                'notes'          => $pay->notes,
-                'items_count'    => 0,
-            ]);
-        }
-
-        // Sort descending by date
-        $sortedLedger = $ledger->sortByDesc('date')->values();
-
-        $totalSales = (string)($invoices->sum('net_total') ?: '0.000');
-        $totalPaidDirect = (string)($payments->sum('amount') ?: '0.000');
-        $totalPaidImmediate = (string)($invoices->sum('paid_amount') ?: '0.000');
-        $totalCustomerPaid = bcadd($totalPaidDirect, $totalPaidImmediate, 3);
-
-        return response()->json([
-            'success'  => true,
-            'customer' => [
-                'id'              => $customer->id,
-                'name'            => $customer->name,
-                'phone'           => $customer->phone,
-                'tax_number'      => $customer->tax_number,
-                'current_balance' => (string)$customer->current_balance,
-            ],
-            'filter'   => [
-                'from_date' => $fromDate,
-                'to_date'   => $toDate,
-            ],
-            'summary'  => [
-                'total_invoices_amount' => $totalSales,
-                'total_paid_amount'     => $totalCustomerPaid,
-                'net_balance'           => (string)$customer->current_balance,
-                'transactions_count'    => $sortedLedger->count(),
-            ],
-            'ledger'   => $sortedLedger,
-        ]);
-    }
-
-    /**
-     * Delete Customer (Deactivate if has financial history, delete otherwise)
-     */
-    public function destroy($id)
-    {
-        $customer = Customer::findOrFail($id);
-
-        if ($customer->invoices()->exists() || $customer->payments()->exists()) {
-            $customer->update(['is_active' => false]);
-            return response()->json([
-                'success' => true,
-                'message' => 'تم تعطيل حساب العميل نظراً لوجود حركات مالية مسجلة باسمه',
-            ]);
-        }
-
-        $customer->delete();
+        $customer = Customer::withCount(['invoices', 'payments'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'message' => 'تم حذف العميل بنجاح',
-        ]);
+            'data'    => (new CustomerResource($customer))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Update the specified customer
+     */
+    public function update(UpdateCustomerRequest $request, int $id): JsonResponse
+    {
+        $customer = Customer::findOrFail($id);
+        $dto = CustomerDTO::fromArray($request->validated());
+        $updatedCustomer = $this->updateCustomerAction->execute($customer, $dto);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.customer_updated') ?: 'تم تعديل بيانات العميل بنجاح',
+            'data'    => (new CustomerResource($updatedCustomer))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Collect / Record Customer Payment
+     */
+    public function collectPayment(CollectCustomerPaymentRequest $request, int $id): JsonResponse
+    {
+        $dto = CollectCustomerPaymentDTO::fromArray($id, $request->validated());
+        $result = $this->collectCustomerPaymentAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.payment_recorded') ?: 'تم تسجيل سند التحصيل بنجاح',
+            'data'    => [
+                'customer' => (new CustomerResource($result['customer']))->resolve(),
+                'payment'  => $result['payment'],
+            ],
+        ], 200);
+    }
+
+    /**
+     * Get Customer Statement of Account (Ledger)
+     */
+    public function statement(Request $request, int $id): JsonResponse
+    {
+        $customer = Customer::findOrFail($id);
+        $fromDate = $request->query('from_date') ?: $request->query('from');
+        $toDate = $request->query('to_date') ?: $request->query('to');
+
+        $data = $this->getCustomerStatementAction->execute($customer, $fromDate, $toDate);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ], 200);
+    }
+
+    /**
+     * Toggle Customer Active Status
+     */
+    public function toggleActive(int $id): JsonResponse
+    {
+        $customer = Customer::findOrFail($id);
+        $toggled = $this->toggleCustomerActiveAction->execute($customer);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.customer_status_updated') ?: 'تم تحديث حالة العميل بنجاح',
+            'data'    => (new CustomerResource($toggled))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Delete the specified customer
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $customer = Customer::findOrFail($id);
+        $this->deleteCustomerAction->execute($customer);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.customer_deleted') ?: 'تم حذف العميل بنجاح',
+        ], 200);
     }
 }

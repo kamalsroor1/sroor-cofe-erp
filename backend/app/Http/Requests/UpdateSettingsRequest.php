@@ -10,7 +10,7 @@ class UpdateSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('roles.manage') ?? false;
+        return (bool)($this->user() && ($this->user()->hasRole('admin') || $this->user()->can('roles.manage') || $this->user()->can('users.manage')));
     }
 
     public function rules(): array

@@ -22,12 +22,15 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, './resources/js'),
+            '@': path.resolve(import.meta.dirname, './resources/js'),
         },
     },
     server: {
-        host: '0.0.0.0',
+        host: 'localhost',
         cors: true,
+        hmr: {
+            host: 'localhost',
+        },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

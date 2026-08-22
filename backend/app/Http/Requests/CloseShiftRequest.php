@@ -10,7 +10,7 @@ class CloseShiftRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('daily_journal.view') ?? false;
+        return $this->user()?->hasRole('admin') || $this->user()?->can('daily_journal.view') || $this->user()?->can('pos.sell') ?? false;
     }
 
     public function rules(): array

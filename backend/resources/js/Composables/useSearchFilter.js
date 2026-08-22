@@ -1,48 +1,28 @@
-import { ref, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 /**
- * useSearchFilter - Reusable Composable for managing search queries and filters with Inertia router.
+ * useSearchFilter - Reusable Composable for managing search queries and filters in Pure Vue 3 SPA.
  * 
- * @param {string} routeName - The endpoint URL to send filter requests to (e.g. '/invoices')
+ * @param {Function} fetchCallback - Async function to call when filters change
  * @param {Object} initialFilters - Initial filter values
- * @param {Object} options - Configuration options (debounceMs, preserveScroll, preserveState, only)
+ * @param {Object} options - Configuration options (debounceMs)
  */
-export function useSearchFilter(routeName, initialFilters = {}, options = {}) {
-    const {
-        debounceMs = 300,
-        preserveScroll = true,
-        preserveState = true,
-        only = []
-    } = options;
+export function useSearchFilter(fetchCallback, initialFilters = {}, options = {}) {
+    const { debounceMs = 300 } = options;
 
     const filters = ref({ ...initialFilters });
     const isFiltering = ref(false);
     let debounceTimer = null;
 
-    const applyFilters = () => {
+    const applyFilters = async () => {
         isFiltering.value = true;
-
-        const cleanParams = {};
-        for (const [key, value] of Object.entries(filters.value)) {
-            if (value !== '' && value !== null && value !== undefined && value !== 'all') {
-                cleanParams[key] = value;
+        try {
+            if (typeof fetchCallback === 'function') {
+                await fetchCallback(filters.value);
             }
+        } finally {
+            isFiltering.value = false;
         }
-
-        const visitOptions = {
-            preserveScroll,
-            preserveState,
-            onFinish: () => {
-                isFiltering.value = false;
-            }
-        };
-
-        if (only.length > 0) {
-            visitOptions.only = only;
-        }
-
-        router.get(routeName, cleanParams, visitOptions);
     };
 
     const debouncedApply = () => {

@@ -1,49 +1,91 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname);
+const authStorageFile = path.resolve(rootDir, 'e2e/.auth/user.json');
 
 /**
- * Playwright E2E Configuration for Mobile ERP
+ * Playwright Configuration for E2E Visual Testing & Crawling System
  */
 export default defineConfig({
-  testDir: './tests/e2e/specs',
-  timeout: 30000,
+  testDir: path.resolve(rootDir, 'e2e'),
+  timeout: 45000,
   expect: {
-    timeout: 6000
+    timeout: 8000,
   },
   fullyParallel: false,
   retries: 0,
   workers: 1,
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'tests/e2e/reports', open: 'never' }]
   ],
   use: {
-    baseURL: 'http://127.0.0.1:8080',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    baseURL: process.env.APP_URL || 'http://127.0.0.1:8000',
+    trace: 'on-first-retry',
+    screenshot: 'off',
+    video: 'off',
     bypassCSP: true,
     locale: 'ar-EG',
     timezoneId: 'Africa/Cairo',
   },
 
-  /* Configure exclusively for Mobile Devices */
+  webServer: {
+    command: 'php backend/artisan serve --host=127.0.0.1 --port=8000',
+    url: 'http://127.0.0.1:8000',
+    reuseExistingServer: true,
+    timeout: 30000,
+    cwd: rootDir,
+  },
+
   projects: [
+    // 1. Authentication Setup
     {
-      name: 'Mobile-Pixel-7',
-      use: { 
-        ...devices['Pixel 7'],
-        channel: 'msedge',
-        locale: 'ar-EG',
-      },
+      name: 'auth-setup',
+      testMatch: /login\.setup\.js/,
     },
+
+    // 2. Desktop Viewport (1920x1080)
     {
-      name: 'Mobile-iPhone-14',
-      use: { 
-        ...devices['iPhone 14 Pro'],
-        channel: 'msedge',
-        locale: 'ar-EG',
+      name: 'desktop',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
+        storageState: authStorageFile,
       },
+      dependencies: ['auth-setup'],
+      testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
+    },
+
+    // 3. Tablet Viewport (iPad Pro 11 / 1024x768 Touch Landscape)
+    {
+      name: 'tablet',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1024, height: 768 },
+        isMobile: true,
+        hasTouch: true,
+        storageState: authStorageFile,
+      },
+      dependencies: ['auth-setup'],
+      testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
+    },
+
+    // 4. Mobile Viewport (390x844 Pixel 7 / iPhone Touch)
+    {
+      name: 'mobile',
+      use: {
+        ...devices['Pixel 7'],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+        storageState: authStorageFile,
+      },
+      dependencies: ['auth-setup'],
+      testMatch: /crawlers\/.*\.spec\.js|flows\/.*\.spec\.js/,
     },
   ],
 });

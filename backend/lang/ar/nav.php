@@ -11,7 +11,9 @@ return [
     'invoices_short' => 'الفواتير',
     'items_short' => 'الأصناف',
     'shift_short' => 'الوردية',
+    'treasury_short' => 'الخزينة',
     'more_short' => 'المزيد',
+    'more_menu' => 'المزيد من القوائم',
     'returns_adjustments' => 'سجل المرتجعات',
     
     'group_inventory' => 'المخزون والفروع والتوزيع',
@@ -21,7 +23,7 @@ return [
     'stores' => 'الفروع وعربات التوزيع',
     'purchases' => 'فواتير المشتريات',
     'smart_reorder' => 'إعادة الطلب الذكي',
-    'coffee_blender' => 'خلّاط ومطحنة البن',
+    'coffee_blender' => 'معمل تركيب وتجميع الأصناف',
     'suppliers' => 'الموردون والشركات',
     
     'group_financials' => 'المرتجعات والمصروفات والتقارير',
@@ -40,7 +42,7 @@ return [
     'super_admin' => 'لوحة Super Admin المركزية',
     'switch_store' => 'تبديل الفرع / المخزن',
     'toggle_sidebar' => 'تصغير / تكبير القائمة',
-    'cloud_erp_subtitle' => 'توزيع خامات مطاحن البن والمبيعات',
+    'cloud_erp_subtitle' => 'إدارة المبيعات والمخزون ونقاط البيع',
     'select_store_modal_title' => 'اختيار الفرع أو المخزن النشط',
     'logout' => 'تسجيل الخروج',
     'store_open' => 'مفتوح',

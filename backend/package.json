@@ -3,7 +3,16 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "e2e:all": "npx playwright test --config=../playwright.config.js",
+        "e2e:desktop": "npx playwright test --config=../playwright.config.js --project=desktop",
+        "e2e:tablet": "npx playwright test --config=../playwright.config.js --project=tablet",
+        "e2e:mobile": "npx playwright test --config=../playwright.config.js --project=mobile",
+        "e2e:touch": "npx playwright test --config=../playwright.config.js --project=tablet --project=mobile",
+        "e2e:module": "npx playwright test --config=../playwright.config.js --grep",
+        "e2e:page": "npx playwright test --config=../playwright.config.js -g",
+        "e2e:flow": "npx playwright test --config=../playwright.config.js e2e/flows/",
+        "e2e:report": "npx playwright show-report"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -21,12 +30,13 @@
         "@capacitor/network": "^8.0.1",
         "@capacitor/status-bar": "^8.0.3",
         "@capacitor/toast": "^8.0.1",
-        "@inertiajs/vue3": "^3.7.0",
         "@vitejs/plugin-vue": "^6.0.8",
         "axios": "^1.19.0",
         "flatpickr": "^4.6.13",
         "lucide-vue-next": "^1.0.0",
+        "pinia": "^3.0.4",
         "sweetalert2": "^11.26.25",
-        "vue": "^3.5.41"
+        "vue": "^3.5.41",
+        "vue-router": "^4.6.4"
     }
 }

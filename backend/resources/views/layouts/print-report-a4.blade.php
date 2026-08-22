@@ -63,16 +63,16 @@
         <div class="flex items-center gap-3">
             <span class="text-xl">🖨️</span>
             <div>
-                <h1 class="text-sm font-bold">معاينة طباعة: {{ $reportTitle }} (A4)</h1>
-                <p class="text-[11px] text-slate-400">تقرير رسمي مفصل جاهز للطباعة المباشرة وحفظه كـ PDF</p>
+                <h1 class="text-sm font-bold">{{ __('reports.report_preview_title', ['title' => $reportTitle]) }}</h1>
+                <p class="text-[11px] text-slate-400">{{ __('reports.report_preview_desc') }}</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
             <button onclick="window.print()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md cursor-pointer">
-                <span>🖨️ طباعة التقرير (Ctrl + P)</span>
+                <span>🖨️ {{ __('reports.print_report_btn') }}</span>
             </button>
             <button onclick="window.close()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer">
-                إغلاق
+                {{ __('common.close') }}
             </button>
         </div>
     </div>
@@ -86,17 +86,17 @@
                 </h1>
                 <p class="text-xs font-bold text-slate-600">{{ $companySubtitle }}</p>
                 <div class="text-[10px] text-slate-500 font-mono">
-                    تاريخ الاستخراج: {{ now()->format('Y-m-d H:i') }} | بواسطة: {{ auth()->user()?->name ?? 'المسؤول' }}
+                    {{ __('inventory.report_generated_at') }} {{ now()->format('Y-m-d H:i') }} | {{ __('common.by') }}: {{ auth()->user()?->name ?? __('common.user') }}
                 </div>
             </div>
 
             <div class="text-left bg-slate-100 p-3 rounded-xl border border-slate-300 min-w-[220px]">
                 <h2 class="text-sm font-black text-slate-900 mb-1 border-b border-slate-300 pb-1">{{ $reportTitle }}</h2>
                 <div class="text-[11px] font-bold text-slate-700">
-                    نطاق الفرع: <span class="text-slate-900">{{ $storeName }}</span>
+                    {{ __('reports.store_scope') }} <span class="text-slate-900">{{ $storeName }}</span>
                 </div>
                 <div class="text-[10px] text-slate-600 font-mono mt-0.5">
-                    الفترة: {{ $fromDate ?: 'أول المدة' }} إلى {{ $toDate ?: now()->toDateString() }}
+                    {{ __('inventory.period_range') }} {{ $fromDate ?: __('inventory.beginning_of_period') }} {{ __('inventory.to_date_label') }} {{ $toDate ?: now()->toDateString() }}
                 </div>
             </div>
         </div>
@@ -142,7 +142,7 @@
             @empty
             <tr>
                 <td colspan="{{ count($tableHeaders) + 1 }}" class="border border-slate-400 p-6 text-center text-slate-500 font-bold">
-                    لا توجد بيانات مسجلة لهذا التقرير خلال الفترة المحددة
+                    {{ __('reports.no_report_data') }}
                 </td>
             </tr>
             @endforelse
@@ -165,16 +165,16 @@
     <div class="page-break-inside-avoid mt-8 pt-4 border-t-2 border-slate-900">
         <div class="grid grid-cols-3 gap-6 text-center text-xs font-bold text-slate-900">
             <div>
-                <p class="mb-10">إعداد / المحاسب المسؤول</p>
-                <p class="text-[10px] text-slate-400">التوقيع: ............................</p>
+                <p class="mb-10">{{ __('reports.prepared_by_accountant') }}</p>
+                <p class="text-[10px] text-slate-400">{{ __('inventory.signature_line') }}</p>
             </div>
             <div>
-                <p class="mb-10">المراجعة والتدقيق المالي</p>
-                <p class="text-[10px] text-slate-400">التوقيع: ............................</p>
+                <p class="mb-10">{{ __('reports.financial_audit_review') }}</p>
+                <p class="text-[10px] text-slate-400">{{ __('inventory.signature_line') }}</p>
             </div>
             <div>
-                <p class="mb-10">اعتماد الإدارة / الختم الرسمي</p>
-                <p class="text-[10px] text-slate-400">التوقيع: ............................</p>
+                <p class="mb-10">{{ __('treasury.management_stamp_approval') }}</p>
+                <p class="text-[10px] text-slate-400">{{ __('inventory.signature_line') }}</p>
             </div>
         </div>
     </div>

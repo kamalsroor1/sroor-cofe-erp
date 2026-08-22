@@ -11,7 +11,9 @@ return [
     'invoices_short' => 'Invoices',
     'items_short' => 'Items',
     'shift_short' => 'Shift',
+    'treasury_short' => 'Treasury',
     'more_short' => 'More',
+    'more_menu' => 'More Menus',
     'returns_adjustments' => 'Returns Registry',
     
     'group_inventory' => 'Inventory & Branches',
@@ -21,7 +23,7 @@ return [
     'stores' => 'Branches & Vans',
     'purchases' => 'Purchases',
     'smart_reorder' => 'Smart Reorder',
-    'coffee_blender' => 'Coffee Blender',
+    'coffee_blender' => 'Product Blender & Assembly',
     'suppliers' => 'Suppliers',
     
     'group_financials' => 'Financials & Reports',
@@ -40,7 +42,7 @@ return [
     'super_admin' => 'Super Admin Hub',
     'switch_store' => 'Switch Branch',
     'toggle_sidebar' => 'Toggle Sidebar',
-    'cloud_erp_subtitle' => 'Coffee Roastery & Wholesale ERP',
+    'cloud_erp_subtitle' => 'Sales, Inventory & Multi-Branch ERP',
     'select_store_modal_title' => 'Select Active Branch or Store',
     'logout' => 'Logout',
     'store_open' => 'Open',

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import { MoreHorizontal, MoreVertical, X } from 'lucide-vue-next';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 
@@ -130,9 +129,9 @@ onUnmounted(() => {
 
                 <template v-for="(item, idx) in items" :key="idx">
                     <template v-if="item.show !== false">
-                        <Link
+                        <router-link
                             v-if="item.href"
-                            :href="item.href"
+                            :to="item.href"
                             @click="closeMenu"
                             class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition text-right cursor-pointer"
                             :class="[
@@ -212,8 +211,8 @@ onUnmounted(() => {
                             @touchend="onTouchEnd"
                         >
                             <div>
-                                <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ title || $t('common.actions') || 'خيارات الإجراءات' }}</h3>
-                                <p class="text-[11px] text-slate-400 font-bold">حدد الإجراء المطلوب تنفيذه</p>
+                                <h3 class="font-black text-sm text-slate-900 dark:text-white">{{ title || $t('common.action_options') }}</h3>
+                                <p class="text-[11px] text-slate-400 font-bold">{{ $t('common.select_action') }}</p>
                             </div>
                             <button
                                 @click="closeMenu"
@@ -228,9 +227,9 @@ onUnmounted(() => {
                         <div class="overflow-y-auto space-y-2 py-1">
                             <template v-for="(item, idx) in items" :key="idx">
                                 <template v-if="item.show !== false">
-                                    <Link
+                                    <router-link
                                         v-if="item.href"
-                                        :href="item.href"
+                                        :to="item.href"
                                         @click="closeMenu"
                                         class="w-full min-h-[48px] px-4 py-3 rounded-2xl flex items-center gap-3.5 text-xs font-black transition text-right active:scale-98 border shadow-xs"
                                         :class="[

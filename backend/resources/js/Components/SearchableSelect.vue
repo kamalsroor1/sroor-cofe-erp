@@ -6,8 +6,8 @@ const props = defineProps({
     options: { type: Array, default: () => [] },
     labelKey: { type: String, default: 'name' },
     valueKey: { type: String, default: 'id' },
-    placeholder: { type: String, default: 'اختر...' },
-    searchPlaceholder: { type: String, default: '... بحث في القائمة' },
+    placeholder: { type: String, default: '' },
+    searchPlaceholder: { type: String, default: '' },
     clearable: { type: Boolean, default: true },
     searchable: { type: Boolean, default: true },
     remote: { type: Boolean, default: false },
@@ -137,7 +137,7 @@ onUnmounted(() => {
                 <span v-if="icon" class="text-sm shrink-0">{{ icon }}</span>
                 <slot name="selected" :option="selectedOption">
                     <span v-if="displayLabel" class="truncate text-slate-900 dark:text-white font-bold">{{ displayLabel }}</span>
-                    <span v-else class="text-slate-400 dark:text-slate-500 truncate">{{ placeholder }}</span>
+                    <span v-else class="text-slate-400 dark:text-slate-500 truncate">{{ placeholder || $t('common.select_placeholder') }}</span>
                 </slot>
             </div>
 
@@ -172,7 +172,7 @@ onUnmounted(() => {
                         ref="searchInputRef"
                         v-model="searchQuery"
                         type="text"
-                        :placeholder="searchPlaceholder"
+                        :placeholder="searchPlaceholder || $t('common.search_in_list')"
                         class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition shadow-inner font-tajawal"
                         @keydown.stop
                     >

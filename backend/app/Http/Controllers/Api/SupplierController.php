@@ -1,233 +1,198 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Suppliers\CreateSupplierAction;
+use App\Actions\Suppliers\DeleteSupplierAction;
+use App\Actions\Suppliers\GetSupplierStatementAction;
+use App\Actions\Suppliers\PaySupplierAction;
+use App\Actions\Suppliers\ToggleSupplierActiveAction;
+use App\Actions\Suppliers\UpdateSupplierAction;
+use App\DTOs\Suppliers\PaySupplierDTO;
+use App\DTOs\Suppliers\SupplierDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\PaySupplierRequest;
+use App\Http\Requests\StoreSupplierRequest;
+use App\Http\Requests\UpdateSupplierRequest;
+use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
-use App\Models\Purchase;
-use App\Models\Payment;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class SupplierController extends Controller
+final class SupplierController extends Controller
 {
-    /**
-     * List / Search Suppliers
-     */
-    public function index(Request $request)
-    {
-        $search = trim($request->input('search', ''));
-        $status = $request->input('status', 'all');
+    public function __construct(
+        private readonly CreateSupplierAction $createSupplierAction,
+        private readonly UpdateSupplierAction $updateSupplierAction,
+        private readonly DeleteSupplierAction $deleteSupplierAction,
+        private readonly ToggleSupplierActiveAction $toggleSupplierActiveAction,
+        private readonly PaySupplierAction $paySupplierAction,
+        private readonly GetSupplierStatementAction $getSupplierStatementAction
+    ) {}
 
-        $query = Supplier::query();
+    /**
+     * List / Search Suppliers with filters & metrics
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $search = trim((string)$request->input('search', ''));
+        $debtStatus = (string)$request->input('debt_status', 'all');
+        $status = (string)$request->input('status', 'all');
+        $perPage = (int)$request->input('per_page', 20);
+
+        $query = Supplier::withCount(['purchases', 'payments']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('company_name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%");
             });
+        }
+
+        if ($debtStatus === 'creditor') {
+            $query->where('current_balance', '>', 0);
+        } elseif ($debtStatus === 'zero') {
+            $query->where('current_balance', '=', 0);
         }
 
         if ($status === 'active') {
             $query->where('is_active', true);
         } elseif ($status === 'inactive') {
             $query->where('is_active', false);
-        } elseif ($status === 'with_balance') {
-            $query->where('current_balance', '>', 0);
         }
 
-        $perPage = (int)$request->input('per_page', 25);
         $suppliers = $query->latest('id')->paginate($perPage);
+
+        $totalPayable = (float)Supplier::where('current_balance', '>', 0)->sum('current_balance');
+        $creditorsCount = Supplier::where('current_balance', '>', 0)->count();
+        $totalSuppliersCount = Supplier::count();
 
         return response()->json([
             'success' => true,
-            'data'    => $suppliers->items(),
-            'pagination' => [
-                'total'        => $suppliers->total(),
+            'data'    => SupplierResource::collection($suppliers->items())->resolve(),
+            'meta'    => [
                 'current_page' => $suppliers->currentPage(),
                 'last_page'    => $suppliers->lastPage(),
                 'per_page'     => $suppliers->perPage(),
+                'total'        => $suppliers->total(),
             ],
             'summary' => [
-                'total_suppliers' => Supplier::count(),
-                'total_payable'   => (string)(Supplier::where('current_balance', '>', 0)->sum('current_balance') ?: '0.000'),
-            ]
-        ]);
+                'total_payable'       => $totalPayable,
+                'creditors_count'     => $creditorsCount,
+                'total_suppliers'     => $totalSuppliersCount,
+            ],
+        ], 200);
     }
 
     /**
-     * Get Supplier Profile
+     * Store a newly created supplier
      */
-    public function show($id)
+    public function store(StoreSupplierRequest $request): JsonResponse
     {
-        $supplier = Supplier::withCount(['purchases', 'payments'])->findOrFail($id);
-
-        $totalPurchases = (string)($supplier->purchases()->where('status', 'confirmed')->sum('net_total') ?: '0.000');
-        $totalPaid = (string)($supplier->payments()->sum('amount') ?: '0.000');
+        $dto = SupplierDTO::fromArray($request->validated());
+        $supplier = $this->createSupplierAction->execute($dto);
 
         return response()->json([
-            'success'  => true,
-            'supplier' => $supplier,
-            'stats'    => [
-                'total_purchases'  => $totalPurchases,
-                'total_paid'       => $totalPaid,
-                'current_balance'  => (string)$supplier->current_balance,
-                'purchases_count'  => $supplier->purchases_count,
-                'payments_count'   => $supplier->payments_count,
-            ]
-        ]);
-    }
-
-    /**
-     * Create New Supplier
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name'            => 'required|string|max:255',
-            'company_name'    => 'nullable|string|max:255',
-            'phone'           => 'nullable|string|max:50',
-            'address'         => 'nullable|string|max:255',
-            'opening_balance' => 'nullable|numeric',
-            'notes'           => 'nullable|string',
-        ]);
-
-        $openingBalance = (string)($validated['opening_balance'] ?? '0.000');
-
-        $supplier = Supplier::create([
-            'name'            => $validated['name'],
-            'company_name'    => $validated['company_name'] ?? null,
-            'phone'           => $validated['phone'] ?? null,
-            'address'         => $validated['address'] ?? null,
-            'current_balance' => $openingBalance,
-            'is_active'       => true,
-            'notes'           => $validated['notes'] ?? null,
-        ]);
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'تم إضافة المورد بنجاح',
-            'supplier' => $supplier,
+            'success' => true,
+            'message' => __('contacts.supplier_added') ?: 'تم إضافة المورد بنجاح',
+            'data'    => (new SupplierResource($supplier))->resolve(),
         ], 201);
     }
 
     /**
-     * Update Supplier
+     * Display the specified supplier
      */
-    public function update(Request $request, $id)
+    public function show(int $id): JsonResponse
     {
-        $supplier = Supplier::findOrFail($id);
-
-        $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'company_name' => 'nullable|string|max:255',
-            'phone'        => 'nullable|string|max:50',
-            'address'      => 'nullable|string|max:255',
-            'is_active'    => 'nullable|boolean',
-            'notes'        => 'nullable|string',
-        ]);
-
-        $supplier->update($validated);
+        $supplier = Supplier::withCount(['purchases', 'payments'])->findOrFail($id);
 
         return response()->json([
-            'success'  => true,
-            'message'  => 'تم تحديث بيانات المورد بنجاح',
-            'supplier' => $supplier,
-        ]);
+            'success' => true,
+            'data'    => (new SupplierResource($supplier))->resolve(),
+        ], 200);
     }
 
     /**
-     * Statement of Account (كشف حساب مورد)
+     * Update the specified supplier
      */
-    public function statement(Request $request, $id)
+    public function update(UpdateSupplierRequest $request, int $id): JsonResponse
     {
         $supplier = Supplier::findOrFail($id);
-
-        $fromDate = $request->input('from_date');
-        $toDate = $request->input('to_date', now()->toDateString());
-
-        // 1. Purchases
-        $purchasesQuery = Purchase::where('supplier_id', $id)
-            ->where('status', 'confirmed');
-        if ($fromDate) {
-            $purchasesQuery->whereDate('purchase_date', '>=', $fromDate);
-        }
-        if ($toDate) {
-            $purchasesQuery->whereDate('purchase_date', '<=', $toDate);
-        }
-        $purchases = $purchasesQuery->latest('purchase_date')->get();
-
-        // 2. Payments to Supplier
-        $paymentsQuery = Payment::where('supplier_id', $id);
-        if ($fromDate) {
-            $paymentsQuery->whereDate('payment_date', '>=', $fromDate);
-        }
-        if ($toDate) {
-            $paymentsQuery->whereDate('payment_date', '<=', $toDate);
-        }
-        $payments = $paymentsQuery->latest('payment_date')->get();
-
-        // 3. Ledger
-        $ledger = collect();
-
-        foreach ($purchases as $purch) {
-            $ledger->push([
-                'id'             => $purch->id,
-                'type'           => 'purchase',
-                'type_label'     => 'فاتورة مشتريات',
-                'document_number'=> $purch->purchase_number,
-                'date'           => $purch->purchase_date,
-                'credit'         => (string)$purch->net_total,
-                'debit'          => (string)($purch->paid_amount ?: '0.000'),
-                'payment_type'   => $purch->payment_type ?? 'credit',
-                'notes'          => $purch->notes,
-                'items_count'    => $purch->items()->count(),
-            ]);
-        }
-
-        foreach ($payments as $pay) {
-            $ledger->push([
-                'id'             => $pay->id,
-                'type'           => 'payment',
-                'type_label'     => 'سند صرف / سداد مورد',
-                'document_number'=> $pay->payment_number ?? ('PAY-SUPP-' . $pay->id),
-                'date'           => $pay->payment_date,
-                'credit'         => '0.000',
-                'debit'          => (string)$pay->amount,
-                'payment_type'   => $pay->payment_type ?? 'cash',
-                'notes'          => $pay->notes,
-                'items_count'    => 0,
-            ]);
-        }
-
-        $sortedLedger = $ledger->sortByDesc('date')->values();
-
-        $totalPurchases = (string)($purchases->sum('net_total') ?: '0.000');
-        $totalPaidDirect = (string)($payments->sum('amount') ?: '0.000');
-        $totalPaidImmediate = (string)($purchases->sum('paid_amount') ?: '0.000');
-        $totalSupplierPaid = bcadd($totalPaidDirect, $totalPaidImmediate, 3);
+        $dto = SupplierDTO::fromArray($request->validated());
+        $updatedSupplier = $this->updateSupplierAction->execute($supplier, $dto);
 
         return response()->json([
-            'success'  => true,
-            'supplier' => [
-                'id'              => $supplier->id,
-                'name'            => $supplier->name,
-                'company_name'    => $supplier->company_name,
-                'phone'           => $supplier->phone,
-                'current_balance' => (string)$supplier->current_balance,
+            'success' => true,
+            'message' => __('contacts.supplier_updated') ?: 'تم تعديل بيانات المورد بنجاح',
+            'data'    => (new SupplierResource($updatedSupplier))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Record payment to supplier
+     */
+    public function pay(PaySupplierRequest $request, int $id): JsonResponse
+    {
+        $dto = PaySupplierDTO::fromArray($id, $request->validated());
+        $result = $this->paySupplierAction->execute($dto);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.supplier_payment_recorded') ?: 'تم تسجيل سند الصرف بنجاح',
+            'data'    => [
+                'supplier' => (new SupplierResource($result['supplier']))->resolve(),
+                'payment'  => $result['payment'],
             ],
-            'filter'   => [
-                'from_date' => $fromDate,
-                'to_date'   => $toDate,
-            ],
-            'summary'  => [
-                'total_purchases_amount' => $totalPurchases,
-                'total_paid_amount'      => $totalSupplierPaid,
-                'net_balance'            => (string)$supplier->current_balance,
-                'transactions_count'     => $sortedLedger->count(),
-            ],
-            'ledger'   => $sortedLedger,
-        ]);
+        ], 200);
+    }
+
+    /**
+     * Get Supplier Statement of Account (Ledger)
+     */
+    public function statement(Request $request, int $id): JsonResponse
+    {
+        $supplier = Supplier::findOrFail($id);
+        $fromDate = $request->query('from_date') ?: $request->query('from');
+        $toDate = $request->query('to_date') ?: $request->query('to');
+
+        $data = $this->getSupplierStatementAction->execute($supplier, $fromDate, $toDate);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ], 200);
+    }
+
+    /**
+     * Toggle Supplier Active Status
+     */
+    public function toggleActive(int $id): JsonResponse
+    {
+        $supplier = Supplier::findOrFail($id);
+        $toggled = $this->toggleSupplierActiveAction->execute($supplier);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.supplier_status_updated') ?: 'تم تحديث حالة المورد بنجاح',
+            'data'    => (new SupplierResource($toggled))->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Delete the specified supplier
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $supplier = Supplier::findOrFail($id);
+        $this->deleteSupplierAction->execute($supplier);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('contacts.supplier_deleted') ?: 'تم حذف المورد بنجاح',
+        ], 200);
     }
 }

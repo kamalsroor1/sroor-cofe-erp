@@ -19,15 +19,23 @@ class Setting extends Model
 
     public static function allCached(): array
     {
-        return Cache::rememberForever(self::CACHE_PREFIX, function () {
-            return static::pluck('value', 'key')->toArray();
-        });
+        try {
+            return Cache::rememberForever(self::CACHE_PREFIX, function () {
+                return static::pluck('value', 'key')->toArray();
+            });
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     public static function get(string $key, $default = null): ?string
     {
-        $all = static::allCached();
-        return $all[$key] ?? $default;
+        try {
+            $all = static::allCached();
+            return $all[$key] ?? $default;
+        } catch (\Throwable) {
+            return $default;
+        }
     }
 
     public static function set(string $key, $value): self

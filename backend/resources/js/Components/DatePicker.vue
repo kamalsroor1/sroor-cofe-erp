@@ -7,7 +7,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 const props = defineProps({
     modelValue: { type: [String, Array, Date, null], default: null },
     mode: { type: String, default: 'single' }, // 'single' | 'range'
-    placeholder: { type: String, default: 'اختر التاريخ...' },
+    placeholder: { type: String, default: '' },
     enableTime: { type: Boolean, default: false },
     clearable: { type: Boolean, default: true },
     disabled: { type: Boolean, default: false },
@@ -69,7 +69,7 @@ const clearDate = (e) => {
             <input
                 ref="inputRef"
                 type="text"
-                :placeholder="placeholder"
+                :placeholder="placeholder || $t('common.select_date')"
                 :disabled="disabled"
                 readonly
                 class="w-full h-11 pr-10 pl-9 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-xs sm:text-sm cursor-pointer focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 focus:outline-none transition shadow-inner font-tajawal"

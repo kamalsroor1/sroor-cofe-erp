@@ -7,7 +7,7 @@ export const PRESET_PALETTES = {
     blue: { hex: '#3b82f6', hover: '#2563eb', rgb: '59, 130, 246', text: '#ffffff', name: 'الأزرق الملكي (Sapphire)', icon: '🔵' },
     purple: { hex: '#a855f7', hover: '#9333ea', rgb: '168, 85, 247', text: '#ffffff', name: 'البنفسجي الإمبراطوري', icon: '🟣' },
     rose: { hex: '#f43f5e', hover: '#e11d48', rgb: '244, 63, 94', text: '#ffffff', name: 'الياقوتي القرمزي (Ruby Rose)', icon: '🌹' },
-    orange: { hex: '#f97316', hover: '#ea580c', rgb: '249, 115, 22', text: '#ffffff', name: 'البرتقالي الدافئ / بن محمص', icon: '☕' },
+    orange: { hex: '#f97316', hover: '#ea580c', rgb: '249, 115, 22', text: '#ffffff', name: 'البرتقالي الكلاسيكي (Warm Orange)', icon: '🟧' },
     teal: { hex: '#14b8a6', hover: '#0d9488', rgb: '20, 184, 166', text: '#ffffff', name: 'السماوي التركوازي (Ocean Teal)', icon: '🌊' },
     indigo: { hex: '#6366f1', hover: '#4f46e5', rgb: '99, 102, 241', text: '#ffffff', name: 'النيلي الداكن (Deep Indigo)', icon: '🌌' },
 };

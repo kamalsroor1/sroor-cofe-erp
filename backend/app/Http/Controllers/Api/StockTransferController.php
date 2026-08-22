@@ -1,123 +1,148 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Transfers\CancelStockTransferAction;
+use App\Actions\Transfers\CreateStockTransferAction;
+use App\DTOs\Transfers\CancelTransferDTO;
+use App\DTOs\Transfers\CreateTransferDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\CancelStockTransferRequest;
+use App\Http\Requests\StoreStockTransferRequest;
+use App\Http\Resources\StockTransferResource;
 use App\Models\StockTransfer;
 use App\Models\Store;
-use App\Services\StockTransferService;
-use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class StockTransferController extends Controller
+final class StockTransferController extends Controller
 {
     public function __construct(
-        protected StockTransferService $transferService
+        private readonly CreateStockTransferAction $createStockTransferAction,
+        private readonly CancelStockTransferAction $cancelStockTransferAction
     ) {}
 
     /**
-     * List Stock Transfers between stores
+     * List Stock Transfers with filters and summary totals
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $search = $request->input('search');
-        $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+        $search = trim((string)$request->input('search', ''));
+        $fromStore = $request->input('from_store_id');
+        $toStore = $request->input('to_store_id');
+        $status = (string)$request->input('status', 'all');
+        $fromDate = $request->input('from_date') ?: $request->input('from');
+        $toDate = $request->input('to_date') ?: $request->input('to');
+        $perPage = (int)$request->input('per_page', 15);
 
-        $query = StockTransfer::with(['fromStore', 'toStore', 'user', 'items.item'])
-            ->when($storeId, function ($q) use ($storeId) {
-                $q->where(function ($sub) use ($storeId) {
-                    $sub->where('from_store_id', $storeId)
-                        ->orWhere('to_store_id', $storeId);
-                });
-            })
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('transfer_number', 'like', "%{$search}%")
-                        ->orWhere('notes', 'like', "%{$search}%");
-                });
+        $storeId = $request->header('X-Store-Id')
+            ?: $request->input('store_id')
+            ?: auth()->user()?->getCurrentStore()?->id
+            ?: Store::getMainStore()?->id;
+
+        $query = StockTransfer::query()->with(['fromStore', 'toStore', 'user', 'items.item']);
+
+        if ($storeId && (!$fromStore && !$toStore)) {
+            $query->where(function ($q) use ($storeId) {
+                $q->where('from_store_id', (int)$storeId)
+                  ->orWhere('to_store_id', (int)$storeId);
             });
+        }
 
-        $totalCount = (clone $query)->count();
-        $transfers = $query->latest('transfer_date')->latest('id')->paginate(30);
+        if ($fromStore && $fromStore !== 'all') {
+            $query->where('from_store_id', (int)$fromStore);
+        }
+
+        if ($toStore && $toStore !== 'all') {
+            $query->where('to_store_id', (int)$toStore);
+        }
+
+        if ($status !== 'all' && $status !== '') {
+            $query->where('status', $status);
+        }
+
+        if ($fromDate) {
+            $query->whereDate('transfer_date', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate('transfer_date', '<=', $toDate);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('transfer_number', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('fromStore', fn($sq) => $sq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('toStore', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $totalCount = (int)(clone $query)->count();
+        $confirmedCount = (int)(clone $query)->where('status', 'confirmed')->count();
+        $cancelledCount = (int)(clone $query)->where('status', 'cancelled')->count();
+
+        $transfers = $query->latest('transfer_date')->latest('id')->paginate($perPage);
 
         return response()->json([
-            'success'     => true,
-            'transfers'   => $transfers->items(),
-            'total_count' => $totalCount,
-            'pagination'  => [
+            'success' => true,
+            'data'    => StockTransferResource::collection($transfers->items())->resolve(),
+            'meta'    => [
                 'current_page' => $transfers->currentPage(),
                 'last_page'    => $transfers->lastPage(),
+                'per_page'     => $transfers->perPage(),
                 'total'        => $transfers->total(),
-            ]
-        ]);
+            ],
+            'summary' => [
+                'total_count'     => $totalCount,
+                'confirmed_count' => $confirmedCount,
+                'cancelled_count' => $cancelledCount,
+            ],
+        ], 200);
     }
 
     /**
-     * Show single Stock Transfer
+     * Show single Stock Transfer details
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $transfer = StockTransfer::with(['fromStore', 'toStore', 'user', 'items.item'])->findOrFail($id);
 
         return response()->json([
-            'success'  => true,
-            'transfer' => $transfer,
-        ]);
+            'success' => true,
+            'data'    => (new StockTransferResource($transfer))->resolve(),
+        ], 200);
     }
 
     /**
-     * Store new Stock Transfer
+     * Create and execute Stock Transfer via Form Request
      */
-    public function store(Request $request)
+    public function store(StoreStockTransferRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'from_store_id'     => 'required|integer|exists:stores,id',
-            'to_store_id'       => 'required|integer|exists:stores,id|different:from_store_id',
-            'transfer_date'     => 'required|date',
-            'notes'             => 'nullable|string|max:1000',
-            'items'             => 'required|array|min:1',
-            'items.*.item_id'   => 'required|integer|exists:items,id',
-            'items.*.quantity'  => 'required|numeric|min:0.001',
-        ]);
+        $dto = CreateTransferDTO::fromArray($request->validated());
+        $transfer = $this->createStockTransferAction->execute($dto);
 
-        try {
-            $transfer = $this->transferService->createTransfer($validated);
-
-            return response()->json([
-                'success'  => true,
-                'message'  => "تم تسجيل إذن التحويل المخزني رقم {$transfer->transfer_number} ونقل البضاعة فوراً بنجاح ✓",
-                'transfer' => $transfer,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل التحويل المخزني: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => "تم تنفيذ إذن التحويل المخزني رقم {$transfer->transfer_number} ونقل البضاعة فوراً بنجاح ✓",
+            'data'    => (new StockTransferResource($transfer->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
+        ], 201);
     }
 
     /**
-     * Cancel / Reverse Stock Transfer
+     * Cancel / Reverse Stock Transfer via Form Request
      */
-    public function cancel(Request $request, $id)
+    public function cancel(CancelStockTransferRequest $request, int $id): JsonResponse
     {
-        $transfer = StockTransfer::findOrFail($id);
-        $reason = $request->input('reason', 'إلغاء من تطبيق الموبايل');
+        $dto = CancelTransferDTO::fromArray($id, $request->validated());
+        $cancelled = $this->cancelStockTransferAction->execute($dto);
 
-        try {
-            $this->transferService->cancelTransfer($transfer, $reason);
-
-            return response()->json([
-                'success' => true,
-                'message' => "تم إلغاء إذن التحويل المخزني رقم {$transfer->transfer_number} وإعادة الرصيد للفرع المصدر بنجاح ✓",
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل إلغاء التحويل المخزني: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => "تم إلغاء إذن التحويل رقم {$cancelled->transfer_number} وعكس حركة الأصناف للفرع المصدر بنجاح ✓",
+            'data'    => (new StockTransferResource($cancelled->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
+        ], 200);
     }
 }
