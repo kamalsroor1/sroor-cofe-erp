@@ -372,6 +372,9 @@ router.beforeEach(async (to, from, next) => {
 
     // 3. Guest-only check (e.g. Login page)
     if (to.meta.guestOnly && authStore.isAuthenticated) {
+        if (authStore.isSuperAdmin && !appConfigStore.tenant) {
+            return next({ name: 'super_admin.dashboard' });
+        }
         return next({ name: 'dashboard' });
     }
 
@@ -380,7 +383,12 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Super Admin Only check
+    // 5. Smart Root Landing: Super Admin vs Tenant Store
+    if (to.path === '/' && authStore.isSuperAdmin && !appConfigStore.tenant) {
+        return next({ name: 'super_admin.dashboard' });
+    }
+
+    // 6. Super Admin Only check
     if (to.meta.superAdminOnly && !authStore.isSuperAdmin) {
         return next({ name: 'dashboard' });
     }
