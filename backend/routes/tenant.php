@@ -56,6 +56,23 @@ Route::middleware([
         return view('spa');
     })->where('any', '.*')->name('tenant.spa');
 
+    // 🖨️ Thermal Receipt Printing Route (Cashier Fast Print & Popup Windows)
+    Route::get('/invoices/{id}/print', function ($id) {
+        $invoice = \App\Models\Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
+        return view('layouts.print-thermal', compact('invoice'));
+    })->name('invoices.print.default');
+
+    Route::get('/invoices/{id}/print/thermal', function ($id) {
+        $invoice = \App\Models\Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
+        return view('layouts.print-thermal', compact('invoice'));
+    })->name('invoices.print.thermal');
+
+    // 🖨️ Standard A4 Tax & Commercial Invoice Print
+    Route::get('/invoices/{id}/print/a4', function ($id) {
+        $invoice = \App\Models\Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
+        return view('layouts.print-a4', compact('invoice'));
+    })->name('invoices.print.a4');
+
     // 3. Protected POS, ERP & Inventory Routes
     Route::middleware('auth')->group(function () {
         // Dashboard (Inertia.js + Vue 3 SPA)
@@ -75,23 +92,6 @@ Route::middleware([
         Route::post('/invoices/{id}/cancel', [\App\Http\Controllers\InvoiceController::class, 'cancel'])->name('invoices.cancel')->middleware('can:invoices.cancel');
         Route::delete('/invoices/{id}', [\App\Http\Controllers\InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('can:invoices.delete');
         Route::post('/invoices/{id}/restore', [\App\Http\Controllers\InvoiceController::class, 'restore'])->name('invoices.restore')->middleware('can:trash.access');
-
-        // 🖨️ Thermal Receipt Printing Route (Cashier Fast Print)
-        Route::get('/invoices/{id}/print', function ($id) {
-            $invoice = \App\Models\Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
-            return view('layouts.print-thermal', compact('invoice'));
-        })->name('invoices.print.default');
-
-        Route::get('/invoices/{id}/print/thermal', function ($id) {
-            $invoice = \App\Models\Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
-            return view('layouts.print-thermal', compact('invoice'));
-        })->name('invoices.print.thermal');
-
-        // 🖨️ Standard A4 Tax & Commercial Invoice Print
-        Route::get('/invoices/{id}/print/a4', function ($id) {
-            $invoice = \App\Models\Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
-            return view('layouts.print-a4', compact('invoice'));
-        })->name('invoices.print.a4');
 
         // Daily Journal A4 Print Route
         Route::get('/daily-journal/print', function (\Illuminate\Http\Request $request) {
