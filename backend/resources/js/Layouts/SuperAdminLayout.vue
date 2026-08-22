@@ -17,6 +17,7 @@ const navItems = computed(() => [
     { name: trans('super.plans'), href: '/super-admin/plans', icon: '💼', active: route.path.startsWith('/super-admin/plans') },
     { name: 'وحدات القياس', href: '/super-admin/units', icon: '⚖️', active: route.path.startsWith('/super-admin/units') },
     { name: trans('super.app_versions'), href: '/super-admin/app-versions', icon: '📱', active: route.path.startsWith('/super-admin/app-versions') },
+    { name: 'مراقب النظام (Telescope)', href: '/telescope', icon: '🔭', external: true, active: false },
 ]);
 
 const handleLogout = async () => {
@@ -116,17 +117,29 @@ const handleLogout = async () => {
                 </div>
 
                 <div class="space-y-1">
-                    <router-link
-                        v-for="(item, idx) in navItems"
-                        :key="idx"
-                        :to="item.href"
-                        @click="mobileMenuOpen = false"
-                        class="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition"
-                        :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
-                    >
-                        <span class="text-lg">{{ item.icon }}</span>
-                        <span>{{ item.name }}</span>
-                    </router-link>
+                    <template v-for="(item, idx) in navItems" :key="idx">
+                        <a
+                            v-if="item.external"
+                            :href="item.href"
+                            target="_blank"
+                            @click="mobileMenuOpen = false"
+                            class="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                        >
+                            <span class="text-lg">{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                            <span class="text-[10px] text-slate-400 ms-auto font-mono">↗</span>
+                        </a>
+                        <router-link
+                            v-else
+                            :to="item.href"
+                            @click="mobileMenuOpen = false"
+                            class="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition"
+                            :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
+                        >
+                            <span class="text-lg">{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                        </router-link>
+                    </template>
                 </div>
 
                 <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
@@ -150,16 +163,27 @@ const handleLogout = async () => {
                         {{ $t('super.platform_title') }}
                     </div>
 
-                    <router-link
-                        v-for="(item, idx) in navItems"
-                        :key="idx"
-                        :to="item.href"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group"
-                        :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
-                    >
-                        <span class="text-base">{{ item.icon }}</span>
-                        <span>{{ item.name }}</span>
-                    </router-link>
+                    <template v-for="(item, idx) in navItems" :key="idx">
+                        <a
+                            v-if="item.external"
+                            :href="item.href"
+                            target="_blank"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                        >
+                            <span class="text-base">{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                            <span class="text-[10px] text-slate-400 ms-auto font-mono">↗</span>
+                        </a>
+                        <router-link
+                            v-else
+                            :to="item.href"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group"
+                            :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
+                        >
+                            <span class="text-base">{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                        </router-link>
+                    </template>
                 </div>
 
                 <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">

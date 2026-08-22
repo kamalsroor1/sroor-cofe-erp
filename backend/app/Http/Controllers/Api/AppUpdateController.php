@@ -32,12 +32,12 @@ class AppUpdateController extends Controller
         $result = $action->execute($dto);
 
         // Map response for standard payload compatibility
-        $latest = $result['latest_version'];
+        $latest = $result['latest_version'] ?? [];
 
         return response()->json([
             'success' => true,
-            'has_update' => $result['has_update'],
-            'force_update' => $result['is_force_update'],
+            'has_update' => (bool) ($result['has_update'] ?? false),
+            'force_update' => (bool) ($result['is_force_update'] ?? false),
             'current_app_version' => $versionName,
             'latest_version' => $latest['version_name'] ?? $versionName,
             'latest_version_code' => $latest['version_code'] ?? $versionCode,
@@ -45,11 +45,11 @@ class AppUpdateController extends Controller
             'file_size' => $latest['file_size'] ?? '18.5 MB',
             'file_size_bytes' => $latest['file_size_bytes'] ?? 0,
             'release_notes_ar' => $latest['release_notes_ar'] ?? '',
-            'release_notes' => $latest['release_notes_ar'] ? explode("\n", $latest['release_notes_ar']) : [],
+            'release_notes' => !empty($latest['release_notes_ar']) ? explode("\n", $latest['release_notes_ar']) : [],
             'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
-            'title' => $result['is_force_update'] ? 'تحديث إلزامي جديد متاح 🚀' : 'تحديث جديد متاح للتحميل 🚀',
-            'message' => $result['has_update']
-                ? "يتوفر إصدار جديد ({$latest['version_name']}) من تطبيق سرور كوفي ERP."
+            'title' => !empty($result['is_force_update']) ? 'تحديث إلزامي جديد متاح 🚀' : 'تحديث جديد متاح للتحميل 🚀',
+            'message' => !empty($result['has_update'])
+                ? "يتوفر إصدار جديد (" . ($latest['version_name'] ?? '') . ") من تطبيق سرور كوفي ERP."
                 : 'أنت تستخدم أحدث إصدار من التطبيق.',
         ]);
     }

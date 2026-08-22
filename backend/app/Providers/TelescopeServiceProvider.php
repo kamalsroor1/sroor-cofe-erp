@@ -56,11 +56,22 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function (User $user) {
-            return $user->hasRole('admin') || in_array($user->email, [
-                '01012316954@sroor.com',
-                '01558088841@sroor.com',
-            ]);
+        Gate::define('viewTelescope', function ($user = null) {
+            $user = $user ?: auth()->user();
+            if (!$user) {
+                return false;
+            }
+
+            // Strict Super Admin Gate: Only Super Admins can access Telescope
+            return !empty($user->is_super_admin)
+                || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))
+                || (isset($user->phone) && in_array($user->phone, ['01012316954', '01558088841']))
+                || (isset($user->email) && in_array($user->email, [
+                    '01012316954@sroor.com',
+                    '01558088841@sroor.com',
+                    'superadmin@baraa-solutions.com',
+                    'admin@baraa-solutions.com',
+                ]));
         });
     }
 }
