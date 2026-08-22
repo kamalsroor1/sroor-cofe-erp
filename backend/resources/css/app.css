@@ -21,6 +21,11 @@ body {
     font-family: 'Cairo', 'Tajawal', sans-serif;
 }
 
+html.dark, html.dark body {
+    background-color: #020617;
+    color: #f8fafc;
+}
+
 /* 📱 Native Mobile App UX Foundations */
 html, body {
     overscroll-behavior-y: none;
