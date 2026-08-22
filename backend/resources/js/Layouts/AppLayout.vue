@@ -760,7 +760,7 @@ const getUserRoleLabel = computed(() => {
             <div
                 v-if="showStoreModal"
                 @click="showStoreModal = false"
-                class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+                class="fixed inset-0 z-50 bg-white dark:bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
             >
                 <div @click.stop class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl space-y-3 font-tajawal text-slate-900 dark:text-white">
                     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">

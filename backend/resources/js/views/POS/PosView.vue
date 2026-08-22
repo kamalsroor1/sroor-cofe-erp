@@ -320,7 +320,7 @@
             type="button"
             @click="submitCheckout"
             :disabled="isSubmitting || cart.length === 0"
-            class="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 rounded-2xl font-black text-sm shadow-xl shadow-emerald-500/20 transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
+            class="w-full h-12 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-sm shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
           >
             <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
             <Zap v-else class="w-5 h-5 fill-slate-950" />
@@ -376,7 +376,7 @@
           </select>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
           <button
             type="button"
             @click="showQuickCustomerModal = false"

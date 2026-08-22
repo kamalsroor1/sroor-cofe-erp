@@ -22,7 +22,7 @@
         <div class="lg:col-span-2 space-y-5">
           <!-- Return Type & Party Info -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
+            <h2 class="text-xs font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>🔄</span>
               <span>{{ $t('returns.type_and_party_section') }}</span>
             </h2>
@@ -33,7 +33,7 @@
                 type="button"
                 @click="onTypeChange('sales_return')"
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
-                :class="form.return_type === 'sales_return' ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20' : 'bg-slate-900 text-slate-400 border-slate-800'"
+                :class="form.return_type === 'sales_return' ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
               >
                 <span>{{ $t('returns.sales_return_option') }}</span>
               </button>
@@ -42,7 +42,7 @@
                 type="button"
                 @click="onTypeChange('purchase_return')"
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
-                :class="form.return_type === 'purchase_return' ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20' : 'bg-slate-900 text-slate-400 border-slate-800'"
+                :class="form.return_type === 'purchase_return' ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-theme-primary' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
               >
                 <span>{{ $t('returns.purchase_return_option') }}</span>
               </button>
@@ -112,7 +112,7 @@
 
           <!-- Items Selection Table -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
                 <span>📦</span>
                 <span>{{ $t('returns.return_items_section') }}</span>
@@ -142,10 +142,10 @@
             </div>
 
             <!-- Items Table -->
-            <div v-if="form.items.length > 0" class="border border-slate-800 rounded-xl overflow-hidden">
+            <div v-if="form.items.length > 0" class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
               <table class="w-full text-start text-xs border-collapse">
                 <thead>
-                  <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                  <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                     <th class="p-3 text-center font-bold w-28">{{ $t('common.quantity') }}</th>
                     <th class="p-3 text-end font-bold w-32">{{ $t('pos.item_price') }}</th>
@@ -194,7 +194,7 @@
               </table>
             </div>
 
-            <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-800 rounded-xl">
+            <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
               {{ $t('returns.no_items_in_return_prompt') }}
             </div>
           </div>
@@ -203,7 +203,7 @@
         <!-- Sidebar Summary (Col Span 1) -->
         <div class="space-y-4">
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
+            <h2 class="text-xs font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
               <span>{{ $t('returns.document_financial_summary') }}</span>
             </h2>
@@ -214,13 +214,13 @@
                 <span class="font-mono text-white font-bold">{{ form.items.length }}</span>
               </div>
 
-              <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans font-tajawal">
+              <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal">
                 <span>{{ $t('returns.total_returns_val') }}:</span>
                 <span class="font-mono text-rose-400">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
               </div>
 
               <!-- Refund cash from drawer -->
-              <div class="pt-2 border-t border-slate-800 space-y-1">
+              <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
                 <label class="block text-xs font-bold text-slate-300 font-sans font-tajawal">
                   {{ $t('returns.refund_cash_from_drawer') }}
                 </label>
@@ -240,7 +240,7 @@
             <button
               type="submit"
               :disabled="isSubmitting || form.items.length === 0"
-              class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
+              class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
             >
               <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <RotateCcw v-else class="w-4 h-4" />

@@ -10,7 +10,7 @@
           <button
             type="button"
             @click="openCreateModal"
-            class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-amber-500/20 cursor-pointer"
+            class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
           >
             <Plus class="w-4 h-4" />
             <span>{{ $t('contacts.add_customer') }}</span>
@@ -244,7 +244,7 @@
             <button
               type="button"
               @click="openCreateModal"
-              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20 cursor-pointer"
+              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
             >
               {{ $t('contacts.add_first_customer') }}
             </button>
@@ -252,7 +252,7 @@
         </EmptyState>
 
         <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
             {{ $t('activity.total_records') }} <span class="font-mono text-amber-400">{{ pagination.total }}</span> {{ $t('contacts.customer_unit') }}
           </div>
@@ -371,7 +371,7 @@
           </div>
 
           <!-- Modal Actions -->
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showCustomerModal = false"
@@ -383,7 +383,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('common.save') }}</span>
@@ -468,7 +468,7 @@
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showPaymentModal = false"
@@ -480,7 +480,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-emerald-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('contacts.confirm_collection') }}</span>

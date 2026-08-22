@@ -11,7 +11,7 @@
             <!-- Open POS Button -->
             <router-link
               to="/pos"
-              class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+              class="px-5 py-2.5 bg-theme-gradient text-white shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary"
             >
               <Zap class="w-4 h-4 fill-slate-950" />
               <span>{{ $t('invoices.pos_fast_badge') }}</span>
@@ -140,7 +140,7 @@
         <div v-else-if="invoices.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.customer') }}</th>
@@ -235,7 +235,7 @@
           <template #action>
             <router-link
               to="/pos"
-              class="px-5 py-2.5 bg-emerald-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-emerald-500/20"
+              class="px-5 py-2.5 bg-emerald-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
             >
               {{ $t('invoices.open_pos_btn') }}
             </router-link>
@@ -243,7 +243,7 @@
         </EmptyState>
 
         <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400">
             {{ $t('invoices.total_results_invoices', { count: pagination.total }) }}
           </div>
@@ -299,10 +299,10 @@
           </div>
 
           <!-- Items Table -->
-          <div class="border border-slate-800 rounded-xl overflow-hidden">
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-2.5 text-start font-bold">{{ $t('invoices.item') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('invoices.quantity') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('invoices.sale_price') }}</th>
@@ -330,7 +330,7 @@
               <span>{{ $t('invoices.discount_value') }}</span>
               <span class="font-mono">-{{ formatMoney(selectedInvoiceDetails.discount_amount) }} {{ $t('common.currency') }}</span>
             </div>
-            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-tajawal">
+            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-tajawal">
               <span>{{ $t('invoices.net_invoice') }}</span>
               <span class="text-emerald-400 font-mono">{{ formatMoney(selectedInvoiceDetails.net_total) }} {{ $t('common.currency') }}</span>
             </div>
@@ -345,7 +345,7 @@
           </div>
 
           <!-- Actions: WhatsApp Share & Thermal Print -->
-          <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
             <a
               v-if="whatsAppData?.whatsapp_url"
               :href="whatsAppData.whatsapp_url"

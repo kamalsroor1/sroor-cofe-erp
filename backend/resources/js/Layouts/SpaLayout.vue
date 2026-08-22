@@ -353,7 +353,7 @@
         <div
           v-if="isSidebarOpen"
           @click="isSidebarOpen = false"
-          class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9998] md:hidden select-none"
+          class="fixed inset-0 bg-white dark:bg-slate-950/80 backdrop-blur-sm z-[9998] md:hidden select-none"
         ></div>
       </Transition>
 
@@ -362,13 +362,13 @@
         <aside
           v-if="isSidebarOpen"
           id="mobile-app-drawer"
-          class="fixed inset-y-0 right-0 w-[88vw] max-w-[420px] bg-slate-950 border-l border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden select-none"
+          class="fixed inset-y-0 right-0 w-[88vw] max-w-[420px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden select-none"
           dir="rtl"
         >
           <!-- 📱 App Drawer Top Profile Header -->
-          <div class="p-5 border-b border-slate-800/80 bg-slate-900/95 flex items-start justify-between gap-3 shrink-0">
+          <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-900/95 flex items-start justify-between gap-3 shrink-0">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-theme-primary">
                 <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-amber-400 font-black text-lg">
                   {{ authStore.userName?.charAt(0) || 'U' }}
                 </div>
@@ -470,7 +470,7 @@
                 to="/"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name === 'dashboard' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
@@ -489,7 +489,7 @@
                 to="/pos"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('pos') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
@@ -504,7 +504,7 @@
                 to="/invoices"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('invoices') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-blue-400'">
@@ -519,7 +519,7 @@
                 to="/returns"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('returns') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
@@ -534,7 +534,7 @@
                 to="/coffee-blender"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('coffee_blender') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
@@ -553,7 +553,7 @@
                 to="/stores"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stores') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
@@ -568,7 +568,7 @@
                 to="/items"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('items') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
@@ -583,7 +583,7 @@
                 to="/stock-transfers"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stock_transfers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
@@ -598,7 +598,7 @@
                 to="/purchases"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('purchases') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
@@ -613,7 +613,7 @@
                 to="/customers"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('customers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
@@ -628,7 +628,7 @@
                 to="/suppliers"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('suppliers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-indigo-400'">
@@ -643,7 +643,7 @@
                 to="/expenses"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('expenses') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
@@ -658,7 +658,7 @@
                 to="/daily-journal"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('daily_journal') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
@@ -673,7 +673,7 @@
                 to="/reports"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('reports') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
@@ -692,7 +692,7 @@
                 to="/users"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('users') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
@@ -707,7 +707,7 @@
                 to="/roles"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('roles') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
@@ -722,7 +722,7 @@
                 to="/activity-logs"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('activity_logs') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
@@ -737,7 +737,7 @@
                 to="/settings"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('settings') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
@@ -752,7 +752,7 @@
                 to="/trash"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('trash') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">

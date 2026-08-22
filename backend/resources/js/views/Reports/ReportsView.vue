@@ -29,7 +29,7 @@
               type="button"
               @click="setPeriod(p.key)"
               class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
-              :class="filters.period === p.key ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'"
+              :class="filters.period === p.key ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-200 dark:border-slate-800'"
             >
               {{ p.label }}
             </button>
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Custom Dates & Stock Filter Row -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/80">
           <div class="flex items-center gap-2">
             <span class="text-xs text-slate-400 font-bold">{{ $t('common.from') }}:</span>
             <input
@@ -83,14 +83,14 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-800 text-xs font-bold">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800 text-xs font-bold">
         <button
           v-for="t in tabs"
           :key="t.key"
           type="button"
           @click="activeTab = t.key"
           class="px-4 py-2.5 rounded-xl transition flex items-center gap-2 whitespace-nowrap cursor-pointer"
-          :class="activeTab === t.key ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+          :class="activeTab === t.key ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-theme-primary' : 'text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
         >
           <span>{{ t.icon }}</span>
           <span>{{ t.label }}</span>
@@ -122,7 +122,7 @@
           </div>
 
           <!-- Gross Profit & Margin -->
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30 bg-emerald-500/5 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-emerald-500/30 bg-emerald-500/5 shadow-md space-y-1">
             <span class="text-xs font-bold text-emerald-400">{{ $t('reports.gross_profit_label') }}</span>
             <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(summary.gross_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-emerald-500 font-bold">{{ $t('reports.gross_margin_label', { pct: summary.margin_percentage }) }}</span>
@@ -165,14 +165,14 @@
 
       <!-- TAB 2: Items Profitability -->
       <div v-else-if="activeTab === 'items'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.items_profitability_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.items_count_badge', { count: itemProfits.length }) }}</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('inventory.category') }}</th>
@@ -201,13 +201,13 @@
 
       <!-- TAB 3: Stores Comparison -->
       <div v-else-if="activeTab === 'stores'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="p-4 border-b border-slate-800">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.stores_comparison_sub') }}</h3>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3 text-start font-bold">{{ $t('inventory.store_name') }}</th>
                 <th class="p-3 text-center font-bold">{{ $t('invoices.invoices_count_label') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('reports.total_sales_revenue') }}</th>
@@ -236,14 +236,14 @@
 
       <!-- TAB 4: Customers Analytics -->
       <div v-else-if="activeTab === 'customers'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.top_customers_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.top_50_customers_sub') }}</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3 text-start font-bold">{{ $t('contacts.customer') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('contacts.phone') }}</th>
                 <th class="p-3 text-center font-bold">{{ $t('invoices.invoices_count_label') }}</th>
@@ -272,7 +272,7 @@
 
       <!-- TAB 5: Operational Expenses -->
       <div v-else-if="activeTab === 'expenses'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="p-4 border-b border-slate-800">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.expenses_breakdown_by_cat') }}</h3>
         </div>
         <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -304,7 +304,7 @@
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.stock_sell_val_label') }}</span>
             <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(inventoryData.stock_selling_valuation) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30 bg-emerald-500/5 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-emerald-500/30 bg-emerald-500/5 shadow-md space-y-1">
             <span class="text-xs font-bold text-emerald-400">{{ $t('reports.expected_profit_val') }}</span>
             <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(inventoryData.expected_stock_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
           </div>
@@ -312,14 +312,14 @@
 
         <!-- Inventory Table -->
         <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.items_stock_valuation_title') }}</h3>
             <span class="text-xs text-slate-500 font-mono">{{ $t('reports.items_count_badge', { count: inventoryData.items?.length || 0 }) }}</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                   <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
                   <th class="p-3 text-end font-bold">{{ $t('inventory.current_stock') }}</th>

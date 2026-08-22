@@ -9,7 +9,7 @@
         <template #actions>
           <router-link
             to="/stock-transfers/create"
-            class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
+            class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary"
           >
             <Plus class="w-4 h-4" />
             <span>{{ $t('inventory.new_transfer_order') }}</span>
@@ -122,7 +122,7 @@
         <div v-else-if="transfersList.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.transfer_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.from_store') }}</th>
@@ -204,7 +204,7 @@
           <template #action>
             <router-link
               to="/stock-transfers/create"
-              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20"
+              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
             >
               {{ $t('inventory.create_first_transfer') }}
             </router-link>
@@ -212,7 +212,7 @@
         </EmptyState>
 
         <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400">
             {{ $t('inventory.total_results_transfers', { count: pagination.total }) }}
           </div>
@@ -268,10 +268,10 @@
           </div>
 
           <!-- Items Table -->
-          <div class="border border-slate-800 rounded-xl overflow-hidden">
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-2.5 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                   <th class="p-2.5 text-start font-bold">{{ $t('inventory.code') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('inventory.transferred_qty_col') }}</th>
@@ -289,7 +289,7 @@
             </table>
           </div>
 
-          <div v-if="selectedTransferDetails.notes" class="p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl text-slate-400">
+          <div v-if="selectedTransferDetails.notes" class="p-3 bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 rounded-xl text-slate-400">
             <span class="font-bold text-slate-300">{{ $t('inventory.transfer_notes_label') }}</span>
             <span>{{ selectedTransferDetails.notes }}</span>
           </div>

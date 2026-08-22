@@ -96,7 +96,7 @@
           <div class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-3 text-start font-bold">{{ $t('purchases.item_material') }}</th>
                   <th class="p-3 text-center font-bold w-28">{{ $t('common.quantity') }}</th>
                   <th class="p-3 text-center font-bold w-32">{{ $t('inventory.purchase_price') }}</th>
@@ -220,7 +220,7 @@
               <span>{{ $t('purchases.discount_earned') }}</span>
               <span class="font-mono font-bold">-{{ formatMoney(discount) }} {{ $t('common.currency') }}</span>
             </div>
-            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans font-tajawal">
+            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal">
               <span>{{ $t('invoices.net_invoice') }}</span>
               <span class="font-mono text-emerald-400">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
             </div>
@@ -243,7 +243,7 @@
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="px-7 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+            class="px-7 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
             <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
             <span>{{ $t('purchases.confirm_and_supply_btn') }}</span>

@@ -141,7 +141,7 @@
         <div v-else-if="ledger.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.transaction_type') }}</th>

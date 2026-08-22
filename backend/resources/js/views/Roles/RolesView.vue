@@ -25,7 +25,7 @@
             v-if="selectedRole?.name !== 'admin'"
             @click="savePermissions"
             :disabled="isSaving"
-            class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+            class="px-5 py-2.5 bg-theme-gradient text-white shadow-theme-primary font-black text-xs rounded-xl shadow-lg shadow-theme-primary flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
           >
             <Check class="w-4 h-4" />
             <span>{{ isSaving ? $t('common.loading') : $t('profile.save_changes') }}</span>

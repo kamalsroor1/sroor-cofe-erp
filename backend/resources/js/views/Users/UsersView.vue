@@ -23,7 +23,7 @@
 
           <button
             @click="openCreateModal"
-            class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer font-tajawal"
+            class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary text-xs rounded-xl shadow-lg shadow-theme-primary flex items-center gap-2 transition cursor-pointer font-tajawal"
           >
             <UserPlus class="w-4 h-4" />
             <span>{{ $t('users.add_user_btn') }}</span>
@@ -71,7 +71,7 @@
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-start text-xs">
-            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-bold font-tajawal">
+            <thead class="bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold font-tajawal">
               <tr>
                 <th class="p-4 text-start">{{ $t('users.employee_col') }}</th>
                 <th class="p-4 text-start">{{ $t('users.phone_col') }}</th>
@@ -140,7 +140,7 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+        <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
           <span class="font-tajawal">{{ $t('users.total_users_count', { count: pagination.total }) }}</span>
           <div class="flex items-center gap-2 font-sans font-tajawal">
             <button
@@ -165,7 +165,7 @@
       <!-- Create / Edit User Modal -->
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <UserPlus class="w-4 h-4 text-amber-400" />
               <span>{{ isEditing ? $t('users.edit_user_title') : $t('users.create_user_title') }}</span>
@@ -257,7 +257,7 @@
               <label for="is_active_check" class="text-slate-300 font-bold cursor-pointer">{{ $t('users.account_active_login_checkbox') }}</label>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 @click="showModal = false"

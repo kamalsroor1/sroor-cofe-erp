@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
             <Layers class="w-5 h-5" />
@@ -42,8 +42,8 @@
         <div
           v-for="plan in plans"
           :key="plan.id"
-          class="bg-slate-950/80 border rounded-3xl p-6 shadow-xl flex flex-col justify-between relative space-y-6"
-          :class="plan.is_popular ? 'border-amber-500/50 ring-1 ring-amber-500/30' : 'border-slate-800'"
+          class="bg-white dark:bg-slate-950/80 border rounded-3xl p-6 shadow-xl flex flex-col justify-between relative space-y-6"
+          :class="plan.is_popular ? 'border-amber-500/50 ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-800'"
         >
           <!-- Popular Badge -->
           <div v-if="plan.is_popular" class="absolute -top-3 start-1/2 -translate-x-1/2 px-3 py-0.5 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full uppercase tracking-wider">
@@ -65,7 +65,7 @@
             </div>
 
             <!-- Pricing -->
-            <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 text-center space-y-1">
+            <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 text-center space-y-1">
               <div class="text-2xl font-black text-amber-400 font-mono">
                 {{ formatMoney(plan.price_monthly) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }} / {{ $t('super.per_month') }}</span>
               </div>
@@ -76,15 +76,15 @@
 
             <!-- Limits List -->
             <div class="space-y-2 text-xs text-slate-300">
-              <div class="flex items-center justify-between py-1.5 border-b border-slate-800/80">
+              <div class="flex items-center justify-between py-1.5 border-b border-slate-200 dark:border-slate-800/80">
                 <span class="text-slate-400">{{ $t('super.max_users_label') }}</span>
                 <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_users }}</span>
               </div>
-              <div class="flex items-center justify-between py-1.5 border-b border-slate-800/80">
+              <div class="flex items-center justify-between py-1.5 border-b border-slate-200 dark:border-slate-800/80">
                 <span class="text-slate-400">{{ $t('super.max_stores_label') }}</span>
                 <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_stores }}</span>
               </div>
-              <div class="flex items-center justify-between py-1.5 border-b border-slate-800/80">
+              <div class="flex items-center justify-between py-1.5 border-b border-slate-200 dark:border-slate-800/80">
                 <span class="text-slate-400">{{ $t('super.max_items_label') }}</span>
                 <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_items }}</span>
               </div>
@@ -108,7 +108,7 @@
       <!-- Edit Plan Modal -->
       <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h2 class="text-base font-black text-white">{{ $t('super.edit_plan_modal_title', { name: editForm.name }) }}</h2>
             <button @click="showEditModal = false" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
           </div>
@@ -202,7 +202,7 @@
               </label>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 type="button"
                 @click="showEditModal = false"

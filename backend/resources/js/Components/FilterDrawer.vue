@@ -32,7 +32,7 @@ onUnmounted(() => {
                 <!-- Backdrop -->
                 <div
                     @click="emit('close')"
-                    class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs transition-opacity"
+                    class="fixed inset-0 bg-white dark:bg-slate-950/80 backdrop-blur-xs transition-opacity"
                 />
 
                 <!-- Slide-Over Drawer Container -->

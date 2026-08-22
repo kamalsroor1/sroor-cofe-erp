@@ -34,7 +34,7 @@
               v-if="!activeShift"
               type="button"
               @click="showOpenShiftModal = true"
-              class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+              class="px-4 py-2 bg-theme-gradient text-white shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary cursor-pointer"
             >
               <Play class="w-4 h-4 fill-slate-950" />
               <span>{{ $t('treasury.open_shift') }}</span>
@@ -75,7 +75,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-4 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 border-slate-800 pt-2 md:pt-0">
+        <div class="flex items-center gap-4 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 border-slate-200 dark:border-slate-800 pt-2 md:pt-0">
           <div class="text-start md:text-end">
             <span class="text-[10px] text-slate-400 block font-bold">{{ $t('treasury.opening_float_balance') }}</span>
             <span class="text-sm font-black text-amber-400 font-mono">{{ formatMoney(activeShift.opening_cash_balance) }} {{ $t('common.currency') }}</span>
@@ -156,7 +156,7 @@
       <!-- Journal Tabs (Invoices vs Expenses) -->
       <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Tabs Header -->
-        <div class="flex items-center border-b border-slate-800 bg-slate-900/60 p-2">
+        <div class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-900/60 p-2">
           <button
             type="button"
             @click="activeTab = 'invoices'"
@@ -189,7 +189,7 @@
           <div v-if="invoices.length > 0" class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="py-3 px-4 text-start font-bold">#</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.customer') }}</th>
@@ -240,7 +240,7 @@
           <div v-if="expenses.length > 0" class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="py-3 px-4 text-start font-bold">#</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
@@ -311,7 +311,7 @@
             >
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showOpenShiftModal = false"
@@ -323,7 +323,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('treasury.confirm_open_shift_btn') }}</span>
@@ -383,7 +383,7 @@
             >
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showCloseShiftModal = false"
@@ -474,7 +474,7 @@
             </select>
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showExpenseModal = false"
@@ -486,7 +486,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('treasury.submit_expense_btn') }}</span>

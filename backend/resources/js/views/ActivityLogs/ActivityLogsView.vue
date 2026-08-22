@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
             <Activity class="w-5 h-5" />
@@ -15,7 +15,7 @@
         <div class="flex items-center gap-2">
           <button
             @click="fetchLogs"
-            class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition cursor-pointer"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition cursor-pointer"
           >
             <RefreshCw class="w-4 h-4 text-amber-400" :class="{ 'animate-spin': isLoading }" />
             <span>{{ $t('activity.refresh_log') }}</span>
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Filter Controls -->
-      <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 shadow-lg space-y-3">
+      <div class="p-4 bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Search -->
           <div class="relative">
@@ -61,7 +61,7 @@
               @input="debouncedFetch"
               type="text"
               :placeholder="$t('activity.search_placeholder')"
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-theme-primary"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-theme-primary"
             />
           </div>
 
@@ -69,7 +69,7 @@
           <select
             v-model="filters.module"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-theme-primary"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary"
           >
             <option value="all">{{ $t('activity.all_modules') }}</option>
             <option v-for="(label, key) in modulesList" :key="key" :value="key">{{ label }}</option>
@@ -79,7 +79,7 @@
           <select
             v-model="filters.user_id"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-theme-primary"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary"
           >
             <option value="all">{{ $t('activity.all_users') }}</option>
             <option v-for="u in usersList" :key="u.id" :value="u.id">{{ u.name }}</option>
@@ -89,7 +89,7 @@
           <select
             v-model="filters.store_id"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-theme-primary"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary"
           >
             <option value="all">{{ $t('activity.all_stores') }}</option>
             <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
@@ -98,7 +98,7 @@
       </div>
 
       <!-- Logs Timeline / List -->
-      <div class="bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+      <div class="bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
           <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p class="text-xs text-slate-400">{{ $t('activity.loading_logs') }}</p>
@@ -142,7 +142,7 @@
               <button
                 v-if="log.properties || log.payload"
                 @click="openDetails(log)"
-                class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-amber-400 font-sans font-bold transition"
+                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-theme-primary font-sans font-bold transition"
               >
                 {{ $t('activity.details_btn') }}
               </button>
@@ -151,7 +151,7 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+        <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
           <span>{{ $t('activity.total_records') }} {{ pagination.total }}</span>
           <div class="flex items-center gap-2 font-sans">
             <button
@@ -176,7 +176,7 @@
       <!-- Payload Details Modal -->
       <div v-if="selectedLog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <Activity class="w-4 h-4 text-cyan-400" />
               <span>{{ $t('activity.log_details_title', { id: selectedLog.id }) }}</span>
@@ -185,17 +185,17 @@
           </div>
 
           <div class="space-y-3 text-xs">
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800">
               <div class="text-slate-400 font-bold mb-1">{{ $t('activity.full_description') }}</div>
               <div class="text-white">{{ selectedLog.description }}</div>
             </div>
 
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 font-mono text-[11px] overflow-x-auto max-h-60">
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-mono text-[11px] overflow-x-auto max-h-60">
               <pre class="text-emerald-400">{{ JSON.stringify(selectedLog.properties || selectedLog.payload, null, 2) }}</pre>
             </div>
           </div>
 
-          <div class="flex justify-end pt-2 border-t border-slate-800">
+          <div class="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
             <button
               @click="selectedLog = null"
               class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold text-xs"

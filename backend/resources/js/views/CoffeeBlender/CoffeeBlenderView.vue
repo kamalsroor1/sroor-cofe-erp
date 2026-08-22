@@ -9,7 +9,7 @@
         <template #actions>
           <router-link
             to="/invoices"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight class="w-4 h-4" />
             <span>{{ $t('nav.invoices_log') }}</span>
@@ -165,7 +165,7 @@
                       type="number"
                       min="0"
                       max="100"
-                      class="w-12 h-7 text-center bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
+                      class="w-12 h-7 text-center bg-white dark:bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
                     >
                     <span class="text-slate-400 text-[10px]">%</span>
                   </div>
@@ -190,7 +190,7 @@
             </div>
 
             <!-- Extra Spices (Cardamom) -->
-            <div class="pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="space-y-1">
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.cardamom_spices') }}</label>
                 <input
@@ -235,7 +235,7 @@
                 <span class="font-mono text-rose-400">{{ formatMoney(totalCalculatedCost) }} {{ $t('common.currency') }}</span>
               </div>
 
-              <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans">
+              <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans">
                 <span>{{ $t('inventory.suggested_retail_price') }}:</span>
                 <span class="font-mono text-emerald-400 text-lg">{{ formatMoney(totalCalculatedPrice) }} {{ $t('common.currency') }}</span>
               </div>
@@ -247,7 +247,7 @@
             </div>
 
             <!-- Customer Selection -->
-            <div class="space-y-1.5 pt-3 border-t border-slate-800">
+            <div class="space-y-1.5 pt-3 border-t border-slate-200 dark:border-slate-800">
               <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-sans">
                 {{ $t('contacts.customer') }} <span class="text-rose-500">*</span>
               </label>
@@ -266,10 +266,10 @@
               type="button"
               @click="submitBlendInvoice"
               :disabled="isSubmitting || components.length === 0"
-              class="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 rounded-2xl font-black text-xs shadow-xl shadow-emerald-500/20 transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2 font-sans"
+              class="w-full h-12 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2 font-sans"
             >
               <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-              <Zap v-else class="w-4 h-4 fill-slate-950" />
+              <Zap v-else class="w-4 h-4 fill-white text-white" />
               <span>{{ $t('inventory.blend_invoice_btn') }}</span>
             </button>
           </div>

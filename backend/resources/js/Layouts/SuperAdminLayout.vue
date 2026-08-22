@@ -25,7 +25,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white font-tajawal" dir="rtl">
+    <div class="min-h-screen bg-white dark:bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white font-tajawal" dir="rtl">
         <!-- Top Navbar -->
         <header class="h-16 border-b border-indigo-900/40 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -68,7 +68,7 @@ const handleLogout = async () => {
                     <span class="hidden sm:inline">{{ $t('super.back_to_pos') }}</span>
                 </router-link>
 
-                <div class="text-left hidden md:block pl-2 border-r border-slate-800 pr-3">
+                <div class="text-left hidden md:block pl-2 border-r border-slate-200 dark:border-slate-800 pr-3">
                     <div class="text-xs font-black text-white">{{ user?.name || $t('super.platform_admin') }}</div>
                     <div class="text-[10px] text-indigo-400 font-mono font-bold">SUPER ADMIN</div>
                 </div>
@@ -90,7 +90,7 @@ const handleLogout = async () => {
             <div
                 v-if="mobileMenuOpen"
                 @click="mobileMenuOpen = false"
-                class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs md:hidden"
+                class="fixed inset-0 z-50 bg-white dark:bg-slate-950/80 backdrop-blur-xs md:hidden"
             />
         </Transition>
 

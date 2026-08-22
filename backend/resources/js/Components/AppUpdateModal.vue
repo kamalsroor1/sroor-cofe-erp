@@ -4,7 +4,7 @@
       <div
         v-if="isModalOpen"
         @click.self="closeModal"
-        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 select-none font-tajawal"
+        class="fixed inset-0 bg-white dark:bg-slate-950/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 select-none font-tajawal"
         dir="rtl"
       >
         <Transition name="modal-zoom">
@@ -25,7 +25,7 @@
                 </p>
               </div>
 
-              <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-400 text-start space-y-1">
+              <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-start space-y-1">
                 <div class="flex items-center gap-2 text-emerald-400 font-bold">
                   <Sparkles class="w-4 h-4" />
                   <span>{{ $t('app_update.install_steps_title') }}</span>
@@ -38,7 +38,7 @@
                 <button
                   type="button"
                   @click="closeModal"
-                  class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition active:scale-95 cursor-pointer"
+                  class="flex-1 py-3 px-4 rounded-2xl bg-theme-gradient text-white shadow-theme-primary font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition active:scale-95 cursor-pointer"
                 >
                   <Check class="w-4.5 h-4.5" />
                   <span>{{ $t('app_update.done_and_close') }}</span>
@@ -58,7 +58,7 @@
             <!-- 🚀 State 2: Update Available & Downloading Details -->
             <template v-else>
               <!-- Top Gradient Accent Header -->
-              <div class="p-6 bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent border-b border-slate-800 text-center relative">
+              <div class="p-6 bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent border-b border-slate-200 dark:border-slate-800 text-center relative">
                 <!-- Close button (Only available if NOT forced) -->
                 <button
                   v-if="!isForceUpdate"
@@ -71,7 +71,7 @@
                 </button>
 
                 <!-- Glowing Rocket Icon Badge -->
-                <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-xl shadow-amber-500/25 mx-auto mb-3 flex items-center justify-center text-slate-950 animate-bounce">
+                <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-xl shadow-theme-primary mx-auto mb-3 flex items-center justify-center text-slate-950 animate-bounce">
                   <Rocket class="w-8 h-8" />
                 </div>
 
@@ -122,7 +122,7 @@
                     <span>{{ $t('app_update.changelog_title') }}</span>
                   </div>
 
-                  <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed">
+                  <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed">
                     <template v-if="latestVersionData?.release_notes?.length">
                       <div
                         v-for="(note, idx) in latestVersionData.release_notes"
@@ -155,12 +155,12 @@
               </div>
 
               <!-- Footer Action Buttons -->
-              <div class="p-5 border-t border-slate-800 bg-slate-950/80 flex items-center gap-3">
+              <div class="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 flex items-center gap-3">
                 <button
                   type="button"
                   @click="startDownloadAndInstall"
                   :disabled="isDownloading"
-                  class="flex-1 py-3 px-4 rounded-2xl bg-theme-gradient text-white font-black shadow-theme-primary text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                  class="flex-1 py-3 px-4 rounded-2xl bg-theme-gradient text-white font-black shadow-theme-primary text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-theme-primary transition active:scale-95 cursor-pointer disabled:opacity-50"
                 >
                   <Download v-if="!isDownloading" class="w-4.5 h-4.5" />
                   <div v-else class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>

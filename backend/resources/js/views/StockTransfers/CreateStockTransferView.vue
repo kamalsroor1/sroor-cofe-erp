@@ -20,7 +20,7 @@
       <form @submit.prevent="submitTransfer" class="space-y-6">
         <!-- Stores & Date Selection Card -->
         <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-          <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
+          <h2 class="text-xs font-bold text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
             <span>🏢</span>
             <span>{{ $t('inventory.branches_and_date_section') }}</span>
           </h2>
@@ -88,7 +88,7 @@
 
         <!-- Items Selection Card -->
         <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
               <span>📦</span>
               <span>{{ $t('inventory.transferred_items_section') }}</span>
@@ -118,10 +118,10 @@
           </div>
 
           <!-- Items Table -->
-          <div v-if="form.items.length > 0" class="border border-slate-800 rounded-xl overflow-hidden">
+          <div v-if="form.items.length > 0" class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                   <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
                   <th class="p-3 text-center font-bold w-36">{{ $t('inventory.transferred_qty_col') }}</th>
@@ -162,7 +162,7 @@
             </table>
           </div>
 
-          <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-800 rounded-xl font-tajawal">
+          <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-200 dark:border-slate-800 rounded-xl font-tajawal">
             {{ $t('inventory.no_items_in_transfer_prompt') }}
           </div>
         </div>
@@ -171,7 +171,7 @@
         <button
           type="submit"
           :disabled="isSubmitting || form.items.length === 0"
-          class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
+          class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
         >
           <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
           <Truck v-else class="w-4 h-4" />

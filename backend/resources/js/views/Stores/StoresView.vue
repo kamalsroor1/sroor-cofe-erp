@@ -19,7 +19,7 @@
             <button
               type="button"
               @click="openCreateModal"
-              class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-amber-500/20 cursor-pointer"
+              class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
             >
               <Plus class="w-4 h-4" />
               <span>{{ $t('inventory.add_store') }}</span>
@@ -94,7 +94,7 @@
             </div>
 
             <!-- Statistics Counters -->
-            <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/80 text-center">
+            <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800/80 text-center">
               <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.items_count') }}</div>
                 <div class="text-sm font-black text-theme-primary font-mono mt-0.5">{{ store.stocks_count || 0 }}</div>
@@ -110,7 +110,7 @@
             </div>
 
             <!-- Assigned Staff Avatars -->
-            <div class="mt-3.5 pt-3 border-t border-slate-800/80">
+            <div class="mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-800/80">
               <div class="flex items-center justify-between">
                 <span class="text-[11px] font-bold text-slate-400 font-tajawal">{{ $t('inventory.assigned_staff') }}:</span>
                 <button
@@ -141,7 +141,7 @@
           </div>
 
           <!-- Card Actions Footer -->
-          <div class="flex items-center justify-between gap-2 mt-5 pt-3 border-t border-slate-800">
+          <div class="flex items-center justify-between gap-2 mt-5 pt-3 border-t border-slate-200 dark:border-slate-800">
             <router-link
               :to="{ path: '/stores/stocks', query: { store_id: store.id } }"
               class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 font-tajawal"
@@ -184,7 +184,7 @@
           <button
             type="button"
             @click="openCreateModal"
-            class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20 cursor-pointer"
+            class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
           >
             {{ $t('inventory.add_first_store') }}
           </button>
@@ -292,7 +292,7 @@
           </div>
 
           <!-- Form Actions -->
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showStoreModal = false"
@@ -304,7 +304,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('common.save') }}</span>
@@ -335,7 +335,7 @@
                   type="checkbox"
                   :value="user.id"
                   v-model="assignedUserIds"
-                  class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
+                  class="w-4 h-4 rounded bg-white dark:bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
                 >
                 <div>
                   <div class="text-xs font-bold text-slate-900 dark:text-white font-tajawal">{{ user.name }}</div>
@@ -345,7 +345,7 @@
             </label>
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
               @click="showUserModal = false"
@@ -357,7 +357,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('common.save') }}</span>

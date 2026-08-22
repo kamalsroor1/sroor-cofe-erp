@@ -17,7 +17,7 @@
         <div class="flex items-center gap-2.5">
           <router-link
             to="/pos"
-            class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer"
+            class="px-5 py-2.5 bg-theme-gradient text-white shadow-theme-primary font-black text-xs rounded-2xl shadow-lg shadow-theme-primary flex items-center gap-2 transition-all cursor-pointer"
           >
             <ShoppingCart class="w-4 h-4" />
             <span>{{ $t('dashboard.pos_fast_btn') }}</span>
@@ -168,7 +168,7 @@
                 <span>{{ $t('dashboard.opening_balance_short') }}</span>
                 <span class="text-slate-300">{{ formatMoney(dashboardData.active_shift.starting_cash) }} {{ $t('common.currency') }}</span>
               </div>
-              <div class="flex justify-between text-slate-400 font-sans pt-2 border-t border-slate-800">
+              <div class="flex justify-between text-slate-400 font-sans pt-2 border-t border-slate-200 dark:border-slate-800">
                 <span>{{ $t('dashboard.expected_drawer_cash') }}</span>
                 <span class="text-emerald-400 font-black text-base">{{ formatMoney(dashboardData.active_shift.current_cash) }} {{ $t('common.currency') }}</span>
               </div>
@@ -190,7 +190,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Low Stock Radar (Col 1) -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <AlertOctagon class="w-4 h-4 text-rose-400" />
                 <span>{{ $t('dashboard.low_stock_radar_count', { count: lowStockItems.length }) }}</span>
@@ -204,7 +204,7 @@
               <div
                 v-for="it in lowStockItems"
                 :key="it.id"
-                class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
+                class="p-2.5 bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
                   <div class="font-bold text-slate-900 dark:text-white">{{ it.name }}</div>
@@ -224,7 +224,7 @@
 
           <!-- Recent Invoices (Col 2) -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <FileText class="w-4 h-4 text-blue-400" />
                 <span>{{ $t('dashboard.recent_invoices_today') }}</span>
@@ -238,7 +238,7 @@
               <div
                 v-for="inv in recentInvoices"
                 :key="inv.id"
-                class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
+                class="p-2.5 bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
                   <div class="font-bold text-amber-400 font-mono">{{ inv.invoice_number }}</div>
@@ -258,7 +258,7 @@
 
           <!-- Top Selling Items (Col 3) -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <PackageCheck class="w-4 h-4 text-amber-400" />
                 <span>{{ $t('dashboard.top_selling_month') }}</span>
@@ -272,7 +272,7 @@
               <div
                 v-for="top in topSellingItems"
                 :key="top.item_id"
-                class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
+                class="p-2.5 bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
                   <div class="font-bold text-slate-900 dark:text-white">{{ top.name }}</div>

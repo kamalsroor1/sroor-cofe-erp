@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
             <Crown class="w-5 h-5" />
@@ -75,7 +75,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Plans Distribution (Col 1) -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <Layers class="w-4 h-4 text-amber-400" />
                 <span>{{ $t('super.tenants_distribution') }}</span>
@@ -86,7 +86,7 @@
               <div
                 v-for="p in planStats"
                 :key="p.id"
-                class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
+                class="p-3 bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
                   <div class="font-bold text-slate-900 dark:text-white">{{ p.name }}</div>
@@ -103,7 +103,7 @@
 
           <!-- Recent Tenants (Col 2-3) -->
           <div class="lg:col-span-2 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <Building2 class="w-4 h-4 text-purple-400" />
                 <span>{{ $t('super.recent_tenants') }}</span>
@@ -117,7 +117,7 @@
               <div
                 v-for="t in recentTenants"
                 :key="t.id"
-                class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+                class="p-3 bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
               >
                 <div class="space-y-0.5">
                   <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -147,7 +147,7 @@
 
         <!-- Central Platform Whitelabel & Branding Card -->
         <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
                 <Sliders class="w-4 h-4" />
@@ -219,7 +219,7 @@
             </div>
 
             <!-- Submit Button -->
-            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800/80">
               <span v-if="saveSuccessMessage" class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                 <span>✓</span> {{ saveSuccessMessage }}
               </span>
@@ -228,7 +228,7 @@
               <button
                 type="submit"
                 :disabled="isSavingSettings"
-                class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+                class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary text-xs rounded-xl shadow-lg shadow-theme-primary flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
                 <span>{{ isSavingSettings ? $t('super.saving_platform_settings') : $t('super.save_platform_settings_btn') }}</span>
               </button>

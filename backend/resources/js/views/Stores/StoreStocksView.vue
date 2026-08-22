@@ -50,7 +50,7 @@
           </div>
 
           <!-- Stock Status Filter -->
-          <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 w-full sm:w-auto">
+          <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 w-full sm:w-auto">
             <button
               type="button"
               @click="setStockStatus('all')"
@@ -154,7 +154,7 @@
         />
 
         <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
             {{ $t('inventory.total_results_items', { count: pagination.total }) }}
           </div>

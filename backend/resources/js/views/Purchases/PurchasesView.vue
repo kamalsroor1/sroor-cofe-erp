@@ -20,7 +20,7 @@
             <!-- Create Purchase Link -->
             <router-link
               to="/purchases/create"
-              class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
+              class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary"
             >
               <Plus class="w-4 h-4" />
               <span>{{ $t('purchases.new_purchase') }}</span>
@@ -136,7 +136,7 @@
         <div v-else-if="purchases.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('purchases.supplier') }}</th>
@@ -226,7 +226,7 @@
           <template #action>
             <router-link
               to="/purchases/create"
-              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20"
+              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
             >
               {{ $t('purchases.add_first_purchase') }}
             </router-link>
@@ -234,7 +234,7 @@
         </EmptyState>
 
         <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400">
             {{ $t('purchases.total_results_purchases', { count: pagination.total }) }}
           </div>
@@ -292,10 +292,10 @@
           </div>
 
           <!-- Items Table -->
-          <div class="border border-slate-800 rounded-xl overflow-hidden">
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-2.5 text-start font-bold">{{ $t('purchases.item_material') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('common.quantity') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('inventory.purchase_price') }}</th>
@@ -327,7 +327,7 @@
               <span>{{ $t('purchases.additional_expenses_loaded') }}</span>
               <span class="font-mono">+{{ formatMoney(selectedPurchase.additional_expenses_total) }} {{ $t('common.currency') }}</span>
             </div>
-            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-tajawal">
+            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-tajawal">
               <span>{{ $t('invoices.net_invoice') }}</span>
               <span class="text-emerald-400 font-mono">{{ formatMoney(selectedPurchase.net_total) }} {{ $t('common.currency') }}</span>
             </div>

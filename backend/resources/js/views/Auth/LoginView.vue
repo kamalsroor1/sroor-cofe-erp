@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 selection:bg-amber-500 selection:text-white relative overflow-hidden font-sans" dir="rtl">
+  <div class="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 selection:bg-amber-500 selection:text-white relative overflow-hidden font-sans" dir="rtl">
     <!-- Glowing Ambient Lighting Background Blobs -->
     <div class="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative z-10">
+    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative z-10">
       <!-- Header / Brand Logo -->
       <div class="text-center space-y-3">
         <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-amber-500/30 text-amber-400 shadow-2xl shadow-amber-500/10">
@@ -42,7 +42,7 @@
               autofocus
               dir="ltr"
               :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
-              class="w-full h-11 pr-10 pl-4 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
+              class="w-full h-11 pr-10 pl-4 bg-white dark:bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
             <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -64,7 +64,7 @@
               required
               dir="ltr"
               :placeholder="$t('auth.password_placeholder')"
-              class="w-full h-11 pr-10 pl-11 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
+              class="w-full h-11 pr-10 pl-11 bg-white dark:bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
             <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -87,7 +87,7 @@
             <input
               v-model="form.remember"
               type="checkbox"
-              class="w-4 h-4 rounded-lg bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20 focus:ring-offset-0 transition-all cursor-pointer"
+              class="w-4 h-4 rounded-lg bg-white dark:bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20 focus:ring-offset-0 transition-all cursor-pointer"
             >
             <span class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('auth.remember_me') }}</span>
           </label>
@@ -97,7 +97,7 @@
         <button
           type="submit"
           :disabled="isLoading"
-          class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
+          class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-theme-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
         >
           <template v-if="isLoading">
             <div class="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
@@ -111,7 +111,7 @@
       </form>
 
       <!-- Quick Account Switcher (Only on Central Hub Baraa Solutions) -->
-      <div v-if="isCentralHub" class="pt-4 border-t border-slate-800/80 space-y-2.5">
+      <div v-if="isCentralHub" class="pt-4 border-t border-slate-200 dark:border-slate-800/80 space-y-2.5">
         <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold font-tajawal">
           <span class="flex items-center gap-1">
             <Key class="w-3.5 h-3.5 text-amber-400" />
@@ -124,7 +124,7 @@
           <button
             type="button"
             @click="fillAccount('01012316954', 'password')"
-            class="p-2.5 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
+            class="p-2.5 bg-white dark:bg-slate-950/60 hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
           >
             <div class="flex items-center gap-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
@@ -136,7 +136,7 @@
           <button
             type="button"
             @click="fillAccount('01140003020', 'password')"
-            class="p-2.5 bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
+            class="p-2.5 bg-white dark:bg-slate-950/60 hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-xl text-start transition-all group cursor-pointer"
           >
             <div class="flex items-center gap-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />

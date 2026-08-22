@@ -9,7 +9,7 @@
         <template #actions>
           <router-link
             to="/returns/create"
-            class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
+            class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary"
           >
             <Plus class="w-4 h-4" />
             <span>{{ $t('returns.new_return') }}</span>
@@ -123,7 +123,7 @@
         <div v-else-if="returnsList.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('returns.doc_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('returns.return_type') }}</th>
@@ -206,7 +206,7 @@
           <template #action>
             <router-link
               to="/returns/create"
-              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20"
+              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
             >
               {{ $t('returns.add_first_return') }}
             </router-link>
@@ -214,7 +214,7 @@
         </EmptyState>
 
         <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
+        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400">
             {{ $t('returns.total_results_returns', { count: pagination.total }) }}
           </div>
@@ -272,10 +272,10 @@
           </div>
 
           <!-- Items Table -->
-          <div class="border border-slate-800 rounded-xl overflow-hidden">
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-2.5 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('returns.returned_quantity') }}</th>
                   <th class="p-2.5 text-end font-bold">{{ $t('inventory.selling_price') }}</th>
@@ -299,7 +299,7 @@
             <span class="text-base font-black text-rose-400 font-mono">{{ formatMoney(selectedReturnDetails.total_amount) }} {{ $t('common.currency') }}</span>
           </div>
 
-          <div v-if="selectedReturnDetails.reason" class="p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl text-slate-400 font-tajawal">
+          <div v-if="selectedReturnDetails.reason" class="p-3 bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 rounded-xl text-slate-400 font-tajawal">
             <span class="font-bold text-slate-300">{{ $t('returns.return_reason_label') }}</span>
             <span>{{ selectedReturnDetails.reason }}</span>
           </div>
