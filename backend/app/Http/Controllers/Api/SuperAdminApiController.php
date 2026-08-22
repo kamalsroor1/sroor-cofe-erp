@@ -82,9 +82,10 @@ final class SuperAdminApiController extends Controller
                 'tenant'  => $tenant,
             ], 201);
         } catch (Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Tenant Provisioning Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'فشل إنشاء المستأجر: ' . $e->getMessage(),
+                'message' => $this->formatTenantException($e),
             ], 422);
         }
     }
@@ -242,5 +243,42 @@ final class SuperAdminApiController extends Controller
                 'support_phone'     => Setting::get('support_phone'),
             ],
         ]);
+    }
+
+    /**
+     * تحويل الأخطاء البرمجية وقواعد البيانات إلى رسائل عربية واضحة ومفهومة للمستخدم
+     */
+    private function formatTenantException(\Throwable $e): string
+    {
+        $message = $e->getMessage();
+
+        // 1. Unknown Database (قاعدة البيانات غير موجودة في هوستنجر)
+        if (str_contains($message, 'Unknown database') || str_contains($message, '1049')) {
+            preg_match("/database '([^']+)'/", $message, $matches);
+            $dbName = $matches[1] ?? 'المحددة';
+            return "قاعدة البيانات ($dbName) غير موجودة في MySQL على هوستنجر. يرجى إنشاؤها أولاً من لوحة الاستضافة (Databases) والتأكد من تطابق الاسم.";
+        }
+
+        // 2. Access Denied / Missing Privileges (الصلاحيات غير ممنوحة)
+        if (str_contains($message, 'Access denied') || str_contains($message, '1044') || str_contains($message, '1045')) {
+            return "تعذر الاتصال بقاعدة البيانات بسبب عدم منح الصلاحيات لمستخدم MySQL. يرجى التأكد من ربط المستخدم بالقاعدة في هوستنجر واختيار (All Privileges).";
+        }
+
+        // 3. Duplicate domain or slug
+        if (str_contains($message, 'Duplicate entry') || str_contains($message, 'UNIQUE constraint')) {
+            return "اسم النطاق أو المعرف البرمجي مستخدم بالفعل لمستأجر آخر. يرجى اختيار اسم معرف مختلف.";
+        }
+
+        // 4. Connection refused
+        if (str_contains($message, 'Connection refused') || str_contains($message, '2002')) {
+            return "تعذر الاتصال بخادم MySQL. يرجى التحقق من حالة خادم قواعد البيانات.";
+        }
+
+        // Generic fallback without raw SQL keywords
+        if (str_contains($message, 'SQLSTATE')) {
+            return 'حدث خطأ أثناء إعداد قاعدة بيانات المستأجر. يرجى التأكد من إنشاء قاعدة البيانات في هوستنجر وربط المستخدم بها.';
+        }
+
+        return 'تعذر إتمام تهيئة المستأجر: ' . $message;
     }
 }
