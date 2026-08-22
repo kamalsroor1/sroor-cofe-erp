@@ -2,7 +2,7 @@
   <!-- Fixed Mobile & Tablet Bottom Navigation Bar (Visible on mobile screens < md) -->
   <nav
     aria-label="Mobile Bottom Navigation"
-    class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-2xl border-t border-slate-800/90 px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0.6rem))] flex items-center justify-around font-tajawal shadow-2xl select-none"
+    class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-800/90 px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0.6rem))] flex items-center justify-around font-tajawal shadow-2xl select-none"
   >
     <!-- 👑 MODE 1: SUPER ADMIN CENTRAL PLATFORM BOTTOM NAV -->
     <template v-if="isSuperAdminPanel">
@@ -10,7 +10,7 @@
       <router-link
         to="/super-admin/dashboard"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -26,7 +26,7 @@
       <router-link
         to="/super-admin/tenants"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -42,7 +42,7 @@
       <div class="flex-1 flex items-center justify-center">
         <router-link
           to="/super-admin/plans"
-          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-400 flex items-center justify-center shadow-lg shadow-purple-600/40 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-slate-950 group"
+          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-400 flex items-center justify-center shadow-lg shadow-purple-600/40 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-950 group"
           :class="isPlansActive ? 'scale-110 ring-purple-400/50' : ''"
           :title="$t('super.plans')"
         >
@@ -54,7 +54,7 @@
       <router-link
         to="/super-admin/app-versions"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -86,7 +86,7 @@
       <router-link
         to="/"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isDashboardActive ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isDashboardActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -102,7 +102,7 @@
       <router-link
         to="/invoices"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isInvoicesActive ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isInvoicesActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -118,7 +118,7 @@
       <div class="flex-1 flex items-center justify-center">
         <router-link
           to="/pos"
-          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-slate-950 group"
+          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-950 group"
           :class="isPosActive ? 'scale-110 ring-amber-400/50' : ''"
           :title="$t('nav.pos_fast')"
         >
@@ -130,7 +130,7 @@
       <router-link
         to="/items"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isItemsActive ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isItemsActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -146,7 +146,7 @@
       <router-link
         to="/daily-journal"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isShiftActive ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-slate-200'"
+        :class="isShiftActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span

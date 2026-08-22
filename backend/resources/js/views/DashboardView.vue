@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Welcome Header Banner -->
-      <div class="p-6 rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="p-6 rounded-3xl bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-bold text-amber-400 mb-2">
             <span>{{ $t('dashboard.app_badge_sub') }}</span>
           </div>
-          <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {{ $t('dashboard.welcome_user', { name: authStore.userName }) }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-400 font-bold mt-1">
@@ -25,7 +25,7 @@
 
           <router-link
             to="/coffee-blender"
-            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
           >
             <Layers class="w-4 h-4" />
             <span>{{ $t('dashboard.coffee_blend_btn') }}</span>
@@ -43,14 +43,14 @@
         <!-- 4 Key Metric Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Today Sales -->
-          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+          <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.today_sales_card') }}</span>
               <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <TrendingUp class="w-4 h-4" />
               </div>
             </div>
-            <div class="text-2xl font-black text-white font-mono">
+            <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
               {{ formatMoney(metrics.today_sales || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
             </div>
             <div class="text-[11px] text-slate-500">
@@ -59,7 +59,7 @@
           </div>
 
           <!-- Monthly Gross Profit & Margin -->
-          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+          <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.monthly_gross_profit_card') }}</span>
               <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
@@ -75,7 +75,7 @@
           </div>
 
           <!-- Customer Debts -->
-          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+          <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.customers_debt_card') }}</span>
               <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
@@ -91,7 +91,7 @@
           </div>
 
           <!-- Net Cash Collected Today -->
-          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+          <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.net_cash') }}</span>
               <div class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
@@ -110,9 +110,9 @@
         <!-- 7-Day Trend Chart & Shift Status (2 Cols) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- 7-Day Sales Trend (Col span 2) -->
-          <div class="lg:col-span-2 bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+          <div class="lg:col-span-2 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <TrendingUp class="w-4 h-4 text-emerald-400" />
                 <span>{{ $t('dashboard.seven_days_trend_title') }}</span>
               </h2>
@@ -126,7 +126,7 @@
                   <span class="text-slate-400 font-sans">{{ day.day_name || day.date }}</span>
                   <span class="text-emerald-400 font-bold">{{ formatMoney(day.total_sales) }} {{ $t('common.currency') }}</span>
                 </div>
-                <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden">
+                <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
                   <div
                     class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
                     :style="{ width: `${getBarWidth(day.total_sales)}%` }"
@@ -141,9 +141,9 @@
           </div>
 
           <!-- Active Cash Shift Widget (Col span 1) -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Wallet class="w-4 h-4 text-amber-400" />
                 <span>{{ $t('dashboard.active_shift_widget_title') }}</span>
               </h2>
@@ -189,9 +189,9 @@
         <!-- 3 Operational Grids: Low Stock, Recent Invoices, Top Selling -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Low Stock Radar (Col 1) -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <AlertOctagon class="w-4 h-4 text-rose-400" />
                 <span>{{ $t('dashboard.low_stock_radar_count', { count: lowStockItems.length }) }}</span>
               </h2>
@@ -223,9 +223,9 @@
           </div>
 
           <!-- Recent Invoices (Col 2) -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <FileText class="w-4 h-4 text-blue-400" />
                 <span>{{ $t('dashboard.recent_invoices_today') }}</span>
               </h2>
@@ -257,9 +257,9 @@
           </div>
 
           <!-- Top Selling Items (Col 3) -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <PackageCheck class="w-4 h-4 text-amber-400" />
                 <span>{{ $t('dashboard.top_selling_month') }}</span>
               </h2>
