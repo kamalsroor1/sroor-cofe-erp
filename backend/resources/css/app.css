@@ -460,6 +460,7 @@ input, textarea, [contenteditable="true"] {
     z-index: 100000 !important;
     background: rgba(2, 6, 23, 0.85) !important;
     backdrop-filter: blur(8px) !important;
+    pointer-events: auto !important;
 }
 
 .swal2-popup {
@@ -471,6 +472,21 @@ input, textarea, [contenteditable="true"] {
     direction: rtl !important;
     padding: 2rem !important;
     color: #f8fafc !important;
+    pointer-events: auto !important;
+}
+
+.swal2-close {
+    color: #94a3b8 !important;
+    font-size: 1.5rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: color 0.2s !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+.swal2-close:hover {
+    color: #f43f5e !important;
 }
 
 .swal2-title {
@@ -494,6 +510,7 @@ input, textarea, [contenteditable="true"] {
     margin-top: 1.25rem !important;
     display: flex !important;
     justify-content: center !important;
+    pointer-events: auto !important;
 }
 
 .swal2-confirm {

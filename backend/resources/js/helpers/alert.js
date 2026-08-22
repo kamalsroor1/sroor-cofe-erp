@@ -16,17 +16,18 @@ const triggerToastHaptic = async (type = 'success') => {
 
 // 🎨 Base ERP SweetAlert2 Dark Configuration
 const DarkSwal = Swal.mixin({
-    background: '#0f172a',
+    background: '#090e1a',
     color: '#f8fafc',
-    buttonsStyling: false,
+    allowOutsideClick: true,
+    allowEscapeKey: true,
+    showCloseButton: true,
     customClass: {
-        popup: 'rounded-3xl border border-slate-800 shadow-2xl font-tajawal',
-        title: 'text-lg font-black text-white font-tajawal',
-        htmlContainer: 'text-xs text-slate-300 font-tajawal',
-        confirmButton: 'px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition cursor-pointer mx-1.5 font-tajawal',
-        cancelButton: 'px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition cursor-pointer mx-1.5 font-tajawal',
-        denyButton: 'px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/25 transition cursor-pointer mx-1.5 font-tajawal',
-        actions: 'pt-3',
+        popup: 'font-tajawal',
+        title: 'font-tajawal',
+        htmlContainer: 'font-tajawal',
+        confirmButton: 'font-tajawal',
+        cancelButton: 'font-tajawal',
+        denyButton: 'font-tajawal',
     },
 });
 
