@@ -11,8 +11,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Setup Roles & Permissions Matrix
+        // 1. Setup Roles & Permissions Matrix & SaaS Plans
         $this->call(PermissionsSeeder::class);
+        $this->call(PlansAndFeaturesSeeder::class);
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
 

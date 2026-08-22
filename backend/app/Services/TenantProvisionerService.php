@@ -43,7 +43,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
         ]);
 
         // 2. Provision Primary Subdomain
-        $centralDomain = config('tenancy.central_domains.0', 'localhost');
+        $centralDomain = env('CENTRAL_DOMAIN', 'baraa-solutions.com');
         $primarySubdomain = $dto->slug . '.' . $centralDomain;
         $tenant->domains()->create([
             'domain' => $primarySubdomain,

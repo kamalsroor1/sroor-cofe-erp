@@ -19,12 +19,10 @@ return [
     'central_domains' => [
         '127.0.0.1',
         'localhost',
-        'makhzani.localhost',
-        'super.localhost',
-        'makhzani.test',
-        'super.makhzani.test',
-        'admin.makhzani.test',
-        env('CENTRAL_DOMAIN', 'makhzani.test'),
+        'baraa-solutions.com',
+        'www.baraa-solutions.com',
+        'sroor.test',
+        env('CENTRAL_DOMAIN', 'baraa-solutions.com'),
     ],
 
     /**
