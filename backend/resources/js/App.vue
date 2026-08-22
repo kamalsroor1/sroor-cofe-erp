@@ -9,7 +9,16 @@
       </router-view>
     </template>
 
-    <!-- 2. Persistent Authenticated App Shell (Header, Sidebar & Mobile Bottom Nav STAY PERMANENTLY MOUNTED) -->
+    <!-- 2. Super Admin Dedicated Layout (Completely Isolated Shell for Central Platform Admins) -->
+    <SuperAdminLayout v-else-if="isSuperAdminRoute">
+      <router-view v-slot="{ Component, route }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" :key="route.fullPath" />
+        </transition>
+      </router-view>
+    </SuperAdminLayout>
+
+    <!-- 3. Persistent Tenant ERP / POS App Shell -->
     <SpaLayout v-else>
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
@@ -18,7 +27,7 @@
       </router-view>
     </SpaLayout>
 
-    <!-- 3. Global In-App APK Auto-Updater Modal (Renders seamlessly across all views) -->
+    <!-- 4. Global In-App APK Auto-Updater Modal (Renders seamlessly across all views) -->
     <AppUpdateModal />
   </div>
 </template>
@@ -30,6 +39,7 @@ import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
 import { useAppUpdate } from './Composables/useAppUpdate';
 import SpaLayout from './Layouts/SpaLayout.vue';
+import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';
 
 const route = useRoute();
@@ -39,6 +49,10 @@ const { checkForUpdates } = useAppUpdate();
 
 const isGuestRoute = computed(() => {
     return route.meta?.guestOnly || route.name === 'login' || route.name === 'marketing.brochure';
+});
+
+const isSuperAdminRoute = computed(() => {
+    return route.path?.startsWith('/super-admin') || route.meta?.isSuperAdmin;
 });
 
 onMounted(async () => {
