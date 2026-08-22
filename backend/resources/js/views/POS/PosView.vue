@@ -119,57 +119,61 @@
         </div>
 
         <div v-else-if="filteredItems.length > 0" class="overflow-y-auto max-h-[calc(100vh-210px)] pr-0.5 custom-scrollbar space-y-4" @scroll="onGridScroll">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               v-for="item in visibleItems"
               :key="item.id"
               type="button"
               @click="addToCart(item)"
-              class="p-4 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl text-start transition-all duration-200 active:scale-[0.98] flex flex-col justify-between space-y-3.5 cursor-pointer group shadow-xs hover:shadow-md min-h-[145px]"
+              class="p-4 sm:p-5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700/80 hover:border-theme-primary rounded-2xl text-start transition-all duration-200 active:scale-[0.98] flex flex-col justify-between space-y-4 cursor-pointer group shadow-sm hover:shadow-xl min-h-[160px]"
             >
               <!-- Top Row: Code & Stock Badge -->
-              <div class="space-y-1.5 w-full">
-                <div class="flex items-center justify-between text-[11px] text-slate-500">
-                  <span class="font-mono font-bold text-slate-400">{{ item.code || '—' }}</span>
+              <div class="space-y-2 w-full">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono font-bold text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    {{ item.code || '—' }}
+                  </span>
                   <span
-                    class="px-2 py-0.5 rounded-lg font-mono font-black text-[10px] flex items-center gap-1"
+                    class="px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1.5 shadow-2xs"
                     :class="item.current_stock > 0
-                      ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20'
-                      : 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20'"
+                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40'
+                      : 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/40'"
                   >
                     <span>{{ item.current_stock > 0 ? '📦' : '⚠️' }}</span>
                     <span>{{ formatMoney(item.current_stock) }} {{ item.unit }}</span>
                   </span>
                 </div>
 
-                <!-- Product Name -->
-                <div class="font-black text-slate-900 dark:text-white text-sm group-hover:text-theme-primary transition-colors line-clamp-2 leading-snug">
+                <!-- Product Name (Large & Bright) -->
+                <div class="font-black text-slate-950 dark:text-white text-base group-hover:text-theme-primary transition-colors line-clamp-2 leading-relaxed tracking-tight">
                   {{ item.name }}
                 </div>
               </div>
 
               <!-- Price Breakdown & Add Button -->
-              <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+              <div class="w-full pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
                 <!-- Secondary Prices (Cost & Min Selling / Wholesale) -->
-                <div class="flex items-center justify-between text-[10px] font-mono">
-                  <span v-if="item.price_wholesale || item.min_selling_price" class="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20" title="أقل سعر بيع (الجملة)">
+                <div class="flex items-center justify-between text-xs font-mono">
+                  <span v-if="item.price_wholesale || item.min_selling_price" class="px-2 py-1 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300 font-black border border-purple-500/40" title="أقل سعر بيع (الجملة)">
                     أقل بيع: {{ formatMoney(item.min_selling_price || item.price_wholesale) }}
                   </span>
-                  <span v-if="item.cost_price" class="text-slate-400 dark:text-slate-500" title="سعر التكلفة">
+                  <span v-if="item.cost_price" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold border border-slate-300 dark:border-slate-700" title="سعر التكلفة">
                     التكلفة: {{ formatMoney(item.cost_price) }}
                   </span>
                 </div>
 
                 <!-- Primary Selling Price Row + Big Touch Add Button -->
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between pt-1">
                   <div>
-                    <div class="text-[9px] text-slate-400 font-bold font-tajawal">سعر البيع ({{ activePriceTier === 'wholesale' ? 'جملة' : 'قطاعي' }}):</div>
-                    <div class="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                      {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                    <div class="text-xs text-slate-600 dark:text-slate-300 font-bold font-tajawal">
+                      سعر البيع ({{ activePriceTier === 'wholesale' ? 'جملة' : 'قطاعي' }}):
+                    </div>
+                    <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
+                      {{ formatMoney(getItemPrice(item)) }} <span class="text-xs font-bold text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
                     </div>
                   </div>
 
-                  <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center text-sm font-black group-hover:scale-110 group-hover:bg-theme-primary group-hover:text-slate-950 transition-all shadow-xs">
+                  <div class="w-10 h-10 rounded-2xl bg-theme-light text-theme-primary flex items-center justify-center text-lg font-black group-hover:scale-110 group-hover:bg-theme-primary group-hover:text-slate-950 transition-all shadow-md">
                     +
                   </div>
                 </div>
