@@ -24,11 +24,27 @@ class AppUpdateController extends Controller
     }
 
     /**
+     * Alias for checkUpdate
+     */
+    public function checkVersion(CheckUpdateRequest $request, CheckAppUpdateAction $action): JsonResponse
+    {
+        return $this->checkUpdate($request, $action);
+    }
+
+    /**
      * Download the latest APK binary
      */
     public function downloadLatestApk(DownloadLatestApkAction $action): BinaryFileResponse
     {
         $platform = request('platform', 'android');
         return $action->execute($platform);
+    }
+
+    /**
+     * Alias for downloadLatestApk
+     */
+    public function downloadApk(DownloadLatestApkAction $action): BinaryFileResponse
+    {
+        return $this->downloadLatestApk($action);
     }
 }

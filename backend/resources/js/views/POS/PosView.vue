@@ -359,16 +359,122 @@
       </div>
     </div>
 
-    <!-- Quick Add Customer Modal -->
+    <!-- 👥 Comprehensive Customer Picker & Quick Add Modal -->
     <AppModal
-      :show="showQuickCustomerModal"
-      :title="$t('pos.quick_add_customer')"
-      @close="showQuickCustomerModal = false"
+      :show="showCustomerPickerModal"
+      :title="isAddingNewCustomer ? '➕ تسجيل عميل جديد فوري' : '🔍 اختيار وتحديد العميل'"
+      @close="showCustomerPickerModal = false"
+      max-width="lg"
     >
-      <form @submit.prevent="submitQuickCustomer" class="space-y-4 font-tajawal">
+      <!-- Modal Navigation Tabs -->
+      <div class="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800 font-tajawal mb-3">
+        <button
+          type="button"
+          @click="isAddingNewCustomer = false"
+          class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+          :class="!isAddingNewCustomer ? 'bg-theme-light text-theme-primary font-black border border-theme-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+        >
+          <Search class="w-3.5 h-3.5" />
+          <span>بحث واختيار عميل</span>
+        </button>
+
+        <button
+          type="button"
+          @click="isAddingNewCustomer = true"
+          class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+          :class="isAddingNewCustomer ? 'bg-theme-light text-theme-primary font-black border border-theme-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+        >
+          <UserPlus class="w-3.5 h-3.5" />
+          <span>تسجيل عميل جديد</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Search & Pick Customer -->
+      <div v-if="!isAddingNewCustomer" class="space-y-3 font-tajawal">
+        <!-- Search input box -->
+        <div class="relative">
+          <input
+            v-model="customerSearchQuery"
+            type="text"
+            autofocus
+            class="w-full h-11 pr-10 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-theme-primary focus:outline-none"
+            placeholder="ابحث باسم العميل أو رقم الهاتف أو الكود..."
+          />
+          <Search class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+        </div>
+
+        <!-- 1-Click Walk-in / Cash Customer button -->
+        <div
+          @click="selectCustomerAndClose({ id: null, name: 'عميل نقدي (نقدي فوري)', price_tier: 'retail' })"
+          class="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-2xl flex items-center justify-between cursor-pointer transition active:scale-[0.99] group shadow-2xs"
+        >
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-xs">
+              💵
+            </div>
+            <div>
+              <div class="font-black text-emerald-600 dark:text-emerald-400 text-xs">عميل نقدي (نقدي فوري)</div>
+              <div class="text-[10px] text-slate-400">للبيع السريع المباشر دون تسجيل حساب</div>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-emerald-500 group-hover:translate-x-[-4px] transition-transform">اختيار ←</span>
+        </div>
+
+        <!-- Matching Customers List -->
+        <div class="max-h-60 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+          <div
+            v-for="cust in filteredCustomerList"
+            :key="cust.id"
+            @click="selectCustomerAndClose(cust)"
+            class="p-2.5 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-xl flex items-center justify-between cursor-pointer transition text-xs group"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
+                {{ cust.name?.charAt(0) || 'ع' }}
+              </div>
+              <div class="min-w-0">
+                <div class="font-black text-slate-900 dark:text-white truncate group-hover:text-theme-primary">
+                  {{ cust.name }}
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono flex items-center gap-2">
+                  <span v-if="cust.phone">{{ cust.phone }}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold" :class="cust.price_tier === 'wholesale' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'">
+                    {{ cust.price_tier === 'wholesale' ? 'جملة' : 'قطاعي' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-end shrink-0">
+              <div
+                v-if="cust.current_balance && Number(cust.current_balance) !== 0"
+                class="text-[10px] font-mono font-bold"
+                :class="Number(cust.current_balance) > 0 ? 'text-rose-500' : 'text-emerald-500'"
+              >
+                {{ Number(cust.current_balance) > 0 ? `عليه: ${formatMoney(cust.current_balance)}` : `له: ${formatMoney(Math.abs(cust.current_balance))}` }}
+              </div>
+              <span class="text-[11px] font-bold text-slate-400 group-hover:text-theme-primary transition">اختيار ←</span>
+            </div>
+          </div>
+
+          <div v-if="filteredCustomerList.length === 0" class="p-8 text-center text-slate-400 text-xs space-y-2">
+            <div>لا توجد نتائج مطابقة لبحثك</div>
+            <button
+              type="button"
+              @click="switchToCreateCustomer"
+              class="px-3 py-1.5 bg-theme-light text-theme-primary font-bold rounded-xl text-xs cursor-pointer"
+            >
+              + إضافة "{{ customerSearchQuery }}" كعميل جديد
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Quick Add Customer Form -->
+      <form v-else @submit.prevent="submitQuickCustomer" class="space-y-3 font-tajawal">
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('contacts.customer_name') }} <span class="text-rose-500">*</span>
+            اسم العميل <span class="text-rose-500">*</span>
           </label>
           <input
             v-model="quickCustomerForm.name"
@@ -376,48 +482,51 @@
             required
             autofocus
             class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :placeholder="$t('pos.customer_name_placeholder')"
-          >
+            placeholder="مثال: كمال سرور"
+          />
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('contacts.phone') }}
+            رقم الهاتف
           </label>
           <input
             v-model="quickCustomerForm.phone"
             type="tel"
             class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :placeholder="$t('contacts.phone_placeholder')"
-          >
+            placeholder="01012345678"
+          />
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('pos.price_tier') }}
+            شريحة السعر الافتراضية
           </label>
           <select
             v-model="quickCustomerForm.price_tier"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
           >
-            <option value="retail">🛍️ {{ $t('pos.retail') }}</option>
-            <option value="wholesale">📦 {{ $t('pos.wholesale') }}</option>
+            <option value="retail">🛍️ سعر البيع (قطاعي / تجزئة)</option>
+            <option value="wholesale">📦 سعر الجملة (شركات وتجار)</option>
           </select>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
           <button
             type="button"
-            @click="showQuickCustomerModal = false"
-            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold cursor-pointer"
+            @click="isAddingNewCustomer = false"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold cursor-pointer"
           >
-            {{ $t('common.cancel') }}
+            إلغاء والعودة للبحث
           </button>
           <button
             type="submit"
-            class="px-5 py-2 bg-theme-gradient text-white shadow-theme-primary font-black rounded-xl text-xs font-black shadow-md cursor-pointer"
+            :disabled="isSubmittingQuickCustomer"
+            class="px-5 py-2 text-slate-950 font-black rounded-xl text-xs shadow-md cursor-pointer flex items-center gap-1.5"
+            :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
           >
-            {{ $t('pos.save_and_select') }}
+            <span v-if="isSubmittingQuickCustomer" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+            <span>حفظ واختيار العميل</span>
           </button>
         </div>
       </form>
