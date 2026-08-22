@@ -117,25 +117,25 @@ final class GetDashboardOverviewAction
         // 8. Low Stock Items Radar
         $lowStockItems = Item::where('is_active', true)
             ->where(function ($q) {
-                $q->whereColumn('current_stock', '<=', 'min_stock')
+                $q->whereColumn('current_stock', '<=', 'min_stock_level')
                   ->orWhere('current_stock', '<=', 5);
             })
             ->orderBy('current_stock', 'asc')
             ->take(8)
-            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock', 'unit'])
+            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock_level', 'unit'])
             ->map(fn($it) => [
                 'id'            => $it->id,
                 'name'          => $it->name,
                 'code'          => $it->code,
                 'category'      => $it->category,
                 'current_stock' => (float)$it->current_stock,
-                'min_stock'     => (float)$it->min_stock,
+                'min_stock'     => (float)($it->min_stock_level ?? 5),
                 'unit'          => $it->unit ?? 'كجم',
             ]);
 
         $lowStockCount = Item::where('is_active', true)
             ->where(function ($q) {
-                $q->whereColumn('current_stock', '<=', 'min_stock')
+                $q->whereColumn('current_stock', '<=', 'min_stock_level')
                   ->orWhere('current_stock', '<=', 5);
             })
             ->count();
