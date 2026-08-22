@@ -39,11 +39,55 @@ class GetPOSBootstrapDataAction
                 ->first();
         }
 
-        // 3. Active Items with stock calculation via POSItemResource
-        $items = Item::where('is_active', true)
-            ->orderBy('category')
-            ->orderBy('name')
-            ->get();
+        // 3. Fast Active Items with Store Stock Left-Join (Ultra-Optimized for 10k+ items)
+        if ($storeId) {
+            $rawItems = Item::where('items.is_active', true)
+                ->leftJoin('store_stocks', function ($join) use ($storeId) {
+                    $join->on('store_stocks.item_id', '=', 'items.id')
+                         ->where('store_stocks.store_id', '=', $storeId);
+                })
+                ->select([
+                    'items.id',
+                    'items.code',
+                    'items.name',
+                    'items.category',
+                    'items.category_id',
+                    'items.unit',
+                    'items.cost_price',
+                    'items.selling_price',
+                    'items.min_selling_price',
+                    'items.min_stock_level',
+                    \Illuminate\Support\Facades\DB::raw('COALESCE(store_stocks.quantity, items.current_stock) as calculated_stock')
+                ])
+                ->orderBy('items.name')
+                ->get();
+        } else {
+            $rawItems = Item::where('is_active', true)
+                ->select([
+                    'id', 'code', 'name', 'category', 'category_id', 'unit',
+                    'cost_price', 'selling_price', 'min_selling_price', 'min_stock_level',
+                    'current_stock as calculated_stock'
+                ])
+                ->orderBy('name')
+                ->get();
+        }
+
+        $items = $rawItems->map(function ($it) {
+            return [
+                'id' => (int)$it->id,
+                'name' => (string)$it->name,
+                'code' => (string)($it->code ?? ''),
+                'category' => (string)($it->category ?: 'عام'),
+                'category_id' => $it->category_id ? (int)$it->category_id : null,
+                'price_retail' => (float)$it->selling_price,
+                'price_wholesale' => (float)(($it->min_selling_price && $it->min_selling_price > 0) ? $it->min_selling_price : $it->selling_price),
+                'min_selling_price' => (float)($it->min_selling_price ?? $it->cost_price ?? 0),
+                'cost_price' => (float)$it->cost_price,
+                'current_stock' => (float)($it->calculated_stock ?? 0),
+                'min_stock_level' => (float)($it->min_stock_level ?: 0),
+                'unit' => (string)($it->unit ?: 'قطعة'),
+            ];
+        })->values()->all();
 
         // 4. Categories list with icons
         if (\App\Models\Category::count() === 0) {
@@ -78,7 +122,7 @@ class GetPOSBootstrapDataAction
         $defaultCustomer = $customers->first();
 
         return [
-            'items' => POSItemResource::collection($items)->additional(['store_id' => $storeId])->resolve(),
+            'items' => $items,
             'categories' => $categories,
             'customers' => POSCustomerResource::collection($customers)->resolve(),
             'default_customer' => $defaultCustomer ? (new POSCustomerResource($defaultCustomer))->resolve() : [

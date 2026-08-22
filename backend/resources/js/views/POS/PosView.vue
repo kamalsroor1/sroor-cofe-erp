@@ -118,62 +118,75 @@
           <p class="text-xs text-slate-400 font-bold">{{ $t('pos.loading_items') }}</p>
         </div>
 
-        <div v-else-if="filteredItems.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 overflow-y-auto max-h-[calc(100vh-210px)] pr-0.5 custom-scrollbar">
-          <button
-            v-for="item in filteredItems"
-            :key="item.id"
-            type="button"
-            @click="addToCart(item)"
-            class="p-3.5 sm:p-4 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl text-start transition-all duration-200 active:scale-[0.98] flex flex-col justify-between space-y-3 cursor-pointer group shadow-xs hover:shadow-md min-h-[140px]"
-          >
-            <!-- Top Row: Code & Stock Badge -->
-            <div class="space-y-1.5 w-full">
-              <div class="flex items-center justify-between text-[11px] text-slate-500">
-                <span class="font-mono font-bold text-slate-400">{{ item.code || '—' }}</span>
-                <span
-                  class="px-2 py-0.5 rounded-lg font-mono font-black text-[10px] flex items-center gap-1"
-                  :class="item.current_stock > 0
-                    ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20'
-                    : 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20'"
-                >
-                  <span>{{ item.current_stock > 0 ? '📦' : '⚠️' }}</span>
-                  <span>{{ formatMoney(item.current_stock) }} {{ item.unit }}</span>
-                </span>
+        <div v-else-if="filteredItems.length > 0" class="overflow-y-auto max-h-[calc(100vh-210px)] pr-0.5 custom-scrollbar space-y-4" @scroll="onGridScroll">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+            <button
+              v-for="item in visibleItems"
+              :key="item.id"
+              type="button"
+              @click="addToCart(item)"
+              class="p-3.5 sm:p-4 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl text-start transition-all duration-200 active:scale-[0.98] flex flex-col justify-between space-y-3 cursor-pointer group shadow-xs hover:shadow-md min-h-[140px]"
+            >
+              <!-- Top Row: Code & Stock Badge -->
+              <div class="space-y-1.5 w-full">
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                  <span class="font-mono font-bold text-slate-400">{{ item.code || '—' }}</span>
+                  <span
+                    class="px-2 py-0.5 rounded-lg font-mono font-black text-[10px] flex items-center gap-1"
+                    :class="item.current_stock > 0
+                      ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20'
+                      : 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20'"
+                  >
+                    <span>{{ item.current_stock > 0 ? '📦' : '⚠️' }}</span>
+                    <span>{{ formatMoney(item.current_stock) }} {{ item.unit }}</span>
+                  </span>
+                </div>
+
+                <!-- Product Name -->
+                <div class="font-black text-slate-900 dark:text-white text-sm group-hover:text-theme-primary transition-colors line-clamp-2 leading-snug">
+                  {{ item.name }}
+                </div>
               </div>
 
-              <!-- Product Name -->
-              <div class="font-black text-slate-900 dark:text-white text-sm group-hover:text-theme-primary transition-colors line-clamp-2 leading-snug">
-                {{ item.name }}
-              </div>
-            </div>
+              <!-- Price Breakdown & Add Button -->
+              <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                <!-- Secondary Prices (Cost & Min Selling / Wholesale) -->
+                <div class="flex items-center justify-between text-[10px] font-mono">
+                  <span v-if="item.price_wholesale || item.min_selling_price" class="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20" title="أقل سعر بيع (الجملة)">
+                    أقل بيع: {{ formatMoney(item.min_selling_price || item.price_wholesale) }}
+                  </span>
+                  <span v-if="item.cost_price" class="text-slate-400 dark:text-slate-500" title="سعر التكلفة">
+                    التكلفة: {{ formatMoney(item.cost_price) }}
+                  </span>
+                </div>
 
-            <!-- Price Breakdown & Add Button -->
-            <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
-              <!-- Secondary Prices (Cost & Min Selling / Wholesale) -->
-              <div class="flex items-center justify-between text-[10px] font-mono">
-                <span v-if="item.price_wholesale || item.min_selling_price" class="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold border border-purple-500/20" title="أقل سعر بيع (الجملة)">
-                  أقل بيع: {{ formatMoney(item.min_selling_price || item.price_wholesale) }}
-                </span>
-                <span v-if="item.cost_price" class="text-slate-400 dark:text-slate-500" title="سعر التكلفة">
-                  التكلفة: {{ formatMoney(item.cost_price) }}
-                </span>
-              </div>
+                <!-- Primary Selling Price Row + Big Touch Add Button -->
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-[9px] text-slate-400 font-bold font-tajawal">سعر البيع ({{ activePriceTier === 'wholesale' ? 'جملة' : 'قطاعي' }}):</div>
+                    <div class="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                    </div>
+                  </div>
 
-              <!-- Primary Selling Price Row + Big Touch Add Button -->
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="text-[9px] text-slate-400 font-bold font-tajawal">سعر البيع ({{ activePriceTier === 'wholesale' ? 'جملة' : 'قطاعي' }}):</div>
-                  <div class="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                    {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                  <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center text-sm font-black group-hover:scale-110 group-hover:bg-theme-primary group-hover:text-slate-950 transition-all shadow-xs">
+                    +
                   </div>
                 </div>
-
-                <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center text-sm font-black group-hover:scale-110 group-hover:bg-theme-primary group-hover:text-slate-950 transition-all shadow-xs">
-                  +
-                </div>
               </div>
-            </div>
-          </button>
+            </button>
+          </div>
+
+          <!-- Pagination Indicator for 10k items -->
+          <div v-if="visibleDisplayLimit < filteredItems.length" class="text-center py-2">
+            <button
+              type="button"
+              @click="visibleDisplayLimit += 60"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 transition active:scale-95 shadow-xs cursor-pointer font-tajawal"
+            >
+              عرض المزيد (+60 صنف) • متبقي {{ (filteredItems.length - visibleDisplayLimit).toLocaleString() }} صنف من أصل {{ filteredItems.length.toLocaleString() }}
+            </button>
+          </div>
         </div>
 
         <div v-else class="p-12 text-center text-slate-500 text-xs font-bold">
@@ -1069,6 +1082,8 @@ const getItemPrice = (item) => {
     return activePriceTier.value === 'wholesale' ? item.price_wholesale : item.price_retail;
 };
 
+const visibleDisplayLimit = ref(60);
+
 const filteredItems = computed(() => {
     return items.value.filter(it => {
         const matchesCategory = selectedCategory.value === 'all' || 
@@ -1080,6 +1095,23 @@ const filteredItems = computed(() => {
         return matchesCategory && matchesSearch;
     });
 });
+
+const visibleItems = computed(() => {
+    return filteredItems.value.slice(0, visibleDisplayLimit.value);
+});
+
+watch([searchQuery, selectedCategory], () => {
+    visibleDisplayLimit.value = 60;
+});
+
+const onGridScroll = (e) => {
+    const el = e.target;
+    if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 250) {
+        if (visibleDisplayLimit.value < filteredItems.value.length) {
+            visibleDisplayLimit.value += 60;
+        }
+    }
+};
 
 const cartSubtotal = computed(() => {
     return cart.value.reduce((sum, it) => sum + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0), 0);
