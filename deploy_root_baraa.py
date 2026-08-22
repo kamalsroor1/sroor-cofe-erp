@@ -99,6 +99,7 @@ $PHP_BIN $(which composer) install --no-dev --optimize-autoloader --no-interacti
 
 echo "5. Running MySQL Migrations safely on u910151740_baraa_central..."
 $PHP_BIN artisan migrate --force
+$PHP_BIN artisan tenants:migrate --force
 $PHP_BIN artisan db:seed --class=PermissionsSeeder --force
 $PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
 
