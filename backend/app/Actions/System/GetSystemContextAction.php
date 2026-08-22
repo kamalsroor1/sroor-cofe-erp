@@ -125,9 +125,9 @@ final class GetSystemContextAction
             ] : null,
             'system' => [
                 'platform_name'      => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
-                'company_name'       => Setting::get('company_name', Setting::get('platform_name', 'مؤسسة تجارية')),
-                'company_subtitle'   => Setting::get('company_subtitle', 'لإدارة المبيعات والمخزون والفروع'),
-                'system_theme_color' => Setting::get('system_theme_color', 'amber'),
+                'company_name'       => Setting::get('company_name') ?: ($tenant?->name ?? 'مؤسسة تجارية'),
+                'company_subtitle'   => Setting::get('company_subtitle') ?: '',
+                'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
                 'server_time'        => now()->toDateTimeString(),
             ],
             'branding' => [
