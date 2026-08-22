@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
@@ -8,21 +8,21 @@ use App\Models\Tenant;
 
 class UpdateTenantDatabaseConfigAction
 {
-    public function execute(Tenant $tenant, array $data): Tenant
+    public function execute(Tenant , array ): Tenant
     {
-        $update = [];
-        if (array_key_exists('tenancy_db_name', $data)) {
-            $update['tenancy_db_name'] = $data['tenancy_db_name'];
+         = [];
+        if (array_key_exists('tenancy_db_name', )) {
+            ['tenancy_db_name'] = ['tenancy_db_name'];
         }
-        if (array_key_exists('tenancy_db_username', $data)) {
-            $update['tenancy_db_username'] = $data['tenancy_db_username'];
+        if (array_key_exists('tenancy_db_username', )) {
+            ['tenancy_db_username'] = ['tenancy_db_username'];
         }
-        if (array_key_exists('tenancy_db_password', $data)) {
-            $update['tenancy_db_password'] = $data['tenancy_db_password'];
+        if (array_key_exists('tenancy_db_password', )) {
+            ['tenancy_db_password'] = ['tenancy_db_password'];
         }
 
-        $tenant->update($update);
+        ->update();
 
-        return $tenant;
+        return ;
     }
 }

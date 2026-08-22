@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class DeleteTenantAction
 {
-    public function execute(Tenant $tenant): void
+    public function execute(Tenant ): void
     {
-        DB::transaction(function () use ($tenant) {
-            $tenant->domains()->delete();
-            $tenant->delete();
+        DB::transaction(function () use () {
+            ->domains()->delete();
+            ->delete();
         });
     }
 }
