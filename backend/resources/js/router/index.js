@@ -171,6 +171,16 @@ const routes = [
         },
     },
     {
+        path: '/invoices/:id/print',
+        name: 'invoices.print',
+        component: () => import('../views/Invoices/InvoicePrintView.vue'),
+        meta: {
+            title: 'طباعة الفاتورة',
+            requiresAuth: true,
+            permission: 'invoices.view',
+        },
+    },
+    {
         path: '/pos',
         name: 'pos.index',
         component: () => import('../views/POS/PosView.vue'),

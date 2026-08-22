@@ -506,7 +506,7 @@
         <div class="space-y-2 pt-2">
           <button
             type="button"
-            @click="submitInvoice(true)"
+            @click="submitInvoice(false)"
             :disabled="cart.length === 0 || isSubmitting"
             class="w-full h-14 bg-theme-primary hover:opacity-95 text-slate-950 rounded-2xl font-black text-base transition-all duration-200 active:scale-[0.98] shadow-lg flex items-center justify-center gap-3 cursor-pointer disabled:opacity-30"
           >
