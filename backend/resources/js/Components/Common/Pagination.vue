@@ -64,7 +64,7 @@ const handlePageClick = (link) => {
                     class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-xs"
                     :class="[
                         link.active
-                            ? 'bg-theme-primary text-slate-950 font-black shadow-theme-sm'
+                            ? 'bg-theme-primary text-white font-black font-black shadow-theme-sm'
                             : 'bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                     ]"
                     v-html="link.label"

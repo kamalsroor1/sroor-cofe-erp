@@ -33,7 +33,7 @@
                 type="button"
                 @click="onTypeChange('sales_return')"
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
-                :class="form.return_type === 'sales_return' ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
+                :class="form.return_type === 'sales_return' ? 'bg-cyan-600 text-white font-bold border-cyan-400 shadow-md shadow-cyan-500/20' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
               >
                 <span>{{ $t('returns.sales_return_option') }}</span>
               </button>
@@ -42,7 +42,7 @@
                 type="button"
                 @click="onTypeChange('purchase_return')"
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
-                :class="form.return_type === 'purchase_return' ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-theme-primary' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
+                :class="form.return_type === 'purchase_return' ? 'bg-theme-primary text-white font-bold border-amber-400 shadow-md shadow-theme-primary' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
               >
                 <span>{{ $t('returns.purchase_return_option') }}</span>
               </button>
@@ -242,7 +242,7 @@
               :disabled="isSubmitting || form.items.length === 0"
               class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
             >
-              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <RotateCcw v-else class="w-4 h-4" />
               <span>{{ $t('returns.confirm_return_save_btn') }}</span>
             </button>

@@ -13,7 +13,7 @@
               to="/pos"
               class="px-5 py-2.5 bg-theme-gradient text-white shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary"
             >
-              <Zap class="w-4 h-4 fill-slate-950" />
+              <Zap class="w-4 h-4 fill-white text-white" />
               <span>{{ $t('invoices.pos_fast_badge') }}</span>
             </router-link>
           </div>
@@ -235,7 +235,7 @@
           <template #action>
             <router-link
               to="/pos"
-              class="px-5 py-2.5 bg-emerald-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
+              class="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
             >
               {{ $t('invoices.open_pos_btn') }}
             </router-link>

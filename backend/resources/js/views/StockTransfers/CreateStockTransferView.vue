@@ -173,7 +173,7 @@
           :disabled="isSubmitting || form.items.length === 0"
           class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
         >
-          <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+          <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           <Truck v-else class="w-4 h-4" />
           <span>{{ $t('inventory.execute_transfer_now_btn') }}</span>
         </button>

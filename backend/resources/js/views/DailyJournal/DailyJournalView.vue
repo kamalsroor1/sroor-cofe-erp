@@ -36,7 +36,7 @@
               @click="showOpenShiftModal = true"
               class="px-4 py-2 bg-theme-gradient text-white shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary cursor-pointer"
             >
-              <Play class="w-4 h-4 fill-slate-950" />
+              <Play class="w-4 h-4 fill-white text-white" />
               <span>{{ $t('treasury.open_shift') }}</span>
             </button>
 
@@ -325,7 +325,7 @@
               :disabled="isSubmitting"
               class="px-5 py-2 bg-theme-gradient text-white rounded-xl text-xs font-black shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
-              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('treasury.confirm_open_shift_btn') }}</span>
             </button>
           </div>
@@ -488,7 +488,7 @@
               :disabled="isSubmitting"
               class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
-              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('treasury.submit_expense_btn') }}</span>
             </button>
           </div>

@@ -184,7 +184,7 @@
           <button
             type="button"
             @click="openCreateModal"
-            class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
+            class="px-5 py-2.5 bg-theme-primary text-white font-bold rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
           >
             {{ $t('inventory.add_first_store') }}
           </button>
@@ -306,7 +306,7 @@
               :disabled="isSubmitting"
               class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
-              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('common.save') }}</span>
             </button>
           </div>
@@ -359,7 +359,7 @@
               :disabled="isSubmitting"
               class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
-              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('common.save') }}</span>
             </button>
           </div>

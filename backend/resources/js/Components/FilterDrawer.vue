@@ -49,7 +49,7 @@ onUnmounted(() => {
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white">{{ title || $t('common.filter_drawer_title') }}</h3>
-                                        <span v-if="activeCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+                                        <span v-if="activeCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-theme-primary text-white font-bold">
                                             {{ activeCount }} {{ $t('common.active_count') }}
                                         </span>
                                     </div>

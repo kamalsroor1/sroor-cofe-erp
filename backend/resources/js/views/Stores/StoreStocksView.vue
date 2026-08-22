@@ -55,7 +55,7 @@
               type="button"
               @click="setStockStatus('all')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
+              :class="stockStatus === 'all' ? 'bg-theme-primary text-white font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
             >
               {{ $t('common.all') }}
             </button>

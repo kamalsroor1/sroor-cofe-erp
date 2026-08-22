@@ -226,7 +226,7 @@
           <template #action>
             <router-link
               to="/purchases/create"
-              class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
+              class="px-5 py-2.5 bg-theme-primary text-white font-bold rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary"
             >
               {{ $t('purchases.add_first_purchase') }}
             </router-link>

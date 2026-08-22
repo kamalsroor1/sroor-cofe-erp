@@ -45,7 +45,7 @@ defineEmits(['toggle-numpad']);
             <button
                 type="button"
                 class="h-9 px-3 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                :class="showNumpad ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-md' : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                :class="showNumpad ? 'bg-theme-primary text-white font-bold font-black border-amber-400 shadow-md' : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
                 @click="$emit('toggle-numpad')"
             >
                 <span>🔢</span>

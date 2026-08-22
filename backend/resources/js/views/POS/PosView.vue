@@ -27,7 +27,7 @@
       <div class="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl text-xs">
         <div class="w-2 h-2 rounded-full" :class="activeShift ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"></div>
         <span v-if="activeShift" class="font-bold text-slate-300">
-          {{ $t('pos.shift_label') }} <span class="font-mono text-amber-400">{{ activeShift.shift_number }}</span>
+          {{ $t('pos.shift_label') }} <span class="font-mono text-theme-primary">{{ activeShift.shift_number }}</span>
         </span>
         <span v-else class="text-rose-400 font-bold">
           {{ $t('pos.no_open_shift_alert') }}
@@ -74,7 +74,7 @@
             type="button"
             @click="selectedCategory = 'all'"
             class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer"
-            :class="selectedCategory === 'all' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
+            :class="selectedCategory === 'all' ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
           >
             {{ $t('common.all') }} ({{ items.length }})
           </button>
@@ -84,7 +84,7 @@
             type="button"
             @click="selectedCategory = cat"
             class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer"
-            :class="selectedCategory === cat ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
+            :class="selectedCategory === cat ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
           >
             {{ cat }}
           </button>
@@ -120,10 +120,10 @@
             </div>
 
             <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60">
-              <span class="text-sm font-black text-amber-400 font-mono">
+              <span class="text-sm font-black text-theme-primary font-mono">
                 {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] text-slate-400 font-normal">{{ $t('common.currency') }}</span>
               </span>
-              <div class="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs font-black">
+              <div class="w-6 h-6 rounded-lg bg-theme-light text-theme-primary flex items-center justify-center text-xs font-black">
                 +
               </div>
             </div>
@@ -157,7 +157,7 @@
             <button
               type="button"
               @click="showQuickCustomerModal = true"
-              class="px-2.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+              class="px-2.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-theme-primary border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
               :title="$t('pos.quick_add_customer')"
             >
               <UserPlus class="w-4 h-4" />
@@ -190,7 +190,7 @@
             <div class="flex-1 min-w-0">
               <div class="font-bold text-slate-900 dark:text-white truncate">{{ item.name }}</div>
               <div class="text-[10px] text-slate-400 font-mono">
-                {{ formatMoney(item.unit_price) }} {{ $t('common.currency') }} × {{ item.quantity }} = <span class="font-bold text-amber-400">{{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}</span>
+                {{ formatMoney(item.unit_price) }} {{ $t('common.currency') }} × {{ item.quantity }} = <span class="font-bold text-theme-primary">{{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}</span>
               </div>
             </div>
 
@@ -272,7 +272,7 @@
               type="button"
               @click="setPaymentType('cash')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'cash' ? 'bg-emerald-500 text-slate-950 font-black border-emerald-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
+              :class="paymentType === 'cash' ? 'bg-emerald-600 text-white font-black border-emerald-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               💵 {{ $t('invoices.cash') }}
             </button>
@@ -280,7 +280,7 @@
               type="button"
               @click="setPaymentType('bank_transfer')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'bank_transfer' ? 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
+              :class="paymentType === 'bank_transfer' ? 'bg-amber-600 text-white font-black border-amber-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               ⚡ {{ $t('contacts.instapay') }}
             </button>
@@ -288,7 +288,7 @@
               type="button"
               @click="setPaymentType('partial')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'partial' ? 'bg-cyan-500 text-slate-950 font-black border-cyan-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
+              :class="paymentType === 'partial' ? 'bg-cyan-600 text-white font-black border-cyan-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               ⚖️ {{ $t('invoices.partial') }}
             </button>
@@ -296,7 +296,7 @@
               type="button"
               @click="setPaymentType('credit')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'credit' ? 'bg-rose-500 text-white font-black border-rose-400 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
+              :class="paymentType === 'credit' ? 'bg-rose-600 text-white font-black border-rose-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               📝 {{ $t('invoices.credit') }}
             </button>
@@ -322,8 +322,8 @@
             :disabled="isSubmitting || cart.length === 0"
             class="w-full h-12 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-sm shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
           >
-            <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-            <Zap v-else class="w-5 h-5 fill-slate-950" />
+            <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <Zap v-else class="w-5 h-5 fill-white text-white" />
             <span>{{ $t('pos.checkout_btn_f9') }}</span>
           </button>
         </div>
@@ -406,7 +406,7 @@
         </div>
 
         <div>
-          <div class="text-sm font-black text-amber-400 font-mono">{{ lastCreatedInvoice.invoice_number }}</div>
+          <div class="text-sm font-black text-theme-primary font-mono">{{ lastCreatedInvoice.invoice_number }}</div>
           <div class="text-xs text-slate-400 mt-0.5">{{ $t('invoices.customer') }}: {{ lastCreatedInvoice.customer_name }}</div>
         </div>
 
@@ -441,7 +441,7 @@
             @click="window.print()"
             class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <Printer class="w-4 h-4 text-amber-400" />
+            <Printer class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('pos.print_receipt') }}</span>
           </button>
         </div>

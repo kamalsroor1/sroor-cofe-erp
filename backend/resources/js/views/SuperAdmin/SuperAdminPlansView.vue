@@ -46,7 +46,7 @@
           :class="plan.is_popular ? 'border-amber-500/50 ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-800'"
         >
           <!-- Popular Badge -->
-          <div v-if="plan.is_popular" class="absolute -top-3 start-1/2 -translate-x-1/2 px-3 py-0.5 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full uppercase tracking-wider">
+          <div v-if="plan.is_popular" class="absolute -top-3 start-1/2 -translate-x-1/2 px-3 py-0.5 bg-theme-primary text-white font-bold font-black text-[10px] rounded-full uppercase tracking-wider">
             {{ $t('super.popular_badge') }}
           </div>
 

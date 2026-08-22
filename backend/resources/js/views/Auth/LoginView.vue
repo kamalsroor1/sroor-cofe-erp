@@ -100,7 +100,7 @@
           class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-theme-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
         >
           <template v-if="isLoading">
-            <div class="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span>{{ $t('auth.logging_in') }}</span>
           </template>
           <template v-else>

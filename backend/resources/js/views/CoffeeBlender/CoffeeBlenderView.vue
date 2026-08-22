@@ -268,7 +268,7 @@
               :disabled="isSubmitting || components.length === 0"
               class="w-full h-12 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2 font-sans"
             >
-              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               <Zap v-else class="w-4 h-4 fill-white text-white" />
               <span>{{ $t('inventory.blend_invoice_btn') }}</span>
             </button>

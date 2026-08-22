@@ -116,7 +116,7 @@ const onPaidAmountInput = (e) => {
             <button
                 type="button"
                 class="h-10 sm:h-9 rounded-xl font-black transition text-center cursor-pointer flex items-center justify-center active:scale-95 shadow-xs"
-                :class="paymentType === 'cash' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
+                :class="paymentType === 'cash' ? 'bg-emerald-600 text-white font-bold shadow-md' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
                 @click="$emit('update:paymentType', 'cash')"
             >
                 {{ $t('pos.payment_cash') }} (F4)

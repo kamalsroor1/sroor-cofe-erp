@@ -245,7 +245,7 @@
             :disabled="isSubmitting"
             class="px-7 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
-            <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+            <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             <span>{{ $t('purchases.confirm_and_supply_btn') }}</span>
           </button>
         </div>

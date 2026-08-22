@@ -163,7 +163,7 @@
                   class="flex-1 py-3 px-4 rounded-2xl bg-theme-gradient text-white font-black shadow-theme-primary text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-theme-primary transition active:scale-95 cursor-pointer disabled:opacity-50"
                 >
                   <Download v-if="!isDownloading" class="w-4.5 h-4.5" />
-                  <div v-else class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+                  <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>{{ isDownloading ? $t('app_update.downloading', { progress: downloadProgress }) : $t('app_update.update_and_install_now') }}</span>
                 </button>
 
