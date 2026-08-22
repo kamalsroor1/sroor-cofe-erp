@@ -140,24 +140,42 @@
         <!-- Customer & Price Tier Header -->
         <div class="space-y-2 pb-2 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2">
-            <!-- Customer Select -->
-            <div class="flex-1">
-              <select
-                v-model="selectedCustomerId"
-                @change="onCustomerChange"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              >
-                <option v-for="c in customers" :key="c.id" :value="c.id">
-                  {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}
-                </option>
-              </select>
-            </div>
+            <!-- Clickable Customer Selector (Opens Modal) -->
+            <button
+              type="button"
+              @click="openCustomerPicker"
+              class="flex-1 h-11 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/80 dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-theme-primary dark:hover:border-theme-primary rounded-xl flex items-center justify-between gap-2 text-xs transition cursor-pointer group shadow-2xs"
+            >
+              <div class="flex items-center gap-2 min-w-0 text-start">
+                <div class="w-7 h-7 rounded-lg bg-theme-light text-theme-primary flex items-center justify-center font-bold text-xs shrink-0">
+                  <Users class="w-3.5 h-3.5" />
+                </div>
+                <div class="min-w-0">
+                  <div class="font-black text-slate-900 dark:text-white truncate text-xs group-hover:text-theme-primary transition-colors">
+                    {{ selectedCustomer?.name || $t('pos.walk_in_customer') }}
+                  </div>
+                  <div v-if="selectedCustomer?.phone" class="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                    {{ selectedCustomer.phone }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span
+                  v-if="selectedCustomer?.current_balance && Number(selectedCustomer.current_balance) > 0"
+                  class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                >
+                  {{ formatMoney(selectedCustomer.current_balance) }} {{ $t('common.currency') }}
+                </span>
+                <Search class="w-3.5 h-3.5 text-slate-400 group-hover:text-theme-primary" />
+              </div>
+            </button>
 
             <!-- Quick Add Customer Button -->
             <button
               type="button"
-              @click="showQuickCustomerModal = true"
-              class="px-2.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-theme-primary border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+              @click="openQuickAddFromCart"
+              class="px-2.5 h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-theme-primary border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
               :title="$t('pos.quick_add_customer')"
             >
               <UserPlus class="w-4 h-4" />
@@ -167,7 +185,7 @@
             <button
               type="button"
               @click="togglePriceTier"
-              class="px-3 h-10 rounded-xl text-xs font-black transition cursor-pointer shrink-0 border"
+              class="px-3 h-11 rounded-xl text-xs font-black transition cursor-pointer shrink-0 border"
               :class="activePriceTier === 'wholesale' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700'"
             >
               {{ activePriceTier === 'wholesale' ? `📦 ${$t('pos.wholesale')}` : `🛍️ ${$t('pos.retail')}` }}
@@ -496,7 +514,54 @@ const paymentType = ref('cash');
 const paidAmount = ref('0.000');
 
 const searchInputRef = ref(null);
-const showQuickCustomerModal = ref(false);
+const showCustomerPickerModal = ref(false);
+const customerSearchQuery = ref('');
+const isAddingNewCustomer = ref(false);
+const isSubmittingQuickCustomer = ref(false);
+
+const selectedCustomer = computed(() => {
+    return customers.value.find(c => c.id === selectedCustomerId.value) || { id: null, name: trans('pos.walk_in_customer') || 'عميل نقدي' };
+});
+
+const filteredCustomerList = computed(() => {
+    if (!customerSearchQuery.value) return customers.value;
+    const q = customerSearchQuery.value.trim().toLowerCase();
+    return customers.value.filter(c => {
+        return (c.name && c.name.toLowerCase().includes(q)) ||
+               (c.phone && c.phone.includes(q)) ||
+               (c.code && c.code.toLowerCase().includes(q));
+    });
+});
+
+const openCustomerPicker = () => {
+    isAddingNewCustomer.value = false;
+    customerSearchQuery.value = '';
+    showCustomerPickerModal.value = true;
+};
+
+const openQuickAddFromCart = () => {
+    isAddingNewCustomer.value = true;
+    quickCustomerForm.name = '';
+    quickCustomerForm.phone = '';
+    quickCustomerForm.address = '';
+    showCustomerPickerModal.value = true;
+};
+
+const switchToCreateCustomer = () => {
+    isAddingNewCustomer.value = true;
+    if (customerSearchQuery.value) {
+        quickCustomerForm.name = customerSearchQuery.value.trim();
+    }
+};
+
+const selectCustomerAndClose = (cust) => {
+    selectedCustomerId.value = cust.id;
+    if (cust.price_tier) {
+        activePriceTier.value = cust.price_tier;
+    }
+    showCustomerPickerModal.value = false;
+};
+
 const quickCustomerForm = reactive({
     name: '',
     phone: '',
@@ -633,6 +698,7 @@ const handleBarcodeScan = () => {
 };
 
 const submitQuickCustomer = async () => {
+    isSubmittingQuickCustomer.value = true;
     try {
         const response = await api.post('/pos/quick-customer', quickCustomerForm);
         const newCust = response.data?.customer;
@@ -640,12 +706,15 @@ const submitQuickCustomer = async () => {
             customers.value.unshift(newCust);
             selectedCustomerId.value = newCust.id;
             activePriceTier.value = newCust.price_tier || 'retail';
-            showQuickCustomerModal.value = false;
+            showCustomerPickerModal.value = false;
             quickCustomerForm.name = '';
             quickCustomerForm.phone = '';
+            quickCustomerForm.address = '';
         }
     } catch (error) {
         Swal.fire({ icon: 'error', title: trans('common.error'), text: error.userMessage || trans('pos.add_customer_failed') });
+    } finally {
+        isSubmittingQuickCustomer.value = false;
     }
 };
 
