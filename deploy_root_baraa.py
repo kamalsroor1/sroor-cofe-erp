@@ -1,5 +1,8 @@
 import sys
+import os
+import subprocess
 import paramiko
+from bump_version import bump_version
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
@@ -8,6 +11,25 @@ PORT = 65002
 USER = "u910151740"
 PASS = "Ks@Rr12699"
 PHP_BIN = "/opt/alt/php83/usr/bin/php"
+
+# 0. Automatically bump version by 0.0.1
+new_ver = bump_version()
+print(f"\n========================================================")
+print(f"🚀 AUTO-INCREMENTING VERSION TO: v{new_ver}")
+print(f"========================================================")
+
+# 1. Build Vite frontend assets locally
+root_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.join(root_dir, "backend")
+
+print("\n>> Building Vite frontend assets...")
+subprocess.run(["npm", "run", "build"], cwd=backend_dir, shell=True, check=True)
+
+# 2. Commit and push version bump
+print("\n>> Committing and pushing release to GitHub...")
+subprocess.run(["git", "add", "."], cwd=root_dir, shell=True, check=True)
+subprocess.run(["git", "commit", "-m", f"chore(release): bump version to v{new_ver}"], cwd=root_dir, shell=True)
+subprocess.run(["git", "push"], cwd=root_dir, shell=True, check=True)
 
 def run_ssh(ssh, cmd):
     print(f"\n>> Command: {cmd}")
@@ -19,7 +41,7 @@ def run_ssh(ssh, cmd):
         print("   " + line.rstrip())
     return stdout.channel.recv_exit_status()
 
-print("1. Connecting to Hostinger via SSH...")
+print("\n>> Connecting to Hostinger via SSH...")
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(HOST, port=PORT, username=USER, password=PASS, timeout=30)

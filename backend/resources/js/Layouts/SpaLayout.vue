@@ -847,28 +847,39 @@
         </div>
 
         <!-- 📌 3. PERMANENTLY FIXED BOTTOM FOOTER OF SIDEBAR -->
-        <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-white/95 dark:bg-slate-900/95 z-20">
-          <div class="flex items-center gap-2.5 overflow-hidden">
-            <div
-              class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs"
-              :style="{ backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))', color: 'var(--color-primary, #f59e0b)' }"
+        <div class="p-2.5 border-t border-slate-200 dark:border-slate-800/80 flex flex-col gap-2 shrink-0 bg-white/95 dark:bg-slate-900/95 z-20">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0 overflow-hidden">
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs"
+                :style="{ backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))', color: 'var(--color-primary, #f59e0b)' }"
+              >
+                {{ authStore.userName?.charAt(0) || 'U' }}
+              </div>
+              <div v-if="!isSidebarCollapsed" class="min-w-0">
+                <div class="text-xs font-black text-slate-900 dark:text-white truncate">{{ authStore.userName }}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">{{ authStore.roles?.[0] || 'المدير العام' }}</div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              @click="confirmLogout"
+              class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
+              title="تسجيل الخروج"
             >
-              {{ authStore.userName?.charAt(0) || 'U' }}
-            </div>
-            <div v-if="!isSidebarCollapsed" class="min-w-0">
-              <div class="text-xs font-black text-slate-900 dark:text-white truncate">{{ authStore.userName }}</div>
-              <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">{{ authStore.roles?.[0] || 'المدير العام' }}</div>
-            </div>
+              <LogOut class="w-4 h-4 stroke-[2.2]" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            @click="confirmLogout"
-            class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
-            title="تسجيل الخروج"
-          >
-            <LogOut class="w-4 h-4 stroke-[2.2]" />
-          </button>
+          <!-- App Version Indicator -->
+          <div v-if="!isSidebarCollapsed" class="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 font-mono">
+            <span class="text-slate-500 dark:text-slate-400 font-tajawal font-medium">إصدار النظام</span>
+            <span class="px-1.5 py-0.5 rounded-md bg-theme-light text-theme-primary font-bold font-mono">v{{ appVersion }}</span>
+          </div>
+          <div v-else class="text-center pt-1 border-t border-slate-100 dark:border-slate-800/60">
+            <span class="text-[9px] font-mono font-bold text-theme-primary opacity-80" :title="'الإصدار v' + appVersion">v{{ appVersion }}</span>
+          </div>
         </div>
       </aside>
 
@@ -1019,6 +1030,12 @@
               <span>التقارير المالية والأرباح</span>
             </router-link>
           </div>
+
+          <!-- Mobile Drawer Footer Version -->
+          <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-[11px] font-mono text-slate-500">
+            <span class="font-tajawal font-medium">سرور كوفي ERP</span>
+            <span class="px-2 py-0.5 rounded-md bg-theme-light text-theme-primary font-bold">v{{ appVersion }}</span>
+          </div>
         </aside>
       </Transition>
     </Teleport>
@@ -1030,8 +1047,11 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
+import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import Swal from 'sweetalert2';
+
+const appVersion = ref(versionData?.version || '1.0.1');
 import {
     LayoutDashboard,
     ShoppingCart,

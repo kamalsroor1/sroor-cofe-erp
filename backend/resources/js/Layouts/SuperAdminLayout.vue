@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { trans } from '../helpers/trans';
+import versionData from '../version.json';
 
 const authStore = useAuthStore();
 const route = useRoute();
@@ -199,6 +200,10 @@ const handleLogout = async () => {
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                         {{ $t('super.multi_db_arch_desc') }}
                     </p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-200 dark:border-indigo-900/40 font-mono">
+                        <span class="font-tajawal">إصدار المنصة</span>
+                        <span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-bold">v{{ versionData?.version || '1.0.1' }}</span>
+                    </div>
                 </div>
             </aside>
 
