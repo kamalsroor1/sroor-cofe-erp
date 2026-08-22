@@ -18,5 +18,7 @@ window.spaRouter = router;
 
 const mountEl = document.getElementById('app') || document.getElementById('spa-app');
 if (mountEl) {
-    app.mount(mountEl);
+    router.isReady().then(() => {
+        app.mount(mountEl);
+    });
 }

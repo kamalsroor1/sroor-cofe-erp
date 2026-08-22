@@ -48,11 +48,20 @@ const authStore = useAuthStore();
 const { checkForUpdates } = useAppUpdate();
 
 const isGuestRoute = computed(() => {
-    return route.meta?.guestOnly || route.name === 'login' || route.name === 'marketing.brochure';
+    const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
+    return route.meta?.guestOnly || 
+           route.name === 'login' || 
+           route.name === 'marketing.brochure' ||
+           path === '/login' ||
+           (typeof window !== 'undefined' && window.location.pathname === '/login');
 });
 
 const isSuperAdminRoute = computed(() => {
-    return route.path?.startsWith('/super-admin') || route.meta?.isSuperAdmin;
+    const currentPath = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
+    const currentMeta = route.meta || {};
+    return currentPath.startsWith('/super-admin') || 
+           (typeof window !== 'undefined' && window.location.pathname.startsWith('/super-admin')) ||
+           currentMeta.isSuperAdmin;
 });
 
 onMounted(async () => {
