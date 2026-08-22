@@ -38,6 +38,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/permissions', [PermissionApiController::class, 'index'])->name('api.permissions.index');
 
         // High-Performance Consolidated Dashboard Summary
+        Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.index');
         Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.summary');
 
         // Stores & Branches (CRUD, Stocks & Switching)
