@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sroor-pos-v5';
+const CACHE_NAME = 'sroor-pos-v7-20260822-categories-payment';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
