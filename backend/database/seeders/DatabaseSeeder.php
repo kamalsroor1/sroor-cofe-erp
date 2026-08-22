@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Setup Roles & Permissions Matrix
         $this->call(PermissionsSeeder::class);
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
 
         // 2. Super Admin 1: كمال سرور (01012316954 / password)
@@ -25,7 +26,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $admin1->syncRoles([$adminRole]);
+        $admin1->syncRoles([$superAdminRole, $adminRole]);
 
         // 3. Super Admin 2: المدير العام 2 (01558088841 / 123456789)
         $admin2 = User::firstOrCreate(
@@ -37,7 +38,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $admin2->syncRoles([$adminRole]);
+        $admin2->syncRoles([$superAdminRole, $adminRole]);
 
         // 4. Base Main Warehouse (المخزن الرئيسي الأساسي)
         Store::firstOrCreate(

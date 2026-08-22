@@ -184,7 +184,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::delete('/trash/{type}/{id}/force', [\App\Http\Controllers\Api\TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
 
         // Super Admin & Multi-Tenant Management
-        Route::prefix('super-admin')->group(function () {
+        Route::prefix('super-admin')->middleware('can:super_admin.access')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'dashboard'])->name('api.super_admin.dashboard');
             Route::get('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'tenants'])->name('api.super_admin.tenants');
             Route::post('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'storeTenant'])->name('api.super_admin.tenants.store');

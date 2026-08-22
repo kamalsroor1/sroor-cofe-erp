@@ -54,7 +54,8 @@ const tenant = computed(() => page.props.tenant);
 const activeStore = computed(() => page.props.activeStore);
 const stores = computed(() => page.props.stores || []);
 const activeShift = computed(() => page.props.activeShift);
-const isAdmin = computed(() => user.value.roles?.includes('admin'));
+const isAdmin = computed(() => user.value.roles?.includes('admin') || user.value.roles?.includes('super_admin'));
+const isSuperAdmin = computed(() => user.value.is_super_admin || user.value.roles?.includes('super_admin') || user.value.permissions?.includes('super_admin.access'));
 
 // Branding Dual Mode Logos
 const branding = computed(() => page.props.branding || {});
@@ -326,7 +327,7 @@ const getUserRoleLabel = computed(() => {
             </nav>
 
             <!-- Sidebar Footer (Super Admin Button) -->
-            <div v-if="isAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0">
+            <div v-if="isSuperAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0">
                 <a
                     href="/admin/super"
                     class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/60 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800/80 text-purple-700 dark:text-purple-300 text-xs font-bold transition font-tajawal shadow-xs"
@@ -432,7 +433,7 @@ const getUserRoleLabel = computed(() => {
                 </nav>
 
                 <!-- Sidebar Footer (Super Admin Button) -->
-                <div v-if="isAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0 pb-safe">
+                <div v-if="isSuperAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0 pb-safe">
                     <a
                         href="/admin/super"
                         class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/60 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800/80 text-purple-700 dark:text-purple-300 text-xs font-bold transition font-tajawal shadow-xs"

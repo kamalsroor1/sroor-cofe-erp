@@ -269,46 +269,48 @@
             <span>{{ $t('nav.trash') }}</span>
           </router-link>
 
-          <!-- Super Admin Section -->
-          <div class="pt-2 pb-1 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            {{ $t('super.central_platform') }}
-          </div>
+          <!-- Super Admin Section (Only for Super Admin) -->
+          <template v-if="authStore.isSuperAdmin">
+            <div class="pt-2 pb-1 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              {{ $t('super.central_platform') }}
+            </div>
 
-          <router-link
-            to="/super-admin/dashboard"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
-          >
-            <Crown class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.dashboard') ? 'text-white' : 'text-purple-400'" />
-            <span>{{ $t('super.dashboard') }}</span>
-          </router-link>
+            <router-link
+              to="/super-admin/dashboard"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+              :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            >
+              <Crown class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.dashboard') ? 'text-white' : 'text-purple-400'" />
+              <span>{{ $t('super.dashboard') }}</span>
+            </router-link>
 
-          <router-link
-            to="/super-admin/tenants"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
-          >
-            <Building2 class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('super_admin.tenants') ? 'text-white' : 'text-indigo-400'" />
-            <span>{{ $t('super.tenants') }}</span>
-          </router-link>
+            <router-link
+              to="/super-admin/tenants"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+              :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            >
+              <Building2 class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('super_admin.tenants') ? 'text-white' : 'text-indigo-400'" />
+              <span>{{ $t('super.tenants') }}</span>
+            </router-link>
 
-          <router-link
-            to="/super-admin/plans"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
-          >
-            <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
-            <span>{{ $t('super.plans') }}</span>
-          </router-link>
+            <router-link
+              to="/super-admin/plans"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+              :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            >
+              <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
+              <span>{{ $t('super.plans') }}</span>
+            </router-link>
 
-          <router-link
-            to="/super-admin/app-versions"
-            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-            :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
-          >
-            <Rocket class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.app_versions') ? 'text-white' : 'text-purple-400'" />
-            <span>{{ $t('super.app_versions') }}</span>
-          </router-link>
+            <router-link
+              to="/super-admin/app-versions"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+              :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+            >
+              <Rocket class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.app_versions') ? 'text-white' : 'text-purple-400'" />
+              <span>{{ $t('super.app_versions') }}</span>
+            </router-link>
+          </template>
         </div>
 
         <div class="p-3 border-t border-slate-800/80 text-center">
@@ -681,70 +683,72 @@
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
 
-            <!-- Group: Super Admin -->
-            <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              {{ $t('super.central_platform') }}
-            </div>
-
-            <router-link
-              to="/super-admin/dashboard"
-              @click="isSidebarOpen = false"
-              class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-              :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
-            >
-              <div class="flex items-center gap-3.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
-                  <Crown class="w-4 h-4" />
-                </div>
-                <span>{{ $t('super.dashboard') }}</span>
+            <!-- Group: Super Admin (Only for Super Admin) -->
+            <template v-if="authStore.isSuperAdmin">
+              <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                {{ $t('super.central_platform') }}
               </div>
-              <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
-            </router-link>
 
-            <router-link
-              to="/super-admin/tenants"
-              @click="isSidebarOpen = false"
-              class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-              :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
-            >
-              <div class="flex items-center gap-3.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-indigo-400'">
-                  <Building2 class="w-4 h-4" />
+              <router-link
+                to="/super-admin/dashboard"
+                @click="isSidebarOpen = false"
+                class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+                :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
+              >
+                <div class="flex items-center gap-3.5">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
+                    <Crown class="w-4 h-4" />
+                  </div>
+                  <span>{{ $t('super.dashboard') }}</span>
                 </div>
-                <span>{{ $t('super.tenants') }}</span>
-              </div>
-              <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
-            </router-link>
+                <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
+              </router-link>
 
-            <router-link
-              to="/super-admin/plans"
-              @click="isSidebarOpen = false"
-              class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-              :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
-            >
-              <div class="flex items-center gap-3.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.plans') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-amber-400'">
-                  <Layers class="w-4 h-4" />
+              <router-link
+                to="/super-admin/tenants"
+                @click="isSidebarOpen = false"
+                class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+                :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
+              >
+                <div class="flex items-center gap-3.5">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-indigo-400'">
+                    <Building2 class="w-4 h-4" />
+                  </div>
+                  <span>{{ $t('super.tenants') }}</span>
                 </div>
-                <span>{{ $t('super.plans') }}</span>
-              </div>
-              <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
-            </router-link>
+                <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
+              </router-link>
 
-            <router-link
-              to="/super-admin/app-versions"
-              @click="isSidebarOpen = false"
-              class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-              :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
-            >
-              <div class="flex items-center gap-3.5">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
-                  <Rocket class="w-4 h-4" />
+              <router-link
+                to="/super-admin/plans"
+                @click="isSidebarOpen = false"
+                class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+                :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
+              >
+                <div class="flex items-center gap-3.5">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.plans') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-amber-400'">
+                    <Layers class="w-4 h-4" />
+                  </div>
+                  <span>{{ $t('super.plans') }}</span>
                 </div>
-                <span>{{ $t('super.app_versions') }}</span>
-              </div>
-              <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
-            </router-link>
+                <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
+              </router-link>
+
+              <router-link
+                to="/super-admin/app-versions"
+                @click="isSidebarOpen = false"
+                class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
+                :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-300 hover:text-white hover:bg-slate-900/90'"
+              >
+                <div class="flex items-center gap-3.5">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
+                    <Rocket class="w-4 h-4" />
+                  </div>
+                  <span>{{ $t('super.app_versions') }}</span>
+                </div>
+                <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
+              </router-link>
+            </template>
           </div>
 
           <!-- 📱 Mobile App Drawer Bottom Quick Actions Bar -->

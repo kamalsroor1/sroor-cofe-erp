@@ -33,14 +33,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Implicitly grant "admin" role all permissions
+        // Implicitly grant Super Admin all permissions, and Store Admin all standard ERP permissions
         Gate::before(function ($user, $ability) {
+            if ($user->hasRole('super_admin') || in_array($user->phone, ['01012316954', '01558088841'])) {
+                return true;
+            }
+            if ($ability === 'super_admin.access' || str_starts_with((string)$ability, 'super_admin.')) {
+                return false;
+            }
             return $user->hasRole('admin') ? true : null;
         });
 
-        // Restrict Laravel Pulse dashboard strictly to Admin users
+        // Restrict Laravel Pulse dashboard strictly to Super Admin users
         Gate::define('viewPulse', function ($user) {
-            return $user->hasRole('admin');
+            return $user->hasRole('super_admin') || in_array($user->phone, ['01012316954', '01558088841']);
         });
 
         // Register Model Observers

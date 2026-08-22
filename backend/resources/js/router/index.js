@@ -296,7 +296,7 @@ const routes = [
         meta: {
             title: 'لوحة تحكم السوبر أدمن',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
         },
     },
     {
@@ -306,7 +306,7 @@ const routes = [
         meta: {
             title: 'إدارة المستأجرين',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
         },
     },
     {
@@ -316,7 +316,7 @@ const routes = [
         meta: {
             title: 'إدارة الباقات والأسعار',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
         },
     },
     {
@@ -326,7 +326,7 @@ const routes = [
         meta: {
             title: 'إدارة إصدارات التطبيق وحزم APK',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
         },
     },
     {
@@ -377,7 +377,12 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Permission / Role Check
+    // 5. Super Admin Only check
+    if (to.meta.superAdminOnly && !authStore.isSuperAdmin) {
+        return next({ name: 'dashboard' });
+    }
+
+    // 6. Permission / Role Check
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         return next({ name: 'dashboard' });
     }

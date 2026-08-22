@@ -32,7 +32,9 @@ class SuperAdminApiTest extends TestCase
             \Stancl\Tenancy\Events\DatabaseMigrated::class,
         ]);
 
-        $role = Role::create(['name' => 'admin']);
+        $role = Role::create(['name' => 'super_admin']);
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'super_admin.access']);
+        $role->givePermissionTo('super_admin.access');
 
         $this->store = Store::create([
             'name'      => 'المحمصة المركزية',
