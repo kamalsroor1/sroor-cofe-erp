@@ -201,50 +201,7 @@ input, textarea, [contenteditable="true"] {
     transform: scale(0.92) translateY(8px) !important;
 }
 
-/* 6. Native App-Like SweetAlert2 Spring Animations & Dark Styling */
-.swal2-container {
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 99999 !important;
-}
 
-.swal2-container.swal2-backdrop-show {
-    background: rgba(2, 6, 23, 0.75) !important;
-}
-
-.swal2-popup.swal2-modal {
-    animation: swal-native-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
-}
-
-.swal2-popup.swal2-toast {
-    animation: swal-toast-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-    border-radius: 1rem !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
-}
-
-@keyframes swal-native-pop {
-    0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(12px);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-@keyframes swal-toast-slide {
-    0% {
-        opacity: 0;
-        transform: translateY(-16px) scale(0.95);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
 
 /* 📐 Modern Mobile Safe Areas */
 .pb-safe {
