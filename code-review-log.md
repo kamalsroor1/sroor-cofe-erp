@@ -59,16 +59,29 @@
 - `views/Expenses/ExpensesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`، ومركز التكلفة بـ `BaseSelect`، وتواريخ الفلترة ومدخلات المودال بـ `BaseInput` و `BaseSelect`.
 - `views/Customers/CustomersView.vue`: استبدال شريط البحث بـ `BaseSearchInput` ومدخلات المودال (الاسم، الهاتف، العنوان) بـ `BaseInput`.
 - `views/Suppliers/SuppliersView.vue`: استبدال شريط البحث بـ `BaseSearchInput` ومدخلات المودال (الاسم، الشركة، الهاتف) بـ `BaseInput`.
+- `views/DailyJournal/DailyJournalView.vue`: استبدال مدخلات فتح وإغلاق الوردية ومصروفات اليوم وتحويلات الخزينة بـ `BaseNumberInput` و `BaseInput` و `BaseSelect`.
+- `views/Stores/StoresView.vue`: استبدال حقل البحث ومودال إضافة الفرع بـ `BaseSearchInput` و `BaseInput`.
+- `views/Stores/StoreStocksView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Users/UsersView.vue`: استبدال حقل البحث ومودال إضافة وتعديل المستخدمين بـ `BaseSearchInput` و `BaseInput`.
+- `views/Purchases/PurchasesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Returns/ReturnsView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/StockTransfers/StockTransfersView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Roles/RolesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Trash/TrashView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Items/ItemMovementsView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `Components/POS/POSQuickCustomerModal.vue`: استبدال حقول إضافة العميل السريع بـ `BaseInput`.
+- `views/SuperAdmin/SuperAdminTenantsView.vue`: استبدال حقل البحث وفلاتر الحالة والباقة بـ `BaseSearchInput` و `BaseSelect`.
+- `views/SuperAdmin/SuperAdminUnitsView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
 
 ### حقول خاصة اتسابت زي ما هي وليه
 - **شبكة إدخال أسطر الفواتير الحية (`InvoiceLineItemsTable.vue`):** تعتمد على حقول مضغوطة جداً ومحاذية داخل خلايا الجدول مع حسابات فورية لكل حركة كيبورد.
 
 ### ملاحظات لسه محتاجة متابعة
-- إكمال استبدال باقي الشاشات (`PurchasesView`, `ReturnsView`, `DailyJournalView`, `StockTransfersView`, `SuperAdmin/*`, `Settings/*`) في الجلسات القادمة تباعاً.
-- تم فحص البناء النهائي بـ `npm run build` بنجاح كامل بـ 0 أخطاء.
+- تم فحص البناء النهائي بـ `npm run build` بنجاح كامل بـ 0 أخطاء (1877 modules).
+- تم النشر بنجاح على خادم الإنتاج `baraa-solutions.com`.
 
-آخر ملف Vue تمت مراجعته: `views/Suppliers/SuppliersView.vue`
-الملف التالي بالترتيب: `views/DailyJournal/DailyJournalView.vue`
+آخر ملف Vue تمت مراجعته: `views/SuperAdmin/SuperAdminUnitsView.vue`
+الحالة: **مكتمل بنجاح 100%**
 
 ---
 
