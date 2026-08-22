@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white dark:bg-slate-950 text-slate-100 antialiased font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
     <!-- 1. Standalone Guest Views (Login, Marketing Brochure) -->
     <template v-if="isGuestRoute">
       <router-view v-slot="{ Component, route }">

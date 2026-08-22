@@ -121,7 +121,7 @@ watch(() => props.show, (val) => {
             >
                 <!-- Sheet Panel Container -->
                 <div
-                    class="w-full bg-white dark:bg-slate-950 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90vh] sm:max-h-[85vh] flex flex-col transition-transform duration-150 ease-out pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] sm:pb-6"
+                    class="w-full bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white max-h-[90vh] sm:max-h-[85vh] flex flex-col transition-transform duration-150 ease-out pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] sm:pb-6"
                     :class="maxWidthClass"
                     :style="dragOffset > 0 ? { transform: `translateY(${dragOffset}px)` } : {}"
                     @click.stop

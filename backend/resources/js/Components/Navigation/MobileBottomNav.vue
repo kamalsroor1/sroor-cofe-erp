@@ -2,7 +2,7 @@
   <!-- Fixed Mobile & Tablet Bottom Navigation Bar (Visible on mobile screens < md) -->
   <nav
     aria-label="Mobile Bottom Navigation"
-    class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-800/90 px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0.6rem))] flex items-center justify-around font-tajawal shadow-2xl select-none"
+    class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-800/90 px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0.6rem))] flex items-center justify-around font-tajawal shadow-2xl select-none"
   >
     <!-- 👑 MODE 1: SUPER ADMIN CENTRAL PLATFORM BOTTOM NAV -->
     <template v-if="isSuperAdminPanel">
@@ -42,7 +42,7 @@
       <div class="flex-1 flex items-center justify-center">
         <router-link
           to="/super-admin/plans"
-          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-400 flex items-center justify-center shadow-lg shadow-purple-600/40 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-950 group"
+          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-400 flex items-center justify-center shadow-lg shadow-purple-600/40 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-900 group"
           :class="isPlansActive ? 'scale-110 ring-purple-400/50' : ''"
           :title="$t('super.plans')"
         >
@@ -118,7 +118,7 @@
       <div class="flex-1 flex items-center justify-center">
         <router-link
           to="/pos"
-          class="relative -top-4 w-12 h-12 rounded-2xl bg-theme-gradient flex items-center justify-center shadow-lg shadow-theme-primary transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-950 group"
+          class="relative -top-4 w-12 h-12 rounded-2xl bg-theme-gradient flex items-center justify-center shadow-lg shadow-theme-primary transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-900 group"
           :class="isPosActive ? 'scale-110 ring-theme-primary' : ''"
           :title="$t('nav.pos_fast')"
         >
