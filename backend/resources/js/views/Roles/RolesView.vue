@@ -35,7 +35,7 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="p-16 text-center">
-        <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('roles.loading_roles_matrix') }}</p>
       </div>
 

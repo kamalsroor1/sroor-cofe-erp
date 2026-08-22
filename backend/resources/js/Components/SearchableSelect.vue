@@ -127,7 +127,7 @@ onUnmounted(() => {
         <!-- Trigger Button -->
         <div
             @click="toggleDropdown"
-            class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-amber-500/50 shadow-inner"
+            class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-theme-primary/50 shadow-inner"
             :class="[
                 isOpen ? 'border-amber-500 ring-2 ring-amber-500/20' : '',
                 selectedOption ? 'font-bold' : 'text-slate-500 dark:text-slate-400'
@@ -173,7 +173,7 @@ onUnmounted(() => {
                         v-model="searchQuery"
                         type="text"
                         :placeholder="searchPlaceholder || $t('common.search_in_list')"
-                        class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition shadow-inner font-tajawal"
+                        class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary transition shadow-inner font-tajawal"
                         @keydown.stop
                     >
                     <span class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 text-xs pointer-events-none">

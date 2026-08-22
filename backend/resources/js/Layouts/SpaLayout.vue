@@ -34,7 +34,7 @@
           <select
             :value="authStore.currentStore?.id"
             @change="handleStoreChange($event.target.value)"
-            class="h-9 pr-8 pl-4 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all cursor-pointer font-tajawal"
+            class="h-9 pr-8 pl-4 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-theme-primary focus:outline-none transition-all cursor-pointer font-tajawal"
           >
             <option v-for="store in authStore.stores" :key="store.id" :value="store.id">
               🏬 {{ store.name }} {{ store.is_main ? `(${$t('common.main_store_default')})` : '' }}
@@ -149,7 +149,7 @@
             <router-link
               to="/"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name === 'dashboard' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <LayoutDashboard class="w-4 h-4" />
               <span>{{ $t('nav.dashboard') }}</span>
@@ -162,7 +162,7 @@
             <router-link
               to="/pos"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('pos') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <ShoppingCart class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('pos') ? 'text-slate-950' : 'text-emerald-400'" />
               <span>{{ $t('nav.pos_fast') }}</span>
@@ -171,7 +171,7 @@
             <router-link
               to="/invoices"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('invoices') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <FileText class="w-4 h-4 text-blue-400" :class="$route.name?.startsWith('invoices') ? 'text-slate-950' : 'text-blue-400'" />
               <span>{{ $t('nav.invoices_log') }}</span>
@@ -180,7 +180,7 @@
             <router-link
               to="/returns"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('returns') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <RotateCcw class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('returns') ? 'text-slate-950' : 'text-cyan-400'" />
               <span>{{ $t('nav.returns_adjustments') }}</span>
@@ -189,7 +189,7 @@
             <router-link
               to="/coffee-blender"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('coffee_blender') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.coffee_blender') }}</span>
@@ -202,7 +202,7 @@
             <router-link
               to="/stores"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('stores') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <StoreIcon class="w-4 h-4" />
               <span>{{ $t('nav.stores') }}</span>
@@ -211,7 +211,7 @@
             <router-link
               to="/items"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('items') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.items_catalog') }}</span>
@@ -220,7 +220,7 @@
             <router-link
               to="/stock-transfers"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('stock_transfers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Truck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('stock_transfers') ? 'text-slate-950' : 'text-purple-400'" />
               <span>{{ $t('nav.stock_transfers') }}</span>
@@ -229,7 +229,7 @@
             <router-link
               to="/purchases"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('purchases') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Truck class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('purchases') ? 'text-slate-950' : 'text-emerald-400'" />
               <span>{{ $t('nav.purchases') }}</span>
@@ -238,7 +238,7 @@
             <router-link
               to="/customers"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('customers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Users class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('customers') ? 'text-slate-950' : 'text-cyan-400'" />
               <span>{{ $t('nav.customers') }}</span>
@@ -247,7 +247,7 @@
             <router-link
               to="/suppliers"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('suppliers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Factory class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('suppliers') ? 'text-slate-950' : 'text-indigo-400'" />
               <span>{{ $t('nav.suppliers') }}</span>
@@ -256,7 +256,7 @@
             <router-link
               to="/expenses"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('expenses') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Receipt class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('expenses') ? 'text-slate-950' : 'text-rose-400'" />
               <span>{{ $t('nav.expenses') }}</span>
@@ -265,7 +265,7 @@
             <router-link
               to="/daily-journal"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('daily_journal') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Wallet class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('daily_journal') ? 'text-slate-950' : 'text-emerald-400'" />
               <span>{{ $t('nav.daily_journal') }}</span>
@@ -274,7 +274,7 @@
             <router-link
               to="/reports"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('reports') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <BarChart3 class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('reports') ? 'text-slate-950' : 'text-purple-400'" />
               <span>{{ $t('nav.reports') }}</span>
@@ -287,7 +287,7 @@
             <router-link
               to="/users"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('users') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.users') }}</span>
@@ -296,7 +296,7 @@
             <router-link
               to="/roles"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('roles') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <ShieldCheck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('roles') ? 'text-slate-950' : 'text-purple-400'" />
               <span>{{ $t('nav.roles') }}</span>
@@ -305,7 +305,7 @@
             <router-link
               to="/activity-logs"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('activity_logs') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-slate-950' : 'text-cyan-400'" />
               <span>{{ $t('nav.audit_logs') }}</span>
@@ -314,7 +314,7 @@
             <router-link
               to="/settings"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('settings') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.settings') }}</span>
@@ -323,7 +323,7 @@
             <router-link
               to="/trash"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
-              :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+              :class="$route.name?.startsWith('trash') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
               <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-slate-950' : 'text-rose-400'" />
               <span>{{ $t('nav.trash') }}</span>

@@ -257,7 +257,7 @@
                 <input
                   v-model="createForm.tenancy_db_name"
                   type="text"
-                  class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                   placeholder="مثلاً: u910151740_tenant_2m"
                 />
               </div>
@@ -270,7 +270,7 @@
                   <input
                     v-model="createForm.tenancy_db_username"
                     type="text"
-                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                     placeholder="اتركه فارغاً لاستخدام الافتراضي"
                   />
                 </div>
@@ -282,7 +282,7 @@
                   <input
                     v-model="createForm.tenancy_db_password"
                     type="password"
-                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                     placeholder="اتركه فارغاً لاستخدام الافتراضية"
                   />
                 </div>
@@ -355,7 +355,7 @@
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
+                class="px-5 py-2 bg-theme-gradient text-white font-black shadow-theme-primary font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
               >
                 {{ isSubmitting ? $t('common.loading') : $t('super.save_status_btn') }}
               </button>

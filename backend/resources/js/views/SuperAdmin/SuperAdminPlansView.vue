@@ -33,7 +33,7 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="p-16 text-center">
-        <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         <p class="text-xs text-slate-400">{{ $t('super.loading_plans') }}</p>
       </div>
 
@@ -120,7 +120,7 @@
                 v-model="editForm.name"
                 required
                 type="text"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary"
               />
             </div>
 
@@ -132,7 +132,7 @@
                   required
                   type="number"
                   step="0.01"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                 />
               </div>
 
@@ -143,7 +143,7 @@
                   required
                   type="number"
                   step="0.01"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                 />
               </div>
             </div>
@@ -192,12 +192,12 @@
 
             <div class="grid grid-cols-2 gap-3 pt-2">
               <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-500" />
+                <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4 rounded text-amber-500 focus:ring-theme-primary" />
                 <span class="text-slate-300 font-bold">{{ $t('super.plan_active_checkbox') }}</span>
               </label>
 
               <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input type="checkbox" v-model="editForm.is_popular" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-500" />
+                <input type="checkbox" v-model="editForm.is_popular" class="w-4 h-4 rounded text-amber-500 focus:ring-theme-primary" />
                 <span class="text-slate-300 font-bold">{{ $t('super.popular_plan_checkbox') }}</span>
               </label>
             </div>
@@ -213,7 +213,7 @@
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
+                class="px-5 py-2 bg-theme-gradient text-white font-black shadow-theme-primary font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
               >
                 {{ isSubmitting ? $t('common.loading') : $t('common.save') }}
               </button>

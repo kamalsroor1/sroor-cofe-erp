@@ -160,7 +160,7 @@
                   type="button"
                   @click="startDownloadAndInstall"
                   :disabled="isDownloading"
-                  class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                  class="flex-1 py-3 px-4 rounded-2xl bg-theme-gradient text-white font-black shadow-theme-primary text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50"
                 >
                   <Download v-if="!isDownloading" class="w-4.5 h-4.5" />
                   <div v-else class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>

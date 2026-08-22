@@ -27,7 +27,7 @@
           <select
             v-model="selectedStoreId"
             @change="fetchStocks(1)"
-            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal cursor-pointer min-w-[180px]"
+            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-200 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal cursor-pointer min-w-[180px]"
           >
             <option v-for="store in stores" :key="store.id" :value="store.id">
               {{ store.name }} {{ store.is_main ? `(${ $t('inventory.main_store') })` : '' }}
@@ -43,7 +43,7 @@
               v-model="searchQuery"
               @input="debounceSearch"
               type="text"
-              class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+              class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
               :placeholder="$t('inventory.search_item_code')"
             >
             <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -85,7 +85,7 @@
       <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Loading State -->
         <div v-if="isLoading" class="p-12 text-center">
-          <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('common.loading') }}</p>
         </div>
 

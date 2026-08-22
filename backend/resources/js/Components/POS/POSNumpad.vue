@@ -17,7 +17,7 @@ defineEmits(['press', 'set-target', 'quick-exact']);
                 <button
                     type="button"
                     class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer"
-                    :class="target === 'paid_amount' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-600 dark:text-slate-400'"
+                    :class="target === 'paid_amount' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400'"
                     @click="$emit('set-target', 'paid_amount')"
                 >
                     {{ $t('invoices.paid') }}
@@ -25,7 +25,7 @@ defineEmits(['press', 'set-target', 'quick-exact']);
                 <button
                     type="button"
                     class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer"
-                    :class="target === 'discount_value' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-600 dark:text-slate-400'"
+                    :class="target === 'discount_value' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400'"
                     @click="$emit('set-target', 'discount_value')"
                 >
                     {{ $t('invoices.discount') }}

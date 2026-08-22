@@ -40,7 +40,7 @@
             <select
               v-model="filters.store_id"
               @change="fetchReportsData"
-              class="w-full h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
               <option value="all">{{ $t('reports.all_stores_branches') }}</option>
               <option v-for="s in stores" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -56,14 +56,14 @@
               v-model="filters.from"
               @change="customDateChanged"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
             <span class="text-xs text-slate-400 font-bold">{{ $t('common.to') }}:</span>
             <input
               v-model="filters.to"
               @change="customDateChanged"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
           </div>
 
@@ -72,7 +72,7 @@
             <select
               v-model="filters.stock_filter"
               @change="fetchReportsData"
-              class="h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
               <option value="all">{{ $t('inventory.all_stock') }}</option>
               <option value="in_stock">{{ $t('reports.in_stock_only') }}</option>
@@ -99,7 +99,7 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="p-16 text-center">
-        <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         <p class="text-xs text-slate-400 font-bold">{{ $t('reports.loading_reports') }}</p>
       </div>
 

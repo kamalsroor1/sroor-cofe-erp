@@ -42,7 +42,7 @@
               autofocus
               dir="ltr"
               :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
-              class="w-full h-11 pr-10 pl-4 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
+              class="w-full h-11 pr-10 pl-4 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
             <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -64,7 +64,7 @@
               required
               dir="ltr"
               :placeholder="$t('auth.password_placeholder')"
-              class="w-full h-11 pr-10 pl-11 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
+              class="w-full h-11 pr-10 pl-11 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
             <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -87,7 +87,7 @@
             <input
               v-model="form.remember"
               type="checkbox"
-              class="w-4 h-4 rounded-lg bg-slate-950 border-slate-700 text-amber-500 focus:ring-amber-500/20 focus:ring-offset-0 transition-all cursor-pointer"
+              class="w-4 h-4 rounded-lg bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20 focus:ring-offset-0 transition-all cursor-pointer"
             >
             <span class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('auth.remember_me') }}</span>
           </label>
@@ -97,7 +97,7 @@
         <button
           type="submit"
           :disabled="isLoading"
-          class="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
+          class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
         >
           <template v-if="isLoading">
             <div class="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>

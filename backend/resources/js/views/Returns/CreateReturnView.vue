@@ -58,7 +58,7 @@
                 <select
                   v-model="form.customer_id"
                   required
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 >
                   <option :value="null" disabled>{{ $t('pos.choose_invoice_customer') }}</option>
                   <option v-for="c in customers" :key="c.id" :value="c.id">
@@ -75,7 +75,7 @@
                 <select
                   v-model="form.supplier_id"
                   required
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 >
                   <option :value="null" disabled>{{ $t('purchases.select_supplier') }}</option>
                   <option v-for="s in suppliers" :key="s.id" :value="s.id">
@@ -93,7 +93,7 @@
                   v-model="form.return_date"
                   type="date"
                   required
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 >
               </div>
 
@@ -103,7 +103,7 @@
                 <input
                   v-model="form.reason"
                   type="text"
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   :placeholder="$t('returns.reason_input_placeholder')"
                 >
               </div>
@@ -123,7 +123,7 @@
             <div class="flex items-center gap-2">
               <select
                 v-model="selectedItemToAdd"
-                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
                 <option :value="null">{{ $t('returns.select_item_to_return') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
@@ -240,7 +240,7 @@
             <button
               type="submit"
               :disabled="isSubmitting || form.items.length === 0"
-              class="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-2xl font-black text-xs shadow-xl shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
+              class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary rounded-2xl font-black text-xs shadow-xl shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
             >
               <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <RotateCcw v-else class="w-4 h-4" />

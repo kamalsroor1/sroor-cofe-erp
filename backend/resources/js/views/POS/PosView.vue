@@ -60,7 +60,7 @@
               v-model="searchQuery"
               @keydown.enter="handleBarcodeScan"
               type="text"
-              class="w-full h-11 pr-10 pl-4 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-xs"
+              class="w-full h-11 pr-10 pl-4 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none shadow-xs"
               :placeholder="$t('pos.search_scan_placeholder')"
               autofocus
             >
@@ -92,7 +92,7 @@
 
         <!-- Products Grid -->
         <div v-if="isLoading" class="p-12 text-center">
-          <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('pos.loading_items') }}</p>
         </div>
 
@@ -114,7 +114,7 @@
                   {{ item.current_stock }} {{ item.unit }}
                 </span>
               </div>
-              <div class="font-bold text-slate-900 dark:text-white text-xs group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors line-clamp-2">
+              <div class="font-bold text-slate-900 dark:text-white text-xs group-hover:text-theme-primary dark:group-hover:text-theme-primary transition-colors line-clamp-2">
                 {{ item.name }}
               </div>
             </div>
@@ -145,7 +145,7 @@
               <select
                 v-model="selectedCustomerId"
                 @change="onCustomerChange"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
                 <option v-for="c in customers" :key="c.id" :value="c.id">
                   {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}
@@ -346,7 +346,7 @@
             type="text"
             required
             autofocus
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
             :placeholder="$t('pos.customer_name_placeholder')"
           >
         </div>
@@ -358,7 +358,7 @@
           <input
             v-model="quickCustomerForm.phone"
             type="tel"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             :placeholder="$t('contacts.phone_placeholder')"
           >
         </div>
@@ -369,7 +369,7 @@
           </label>
           <select
             v-model="quickCustomerForm.price_tier"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
           >
             <option value="retail">🛍️ {{ $t('pos.retail') }}</option>
             <option value="wholesale">📦 {{ $t('pos.wholesale') }}</option>

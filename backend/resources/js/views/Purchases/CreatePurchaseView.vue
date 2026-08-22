@@ -38,7 +38,7 @@
               <select
                 v-model="form.supplier_id"
                 required
-                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
                 <option value="">{{ $t('purchases.select_supplier') }}</option>
                 <option v-for="s in suppliers" :key="s.id" :value="s.id">
@@ -56,7 +56,7 @@
                 v-model="form.purchase_date"
                 type="date"
                 required
-                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
             </div>
 
@@ -68,7 +68,7 @@
               <input
                 v-model="form.supplier_invoice_ref"
                 type="text"
-                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 placeholder="INV-SUP-1234..."
               >
             </div>
@@ -111,7 +111,7 @@
                       v-model="line.item_id"
                       @change="onItemSelect(line)"
                       required
-                      class="w-full h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      class="w-full h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                     >
                       <option value="">{{ $t('purchases.select_item_from_list') }}</option>
                       <option v-for="it in availableItems" :key="it.id" :value="it.id">
@@ -127,7 +127,7 @@
                       step="0.001"
                       min="0.001"
                       required
-                      class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-amber-400 font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-amber-400 font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
                       placeholder="1.000"
                     >
                   </td>
@@ -174,7 +174,7 @@
               <textarea
                 v-model="form.notes"
                 rows="3"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 :placeholder="$t('purchases.invoice_notes_placeholder')"
               ></textarea>
             </div>
@@ -243,7 +243,7 @@
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="px-7 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+            class="px-7 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
             <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
             <span>{{ $t('purchases.confirm_and_supply_btn') }}</span>

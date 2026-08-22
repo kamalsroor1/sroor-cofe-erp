@@ -160,7 +160,7 @@ const onTouchEnd = () => {
                                 inputmode="decimal"
                                 :placeholder="$t('pos.enter_custom_weight')"
                                 @keyup.enter="applyCustomWeight"
-                                class="flex-1 h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-mono font-bold focus:ring-2 focus:ring-amber-500 outline-hidden transition shadow-xs"
+                                class="flex-1 h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-mono font-bold focus:ring-2 focus:ring-theme-primary outline-hidden transition shadow-xs"
                             />
                             <button
                                 @click="applyCustomWeight"

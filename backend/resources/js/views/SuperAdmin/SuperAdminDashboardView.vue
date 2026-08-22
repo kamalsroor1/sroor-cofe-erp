@@ -171,7 +171,7 @@
                   v-model="platformSettings.platform_name"
                   type="text"
                   required
-                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   :placeholder="$t('super.platform_name_placeholder')"
                 >
               </div>
@@ -184,7 +184,7 @@
                 <input
                   v-model="platformSettings.platform_subtitle"
                   type="text"
-                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   :placeholder="$t('super.platform_subtitle_placeholder')"
                 >
               </div>
@@ -198,7 +198,7 @@
                   v-model="platformSettings.support_email"
                   type="email"
                   dir="ltr"
-                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   placeholder="support@domain.com"
                 >
               </div>
@@ -212,7 +212,7 @@
                   v-model="platformSettings.support_phone"
                   type="text"
                   dir="ltr"
-                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   placeholder="010XXXXXXXX"
                 >
               </div>
@@ -228,7 +228,7 @@
               <button
                 type="submit"
                 :disabled="isSavingSettings"
-                class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+                class="px-5 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
                 <span>{{ isSavingSettings ? $t('super.saving_platform_settings') : $t('super.save_platform_settings_btn') }}</span>
               </button>

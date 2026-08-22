@@ -23,7 +23,7 @@
 
           <button
             @click="openCreateModal"
-            class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer font-tajawal"
+            class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer font-tajawal"
           >
             <UserPlus class="w-4 h-4" />
             <span>{{ $t('users.add_user_btn') }}</span>
@@ -40,7 +40,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('users.search_users_placeholder')"
-            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-theme-primary font-tajawal"
           />
         </div>
 
@@ -48,7 +48,7 @@
           <select
             v-model="filters.role"
             @change="fetchUsers"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary font-tajawal"
           >
             <option value="all">{{ $t('users.all_roles_filter') }}</option>
             <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -59,7 +59,7 @@
       <!-- Users Grid / Table -->
       <div class="bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
-          <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p class="text-xs text-slate-400 font-tajawal">{{ $t('users.loading_users') }}</p>
         </div>
 
@@ -180,7 +180,7 @@
                 v-model="form.name"
                 required
                 type="text"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary"
                 :placeholder="$t('users.fullname_placeholder')"
               />
             </div>
@@ -193,7 +193,7 @@
                   required
                   type="text"
                   dir="ltr"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                   placeholder="010XXXXXXXX"
                 />
               </div>
@@ -204,7 +204,7 @@
                   v-model="form.email"
                   type="email"
                   dir="ltr"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                   placeholder="user@example.com"
                 />
               </div>
@@ -216,7 +216,7 @@
                 <select
                   v-model="form.role"
                   required
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary font-tajawal"
                 >
                   <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
                 </select>
@@ -226,7 +226,7 @@
                 <label class="block text-slate-400 font-bold mb-1">{{ $t('users.default_store_label') }}</label>
                 <select
                   v-model="form.default_store_id"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary font-tajawal"
                 >
                   <option :value="null">{{ $t('users.no_store_assigned') }}</option>
                   <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
@@ -242,7 +242,7 @@
                 v-model="form.password"
                 :required="!isEditing"
                 type="password"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
                 placeholder="••••••••"
               />
             </div>
@@ -252,7 +252,7 @@
                 v-model="form.is_active"
                 type="checkbox"
                 id="is_active_check"
-                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500"
+                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary"
               />
               <label for="is_active_check" class="text-slate-300 font-bold cursor-pointer">{{ $t('users.account_active_login_checkbox') }}</label>
             </div>
@@ -268,7 +268,7 @@
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
+                class="px-5 py-2 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
               >
                 {{ isSubmitting ? $t('common.loading') : (isEditing ? $t('common.save') : $t('common.save')) }}
               </button>

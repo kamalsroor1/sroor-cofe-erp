@@ -61,7 +61,7 @@
               @input="debouncedFetch"
               type="text"
               :placeholder="$t('activity.search_placeholder')"
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-theme-primary"
             />
           </div>
 
@@ -69,7 +69,7 @@
           <select
             v-model="filters.module"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-theme-primary"
           >
             <option value="all">{{ $t('activity.all_modules') }}</option>
             <option v-for="(label, key) in modulesList" :key="key" :value="key">{{ label }}</option>
@@ -79,7 +79,7 @@
           <select
             v-model="filters.user_id"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-theme-primary"
           >
             <option value="all">{{ $t('activity.all_users') }}</option>
             <option v-for="u in usersList" :key="u.id" :value="u.id">{{ u.name }}</option>
@@ -89,7 +89,7 @@
           <select
             v-model="filters.store_id"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-theme-primary"
           >
             <option value="all">{{ $t('activity.all_stores') }}</option>
             <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
@@ -100,7 +100,7 @@
       <!-- Logs Timeline / List -->
       <div class="bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
-          <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p class="text-xs text-slate-400">{{ $t('activity.loading_logs') }}</p>
         </div>
 

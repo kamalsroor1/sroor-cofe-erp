@@ -10,7 +10,7 @@
           <div class="flex items-center gap-2">
             <router-link
               to="/stores/stocks"
-              class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-tajawal shadow-sm"
+              class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-tajawal shadow-sm"
             >
               <Package class="w-4 h-4 text-amber-400" />
               <span>{{ $t('inventory.branch_stocks_balance') }}</span>
@@ -19,7 +19,7 @@
             <button
               type="button"
               @click="openCreateModal"
-              class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-amber-500/20 cursor-pointer"
+              class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-amber-500/20 cursor-pointer"
             >
               <Plus class="w-4 h-4" />
               <span>{{ $t('inventory.add_store') }}</span>
@@ -30,7 +30,7 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="p-12 text-center">
-        <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         <p class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('common.loading') }}</p>
       </div>
 
@@ -39,14 +39,14 @@
         <div
           v-for="store in stores"
           :key="store.id"
-          class="bg-slate-950/80 border rounded-2xl p-5 transition-all relative overflow-hidden flex flex-col justify-between group shadow-lg"
+          class="bg-white dark:bg-slate-950/80 border rounded-2xl p-5 transition-all relative overflow-hidden flex flex-col justify-between group shadow-sm dark:shadow-lg"
           :class="[
-            store.is_main ? 'border-amber-500/50 shadow-amber-500/5' : 'border-slate-800 hover:border-slate-700',
+            store.is_main ? 'border-theme-primary shadow-theme-primary ring-1 ring-theme-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
             !store.is_active ? 'opacity-60 grayscale-[50%]' : ''
           ]"
         >
           <!-- Main Branch Badge Background Glow -->
-          <div v-if="store.is_main" class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div v-if="store.is_main" class="absolute -top-12 -right-12 w-32 h-32 bg-theme-light rounded-full blur-2xl pointer-events-none"></div>
 
           <div>
             <!-- Header Row: Type, Code & Status -->
@@ -58,7 +58,7 @@
                 <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
                   {{ store.code }}
                 </span>
-                <span v-if="store.is_main" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 font-tajawal">
+                <span v-if="store.is_main" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-theme-light text-theme-primary border border-theme-border font-tajawal">
                   {{ $t('inventory.main_store') }}
                 </span>
               </div>
@@ -78,7 +78,7 @@
             </div>
 
             <!-- Store Title & Info -->
-            <h3 class="text-base font-black text-white font-tajawal group-hover:text-amber-400 transition-colors">
+            <h3 class="text-base font-black text-slate-900 dark:text-white font-tajawal group-hover:text-theme-primary transition-colors">
               {{ store.name }}
             </h3>
 
@@ -95,15 +95,15 @@
 
             <!-- Statistics Counters -->
             <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/80 text-center">
-              <div class="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
+              <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.items_count') }}</div>
-                <div class="text-sm font-black text-amber-400 font-mono mt-0.5">{{ store.stocks_count || 0 }}</div>
+                <div class="text-sm font-black text-theme-primary font-mono mt-0.5">{{ store.stocks_count || 0 }}</div>
               </div>
-              <div class="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
+              <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.invoices_count') }}</div>
                 <div class="text-sm font-black text-emerald-400 font-mono mt-0.5">{{ store.invoices_count || 0 }}</div>
               </div>
-              <div class="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
+              <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.purchases_count') }}</div>
                 <div class="text-sm font-black text-blue-400 font-mono mt-0.5">{{ store.purchases_count || 0 }}</div>
               </div>
@@ -207,7 +207,7 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
               :placeholder="$t('inventory.store_name_placeholder')"
             >
           </div>
@@ -221,7 +221,7 @@
               <input
                 v-model="form.code"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono uppercase focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono uppercase focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 :placeholder="$t('inventory.store_code_placeholder')"
               >
             </div>
@@ -233,7 +233,7 @@
               <select
                 v-model="form.type"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
               >
                 <option value="retail_shop">🏬 {{ $t('inventory.retail_shop') }}</option>
                 <option value="warehouse">🏭 {{ $t('inventory.warehouse') }}</option>
@@ -251,7 +251,7 @@
               <input
                 v-model="form.address"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
                 :placeholder="$t('inventory.address_placeholder')"
               >
             </div>
@@ -264,7 +264,7 @@
                 v-model="form.phone"
                 type="text"
                 dir="ltr"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 :placeholder="$t('inventory.phone_placeholder')"
               >
             </div>
@@ -276,7 +276,7 @@
               <input
                 v-model="form.is_main"
                 type="checkbox"
-                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500/20"
+                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
               >
               <span class="text-xs font-bold text-slate-300 font-tajawal">{{ $t('inventory.is_main_branch') }}</span>
             </label>
@@ -285,7 +285,7 @@
               <input
                 v-model="form.is_active"
                 type="checkbox"
-                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500/20"
+                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
               >
               <span class="text-xs font-bold text-slate-300 font-tajawal">{{ $t('inventory.is_active_branch') }}</span>
             </label>
@@ -335,7 +335,7 @@
                   type="checkbox"
                   :value="user.id"
                   v-model="assignedUserIds"
-                  class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-amber-500/20"
+                  class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
                 >
                 <div>
                   <div class="text-xs font-bold text-slate-900 dark:text-white font-tajawal">{{ user.name }}</div>

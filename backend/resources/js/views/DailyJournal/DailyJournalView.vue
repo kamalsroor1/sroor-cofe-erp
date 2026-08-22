@@ -180,7 +180,7 @@
 
         <!-- Loading State -->
         <div v-if="isLoading" class="p-12 text-center">
-          <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>
         </div>
 
@@ -294,7 +294,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-amber-400 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-amber-400 font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
               placeholder="0.00"
             >
           </div>
@@ -306,7 +306,7 @@
             <input
               v-model="openShiftForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               :placeholder="$t('treasury.open_shift_notes_placeholder')"
             >
           </div>
@@ -378,7 +378,7 @@
             <input
               v-model="closeShiftForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               :placeholder="$t('treasury.close_shift_notes_placeholder')"
             >
           </div>
@@ -419,7 +419,7 @@
               v-model="expenseForm.title"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               :placeholder="$t('treasury.expense_title_placeholder')"
             >
           </div>
@@ -446,7 +446,7 @@
               <select
                 v-model="expenseForm.cost_center"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
                 <option value="operational">{{ $t('treasury.cost_center_operational') }}</option>
                 <option value="hospitality">{{ $t('treasury.cost_center_hospitality') }}</option>
@@ -465,7 +465,7 @@
             <select
               v-model="expenseForm.payment_method"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
               <option value="cash">{{ $t('treasury.method_cash_drawer') }}</option>
               <option value="instapay">{{ $t('treasury.method_instapay') }}</option>

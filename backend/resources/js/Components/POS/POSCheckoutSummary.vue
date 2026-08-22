@@ -124,7 +124,7 @@ const onPaidAmountInput = (e) => {
             <button
                 type="button"
                 class="h-10 sm:h-9 rounded-xl font-black transition text-center cursor-pointer flex items-center justify-center active:scale-95 shadow-xs"
-                :class="paymentType === 'partial' ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
+                :class="paymentType === 'partial' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
                 @click="$emit('update:paymentType', 'partial')"
             >
                 {{ $t('pos.payment_partial') }} (F8)

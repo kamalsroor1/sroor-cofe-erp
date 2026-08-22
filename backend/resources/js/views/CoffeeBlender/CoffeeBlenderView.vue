@@ -34,7 +34,7 @@
                 <input
                   v-model="blendName"
                   type="text"
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   :placeholder="$t('inventory.blend_name_placeholder')"
                 >
               </div>
@@ -73,7 +73,7 @@
                   <label class="block text-xs font-bold text-slate-700 dark:text-slate-400">{{ $t('inventory.roast_type') }}</label>
                   <select
                     v-model="roastType"
-                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   >
                     <option value="فاتح">{{ $t('inventory.roast_light') }}</option>
                     <option value="وسط">{{ $t('inventory.roast_medium') }}</option>
@@ -86,7 +86,7 @@
                   <label class="block text-xs font-bold text-slate-700 dark:text-slate-400">{{ $t('inventory.grind_level') }}</label>
                   <select
                     v-model="grindLevel"
-                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   >
                     <option value="تركي ناعم">{{ $t('inventory.grind_turkish') }}</option>
                     <option value="إسبريسو">{{ $t('inventory.grind_espresso') }}</option>
@@ -117,7 +117,7 @@
             <div class="flex items-center gap-2">
               <select
                 v-model="selectedItemIdToAdd"
-                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
                 <option :value="null">{{ $t('inventory.select_blend_item_prompt') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
@@ -253,7 +253,7 @@
               </label>
               <select
                 v-model="selectedCustomerId"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
                 <option v-for="c in customers" :key="c.id" :value="c.id">
                   {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}

@@ -85,7 +85,7 @@
             <input
               v-model="dateFrom"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
           </div>
           <div class="flex items-center gap-1.5">
@@ -93,7 +93,7 @@
             <input
               v-model="dateTo"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
           </div>
           <button
@@ -111,7 +111,7 @@
             type="button"
             @click="applyPreset('today')"
             class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
-            :class="activePreset === 'today' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'"
+            :class="activePreset === 'today' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-400 hover:text-white'"
           >
             {{ $t('common.today') }}
           </button>
@@ -119,7 +119,7 @@
             type="button"
             @click="applyPreset('this_month')"
             class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
-            :class="activePreset === 'this_month' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'"
+            :class="activePreset === 'this_month' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-400 hover:text-white'"
           >
             {{ $t('common.this_month') }}
           </button>
@@ -127,7 +127,7 @@
             type="button"
             @click="applyPreset('all')"
             class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
-            :class="activePreset === 'all' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white'"
+            :class="activePreset === 'all' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-400 hover:text-white'"
           >
             {{ $t('common.all') }}
           </button>
@@ -137,7 +137,7 @@
       <!-- Movements Ledger Table -->
       <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
-          <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>
         </div>
 
