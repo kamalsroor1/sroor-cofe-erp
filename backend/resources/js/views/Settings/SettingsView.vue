@@ -107,7 +107,7 @@
                 type="button"
                 @click="selectedSection = sec.id"
                 class="w-full p-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-between gap-3 text-start cursor-pointer group"
-                :class="selectedSection === sec.id ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                :class="selectedSection === sec.id ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900'"
               >
                 <div class="flex items-center gap-3 min-w-0">
                   <div

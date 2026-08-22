@@ -88,7 +88,7 @@
           <select
             v-model="selectedCostCenter"
             @change="fetchExpenses(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
           >
             <option value="all">{{ $t('expenses.all_cost_centers') }}</option>
             <option v-for="(label, key) in costCenters" :key="key" :value="key">
@@ -151,7 +151,7 @@
         <div v-else-if="expenses.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 font-tajawal border-b border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
@@ -162,11 +162,11 @@
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="(expense, idx) in expenses"
                 :key="expense.id"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
@@ -175,7 +175,7 @@
                   {{ expense.expense_number }}
                 </td>
                 <td class="py-3.5 px-4">
-                  <div class="font-bold text-white font-tajawal text-sm">{{ expense.title }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ expense.title }}</div>
                   <div v-if="expense.notes" class="text-[10px] text-slate-500 font-tajawal mt-0.5 max-w-xs truncate">
                     {{ expense.notes }}
                   </div>
@@ -201,7 +201,7 @@
                     <button
                       type="button"
                       @click="openEditModal(expense)"
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
                       :title="$t('common.edit')"
                     >
                       <Pencil class="w-4 h-4" />
@@ -286,7 +286,7 @@
               v-model="form.title"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('expenses.title_placeholder')"
             >
           </div>
@@ -300,7 +300,7 @@
               <select
                 v-model="form.cost_center"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option v-for="(label, key) in costCenters" :key="key" :value="key">
                   {{ label }}
@@ -316,7 +316,7 @@
                 v-model="form.category"
                 type="text"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('expenses.category_placeholder')"
               >
             </div>
@@ -373,7 +373,7 @@
             <select
               v-model="form.payment_method"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="cash">💵 {{ $t('treasury.method_cash_drawer') }}</option>
               <option value="instapay">⚡ {{ $t('contacts.instapay') }}</option>
@@ -392,7 +392,7 @@
             <textarea
               v-model="form.notes"
               rows="2"
-              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('expenses.notes_placeholder')"
             ></textarea>
           </div>

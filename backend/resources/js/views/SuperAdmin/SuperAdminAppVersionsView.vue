@@ -112,8 +112,8 @@
               <th class="pb-3 text-end">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60 font-mono">
-            <tr v-for="v in versions" :key="v.id" class="hover:bg-slate-900/50 transition">
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
+            <tr v-for="v in versions" :key="v.id" class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition">
               <td class="py-3.5">
                 <div class="flex items-center gap-2">
                   <span class="font-black text-white font-mono text-sm">v{{ v.version_name }}</span>
@@ -243,7 +243,7 @@
         <!-- Force update toggle -->
         <label class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 cursor-pointer">
           <div>
-            <div class="font-bold text-white">{{ $t('super.force_update_label') }}</div>
+            <div class="font-bold text-slate-900 dark:text-white">{{ $t('super.force_update_label') }}</div>
             <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('super.force_update_desc') }}</div>
           </div>
           <input

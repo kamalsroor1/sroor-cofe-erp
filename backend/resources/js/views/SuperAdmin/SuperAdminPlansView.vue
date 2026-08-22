@@ -78,19 +78,19 @@
             <div class="space-y-2 text-xs text-slate-300">
               <div class="flex items-center justify-between py-1.5 border-b border-slate-800/80">
                 <span class="text-slate-400">{{ $t('super.max_users_label') }}</span>
-                <span class="font-mono font-bold text-white">{{ plan.max_users }}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_users }}</span>
               </div>
               <div class="flex items-center justify-between py-1.5 border-b border-slate-800/80">
                 <span class="text-slate-400">{{ $t('super.max_stores_label') }}</span>
-                <span class="font-mono font-bold text-white">{{ plan.max_stores }}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_stores }}</span>
               </div>
               <div class="flex items-center justify-between py-1.5 border-b border-slate-800/80">
                 <span class="text-slate-400">{{ $t('super.max_items_label') }}</span>
-                <span class="font-mono font-bold text-white">{{ plan.max_items }}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_items }}</span>
               </div>
               <div class="flex items-center justify-between py-1.5">
                 <span class="text-slate-400">{{ $t('super.monthly_invoices_label') }}</span>
-                <span class="font-mono font-bold text-white">{{ plan.max_invoices_per_month }}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_invoices_per_month }}</span>
               </div>
             </div>
           </div>

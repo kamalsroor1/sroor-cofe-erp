@@ -58,7 +58,7 @@
                 <select
                   v-model="form.customer_id"
                   required
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
                   <option :value="null" disabled>{{ $t('pos.choose_invoice_customer') }}</option>
                   <option v-for="c in customers" :key="c.id" :value="c.id">
@@ -75,7 +75,7 @@
                 <select
                   v-model="form.supplier_id"
                   required
-                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
                   <option :value="null" disabled>{{ $t('purchases.select_supplier') }}</option>
                   <option v-for="s in suppliers" :key="s.id" :value="s.id">
@@ -123,7 +123,7 @@
             <div class="flex items-center gap-2">
               <select
                 v-model="selectedItemToAdd"
-                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null">{{ $t('returns.select_item_to_return') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
@@ -154,8 +154,8 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/50 font-sans">
-                  <tr v-for="(item, idx) in form.items" :key="item.item_id" class="hover:bg-slate-900/40">
-                    <td class="p-3 font-bold text-white font-tajawal">
+                  <tr v-for="(item, idx) in form.items" :key="item.item_id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
+                    <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">
                       <div>{{ item.name }}</div>
                       <span class="text-[10px] text-slate-500 font-mono">({{ item.unit }})</span>
                     </td>
@@ -165,7 +165,7 @@
                         type="number"
                         step="0.001"
                         min="0.001"
-                        class="w-20 h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-white focus:outline-none"
+                        class="w-20 h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
                       >
                     </td>
                     <td class="p-3 text-end">

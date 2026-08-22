@@ -38,7 +38,7 @@
               <select
                 v-model="form.supplier_id"
                 required
-                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option value="">{{ $t('purchases.select_supplier') }}</option>
                 <option v-for="s in suppliers" :key="s.id" :value="s.id">
@@ -105,13 +105,13 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50">
-                <tr v-for="(line, idx) in form.items" :key="idx" class="hover:bg-slate-900/30">
+                <tr v-for="(line, idx) in form.items" :key="idx" class="hover:bg-slate-100 dark:hover:bg-slate-900/30">
                   <td class="p-2.5">
                     <select
                       v-model="line.item_id"
                       @change="onItemSelect(line)"
                       required
-                      class="w-full h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      class="w-full h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                     >
                       <option value="">{{ $t('purchases.select_item_from_list') }}</option>
                       <option v-for="it in availableItems" :key="it.id" :value="it.id">
@@ -174,7 +174,7 @@
               <textarea
                 v-model="form.notes"
                 rows="3"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('purchases.invoice_notes_placeholder')"
               ></textarea>
             </div>

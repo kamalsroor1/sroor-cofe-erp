@@ -87,7 +87,7 @@
           <select
             v-model="selectedType"
             @change="fetchReturns(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('returns.all_return_types') }}</option>
             <option value="sales_return">{{ $t('returns.sales_return_option') }}</option>
@@ -134,11 +134,11 @@
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="(ret, idx) in returnsList"
                 :key="ret.id"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
@@ -155,7 +155,7 @@
                   </span>
                 </td>
                 <td class="py-3.5 px-4">
-                  <div class="font-bold text-white font-tajawal">{{ ret.party_name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white font-tajawal">{{ ret.party_name }}</div>
                   <div v-if="ret.party_phone" class="text-[10px] text-slate-500 font-mono mt-0.5">
                     {{ ret.party_phone }}
                   </div>
@@ -175,7 +175,7 @@
                     <button
                       type="button"
                       @click="openDetailsModal(ret)"
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
                       :title="$t('returns.view_return_details_hint')"
                     >
                       <Eye class="w-4 h-4" />
@@ -253,7 +253,7 @@
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('returns.return_type') }}:</span>
-              <span class="font-bold text-white">
+              <span class="font-bold text-slate-900 dark:text-white">
                 {{ selectedReturnDetails.return_type === 'sales_return' ? $t('returns.sales_return_option') : $t('returns.purchase_return_option') }}
               </span>
             </div>
@@ -284,7 +284,7 @@
               </thead>
               <tbody class="divide-y divide-slate-800/50">
                 <tr v-for="it in selectedReturnDetails.items" :key="it.id">
-                  <td class="p-2.5 font-bold text-white">{{ it.item_name }}</td>
+                  <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ it.item_name }}</td>
                   <td class="p-2.5 text-end font-mono text-amber-400">{{ it.quantity }} {{ it.unit }}</td>
                   <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(it.unit_price) }} {{ $t('common.currency') }}</td>
                   <td class="p-2.5 text-end font-mono font-bold text-rose-400">{{ formatMoney(it.total_price) }} {{ $t('common.currency') }}</td>

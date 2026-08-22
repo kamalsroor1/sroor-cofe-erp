@@ -55,7 +55,7 @@
               type="button"
               @click="setStockStatus('all')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+              :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
             >
               {{ $t('common.all') }}
             </button>
@@ -64,7 +64,7 @@
               type="button"
               @click="setStockStatus('low')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'low' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200'"
+              :class="stockStatus === 'low' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
             >
               ⚠️ {{ $t('inventory.low_stock') }}
             </button>
@@ -73,7 +73,7 @@
               type="button"
               @click="setStockStatus('out')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'out' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-slate-200'"
+              :class="stockStatus === 'out' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
             >
               🚨 {{ $t('inventory.out_of_stock') }}
             </button>
@@ -92,7 +92,7 @@
         <div v-else-if="stocks.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 font-tajawal border-b border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_code') }}</th>
@@ -104,15 +104,15 @@
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="(stock, idx) in stocks"
                 :key="stock.id"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
                 :class="stock.is_out_of_stock ? 'bg-rose-500/5' : (stock.is_low_stock ? 'bg-amber-500/5' : '')"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}</td>
-                <td class="py-3.5 px-4 font-bold text-white font-tajawal">{{ stock.item_name }}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ stock.item_name }}</td>
                 <td class="py-3.5 px-4 font-mono text-slate-400">{{ stock.item_code }}</td>
                 <td class="py-3.5 px-4 text-center font-tajawal text-slate-300">{{ stock.unit || $t('inventory.unit_piece_short') }}</td>
                 <td class="py-3.5 px-4 text-center font-mono font-black text-sm" :class="stock.is_out_of_stock ? 'text-rose-400' : (stock.is_low_stock ? 'text-amber-400' : 'text-emerald-400')">

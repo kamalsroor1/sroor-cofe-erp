@@ -91,9 +91,9 @@
                 <th class="p-4 text-end font-tajawal">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-mono">
-              <tr v-for="t in tenants" :key="t.id" class="hover:bg-slate-900/40 transition">
-                <td class="p-4 font-sans font-bold text-white font-tajawal">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
+              <tr v-for="t in tenants" :key="t.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40 transition">
+                <td class="p-4 font-sans font-bold text-slate-900 dark:text-white font-tajawal">
                   <div class="text-sm">{{ t.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">ID: {{ t.id }}</div>
                 </td>

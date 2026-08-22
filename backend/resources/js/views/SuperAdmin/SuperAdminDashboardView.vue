@@ -89,7 +89,7 @@
                 class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
-                  <div class="font-bold text-white">{{ p.name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white">{{ p.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">{{ $t('super.monthly_rate', { amount: formatMoney(p.price_monthly) }) }}</div>
                 </div>
                 <div class="text-end font-mono">
@@ -120,7 +120,7 @@
                 class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
               >
                 <div class="space-y-0.5">
-                  <div class="font-bold text-white flex items-center gap-2">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span>{{ t.name }}</span>
                     <span class="text-[10px] text-slate-400 font-mono">({{ t.domain }})</span>
                   </div>

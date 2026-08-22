@@ -95,7 +95,7 @@
         </div>
 
         <!-- Quick Date Range Pills -->
-        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto">
+        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
           <button
             type="button"
             @click="applyPreset('today')"
@@ -152,15 +152,15 @@
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.notes') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="(row, idx) in ledger"
                 :key="idx"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
                 <td class="py-3.5 px-4 font-mono text-slate-300">{{ row.date }}</td>
-                <td class="py-3.5 px-4 font-bold text-white font-tajawal">{{ row.type }}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ row.type }}</td>
                 <td class="py-3.5 px-4 font-mono text-amber-400">{{ row.ref_number || '—' }}</td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold" :class="row.credit > 0 ? 'text-white' : 'text-slate-500'">
                   {{ formatMoney(row.credit) }}

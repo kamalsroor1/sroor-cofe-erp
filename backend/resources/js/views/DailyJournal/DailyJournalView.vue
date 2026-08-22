@@ -161,7 +161,7 @@
             type="button"
             @click="activeTab = 'invoices'"
             class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-            :class="activeTab === 'invoices' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            :class="activeTab === 'invoices' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             <ShoppingCart class="w-4 h-4" />
             <span>{{ $t('treasury.journal_invoices_tab') }} ({{ invoices.length }})</span>
@@ -171,7 +171,7 @@
             type="button"
             @click="activeTab = 'expenses'"
             class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-            :class="activeTab === 'expenses' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            :class="activeTab === 'expenses' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             <Receipt class="w-4 h-4" />
             <span>{{ $t('treasury.journal_expenses_tab') }} ({{ expenses.length }})</span>
@@ -200,11 +200,11 @@
                   <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-800/60 font-sans">
-                <tr v-for="(inv, idx) in invoices" :key="inv.id" class="hover:bg-slate-900/50 transition-colors">
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
+                <tr v-for="(inv, idx) in invoices" :key="inv.id" class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
                   <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
                   <td class="py-3.5 px-4 font-mono font-bold text-amber-400">{{ inv.invoice_number }}</td>
-                  <td class="py-3.5 px-4 font-bold text-white font-tajawal">{{ inv.customer_name }}</td>
+                  <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ inv.customer_name }}</td>
                   <td class="py-3.5 px-4 font-mono text-slate-400">{{ inv.time || '—' }}</td>
                   <td class="py-3.5 px-4 text-center">
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-300">
@@ -249,11 +249,11 @@
                   <th class="py-3 px-4 text-end font-bold">{{ $t('common.amount') }}</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-800/60 font-sans">
-                <tr v-for="(e, idx) in expenses" :key="e.id" class="hover:bg-slate-900/50 transition-colors">
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
+                <tr v-for="(e, idx) in expenses" :key="e.id" class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
                   <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
                   <td class="py-3.5 px-4 font-mono font-bold text-amber-400">{{ e.expense_number }}</td>
-                  <td class="py-3.5 px-4 font-bold text-white font-tajawal">{{ e.title }}</td>
+                  <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ e.title }}</td>
                   <td class="py-3.5 px-4 font-tajawal text-slate-300">{{ e.cost_center_label || e.cost_center }}</td>
                   <td class="py-3.5 px-4 text-center">
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-300">
@@ -306,7 +306,7 @@
             <input
               v-model="openShiftForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('treasury.open_shift_notes_placeholder')"
             >
           </div>
@@ -378,7 +378,7 @@
             <input
               v-model="closeShiftForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('treasury.close_shift_notes_placeholder')"
             >
           </div>
@@ -419,7 +419,7 @@
               v-model="expenseForm.title"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('treasury.expense_title_placeholder')"
             >
           </div>
@@ -446,7 +446,7 @@
               <select
                 v-model="expenseForm.cost_center"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option value="operational">{{ $t('treasury.cost_center_operational') }}</option>
                 <option value="hospitality">{{ $t('treasury.cost_center_hospitality') }}</option>
@@ -465,7 +465,7 @@
             <select
               v-model="expenseForm.payment_method"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="cash">{{ $t('treasury.method_cash_drawer') }}</option>
               <option value="instapay">{{ $t('treasury.method_instapay') }}</option>

@@ -110,11 +110,11 @@
           <p class="text-xs text-slate-500">{{ $t('activity.adjust_filter_hint') }}</p>
         </div>
 
-        <div v-else class="divide-y divide-slate-800/60">
+        <div v-else class="divide-y divide-slate-200 dark:divide-slate-800/60">
           <div
             v-for="log in logs"
             :key="log.id"
-            class="p-4 hover:bg-slate-900/40 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs"
+            class="p-4 hover:bg-slate-100 dark:hover:bg-slate-900/40 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs"
           >
             <div class="flex items-start gap-3">
               <span class="text-xl shrink-0 mt-0.5">{{ log.module_icon || '📋' }}</span>
@@ -126,7 +126,7 @@
                   >
                     {{ log.action }}
                   </span>
-                  <span class="font-bold text-white">{{ log.description }}</span>
+                  <span class="font-bold text-slate-900 dark:text-white">{{ log.description }}</span>
                 </div>
 
                 <div class="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap font-sans">

@@ -34,7 +34,7 @@
               <select
                 v-model="form.from_store_id"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null" disabled>{{ $t('inventory.choose_source_store') }}</option>
                 <option v-for="s in stores" :key="s.id" :value="s.id">
@@ -51,7 +51,7 @@
               <select
                 v-model="form.to_store_id"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null" disabled>{{ $t('inventory.choose_dest_store') }}</option>
                 <option v-for="s in stores" :key="s.id" :value="s.id" :disabled="s.id === form.from_store_id">
@@ -99,7 +99,7 @@
           <div class="flex items-center gap-2">
             <select
               v-model="selectedItemToAdd"
-              class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option :value="null">{{ $t('inventory.select_item_to_transfer') }}</option>
               <option v-for="it in items" :key="it.id" :value="it">
@@ -129,8 +129,8 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50 font-sans">
-                <tr v-for="(item, idx) in form.items" :key="item.item_id" class="hover:bg-slate-900/40">
-                  <td class="p-3 font-bold text-white font-tajawal">
+                <tr v-for="(item, idx) in form.items" :key="item.item_id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
+                  <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">
                     <div>{{ item.name }}</div>
                   </td>
                   <td class="p-3 font-mono text-slate-400">

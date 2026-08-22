@@ -88,7 +88,7 @@
           <select
             v-model="selectedCategory"
             @change="fetchItems(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
           >
             <option value="all">{{ $t('inventory.all_categories') }}</option>
             <option v-for="cat in categories" :key="cat" :value="cat">
@@ -98,12 +98,12 @@
         </div>
 
         <!-- Stock Status Filter Pills -->
-        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto">
+        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
           <button
             type="button"
             @click="setStockStatus('all')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             {{ $t('common.all') }}
           </button>
@@ -112,7 +112,7 @@
             type="button"
             @click="setStockStatus('low')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'low' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-slate-200'"
+            :class="stockStatus === 'low' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             🚨 {{ $t('inventory.low_stock_only') }}
           </button>
@@ -121,7 +121,7 @@
             type="button"
             @click="setStockStatus('out')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'out' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200'"
+            :class="stockStatus === 'out' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             ❌ {{ $t('inventory.out_of_stock_only') }}
           </button>
@@ -130,7 +130,7 @@
             type="button"
             @click="setStockStatus('in_stock')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'in_stock' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-200'"
+            :class="stockStatus === 'in_stock' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             ✅ {{ $t('inventory.available_only') }}
           </button>
@@ -148,7 +148,7 @@
         <div v-else-if="items.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 font-tajawal border-b border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.code') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_name') }}</th>
@@ -160,11 +160,11 @@
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="(item, idx) in items"
                 :key="item.id"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
                 :class="item.is_low_stock ? 'bg-rose-500/5' : ''"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">
@@ -174,13 +174,13 @@
                   {{ item.code || '—' }}
                 </td>
                 <td class="py-3.5 px-4">
-                  <div class="font-bold text-white font-tajawal text-sm">{{ item.name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ item.name }}</div>
                   <div v-if="item.notes" class="text-[10px] text-slate-500 font-tajawal mt-0.5 max-w-xs truncate">
                     {{ item.notes }}
                   </div>
                 </td>
                 <td class="py-3.5 px-4 font-tajawal text-slate-300">
-                  <span v-if="item.category" class="px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-300 text-[11px]">
+                  <span v-if="item.category" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
                     {{ item.category }}
                   </span>
                   <span v-else class="text-slate-500">—</span>
@@ -194,7 +194,7 @@
                 <td class="py-3.5 px-4 text-end">
                   <div
                     class="font-mono font-black text-sm"
-                    :class="item.current_stock <= 0 ? 'text-slate-500' : (item.is_low_stock ? 'text-rose-400' : 'text-white')"
+                    :class="item.current_stock <= 0 ? 'text-slate-500' : (item.is_low_stock ? 'text-rose-500 dark:text-rose-400' : 'text-slate-900 dark:text-white')"
                   >
                     {{ formatQty(item.current_stock) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ item.unit }}</span>
                   </div>
@@ -227,7 +227,7 @@
                     <!-- Movements Button -->
                     <router-link
                       :to="`/items/${item.id}/movements`"
-                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-900 rounded-xl transition-all"
+                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
                       :title="$t('inventory.movements_log')"
                     >
                       <History class="w-4 h-4" />
@@ -237,7 +237,7 @@
                     <button
                       type="button"
                       @click="openEditModal(item)"
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
                       :title="$t('common.edit')"
                     >
                       <Pencil class="w-4 h-4" />
@@ -323,7 +323,7 @@
                 v-model="form.name"
                 type="text"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('inventory.item_name_placeholder')"
               >
             </div>
@@ -350,7 +350,7 @@
               <input
                 v-model="form.category"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('inventory.category_hint_placeholder')"
               >
             </div>
@@ -362,7 +362,7 @@
               <select
                 v-model="form.unit"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option value="كجم">{{ $t('inventory.unit_kg') }}</option>
                 <option value="جرام">{{ $t('inventory.unit_g') }}</option>
@@ -427,7 +427,7 @@
             <textarea
               v-model="form.notes"
               rows="2"
-              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('inventory.item_notes_placeholder')"
             ></textarea>
           </div>
@@ -477,7 +477,7 @@
             <select
               v-model="adjustForm.movement_type"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="stock_adjustment_in">{{ $t('inventory.movement_adj_in') }}</option>
               <option value="stock_adjustment_out">{{ $t('inventory.movement_adj_out') }}</option>
@@ -510,7 +510,7 @@
             <input
               v-model="adjustForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('inventory.adjust_reason_placeholder')"
             >
           </div>

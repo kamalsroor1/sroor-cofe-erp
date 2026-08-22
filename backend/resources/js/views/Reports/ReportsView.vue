@@ -40,7 +40,7 @@
             <select
               v-model="filters.store_id"
               @change="fetchReportsData"
-              class="w-full h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="all">{{ $t('reports.all_stores_branches') }}</option>
               <option v-for="s in stores" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -72,7 +72,7 @@
             <select
               v-model="filters.stock_filter"
               @change="fetchReportsData"
-              class="h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="all">{{ $t('inventory.all_stock') }}</option>
               <option value="in_stock">{{ $t('reports.in_stock_only') }}</option>
@@ -90,7 +90,7 @@
           type="button"
           @click="activeTab = t.key"
           class="px-4 py-2.5 rounded-xl transition flex items-center gap-2 whitespace-nowrap cursor-pointer"
-          :class="activeTab === t.key ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'"
+          :class="activeTab === t.key ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
         >
           <span>{{ t.icon }}</span>
           <span>{{ t.label }}</span>
@@ -184,12 +184,12 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/50 font-sans">
-              <tr v-for="it in itemProfits" :key="it.item_id" class="hover:bg-slate-900/40">
-                <td class="p-3 font-bold text-white">{{ it.name }}</td>
+              <tr v-for="it in itemProfits" :key="it.item_id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
+                <td class="p-3 font-bold text-slate-900 dark:text-white">{{ it.name }}</td>
                 <td class="p-3 font-mono text-slate-400">{{ it.code || '—' }}</td>
                 <td class="p-3 text-slate-400">{{ it.category }}</td>
                 <td class="p-3 text-end font-mono font-bold text-cyan-400">{{ it.total_qty }} {{ it.unit }}</td>
-                <td class="p-3 text-end font-mono font-bold text-white">{{ formatMoney(it.total_revenue) }}</td>
+                <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(it.total_revenue) }}</td>
                 <td class="p-3 text-end font-mono text-rose-400">{{ formatMoney(it.total_cogs) }}</td>
                 <td class="p-3 text-end font-mono font-black text-emerald-400">{{ formatMoney(it.profit) }}</td>
                 <td class="p-3 text-end font-mono font-bold text-amber-400">{{ it.margin }}%</td>
@@ -219,10 +219,10 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/50 font-sans">
-              <tr v-for="st in storeBreakdown" :key="st.id" class="hover:bg-slate-900/40">
-                <td class="p-3 font-bold text-white font-tajawal">{{ st.name }}</td>
+              <tr v-for="st in storeBreakdown" :key="st.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
+                <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ st.name }}</td>
                 <td class="p-3 text-center font-mono font-bold text-slate-300">{{ st.invoice_count }}</td>
-                <td class="p-3 text-end font-mono font-bold text-white">{{ formatMoney(st.total_sales) }}</td>
+                <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(st.total_sales) }}</td>
                 <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(st.total_paid) }}</td>
                 <td class="p-3 text-end font-mono text-amber-400">{{ formatMoney(st.total_remaining) }}</td>
                 <td class="p-3 text-end font-mono font-black text-emerald-400">{{ formatMoney(st.gross_profit) }}</td>
@@ -254,11 +254,11 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/50 font-sans">
-              <tr v-for="c in customerSales" :key="c.customer_id" class="hover:bg-slate-900/40">
-                <td class="p-3 font-bold text-white font-tajawal">{{ c.name }}</td>
+              <tr v-for="c in customerSales" :key="c.customer_id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
+                <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ c.name }}</td>
                 <td class="p-3 font-mono text-slate-400">{{ c.phone || '—' }}</td>
                 <td class="p-3 text-center font-mono font-bold text-slate-300">{{ c.total_invoices }}</td>
-                <td class="p-3 text-end font-mono font-bold text-white">{{ formatMoney(c.total_bought) }}</td>
+                <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(c.total_bought) }}</td>
                 <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(c.total_paid) }}</td>
                 <td class="p-3 text-end font-mono text-amber-400">{{ formatMoney(c.total_debt_in_period) }}</td>
                 <td class="p-3 text-end font-mono font-bold" :class="c.current_balance > 0 ? 'text-rose-400' : 'text-emerald-400'">
@@ -331,14 +331,14 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50 font-sans">
-                <tr v-for="itm in inventoryData.items" :key="itm.id" class="hover:bg-slate-900/40">
-                  <td class="p-3 font-bold text-white">{{ itm.name }}</td>
+                <tr v-for="itm in inventoryData.items" :key="itm.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
+                  <td class="p-3 font-bold text-slate-900 dark:text-white">{{ itm.name }}</td>
                   <td class="p-3 font-mono text-slate-400">{{ itm.code || '—' }}</td>
                   <td class="p-3 text-end font-mono font-bold text-cyan-400">{{ itm.current_stock }} {{ itm.unit }}</td>
                   <td class="p-3 text-end font-mono text-slate-300">{{ formatMoney(itm.cost_price) }}</td>
                   <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(itm.selling_price) }}</td>
                   <td class="p-3 text-end font-mono text-rose-400">{{ formatMoney(itm.cost_val) }}</td>
-                  <td class="p-3 text-end font-mono font-bold text-white">{{ formatMoney(itm.sell_val) }}</td>
+                  <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(itm.sell_val) }}</td>
                   <td class="p-3 text-end font-mono font-black text-emerald-400">{{ formatMoney(itm.profit) }}</td>
                 </tr>
               </tbody>

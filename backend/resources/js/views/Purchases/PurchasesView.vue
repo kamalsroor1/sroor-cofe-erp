@@ -99,7 +99,7 @@
           <select
             v-model="selectedStatus"
             @change="fetchPurchases(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('purchases.status_all') }}</option>
             <option value="confirmed">{{ $t('purchases.status_confirmed_badge') }}</option>
@@ -148,11 +148,11 @@
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="(p, idx) in purchases"
                 :key="p.id"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
                 :class="p.status === 'cancelled' ? 'opacity-50 line-through bg-rose-500/5' : ''"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">
@@ -162,7 +162,7 @@
                   {{ p.purchase_number }}
                 </td>
                 <td class="py-3.5 px-4">
-                  <div class="font-bold text-white font-tajawal text-sm">{{ p.supplier_name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ p.supplier_name }}</div>
                   <div v-if="p.supplier_company" class="text-[10px] text-slate-400 font-tajawal mt-0.5">
                     {{ p.supplier_company }}
                   </div>
@@ -193,7 +193,7 @@
                     <button
                       type="button"
                       @click="openDetailsModal(p)"
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
                       :title="$t('purchases.view_items_hint')"
                     >
                       <Eye class="w-4 h-4" />
@@ -304,7 +304,7 @@
               </thead>
               <tbody class="divide-y divide-slate-800/50">
                 <tr v-for="item in selectedPurchase.items" :key="item.id">
-                  <td class="p-2.5 font-bold text-white">{{ item.item_name }}</td>
+                  <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ item.item_name }}</td>
                   <td class="p-2.5 text-end font-mono text-amber-400">{{ item.quantity }} {{ item.unit }}</td>
                   <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(item.cost_price) }} {{ $t('common.currency') }}</td>
                   <td class="p-2.5 text-end font-mono font-bold text-emerald-400">{{ formatMoney(item.total_price) }} {{ $t('common.currency') }}</td>

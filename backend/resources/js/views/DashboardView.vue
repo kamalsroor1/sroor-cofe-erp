@@ -207,7 +207,7 @@
                 class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
-                  <div class="font-bold text-white">{{ it.name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white">{{ it.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">{{ it.code || '—' }}</div>
                 </div>
                 <div class="text-end font-mono">
@@ -275,7 +275,7 @@
                 class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between text-xs"
               >
                 <div>
-                  <div class="font-bold text-white">{{ top.name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white">{{ top.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">{{ top.code || '—' }}</div>
                 </div>
                 <div class="text-end font-mono">

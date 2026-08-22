@@ -97,7 +97,7 @@
               <label
                 v-for="(label, permKey) in mod.permissions"
                 :key="permKey"
-                class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition text-xs"
+                class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition text-xs"
               >
                 <span class="text-slate-700 dark:text-slate-300 font-medium">{{ label }}</span>
                 <input

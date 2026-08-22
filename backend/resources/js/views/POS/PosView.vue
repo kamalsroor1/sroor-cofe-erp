@@ -145,7 +145,7 @@
               <select
                 v-model="selectedCustomerId"
                 @change="onCustomerChange"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option v-for="c in customers" :key="c.id" :value="c.id">
                   {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}
@@ -346,7 +346,7 @@
             type="text"
             required
             autofocus
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('pos.customer_name_placeholder')"
           >
         </div>
@@ -369,7 +369,7 @@
           </label>
           <select
             v-model="quickCustomerForm.price_tier"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="retail">🛍️ {{ $t('pos.retail') }}</option>
             <option value="wholesale">📦 {{ $t('pos.wholesale') }}</option>

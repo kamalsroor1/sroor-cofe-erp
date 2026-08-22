@@ -81,9 +81,9 @@
                 <th class="p-4 text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-mono">
-              <tr v-for="u in users" :key="u.id" class="hover:bg-slate-900/40 transition">
-                <td class="p-4 font-sans font-bold text-white flex items-center gap-3">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
+              <tr v-for="u in users" :key="u.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40 transition">
+                <td class="p-4 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 font-bold">
                     {{ u.name.charAt(0) }}
                   </div>

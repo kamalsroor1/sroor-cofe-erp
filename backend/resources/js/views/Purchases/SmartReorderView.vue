@@ -107,7 +107,7 @@
           <select
             v-model="analysisDays"
             @change="fetchSuggestions"
-            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option :value="7">{{ $t('purchases.last_7_days') }}</option>
             <option :value="14">{{ $t('purchases.last_14_days') }}</option>
@@ -121,7 +121,7 @@
           <select
             v-model="targetCoverDays"
             @change="fetchSuggestions"
-            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option :value="7">{{ $t('purchases.cover_7_days') }}</option>
             <option :value="15">{{ $t('purchases.cover_15_days') }}</option>
@@ -134,7 +134,7 @@
           <select
             v-model="selectedUrgency"
             @change="fetchSuggestions"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('purchases.urgency_all') }}</option>
             <option value="critical">{{ $t('purchases.urgency_critical_only') }}</option>
@@ -172,11 +172,11 @@
                 <th class="py-3 px-4 text-center font-bold">{{ $t('purchases.risk_level') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-sans">
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
               <tr
                 v-for="it in suggestions"
                 :key="it.id"
-                class="hover:bg-slate-900/50 transition-colors"
+                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
                 :class="it.urgency === 'critical' ? 'bg-rose-500/5' : ''"
               >
                 <td class="p-3.5 text-center">
@@ -188,7 +188,7 @@
                   >
                 </td>
                 <td class="py-3.5 px-4">
-                  <div class="font-bold text-white font-tajawal text-sm">{{ it.name }}</div>
+                  <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ it.name }}</div>
                   <div class="text-[10px] text-slate-500 font-mono">{{ it.code || '—' }} ({{ it.unit }})</div>
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black text-sm" :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-200'">

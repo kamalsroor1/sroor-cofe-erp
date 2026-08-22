@@ -28,7 +28,7 @@
           :key="t.id"
           @click="changeTab(t.id)"
           class="px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer font-tajawal"
-          :class="currentTab === t.id ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
+          :class="currentTab === t.id ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
         >
           <span>{{ t.icon }}</span>
           <span>{{ t.label }}</span>
@@ -78,9 +78,9 @@
                 <th class="p-4 text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60 font-mono">
-              <tr v-for="item in records" :key="item.id" class="hover:bg-slate-900/40 transition">
-                <td class="p-4 font-sans font-bold text-white font-tajawal">{{ item.title }}</td>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
+              <tr v-for="item in records" :key="item.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40 transition">
+                <td class="p-4 font-sans font-bold text-slate-900 dark:text-white font-tajawal">{{ item.title }}</td>
                 <td class="p-4 text-slate-400 font-sans font-tajawal">{{ item.subtitle }}</td>
                 <td class="p-4 text-slate-500 font-sans">{{ item.deleted_at }}</td>
                 <td class="p-4 text-end font-sans">

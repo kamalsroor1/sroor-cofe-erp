@@ -154,7 +154,7 @@
               <button
                 type="button"
                 @click="openEditModal(store)"
-                class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
                 :title="$t('common.edit')"
               >
                 <Pencil class="w-4 h-4" />
@@ -207,7 +207,7 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
               :placeholder="$t('inventory.store_name_placeholder')"
             >
           </div>
@@ -233,7 +233,7 @@
               <select
                 v-model="form.type"
                 required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
               >
                 <option value="retail_shop">🏬 {{ $t('inventory.retail_shop') }}</option>
                 <option value="warehouse">🏭 {{ $t('inventory.warehouse') }}</option>
@@ -251,7 +251,7 @@
               <input
                 v-model="form.address"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
                 :placeholder="$t('inventory.address_placeholder')"
               >
             </div>
@@ -338,7 +338,7 @@
                   class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-amber-500/20"
                 >
                 <div>
-                  <div class="text-xs font-bold text-white font-tajawal">{{ user.name }}</div>
+                  <div class="text-xs font-bold text-slate-900 dark:text-white font-tajawal">{{ user.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">{{ user.email }}</div>
                 </div>
               </div>

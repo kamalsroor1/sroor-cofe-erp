@@ -20,7 +20,7 @@
       <form v-else @submit.prevent="submitProfile" class="space-y-6">
         <!-- Personal Information Card -->
         <div class="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
-          <h2 class="text-sm font-bold text-white mb-2">👤 {{ $t('profile.basic_info') }}</h2>
+          <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-2">👤 {{ $t('profile.basic_info') }}</h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -56,7 +56,7 @@
 
         <!-- Security / Password Card -->
         <div class="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
-          <h2 class="text-sm font-bold text-white mb-2">🔐 {{ $t('profile.security_password_title') }}</h2>
+          <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-2">🔐 {{ $t('profile.security_password_title') }}</h2>
           <p class="text-[11px] text-slate-500">{{ $t('profile.password_leave_blank_hint') }}</p>
 
           <div class="space-y-3">
@@ -96,7 +96,7 @@
 
         <!-- Preferences Card -->
         <div class="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 text-xs">
-          <h2 class="text-sm font-bold text-white mb-2">🎨 {{ $t('profile.theme_pref') }}</h2>
+          <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-2">🎨 {{ $t('profile.theme_pref') }}</h2>
 
           <div class="grid grid-cols-2 gap-4">
             <button
