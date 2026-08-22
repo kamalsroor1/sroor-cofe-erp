@@ -33,7 +33,7 @@ const handleLogout = async () => {
                 <button
                     @click="mobileMenuOpen = !mobileMenuOpen"
                     type="button"
-                    class="md:hidden w-10 h-10 rounded-2xl bg-slate-800 text-slate-200 flex items-center justify-center text-lg active:scale-90 transition cursor-pointer shadow-xs border border-slate-700"
+                    class="md:hidden w-10 h-10 rounded-2xl bg-slate-800 text-slate-900 dark:text-slate-200 flex items-center justify-center text-lg active:scale-90 transition cursor-pointer shadow-xs border border-slate-700"
                 >
                     {{ mobileMenuOpen ? '✕' : '☰' }}
                 </button>

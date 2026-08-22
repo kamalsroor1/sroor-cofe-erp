@@ -89,7 +89,7 @@
             type="button"
             @click="setDebtStatus('all')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="debtStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="debtStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             {{ $t('common.all') }}
           </button>
@@ -98,7 +98,7 @@
             type="button"
             @click="setDebtStatus('creditor')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="debtStatus === 'creditor' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="debtStatus === 'creditor' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             🚨 {{ $t('contacts.creditors_only') }}
           </button>
@@ -107,7 +107,7 @@
             type="button"
             @click="setDebtStatus('zero')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="debtStatus === 'zero' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="debtStatus === 'zero' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             ✅ {{ $t('contacts.settled_only') }}
           </button>

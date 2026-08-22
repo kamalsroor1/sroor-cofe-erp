@@ -122,7 +122,7 @@
         <div v-else-if="transfersList.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.transfer_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.from_store') }}</th>
@@ -259,11 +259,11 @@
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('common.date') }}:</span>
-              <span class="text-slate-200 font-mono">{{ selectedTransferDetails.transfer_date }}</span>
+              <span class="text-slate-900 dark:text-slate-200 font-mono">{{ selectedTransferDetails.transfer_date }}</span>
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('inventory.store_user') }}:</span>
-              <span class="text-slate-200">{{ selectedTransferDetails.user_name }}</span>
+              <span class="text-slate-900 dark:text-slate-200">{{ selectedTransferDetails.user_name }}</span>
             </div>
           </div>
 

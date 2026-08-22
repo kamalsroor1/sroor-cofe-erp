@@ -190,7 +190,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                             :class="[
                                 alignClass(col),
                                 col.width ? col.width : '',
-                                col.sortable ? 'cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition' : '',
+                                col.sortable ? 'cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200 transition' : '',
                             ]"
                             @click="handleSort(col)"
                         >

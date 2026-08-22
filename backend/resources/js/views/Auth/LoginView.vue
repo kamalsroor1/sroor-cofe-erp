@@ -128,7 +128,7 @@
           >
             <div class="flex items-center gap-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-              <span class="text-[11px] font-bold text-slate-200 truncate font-tajawal">{{ $t('auth.super_admin_1') }}</span>
+              <span class="text-[11px] font-bold text-slate-900 dark:text-slate-200 truncate font-tajawal">{{ $t('auth.super_admin_1') }}</span>
             </div>
             <div class="text-[10px] text-slate-400 font-mono mt-0.5" dir="ltr">01012316954</div>
           </button>
@@ -140,7 +140,7 @@
           >
             <div class="flex items-center gap-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-              <span class="text-[11px] font-bold text-slate-200 truncate font-tajawal">{{ $t('auth.super_admin_2') }}</span>
+              <span class="text-[11px] font-bold text-slate-900 dark:text-slate-200 truncate font-tajawal">{{ $t('auth.super_admin_2') }}</span>
             </div>
             <div class="text-[10px] text-slate-400 font-mono mt-0.5" dir="ltr">01140003020</div>
           </button>

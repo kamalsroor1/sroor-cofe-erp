@@ -98,7 +98,7 @@
           <!-- Edit Button -->
           <button
             @click="openEditModal(plan)"
-            class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+            class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-900 dark:text-slate-200 hover:text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
           >
             {{ $t('super.edit_prices_and_limits_btn') }}
           </button>

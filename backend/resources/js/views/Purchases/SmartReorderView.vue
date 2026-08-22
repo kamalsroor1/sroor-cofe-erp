@@ -5,7 +5,7 @@
         <div class="flex items-center gap-3">
           <router-link
             to="/purchases"
-            class="w-10 h-10 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-sm border border-slate-700 shrink-0"
+            class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-300 dark:border-slate-700 shrink-0"
             :title="$t('common.back')"
           >
             <ArrowRight class="w-5 h-5" />
@@ -39,7 +39,7 @@
       <!-- Urgency & Financial Radar Metrics -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Critical Items -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-rose-500/30 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-rose-50/60 dark:bg-slate-950/80 border border-rose-200 dark:border-rose-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.critical_shortage_range') }}</span>
             <AlertTriangle class="w-4 h-4 text-rose-400" />
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Warning Items -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-amber-500/30 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-950/80 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.warning_supply_range') }}</span>
             <Clock class="w-4 h-4 text-amber-400" />
@@ -63,7 +63,7 @@
         </div>
 
         <!-- Safe Items -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-emerald-500/30 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.safe_stock_range') }}</span>
             <ShieldCheck class="w-4 h-4 text-emerald-400" />
@@ -75,7 +75,7 @@
         </div>
 
         <!-- Estimated Total Cost -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-purple-500/30 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-purple-50/60 dark:bg-slate-950/80 border border-purple-200 dark:border-purple-500/30 shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.estimated_reorder_cost') }}</span>
             <Sparkles class="w-4 h-4 text-purple-400" />
@@ -154,7 +154,7 @@
         <div v-else-if="suggestions.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3.5 text-center w-10">
                   <input
                     type="checkbox"
@@ -191,7 +191,7 @@
                   <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ it.name }}</div>
                   <div class="text-[10px] text-slate-500 font-mono">{{ it.code || '—' }} ({{ it.unit }})</div>
                 </td>
-                <td class="py-3.5 px-4 text-end font-mono font-black text-sm" :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-200'">
+                <td class="py-3.5 px-4 text-end font-mono font-black text-sm" :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-900 dark:text-slate-200'">
                   {{ it.current_stock }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono text-slate-400">

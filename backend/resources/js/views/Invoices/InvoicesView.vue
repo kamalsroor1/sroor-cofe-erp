@@ -140,7 +140,7 @@
         <div v-else-if="invoices.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.customer') }}</th>
@@ -286,11 +286,11 @@
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('common.date') }}:</span>
-              <span class="text-slate-200 font-mono">{{ selectedInvoiceDetails.invoice_date }}</span>
+              <span class="text-slate-900 dark:text-slate-200 font-mono">{{ selectedInvoiceDetails.invoice_date }}</span>
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('invoices.branch_cashier') }}</span>
-              <span class="text-slate-200">{{ selectedInvoiceDetails.store_name }} ({{ selectedInvoiceDetails.cashier_name }})</span>
+              <span class="text-slate-900 dark:text-slate-200">{{ selectedInvoiceDetails.store_name }} ({{ selectedInvoiceDetails.cashier_name }})</span>
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('invoices.payment_method') }}:</span>
@@ -359,7 +359,7 @@
             <button
               type="button"
               @click="window.print()"
-              class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+              class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Printer class="w-4 h-4 text-amber-400" />
               <span>{{ $t('invoices.print_receipt_btn') }}</span>

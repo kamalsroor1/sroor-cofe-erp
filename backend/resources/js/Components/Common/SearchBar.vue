@@ -70,7 +70,7 @@ const clear = () => {
         <button
             v-if="localValue"
             type="button"
-            class="absolute inset-y-0 left-0 pl-3.5 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer transition"
+            class="absolute inset-y-0 left-0 pl-3.5 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-900 dark:text-slate-200 text-xs cursor-pointer transition"
             @click="clear"
         >
             ✕

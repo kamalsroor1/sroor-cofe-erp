@@ -144,7 +144,7 @@
           <div class="flex items-center justify-between gap-2 mt-5 pt-3 border-t border-slate-200 dark:border-slate-800">
             <router-link
               :to="{ path: '/stores/stocks', query: { store_id: store.id } }"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 font-tajawal"
+              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-900 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 font-tajawal"
             >
               <Package class="w-3.5 h-3.5 text-amber-400" />
               <span>{{ $t('inventory.view_stocks') }}</span>

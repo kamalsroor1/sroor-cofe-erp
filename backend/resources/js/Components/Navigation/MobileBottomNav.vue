@@ -10,7 +10,7 @@
       <router-link
         to="/super-admin/dashboard"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -26,7 +26,7 @@
       <router-link
         to="/super-admin/tenants"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -54,7 +54,7 @@
       <router-link
         to="/super-admin/app-versions"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -70,7 +70,7 @@
       <button
         @click="$emit('open-drawer')"
         type="button"
-        class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 active:scale-90 text-slate-400 hover:text-slate-200 cursor-pointer group"
+        class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 active:scale-90 text-slate-400 hover:text-slate-900 dark:text-slate-200 cursor-pointer group"
         :title="$t('nav.more_menu')"
       >
         <div class="relative flex items-center justify-center">
@@ -86,7 +86,7 @@
       <router-link
         to="/"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isDashboardActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isDashboardActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -102,7 +102,7 @@
       <router-link
         to="/invoices"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isInvoicesActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isInvoicesActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -130,7 +130,7 @@
       <router-link
         to="/items"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isItemsActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isItemsActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -146,7 +146,7 @@
       <router-link
         to="/daily-journal"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isShiftActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isShiftActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -167,7 +167,7 @@
       <button
         @click="$emit('open-drawer')"
         type="button"
-        class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 active:scale-90 text-slate-400 hover:text-slate-200 cursor-pointer group"
+        class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 active:scale-90 text-slate-400 hover:text-slate-900 dark:text-slate-200 cursor-pointer group"
         :title="$t('nav.more_menu')"
       >
         <div class="relative flex items-center justify-center">

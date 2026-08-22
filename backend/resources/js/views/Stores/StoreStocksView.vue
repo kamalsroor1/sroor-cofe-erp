@@ -9,7 +9,7 @@
         <template #actions>
           <router-link
             to="/stores"
-            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-tajawal shadow-sm"
+            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-tajawal shadow-sm"
           >
             <ArrowRight class="w-4 h-4" />
             <span>{{ $t('inventory.back_to_stores') }}</span>
@@ -27,7 +27,7 @@
           <select
             v-model="selectedStoreId"
             @change="fetchStocks(1)"
-            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-200 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal cursor-pointer min-w-[180px]"
+            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal cursor-pointer min-w-[180px]"
           >
             <option v-for="store in stores" :key="store.id" :value="store.id">
               {{ store.name }} {{ store.is_main ? `(${ $t('inventory.main_store') })` : '' }}
@@ -55,7 +55,7 @@
               type="button"
               @click="setStockStatus('all')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+              :class="stockStatus === 'all' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
             >
               {{ $t('common.all') }}
             </button>
@@ -64,7 +64,7 @@
               type="button"
               @click="setStockStatus('low')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'low' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+              :class="stockStatus === 'low' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
             >
               ⚠️ {{ $t('inventory.low_stock') }}
             </button>
@@ -73,7 +73,7 @@
               type="button"
               @click="setStockStatus('out')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'out' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+              :class="stockStatus === 'out' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
             >
               🚨 {{ $t('inventory.out_of_stock') }}
             </button>

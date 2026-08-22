@@ -6,7 +6,7 @@
           <div class="flex items-center gap-3">
             <router-link
               to="/customers"
-              class="w-10 h-10 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-sm border border-slate-700 shrink-0"
+              class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-300 dark:border-slate-700 shrink-0"
               :title="$t('common.back')"
             >
               <ArrowRight class="w-5 h-5" />
@@ -27,7 +27,7 @@
           <button
             type="button"
             @click="printStatement"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
           >
             <Printer class="w-4 h-4 text-amber-400" />
             <span>{{ $t('common.print') }}</span>
@@ -141,7 +141,7 @@
         <div v-else-if="ledger.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.transaction_type') }}</th>

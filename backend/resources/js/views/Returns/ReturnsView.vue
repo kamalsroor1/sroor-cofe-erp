@@ -123,7 +123,7 @@
         <div v-else-if="returnsList.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('returns.doc_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('returns.return_type') }}</th>
@@ -263,11 +263,11 @@
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('common.date') }}:</span>
-              <span class="text-slate-200 font-mono">{{ selectedReturnDetails.return_date }}</span>
+              <span class="text-slate-900 dark:text-slate-200 font-mono">{{ selectedReturnDetails.return_date }}</span>
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('returns.responsible_branch') }}</span>
-              <span class="text-slate-200">{{ selectedReturnDetails.user_name }} ({{ selectedReturnDetails.store_name || $t('common.main_branch') }})</span>
+              <span class="text-slate-900 dark:text-slate-200">{{ selectedReturnDetails.user_name }} ({{ selectedReturnDetails.store_name || $t('common.main_branch') }})</span>
             </div>
           </div>
 

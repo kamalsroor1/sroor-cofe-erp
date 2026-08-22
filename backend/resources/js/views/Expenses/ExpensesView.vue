@@ -126,7 +126,7 @@
           type="button"
           @click="filterByCategory(cat)"
           class="px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border"
-          :class="selectedCategory === cat ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-sm' : 'bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-200'"
+          :class="selectedCategory === cat ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-sm' : 'bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:text-slate-200'"
         >
           {{ cat }}
         </button>

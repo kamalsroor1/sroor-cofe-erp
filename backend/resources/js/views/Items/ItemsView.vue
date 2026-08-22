@@ -103,7 +103,7 @@
             type="button"
             @click="setStockStatus('all')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'all' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="stockStatus === 'all' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             {{ $t('common.all') }}
           </button>
@@ -112,7 +112,7 @@
             type="button"
             @click="setStockStatus('low')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'low' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="stockStatus === 'low' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             🚨 {{ $t('inventory.low_stock_only') }}
           </button>
@@ -121,7 +121,7 @@
             type="button"
             @click="setStockStatus('out')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'out' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="stockStatus === 'out' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             ❌ {{ $t('inventory.out_of_stock_only') }}
           </button>
@@ -130,7 +130,7 @@
             type="button"
             @click="setStockStatus('in_stock')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'in_stock' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="stockStatus === 'in_stock' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             ✅ {{ $t('inventory.available_only') }}
           </button>
