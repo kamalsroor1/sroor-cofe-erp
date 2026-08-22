@@ -417,47 +417,50 @@
       :show="showSuccessModal"
       :title="$t('pos.invoice_success_title')"
       @close="closeSuccessModal"
+      max-width="md"
     >
       <div v-if="lastCreatedInvoice" class="space-y-4 font-tajawal text-center">
-        <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-xl font-black">
+        <div class="w-14 h-14 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 flex items-center justify-center mx-auto text-2xl font-black shadow-xs">
           ✓
         </div>
 
         <div>
-          <div class="text-sm font-black text-theme-primary font-mono">{{ lastCreatedInvoice.invoice_number }}</div>
-          <div class="text-xs text-slate-400 mt-0.5">{{ $t('invoices.customer') }}: {{ lastCreatedInvoice.customer_name }}</div>
+          <div class="text-base font-black text-theme-primary font-mono tracking-wide">{{ lastCreatedInvoice.invoice_number }}</div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 mt-1 font-bold">
+            {{ $t('invoices.customer') }}: <span class="text-slate-900 dark:text-slate-200">{{ lastCreatedInvoice.customer_name }}</span>
+          </div>
         </div>
 
-        <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-1 font-mono text-xs">
-          <div class="flex justify-between text-slate-300 font-tajawal">
-            <span>{{ $t('invoices.net_invoice') }}</span>
-            <span class="font-black text-emerald-400 font-mono">{{ formatMoney(lastCreatedInvoice.net_total) }} {{ $t('common.currency') }}</span>
+        <div class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2 text-xs">
+          <div class="flex justify-between items-center text-slate-700 dark:text-slate-300 font-bold font-tajawal">
+            <span>{{ $t('invoices.net_invoice') }}:</span>
+            <span class="font-black text-emerald-600 dark:text-emerald-400 font-mono text-sm">{{ formatMoney(lastCreatedInvoice.net_total) }} {{ $t('common.currency') }}</span>
           </div>
-          <div class="flex justify-between text-slate-400 font-tajawal">
+          <div class="flex justify-between items-center text-slate-600 dark:text-slate-400 font-medium font-tajawal">
             <span>{{ $t('invoices.paid') }}:</span>
-            <span class="font-mono">{{ formatMoney(lastCreatedInvoice.paid_amount) }} {{ $t('common.currency') }}</span>
+            <span class="font-mono font-bold text-slate-800 dark:text-slate-200">{{ formatMoney(lastCreatedInvoice.paid_amount) }} {{ $t('common.currency') }}</span>
           </div>
-          <div v-if="lastCreatedInvoice.remaining_amount > 0" class="flex justify-between text-rose-400 font-bold font-tajawal">
-            <span>{{ $t('invoices.remaining_due') }}</span>
-            <span class="font-mono">{{ formatMoney(lastCreatedInvoice.remaining_amount) }} {{ $t('common.currency') }}</span>
+          <div v-if="lastCreatedInvoice.remaining_amount > 0" class="flex justify-between items-center text-rose-600 dark:text-rose-400 font-bold font-tajawal pt-2 border-t border-slate-200 dark:border-slate-800">
+            <span>{{ $t('invoices.remaining_due') }}:</span>
+            <span class="font-mono font-black">{{ formatMoney(lastCreatedInvoice.remaining_amount) }} {{ $t('common.currency') }}</span>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
           <a
             v-if="lastWhatsAppData?.whatsapp_url"
             :href="lastWhatsAppData.whatsapp_url"
             target="_blank"
-            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+            class="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition active:scale-95 cursor-pointer"
           >
-            <Share2 class="w-4 h-4" />
+            <Share2 class="w-4 h-4 text-white" />
             <span>{{ $t('pos.send_whatsapp') }}</span>
           </a>
 
           <button
             type="button"
             @click="window.print()"
-            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            class="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
           >
             <Printer class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('pos.print_receipt') }}</span>
@@ -467,9 +470,10 @@
         <button
           type="button"
           @click="closeSuccessModal"
-          class="w-full py-2.5 bg-theme-gradient text-white shadow-theme-primary font-black font-black text-xs rounded-xl shadow-md cursor-pointer"
+          class="w-full py-3 bg-theme-gradient text-white shadow-theme-primary font-black text-xs sm:text-sm rounded-xl shadow-lg transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
         >
-          {{ $t('pos.start_new_invoice') }}
+          <span>{{ $t('pos.start_new_invoice') }}</span>
+          <span class="text-[10px] opacity-80 font-mono">(Enter)</span>
         </button>
       </div>
     </AppModal>
