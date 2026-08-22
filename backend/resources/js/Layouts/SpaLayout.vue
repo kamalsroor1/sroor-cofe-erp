@@ -353,7 +353,7 @@
         <div
           v-if="isSidebarOpen"
           @click="isSidebarOpen = false"
-          class="fixed inset-0 bg-white dark:bg-slate-950/80 backdrop-blur-sm z-[9998] md:hidden select-none"
+          class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9998] md:hidden select-none"
         ></div>
       </Transition>
 
@@ -366,16 +366,16 @@
           dir="rtl"
         >
           <!-- 📱 App Drawer Top Profile Header -->
-          <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-900/95 flex items-start justify-between gap-3 shrink-0">
+          <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/95 flex items-start justify-between gap-3 shrink-0">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-theme-primary">
-                <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-amber-400 font-black text-lg">
+              <div class="w-12 h-12 rounded-2xl bg-theme-gradient p-0.5 shadow-lg shadow-theme-primary">
+                <div class="w-full h-full bg-white dark:bg-slate-900 rounded-[14px] flex items-center justify-center text-theme-primary font-black text-lg">
                   {{ authStore.userName?.charAt(0) || 'U' }}
                 </div>
               </div>
               <div>
-                <h3 class="font-bold text-sm text-white">{{ authStore.userName }}</h3>
-                <p class="text-[11px] text-amber-400 font-bold mt-0.5">
+                <h3 class="font-bold text-sm text-slate-900 dark:text-white">{{ authStore.userName }}</h3>
+                <p class="text-[11px] text-theme-primary font-bold mt-0.5">
                   {{ isSuperAdminPanel ? '👑 سوبر أدمن المنصة' : (authStore.roles?.[0] || $t('nav.cashier_role')) }}
                 </p>
                 <p v-if="!isSuperAdminPanel" class="text-[10px] text-slate-400 font-bold">
@@ -387,7 +387,7 @@
             <button
               @click="isSidebarOpen = false"
               type="button"
-              class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
+              class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
             >
               <X class="w-5 h-5" />
             </button>
@@ -407,7 +407,7 @@
                 to="/super-admin/dashboard"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name === 'super_admin.dashboard' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name === 'super_admin.dashboard' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name === 'super_admin.dashboard' ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
@@ -422,7 +422,7 @@
                 to="/super-admin/tenants"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-indigo-400'">
@@ -437,7 +437,7 @@
                 to="/super-admin/plans"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.plans') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-amber-400'">
@@ -452,7 +452,7 @@
                 to="/super-admin/app-versions"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
                   <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
@@ -470,10 +470,10 @@
                 to="/"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name === 'dashboard' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name === 'dashboard' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name === 'dashboard' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <LayoutDashboard class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.dashboard') }}</span>
@@ -489,10 +489,10 @@
                 to="/pos"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('pos') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('pos') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('pos')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <ShoppingCart class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.pos_fast') }}</span>
@@ -504,10 +504,10 @@
                 to="/invoices"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('invoices') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('invoices') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-blue-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('invoices')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <FileText class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.invoices_log') }}</span>
@@ -519,10 +519,10 @@
                 to="/returns"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('returns') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('returns') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('returns')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <RotateCcw class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.returns_adjustments') }}</span>
@@ -534,10 +534,10 @@
                 to="/coffee-blender"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('coffee_blender') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('coffee_blender') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('coffee_blender')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Layers class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.coffee_blender') }}</span>
@@ -553,10 +553,10 @@
                 to="/stores"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('stores') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stores') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stores')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <StoreIcon class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.stores') }}</span>
@@ -568,10 +568,10 @@
                 to="/items"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('items') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('items') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('items')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Package class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.items_catalog') }}</span>
@@ -583,10 +583,10 @@
                 to="/stock-transfers"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('stock_transfers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stock_transfers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stock_transfers')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Truck class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.stock_transfers') }}</span>
@@ -598,10 +598,10 @@
                 to="/purchases"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('purchases') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('purchases') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('purchases')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Truck class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.purchases') }}</span>
@@ -613,10 +613,10 @@
                 to="/customers"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('customers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('customers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('customers')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Users class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.customers') }}</span>
@@ -628,10 +628,10 @@
                 to="/suppliers"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('suppliers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('suppliers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-indigo-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('suppliers')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Factory class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.suppliers') }}</span>
@@ -643,10 +643,10 @@
                 to="/expenses"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('expenses') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('expenses') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('expenses')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Receipt class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.expenses') }}</span>
@@ -658,10 +658,10 @@
                 to="/daily-journal"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('daily_journal') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('daily_journal') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('daily_journal')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Wallet class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.daily_journal') }}</span>
@@ -673,10 +673,10 @@
                 to="/reports"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('reports') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('reports') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('reports')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <BarChart3 class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.reports') }}</span>
@@ -692,10 +692,10 @@
                 to="/users"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('users') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('users') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('users')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Users class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.users') }}</span>
@@ -707,10 +707,10 @@
                 to="/roles"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('roles') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('roles') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('roles')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <ShieldCheck class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.roles') }}</span>
@@ -722,10 +722,10 @@
                 to="/activity-logs"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('activity_logs') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('activity_logs') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('activity_logs')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Activity class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.audit_logs') }}</span>
@@ -737,10 +737,10 @@
                 to="/settings"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('settings') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('settings') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('settings')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Sliders class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.settings') }}</span>
@@ -752,10 +752,10 @@
                 to="/trash"
                 @click="isSidebarOpen = false"
                 class="flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all group"
-                :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                :class="$route.name?.startsWith('trash') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/90'"
               >
                 <div class="flex items-center gap-3.5">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('trash') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('trash')  ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'">
                     <Trash2 class="w-4 h-4" />
                   </div>
                   <span>{{ $t('nav.trash') }}</span>
@@ -770,9 +770,9 @@
             <button
               type="button"
               @click="toggleTheme"
-              class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+              class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
             >
-              <Sun v-if="appConfigStore.isDark" class="w-4 h-4 text-amber-400" />
+              <Sun v-if="appConfigStore.isDark" class="w-4 h-4 text-amber-500 dark:text-amber-400" />
               <Moon v-else class="w-4 h-4" />
               <span>{{ appConfigStore.isDark ? $t('nav.switch_to_light') : $t('nav.switch_to_dark') }}</span>
             </button>
