@@ -7,26 +7,26 @@
             <Users class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">إدارة المستخدمين والموظفين</h1>
-            <p class="text-xs text-slate-400">إدارة حسابات الكاشير، أمناء المخازن، والمديرين وتوزيع الصلاحيات</p>
+            <h1 class="text-xl font-black text-white">{{ $t('users.users_title') }}</h1>
+            <p class="text-xs text-slate-400">{{ $t('users.users_subtitle') }}</p>
           </div>
         </div>
 
         <div class="flex items-center gap-3 w-full sm:w-auto">
           <router-link
             to="/roles"
-            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition"
+            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition font-tajawal"
           >
             <ShieldCheck class="w-4 h-4 text-amber-400" />
-            <span>مصفوفة الصلاحيات</span>
+            <span>{{ $t('users.permissions_matrix_btn') }}</span>
           </router-link>
 
           <button
             @click="openCreateModal"
-            class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer"
+            class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer font-tajawal"
           >
             <UserPlus class="w-4 h-4" />
-            <span>إضافة موظف جديد</span>
+            <span>{{ $t('users.add_user_btn') }}</span>
           </button>
         </div>
       </div>
@@ -39,8 +39,8 @@
             v-model="filters.search"
             @input="debouncedFetch"
             type="text"
-            placeholder="بحث بالاسم، رقم الهاتف، أو البريد الإلكتروني..."
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            :placeholder="$t('users.search_users_placeholder')"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
           />
         </div>
 
@@ -48,9 +48,9 @@
           <select
             v-model="filters.role"
             @change="fetchUsers"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-tajawal"
           >
-            <option value="all">جميع الأدوار</option>
+            <option value="all">{{ $t('users.all_roles_filter') }}</option>
             <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
           </select>
         </div>
@@ -60,25 +60,25 @@
       <div class="bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
           <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-xs text-slate-400">جاري تحميل بيانات المستخدمين...</p>
+          <p class="text-xs text-slate-400 font-tajawal">{{ $t('users.loading_users') }}</p>
         </div>
 
         <div v-else-if="users.length === 0" class="p-16 text-center">
           <Users class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1">لم يتم العثور على أي مستخدمين</h3>
-          <p class="text-xs text-slate-500">جرب تعديل خيارات البحث أو قم بإضافة مستخدم جديد.</p>
+          <h3 class="text-sm font-bold text-slate-300 mb-1 font-tajawal">{{ $t('users.no_users_found') }}</h3>
+          <p class="text-xs text-slate-500 font-tajawal">{{ $t('users.no_users_hint') }}</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-start text-xs">
-            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-bold">
+            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-bold font-tajawal">
               <tr>
-                <th class="p-4 text-start">الموظف / الاسم</th>
-                <th class="p-4 text-start">رقم الهاتف</th>
-                <th class="p-4 text-start">الدور الوظيفي</th>
-                <th class="p-4 text-start">الفرع الافتراضي</th>
-                <th class="p-4 text-center">حالة النشاط</th>
-                <th class="p-4 text-end">الإجراءات</th>
+                <th class="p-4 text-start">{{ $t('users.employee_col') }}</th>
+                <th class="p-4 text-start">{{ $t('users.phone_col') }}</th>
+                <th class="p-4 text-start">{{ $t('users.role_col') }}</th>
+                <th class="p-4 text-start">{{ $t('users.default_store_col') }}</th>
+                <th class="p-4 text-center">{{ $t('users.active_status_col') }}</th>
+                <th class="p-4 text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 font-mono">
@@ -88,31 +88,31 @@
                     {{ u.name.charAt(0) }}
                   </div>
                   <div>
-                    <div>{{ u.name }}</div>
-                    <div class="text-[10px] text-slate-400 font-mono">{{ u.email || 'بدون بريد إلكتروني' }}</div>
+                    <div class="font-tajawal">{{ u.name }}</div>
+                    <div class="text-[10px] text-slate-400 font-mono">{{ u.email || $t('users.no_email') }}</div>
                   </div>
                 </td>
 
-                <td class="p-4 text-slate-300 font-mono">{{ u.phone }}</td>
+                <td class="p-4 text-slate-300 font-mono" dir="ltr">{{ u.phone }}</td>
 
                 <td class="p-4 font-sans">
                   <span
-                    class="px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                    class="px-2.5 py-1 rounded-full text-[11px] font-bold border font-tajawal"
                     :class="getRoleBadgeClass(u.primary_role)"
                   >
                     {{ getRoleLabel(u.primary_role) }}
                   </span>
                 </td>
 
-                <td class="p-4 font-sans text-slate-300">{{ u.default_store_name }}</td>
+                <td class="p-4 font-sans text-slate-300 font-tajawal">{{ u.default_store_name || $t('users.no_store_assigned') }}</td>
 
                 <td class="p-4 text-center font-sans">
                   <button
                     @click="toggleActive(u)"
-                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition cursor-pointer"
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition cursor-pointer font-tajawal"
                     :class="u.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'"
                   >
-                    {{ u.is_active ? 'نشط ✅' : 'معطل 🚫' }}
+                    {{ u.is_active ? $t('users.status_active_badge') : $t('users.status_inactive_badge') }}
                   </button>
                 </td>
 
@@ -120,15 +120,15 @@
                   <div class="flex items-center justify-end gap-2">
                     <button
                       @click="openEditModal(u)"
-                      class="p-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg transition"
-                      title="تعديل"
+                      class="p-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg transition cursor-pointer"
+                      :title="$t('common.edit')"
                     >
                       <Edit2 class="w-3.5 h-3.5" />
                     </button>
                     <button
                       @click="deleteUser(u)"
-                      class="p-1.5 bg-slate-900 hover:bg-rose-950/40 text-rose-400 border border-slate-700 hover:border-rose-800 rounded-lg transition"
-                      title="حذف"
+                      class="p-1.5 bg-slate-900 hover:bg-rose-950/40 text-rose-400 border border-slate-700 hover:border-rose-800 rounded-lg transition cursor-pointer"
+                      :title="$t('common.delete')"
                     >
                       <Trash2 class="w-3.5 h-3.5" />
                     </button>
@@ -141,22 +141,22 @@
 
         <!-- Pagination -->
         <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
-          <span>إجمالي المستخدمين: {{ pagination.total }}</span>
-          <div class="flex items-center gap-2 font-sans">
+          <span class="font-tajawal">{{ $t('users.total_users_count', { count: pagination.total }) }}</span>
+          <div class="flex items-center gap-2 font-sans font-tajawal">
             <button
               :disabled="pagination.current_page === 1"
               @click="changePage(pagination.current_page - 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl"
+              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl cursor-pointer"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
-            <span>صفحة {{ pagination.current_page }} من {{ pagination.last_page }}</span>
+            <span class="font-mono">{{ pagination.current_page }} / {{ pagination.last_page }}</span>
             <button
               :disabled="pagination.current_page === pagination.last_page"
               @click="changePage(pagination.current_page + 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl"
+              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl cursor-pointer"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -168,40 +168,42 @@
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <UserPlus class="w-4 h-4 text-amber-400" />
-              <span>{{ isEditing ? 'تعديل بيانات المستخدم' : 'إضافة موظف جديد' }}</span>
+              <span>{{ isEditing ? $t('users.edit_user_title') : $t('users.create_user_title') }}</span>
             </h2>
-            <button @click="showModal = false" class="text-slate-400 hover:text-white">✕</button>
+            <button @click="showModal = false" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
           </div>
 
-          <form @submit.prevent="submitForm" class="space-y-3.5 text-xs">
+          <form @submit.prevent="submitForm" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">الاسم بالكامل *</label>
+              <label class="block text-slate-400 font-bold mb-1">{{ $t('users.fullname_label') }}</label>
               <input
                 v-model="form.name"
                 required
                 type="text"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
-                placeholder="مثال: أحمد مصطفى"
+                :placeholder="$t('users.fullname_placeholder')"
               />
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">رقم الهاتف *</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.phone_label') }}</label>
                 <input
                   v-model="form.phone"
                   required
                   type="text"
+                  dir="ltr"
                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                   placeholder="010XXXXXXXX"
                 />
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">البريد الإلكتروني (اختياري)</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.email_optional_label') }}</label>
                 <input
                   v-model="form.email"
                   type="email"
+                  dir="ltr"
                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                   placeholder="user@example.com"
                 />
@@ -210,23 +212,23 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">الدور الوظيفي *</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.job_role_label') }}</label>
                 <select
                   v-model="form.role"
                   required
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
                 >
                   <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
                 </select>
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">الفرع الافتراضي</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.default_store_label') }}</label>
                 <select
                   v-model="form.default_store_id"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
                 >
-                  <option :value="null">بدون تعيين فرع</option>
+                  <option :value="null">{{ $t('users.no_store_assigned') }}</option>
                   <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
                 </select>
               </div>
@@ -234,7 +236,7 @@
 
             <div>
               <label class="block text-slate-400 font-bold mb-1">
-                {{ isEditing ? 'كلمة المرور الجديدة (اتركها فارغة إذا لم ترد التغيير)' : 'كلمة المرور *' }}
+                {{ isEditing ? $t('users.password_edit_label') : $t('users.password_create_label') }}
               </label>
               <input
                 v-model="form.password"
@@ -252,23 +254,23 @@
                 id="is_active_check"
                 class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-amber-500"
               />
-              <label for="is_active_check" class="text-slate-300 font-bold">الحساب نشط ويمكنه تسجيل الدخول</label>
+              <label for="is_active_check" class="text-slate-300 font-bold cursor-pointer">{{ $t('users.account_active_login_checkbox') }}</label>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
               <button
                 type="button"
                 @click="showModal = false"
-                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold"
+                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold cursor-pointer"
               >
-                إلغاء
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50"
+                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
               >
-                {{ isSubmitting ? 'جاري الحفظ...' : (isEditing ? 'تحديث البيانات' : 'حفظ الموظف') }}
+                {{ isSubmitting ? $t('common.loading') : (isEditing ? $t('common.save') : $t('common.save')) }}
               </button>
             </div>
           </form>
@@ -281,6 +283,7 @@
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Users,
     UserPlus,
@@ -387,15 +390,15 @@ const submitForm = async () => {
     try {
         if (isEditing.value) {
             await api.put(`/users/${editingId.value}`, form.value);
-            Swal.fire({ icon: 'success', title: 'تم التحديث', text: 'تم تحديث بيانات المستخدم بنجاح', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('users.user_updated_success'), timer: 1500, showConfirmButton: false });
         } else {
             await api.post('/users', form.value);
-            Swal.fire({ icon: 'success', title: 'تمت الإضافة', text: 'تم إنشاء حساب الموظف بنجاح', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('users.user_created_success'), timer: 1500, showConfirmButton: false });
         }
         showModal.value = false;
         fetchUsers();
     } catch (e) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: e.response?.data?.message || 'تعذر حفظ البيانات' });
+        Swal.fire({ icon: 'error', title: trans('common.error'), text: e.response?.data?.message || trans('users.user_save_failed') });
     } finally {
         isSubmitting.value = false;
     }
@@ -406,29 +409,29 @@ const toggleActive = async (u) => {
         const res = await api.patch(`/users/${u.id}/toggle-active`);
         u.is_active = res.data?.is_active;
     } catch (e) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: e.response?.data?.message || 'تعذر تغيير حالة الحساب' });
+        Swal.fire({ icon: 'error', title: trans('common.error'), text: e.response?.data?.message || trans('users.user_toggle_active_failed') });
     }
 };
 
 const deleteUser = async (u) => {
     const result = await Swal.fire({
-        title: `حذف حساب ${u.name}؟`,
-        text: 'هل أنت متأكد من حذف هذا المستخدم؟',
+        title: trans('users.delete_user_confirm_title', { name: u.name }),
+        text: trans('users.delete_user_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#334155',
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.yes'),
+        cancelButtonText: trans('common.cancel'),
     });
 
     if (result.isConfirmed) {
         try {
             await api.delete(`/users/${u.id}`);
-            Swal.fire({ icon: 'success', title: 'تم الحذف', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('users.user_deleted_success'), timer: 1500, showConfirmButton: false });
             fetchUsers();
         } catch (e) {
-            Swal.fire({ icon: 'error', title: 'خطأ', text: e.response?.data?.message || 'تعذر حذف الحساب' });
+            Swal.fire({ icon: 'error', title: trans('common.error'), text: e.response?.data?.message || trans('users.user_delete_failed') });
         }
     }
 };
@@ -439,10 +442,10 @@ const getRoleLabel = (role) => {
 
 const matchRole = (role) => {
     switch (role) {
-        case 'admin': return 'مدير النظام 👑';
-        case 'cashier': return 'كاشير 🛒';
-        case 'storekeeper': return 'أمين مخزن 📦';
-        case 'accountant': return 'محاسب 💼';
+        case 'admin': return trans('users.role_admin');
+        case 'cashier': return trans('users.role_cashier');
+        case 'storekeeper': return trans('users.role_storekeeper');
+        case 'accountant': return trans('users.role_accountant');
         default: return role;
     }
 };

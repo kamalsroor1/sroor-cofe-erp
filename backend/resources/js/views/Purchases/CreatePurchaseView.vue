@@ -15,7 +15,7 @@
               {{ $t('purchases.new_purchase') }}
             </h1>
             <p class="text-xs text-slate-400 font-bold">
-              توريد أصناف وخامات وحساب التكلفة المحملة ومتوسط التكلفة المرجح WAC
+              {{ $t('purchases.create_subtitle') }}
             </p>
           </div>
         </div>
@@ -26,21 +26,21 @@
         <div class="p-5 bg-slate-950/80 border border-slate-800 rounded-2xl shadow-lg space-y-4">
           <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
             <Factory class="w-4 h-4" />
-            <span>بيانات المورد وأمر الشراء</span>
+            <span>{{ $t('purchases.supplier_po_section') }}</span>
           </h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Supplier Select -->
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
-                المورد <span class="text-rose-500">*</span>
+                {{ $t('purchases.supplier') }} <span class="text-rose-500">*</span>
               </label>
               <select
                 v-model="form.supplier_id"
                 required
                 class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option value="">اختر المورد...</option>
+                <option value="">{{ $t('purchases.select_supplier') }}</option>
                 <option v-for="s in suppliers" :key="s.id" :value="s.id">
                   {{ s.name }} {{ s.company_name ? `(${s.company_name})` : '' }}
                 </option>
@@ -50,7 +50,7 @@
             <!-- Purchase Date -->
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
-                تاريخ الفاتورة <span class="text-rose-500">*</span>
+                {{ $t('purchases.purchase_date') }} <span class="text-rose-500">*</span>
               </label>
               <input
                 v-model="form.purchase_date"
@@ -63,7 +63,7 @@
             <!-- Supplier Invoice Ref -->
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
-                رقم فاتورة المورد (المرجع)
+                {{ $t('purchases.supplier_invoice_ref_label') }}
               </label>
               <input
                 v-model="form.supplier_invoice_ref"
@@ -80,7 +80,7 @@
           <div class="flex items-center justify-between">
             <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
               <Package class="w-4 h-4" />
-              <span>بنود وأصناف التوريد</span>
+              <span>{{ $t('purchases.supply_items_section') }}</span>
             </h2>
 
             <button
@@ -89,7 +89,7 @@
               class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Plus class="w-3.5 h-3.5" />
-              <span>إضافة صنف</span>
+              <span>{{ $t('purchases.add_item_line') }}</span>
             </button>
           </div>
 
@@ -97,10 +97,10 @@
             <table class="w-full text-start text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
-                  <th class="p-3 text-start font-bold">الصنف / الخامة</th>
-                  <th class="p-3 text-center font-bold w-28">الكمية</th>
-                  <th class="p-3 text-center font-bold w-32">سعر الوحدة</th>
-                  <th class="p-3 text-end font-bold w-32">الإجمالي</th>
+                  <th class="p-3 text-start font-bold">{{ $t('purchases.item_material') }}</th>
+                  <th class="p-3 text-center font-bold w-28">{{ $t('common.quantity') }}</th>
+                  <th class="p-3 text-center font-bold w-32">{{ $t('inventory.purchase_price') }}</th>
+                  <th class="p-3 text-end font-bold w-32">{{ $t('common.total') }}</th>
                   <th class="p-3 text-center font-bold w-12"></th>
                 </tr>
               </thead>
@@ -113,9 +113,9 @@
                       required
                       class="w-full h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                     >
-                      <option value="">اختر الصنف من القائمة...</option>
+                      <option value="">{{ $t('purchases.select_item_from_list') }}</option>
                       <option v-for="it in availableItems" :key="it.id" :value="it.id">
-                        {{ it.name }} ({{ it.code || 'بدون كود' }}) - {{ it.unit }}
+                        {{ it.name }} ({{ it.code || $t('purchases.no_code') }}) - {{ it.unit }}
                       </option>
                     </select>
                   </td>
@@ -145,7 +145,7 @@
                   </td>
 
                   <td class="p-2.5 text-end font-mono font-black text-white text-sm">
-                    {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }} ج.م
+                    {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }} {{ $t('common.currency') }}
                   </td>
 
                   <td class="p-2.5 text-center">
@@ -169,20 +169,20 @@
           <div class="space-y-3">
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
-                ملاحظات الفاتورة
+                {{ $t('purchases.invoice_notes') }}
               </label>
               <textarea
                 v-model="form.notes"
                 rows="3"
                 class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                placeholder="شروط التسليم، رقم بوليصة الشحن، حالة الخامات..."
+                :placeholder="$t('purchases.invoice_notes_placeholder')"
               ></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-slate-300 mb-1">
-                  المدفوع نقداً للمورد
+                  {{ $t('purchases.paid_to_supplier') }}
                 </label>
                 <input
                   v-model="form.paid_amount"
@@ -196,7 +196,7 @@
 
               <div>
                 <label class="block text-xs font-bold text-slate-300 mb-1">
-                  الخصم المكتسب
+                  {{ $t('purchases.discount_earned') }}
                 </label>
                 <input
                   v-model="form.discount_amount"
@@ -212,21 +212,21 @@
 
           <!-- Total Calculation Ledger -->
           <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-2.5 font-mono text-xs self-center">
-            <div class="flex justify-between text-slate-300 font-sans">
-              <span>إجمالي قيمة الأصناف:</span>
-              <span class="font-mono font-bold">{{ formatMoney(subtotal) }} ج.م</span>
+            <div class="flex justify-between text-slate-300 font-sans font-tajawal">
+              <span>{{ $t('purchases.items_total_value') }}</span>
+              <span class="font-mono font-bold">{{ formatMoney(subtotal) }} {{ $t('common.currency') }}</span>
             </div>
-            <div v-if="discount > 0" class="flex justify-between text-rose-400 font-sans">
-              <span>الخصم المكتسب:</span>
-              <span class="font-mono font-bold">-{{ formatMoney(discount) }} ج.م</span>
+            <div v-if="discount > 0" class="flex justify-between text-rose-400 font-sans font-tajawal">
+              <span>{{ $t('purchases.discount_earned') }}</span>
+              <span class="font-mono font-bold">-{{ formatMoney(discount) }} {{ $t('common.currency') }}</span>
             </div>
-            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans">
-              <span>صافي الفاتورة:</span>
-              <span class="font-mono text-emerald-400">{{ formatMoney(netTotal) }} ج.م</span>
+            <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans font-tajawal">
+              <span>{{ $t('invoices.net_invoice') }}</span>
+              <span class="font-mono text-emerald-400">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
             </div>
-            <div class="flex justify-between text-xs font-bold font-sans" :class="remaining > 0 ? 'text-rose-400' : 'text-slate-400'">
-              <span>المتبقي آجل على المنشأة:</span>
-              <span class="font-mono">{{ formatMoney(remaining) }} ج.م</span>
+            <div class="flex justify-between text-xs font-bold font-sans font-tajawal" :class="remaining > 0 ? 'text-rose-400' : 'text-slate-400'">
+              <span>{{ $t('purchases.remaining_on_company') }}</span>
+              <span class="font-mono">{{ formatMoney(remaining) }} {{ $t('common.currency') }}</span>
             </div>
           </div>
         </div>
@@ -246,7 +246,7 @@
             class="px-7 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
             <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-            <span>حفظ واعتماد الفاتورة وتوريد المخزون</span>
+            <span>{{ $t('purchases.confirm_and_supply_btn') }}</span>
           </button>
         </div>
       </form>
@@ -258,6 +258,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     ArrowRight,
     Factory,
@@ -353,13 +354,13 @@ const loadInitialData = async () => {
 
 const submitPurchase = async () => {
     if (!form.supplier_id) {
-        Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى اختيار المورد' });
+        Swal.fire({ icon: 'warning', title: trans('common.warning'), text: trans('purchases.select_supplier_warning') });
         return;
     }
 
     const invalidLine = form.items.find(it => !it.item_id || parseFloat(it.quantity) <= 0);
     if (invalidLine) {
-        Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى اختيار الصنف وتحديد كمية صحيحة لكل بند' });
+        Swal.fire({ icon: 'warning', title: trans('common.warning'), text: trans('purchases.invalid_line_warning') });
         return;
     }
 
@@ -377,15 +378,15 @@ const submitPurchase = async () => {
         const response = await api.post('/purchases', payload);
         Swal.fire({
             icon: 'success',
-            title: 'تم اعتماد التوريد',
-            text: response.data?.message || 'تم حفظ فاتورة المشتريات وإيداع الأصناف بالمخزن بنجاح',
+            title: trans('purchases.supply_confirmed_title'),
+            text: response.data?.message || trans('purchases.supply_confirmed_msg'),
         });
         router.push({ name: 'purchases.index' });
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تسجيل فاتورة المشتريات',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;

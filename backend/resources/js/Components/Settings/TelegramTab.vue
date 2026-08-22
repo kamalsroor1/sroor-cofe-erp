@@ -53,7 +53,7 @@ defineEmits([
                         <input
                             v-model="form.telegram_chat_id"
                             type="text"
-                            placeholder="-100xxxxxxxxx أو 12345678"
+                            :placeholder="$t('settings.chat_id_placeholder')"
                             class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
                         >
                     </div>

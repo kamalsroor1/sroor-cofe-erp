@@ -137,7 +137,7 @@ const onTouchEnd = () => {
                         >
                             <div>
                                 <p class="text-xs sm:text-sm font-black">{{ c.name }}</p>
-                                <p class="text-[11px] text-slate-400 font-mono mt-0.5">{{ c.phone || 'بدون هاتف' }}</p>
+                                <p class="text-[11px] text-slate-400 font-mono mt-0.5">{{ c.phone || $t('common.no_phone') }}</p>
                             </div>
                             <div class="text-left font-mono">
                                 <span class="text-xs font-bold" :class="c.current_balance > 0 ? 'text-rose-500' : 'text-emerald-500'">
@@ -147,7 +147,7 @@ const onTouchEnd = () => {
                         </div>
 
                         <div v-if="filteredCustomers.length === 0" class="py-8 text-center text-slate-400 text-xs font-bold">
-                            {{ $t('customers.no_customers_found') || 'لا يوجد عملاء مطابقين للبحث' }}
+                            {{ $t('contacts.no_customers_found') }}
                         </div>
                     </div>
 
@@ -159,7 +159,7 @@ const onTouchEnd = () => {
                             class="w-full h-11 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
                         >
                             <span>➕</span>
-                            <span>{{ $t('customers.add_new') || 'إضافة عميل جديد سريع' }}</span>
+                            <span>{{ $t('contacts.add_new_customer') }}</span>
                         </button>
                     </div>
                 </div>

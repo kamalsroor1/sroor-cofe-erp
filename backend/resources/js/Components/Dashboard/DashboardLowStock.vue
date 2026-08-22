@@ -1,5 +1,4 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
 import { AlertTriangle } from 'lucide-vue-next';
 
 defineProps({
@@ -17,9 +16,9 @@ defineProps({
                 <AlertTriangle class="w-5 h-5 text-rose-500" />
                 <h2 class="text-base lg:text-lg font-black text-slate-900 dark:text-white">{{ $t('dashboard.low_stock_radar_title') }}</h2>
             </div>
-            <Link href="/purchases/smart-reorder" class="text-xs font-black text-theme-primary hover:underline transition active:scale-95">
+            <router-link to="/purchases/smart-reorder" class="text-xs font-black text-theme-primary hover:underline transition active:scale-95">
                 {{ $t('dashboard.purchases_assistant') }}
-            </Link>
+            </router-link>
         </div>
 
         <div class="space-y-3">

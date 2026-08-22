@@ -22,6 +22,10 @@ final class ActivityLogController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        if ($request->user() && !$request->user()->can('logs.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $result = $this->getActivityLogsAction->execute($request->all());
 
         $users = User::orderBy('name')->select('id', 'name', 'phone')->get();
@@ -37,7 +41,7 @@ final class ActivityLogController extends Controller
             'auth'          => 'الأمان والدخول 🔐',
             'settings'      => 'إدارة النظام والإعدادات ⚙️',
             'transfers'     => 'التحويلات المخزنية 🔄',
-            'blends'        => 'توليفات البن ☕',
+            'blends'        => 'تجميع وتوليف الأصناف 🔄',
         ];
 
         return response()->json([

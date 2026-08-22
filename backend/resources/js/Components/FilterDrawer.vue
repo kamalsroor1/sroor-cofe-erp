@@ -3,8 +3,8 @@ import { onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     show: { type: Boolean, default: false },
-    title: { type: String, default: 'تصفية وفلاتر متقدمة' },
-    subtitle: { type: String, default: 'خصص معايير البحث للحصول على نتائج دقيقة' },
+    title: { type: String, default: '' },
+    subtitle: { type: String, default: '' },
     activeCount: { type: Number, default: 0 },
 });
 
@@ -48,12 +48,12 @@ onUnmounted(() => {
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white">{{ title }}</h3>
+                                        <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white">{{ title || $t('common.filter_drawer_title') }}</h3>
                                         <span v-if="activeCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
                                             {{ activeCount }} {{ $t('common.active_count') }}
                                         </span>
                                     </div>
-                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ subtitle }}</p>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ subtitle || $t('common.filter_drawer_subtitle') }}</p>
                                 </div>
                             </div>
 

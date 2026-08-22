@@ -7,8 +7,8 @@
             <Trash2 class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">سلة المحذوفات</h1>
-            <p class="text-xs text-slate-400">استرجاع أو الحذف النهائي للسجلات المحذوفة عبر كافة أقسام النظام</p>
+            <h1 class="text-xl font-black text-white">{{ $t('trash.trash_title') }}</h1>
+            <p class="text-xs text-slate-400">{{ $t('trash.trash_subtitle') }}</p>
           </div>
         </div>
 
@@ -17,7 +17,7 @@
           class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition cursor-pointer"
         >
           <RefreshCw class="w-4 h-4 text-amber-400" :class="{ 'animate-spin': isLoading }" />
-          <span>تحديث السلة</span>
+          <span>{{ $t('trash.refresh_trash') }}</span>
         </button>
       </div>
 
@@ -27,7 +27,7 @@
           v-for="t in tabsList"
           :key="t.id"
           @click="changeTab(t.id)"
-          class="px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer"
+          class="px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer font-tajawal"
           :class="currentTab === t.id ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
         >
           <span>{{ t.icon }}</span>
@@ -49,8 +49,8 @@
             v-model="search"
             @input="debouncedFetch"
             type="text"
-            placeholder="بحث في العناصر المحذوفة..."
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            :placeholder="$t('trash.search_trash_placeholder')"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
           />
         </div>
       </div>
@@ -59,46 +59,46 @@
       <div class="bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
           <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-xs text-slate-400">جاري تحميل عناصر سلة المحذوفات...</p>
+          <p class="text-xs text-slate-400 font-bold">{{ $t('trash.loading_trash') }}</p>
         </div>
 
         <div v-else-if="records.length === 0" class="p-16 text-center">
           <Trash2 class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1">سلة المحذوفات فارغة</h3>
-          <p class="text-xs text-slate-500">لا توجد عناصر محذوفة في هذا التبويب حالياً.</p>
+          <h3 class="text-sm font-bold text-slate-300 mb-1 font-tajawal">{{ $t('trash.empty_trash_title') }}</h3>
+          <p class="text-xs text-slate-500 font-tajawal">{{ $t('trash.empty_trash_desc') }}</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-start text-xs">
-            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-bold">
+            <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-bold font-tajawal">
               <tr>
-                <th class="p-4 text-start">العنصر / الاسم</th>
-                <th class="p-4 text-start">البيان / الرمز</th>
-                <th class="p-4 text-start">تاريخ الحذف</th>
-                <th class="p-4 text-end">الإجراءات</th>
+                <th class="p-4 text-start">{{ $t('trash.item_name_col') }}</th>
+                <th class="p-4 text-start">{{ $t('trash.description_code_col') }}</th>
+                <th class="p-4 text-start">{{ $t('trash.deleted_at_col') }}</th>
+                <th class="p-4 text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 font-mono">
               <tr v-for="item in records" :key="item.id" class="hover:bg-slate-900/40 transition">
-                <td class="p-4 font-sans font-bold text-white">{{ item.title }}</td>
-                <td class="p-4 text-slate-400 font-sans">{{ item.subtitle }}</td>
+                <td class="p-4 font-sans font-bold text-white font-tajawal">{{ item.title }}</td>
+                <td class="p-4 text-slate-400 font-sans font-tajawal">{{ item.subtitle }}</td>
                 <td class="p-4 text-slate-500 font-sans">{{ item.deleted_at }}</td>
                 <td class="p-4 text-end font-sans">
                   <div class="flex items-center justify-end gap-2">
                     <button
                       @click="restoreRecord(item)"
-                      class="px-3 py-1.5 bg-slate-900 hover:bg-emerald-950/40 border border-slate-700 hover:border-emerald-700 text-emerald-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
+                      class="px-3 py-1.5 bg-slate-900 hover:bg-emerald-950/40 border border-slate-700 hover:border-emerald-700 text-emerald-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 font-tajawal cursor-pointer"
                     >
                       <RotateCcw class="w-3.5 h-3.5" />
-                      <span>استرجاع</span>
+                      <span>{{ $t('common.restore') }}</span>
                     </button>
 
                     <button
                       @click="forceDeleteRecord(item)"
-                      class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-800 text-rose-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5"
+                      class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-800 text-rose-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 font-tajawal cursor-pointer"
                     >
                       <Trash2 class="w-3.5 h-3.5" />
-                      <span>حذف نهائي</span>
+                      <span>{{ $t('common.force_delete') }}</span>
                     </button>
                   </div>
                 </td>
@@ -109,22 +109,22 @@
 
         <!-- Pagination -->
         <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
-          <span>إجمالي المحذوفات: {{ pagination.total }}</span>
-          <div class="flex items-center gap-2 font-sans">
+          <span class="font-tajawal">{{ $t('trash.total_deleted_items', { count: pagination.total }) }}</span>
+          <div class="flex items-center gap-2 font-sans font-tajawal">
             <button
               :disabled="pagination.current_page === 1"
               @click="changePage(pagination.current_page - 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl"
+              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl cursor-pointer"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
-            <span>صفحة {{ pagination.current_page }} من {{ pagination.last_page }}</span>
+            <span class="font-mono">{{ pagination.current_page }} / {{ pagination.last_page }}</span>
             <button
               :disabled="pagination.current_page === pagination.last_page"
               @click="changePage(pagination.current_page + 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl"
+              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl cursor-pointer"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -133,9 +133,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Trash2,
     RotateCcw,
@@ -149,14 +150,14 @@ const records = ref([]);
 const counts = ref({});
 const isLoading = ref(false);
 
-const tabsList = [
-    { id: 'items', label: 'الأصناف والخامات', icon: '📦' },
-    { id: 'customers', label: 'العملاء', icon: '👥' },
-    { id: 'suppliers', label: 'الموردين', icon: '🏭' },
-    { id: 'stores', label: 'الفروع والمخازن', icon: '🏬' },
-    { id: 'expenses', label: 'المصروفات', icon: '💸' },
-    { id: 'returns', label: 'المرتجعات', icon: '🔄' },
-];
+const tabsList = computed(() => [
+    { id: 'items', label: trans('trash.tab_items_label'), icon: '📦' },
+    { id: 'customers', label: trans('trash.tab_customers_label'), icon: '👥' },
+    { id: 'suppliers', label: trans('trash.tab_suppliers_label'), icon: '🏭' },
+    { id: 'stores', label: trans('trash.tab_stores_label'), icon: '🏬' },
+    { id: 'expenses', label: trans('trash.tab_expenses_label'), icon: '💸' },
+    { id: 'returns', label: trans('trash.tab_returns_label'), icon: '🔄' },
+]);
 
 const pagination = ref({
     current_page: 1,
@@ -208,46 +209,46 @@ const changePage = (page) => {
 
 const restoreRecord = async (item) => {
     const result = await Swal.fire({
-        title: `استرجاع "${item.title}"؟`,
-        text: 'سيتم استرجاع السجل وإعادته إلى قائمة السجلات النشطة.',
+        title: trans('trash.restore_record_confirm_title', { title: item.title }),
+        text: trans('trash.restore_record_confirm_text'),
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#10b981',
         cancelButtonColor: '#334155',
-        confirmButtonText: 'نعم، استرجع',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.yes'),
+        cancelButtonText: trans('common.cancel'),
     });
 
     if (result.isConfirmed) {
         try {
             await api.post(`/trash/${currentTab.value}/${item.id}/restore`);
-            Swal.fire({ icon: 'success', title: 'تم الاسترجاع', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: trans('trash.restore_success'), timer: 1500, showConfirmButton: false });
             fetchRecords();
         } catch (e) {
-            Swal.fire({ icon: 'error', title: 'خطأ', text: e.response?.data?.message || 'تعذر استرجاع السجل' });
+            Swal.fire({ icon: 'error', title: trans('common.error'), text: e.response?.data?.message || trans('trash.restore_failed') });
         }
     }
 };
 
 const forceDeleteRecord = async (item) => {
     const result = await Swal.fire({
-        title: `حذف نهائي لـ "${item.title}"؟`,
-        text: 'تحذير: الحذف النهائي لا يمكن التراجع عنه مطلقاً!',
+        title: trans('trash.force_delete_confirm_title', { title: item.title }),
+        text: trans('trash.force_delete_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#334155',
-        confirmButtonText: 'نعم، احذف نهائياً',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.yes'),
+        cancelButtonText: trans('common.cancel'),
     });
 
     if (result.isConfirmed) {
         try {
             await api.delete(`/trash/${currentTab.value}/${item.id}/force`);
-            Swal.fire({ icon: 'success', title: 'تم الحذف النهائي', timer: 1500, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: trans('trash.force_delete_success'), timer: 1500, showConfirmButton: false });
             fetchRecords();
         } catch (e) {
-            Swal.fire({ icon: 'error', title: 'خطأ', text: e.response?.data?.message || 'تعذر حذف السجل' });
+            Swal.fire({ icon: 'error', title: trans('common.error'), text: e.response?.data?.message || trans('trash.force_delete_failed') });
         }
     }
 };

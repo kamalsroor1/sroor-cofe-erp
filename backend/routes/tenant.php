@@ -49,7 +49,7 @@ Route::middleware([
     })->name('impersonate.leave')->middleware('auth');
 
     // 2. Logout Route
-    Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('logout')->middleware('auth');
+    Route::post('/tenant/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])->name('tenant.logout')->middleware('auth');
 
     // 🌐 Pure Vue 3 SPA Host Route (Dual-Engine Mode)
     Route::get('/spa/{any?}', function () {
@@ -75,17 +75,6 @@ Route::middleware([
         Route::post('/invoices/{id}/cancel', [\App\Http\Controllers\InvoiceController::class, 'cancel'])->name('invoices.cancel')->middleware('can:invoices.cancel');
         Route::delete('/invoices/{id}', [\App\Http\Controllers\InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('can:invoices.delete');
         Route::post('/invoices/{id}/restore', [\App\Http\Controllers\InvoiceController::class, 'restore'])->name('invoices.restore')->middleware('can:trash.access');
-
-        // Printing Routes
-        Route::get('/invoices/{id}/print/thermal', function ($id) {
-            $invoice = Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
-            return view('layouts.print-thermal', compact('invoice'));
-        })->name('invoices.print.thermal')->middleware('can:invoices.view');
-
-        Route::get('/invoices/{id}/print/a4', function ($id) {
-            $invoice = Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
-            return view('layouts.print-a4', compact('invoice'));
-        })->name('invoices.print.a4')->middleware('can:invoices.view');
 
         // Daily Journal A4 Print Route
         Route::get('/daily-journal/print', function (\Illuminate\Http\Request $request) {
@@ -156,74 +145,17 @@ Route::middleware([
         Route::put('/items/{id}', [\App\Http\Controllers\ItemController::class, 'update'])->name('items.update')->middleware('can:items.manage');
         Route::delete('/items/{id}', [\App\Http\Controllers\ItemController::class, 'destroy'])->name('items.destroy')->middleware('can:items.manage');
         Route::get('/items/{id}/movements', [\App\Http\Controllers\ItemController::class, 'movements'])->name('items.movements')->middleware('can:items.view');
-        Route::get('/items/{id}/movements/print', function ($id, \Illuminate\Http\Request $request) {
-            $item = \App\Models\Item::withTrashed()->findOrFail($id);
-            $storeId = ($request->query('store_id') && $request->query('store_id') !== 'all') ? (int)$request->query('store_id') : null;
-            $fromDate = $request->query('from');
-            $toDate = $request->query('to');
-            $filterType = $request->query('type');
-
-            if ($storeId) {
-                $inTypes = ['purchase_in', 'stock_deposit_in', 'stock_adjustment_in', 'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in'];
-                $outTypes = ['sales_out', 'waste_out', 'stock_adjustment_out', 'transfer_out', 'purchase_cancel_out', 'purchase_return_out'];
-            } else {
-                $inTypes = ['purchase_in', 'stock_deposit_in', 'stock_adjustment_in', 'cancellation_in', 'sales_return_in', 'purchase_restore_in'];
-                $outTypes = ['sales_out', 'waste_out', 'stock_adjustment_out', 'purchase_cancel_out', 'purchase_return_out'];
-            }
-
-            $allFilterInTypes = ['purchase_in', 'stock_deposit_in', 'stock_adjustment_in', 'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in'];
-            $allFilterOutTypes = ['sales_out', 'waste_out', 'stock_adjustment_out', 'transfer_out', 'purchase_cancel_out', 'purchase_return_out'];
-            $adjTypes = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in'];
-
-            $storeName = 'كافة الفروع والمخازن';
-            if ($storeId) {
-                $st = \App\Models\Store::find($storeId);
-                if ($st) $storeName = $st->name;
-            }
-
-            $baseQuery = \App\Models\StockMovement::with(['user', 'store'])
-                ->where('item_id', $item->id)
-                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-                ->when($fromDate, fn($q) => $q->whereDate('created_at', '>=', $fromDate))
-                ->when($toDate, fn($q) => $q->whereDate('created_at', '<=', $toDate))
-                ->when($filterType === 'in', fn($q) => $q->whereIn('movement_type', $allFilterInTypes))
-                ->when($filterType === 'out', fn($q) => $q->whereIn('movement_type', $allFilterOutTypes))
-                ->when($filterType === 'adjustments', fn($q) => $q->whereIn('movement_type', $adjTypes));
-
-            $allMovements = (clone $baseQuery)->get();
-            $totalIn = '0.000';
-            $totalOut = '0.000';
-            foreach ($allMovements as $mov) {
-                if (in_array($mov->movement_type, $inTypes)) {
-                    $totalIn = bcadd($totalIn, (string)$mov->quantity, 3);
-                } elseif (in_array($mov->movement_type, $outTypes)) {
-                    $totalOut = bcadd($totalOut, (string)$mov->quantity, 3);
-                }
-            }
-            $netMovement = bcsub($totalIn, $totalOut, 3);
-            $currentScopeStock = $storeId
-                ? (string)(\App\Models\StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->value('quantity') ?: '0.000')
-                : (string)$item->current_stock;
-
-            $movements = $baseQuery->oldest('created_at')->get();
-
-            return view('layouts.print-item-movements-a4', compact(
-                'item', 'storeName', 'fromDate', 'toDate', 'movements',
-                'totalIn', 'totalOut', 'netMovement', 'currentScopeStock'
-            ));
-        })->name('items.movements.print')->middleware('can:items.view');
-
-        Route::get('/items/{id}/export-movements-csv', [App\Http\Controllers\ExportController::class, 'exportItemMovements'])->name('items.movements.export')->middleware('can:items.view');
 
         // Multi-Store, Vans & Warehouse Management
         Route::get('/stores', [\App\Http\Controllers\StoreController::class, 'index'])->name('stores')->middleware('can:stores.manage');
         Route::post('/stores', [\App\Http\Controllers\StoreController::class, 'store'])->name('stores.store')->middleware('can:stores.manage');
+        Route::post('/stores/switch', [\App\Http\Controllers\StoreController::class, 'switchStore']);
         Route::put('/stores/{id}', [\App\Http\Controllers\StoreController::class, 'update'])->name('stores.update')->middleware('can:stores.manage');
         Route::post('/stores/{id}/toggle-active', [\App\Http\Controllers\StoreController::class, 'toggleActive'])->name('stores.toggle_active')->middleware('can:stores.manage');
         Route::post('/stores/{id}/assign-users', [\App\Http\Controllers\StoreController::class, 'assignUsers'])->name('stores.assign_users')->middleware('can:stores.manage');
         Route::delete('/stores/{id}', [\App\Http\Controllers\StoreController::class, 'destroy'])->name('stores.destroy')->middleware('can:stores.manage');
         Route::get('/store-stocks', [\App\Http\Controllers\StoreController::class, 'stocks'])->name('store-stocks')->middleware('can:items.view');
-        Route::get('/stock-transfers', [\App\Http\Controllers\StockTransferController::class, 'index'])->name('stock-transfers.index')->middleware('can:transfers.view');
+        Route::get('/stock-transfers', [\App\Http\Controllers\StockTransferController::class, 'index'])->name('stock-transfers')->middleware('can:transfers.view');
         Route::get('/stock-transfers/create', [\App\Http\Controllers\StockTransferController::class, 'create'])->name('stock-transfers.create')->middleware('can:transfers.create');
         Route::post('/stock-transfers', [\App\Http\Controllers\StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('can:transfers.create');
 
@@ -279,7 +211,7 @@ Route::middleware([
 
         // Auth, Profile, Settings, Trash, Activity Logs & User Management
         Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('can:logs.view');
-        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv')->middleware('can:logs.view');
+        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
         
         Route::get('/trash', [\App\Http\Controllers\TrashController::class, 'index'])->name('trash.index')->middleware('can:trash.access');
         Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\TrashController::class, 'restore'])->name('trash.restore')->middleware('can:trash.access');
@@ -307,11 +239,6 @@ Route::middleware([
         Route::get('/roles', [\App\Http\Controllers\RoleController::class, 'index'])->name('roles.index')->middleware('can:roles.manage');
         Route::put('/roles/{id}', [\App\Http\Controllers\RoleController::class, 'update'])->name('roles.update')->middleware('can:roles.manage');
 
-        // Excel & CSV Exports
-        Route::get('/customers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportCustomerStatement'])->name('customers.export.csv')->middleware('can:customers.statement');
-        Route::get('/suppliers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportSupplierStatement'])->name('suppliers.export.csv')->middleware('can:suppliers.statement');
-        Route::get('/items/export-csv', [App\Http\Controllers\ExportController::class, 'exportInventory'])->name('items.export.csv')->middleware('can:items.view');
-
         // Theme Toggle (Dark / Light Mode)
         Route::post('/theme-toggle', function (\Illuminate\Http\Request $request) {
             $theme = $request->input('theme', 'dark');
@@ -325,7 +252,7 @@ Route::middleware([
         })->name('theme.toggle');
 
         // Store Switcher (Fast active branch/van switch for authorized users)
-        Route::post('/store/switch', function (\Illuminate\Http\Request $request) {
+        Route::post('/tenant/store/switch', function (\Illuminate\Http\Request $request) {
             $storeId = (int)$request->input('store_id');
             $store = \App\Models\Store::where('id', $storeId)->where('is_active', true)->first();
 
@@ -344,7 +271,7 @@ Route::middleware([
                 return response()->json(['status' => 'error', 'message' => 'غير مصرح'], 403);
             }
             return back()->with('error', 'غير مصرح بالوصول إلى هذا الفرع');
-        })->name('store.switch');
+        })->name('tenant.store.switch');
     });
 });
 

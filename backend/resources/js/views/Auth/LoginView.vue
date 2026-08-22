@@ -167,6 +167,8 @@ import {
     Crown
 } from 'lucide-vue-next';
 
+import { trans } from '../../helpers/trans';
+
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -206,7 +208,7 @@ const handleLogin = async () => {
         const redirectPath = route.query.redirect || '/';
         router.push(redirectPath);
     } catch (error) {
-        errorMessage.value = error.userMessage || error.response?.data?.message || 'بيانات الدخول غير صحيحة';
+        errorMessage.value = error.userMessage || error.response?.data?.message || trans('auth.failed');
     } finally {
         isLoading.value = false;
     }

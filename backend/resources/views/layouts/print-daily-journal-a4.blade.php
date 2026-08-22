@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تقرير حركة اليومية والخزينة - {{ $date }}</title>
+    <title>{{ __('treasury.daily_journal_report_title', ['date' => $date]) }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         @page {
@@ -175,13 +175,13 @@
 
     <!-- Print Action Bar (Hidden on actual print) -->
     <div class="no-print" style="max-width: 210mm; margin: 0 auto 12px auto; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <div style="font-weight: 900; font-size: 14px;">🖨️ معاينة طباعة اليومية والتقفيل (A4 Document)</div>
+        <div style="font-weight: 900; font-size: 14px;">🖨️ {{ __('treasury.daily_journal_print_preview') }}</div>
         <div style="display: flex; gap: 8px;">
             <button onclick="window.print()" style="padding: 8px 18px; background: #059669; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-family: 'Cairo'; font-size: 13px;">
-                🖨️ طباعة الآن (Print)
+                🖨️ {{ __('treasury.print_now') }}
             </button>
             <button onclick="window.close()" style="padding: 8px 14px; background: #64748b; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-family: 'Cairo'; font-size: 13px;">
-                ✕ إغلاق
+                ✕ {{ __('common.close') }}
             </button>
         </div>
     </div>
@@ -210,109 +210,109 @@
             </div>
 
             <div class="report-meta">
-                <h2 class="report-title">تقرير اليومية وحركة الدرج</h2>
-                <div class="report-date">📅 التاريخ: {{ $date }}</div>
-                <div style="font-size: 11px; color: #444;">وقت الطباعة: {{ now()->format('Y-m-d h:i A') }}</div>
+                <h2 class="report-title">{{ __('treasury.daily_journal') }}</h2>
+                <div class="report-date">📅 {{ __('common.date') }}: {{ $date }}</div>
+                <div style="font-size: 11px; color: #444;">{{ __('treasury.print_time') }}: {{ now()->format('Y-m-d h:i A') }}</div>
             </div>
         </div>
 
         <!-- Info Bar -->
         <div class="info-bar">
-            <div><b>🏢 الفرع / المخزن:</b> {{ $storeName }}</div>
-            <div><b>👤 المستخدم الطابع:</b> {{ auth()->user()->name }}</div>
-            <div><b>🧾 عدد الفواتير:</b> {{ $invoicesCount }} فاتورة</div>
-            <div><b>🔐 عدد الورديات:</b> {{ $shiftsOnDate->count() }} وردية</div>
+            <div><b>🏢 {{ __('common.store') }}:</b> {{ $storeName }}</div>
+            <div><b>👤 {{ __('treasury.printed_by') }}:</b> {{ auth()->user()?->name ?? __('common.user') }}</div>
+            <div><b>🧾 {{ __('invoices.total_invoices_count') }}:</b> {{ $invoicesCount }} {{ __('invoices.invoice_unit') }}</div>
+            <div><b>🔐 {{ __('treasury.shifts_count') }}:</b> {{ $shiftsOnDate->count() }}</div>
         </div>
 
         <!-- KPI Financial Summary Cards Grid -->
         <div class="summary-grid">
             <div class="summary-card">
-                <div class="summary-label">إجمالي المبيعات</div>
-                <div class="summary-val">{{ number_format((float)$totalSales, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('common.total') }} {{ __('invoices.title') }}</div>
+                <div class="summary-val">{{ number_format((float)$totalSales, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card" style="background: #f0fdf4;">
-                <div class="summary-label">نقدية المبيعات المقبوضة</div>
-                <div class="summary-val" style="color: #166534;">{{ number_format((float)$cashSales, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('treasury.cash_sales_collected') }}</div>
+                <div class="summary-val" style="color: #166534;">{{ number_format((float)$cashSales, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card" style="background: #fffbeb;">
-                <div class="summary-label">مبيعات آجلة (ذمم)</div>
-                <div class="summary-val" style="color: #92400e;">{{ number_format((float)$creditSales, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('treasury.recorded_credit_sales') }}</div>
+                <div class="summary-val" style="color: #92400e;">{{ number_format((float)$creditSales, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card" style="background: #f8fafc;">
-                <div class="summary-label">سندات قبض وتحصيلات</div>
-                <div class="summary-val">{{ number_format((float)$customerPayments, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('treasury.customer_receipts_collections') }}</div>
+                <div class="summary-val">{{ number_format((float)$customerPayments, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card" style="background: #fef2f2;">
-                <div class="summary-label">المصروفات والمسحوبات</div>
-                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalExpenses, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('treasury.expenses_and_withdrawals') }}</div>
+                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalExpenses, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card" style="background: #fef2f2;">
-                <div class="summary-label">مدفوعات الموردين (كاش)</div>
-                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalSupplierPaid, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('treasury.supplier_cash_payments') }}</div>
+                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalSupplierPaid, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card">
-                <div class="summary-label">رصيد بداية الدرج (عهد)</div>
-                <div class="summary-val">{{ number_format((float)$openingCashBalance, 2) }} ج.م</div>
+                <div class="summary-label">{{ __('treasury.opening_float') }}</div>
+                <div class="summary-val">{{ number_format((float)$openingCashBalance, 2) }} {{ __('common.currency') }}</div>
             </div>
 
             <div class="summary-card" style="background: #e0f2fe; border: 2px solid #0284c7;">
-                <div class="summary-label" style="color: #0369a1;">النقدية المحسوبة في الدرج</div>
-                <div class="summary-val" style="color: #0369a1; font-size: 16px;">{{ number_format((float)$expectedCashInDrawer, 2) }} ج.م</div>
+                <div class="summary-label" style="color: #0369a1;">{{ __('treasury.calculated_cash_in_drawer') }}</div>
+                <div class="summary-val" style="color: #0369a1; font-size: 16px;">{{ number_format((float)$expectedCashInDrawer, 2) }} {{ __('common.currency') }}</div>
             </div>
         </div>
 
         <!-- 1. Shifts & Drawer Closing Table -->
         @if($shiftsOnDate->isNotEmpty())
         <div class="section-title">
-            <span>🔐 بيان ورديات العمل وتقفيل الكاشير (Shifts)</span>
-            <span style="font-size: 12px; font-weight: normal;">({{ $shiftsOnDate->count() }} وردية)</span>
+            <span>🔐 {{ __('treasury.shifts_closing_statement') }}</span>
+            <span style="font-size: 12px; font-weight: normal;">({{ $shiftsOnDate->count() }})</span>
         </div>
         <table class="table">
             <thead>
                 <tr>
-                    <th>رقم الوردية</th>
-                    <th>الكاشير</th>
-                    <th>الفرع</th>
-                    <th>وقت الفتح</th>
-                    <th>وقت الإغلاق</th>
-                    <th>رصيد البداية</th>
-                    <th>المحسوب</th>
-                    <th>الفعلي</th>
-                    <th>الفارق / العجز</th>
-                    <th>الحالة</th>
+                    <th>{{ __('treasury.shift_number') }}</th>
+                    <th>{{ __('common.cashier') }}</th>
+                    <th>{{ __('common.store') }}</th>
+                    <th>{{ __('treasury.opening_time') }}</th>
+                    <th>{{ __('treasury.closing_time') }}</th>
+                    <th>{{ __('treasury.opening_balance_short') }}</th>
+                    <th>{{ __('treasury.calculated_short') }}</th>
+                    <th>{{ __('treasury.actual_short') }}</th>
+                    <th>{{ __('treasury.diff_short') }}</th>
+                    <th>{{ __('common.status') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($shiftsOnDate as $shift)
                 <tr>
                     <td style="font-family: monospace; font-weight: 900;">#{{ $shift->shift_number }}</td>
-                    <td>{{ $shift->user?->name ?? 'غير محدد' }}</td>
-                    <td>{{ $shift->store?->name ?? 'المركز الرئيسي' }}</td>
+                    <td>{{ $shift->user?->name ?? __('common.unspecified') }}</td>
+                    <td>{{ $shift->store?->name ?? __('common.main_store_default') }}</td>
                     <td>{{ $shift->opened_at ? $shift->opened_at->format('h:i A') : '-' }}</td>
-                    <td>{{ $shift->closed_at ? $shift->closed_at->format('h:i A') : 'مفتوحة الآن' }}</td>
+                    <td>{{ $shift->closed_at ? $shift->closed_at->format('h:i A') : __('treasury.currently_open') }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$shift->opening_cash_balance, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$shift->expected_cash_balance, 2) }}</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ $shift->actual_cash_balance !== null ? number_format((float)$shift->actual_cash_balance, 2) : '-' }}</td>
                     <td style="font-family: monospace; font-weight: 900;">
                         @if($shift->cash_difference !== null)
                             @if(bccomp((string)$shift->cash_difference, '0.000', 3) < 0)
-                                <span style="color: #dc2626;">عجز: {{ number_format(abs((float)$shift->cash_difference), 2) }}</span>
+                                <span style="color: #dc2626;">{{ __('treasury.shortage_prefix') }} {{ number_format(abs((float)$shift->cash_difference), 2) }}</span>
                             @elseif(bccomp((string)$shift->cash_difference, '0.000', 3) > 0)
-                                <span style="color: #16a34a;">زيادة: {{ number_format((float)$shift->cash_difference, 2) }}</span>
+                                <span style="color: #16a34a;">{{ __('treasury.overage_prefix') }} {{ number_format((float)$shift->cash_difference, 2) }}</span>
                             @else
-                                <span>0.00 (متطابق)</span>
+                                <span>0.00 ({{ __('treasury.exact_match') }})</span>
                             @endif
                         @else
                             -
                         @endif
                     </td>
-                    <td>{{ $shift->status === 'open' ? '🟢 مفتوحة' : '🔒 مغلقة' }}</td>
+                    <td>{{ $shift->status === 'open' ? '🟢 ' . __('treasury.open_badge') : '🔒 ' . __('treasury.closed_badge') }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -322,34 +322,34 @@
         <!-- 2. Expenses Table -->
         @if($expenses->isNotEmpty())
         <div class="section-title">
-            <span>💸 بيان المصروفات والمسحوبات النقدية</span>
-            <span style="font-size: 12px; font-weight: 900;">الإجمالي: {{ number_format((float)$totalExpenses, 2) }} ج.م</span>
+            <span>💸 {{ __('treasury.cash_expenses_statement') }}</span>
+            <span style="font-size: 12px; font-weight: 900;">{{ __('common.total') }}: {{ number_format((float)$totalExpenses, 2) }} {{ __('common.currency') }}</span>
         </div>
         <table class="table">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>البند / الفئة</th>
-                    <th>البيان والتفاصيل</th>
-                    <th>طريقة الدفع</th>
-                    <th>الفرع</th>
-                    <th>المبلغ</th>
+                    <th>{{ __('treasury.category_item') }}</th>
+                    <th>{{ __('treasury.details_desc') }}</th>
+                    <th>{{ __('treasury.disbursement_method') }}</th>
+                    <th>{{ __('common.store') }}</th>
+                    <th>{{ __('common.total') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($expenses as $idx => $exp)
                 <tr>
                     <td>{{ $idx + 1 }}</td>
-                    <td>{{ $exp->category ?? 'مصروفات عامة' }}</td>
-                    <td style="text-align: right;">{{ $exp->notes ?: $exp->description ?: 'مصروف تشغيلي' }}</td>
-                    <td>{{ $exp->payment_method === 'cash' ? 'كاش (من الدرج)' : 'بنكي / أخرى' }}</td>
-                    <td>{{ $exp->store?->name ?? 'المركز الرئيسي' }}</td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$exp->amount, 2) }} ج.م</td>
+                    <td>{{ $exp->category ?? __('expenses.general_expenses') }}</td>
+                    <td style="text-align: right;">{{ $exp->notes ?: $exp->description ?: __('expenses.operational_expense') }}</td>
+                    <td>{{ $exp->payment_method === 'cash' ? __('treasury.from_drawer_cash') : __('treasury.bank_other') }}</td>
+                    <td>{{ $exp->store?->name ?? __('common.main_store_default') }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$exp->amount, 2) }} {{ __('common.currency') }}</td>
                 </tr>
                 @endforeach
                 <tr class="table-total">
-                    <td colspan="5" style="text-align: left; font-weight: 900;">إجمالي المصروفات:</td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalExpenses, 2) }} ج.م</td>
+                    <td colspan="5" style="text-align: left; font-weight: 900;">{{ __('common.total') }} {{ __('expenses.title') }}:</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalExpenses, 2) }} {{ __('common.currency') }}</td>
                 </tr>
             </tbody>
         </table>
@@ -358,20 +358,20 @@
         <!-- 3. Invoices Summary Table -->
         @if($invoices->isNotEmpty())
         <div class="section-title">
-            <span>🧾 فواتير المبيعات الصادرة (أول 30 فاتورة)</span>
-            <span style="font-size: 12px; font-weight: 900;">الإجمالي: {{ number_format((float)$totalSales, 2) }} ج.م</span>
+            <span>🧾 {{ __('treasury.issued_invoices_first_30') }}</span>
+            <span style="font-size: 12px; font-weight: 900;">{{ __('common.total') }}: {{ number_format((float)$totalSales, 2) }} {{ __('common.currency') }}</span>
         </div>
         <table class="table">
             <thead>
                 <tr>
-                    <th>رقم الفاتورة</th>
-                    <th>الوقت</th>
-                    <th>العميل</th>
-                    <th>طريقة الدفع</th>
-                    <th>الإجمالي</th>
-                    <th>المسدد (كاش)</th>
-                    <th>المتبقي (آجل)</th>
-                    <th>الفرع</th>
+                    <th>{{ __('invoices.invoice_number') }}</th>
+                    <th>{{ __('common.time') }}</th>
+                    <th>{{ __('invoices.customer') }}</th>
+                    <th>{{ __('invoices.payment_type') }}</th>
+                    <th>{{ __('common.total') }}</th>
+                    <th>{{ __('treasury.cash_paid_col') }}</th>
+                    <th>{{ __('treasury.credit_remaining_col') }}</th>
+                    <th>{{ __('common.store') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -379,21 +379,21 @@
                 <tr>
                     <td style="font-family: monospace; font-weight: 900;">#{{ $inv->invoice_number }}</td>
                     <td>{{ $inv->created_at->format('h:i A') }}</td>
-                    <td style="text-align: right;">{{ $inv->customer?->name ?? 'عميل نقدي' }}</td>
+                    <td style="text-align: right;">{{ $inv->customer?->name ?? __('treasury.cash_customer') }}</td>
                     <td>
-                        @if($inv->payment_type === 'cash') كاش
-                        @elseif($inv->payment_type === 'credit') آجل
-                        @else جزئي
+                        @if($inv->payment_type === 'cash') {{ __('invoices.cash') }}
+                        @elseif($inv->payment_type === 'credit') {{ __('invoices.credit') }}
+                        @else {{ __('invoices.partial') }}
                         @endif
                     </td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$inv->total_amount, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$inv->paid_amount, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$inv->remaining_amount, 2) }}</td>
-                    <td>{{ $inv->store?->name ?? 'المركز الرئيسي' }}</td>
+                    <td>{{ $inv->store?->name ?? __('common.main_store_default') }}</td>
                 </tr>
                 @endforeach
                 <tr class="table-total">
-                    <td colspan="4" style="text-align: left; font-weight: 900;">الإجمالي:</td>
+                    <td colspan="4" style="text-align: left; font-weight: 900;">{{ __('common.total') }}:</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalSales, 2) }}</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$cashSales, 2) }}</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$creditSales, 2) }}</td>
@@ -406,15 +406,15 @@
         <!-- Signatures & Stamp -->
         <div class="signatures">
             <div class="sig-box">
-                <div class="sig-title">توقيع أمين الخزينة / الكاشير</div>
+                <div class="sig-title">{{ __('treasury.treasurer_cashier_sig') }}</div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
-                <div class="sig-title">توقيع المحاسب / المراجع</div>
+                <div class="sig-title">{{ __('treasury.accountant_auditor_sig') }}</div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
-                <div class="sig-title">اعتماد الإدارة والختم الرسمي</div>
+                <div class="sig-title">{{ __('treasury.management_stamp_approval') }}</div>
                 <div class="sig-line"></div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto">
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
       <PageHeader
         :title="$t('inventory.branch_stocks_balance')"
@@ -114,31 +114,31 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}</td>
                 <td class="py-3.5 px-4 font-bold text-white font-tajawal">{{ stock.item_name }}</td>
                 <td class="py-3.5 px-4 font-mono text-slate-400">{{ stock.item_code }}</td>
-                <td class="py-3.5 px-4 text-center font-tajawal text-slate-300">{{ stock.unit || 'قطعة' }}</td>
+                <td class="py-3.5 px-4 text-center font-tajawal text-slate-300">{{ stock.unit || $t('inventory.unit_piece_short') }}</td>
                 <td class="py-3.5 px-4 text-center font-mono font-black text-sm" :class="stock.is_out_of_stock ? 'text-rose-400' : (stock.is_low_stock ? 'text-amber-400' : 'text-emerald-400')">
                   {{ formatDecimal(stock.quantity) }}
                 </td>
                 <td class="py-3.5 px-4 text-center font-mono text-slate-400">{{ formatDecimal(stock.min_stock_level) }}</td>
-                <td class="py-3.5 px-4 text-end font-mono text-slate-300">{{ formatMoney(stock.cost_price) }} ج.م</td>
-                <td class="py-3.5 px-4 text-end font-mono font-bold text-amber-400">{{ formatMoney(stock.total_valuation) }} ج.م</td>
+                <td class="py-3.5 px-4 text-end font-mono text-slate-300">{{ formatMoney(stock.cost_price) }} {{ $t('common.currency') }}</td>
+                <td class="py-3.5 px-4 text-end font-mono font-bold text-amber-400">{{ formatMoney(stock.total_valuation) }} {{ $t('common.currency') }}</td>
                 <td class="py-3.5 px-4 text-center">
                   <span
                     v-if="stock.is_out_of_stock"
                     class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 font-tajawal"
                   >
-                    نفد من المخزن
+                    {{ $t('inventory.out_of_stock_badge') }}
                   </span>
                   <span
                     v-else-if="stock.is_low_stock"
                     class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 font-tajawal"
                   >
-                    تحت حد الطلب
+                    {{ $t('inventory.low_stock_badge') }}
                   </span>
                   <span
                     v-else
                     class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-tajawal"
                   >
-                    متوفر
+                    {{ $t('inventory.available_badge') }}
                   </span>
                 </td>
               </tr>
@@ -156,7 +156,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
-            إجمالي النتائج: <span class="font-mono text-amber-400">{{ pagination.total }}</span> صنف
+            {{ $t('inventory.total_results_items', { count: pagination.total }) }}
           </div>
           <div class="flex items-center gap-1">
             <button
@@ -165,7 +165,7 @@
               :disabled="pagination.current_page <= 1"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
             <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
               {{ pagination.current_page }} / {{ pagination.last_page }}
@@ -176,7 +176,7 @@
               :disabled="pagination.current_page >= pagination.last_page"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>

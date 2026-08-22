@@ -29,10 +29,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ formatMoney(metrics.total_debt || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(metrics.total_debt || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            إجمالي المبالغ المستحقة على العملاء
+            {{ $t('contacts.total_receivables_sub') }}
           </div>
         </div>
 
@@ -45,10 +45,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-amber-400 font-mono">
-            {{ metrics.debtors_count || 0 }} <span class="text-xs text-slate-400">عميل</span>
+            {{ metrics.debtors_count || 0 }} <span class="text-xs text-slate-400">{{ $t('contacts.customer_unit') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            عملاء عليهم مديونيات بحاجة للتحصيل
+            {{ $t('contacts.debtors_count_sub') }}
           </div>
         </div>
 
@@ -61,10 +61,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-white font-mono">
-            {{ metrics.total_customers || 0 }} <span class="text-xs text-slate-400">عميل</span>
+            {{ metrics.total_customers || 0 }} <span class="text-xs text-slate-400">{{ $t('contacts.customer_unit') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            إجمالي الحسابات المسجلة بالنظام
+            {{ $t('contacts.total_customers_sub') }}
           </div>
         </div>
       </div>
@@ -157,7 +157,7 @@
                 <td class="py-3.5 px-4">
                   <div class="font-bold text-white font-tajawal text-sm">{{ customer.name }}</div>
                   <div v-if="customer.tax_number" class="text-[10px] text-slate-500 font-mono mt-0.5">
-                    الرقم الضريبي: {{ customer.tax_number }}
+                    {{ $t('contacts.tax_number_label') }} {{ customer.tax_number }}
                   </div>
                 </td>
                 <td class="py-3.5 px-4 font-mono text-slate-300" dir="ltr">
@@ -171,10 +171,10 @@
                     class="font-mono font-black text-sm"
                     :class="customer.current_balance > 0 ? 'text-rose-400' : (customer.current_balance < 0 ? 'text-cyan-400' : 'text-emerald-400')"
                   >
-                    {{ formatMoney(customer.current_balance) }} <span class="text-xs font-normal">ج.م</span>
+                    {{ formatMoney(customer.current_balance) }} <span class="text-xs font-normal">{{ $t('common.currency') }}</span>
                   </div>
                   <div class="text-[10px] font-tajawal text-slate-500 mt-0.5">
-                    {{ customer.current_balance > 0 ? 'مدين (مستحق)' : (customer.current_balance < 0 ? 'دائن (رصيد)' : 'مسدد') }}
+                    {{ customer.current_balance > 0 ? $t('contacts.debt_due') : (customer.current_balance < 0 ? $t('contacts.credit_balance') : $t('contacts.settled')) }}
                   </div>
                 </td>
                 <td class="py-3.5 px-4 text-center">
@@ -254,7 +254,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
-            إجمالي النتائج: <span class="font-mono text-amber-400">{{ pagination.total }}</span> عميل
+            {{ $t('activity.total_records') }} <span class="font-mono text-amber-400">{{ pagination.total }}</span> {{ $t('contacts.customer_unit') }}
           </div>
           <div class="flex items-center gap-1">
             <button
@@ -263,7 +263,7 @@
               :disabled="pagination.current_page <= 1"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
             <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
               {{ pagination.current_page }} / {{ pagination.last_page }}
@@ -274,7 +274,7 @@
               :disabled="pagination.current_page >= pagination.last_page"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -403,7 +403,7 @@
           <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.current_balance') }}:</span>
             <span class="text-base font-black font-mono" :class="targetCustomer?.current_balance > 0 ? 'text-rose-400' : 'text-emerald-400'">
-              {{ formatMoney(targetCustomer?.current_balance || 0) }} ج.م
+              {{ formatMoney(targetCustomer?.current_balance || 0) }} {{ $t('common.currency') }}
             </span>
           </div>
 
@@ -498,6 +498,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Plus,
     Search,
@@ -632,8 +633,8 @@ const saveCustomer = async () => {
             await api.put(`/customers/${editingCustomer.value.id}`, form);
             Swal.fire({
                 icon: 'success',
-                title: 'تم التعديل',
-                text: 'تم تعديل بيانات العميل بنجاح',
+                title: trans('common.success'),
+                text: trans('contacts.customer_updated'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -641,8 +642,8 @@ const saveCustomer = async () => {
             await api.post('/customers', form);
             Swal.fire({
                 icon: 'success',
-                title: 'تمت الإضافة',
-                text: 'تم إضافة العميل بنجاح',
+                title: trans('common.success'),
+                text: trans('contacts.customer_added'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -652,8 +653,8 @@ const saveCustomer = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر حفظ بيانات العميل',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;
@@ -665,7 +666,7 @@ const openPaymentModal = (c) => {
     paymentForm.amount = c.current_balance > 0 ? c.current_balance : '';
     paymentForm.payment_method = 'cash';
     paymentForm.payment_date = new Date().toISOString().split('T')[0];
-    paymentForm.notes = 'سند قبض وتحصيل نقدي';
+    paymentForm.notes = trans('contacts.receipt_voucher');
     showPaymentModal.value = true;
 };
 
@@ -673,8 +674,8 @@ const savePayment = async () => {
     if (!paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
         Swal.fire({
             icon: 'warning',
-            title: 'تنبيه',
-            text: 'يرجى إدخال مبلغ سداد صحيح أكبر من الصفر',
+            title: trans('common.warning'),
+            text: trans('contacts.enter_valid_amount'),
         });
         return;
     }
@@ -684,8 +685,8 @@ const savePayment = async () => {
         await api.post(`/customers/${targetCustomer.value.id}/collect-payment`, paymentForm);
         Swal.fire({
             icon: 'success',
-            title: 'تم التحصيل',
-            text: 'تم تسجيل سند القبض بنجاح وتحديث رصيد العميل',
+            title: trans('common.success'),
+            text: trans('contacts.payment_recorded'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -694,8 +695,8 @@ const savePayment = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تسجيل السداد',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;
@@ -707,19 +708,19 @@ const deleteCustomer = async (c) => {
         const blockers = c.deletion_blockers?.join('\n- ') || '';
         Swal.fire({
             icon: 'warning',
-            title: 'لا يمكن حذف العميل',
-            text: `يوجد ارتباطات عمليات تمنع الحذف:\n- ${blockers}`,
+            title: trans('contacts.cannot_delete_customer'),
+            text: `${trans('contacts.deletion_blockers_found')}\n- ${blockers}`,
         });
         return;
     }
 
     const result = await Swal.fire({
-        title: `حذف العميل (${c.name})؟`,
-        text: 'هل أنت متأكد من حذف هذا العميل؟',
+        title: trans('contacts.delete_customer_confirm_title', { name: c.name }),
+        text: trans('contacts.delete_customer_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.delete'),
+        cancelButtonText: trans('common.cancel'),
         confirmButtonColor: '#f43f5e',
     });
 
@@ -728,8 +729,8 @@ const deleteCustomer = async (c) => {
             await api.delete(`/customers/${c.id}`);
             Swal.fire({
                 icon: 'success',
-                title: 'تم الحذف',
-                text: 'تم حذف العميل بنجاح',
+                title: trans('common.success'),
+                text: trans('contacts.customer_deleted'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -737,8 +738,8 @@ const deleteCustomer = async (c) => {
         } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'خطأ',
-                text: error.userMessage || 'تعذر حذف العميل',
+                title: trans('common.error'),
+                text: error.userMessage || trans('common.error'),
             });
         }
     }

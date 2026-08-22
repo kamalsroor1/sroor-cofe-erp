@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     links: {
@@ -21,9 +20,30 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['page-change']);
+
 const shouldRender = computed(() => {
     return props.links && props.links.length > 3;
 });
+
+const extractPage = (url) => {
+    if (!url) return null;
+    try {
+        const parsed = new URL(url, window.location.origin);
+        return parsed.searchParams.get('page');
+    } catch {
+        const match = url.match(/[?&]page=(\d+)/);
+        return match ? match[1] : null;
+    }
+};
+
+const handlePageClick = (link) => {
+    if (!link.url) return;
+    const page = extractPage(link.url);
+    if (page) {
+        emit('page-change', parseInt(page, 10));
+    }
+};
 </script>
 
 <template>
@@ -35,11 +55,12 @@ const shouldRender = computed(() => {
             {{ $t('common.showing_results', { from: from || 0, to: to || 0, total: total || 0 }) || `عرض ${from || 0} إلى ${to || 0} من إجمالي ${total || 0}` }}
         </span>
 
-        <div class="flex items-center gap-1 flex-wrap justify-center">
+        <div class="flex items-center gap-1 flex-wrap justify-center font-tajawal">
             <template v-for="(link, lIdx) in links" :key="lIdx">
-                <Link
+                <button
                     v-if="link.url"
-                    :href="link.url"
+                    type="button"
+                    @click="handlePageClick(link)"
                     class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-xs"
                     :class="[
                         link.active

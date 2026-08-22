@@ -12,7 +12,7 @@
             class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
           >
             <Plus class="w-4 h-4" />
-            <span>تسجيل مرتجع جديد</span>
+            <span>{{ $t('returns.new_return') }}</span>
           </router-link>
         </template>
       </PageHeader>
@@ -22,49 +22,49 @@
         <!-- Total Returns Value -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">إجمالي قيمة المرتجعات</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('returns.total_returns_value') }}</span>
             <TrendingDown class="w-4 h-4 text-rose-400" />
           </div>
           <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ formatMoney(summary.total_value || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(summary.total_value || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">قيمة كافة المرتجعات المسجلة</span>
+          <span class="text-[10px] text-slate-500">{{ $t('returns.total_returns_value_sub') }}</span>
         </div>
 
         <!-- Sales Returns Count -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">مرتجعات مبيعات (من عملاء)</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('returns.sales_returns_title') }}</span>
             <RotateCcw class="w-4 h-4 text-cyan-400" />
           </div>
           <div class="text-2xl font-black text-cyan-400 font-mono">
-            {{ summary.sales_count || 0 }} <span class="text-xs text-slate-400">مستند</span>
+            {{ summary.sales_count || 0 }} <span class="text-xs text-slate-400">{{ $t('returns.doc_unit') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">بضاعة مسترجعة للمخازن</span>
+          <span class="text-[10px] text-slate-500">{{ $t('returns.sales_returns_sub') }}</span>
         </div>
 
         <!-- Purchase Returns Count -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">مرتجعات مشتريات (لموردين)</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('returns.purchase_returns_title') }}</span>
             <RotateCw class="w-4 h-4 text-amber-400" />
           </div>
           <div class="text-2xl font-black text-amber-400 font-mono">
-            {{ summary.purchase_count || 0 }} <span class="text-xs text-slate-400">مستند</span>
+            {{ summary.purchase_count || 0 }} <span class="text-xs text-slate-400">{{ $t('returns.doc_unit') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">بضاعة مرتجعة للموردين</span>
+          <span class="text-[10px] text-slate-500">{{ $t('returns.purchase_returns_sub') }}</span>
         </div>
 
         <!-- Total Count -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">إجمالي المستندات</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('returns.total_documents') }}</span>
             <FileText class="w-4 h-4 text-slate-400" />
           </div>
           <div class="text-2xl font-black text-white font-mono">
-            {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">حركة</span>
+            {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">{{ $t('common.actions') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">سجل عمليات الإرجاع</span>
+          <span class="text-[10px] text-slate-500">{{ $t('returns.total_documents_sub') }}</span>
         </div>
       </div>
 
@@ -77,7 +77,7 @@
             @input="debounceSearch"
             type="text"
             class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            placeholder="بحث برقم المرتجع، اسم العميل أو المورد، أو السبب..."
+            :placeholder="$t('returns.search_returns_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
         </div>
@@ -89,9 +89,9 @@
             @change="fetchReturns(1)"
             class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
-            <option value="all">كافة أنواع المرتجعات</option>
-            <option value="sales_return">↩️ مرتجع مبيعات (من عميل)</option>
-            <option value="purchase_return">↪️ مرتجع مشتريات (إلى مورد)</option>
+            <option value="all">{{ $t('returns.all_return_types') }}</option>
+            <option value="sales_return">{{ $t('returns.sales_return_option') }}</option>
+            <option value="purchase_return">{{ $t('returns.purchase_return_option') }}</option>
           </select>
         </div>
 
@@ -125,12 +125,12 @@
             <thead>
               <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
-                <th class="py-3 px-4 text-start font-bold">رقم المستند</th>
-                <th class="py-3 px-4 text-start font-bold">النوع</th>
-                <th class="py-3 px-4 text-start font-bold">الطرف (العميل / المورد)</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('returns.doc_number') }}</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('returns.return_type') }}</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('returns.party_col') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
-                <th class="py-3 px-4 text-end font-bold">قيمة المرتجع</th>
-                <th class="py-3 px-4 text-start font-bold">السبب</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('returns.return_value') }}</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('returns.reason') }}</th>
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
@@ -151,7 +151,7 @@
                     class="px-2.5 py-1 rounded-full text-[10px] font-bold border font-tajawal"
                     :class="ret.return_type === 'sales_return' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'"
                   >
-                    {{ ret.return_type === 'sales_return' ? '↩️ مرتجع مبيعات' : '↪️ مرتجع مشتريات' }}
+                    {{ ret.return_type === 'sales_return' ? $t('returns.sales_return_option') : $t('returns.purchase_return_option') }}
                   </span>
                 </td>
                 <td class="py-3.5 px-4">
@@ -164,7 +164,7 @@
                   {{ ret.return_date }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black text-rose-400 text-sm">
-                  {{ formatMoney(ret.total_amount) }} ج.م
+                  {{ formatMoney(ret.total_amount) }} {{ $t('common.currency') }}
                 </td>
                 <td class="py-3.5 px-4 text-slate-400 font-tajawal max-w-xs truncate">
                   {{ ret.reason || '—' }}
@@ -176,7 +176,7 @@
                       type="button"
                       @click="openDetailsModal(ret)"
                       class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
-                      :title="'عرض تفاصيل المستند'"
+                      :title="$t('returns.view_return_details_hint')"
                     >
                       <Eye class="w-4 h-4" />
                     </button>
@@ -186,7 +186,7 @@
                       type="button"
                       @click="deleteReturnDoc(ret)"
                       class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-                      :title="'أرشفة المستند'"
+                      :title="$t('returns.archive_return_hint')"
                     >
                       <Trash2 class="w-4 h-4" />
                     </button>
@@ -200,7 +200,7 @@
         <EmptyState
           v-else
           :title="$t('returns.no_returns_found')"
-          :description="'لم يتم تسجيل أي حركات مرتجعات مبيعات أو مشتريات مطابقة للفلاتر المحددة.'"
+          :description="$t('returns.no_returns_description')"
           :icon="'🔄'"
         >
           <template #action>
@@ -208,7 +208,7 @@
               to="/returns/create"
               class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20"
             >
-              تسجيل أول مرتجع
+              {{ $t('returns.add_first_return') }}
             </router-link>
           </template>
         </EmptyState>
@@ -216,7 +216,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400">
-            إجمالي النتائج: <span class="font-mono text-amber-400">{{ pagination.total }}</span> مستند
+            {{ $t('returns.total_results_returns', { count: pagination.total }) }}
           </div>
           <div class="flex items-center gap-1">
             <button
@@ -225,7 +225,7 @@
               :disabled="pagination.current_page <= 1"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
             <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
               {{ pagination.current_page }} / {{ pagination.last_page }}
@@ -236,7 +236,7 @@
               :disabled="pagination.current_page >= pagination.last_page"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -245,29 +245,29 @@
       <!-- Return Details Modal -->
       <AppModal
         :show="showDetailsModal"
-        :title="`تفاصيل المرتجع: ${selectedReturnDetails?.return_number || ''}`"
+        :title="$t('returns.return_details_title', { number: selectedReturnDetails?.return_number || '' })"
         @close="showDetailsModal = false"
       >
         <div v-if="selectedReturnDetails" class="space-y-4 font-tajawal text-xs">
           <!-- Header info -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-900/80 border border-slate-800 rounded-2xl">
             <div>
-              <span class="text-slate-400 block font-bold">النوع:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('returns.return_type') }}:</span>
               <span class="font-bold text-white">
-                {{ selectedReturnDetails.return_type === 'sales_return' ? '↩️ مرتجع مبيعات' : '↪️ مرتجع مشتريات' }}
+                {{ selectedReturnDetails.return_type === 'sales_return' ? $t('returns.sales_return_option') : $t('returns.purchase_return_option') }}
               </span>
             </div>
             <div>
-              <span class="text-slate-400 block font-bold">الطرف:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('returns.party_name') }}:</span>
               <span class="text-amber-400 font-bold">{{ selectedReturnDetails.party_name }}</span>
             </div>
             <div>
-              <span class="text-slate-400 block font-bold">التاريخ:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('common.date') }}:</span>
               <span class="text-slate-200 font-mono">{{ selectedReturnDetails.return_date }}</span>
             </div>
             <div>
-              <span class="text-slate-400 block font-bold">المسؤول / الفرع:</span>
-              <span class="text-slate-200">{{ selectedReturnDetails.user_name }} ({{ selectedReturnDetails.store_name }})</span>
+              <span class="text-slate-400 block font-bold">{{ $t('returns.responsible_branch') }}</span>
+              <span class="text-slate-200">{{ selectedReturnDetails.user_name }} ({{ selectedReturnDetails.store_name || $t('common.main_branch') }})</span>
             </div>
           </div>
 
@@ -276,31 +276,31 @@
             <table class="w-full text-start text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
-                  <th class="p-2.5 text-start font-bold">الصنف</th>
-                  <th class="p-2.5 text-end font-bold">الكمية المرتجعة</th>
-                  <th class="p-2.5 text-end font-bold">سعر الوحدة</th>
-                  <th class="p-2.5 text-end font-bold">الإجمالي</th>
+                  <th class="p-2.5 text-start font-bold">{{ $t('inventory.item_name') }}</th>
+                  <th class="p-2.5 text-end font-bold">{{ $t('returns.returned_quantity') }}</th>
+                  <th class="p-2.5 text-end font-bold">{{ $t('inventory.selling_price') }}</th>
+                  <th class="p-2.5 text-end font-bold">{{ $t('common.total') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50">
                 <tr v-for="it in selectedReturnDetails.items" :key="it.id">
                   <td class="p-2.5 font-bold text-white">{{ it.item_name }}</td>
                   <td class="p-2.5 text-end font-mono text-amber-400">{{ it.quantity }} {{ it.unit }}</td>
-                  <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(it.unit_price) }} ج.م</td>
-                  <td class="p-2.5 text-end font-mono font-bold text-rose-400">{{ formatMoney(it.total_price) }} ج.م</td>
+                  <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(it.unit_price) }} {{ $t('common.currency') }}</td>
+                  <td class="p-2.5 text-end font-mono font-bold text-rose-400">{{ formatMoney(it.total_price) }} {{ $t('common.currency') }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <!-- Total Footer -->
-          <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
-            <span class="font-bold text-slate-300">إجمالي قيمة المرتجع:</span>
-            <span class="text-base font-black text-rose-400 font-mono">{{ formatMoney(selectedReturnDetails.total_amount) }} ج.م</span>
+          <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs font-tajawal">
+            <span class="font-bold text-slate-300">{{ $t('returns.total_returns_val') }}:</span>
+            <span class="text-base font-black text-rose-400 font-mono">{{ formatMoney(selectedReturnDetails.total_amount) }} {{ $t('common.currency') }}</span>
           </div>
 
-          <div v-if="selectedReturnDetails.reason" class="p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl text-slate-400">
-            <span class="font-bold text-slate-300">سبب الإرجاع: </span>
+          <div v-if="selectedReturnDetails.reason" class="p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl text-slate-400 font-tajawal">
+            <span class="font-bold text-slate-300">{{ $t('returns.return_reason_label') }}</span>
             <span>{{ selectedReturnDetails.reason }}</span>
           </div>
         </div>
@@ -315,6 +315,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Plus,
     Search,
@@ -409,12 +410,12 @@ const openDetailsModal = async (ret) => {
 
 const deleteReturnDoc = async (ret) => {
     const result = await Swal.fire({
-        title: `أرشفة المرتجع (${ret.return_number})؟`,
-        text: 'هل أنت متأكد من رغبتك في حذف أو أرشفة هذا المستند؟',
+        title: trans('returns.archive_confirm_title', { number: ret.return_number }),
+        text: trans('returns.archive_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، قم بالأرشفة',
-        cancelButtonText: 'تراجع',
+        confirmButtonText: trans('common.yes'),
+        cancelButtonText: trans('common.cancel'),
         confirmButtonColor: '#f43f5e',
     });
 
@@ -423,8 +424,8 @@ const deleteReturnDoc = async (ret) => {
             await api.delete(`/returns/${ret.id}`);
             Swal.fire({
                 icon: 'success',
-                title: 'تم الحذف',
-                text: 'تم أرشفة مستند المرتجع بنجاح',
+                title: trans('common.success'),
+                text: trans('returns.archived_success'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -432,8 +433,8 @@ const deleteReturnDoc = async (ret) => {
         } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'خطأ',
-                text: error.userMessage || 'تعذر أرشفة المستند',
+                title: trans('common.error'),
+                text: error.userMessage || trans('returns.archive_failed'),
             });
         }
     }

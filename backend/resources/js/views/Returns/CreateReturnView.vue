@@ -12,7 +12,7 @@
             class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight class="w-4 h-4" />
-            <span>العودة للمرتجعات</span>
+            <span>{{ $t('returns.back_to_returns') }}</span>
           </router-link>
         </template>
       </PageHeader>
@@ -24,7 +24,7 @@
           <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>🔄</span>
-              <span>نوع المرتجع والطرف المتعامل</span>
+              <span>{{ $t('returns.type_and_party_section') }}</span>
             </h2>
 
             <!-- Return Type Switcher -->
@@ -35,7 +35,7 @@
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
                 :class="form.return_type === 'sales_return' ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20' : 'bg-slate-900 text-slate-400 border-slate-800'"
               >
-                <span>↩️ مرتجع مبيعات (من عميل)</span>
+                <span>{{ $t('returns.sales_return_option') }}</span>
               </button>
 
               <button
@@ -44,7 +44,7 @@
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
                 :class="form.return_type === 'purchase_return' ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20' : 'bg-slate-900 text-slate-400 border-slate-800'"
               >
-                <span>↪️ مرتجع مشتريات (إلى مورد)</span>
+                <span>{{ $t('returns.purchase_return_option') }}</span>
               </button>
             </div>
 
@@ -53,14 +53,14 @@
               <!-- Customer Field -->
               <div v-if="form.return_type === 'sales_return'" class="space-y-1">
                 <label class="block text-xs font-bold text-slate-300">
-                  العميل المسترجع منه <span class="text-rose-500">*</span>
+                  {{ $t('returns.customer_from') }}
                 </label>
                 <select
                   v-model="form.customer_id"
                   required
                   class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
-                  <option :value="null" disabled>اختر العميل...</option>
+                  <option :value="null" disabled>{{ $t('pos.choose_invoice_customer') }}</option>
                   <option v-for="c in customers" :key="c.id" :value="c.id">
                     {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}
                   </option>
@@ -70,14 +70,14 @@
               <!-- Supplier Field -->
               <div v-else class="space-y-1">
                 <label class="block text-xs font-bold text-slate-300">
-                  المورد المسترجع إليه <span class="text-rose-500">*</span>
+                  {{ $t('returns.supplier_to') }}
                 </label>
                 <select
                   v-model="form.supplier_id"
                   required
                   class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
-                  <option :value="null" disabled>اختر المورد...</option>
+                  <option :value="null" disabled>{{ $t('purchases.select_supplier') }}</option>
                   <option v-for="s in suppliers" :key="s.id" :value="s.id">
                     {{ s.name }} {{ s.company_name ? `(${s.company_name})` : '' }}
                   </option>
@@ -87,7 +87,7 @@
               <!-- Return Date -->
               <div class="space-y-1">
                 <label class="block text-xs font-bold text-slate-300">
-                  تاريخ المرتجع <span class="text-rose-500">*</span>
+                  {{ $t('returns.return_date') }} <span class="text-rose-500">*</span>
                 </label>
                 <input
                   v-model="form.return_date"
@@ -99,12 +99,12 @@
 
               <!-- Reason -->
               <div class="sm:col-span-2 space-y-1">
-                <label class="block text-xs font-bold text-slate-300">سبب الإرجاع أو الملاحظات</label>
+                <label class="block text-xs font-bold text-slate-300">{{ $t('returns.reason') }}</label>
                 <input
                   v-model="form.reason"
                   type="text"
                   class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                  placeholder="مثال: تلف بالعبوة، زيادة في الكمية، انتهاء صلاحية..."
+                  :placeholder="$t('returns.reason_input_placeholder')"
                 >
               </div>
             </div>
@@ -115,7 +115,7 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
                 <span>📦</span>
-                <span>أصناف المرتجع</span>
+                <span>{{ $t('returns.return_items_section') }}</span>
               </h2>
             </div>
 
@@ -125,9 +125,9 @@
                 v-model="selectedItemToAdd"
                 class="flex-1 h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option :value="null">اختر صنفاً لإضافته للمرتجع...</option>
+                <option :value="null">{{ $t('returns.select_item_to_return') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
-                  {{ it.name }} ({{ it.code || '—' }}) — الرصيد: {{ it.current_stock }} {{ it.unit }}
+                  {{ it.name }} ({{ it.code || '—' }}) — {{ $t('inventory.current_stock') }}: {{ it.current_stock }} {{ it.unit }}
                 </option>
               </select>
 
@@ -137,7 +137,7 @@
                 :disabled="!selectedItemToAdd"
                 class="px-4 h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black transition disabled:opacity-30 cursor-pointer shrink-0"
               >
-                + إضافة
+                {{ $t('returns.add_item_btn') }}
               </button>
             </div>
 
@@ -146,16 +146,16 @@
               <table class="w-full text-start text-xs border-collapse">
                 <thead>
                   <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
-                    <th class="p-3 text-start font-bold">الصنف</th>
-                    <th class="p-3 text-center font-bold w-28">الكمية</th>
-                    <th class="p-3 text-end font-bold w-32">سعر الوحدة</th>
-                    <th class="p-3 text-end font-bold w-32">الإجمالي</th>
+                    <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
+                    <th class="p-3 text-center font-bold w-28">{{ $t('common.quantity') }}</th>
+                    <th class="p-3 text-end font-bold w-32">{{ $t('pos.item_price') }}</th>
+                    <th class="p-3 text-end font-bold w-32">{{ $t('common.total') }}</th>
                     <th class="p-3 text-center font-bold w-12"></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/50 font-sans">
                   <tr v-for="(item, idx) in form.items" :key="item.item_id" class="hover:bg-slate-900/40">
-                    <td class="p-3 font-bold text-white">
+                    <td class="p-3 font-bold text-white font-tajawal">
                       <div>{{ item.name }}</div>
                       <span class="text-[10px] text-slate-500 font-mono">({{ item.unit }})</span>
                     </td>
@@ -178,7 +178,7 @@
                       >
                     </td>
                     <td class="p-3 text-end font-mono font-bold text-rose-400">
-                      {{ formatMoney(item.quantity * item.unit_price) }} ج.م
+                      {{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}
                     </td>
                     <td class="p-3 text-center">
                       <button
@@ -195,7 +195,7 @@
             </div>
 
             <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-800 rounded-xl">
-              لم يتم إضافة أي أصناف للمرتجع بعد. اختر صنفاً من القائمة واضغط إضافة.
+              {{ $t('returns.no_items_in_return_prompt') }}
             </div>
           </div>
         </div>
@@ -205,24 +205,24 @@
           <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
-              <span>الملخص المالي للمستند</span>
+              <span>{{ $t('returns.document_financial_summary') }}</span>
             </h2>
 
             <div class="space-y-2.5 font-mono text-xs">
-              <div class="flex justify-between text-slate-300 font-sans">
-                <span>عدد الأصناف:</span>
+              <div class="flex justify-between text-slate-300 font-sans font-tajawal">
+                <span>{{ $t('inventory.total_items_count') }}:</span>
                 <span class="font-mono text-white font-bold">{{ form.items.length }}</span>
               </div>
 
-              <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans">
-                <span>إجمالي قيمة المرتجع:</span>
-                <span class="font-mono text-rose-400">{{ formatMoney(netTotal) }} ج.م</span>
+              <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans font-tajawal">
+                <span>{{ $t('returns.total_returns_val') }}:</span>
+                <span class="font-mono text-rose-400">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
               </div>
 
               <!-- Refund cash from drawer -->
               <div class="pt-2 border-t border-slate-800 space-y-1">
-                <label class="block text-xs font-bold text-slate-300 font-sans">
-                  المبلغ المسترد نقداً من الخزينة:
+                <label class="block text-xs font-bold text-slate-300 font-sans font-tajawal">
+                  {{ $t('returns.refund_cash_from_drawer') }}
                 </label>
                 <input
                   v-model="form.refund_amount"
@@ -232,7 +232,7 @@
                   class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:outline-none"
                   placeholder="0.00"
                 >
-                <span class="text-[10px] text-slate-500 font-sans">اتركه 0.00 إذا كان المرتجع تسوية حساب آجل</span>
+                <span class="text-[10px] text-slate-500 font-sans font-tajawal">{{ $t('returns.refund_zero_hint') }}</span>
               </div>
             </div>
 
@@ -244,7 +244,7 @@
             >
               <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <RotateCcw v-else class="w-4 h-4" />
-              <span>حفظ واعتماد المرتجع 🔄</span>
+              <span>{{ $t('returns.confirm_return_save_btn') }}</span>
             </button>
           </div>
         </div>
@@ -258,6 +258,7 @@ import { useRouter } from 'vue-router';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     ArrowRight,
     Trash2,
@@ -330,7 +331,7 @@ const addItemRow = () => {
     const it = selectedItemToAdd.value;
 
     if (form.items.some(i => i.item_id === it.id)) {
-        Swal.fire({ icon: 'info', title: 'تنبيه', text: 'هذا الصنف مضاف بالفعل في قائمة المرتجع' });
+        Swal.fire({ icon: 'info', title: trans('common.warning'), text: trans('returns.item_already_in_return') });
         return;
     }
 
@@ -355,7 +356,7 @@ const removeItemRow = (idx) => {
 
 const submitReturn = async () => {
     if (form.items.length === 0) {
-        Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى إضافة صنف واحد على الأقل للمرتجع' });
+        Swal.fire({ icon: 'warning', title: trans('common.warning'), text: trans('returns.add_at_least_one_item') });
         return;
     }
 
@@ -378,8 +379,8 @@ const submitReturn = async () => {
         const response = await api.post('/returns', payload);
         Swal.fire({
             icon: 'success',
-            title: 'تم اعتماد المرتجع',
-            text: response.data?.message || 'تم تسجيل المرتجع وتعديل الأرصدة بنجاح ✓',
+            title: trans('returns.return_confirmed_title'),
+            text: response.data?.message || trans('returns.return_confirmed_msg'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -388,8 +389,8 @@ const submitReturn = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تسجيل مستند المرتجع',
+            title: trans('common.error'),
+            text: error.userMessage || trans('returns.save_return_failed'),
         });
     } finally {
         isSubmitting.value = false;

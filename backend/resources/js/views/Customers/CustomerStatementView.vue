@@ -39,28 +39,28 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Total Debit -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.period_debit') }} (مسحوبات)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.period_debit') }} ({{ $t('contacts.withdrawals') }})</div>
           <div class="text-xl font-black text-white font-mono">
-            {{ formatMoney(summary.total_debit || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(summary.total_debit || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
         </div>
 
         <!-- Total Credit -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.period_credit') }} (سدادات)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.period_credit') }} ({{ $t('contacts.payments_received') }})</div>
           <div class="text-xl font-black text-emerald-400 font-mono">
-            {{ formatMoney(summary.total_credit || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(summary.total_credit || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
         </div>
 
         <!-- Closing Balance -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.closing_balance') }} (الصافي)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.closing_balance') }} ({{ $t('contacts.net_balance') }})</div>
           <div
             class="text-xl font-black font-mono"
             :class="customer?.current_balance > 0 ? 'text-rose-400' : 'text-emerald-400'"
           >
-            {{ formatMoney(customer?.current_balance || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(customer?.current_balance || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@
                   {{ formatMoney(row.credit) }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black" :class="row.balance_after > 0 ? 'text-rose-400' : (row.balance_after < 0 ? 'text-cyan-400' : 'text-emerald-400')">
-                  {{ formatMoney(row.balance_after) }} ج.م
+                  {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
                 </td>
                 <td class="py-3.5 px-4 font-tajawal text-slate-400 max-w-xs truncate">{{ row.notes || '—' }}</td>
               </tr>

@@ -12,7 +12,7 @@
             class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
           >
             <Plus class="w-4 h-4" />
-            <span>إذن تحويل مخزني جديد</span>
+            <span>{{ $t('inventory.new_transfer_order') }}</span>
           </router-link>
         </template>
       </PageHeader>
@@ -22,37 +22,37 @@
         <!-- Total Transfers Count -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">إجمالي أذونات التحويل</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('inventory.total_transfers_count') }}</span>
             <Truck class="w-4 h-4 text-amber-400" />
           </div>
           <div class="text-2xl font-black text-white font-mono">
-            {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">إذن</span>
+            {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.transfer_doc_unit') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">حركات نقل البضاعة بين المخازن</span>
+          <span class="text-[10px] text-slate-500">{{ $t('inventory.total_transfers_count_sub') }}</span>
         </div>
 
         <!-- Confirmed Transfers -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">التحويلات المنفذة</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('inventory.confirmed_transfers_title') }}</span>
             <CheckCircle2 class="w-4 h-4 text-emerald-400" />
           </div>
           <div class="text-2xl font-black text-emerald-400 font-mono">
-            {{ summary.confirmed_count || 0 }} <span class="text-xs text-slate-400">منفذ</span>
+            {{ summary.confirmed_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.transfer_status_done') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">بضاعة تم استلامها بالفرع المستهدف</span>
+          <span class="text-[10px] text-slate-500">{{ $t('inventory.confirmed_transfers_sub') }}</span>
         </div>
 
         <!-- Cancelled Transfers -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">التحويلات الملغاة</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('inventory.cancelled_transfers_title') }}</span>
             <Ban class="w-4 h-4 text-rose-400" />
           </div>
           <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ summary.cancelled_count || 0 }} <span class="text-xs text-slate-400">ملغي</span>
+            {{ summary.cancelled_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.transfer_status_cancelled') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">حركات تم عكس رصيدها للمصدر</span>
+          <span class="text-[10px] text-slate-500">{{ $t('inventory.cancelled_transfers_sub') }}</span>
         </div>
       </div>
 
@@ -65,7 +65,7 @@
             @input="debounceSearch"
             type="text"
             class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            placeholder="بحث برقم إذن التحويل أو الملاحظات..."
+            :placeholder="$t('inventory.search_transfers_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
         </div>
@@ -77,7 +77,7 @@
             @change="fetchTransfers(1)"
             class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
-            <option value="all">من مخزن (الكل)</option>
+            <option value="all">{{ $t('inventory.all_from_stores') }}</option>
             <option v-for="s in stores" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </div>
@@ -89,7 +89,7 @@
             @change="fetchTransfers(1)"
             class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
-            <option value="all">إلى مخزن (الكل)</option>
+            <option value="all">{{ $t('inventory.all_to_stores') }}</option>
             <option v-for="s in stores" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </div>
@@ -124,11 +124,11 @@
             <thead>
               <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
                 <th class="py-3 px-4 text-start font-bold">#</th>
-                <th class="py-3 px-4 text-start font-bold">رقم الإذن</th>
-                <th class="py-3 px-4 text-start font-bold">من مخزن</th>
-                <th class="py-3 px-4 text-start font-bold">إلى مخزن</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.transfer_number') }}</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.from_store') }}</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.to_store') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
-                <th class="py-3 px-4 text-center font-bold">الأصناف</th>
+                <th class="py-3 px-4 text-center font-bold">{{ $t('inventory.transfer_items') }}</th>
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
               </tr>
@@ -156,14 +156,14 @@
                   {{ trf.transfer_date }}
                 </td>
                 <td class="py-3.5 px-4 text-center font-mono font-bold text-cyan-400">
-                  {{ trf.items_count }} صنف
+                  {{ trf.items_count }} {{ $t('inventory.item_unit') }}
                 </td>
                 <td class="py-3.5 px-4 text-center font-tajawal">
                   <span
                     class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
                     :class="!trf.is_cancelled ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
                   >
-                    {{ !trf.is_cancelled ? 'منفذ ✅' : 'ملغي 🚫' }}
+                    {{ !trf.is_cancelled ? $t('inventory.transfer_status_done') : $t('inventory.transfer_status_cancelled') }}
                   </span>
                 </td>
                 <td class="py-3.5 px-4 text-center">
@@ -173,7 +173,7 @@
                       type="button"
                       @click="openDetailsModal(trf)"
                       class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
-                      :title="'عرض تفاصيل الإذن والأصناف'"
+                      :title="$t('inventory.view_transfer_details_hint')"
                     >
                       <Eye class="w-4 h-4" />
                     </button>
@@ -184,7 +184,7 @@
                       type="button"
                       @click="cancelTransferDoc(trf)"
                       class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-                      :title="'إلغاء التحويل وعكس رصيد الأصناف'"
+                      :title="$t('inventory.cancel_transfer_hint')"
                     >
                       <Ban class="w-4 h-4" />
                     </button>
@@ -198,7 +198,7 @@
         <EmptyState
           v-else
           :title="$t('inventory.no_transfers_found')"
-          :description="'لم يتم العثور على أي أذونات تحويل مخزني مطابقة للفلاتر الحالية.'"
+          :description="$t('inventory.no_transfers_found')"
           :icon="'🚚'"
         >
           <template #action>
@@ -206,7 +206,7 @@
               to="/stock-transfers/create"
               class="px-5 py-2.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black font-tajawal shadow-lg shadow-amber-500/20"
             >
-              إنشاء أول إذن تحويل
+              {{ $t('inventory.create_first_transfer') }}
             </router-link>
           </template>
         </EmptyState>
@@ -214,7 +214,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400">
-            إجمالي النتائج: <span class="font-mono text-amber-400">{{ pagination.total }}</span> إذن
+            {{ $t('inventory.total_results_transfers', { count: pagination.total }) }}
           </div>
           <div class="flex items-center gap-1">
             <button
@@ -223,7 +223,7 @@
               :disabled="pagination.current_page <= 1"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
             <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
               {{ pagination.current_page }} / {{ pagination.last_page }}
@@ -234,7 +234,7 @@
               :disabled="pagination.current_page >= pagination.last_page"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -243,26 +243,26 @@
       <!-- Transfer Details Modal -->
       <AppModal
         :show="showDetailsModal"
-        :title="`إذن تحويل مخزني: ${selectedTransferDetails?.transfer_number || ''}`"
+        :title="$t('inventory.transfer_details_modal_title', { number: selectedTransferDetails?.transfer_number || '' })"
         @close="showDetailsModal = false"
       >
         <div v-if="selectedTransferDetails" class="space-y-4 font-tajawal text-xs">
           <!-- Top Info Grid -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-900/80 border border-slate-800 rounded-2xl">
             <div>
-              <span class="text-slate-400 block font-bold">من مخزن:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('inventory.from_store') }}:</span>
               <span class="font-bold text-amber-400">{{ selectedTransferDetails.from_store_name }}</span>
             </div>
             <div>
-              <span class="text-slate-400 block font-bold">إلى مخزن:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('inventory.to_store') }}:</span>
               <span class="font-bold text-emerald-400">{{ selectedTransferDetails.to_store_name }}</span>
             </div>
             <div>
-              <span class="text-slate-400 block font-bold">التاريخ:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('common.date') }}:</span>
               <span class="text-slate-200 font-mono">{{ selectedTransferDetails.transfer_date }}</span>
             </div>
             <div>
-              <span class="text-slate-400 block font-bold">المسؤول:</span>
+              <span class="text-slate-400 block font-bold">{{ $t('inventory.store_user') }}:</span>
               <span class="text-slate-200">{{ selectedTransferDetails.user_name }}</span>
             </div>
           </div>
@@ -272,9 +272,9 @@
             <table class="w-full text-start text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
-                  <th class="p-2.5 text-start font-bold">الصنف</th>
-                  <th class="p-2.5 text-start font-bold">الكود</th>
-                  <th class="p-2.5 text-end font-bold">الكمية المحولة</th>
+                  <th class="p-2.5 text-start font-bold">{{ $t('inventory.item_name') }}</th>
+                  <th class="p-2.5 text-start font-bold">{{ $t('inventory.code') }}</th>
+                  <th class="p-2.5 text-end font-bold">{{ $t('inventory.transferred_qty_col') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50">
@@ -290,7 +290,7 @@
           </div>
 
           <div v-if="selectedTransferDetails.notes" class="p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl text-slate-400">
-            <span class="font-bold text-slate-300">ملاحظات التحويل: </span>
+            <span class="font-bold text-slate-300">{{ $t('inventory.transfer_notes_label') }}</span>
             <span>{{ selectedTransferDetails.notes }}</span>
           </div>
         </div>
@@ -305,6 +305,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Plus,
     Search,
@@ -402,14 +403,14 @@ const openDetailsModal = async (trf) => {
 
 const cancelTransferDoc = async (trf) => {
     const { value: reason } = await Swal.fire({
-        title: `إلغاء التحويل (${trf.transfer_number})؟`,
-        text: 'سيتم عكس رصيد كافة الأصناف وإرجاعها للمخزن المصدر فوراً.',
+        title: trans('inventory.cancel_transfer_confirm_title', { number: trf.transfer_number }),
+        text: trans('inventory.cancel_transfer_confirm_text'),
         input: 'text',
-        inputPlaceholder: 'اكتب سبب الإلغاء هنا (اختياري)...',
+        inputPlaceholder: trans('inventory.cancel_reason_placeholder'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، قم بإلغاء التحويل',
-        cancelButtonText: 'تراجع',
+        confirmButtonText: trans('inventory.cancel_transfer_btn'),
+        cancelButtonText: trans('common.cancel'),
         confirmButtonColor: '#f43f5e',
     });
 
@@ -418,8 +419,8 @@ const cancelTransferDoc = async (trf) => {
             await api.post(`/transfers/${trf.id}/cancel`, { reason: reason || 'إلغاء من النظام' });
             Swal.fire({
                 icon: 'success',
-                title: 'تم الإلغاء',
-                text: 'تم إلغاء إذن التحويل وعكس رصيد الأصناف بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.transfer_cancelled_success'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -427,8 +428,8 @@ const cancelTransferDoc = async (trf) => {
         } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'خطأ',
-                text: error.userMessage || 'تعذر إلغاء إذن التحويل',
+                title: trans('common.error'),
+                text: error.userMessage || trans('inventory.transfer_cancel_failed'),
             });
         }
     }

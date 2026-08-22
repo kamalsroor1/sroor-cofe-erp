@@ -7,8 +7,8 @@
             <ShieldCheck class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">مصفوفة الصلاحيات والأدوار</h1>
-            <p class="text-xs text-slate-400">تخصيص صلاحيات الوصول والرقابة لكل دور وظيفي في النظام</p>
+            <h1 class="text-xl font-black text-white">{{ $t('roles.title') }}</h1>
+            <p class="text-xs text-slate-400">{{ $t('roles.subtitle') }}</p>
           </div>
         </div>
 
@@ -18,7 +18,7 @@
             class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition"
           >
             <Users class="w-4 h-4 text-amber-400" />
-            <span>المستخدمين والموظفين</span>
+            <span>{{ $t('roles.users_and_employees') }}</span>
           </router-link>
 
           <button
@@ -28,7 +28,7 @@
             class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
           >
             <Check class="w-4 h-4" />
-            <span>{{ isSaving ? 'جاري الحفظ...' : 'حفظ التعديلات' }}</span>
+            <span>{{ isSaving ? $t('common.loading') : $t('profile.save_changes') }}</span>
           </button>
         </div>
       </div>
@@ -36,7 +36,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="p-16 text-center">
         <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        <p class="text-xs text-slate-400">جاري تحميل مصفوفة الصلاحيات والأدوار...</p>
+        <p class="text-xs text-slate-400">{{ $t('roles.loading_roles_matrix') }}</p>
       </div>
 
       <div v-else class="space-y-6">
@@ -51,7 +51,7 @@
           >
             <div class="text-sm font-bold text-white mb-1">{{ r.label }}</div>
             <div class="text-[11px] text-slate-400 font-mono">
-              {{ r.name === 'admin' ? 'كامل الصلاحيات ⚡' : `${r.permissions_count} صلاحية مفعّلة` }}
+              {{ r.name === 'admin' ? $t('roles.full_permissions_badge') : $t('roles.active_permissions_count', { count: r.permissions_count }) }}
             </div>
           </button>
         </div>
@@ -59,7 +59,7 @@
         <!-- Admin Notice -->
         <div v-if="selectedRole?.name === 'admin'" class="p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center gap-3 text-xs text-purple-300">
           <ShieldAlert class="w-5 h-5 shrink-0" />
-          <span>دور <strong>مدير النظام (Admin)</strong> يمتلك كافة الصلاحيات الحالية والمستقبلية تلقائياً ولا يحتاج إلى تعديل يدوي.</span>
+          <span>{{ $t('roles.admin_role_notice') }}</span>
         </div>
 
         <!-- Permission Modules Grid -->
@@ -80,14 +80,14 @@
                   @click="toggleModule(mod.permissions, true)"
                   class="text-amber-400 hover:underline"
                 >
-                  تحديد الكل
+                  {{ $t('roles.select_all') }}
                 </button>
                 <span class="text-slate-600">|</span>
                 <button
                   @click="toggleModule(mod.permissions, false)"
                   class="text-slate-500 hover:text-slate-400"
                 >
-                  إلغاء الكل
+                  {{ $t('roles.deselect_all') }}
                 </button>
               </div>
             </div>
@@ -119,6 +119,7 @@
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     ShieldCheck,
     ShieldAlert,
@@ -188,16 +189,16 @@ const savePermissions = async () => {
 
         Swal.fire({
             icon: 'success',
-            title: 'تم الحفظ',
-            text: 'تم تحديث مصفوفة الصلاحيات للدور بنجاح',
+            title: trans('common.success'),
+            text: trans('roles.permissions_saved_success'),
             timer: 1500,
             showConfirmButton: false,
         });
     } catch (e) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: e.response?.data?.message || 'تعذر حفظ الصلاحيات',
+            title: trans('common.error'),
+            text: e.response?.data?.message || trans('roles.permissions_save_failed'),
         });
     } finally {
         isSaving.value = false;

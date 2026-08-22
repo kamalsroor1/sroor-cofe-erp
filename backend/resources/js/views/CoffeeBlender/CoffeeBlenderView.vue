@@ -4,7 +4,7 @@
       <PageHeader
         :title="$t('inventory.blender_title')"
         :subtitle="$t('inventory.blender_subtitle')"
-        :icon="'☕'"
+        :icon="'📦'"
       >
         <template #actions>
           <router-link
@@ -12,7 +12,7 @@
             class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight class="w-4 h-4" />
-            <span>سجل الفواتير</span>
+            <span>{{ $t('nav.invoices_log') }}</span>
           </router-link>
         </template>
       </PageHeader>
@@ -24,24 +24,24 @@
           <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>⚙️</span>
-              <span>مواصفات التوليفة والوزن المستهدف</span>
+              <span>{{ $t('inventory.blend_specs_title') }}</span>
             </h2>
 
             <div class="space-y-3">
               <!-- Blend Name -->
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">اسم التوليفة</label>
+                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.blend_name') }}</label>
                 <input
                   v-model="blendName"
                   type="text"
                   class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                  placeholder="مثال: توليفة سرور الخاصة، خلطة فرنسي بالبندق..."
+                  :placeholder="$t('inventory.blend_name_placeholder')"
                 >
               </div>
 
               <!-- Target Weight Presets -->
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">الوزن المطلوب</label>
+                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.target_weight') }}</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     v-for="w in presetWeights"
@@ -59,7 +59,7 @@
               <!-- Custom Weight, Roast, Grind -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-400">وزن مخصص (جرام)</label>
+                  <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.custom_weight') }}</label>
                   <input
                     v-model.number="targetWeightGrams"
                     type="number"
@@ -70,28 +70,28 @@
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-400">درجة التحميص</label>
+                  <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.roast_type') }}</label>
                   <select
                     v-model="roastType"
                     class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   >
-                    <option value="فاتح">تحميص فاتح</option>
-                    <option value="وسط">تحميص وسط</option>
-                    <option value="غامق">تحميص غامق</option>
-                    <option value="محروق / دبل">دبل روست / محروق</option>
+                    <option value="فاتح">{{ $t('inventory.roast_light') }}</option>
+                    <option value="وسط">{{ $t('inventory.roast_medium') }}</option>
+                    <option value="غامق">{{ $t('inventory.roast_dark') }}</option>
+                    <option value="محروق / دبل">{{ $t('inventory.roast_double') }}</option>
                   </select>
                 </div>
 
                 <div class="space-y-1">
-                  <label class="block text-xs font-bold text-slate-400">درجة الطحن</label>
+                  <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.grind_level') }}</label>
                   <select
                     v-model="grindLevel"
                     class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   >
-                    <option value="تركي ناعم">تركي ناعم جداً</option>
-                    <option value="إسبريسو">إسبريسو ناعم</option>
-                    <option value="فرينش بريس">فرينش بريس خشن</option>
-                    <option value="حبوب بدون طحن">حبوب بدون طحن</option>
+                    <option value="تركي ناعم">{{ $t('inventory.grind_turkish') }}</option>
+                    <option value="إسبريسو">{{ $t('inventory.grind_espresso') }}</option>
+                    <option value="فرينش بريس">{{ $t('inventory.grind_french_press') }}</option>
+                    <option value="حبوب بدون طحن">{{ $t('inventory.grind_beans') }}</option>
                   </select>
                 </div>
               </div>
@@ -103,13 +103,13 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
                 <span>🫘</span>
-                <span>مكونات خامات حبوب البن</span>
+                <span>{{ $t('inventory.raw_beans_components') }}</span>
               </h2>
               <span
                 class="px-2.5 py-0.5 rounded-full text-xs font-mono font-black border"
                 :class="totalPercentage === 100 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
               >
-                إجمالي النسب: {{ totalPercentage }}%
+                {{ $t('inventory.total_ratio_badge', { pct: totalPercentage }) }}
               </span>
             </div>
 
@@ -119,9 +119,9 @@
                 v-model="selectedItemIdToAdd"
                 class="flex-1 h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option :value="null">اختر صنف بن لإضافته للتوليفة...</option>
+                <option :value="null">{{ $t('inventory.select_blend_item_prompt') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
-                  {{ it.name }} ({{ it.code || '—' }}) — سعر البيع: {{ it.price_retail || it.selling_price }} ج.م | الرصيد: {{ it.current_stock }} {{ it.unit }}
+                  {{ it.name }} ({{ it.code || '—' }}) — {{ $t('inventory.retail_price') }}: {{ it.price_retail || it.selling_price }} {{ $t('common.currency') }} | {{ $t('inventory.current_stock') }}: {{ it.current_stock }} {{ it.unit }}
                 </option>
               </select>
 
@@ -131,7 +131,7 @@
                 :disabled="!selectedItemIdToAdd"
                 class="px-4 h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black transition disabled:opacity-30 cursor-pointer shrink-0"
               >
-                + إضافة
+                + {{ $t('common.add') }}
               </button>
             </div>
 
@@ -145,7 +145,7 @@
                 <div class="sm:w-1/3 min-w-0">
                   <div class="font-bold text-white truncate">{{ comp.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">
-                    {{ formatMoney(comp.selling_price) }} ج.م / كجم (رصيد: {{ comp.current_stock }} كجم)
+                    {{ formatMoney(comp.selling_price) }} {{ $t('common.currency') }} / {{ $t('inventory.unit_weight_short') }} ({{ $t('inventory.current_stock') }}: {{ comp.current_stock }} {{ $t('inventory.unit_weight_short') }})
                   </div>
                 </div>
 
@@ -174,8 +174,8 @@
                 <!-- Calculated Grams & Price -->
                 <div class="sm:w-1/3 flex items-center justify-between sm:justify-end gap-3 font-mono">
                   <div class="text-end">
-                    <div class="font-black text-emerald-400 text-xs">{{ comp.grams }} جم</div>
-                    <div class="text-[10px] text-slate-400">{{ formatMoney(comp.price) }} ج.م</div>
+                    <div class="font-black text-emerald-400 text-xs">{{ comp.grams }} {{ $t('inventory.unit_gram') }}</div>
+                    <div class="text-[10px] text-slate-400">{{ formatMoney(comp.price) }} {{ $t('common.currency') }}</div>
                   </div>
 
                   <button
@@ -192,7 +192,7 @@
             <!-- Extra Spices (Cardamom) -->
             <div class="pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">حبهان / بهارات مخصوصة (جرام)</label>
+                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.cardamom_spices') }}</label>
                 <input
                   v-model.number="cardamomGrams"
                   type="number"
@@ -204,12 +204,12 @@
               </div>
 
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">ملاحظات التحضير أو الطحن</label>
+                <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.blend_notes') }}</label>
                 <input
                   v-model="notes"
                   type="text"
                   class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none"
-                  placeholder="مثال: طحن ناعم جداً، زيادة مستكة..."
+                  :placeholder="$t('inventory.notes_placeholder')"
                 >
               </div>
             </div>
@@ -221,35 +221,35 @@
           <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4 sticky top-6">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
-              <span>الملخص المالي وتكلفة التوليفة</span>
+              <span>{{ $t('inventory.blend_cost_summary') }}</span>
             </h2>
 
             <div class="space-y-2.5 font-mono text-xs">
               <div class="flex justify-between text-slate-400 font-sans">
-                <span>الوزن الإجمالي:</span>
-                <span class="font-mono text-white font-bold">{{ targetWeightGrams }} جم ({{ (targetWeightGrams / 1000).toFixed(3) }} كجم)</span>
+                <span>{{ $t('inventory.total_weight_label') }}</span>
+                <span class="font-mono text-white font-bold">{{ targetWeightGrams }} {{ $t('inventory.unit_gram') }} ({{ (targetWeightGrams / 1000).toFixed(3) }} {{ $t('inventory.unit_weight_short') }})</span>
               </div>
 
               <div class="flex justify-between text-slate-400 font-sans">
-                <span>تكلفة الخامات التقديرية:</span>
-                <span class="font-mono text-rose-400">{{ formatMoney(totalCalculatedCost) }} ج.م</span>
+                <span>{{ $t('inventory.estimated_raw_cost') }}</span>
+                <span class="font-mono text-rose-400">{{ formatMoney(totalCalculatedCost) }} {{ $t('common.currency') }}</span>
               </div>
 
               <div class="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800 font-sans">
-                <span>سعر البيع المقترح:</span>
-                <span class="font-mono text-emerald-400 text-lg">{{ formatMoney(totalCalculatedPrice) }} ج.م</span>
+                <span>{{ $t('inventory.suggested_retail_price') }}:</span>
+                <span class="font-mono text-emerald-400 text-lg">{{ formatMoney(totalCalculatedPrice) }} {{ $t('common.currency') }}</span>
               </div>
 
               <div class="flex justify-between text-xs text-slate-400 font-sans">
-                <span>هامش الربح:</span>
-                <span class="font-mono font-bold text-amber-400">{{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }} ج.م)</span>
+                <span>{{ $t('inventory.profit_margin') }}:</span>
+                <span class="font-mono font-bold text-amber-400">{{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }} {{ $t('common.currency') }})</span>
               </div>
             </div>
 
             <!-- Customer Selection -->
             <div class="space-y-1.5 pt-3 border-t border-slate-800">
               <label class="block text-xs font-bold text-slate-300 font-sans">
-                العميل <span class="text-rose-500">*</span>
+                {{ $t('contacts.customer') }} <span class="text-rose-500">*</span>
               </label>
               <select
                 v-model="selectedCustomerId"
@@ -270,7 +270,7 @@
             >
               <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <Zap v-else class="w-4 h-4 fill-slate-950" />
-              <span>إصدار وتأكيد فاتورة التوليفة ⚡</span>
+              <span>{{ $t('inventory.blend_invoice_btn') }}</span>
             </button>
           </div>
         </div>
@@ -284,6 +284,7 @@ import { useRouter } from 'vue-router';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     ArrowRight,
     Trash2,
@@ -295,7 +296,7 @@ const router = useRouter();
 const items = ref([]);
 const customers = ref([]);
 
-const blendName = ref('توليفة بن مخصوصة (خلطة سرور المميزة)');
+const blendName = ref('تركيبة مجمعة مخصصة');
 const targetWeightGrams = ref(250);
 const selectedCustomerId = ref(null);
 const selectedItemIdToAdd = ref(null);
@@ -306,12 +307,12 @@ const notes = ref('');
 
 const isSubmitting = ref(false);
 
-const presetWeights = [
-    { label: 'ثمن كيلو (125 جم)', value: 125 },
-    { label: 'ربع كيلو (250 جم)', value: 250 },
-    { label: 'نصف كيلو (500 جم)', value: 500 },
-    { label: 'كيلو كامل (1000 جم)', value: 1000 },
-];
+const presetWeights = computed(() => [
+    { label: trans('inventory.weight_125'), value: 125 },
+    { label: trans('inventory.weight_250'), value: 250 },
+    { label: trans('inventory.weight_500'), value: 500 },
+    { label: trans('inventory.weight_1000'), value: 1000 },
+]);
 
 const formatMoney = (val) => {
     const num = parseFloat(val) || 0;
@@ -414,7 +415,7 @@ const addComponentRow = () => {
     const item = selectedItemIdToAdd.value;
 
     if (components.value.some(c => c.item_id === item.id)) {
-        Swal.fire({ icon: 'info', title: 'تنبيه', text: 'هذا الصنف مضاف بالفعل في التوليفة' });
+        Swal.fire({ icon: 'info', title: trans('common.warning'), text: trans('inventory.item_already_added') });
         return;
     }
 
@@ -436,18 +437,18 @@ const removeComponentRow = (idx) => {
 
 const submitBlendInvoice = async () => {
     if (components.value.length === 0) {
-        Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى إضافة مكونات التوليفة أولاً' });
+        Swal.fire({ icon: 'warning', title: trans('common.warning'), text: trans('inventory.blend_components_empty') });
         return;
     }
 
     if (totalPercentage.value !== 100) {
         const result = await Swal.fire({
-            title: 'تنبيه مجموع النسب',
-            text: `مجموع النسب الحالية هو ${totalPercentage.value}% (وليس 100%). هل ترغب في المتابعة بهذا الوزن التقديري؟`,
+            title: trans('inventory.ratio_warning_title'),
+            text: trans('inventory.ratio_warning_text', { pct: totalPercentage.value }),
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'نعم، تابع',
-            cancelButtonText: 'تراجع لضبط النسب',
+            confirmButtonText: trans('common.confirm'),
+            cancelButtonText: trans('common.cancel'),
         });
         if (!result.isConfirmed) return;
     }
@@ -472,8 +473,8 @@ const submitBlendInvoice = async () => {
         const response = await api.post('/coffee-blender/invoice', payload);
         Swal.fire({
             icon: 'success',
-            title: 'تم إصدار الفاتورة',
-            text: response.data?.message || 'تم اعتماد فاتورة التوليفة وخصم الخامات بنجاح ✓',
+            title: trans('common.success'),
+            text: response.data?.message || trans('inventory.blend_invoice_success'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -482,8 +483,8 @@ const submitBlendInvoice = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر إصدار فاتورة التوليفة',
+            title: trans('common.error'),
+            text: error.userMessage || error.response?.data?.message || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;

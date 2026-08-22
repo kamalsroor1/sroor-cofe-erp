@@ -7,8 +7,8 @@
             <Building2 class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">إدارة المستأجرين والشركات (Tenants)</h1>
-            <p class="text-xs text-slate-400">إنشاء وتفعيل وإيقاف اشتراكات المؤسسات والمحامص على المنصة</p>
+            <h1 class="text-xl font-black text-white">{{ $t('super.tenants_page_title') }}</h1>
+            <p class="text-xs text-slate-400">{{ $t('super.tenants_page_subtitle') }}</p>
           </div>
         </div>
 
@@ -18,7 +18,7 @@
             class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition"
           >
             <Crown class="w-4 h-4 text-purple-400" />
-            <span>لوحة التحكم</span>
+            <span>{{ $t('super.dashboard') }}</span>
           </router-link>
 
           <button
@@ -26,7 +26,7 @@
             class="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-lg shadow-purple-500/20 flex items-center gap-2 transition cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>إنشاء مستأجر جديد</span>
+            <span>{{ $t('super.new_tenant_btn') }}</span>
           </button>
         </div>
       </div>
@@ -39,7 +39,7 @@
             v-model="filters.search"
             @input="debouncedFetch"
             type="text"
-            placeholder="بحث باسم المستأجر، الدومين، أو البريد الإلكتروني..."
+            :placeholder="$t('super.search_tenants_placeholder')"
             class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
           />
         </div>
@@ -48,20 +48,20 @@
           <select
             v-model="filters.status"
             @change="fetchTenants"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500"
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 font-tajawal"
           >
-            <option value="all">جميع الحالات</option>
-            <option value="active">نشط</option>
-            <option value="trial">تجريبي</option>
-            <option value="suspended">موقوف</option>
+            <option value="all">{{ $t('super.all_statuses') }}</option>
+            <option value="active">{{ $t('super.status_active') }}</option>
+            <option value="trial">{{ $t('super.status_trial') }}</option>
+            <option value="suspended">{{ $t('super.status_suspended') }}</option>
           </select>
 
           <select
             v-model="filters.plan_id"
             @change="fetchTenants"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500"
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 font-tajawal"
           >
-            <option value="all">جميع الباقات</option>
+            <option value="all">{{ $t('super.all_plans') }}</option>
             <option v-for="p in plansList" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </div>
@@ -71,30 +71,29 @@
       <div class="bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
           <div class="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-xs text-slate-400">جاري تحميل بيانات المستأجرين...</p>
+          <p class="text-xs text-slate-400">{{ $t('common.loading') }}</p>
         </div>
 
         <div v-else-if="tenants.length === 0" class="p-16 text-center">
           <Building2 class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1">لم يتم العثور على أي مستأجرين</h3>
-          <p class="text-xs text-slate-500">جرب تعديل خيارات البحث أو قم بإنشاء مستأجر جديد.</p>
+          <h3 class="text-sm font-bold text-slate-300 mb-1">{{ $t('super.no_tenants_registered') }}</h3>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-start text-xs">
             <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400 font-bold">
               <tr>
-                <th class="p-4 text-start">المستأجر / المؤسسة</th>
-                <th class="p-4 text-start">الدومين والمسار</th>
-                <th class="p-4 text-start">الباقة المشتركة</th>
-                <th class="p-4 text-start">البريد والمسؤول</th>
-                <th class="p-4 text-center">الحالة</th>
-                <th class="p-4 text-end">الإجراءات</th>
+                <th class="p-4 text-start font-tajawal">{{ $t('super.tenant_org_col') }}</th>
+                <th class="p-4 text-start font-tajawal">{{ $t('super.domain_path_col') }}</th>
+                <th class="p-4 text-start font-tajawal">{{ $t('super.subscribed_plan_col') }}</th>
+                <th class="p-4 text-start font-tajawal">{{ $t('super.email_admin_col') }}</th>
+                <th class="p-4 text-center font-tajawal">{{ $t('common.status') }}</th>
+                <th class="p-4 text-end font-tajawal">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 font-mono">
               <tr v-for="t in tenants" :key="t.id" class="hover:bg-slate-900/40 transition">
-                <td class="p-4 font-sans font-bold text-white">
+                <td class="p-4 font-sans font-bold text-white font-tajawal">
                   <div class="text-sm">{{ t.name }}</div>
                   <div class="text-[10px] text-slate-400 font-mono">ID: {{ t.id }}</div>
                 </td>
@@ -114,7 +113,7 @@
 
                 <td class="p-4 text-slate-300 font-mono">
                   <div>{{ t.email }}</div>
-                  <div class="text-[10px] text-slate-500">{{ t.phone || 'بدون هاتف' }}</div>
+                  <div class="text-[10px] text-slate-500">{{ t.phone || $t('super.no_phone') }}</div>
                 </td>
 
                 <td class="p-4 text-center font-sans">
@@ -130,9 +129,9 @@
                 <td class="p-4 text-end font-sans">
                   <button
                     @click="openStatusModal(t)"
-                    class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg text-xs font-bold transition"
+                    class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
                   >
-                    تعديل الحالة والاشتراك
+                    {{ $t('super.edit_status_and_sub_btn') }}
                   </button>
                 </td>
               </tr>
@@ -147,41 +146,41 @@
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <Building2 class="w-4 h-4 text-purple-400" />
-              <span>إنشاء وتهيئة مستأجر جديد (Auto-Provisioning)</span>
+              <span>{{ $t('super.create_tenant_modal_title') }}</span>
             </h2>
-            <button @click="showCreateModal = false" class="text-slate-400 hover:text-white">✕</button>
+            <button @click="showCreateModal = false" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
           </div>
 
-          <form @submit.prevent="submitCreateTenant" class="space-y-3.5 text-xs">
+          <form @submit.prevent="submitCreateTenant" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">اسم المؤسسة / العميل *</label>
+              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.org_name_label') }}</label>
               <input
                 v-model="createForm.name"
                 required
                 type="text"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
-                placeholder="مثال: مطاحن ومحمصة الشرق"
+                :placeholder="$t('super.org_name_placeholder')"
               />
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">المعرف الفرعي (Slug) *</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.slug_label') }}</label>
                 <input
                   v-model="createForm.slug"
                   required
                   type="text"
                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
-                  placeholder="alsharq-roast"
+                  :placeholder="$t('super.slug_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">الباقة المختارة *</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.selected_plan_label') }}</label>
                 <select
                   v-model="createForm.plan_id"
                   required
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
                 >
                   <option v-for="p in plansList" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
@@ -190,30 +189,30 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">البريد الإلكتروني للإدارة *</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.admin_email_label') }}</label>
                 <input
                   v-model="createForm.email"
                   required
                   type="email"
                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
-                  placeholder="admin@tenant.com"
+                  :placeholder="$t('super.admin_email_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">رقم الهاتف</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.admin_phone_label') }}</label>
                 <input
                   v-model="createForm.phone"
                   type="text"
                   class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
-                  placeholder="010XXXXXXXX"
+                  :placeholder="$t('super.admin_phone_placeholder')"
                 />
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">كلمة مرور المدير *</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.admin_password_label') }}</label>
                 <input
                   v-model="createForm.password"
                   required
@@ -224,7 +223,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">أيام التجربة المجانية (Trial)</label>
+                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.trial_days_label') }}</label>
                 <input
                   v-model="createForm.trial_days"
                   type="number"
@@ -239,16 +238,16 @@
               <button
                 type="button"
                 @click="showCreateModal = false"
-                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold"
+                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold cursor-pointer"
               >
-                إلغاء
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-5 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg transition disabled:opacity-50"
+                class="px-5 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
               >
-                {{ isSubmitting ? 'جاري التهيئة...' : 'إنشاء وتهيئة المستأجر' }}
+                {{ isSubmitting ? $t('super.provisioning_status') : $t('super.create_and_provision_btn') }}
               </button>
             </div>
           </form>
@@ -259,26 +258,26 @@
       <div v-if="showStatusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
         <div class="bg-slate-950 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h2 class="text-base font-black text-white">تعديل حالة المستأجر ({{ selectedTenant?.name }})</h2>
-            <button @click="showStatusModal = false" class="text-slate-400 hover:text-white">✕</button>
+            <h2 class="text-base font-black text-white">{{ $t('super.edit_tenant_status_title', { name: selectedTenant?.name || '' }) }}</h2>
+            <button @click="showStatusModal = false" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
           </div>
 
-          <form @submit.prevent="submitStatusChange" class="space-y-3.5 text-xs">
+          <form @submit.prevent="submitStatusChange" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">الحالة الجديدة *</label>
+              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.new_status_label') }}</label>
               <select
                 v-model="statusForm.status"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
               >
-                <option value="active">نشط ومفعل (Active)</option>
-                <option value="trial">تجريبي (Trial)</option>
-                <option value="suspended">موقوف مؤقتاً (Suspended)</option>
-                <option value="expired">منتهي الاشتراك (Expired)</option>
+                <option value="active">{{ $t('super.status_active_opt') }}</option>
+                <option value="trial">{{ $t('super.status_trial_opt') }}</option>
+                <option value="suspended">{{ $t('super.status_suspended_opt') }}</option>
+                <option value="expired">{{ $t('super.status_expired_opt') }}</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-slate-400 font-bold mb-1">تمديد الاشتراك (عدد الأيام الإضافية)</label>
+              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.extend_days_label') }}</label>
               <input
                 v-model="statusForm.extend_days"
                 type="number"
@@ -293,16 +292,16 @@
               <button
                 type="button"
                 @click="showStatusModal = false"
-                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold"
+                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold cursor-pointer"
               >
-                إلغاء
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50"
+                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer"
               >
-                {{ isSubmitting ? 'جاري التحديث...' : 'حفظ الحالة' }}
+                {{ isSubmitting ? $t('common.loading') : $t('super.save_status_btn') }}
               </button>
             </div>
           </form>
@@ -315,6 +314,7 @@
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Building2,
     Crown,
@@ -396,8 +396,8 @@ const submitCreateTenant = async () => {
         await api.post('/super-admin/tenants', createForm.value);
         Swal.fire({
             icon: 'success',
-            title: 'تم إنشاء المستأجر',
-            text: 'تم إنشاء وتهيئة المستأجر وقاعدة البيانات الخاصة به بنجاح ✓',
+            title: trans('super.tenant_created_title'),
+            text: trans('super.tenant_created_msg'),
             timer: 2000,
             showConfirmButton: false,
         });
@@ -406,8 +406,8 @@ const submitCreateTenant = async () => {
     } catch (e) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: e.response?.data?.message || 'تعذر إنشاء المستأجر',
+            title: trans('common.error'),
+            text: e.response?.data?.message || trans('super.tenant_create_failed'),
         });
     } finally {
         isSubmitting.value = false;
@@ -430,8 +430,8 @@ const submitStatusChange = async () => {
         await api.post(`/super-admin/tenants/${selectedTenant.value.id}/toggle-status`, statusForm.value);
         Swal.fire({
             icon: 'success',
-            title: 'تم التحديث',
-            text: 'تم تحديث حالة المستأجر بنجاح ✓',
+            title: trans('common.success'),
+            text: trans('super.status_updated_msg'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -440,8 +440,8 @@ const submitStatusChange = async () => {
     } catch (e) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: e.response?.data?.message || 'تعذر تحديث الحالة',
+            title: trans('common.error'),
+            text: e.response?.data?.message || trans('super.status_update_failed'),
         });
     } finally {
         isSubmitting.value = false;
@@ -459,9 +459,10 @@ const getStatusBadgeClass = (status) => {
 
 const getStatusLabel = (status) => {
     switch (status) {
-        case 'active': return 'نشط ✅';
-        case 'trial': return 'تجريبي ⏳';
-        case 'suspended': return 'موقوف 🚫';
+        case 'active': return trans('super.status_active_badge');
+        case 'trial': return trans('super.status_trial_badge');
+        case 'suspended': return trans('super.status_suspended_badge');
+        case 'expired': return trans('super.status_expired_badge');
         default: return status;
     }
 };

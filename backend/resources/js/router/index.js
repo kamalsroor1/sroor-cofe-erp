@@ -215,7 +215,7 @@ const routes = [
         name: 'coffee_blender.index',
         component: () => import('../views/CoffeeBlender/CoffeeBlenderView.vue'),
         meta: {
-            title: 'محرك توليف وخلاط البن',
+            title: 'معمل تركيب وتجميع المنتجات',
             requiresAuth: true,
             permission: 'items.create',
         },
@@ -364,7 +364,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // 2. Set document title
-    const appName = appConfigStore.system?.company_name || 'مخزني ERP';
+    const appName = appConfigStore.platformName || 'منظومة ERP';
     document.title = to.meta.title ? `${to.meta.title} - ${appName}` : appName;
 
     // 3. Guest-only check (e.g. Login page)

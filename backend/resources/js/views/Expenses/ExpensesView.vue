@@ -29,10 +29,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ formatMoney(metrics.total_month || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(metrics.total_month || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            إجمالي مصروفات ونثريات الشهر الحالي
+            {{ $t('expenses.total_month_sub') }}
           </div>
         </div>
 
@@ -45,10 +45,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-amber-400 font-mono">
-            {{ formatMoney(metrics.total_cash || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(metrics.total_cash || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            المصروفات المنصرفة نقداً من درج الكاشير
+            {{ $t('expenses.cash_expenses_sub') }}
           </div>
         </div>
 
@@ -61,10 +61,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-white font-mono">
-            {{ formatMoney(metrics.total_filtered || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(metrics.total_filtered || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            إجمالي نتائج الفلترة والبحث الحالي
+            {{ $t('expenses.filtered_total_sub') }}
           </div>
         </div>
       </div>
@@ -119,7 +119,7 @@
 
       <!-- Quick Category Chips -->
       <div v-if="quickCategories.length > 0" class="flex items-center gap-2 overflow-x-auto pb-1">
-        <span class="text-xs font-bold text-slate-400 shrink-0 font-tajawal">تصنيفات سريعة:</span>
+        <span class="text-xs font-bold text-slate-400 shrink-0 font-tajawal">{{ $t('expenses.quick_categories_label') }}</span>
         <button
           v-for="cat in quickCategories"
           :key="cat"
@@ -136,7 +136,7 @@
           @click="filterByCategory('all')"
           class="px-2.5 py-1 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 transition-all whitespace-nowrap cursor-pointer"
         >
-          ✕ إلغاء الفلتر
+          {{ $t('expenses.clear_filter') }}
         </button>
       </div>
 
@@ -155,7 +155,7 @@
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
-                <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.cost_center') }} & التصنيف</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.cost_center_and_category') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
                 <th class="py-3 px-4 text-end font-bold">{{ $t('common.amount') }}</th>
                 <th class="py-3 px-4 text-center font-bold">{{ $t('invoices.payment_method') }}</th>
@@ -188,7 +188,7 @@
                   {{ expense.expense_date }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black text-sm text-rose-400">
-                  {{ formatMoney(expense.amount) }} <span class="text-xs font-normal">ج.م</span>
+                  {{ formatMoney(expense.amount) }} <span class="text-xs font-normal">{{ $t('common.currency') }}</span>
                 </td>
                 <td class="py-3.5 px-4 text-center">
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-300">
@@ -244,7 +244,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
-            إجمالي النتائج: <span class="font-mono text-amber-400">{{ pagination.total }}</span> مصروف
+            {{ $t('expenses.total_results_count', { count: pagination.total }) }}
           </div>
           <div class="flex items-center gap-1">
             <button
@@ -253,7 +253,7 @@
               :disabled="pagination.current_page <= 1"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
             <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
               {{ pagination.current_page }} / {{ pagination.last_page }}
@@ -264,7 +264,7 @@
               :disabled="pagination.current_page >= pagination.last_page"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -324,7 +324,7 @@
 
           <!-- Quick Category Tags in Modal -->
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-[11px] text-slate-500 font-bold">اقتراحات:</span>
+            <span class="text-[11px] text-slate-500 font-bold">{{ $t('expenses.suggestions_label') }}</span>
             <button
               v-for="cat in quickCategories"
               :key="cat"
@@ -375,12 +375,12 @@
               required
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
-              <option value="cash">💵 نقداً (درج الكاشير)</option>
-              <option value="instapay">⚡ إنستاباي</option>
-              <option value="e_wallet">📱 محفظة إلكترونية</option>
-              <option value="visa">💳 فيزا / بطاقة بنكية</option>
-              <option value="bank_transfer">🏦 تحويل بنكي</option>
-              <option value="check">📄 شيك</option>
+              <option value="cash">💵 {{ $t('treasury.method_cash_drawer') }}</option>
+              <option value="instapay">⚡ {{ $t('contacts.instapay') }}</option>
+              <option value="e_wallet">📱 {{ $t('contacts.wallet') }}</option>
+              <option value="visa">💳 {{ $t('treasury.method_visa') }}</option>
+              <option value="bank_transfer">🏦 {{ $t('contacts.bank_transfer') }}</option>
+              <option value="check">📄 {{ $t('invoices.check') }}</option>
             </select>
           </div>
 
@@ -428,6 +428,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Plus,
     Search,
@@ -485,12 +486,12 @@ const formatMoney = (val) => {
 
 const formatPaymentMethod = (method) => {
     const map = {
-        cash: '💵 نقداً',
-        instapay: '⚡ إنستاباي',
-        e_wallet: '📱 محفظة',
-        visa: '💳 فيزا',
-        bank_transfer: '🏦 تحويل بنكي',
-        check: '📄 شيك',
+        cash: trans('contacts.cash'),
+        instapay: trans('contacts.instapay'),
+        e_wallet: trans('contacts.wallet'),
+        visa: '💳 Visa',
+        bank_transfer: trans('contacts.bank_transfer'),
+        check: trans('invoices.check'),
     };
     return map[method] || method;
 };
@@ -549,7 +550,7 @@ onMounted(() => {
 const openCreateModal = () => {
     editingExpense.value = null;
     form.title = '';
-    form.category = 'نثريات ومصاريف تشغيل';
+    form.category = trans('expenses.preset_customs');
     form.cost_center = 'operational';
     form.amount = '';
     form.expense_date = new Date().toISOString().split('T')[0];
@@ -577,8 +578,8 @@ const saveExpense = async () => {
             await api.put(`/expenses/${editingExpense.value.id}`, form);
             Swal.fire({
                 icon: 'success',
-                title: 'تم التعديل',
-                text: 'تم تعديل بيانات المصروف بنجاح',
+                title: trans('common.success'),
+                text: trans('expenses.expense_updated'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -586,8 +587,8 @@ const saveExpense = async () => {
             await api.post('/expenses', form);
             Swal.fire({
                 icon: 'success',
-                title: 'تم التسجيل',
-                text: 'تم تسجيل المصروف بنجاح',
+                title: trans('common.success'),
+                text: trans('expenses.expense_added'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -597,8 +598,8 @@ const saveExpense = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر حفظ المصروف',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;
@@ -607,12 +608,12 @@ const saveExpense = async () => {
 
 const deleteExpense = async (e) => {
     const result = await Swal.fire({
-        title: `حذف المصروف (${e.title})؟`,
-        text: 'هل أنت متأكد من حذف هذا المصروف؟',
+        title: trans('expenses.delete_expense_confirm_title', { title: e.title }),
+        text: trans('expenses.delete_expense_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.delete'),
+        cancelButtonText: trans('common.cancel'),
         confirmButtonColor: '#f43f5e',
     });
 
@@ -621,8 +622,8 @@ const deleteExpense = async (e) => {
             await api.delete(`/expenses/${e.id}`);
             Swal.fire({
                 icon: 'success',
-                title: 'تم الحذف',
-                text: 'تم حذف المصروف بنجاح',
+                title: trans('common.success'),
+                text: trans('expenses.expense_deleted'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -630,8 +631,8 @@ const deleteExpense = async (e) => {
         } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'خطأ',
-                text: error.userMessage || 'تعذر حذف المصروف',
+                title: trans('common.error'),
+                text: error.userMessage || trans('common.error'),
             });
         }
     }

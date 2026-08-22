@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { trans } from '../helpers/trans';
 
 // 1. Create centralized Axios instance
 const apiClient = axios.create({
@@ -51,7 +52,7 @@ apiClient.interceptors.response.use(
     (error) => {
         const status = error.response ? error.response.status : null;
         const data = error.response ? error.response.data : null;
-        const message = data?.message || error.message || 'حدث خطأ غير متوقع في الاتصال بالخادم';
+        const message = data?.message || error.message || trans('common.unexpected_error');
 
         // 401 Unauthorized: Session Expired / Invalid Token
         if (status === 401) {
@@ -74,9 +75,9 @@ apiClient.interceptors.response.use(
         if (status === 403) {
             Swal.fire({
                 icon: 'warning',
-                title: 'تنبيه الصلاحيات',
+                title: trans('common.permission_alert'),
                 text: message,
-                confirmButtonText: 'حسناً',
+                confirmButtonText: trans('common.ok'),
                 confirmButtonColor: '#f59e0b',
                 background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff',
                 color: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',

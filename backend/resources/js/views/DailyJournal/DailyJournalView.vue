@@ -26,7 +26,7 @@
               class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <MinusCircle class="w-4 h-4" />
-              <span>تسجيل مصروف اليومية</span>
+              <span>{{ $t('treasury.record_journal_expense') }}</span>
             </button>
 
             <!-- Shift Control Button -->
@@ -66,19 +66,19 @@
             <div class="flex items-center gap-2">
               <span class="text-xs font-black text-white font-mono">{{ activeShift.shift_number }}</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                وردية نشطة ومفتوحة
+                {{ $t('treasury.active_open_shift_badge') }}
               </span>
             </div>
             <p class="text-[11px] text-slate-400 mt-0.5">
-              الكاشير: <span class="font-bold text-slate-200">{{ activeShift.user_name || 'الكاشير' }}</span> — فُتحت في: <span class="font-mono text-slate-300">{{ activeShift.opened_at }}</span>
+              {{ $t('treasury.cashier_label') }}: <span class="font-bold text-slate-200">{{ activeShift.user_name || $t('treasury.cashier_label') }}</span> — {{ $t('treasury.opened_at_time') }} <span class="font-mono text-slate-300">{{ activeShift.opened_at }}</span>
             </p>
           </div>
         </div>
 
         <div class="flex items-center gap-4 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 border-slate-800 pt-2 md:pt-0">
           <div class="text-start md:text-end">
-            <span class="text-[10px] text-slate-400 block font-bold">الرصيد الافتتاحي للدرج</span>
-            <span class="text-sm font-black text-amber-400 font-mono">{{ formatMoney(activeShift.opening_cash_balance) }} ج.م</span>
+            <span class="text-[10px] text-slate-400 block font-bold">{{ $t('treasury.opening_float_balance') }}</span>
+            <span class="text-sm font-black text-amber-400 font-mono">{{ formatMoney(activeShift.opening_cash_balance) }} {{ $t('common.currency') }}</span>
           </div>
 
           <button
@@ -87,7 +87,7 @@
             class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Printer class="w-3.5 h-3.5 text-amber-400" />
-            <span>طباعة تقرير Z</span>
+            <span>{{ $t('treasury.print_z_report') }}</span>
           </button>
         </div>
       </div>
@@ -99,7 +99,7 @@
         <div class="flex items-center gap-3">
           <AlertCircle class="w-5 h-5 text-amber-400 shrink-0" />
           <span class="text-xs font-bold text-amber-300">
-            لا توجد وردية عمل مفتوحة حالياً لهذا الفرع. يرجى فتح وردية لبدء عمليات البيع والتحصيل.
+            {{ $t('treasury.no_open_shift_warning') }}
           </span>
         </div>
         <button
@@ -107,7 +107,7 @@
           @click="showOpenShiftModal = true"
           class="px-3.5 py-1.5 bg-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-md cursor-pointer"
         >
-          فتح وردية الآن
+          {{ $t('treasury.open_shift_now') }}
         </button>
       </div>
 
@@ -115,41 +115,41 @@
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <!-- Total Inflow -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <span class="text-[11px] font-bold text-slate-400 block">إجمالي المقبوضات (كاش وارد)</span>
+          <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.total_receipts_in') }}</span>
           <div class="text-xl font-black text-emerald-400 font-mono">
-            +{{ formatMoney(summary.total_cash_in || 0) }} <span class="text-xs text-slate-400 font-normal">ج.م</span>
+            +{{ formatMoney(summary.total_cash_in || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500 block">مبيعات كاش + تحصيل عملاء</span>
+          <span class="text-[10px] text-slate-500 block">{{ $t('treasury.inflow_details_sub') }}</span>
         </div>
 
         <!-- Total Outflow -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <span class="text-[11px] font-bold text-slate-400 block">إجمالي المدفوعات (كاش منصرف)</span>
+          <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.total_disbursements_out') }}</span>
           <div class="text-xl font-black text-rose-400 font-mono">
-            -{{ formatMoney(summary.total_cash_out || 0) }} <span class="text-xs text-slate-400 font-normal">ج.م</span>
+            -{{ formatMoney(summary.total_cash_out || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500 block">مصروفات + سداد موردين</span>
+          <span class="text-[10px] text-slate-500 block">{{ $t('treasury.outflow_details_sub') }}</span>
         </div>
 
         <!-- Net Cash Today -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <span class="text-[11px] font-bold text-slate-400 block">صافي النقدية اليومية</span>
+          <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.net_cash_flow') }}</span>
           <div
             class="text-xl font-black font-mono"
             :class="(summary.net_cash_today || 0) >= 0 ? 'text-cyan-400' : 'text-amber-400'"
           >
-            {{ (summary.net_cash_today || 0) > 0 ? '+' : '' }}{{ formatMoney(summary.net_cash_today || 0) }} <span class="text-xs text-slate-400 font-normal">ج.م</span>
+            {{ (summary.net_cash_today || 0) > 0 ? '+' : '' }}{{ formatMoney(summary.net_cash_today || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500 block">الفارق بين الوارد والمنصرف</span>
+          <span class="text-[10px] text-slate-500 block">{{ $t('treasury.net_cash_flow_sub') }}</span>
         </div>
 
         <!-- Expected Cash In Drawer -->
         <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-950 border border-amber-500/30 shadow-md space-y-1">
-          <span class="text-[11px] font-bold text-amber-300 block">الرصيد المتوقع بالدرج 💵</span>
+          <span class="text-[11px] font-bold text-amber-300 block">{{ $t('treasury.expected_drawer_balance') }}</span>
           <div class="text-xl font-black text-amber-400 font-mono">
-            {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-amber-300/80 font-normal">ج.م</span>
+            {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-amber-300/80 font-normal">{{ $t('common.currency') }}</span>
           </div>
-          <span class="text-[10px] text-slate-400 block">افتتاحي + صافي النقدية</span>
+          <span class="text-[10px] text-slate-400 block">{{ $t('treasury.expected_drawer_sub') }}</span>
         </div>
       </div>
 
@@ -164,7 +164,7 @@
             :class="activeTab === 'invoices' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-slate-200'"
           >
             <ShoppingCart class="w-4 h-4" />
-            <span>فواتير مبيعات اليومية ({{ invoices.length }})</span>
+            <span>{{ $t('treasury.journal_invoices_tab') }} ({{ invoices.length }})</span>
           </button>
 
           <button
@@ -174,7 +174,7 @@
             :class="activeTab === 'expenses' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-slate-200'"
           >
             <Receipt class="w-4 h-4" />
-            <span>مصروفات ونثريات اليومية ({{ expenses.length }})</span>
+            <span>{{ $t('treasury.journal_expenses_tab') }} ({{ expenses.length }})</span>
           </button>
         </div>
 
@@ -193,8 +193,8 @@
                   <th class="py-3 px-4 text-start font-bold">#</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.customer') }}</th>
-                  <th class="py-3 px-4 text-start font-bold">الوقت</th>
-                  <th class="py-3 px-4 text-center font-bold">طريقة السداد</th>
+                  <th class="py-3 px-4 text-start font-bold">{{ $t('treasury.time') }}</th>
+                  <th class="py-3 px-4 text-center font-bold">{{ $t('treasury.payment_method') }}</th>
                   <th class="py-3 px-4 text-end font-bold">{{ $t('common.total') }}</th>
                   <th class="py-3 px-4 text-end font-bold">{{ $t('invoices.paid') }}</th>
                   <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
@@ -212,14 +212,14 @@
                     </span>
                   </td>
                   <td class="py-3.5 px-4 text-end font-mono font-bold text-slate-200">
-                    {{ formatMoney(inv.net_total) }} ج.م
+                    {{ formatMoney(inv.net_total) }} {{ $t('common.currency') }}
                   </td>
                   <td class="py-3.5 px-4 text-end font-mono font-black text-emerald-400">
-                    {{ formatMoney(inv.paid_amount) }} ج.م
+                    {{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}
                   </td>
                   <td class="py-3.5 px-4 text-center">
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
-                      معتمدة
+                      {{ $t('treasury.approved_status') }}
                     </span>
                   </td>
                 </tr>
@@ -229,8 +229,8 @@
 
           <EmptyState
             v-else
-            :title="'لا توجد فواتير مبيعات مسجلة في هذا التاريخ'"
-            :description="'لم يتم إصدار أي فواتير مبيعات في اليوم المحدد.'"
+            :title="$t('treasury.no_invoices_date')"
+            :description="$t('treasury.no_invoices_date_desc')"
             :icon="'🛒'"
           />
         </div>
@@ -244,8 +244,8 @@
                   <th class="py-3 px-4 text-start font-bold">#</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
-                  <th class="py-3 px-4 text-start font-bold">مركز التكلفة</th>
-                  <th class="py-3 px-4 text-center font-bold">طريقة الصرف</th>
+                  <th class="py-3 px-4 text-start font-bold">{{ $t('treasury.cost_center') }}</th>
+                  <th class="py-3 px-4 text-center font-bold">{{ $t('treasury.expense_method') }}</th>
                   <th class="py-3 px-4 text-end font-bold">{{ $t('common.amount') }}</th>
                 </tr>
               </thead>
@@ -261,7 +261,7 @@
                     </span>
                   </td>
                   <td class="py-3.5 px-4 text-end font-mono font-black text-rose-400">
-                    {{ formatMoney(e.amount) }} ج.م
+                    {{ formatMoney(e.amount) }} {{ $t('common.currency') }}
                   </td>
                 </tr>
               </tbody>
@@ -270,8 +270,8 @@
 
           <EmptyState
             v-else
-            :title="'لا توجد مصروفات مسجلة في هذا التاريخ'"
-            :description="'لم يتم تسجيل أي نثريات أو مصروفات في اليوم المحدد.'"
+            :title="$t('treasury.no_expenses_date')"
+            :description="$t('treasury.no_expenses_date_desc')"
             :icon="'💸'"
           />
         </div>
@@ -286,7 +286,7 @@
         <form @submit.prevent="submitOpenShift" class="space-y-4 font-tajawal">
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">
-              الرصيد الافتتاحي للدرج (كاش بداية الوردية) <span class="text-rose-500">*</span>
+              {{ $t('treasury.opening_cash_prompt') }} <span class="text-rose-500">*</span>
             </label>
             <input
               v-model="openShiftForm.opening_cash_balance"
@@ -301,13 +301,13 @@
 
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">
-              ملاحظات الفتح
+              {{ $t('treasury.open_shift_notes_prompt') }}
             </label>
             <input
               v-model="openShiftForm.notes"
               type="text"
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              placeholder="مثال: استلام الدرج من الكاشير الصباحي..."
+              :placeholder="$t('treasury.open_shift_notes_placeholder')"
             >
           </div>
 
@@ -326,7 +326,7 @@
               class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-              <span>تأكيد فتح الوردية</span>
+              <span>{{ $t('treasury.confirm_open_shift_btn') }}</span>
             </button>
           </div>
         </form>
@@ -341,18 +341,18 @@
         <form @submit.prevent="submitCloseShift" class="space-y-4 font-tajawal">
           <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
             <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-400 font-bold">الرصيد الافتتاحي للوردية:</span>
-              <span class="font-mono text-slate-200 font-bold">{{ formatMoney(activeShift?.opening_cash_balance || 0) }} ج.م</span>
+              <span class="text-slate-400 font-bold">{{ $t('treasury.shift_opening_balance_label') }}</span>
+              <span class="font-mono text-slate-200 font-bold">{{ formatMoney(activeShift?.opening_cash_balance || 0) }} {{ $t('common.currency') }}</span>
             </div>
             <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-400 font-bold">الرصيد الدفتري المتوقع بالدرج:</span>
-              <span class="font-mono text-amber-400 font-black text-sm">{{ formatMoney(summary.expected_cash_in_drawer || 0) }} ج.م</span>
+              <span class="text-slate-400 font-bold">{{ $t('treasury.shift_expected_balance_label') }}</span>
+              <span class="font-mono text-amber-400 font-black text-sm">{{ formatMoney(summary.expected_cash_in_drawer || 0) }} {{ $t('common.currency') }}</span>
             </div>
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">
-              النقدية الفعلية بعد العدّ والجرد (الدرج الفعلي) <span class="text-rose-500">*</span>
+              {{ $t('treasury.actual_counted_cash_prompt') }} <span class="text-rose-500">*</span>
             </label>
             <input
               v-model="closeShiftForm.actual_cash_balance"
@@ -367,19 +367,19 @@
 
           <!-- Live Discrepancy Preview -->
           <div v-if="closeShiftForm.actual_cash_balance !== ''" class="p-3 rounded-xl border text-xs font-bold flex items-center justify-between" :class="getDiffClass()">
-            <span>فارق الدرج (العجز / الزيادة):</span>
+            <span>{{ $t('treasury.drawer_difference_label') }}</span>
             <span class="font-mono text-sm">{{ getDiffText() }}</span>
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">
-              ملاحظات التقفيل
+              {{ $t('treasury.close_shift_notes_prompt') }}
             </label>
             <input
               v-model="closeShiftForm.notes"
               type="text"
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              placeholder="أي ملاحظات حول الجرد أو التسليم..."
+              :placeholder="$t('treasury.close_shift_notes_placeholder')"
             >
           </div>
 
@@ -398,7 +398,7 @@
               class="px-5 py-2 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-xs font-black shadow-lg shadow-rose-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              <span>تأكيد الإغلاق وإصدار Z-Report</span>
+              <span>{{ $t('treasury.confirm_close_zreport_btn') }}</span>
             </button>
           </div>
         </form>
@@ -407,7 +407,7 @@
       <!-- Quick Journal Expense Modal -->
       <AppModal
         :show="showExpenseModal"
-        :title="'تسجيل مصروف في اليومية'"
+        :title="$t('treasury.record_journal_expense_title')"
         @close="showExpenseModal = false"
       >
         <form @submit.prevent="submitExpense" class="space-y-4 font-tajawal">
@@ -420,7 +420,7 @@
               type="text"
               required
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              placeholder="مثال: بوفيه، إكراميات، شنط وتغليف..."
+              :placeholder="$t('treasury.expense_title_placeholder')"
             >
           </div>
 
@@ -441,36 +441,36 @@
 
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
-                مركز التكلفة <span class="text-rose-500">*</span>
+                {{ $t('treasury.cost_center') }} <span class="text-rose-500">*</span>
               </label>
               <select
                 v-model="expenseForm.cost_center"
                 required
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option value="operational">مصاريف تشغيلية ونثريات</option>
-                <option value="hospitality">ضيافة وبوفيه ونظافة</option>
-                <option value="packaging">شنط وكراتين وتغليف</option>
-                <option value="utilities">مرافق وكهرباء ومياه</option>
-                <option value="salaries">رواتب وإكراميات</option>
-                <option value="maintenance">صيانة دورية</option>
+                <option value="operational">{{ $t('treasury.cost_center_operational') }}</option>
+                <option value="hospitality">{{ $t('treasury.cost_center_hospitality') }}</option>
+                <option value="packaging">{{ $t('treasury.cost_center_packaging') }}</option>
+                <option value="utilities">{{ $t('treasury.cost_center_utilities') }}</option>
+                <option value="salaries">{{ $t('treasury.cost_center_salaries') }}</option>
+                <option value="maintenance">{{ $t('treasury.cost_center_maintenance') }}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">
-              طريقة الدفع <span class="text-rose-500">*</span>
+              {{ $t('treasury.payment_method') }} <span class="text-rose-500">*</span>
             </label>
             <select
               v-model="expenseForm.payment_method"
               required
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
-              <option value="cash">💵 نقداً من درج الكاشير</option>
-              <option value="instapay">⚡ إنستاباي</option>
-              <option value="e_wallet">📱 محفظة إلكترونية</option>
-              <option value="visa">💳 فيزا وبطاقة بنكية</option>
+              <option value="cash">{{ $t('treasury.method_cash_drawer') }}</option>
+              <option value="instapay">{{ $t('treasury.method_instapay') }}</option>
+              <option value="e_wallet">{{ $t('treasury.method_wallet') }}</option>
+              <option value="visa">{{ $t('treasury.method_visa') }}</option>
             </select>
           </div>
 
@@ -489,7 +489,7 @@
               class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-              <span>تسجيل المصروف</span>
+              <span>{{ $t('treasury.submit_expense_btn') }}</span>
             </button>
           </div>
         </form>
@@ -504,6 +504,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Calendar,
     MinusCircle,
@@ -568,12 +569,12 @@ const formatMoney = (val) => {
 
 const formatPaymentMethod = (method) => {
     const map = {
-        cash: '💵 نقداً',
-        instapay: '⚡ إنستاباي',
-        e_wallet: '📱 محفظة',
-        visa: '💳 فيزا',
-        credit: '📝 آجل',
-        partial: '⚖️ جزئي',
+        cash: trans('contacts.cash'),
+        instapay: trans('contacts.instapay'),
+        e_wallet: trans('contacts.wallet'),
+        visa: '💳 Visa',
+        credit: trans('invoices.credit'),
+        partial: trans('invoices.partial'),
     };
     return map[method] || method;
 };
@@ -610,8 +611,8 @@ const submitOpenShift = async () => {
         await api.post('/shifts/open', openShiftForm);
         Swal.fire({
             icon: 'success',
-            title: 'تم فتح الوردية',
-            text: 'تم فتح وردية العمل بنجاح',
+            title: trans('common.success'),
+            text: trans('treasury.shift_opened_success'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -620,8 +621,8 @@ const submitOpenShift = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر فتح الوردية',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;
@@ -638,9 +639,9 @@ const getDiffText = () => {
     const actual = parseFloat(closeShiftForm.actual_cash_balance) || 0;
     const expected = parseFloat(summary.value?.expected_cash_in_drawer) || 0;
     const diff = actual - expected;
-    if (Math.abs(diff) < 0.001) return 'مطابقة تماماً بدون عجز أو زيادة ✓';
-    if (diff > 0) return `زيادة بالدرج: +${diff.toFixed(2)} ج.م`;
-    return `عجز بالدرج: -${Math.abs(diff).toFixed(2)} ج.م`;
+    if (Math.abs(diff) < 0.001) return trans('treasury.exact_match_no_diff');
+    if (diff > 0) return trans('treasury.drawer_overage', { amount: diff.toFixed(2) });
+    return trans('treasury.drawer_shortage', { amount: Math.abs(diff).toFixed(2) });
 };
 
 const getDiffClass = () => {
@@ -663,16 +664,16 @@ const submitCloseShift = async () => {
         });
         Swal.fire({
             icon: 'success',
-            title: 'تم إغلاق الوردية',
-            text: response.data?.message || 'تم إغلاق وتقفيل الوردية وإصدار Z-Report بنجاح',
+            title: trans('common.success'),
+            text: response.data?.message || trans('treasury.shift_closed_success'),
         });
         showCloseShiftModal.value = false;
         await fetchDailyJournal();
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر إغلاق الوردية',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;
@@ -689,8 +690,8 @@ const submitExpense = async () => {
         });
         Swal.fire({
             icon: 'success',
-            title: 'تم التسجيل',
-            text: 'تم تسجيل المصروف في اليومية بنجاح',
+            title: trans('common.success'),
+            text: trans('expenses.expense_added'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -701,8 +702,8 @@ const submitExpense = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تسجيل المصروف',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;

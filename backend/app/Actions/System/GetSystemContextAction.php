@@ -124,8 +124,9 @@ final class GetSystemContextAction
                 'opening_cash_balance' => (float)$activeShift->opening_cash_balance,
             ] : null,
             'system' => [
-                'company_name'       => Setting::get('company_name', 'سرور كوفي'),
-                'company_subtitle'   => Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن'),
+                'platform_name'      => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
+                'company_name'       => Setting::get('company_name', Setting::get('platform_name', 'مؤسسة تجارية')),
+                'company_subtitle'   => Setting::get('company_subtitle', 'لإدارة المبيعات والمخزون والفروع'),
                 'system_theme_color' => Setting::get('system_theme_color', 'amber'),
                 'server_time'        => now()->toDateTimeString(),
             ],

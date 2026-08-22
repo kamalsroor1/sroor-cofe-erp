@@ -8,7 +8,7 @@
           type="button"
           @click="isSidebarOpen = true"
           class="p-2.5 text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-2xl transition-all md:hidden cursor-pointer active:scale-90"
-          title="القائمة الرئيسية"
+          :title="$t('nav.more_menu')"
         >
           <Menu class="w-6 h-6" />
         </button>
@@ -19,7 +19,7 @@
           </div>
           <div>
             <h1 class="font-black text-sm text-white group-hover:text-amber-400 transition-colors font-tajawal">
-              {{ appConfigStore.companyName || 'سرور كوفي ERP' }}
+              {{ appConfigStore.companyName || appConfigStore.platformName }}
             </h1>
             <p class="text-[10px] text-slate-400 font-bold -mt-0.5">
               {{ authStore.activeStoreName }}
@@ -37,7 +37,7 @@
             class="h-9 pr-8 pl-4 bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-xl text-xs font-bold text-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all cursor-pointer font-tajawal"
           >
             <option v-for="store in authStore.stores" :key="store.id" :value="store.id">
-              🏬 {{ store.name }} {{ store.is_main ? '(الرئيسي)' : '' }}
+              🏬 {{ store.name }} {{ store.is_main ? `(${$t('common.main_store_default')})` : '' }}
             </option>
           </select>
         </div>
@@ -45,7 +45,7 @@
         <!-- Active Shift Badge -->
         <div v-if="appConfigStore.hasOpenShift" class="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-[11px] font-bold text-emerald-400 flex items-center gap-1.5 font-tajawal">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>وردية مفتوحة: {{ appConfigStore.currentShiftNumber }}</span>
+          <span>{{ $t('nav.active_shift') }}: {{ appConfigStore.currentShiftNumber }}</span>
         </div>
       </div>
 
@@ -56,7 +56,7 @@
           type="button"
           @click="toggleTheme"
           class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
-          :title="appConfigStore.isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'"
+          :title="appConfigStore.isDark ? $t('nav.switch_to_light') : $t('nav.switch_to_dark')"
         >
           <Sun v-if="appConfigStore.isDark" class="w-4 h-4" />
           <Moon v-else class="w-4 h-4" />
@@ -66,14 +66,14 @@
         <div class="flex items-center gap-2 pr-2 border-r border-slate-800">
           <div class="text-end hidden lg:block">
             <div class="text-xs font-bold text-slate-200 font-tajawal">{{ authStore.userName }}</div>
-            <div class="text-[10px] text-amber-400 font-mono">{{ authStore.roles?.[0] || 'كاشير' }}</div>
+            <div class="text-[10px] text-amber-400 font-mono">{{ authStore.roles?.[0] || $t('nav.cashier_role') }}</div>
           </div>
 
           <button
             type="button"
             @click="handleLogout"
             class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-            title="تسجيل الخروج"
+            :title="$t('nav.logout')"
           >
             <LogOut class="w-4 h-4" />
           </button>
@@ -92,11 +92,11 @@
             :class="$route.name === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <LayoutDashboard class="w-4 h-4" />
-            <span>لوحة التحكم الرئيسية</span>
+            <span>{{ $t('nav.dashboard') }}</span>
           </router-link>
 
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider">
-            العمليات ونقاط البيع
+            {{ $t('nav.group_sales') }}
           </div>
 
           <router-link
@@ -105,7 +105,7 @@
             :class="$route.name?.startsWith('pos') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <ShoppingCart class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('pos') ? 'text-slate-950' : 'text-emerald-400'" />
-            <span>نقطة البيع السريعة (POS)</span>
+            <span>{{ $t('nav.pos_fast') }}</span>
           </router-link>
 
           <router-link
@@ -114,7 +114,7 @@
             :class="$route.name?.startsWith('invoices') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <FileText class="w-4 h-4 text-blue-400" :class="$route.name?.startsWith('invoices') ? 'text-slate-950' : 'text-blue-400'" />
-            <span>فواتير المبيعات</span>
+            <span>{{ $t('nav.invoices_log') }}</span>
           </router-link>
 
           <router-link
@@ -123,7 +123,7 @@
             :class="$route.name?.startsWith('returns') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <RotateCcw class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('returns') ? 'text-slate-950' : 'text-cyan-400'" />
-            <span>مرتجعات المبيعات والمشتريات</span>
+            <span>{{ $t('nav.returns_adjustments') }}</span>
           </router-link>
 
           <router-link
@@ -131,12 +131,12 @@
             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
             :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
-            <Coffee class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-amber-400'" />
-            <span>استوديو وخلاط البن</span>
+            <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-amber-400'" />
+            <span>{{ $t('nav.coffee_blender') }}</span>
           </router-link>
 
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider">
-            الفروع والمخزون
+            {{ $t('nav.group_inventory') }}
           </div>
 
           <router-link
@@ -145,7 +145,7 @@
             :class="$route.name?.startsWith('stores') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <StoreIcon class="w-4 h-4" />
-            <span>الفروع والمخازن</span>
+            <span>{{ $t('nav.stores') }}</span>
           </router-link>
 
           <router-link
@@ -154,7 +154,7 @@
             :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-slate-950' : 'text-amber-400'" />
-            <span>الأصناف والمخزون</span>
+            <span>{{ $t('nav.items_catalog') }}</span>
           </router-link>
 
           <router-link
@@ -163,7 +163,7 @@
             :class="$route.name?.startsWith('stock_transfers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Truck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('stock_transfers') ? 'text-slate-950' : 'text-purple-400'" />
-            <span>التحويلات المخزنية</span>
+            <span>{{ $t('nav.stock_transfers') }}</span>
           </router-link>
 
           <router-link
@@ -172,7 +172,7 @@
             :class="$route.name?.startsWith('purchases') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Truck class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('purchases') ? 'text-slate-950' : 'text-emerald-400'" />
-            <span>المشتريات والتوريد</span>
+            <span>{{ $t('nav.purchases') }}</span>
           </router-link>
 
           <router-link
@@ -181,7 +181,7 @@
             :class="$route.name?.startsWith('customers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Users class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('customers') ? 'text-slate-950' : 'text-cyan-400'" />
-            <span>العملاء وكشوف الحساب</span>
+            <span>{{ $t('nav.customers') }}</span>
           </router-link>
 
           <router-link
@@ -190,7 +190,7 @@
             :class="$route.name?.startsWith('suppliers') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Factory class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('suppliers') ? 'text-slate-950' : 'text-indigo-400'" />
-            <span>الموردين وكشوف الحساب</span>
+            <span>{{ $t('nav.suppliers') }}</span>
           </router-link>
 
           <router-link
@@ -199,7 +199,7 @@
             :class="$route.name?.startsWith('expenses') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Receipt class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('expenses') ? 'text-slate-950' : 'text-rose-400'" />
-            <span>المصروفات والعهد النثرية</span>
+            <span>{{ $t('nav.expenses') }}</span>
           </router-link>
 
           <router-link
@@ -208,7 +208,7 @@
             :class="$route.name?.startsWith('daily_journal') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Wallet class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('daily_journal') ? 'text-slate-950' : 'text-emerald-400'" />
-            <span>دفتر اليومية والخزينة</span>
+            <span>{{ $t('nav.daily_journal') }}</span>
           </router-link>
 
           <router-link
@@ -217,11 +217,11 @@
             :class="$route.name?.startsWith('reports') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <BarChart3 class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('reports') ? 'text-slate-950' : 'text-purple-400'" />
-            <span>التقارير والأرباح</span>
+            <span>{{ $t('nav.reports') }}</span>
           </router-link>
 
           <div class="pt-3 pb-1 px-3 text-[10px] font-black text-slate-500 uppercase tracking-wider">
-            إدارة النظام والمستخدمين
+            {{ $t('nav.group_management') }}
           </div>
 
           <router-link
@@ -230,7 +230,7 @@
             :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-amber-400'" />
-            <span>المستخدمين والموظفين</span>
+            <span>{{ $t('nav.users') }}</span>
           </router-link>
 
           <router-link
@@ -239,7 +239,7 @@
             :class="$route.name?.startsWith('roles') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <ShieldCheck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('roles') ? 'text-slate-950' : 'text-purple-400'" />
-            <span>مصفوفة الصلاحيات</span>
+            <span>{{ $t('nav.roles') }}</span>
           </router-link>
 
           <router-link
@@ -248,7 +248,7 @@
             :class="$route.name?.startsWith('activity_logs') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-slate-950' : 'text-cyan-400'" />
-            <span>سجل النشاطات</span>
+            <span>{{ $t('nav.audit_logs') }}</span>
           </router-link>
 
           <router-link
@@ -257,7 +257,7 @@
             :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-amber-400'" />
-            <span>إعدادات النظام</span>
+            <span>{{ $t('nav.settings') }}</span>
           </router-link>
 
           <router-link
@@ -266,12 +266,12 @@
             :class="$route.name?.startsWith('trash') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-slate-950' : 'text-rose-400'" />
-            <span>سلة المحذوفات</span>
+            <span>{{ $t('nav.trash') }}</span>
           </router-link>
 
           <!-- Super Admin Section -->
           <div class="pt-2 pb-1 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            إدارة المنصة والسوبر أدمن
+            {{ $t('super.central_platform') }}
           </div>
 
           <router-link
@@ -280,7 +280,7 @@
             :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Crown class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.dashboard') ? 'text-white' : 'text-purple-400'" />
-            <span>لوحة السوبر أدمن</span>
+            <span>{{ $t('super.dashboard') }}</span>
           </router-link>
 
           <router-link
@@ -289,7 +289,7 @@
             :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Building2 class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('super_admin.tenants') ? 'text-white' : 'text-indigo-400'" />
-            <span>إدارة المستأجرين</span>
+            <span>{{ $t('super.tenants') }}</span>
           </router-link>
 
           <router-link
@@ -298,7 +298,7 @@
             :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
-            <span>الباقات والأسعار</span>
+            <span>{{ $t('super.plans') }}</span>
           </router-link>
 
           <router-link
@@ -307,7 +307,7 @@
             :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'"
           >
             <Rocket class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('super_admin.app_versions') ? 'text-white' : 'text-purple-400'" />
-            <span>إصدارات التطبيق (APK)</span>
+            <span>{{ $t('super.app_versions') }}</span>
           </router-link>
         </div>
 
@@ -356,7 +356,7 @@
                 </h2>
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold text-[10px]">
-                    {{ authStore.roles?.[0] || 'كاشير' }}
+                    {{ authStore.roles?.[0] || $t('nav.cashier_role') }}
                   </span>
                   <span class="text-[11px] text-slate-400 truncate">
                     🏬 {{ authStore.activeStoreName }}
@@ -370,7 +370,7 @@
               type="button"
               @click="isSidebarOpen = false"
               class="w-10 h-10 rounded-2xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md shrink-0"
-              title="إغلاق القائمة"
+              :title="$t('common.close')"
             >
               <X class="w-5 h-5" />
             </button>
@@ -389,7 +389,7 @@
                   <div class="w-8 h-8 rounded-xl bg-slate-950/20 flex items-center justify-center">
                     <ShoppingCart class="w-4.5 h-4.5 text-slate-950" />
                   </div>
-                  <span>نقطة البيع السريعة (POS)</span>
+                  <span>{{ $t('nav.pos_fast') }}</span>
                 </div>
                 <span class="text-xs opacity-75 font-mono">F2 ←</span>
               </router-link>
@@ -406,14 +406,14 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name === 'dashboard' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
                   <LayoutDashboard class="w-4 h-4" />
                 </div>
-                <span>لوحة التحكم الرئيسية</span>
+                <span>{{ $t('nav.dashboard') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
 
             <!-- Group: Operations -->
             <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              العمليات ونقاط البيع
+              {{ $t('nav.group_sales') }}
             </div>
 
             <router-link
@@ -426,7 +426,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('invoices') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-blue-400'">
                   <FileText class="w-4 h-4" />
                 </div>
-                <span>فواتير المبيعات</span>
+                <span>{{ $t('nav.invoices_log') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -441,7 +441,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('returns') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
                   <RotateCcw class="w-4 h-4" />
                 </div>
-                <span>مرتجعات المبيعات والمشتريات</span>
+                <span>{{ $t('nav.returns_adjustments') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -454,16 +454,16 @@
             >
               <div class="flex items-center gap-3.5">
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('coffee_blender') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
-                  <Coffee class="w-4 h-4" />
+                  <Layers class="w-4 h-4" />
                 </div>
-                <span>استوديو وخلاط البن</span>
+                <span>{{ $t('nav.coffee_blender') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
 
             <!-- Group: Inventory -->
             <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              الفروع والمخزون
+              {{ $t('nav.group_inventory') }}
             </div>
 
             <router-link
@@ -476,7 +476,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stores') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
                   <StoreIcon class="w-4 h-4" />
                 </div>
-                <span>الفروع والمخازن</span>
+                <span>{{ $t('nav.stores') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -491,7 +491,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('items') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
                   <Package class="w-4 h-4" />
                 </div>
-                <span>الأصناف والمخزون</span>
+                <span>{{ $t('nav.items_catalog') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -506,7 +506,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('stock_transfers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
                   <Truck class="w-4 h-4" />
                 </div>
-                <span>التحويلات المخزنية</span>
+                <span>{{ $t('nav.stock_transfers') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -521,7 +521,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('purchases') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-teal-400'">
                   <Truck class="w-4 h-4" />
                 </div>
-                <span>المشتريات والتوريد</span>
+                <span>{{ $t('nav.purchases') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -536,7 +536,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('customers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-sky-400'">
                   <Users class="w-4 h-4" />
                 </div>
-                <span>العملاء وكشوف الحساب</span>
+                <span>{{ $t('nav.customers') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -551,7 +551,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('suppliers') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-indigo-400'">
                   <Factory class="w-4 h-4" />
                 </div>
-                <span>الموردين وكشوف الحساب</span>
+                <span>{{ $t('nav.suppliers') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -566,7 +566,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('expenses') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
                   <Receipt class="w-4 h-4" />
                 </div>
-                <span>المصروفات والعهد النثرية</span>
+                <span>{{ $t('nav.expenses') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -581,7 +581,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('daily_journal') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-emerald-400'">
                   <Wallet class="w-4 h-4" />
                 </div>
-                <span>دفتر اليومية والخزينة</span>
+                <span>{{ $t('nav.daily_journal') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -596,14 +596,14 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('reports') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
                   <BarChart3 class="w-4 h-4" />
                 </div>
-                <span>التقارير والأرباح</span>
+                <span>{{ $t('nav.reports') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
 
             <!-- Group: Management -->
             <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              إدارة النظام والمستخدمين
+              {{ $t('nav.group_management') }}
             </div>
 
             <router-link
@@ -616,7 +616,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('users') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
                   <Users class="w-4 h-4" />
                 </div>
-                <span>المستخدمين والموظفين</span>
+                <span>{{ $t('nav.users') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -631,7 +631,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('roles') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-purple-400'">
                   <ShieldCheck class="w-4 h-4" />
                 </div>
-                <span>مصفوفة الصلاحيات</span>
+                <span>{{ $t('nav.roles') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -646,7 +646,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('activity_logs') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-400'">
                   <Activity class="w-4 h-4" />
                 </div>
-                <span>سجل النشاطات والتدقيق</span>
+                <span>{{ $t('nav.audit_logs') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -661,7 +661,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('settings') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-amber-400'">
                   <Sliders class="w-4 h-4" />
                 </div>
-                <span>إعدادات النظام</span>
+                <span>{{ $t('nav.settings') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -676,14 +676,14 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('trash') ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-rose-400'">
                   <Trash2 class="w-4 h-4" />
                 </div>
-                <span>سلة المحذوفات</span>
+                <span>{{ $t('nav.trash') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
 
             <!-- Group: Super Admin -->
             <div class="pt-4 pb-1 px-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-              إدارة المنصة والسوبر أدمن
+              {{ $t('super.central_platform') }}
             </div>
 
             <router-link
@@ -696,7 +696,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.dashboard') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
                   <Crown class="w-4 h-4" />
                 </div>
-                <span>لوحة السوبر أدمن</span>
+                <span>{{ $t('super.dashboard') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -711,7 +711,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.tenants') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-indigo-400'">
                   <Building2 class="w-4 h-4" />
                 </div>
-                <span>إدارة المستأجرين</span>
+                <span>{{ $t('super.tenants') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -726,7 +726,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.plans') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-amber-400'">
                   <Layers class="w-4 h-4" />
                 </div>
-                <span>الباقات والأسعار</span>
+                <span>{{ $t('super.plans') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -741,7 +741,7 @@
                 <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="$route.name?.startsWith('super_admin.app_versions') ? 'bg-slate-950/20 text-white' : 'bg-slate-800 text-purple-400'">
                   <Rocket class="w-4 h-4" />
                 </div>
-                <span>إصدارات التطبيق (APK)</span>
+                <span>{{ $t('super.app_versions') }}</span>
               </div>
               <span class="text-xs opacity-40 group-hover:opacity-100 transition-opacity">←</span>
             </router-link>
@@ -756,7 +756,7 @@
             >
               <Sun v-if="appConfigStore.isDark" class="w-4 h-4 text-amber-400" />
               <Moon v-else class="w-4 h-4" />
-              <span>{{ appConfigStore.isDark ? 'نهاري' : 'ليلي' }}</span>
+              <span>{{ appConfigStore.isDark ? $t('nav.switch_to_light') : $t('nav.switch_to_dark') }}</span>
             </button>
 
             <button
@@ -765,7 +765,7 @@
               class="py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
             >
               <LogOut class="w-4 h-4" />
-              <span>خروج</span>
+              <span>{{ $t('nav.logout') }}</span>
             </button>
           </div>
         </aside>
@@ -795,7 +795,6 @@ import {
     Wallet,
     BarChart3,
     RotateCcw,
-    Coffee,
     ShieldCheck,
     Activity,
     Sliders,

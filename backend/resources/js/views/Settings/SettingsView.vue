@@ -9,7 +9,7 @@
           type="button"
           @click="selectedSection = null"
           class="w-10 h-10 rounded-2xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-amber-400 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-md shrink-0"
-          title="الرجوع لمركز الإعدادات"
+          :title="$t('settings.back_to_hub')"
         >
           <ArrowRight class="w-5 h-5" />
         </button>
@@ -24,7 +24,7 @@
               {{ currentSectionTitle }}
             </h1>
             <span v-if="selectedSection" class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
-              صفحة فرعية
+              {{ $t('settings.subpage_badge') }}
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-0.5">
@@ -43,7 +43,7 @@
           class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
         >
           <Save class="w-4.5 h-4.5" />
-          <span>{{ isSaving ? 'جاري الحفظ...' : 'حفظ التعديلات' }}</span>
+          <span>{{ isSaving ? $t('common.loading') : $t('profile.save_changes') }}</span>
         </button>
       </div>
     </div>
@@ -51,7 +51,7 @@
     <!-- Loading State -->
     <div v-if="isLoading" class="p-16 text-center bg-slate-950/60 rounded-3xl border border-slate-800">
       <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-      <p class="text-xs text-slate-300 font-bold">جاري تحميل إعدادات النظام...</p>
+      <p class="text-xs text-slate-300 font-bold">{{ $t('common.loading') }}</p>
     </div>
 
     <!-- Main Settings Navigation & Sub-Pages Layout -->
@@ -99,7 +99,7 @@
           <div class="hidden lg:block lg:col-span-4 space-y-2.5">
             <div class="p-3 bg-slate-950/80 rounded-3xl border border-slate-800 shadow-xl space-y-1.5">
               <div class="px-3.5 py-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-                أقسام الإعدادات
+                {{ $t('settings.settings_sections_title') }}
               </div>
 
               <button
@@ -133,10 +133,10 @@
             <div class="p-4 bg-slate-950/60 rounded-3xl border border-slate-800/80 text-xs text-slate-400 space-y-2">
               <div class="flex items-center gap-2 text-slate-200 font-bold">
                 <ShieldCheck class="w-4 h-4 text-emerald-400" />
-                <span>إدارة آمنة 100%</span>
+                <span>{{ $t('settings.secure_management_title') }}</span>
               </div>
               <p class="text-[11px] leading-relaxed">
-                تنعكس التعديلات على كافة فروع المؤسسة وتطبيق الكاشير والطباعة السريعة فور الضغط على حفظ.
+                {{ $t('settings.secure_management_desc') }}
               </p>
             </div>
           </div>
@@ -156,50 +156,50 @@
                     <Building2 class="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 class="text-base font-black text-white">الهوية التجارية وبيانات المحمصة</h2>
-                    <p class="text-xs text-slate-400">تخصيص اسم المتجر، الهاتف، والعنوان الذي يظهر للعملاء</p>
+                    <h2 class="text-base font-black text-white">{{ $t('settings.branding_section_title') }}</h2>
+                    <p class="text-xs text-slate-400">{{ $t('settings.branding_section_sub') }}</p>
                   </div>
                 </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-300">اسم المؤسسة / المحمصة *</label>
+                  <label class="block text-xs font-bold text-slate-300">{{ $t('settings.company_name') }}</label>
                   <input
                     v-model="form.company_name"
                     type="text"
-                    placeholder="مثال: سرور كوفي"
+                    :placeholder="$t('settings.company_name_placeholder')"
                     class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
                   />
                 </div>
 
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-300">الوصف الفرعي (يظهر أسفل الاسم)</label>
+                  <label class="block text-xs font-bold text-slate-300">{{ $t('settings.company_subtitle') }}</label>
                   <input
                     v-model="form.company_subtitle"
                     type="text"
-                    placeholder="مثال: لتوريدات خامات مطاحن البن الفاخر"
+                    :placeholder="$t('settings.company_subtitle_placeholder')"
                     class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
                   />
                 </div>
 
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-300">رقم الهاتف الرسمي للتواصل</label>
+                  <label class="block text-xs font-bold text-slate-300">{{ $t('settings.company_phone') }}</label>
                   <input
                     v-model="form.company_phone"
                     type="text"
-                    placeholder="01012345678"
+                    :placeholder="$t('settings.company_phone_placeholder')"
                     class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
                     dir="ltr"
                   />
                 </div>
 
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-300">العنوان الرئيسي للمقر</label>
+                  <label class="block text-xs font-bold text-slate-300">{{ $t('settings.company_address') }}</label>
                   <input
                     v-model="form.company_address"
                     type="text"
-                    placeholder="مثال: القاهرة - المعادي"
+                    :placeholder="$t('settings.company_address_placeholder')"
                     class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
                   />
                 </div>
@@ -218,8 +218,8 @@
                     <Printer class="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 class="text-base font-black text-white">تخصيص الفواتير والطباعة الحرارية</h2>
-                    <p class="text-xs text-slate-400">التحكم في محتويات إيصال البيع الحراري ومقاسات الورق</p>
+                    <h2 class="text-base font-black text-white">{{ $t('settings.printing_section_title') }}</h2>
+                    <p class="text-xs text-slate-400">{{ $t('settings.printing_section_sub') }}</p>
                   </div>
                 </div>
               </div>
@@ -231,8 +231,8 @@
                   class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 cursor-pointer transition"
                 >
                   <div>
-                    <div class="text-xs sm:text-sm font-bold text-white">طباعة اسم المؤسسة أعلى الإيصال</div>
-                    <div class="text-[11px] text-slate-400 mt-0.5">إظهار الاسم التجاري المخصص في رأس الفاتورة</div>
+                    <div class="text-xs sm:text-sm font-bold text-white">{{ $t('settings.print_company_name_toggle') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('settings.print_company_name_desc') }}</div>
                   </div>
                   <div
                     class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
@@ -250,8 +250,8 @@
                   class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 cursor-pointer transition"
                 >
                   <div>
-                    <div class="text-xs sm:text-sm font-bold text-white">طباعة الوصف الفرعي في الإيصال</div>
-                    <div class="text-[11px] text-slate-400 mt-0.5">إظهار جملة النشاط أسفل الاسم التجاري</div>
+                    <div class="text-xs sm:text-sm font-bold text-white">{{ $t('settings.print_subtitle_toggle') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('settings.print_subtitle_desc') }}</div>
                   </div>
                   <div
                     class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
@@ -269,8 +269,8 @@
                   class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 cursor-pointer transition"
                 >
                   <div>
-                    <div class="text-xs sm:text-sm font-bold text-white">طباعة رصيد ومديونية العميل أسفل الفاتورة</div>
-                    <div class="text-[11px] text-slate-400 mt-0.5">توضيح الرصيد الإجمالي السابق والحالي للعميل في الإيصال</div>
+                    <div class="text-xs sm:text-sm font-bold text-white">{{ $t('settings.thermal_balance_toggle') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('settings.thermal_balance_desc') }}</div>
                   </div>
                   <div
                     class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
@@ -288,8 +288,8 @@
                   class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 cursor-pointer transition"
                 >
                   <div>
-                    <div class="text-xs sm:text-sm font-bold text-white">توليد رمز الاستجابة السريعة (QR Code)</div>
-                    <div class="text-[11px] text-slate-400 mt-0.5">تضمين رمز QR المتوافق مع متطلبات الفاتورة الإلكترونية</div>
+                    <div class="text-xs sm:text-sm font-bold text-white">{{ $t('settings.print_qr_toggle') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('settings.print_qr_desc') }}</div>
                   </div>
                   <div
                     class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
@@ -305,11 +305,11 @@
 
               <!-- Footer Note -->
               <div class="space-y-1.5 pt-2">
-                <label class="block text-xs font-bold text-slate-300">الملاحظة التذييلية للفواتير (Footer Note)</label>
+                <label class="block text-xs font-bold text-slate-300">{{ $t('settings.invoice_footer_note_label') }}</label>
                 <textarea
                   v-model="form.invoice_footer_note"
                   rows="3"
-                  placeholder="مثال: البضاعة المباعة ترد وتستبدل خلال 14 يوماً بموجب الفاتورة. شكراً لزيارتكم!"
+                  :placeholder="$t('settings.invoice_footer_placeholder')"
                   class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition leading-relaxed"
                 ></textarea>
               </div>
@@ -327,8 +327,8 @@
                     <Bot class="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 class="text-base font-black text-white">الربط مع بوت تلجرام للإشعارات الفورية</h2>
-                    <p class="text-xs text-slate-400">استقبال تنبيهات فورية للمبيعات، النواقص، وإغلاق الورديات على هاتفك</p>
+                    <h2 class="text-base font-black text-white">{{ $t('settings.telegram_section_title') }}</h2>
+                    <p class="text-xs text-slate-400">{{ $t('settings.telegram_section_sub') }}</p>
                   </div>
                 </div>
               </div>
@@ -339,8 +339,8 @@
                 class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 cursor-pointer transition"
               >
                 <div>
-                  <div class="text-xs sm:text-sm font-bold text-white">تفعيل نظام إشعارات تلجرام اللحظي</div>
-                  <div class="text-[11px] text-slate-400 mt-0.5">إرسال تقارير المبيعات ونواقص المخزن تلقائياً</div>
+                  <div class="text-xs sm:text-sm font-bold text-white">{{ $t('settings.telegram_enable_toggle') }}</div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('settings.telegram_enable_desc') }}</div>
                 </div>
                 <div
                   class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
@@ -356,22 +356,22 @@
               <!-- Credentials -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-300">رمز البوت (Bot Token)</label>
+                  <label class="block text-xs font-bold text-slate-300">{{ $t('settings.bot_token') }}</label>
                   <input
                     v-model="form.telegram_bot_token"
                     type="text"
-                    placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                    :placeholder="$t('settings.bot_token_placeholder')"
                     class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
                     dir="ltr"
                   />
                 </div>
 
                 <div class="space-y-1.5">
-                  <label class="block text-xs font-bold text-slate-300">معرف القناة أو المحادثة (Chat ID)</label>
+                  <label class="block text-xs font-bold text-slate-300">{{ $t('settings.chat_id') }}</label>
                   <input
                     v-model="form.telegram_chat_id"
                     type="text"
-                    placeholder="-1001234567890 أو 12345678"
+                    :placeholder="$t('settings.chat_id_input_placeholder')"
                     class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
                     dir="ltr"
                   />
@@ -381,8 +381,8 @@
               <!-- Test Notification Button -->
               <div class="pt-2 flex items-center justify-between p-4 rounded-2xl bg-cyan-950/20 border border-cyan-800/30">
                 <div class="text-xs text-cyan-200">
-                  <span class="font-bold block">اختبار صحة الاتصال بالبوت</span>
-                  <span class="text-[11px] text-cyan-400/80">سيتم إرسال رسالة تجريبية إلى معرف المحادثة المحدد</span>
+                  <span class="font-bold block">{{ $t('settings.test_connection_title') }}</span>
+                  <span class="text-[11px] text-cyan-400/80">{{ $t('settings.test_connection_desc') }}</span>
                 </div>
 
                 <button
@@ -392,7 +392,7 @@
                   class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-cyan-600/20 flex items-center gap-2 transition active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   <Send class="w-4 h-4" />
-                  <span>{{ isTestingTelegram ? 'جاري الإرسال...' : 'إرسال تجريبي ✈️' }}</span>
+                  <span>{{ isTestingTelegram ? $t('common.loading') : $t('settings.send_test_btn') }}</span>
                 </button>
               </div>
             </div>
@@ -409,8 +409,8 @@
                     <Cpu class="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 class="text-base font-black text-white">معلومات الخادم وبيئة التشغيل</h2>
-                    <p class="text-xs text-slate-400">مواصفات السيرفر، إصدارات الأطر البرمجية ومحرك قواعد البيانات</p>
+                    <h2 class="text-base font-black text-white">{{ $t('settings.system_section_title') }}</h2>
+                    <p class="text-xs text-slate-400">{{ $t('settings.system_section_sub') }}</p>
                   </div>
                 </div>
               </div>
@@ -422,11 +422,11 @@
                       <Code2 class="w-4.5 h-4.5" />
                     </div>
                     <div>
-                      <span class="text-slate-400 text-xs block">إصدار PHP</span>
+                      <span class="text-slate-400 text-xs block">{{ $t('settings.php_version') }}</span>
                       <span class="text-white font-bold font-mono text-sm">{{ systemInfo.php_version || '8.3+' }}</span>
                     </div>
                   </div>
-                  <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">نشط</span>
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">{{ $t('settings.active_badge') }}</span>
                 </div>
 
                 <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 flex items-center justify-between">
@@ -435,11 +435,11 @@
                       <Layers class="w-4.5 h-4.5" />
                     </div>
                     <div>
-                      <span class="text-slate-400 text-xs block">إصدار Laravel</span>
+                      <span class="text-slate-400 text-xs block">{{ $t('settings.laravel_version') }}</span>
                       <span class="text-white font-bold font-mono text-sm">{{ systemInfo.laravel_version || '11.x' }}</span>
                     </div>
                   </div>
-                  <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">محدث</span>
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">{{ $t('settings.updated_badge') }}</span>
                 </div>
 
                 <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 flex items-center justify-between">
@@ -448,7 +448,7 @@
                       <Server class="w-4.5 h-4.5" />
                     </div>
                     <div>
-                      <span class="text-slate-400 text-xs block">بيئة التشغيل</span>
+                      <span class="text-slate-400 text-xs block">{{ $t('settings.environment') }}</span>
                       <span class="text-emerald-400 font-bold font-mono text-sm">{{ systemInfo.environment || 'Production' }}</span>
                     </div>
                   </div>
@@ -461,7 +461,7 @@
                       <Database class="w-4.5 h-4.5" />
                     </div>
                     <div>
-                      <span class="text-slate-400 text-xs block">محرك قاعدة البيانات</span>
+                      <span class="text-slate-400 text-xs block">{{ $t('settings.db_engine') }}</span>
                       <span class="text-cyan-400 font-bold font-mono text-sm">{{ systemInfo.db_driver || 'MySQL' }}</span>
                     </div>
                   </div>
@@ -476,13 +476,13 @@
                   </div>
                   <div>
                     <div class="flex items-center gap-2">
-                      <h3 class="text-sm font-bold text-white">إصدار التطبيق ونظام التحديثات</h3>
+                      <h3 class="text-sm font-bold text-white">{{ $t('app_update.system_updates_title') }}</h3>
                       <span class="px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 text-[10px] font-mono font-bold">
                         v{{ currentVersionName }}
                       </span>
                     </div>
                     <p class="text-xs text-slate-400 mt-0.5">
-                      فحص الإصدارات الجديدة وحزم الـ APK المنشورة وتثبيتها تلقائياً
+                      {{ $t('app_update.system_updates_desc') }}
                     </p>
                   </div>
                 </div>
@@ -494,7 +494,7 @@
                   class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isChecking }" />
-                  <span>{{ isChecking ? 'جاري الفحص...' : 'فحص التحديثات الآن ⚡' }}</span>
+                  <span>{{ isChecking ? $t('app_update.checking_updates') : $t('app_update.check_updates_now') }}</span>
                 </button>
               </div>
             </div>
@@ -511,6 +511,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
+import { trans } from '../../helpers/trans';
 import {
     Sliders,
     Save,
@@ -540,58 +541,58 @@ const isLoading = ref(false);
 const isSaving = ref(false);
 const isTestingTelegram = ref(false);
 
-const sections = [
+const sections = computed(() => [
     {
         id: 'branding',
-        label: 'الهوية والمؤسسة',
-        subtitle: 'اسم المحمصة، الهاتف والعنوان',
-        description: 'تخصيص الاسم التجاري، الشعار، والبيانات الرسمية للمؤسسة والفروع.',
+        label: trans('settings.sec_branding_label'),
+        subtitle: trans('settings.sec_branding_subtitle'),
+        description: trans('settings.sec_branding_desc'),
         icon: Building2,
         iconBg: 'bg-amber-500/10 border border-amber-500/20',
         iconColor: 'text-amber-400',
-        badge: 'أساسي'
+        badge: trans('settings.sec_branding_badge')
     },
     {
         id: 'printing',
-        label: 'الفواتير والطباعة',
-        subtitle: 'إيصالات الكاشير و QR Code',
-        description: 'التحكم في شكل الفاتورة الحرارية، إظهار الرصيد، ورمز الاستجابة السريع.',
+        label: trans('settings.sec_printing_label'),
+        subtitle: trans('settings.sec_printing_subtitle'),
+        description: trans('settings.sec_printing_desc'),
         icon: Printer,
         iconBg: 'bg-blue-500/10 border border-blue-500/20',
         iconColor: 'text-blue-400',
-        badge: 'طباعة'
+        badge: trans('settings.sec_printing_badge')
     },
     {
         id: 'telegram',
-        label: 'إشعارات تلجرام',
-        subtitle: 'ربط البوت والتقارير الفورية',
-        description: 'إرسال تنبيهات المبيعات، نواقص المخزن، وإغلاق الورديات لحظياً.',
+        label: trans('settings.sec_telegram_label'),
+        subtitle: trans('settings.sec_telegram_subtitle'),
+        description: trans('settings.sec_telegram_desc'),
         icon: Bot,
         iconBg: 'bg-cyan-500/10 border border-cyan-500/20',
         iconColor: 'text-cyan-400',
-        badge: 'تلقائي'
+        badge: trans('settings.sec_telegram_badge')
     },
     {
         id: 'system',
-        label: 'معلومات النظام',
-        subtitle: 'بيئة التشغيل ومواصفات السيرفر',
-        description: 'متابعة إصدارات PHP و Laravel ومحرك قاعدة البيانات وحالة الخادم.',
+        label: trans('settings.sec_system_label'),
+        subtitle: trans('settings.sec_system_subtitle'),
+        description: trans('settings.sec_system_desc'),
         icon: Cpu,
         iconBg: 'bg-purple-500/10 border border-purple-500/20',
         iconColor: 'text-purple-400',
-        badge: 'تقني'
+        badge: trans('settings.sec_system_badge')
     },
-];
+]);
 
 const currentSectionTitle = computed(() => {
-    if (!selectedSection.value) return 'إعدادات النظام والمؤسسة';
-    const found = sections.find((s) => s.id === selectedSection.value);
-    return found ? found.label : 'إعدادات النظام';
+    if (!selectedSection.value) return trans('settings.hub_title');
+    const found = sections.value.find((s) => s.id === selectedSection.value);
+    return found ? found.label : trans('settings.title');
 });
 
 const currentSectionSubtitle = computed(() => {
-    if (!selectedSection.value) return 'اختر أحد أقسام الإعدادات لتخصيص الخيارات المتقدمة';
-    const found = sections.find((s) => s.id === selectedSection.value);
+    if (!selectedSection.value) return trans('settings.hub_subtitle');
+    const found = sections.value.find((s) => s.id === selectedSection.value);
     return found ? found.subtitle : '';
 });
 
@@ -654,16 +655,16 @@ const saveSettings = async () => {
         await api.post('/settings', form.value);
         Swal.fire({
             icon: 'success',
-            title: 'تم الحفظ',
-            text: 'تم حفظ وتحديث إعدادات النظام بنجاح ✓',
+            title: trans('common.success'),
+            text: trans('settings.settings_saved_success'),
             timer: 1500,
             showConfirmButton: false,
         });
     } catch (e) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: e.response?.data?.message || 'تعذر حفظ الإعدادات',
+            title: trans('common.error'),
+            text: e.response?.data?.message || trans('settings.settings_save_failed'),
         });
     } finally {
         isSaving.value = false;
@@ -678,12 +679,12 @@ const sendTestTelegram = async () => {
             chat_id: form.value.telegram_chat_id,
         });
         if (res.data?.success) {
-            Swal.fire({ icon: 'success', title: 'نجاح الإرسال', text: res.data.message });
+            Swal.fire({ icon: 'success', title: trans('settings.test_send_success'), text: res.data.message });
         } else {
-            Swal.fire({ icon: 'error', title: 'فشل الإرسال', text: res.data.message });
+            Swal.fire({ icon: 'error', title: trans('settings.test_send_failed'), text: res.data.message });
         }
     } catch (e) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: e.response?.data?.message || 'فشل إرسال الإشعار' });
+        Swal.fire({ icon: 'error', title: trans('common.error'), text: e.response?.data?.message || trans('settings.test_send_failed') });
     } finally {
         isTestingTelegram.value = false;
     }

@@ -82,7 +82,7 @@
               {{ store.name }}
             </h3>
 
-            <div class="text-xs text-slate-400 mt-2 space-y-1">
+            <div class="text-xs text-slate-400 mt-2 space-y-1 font-tajawal">
               <div v-if="store.address" class="flex items-center gap-1.5 text-[11px]">
                 <MapPin class="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 <span class="truncate">{{ store.address }}</span>
@@ -375,6 +375,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Plus,
     Package,
@@ -454,8 +455,8 @@ const saveStore = async () => {
             await api.put(`/stores/${editingStore.value.id}`, form);
             Swal.fire({
                 icon: 'success',
-                title: 'تم التعديل',
-                text: 'تم تعديل بيانات الفرع بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.store_updated_success'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -463,8 +464,8 @@ const saveStore = async () => {
             await api.post('/stores', form);
             Swal.fire({
                 icon: 'success',
-                title: 'تمت الإضافة',
-                text: 'تم إضافة الفرع بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.store_added_success'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -474,8 +475,8 @@ const saveStore = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر حفظ بيانات الفرع',
+            title: trans('common.error'),
+            text: error.userMessage || trans('inventory.store_save_failed'),
         });
     } finally {
         isSubmitting.value = false;
@@ -486,8 +487,8 @@ const toggleActive = async (store) => {
     if (store.is_main && store.is_active) {
         Swal.fire({
             icon: 'warning',
-            title: 'تنبيه',
-            text: 'لا يمكن تعطيل الفرع والمخزن الرئيسي للمنشأة',
+            title: trans('common.warning'),
+            text: trans('inventory.cannot_disable_main_alert'),
         });
         return;
     }
@@ -498,8 +499,8 @@ const toggleActive = async (store) => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تغيير حالة الفرع',
+            title: trans('common.error'),
+            text: error.userMessage || trans('inventory.store_toggle_active_failed'),
         });
     }
 };
@@ -509,19 +510,19 @@ const deleteStore = async (store) => {
         const blockers = store.deletion_blockers?.join('\n- ') || '';
         Swal.fire({
             icon: 'warning',
-            title: 'لا يمكن حذف الفرع',
+            title: trans('inventory.cannot_delete_store'),
             text: `يوجد ارتباطات عمليات تمنع الحذف:\n- ${blockers}`,
         });
         return;
     }
 
     const result = await Swal.fire({
-        title: `حذف فرع (${store.name})؟`,
-        text: 'هل أنت متأكد من نقل هذا الفرع لسلة المهملات؟',
+        title: trans('inventory.store_delete_confirm_title', { name: store.name }),
+        text: trans('inventory.store_delete_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.yes'),
+        cancelButtonText: trans('common.cancel'),
         confirmButtonColor: '#f43f5e',
     });
 
@@ -530,8 +531,8 @@ const deleteStore = async (store) => {
             await api.delete(`/stores/${store.id}`);
             Swal.fire({
                 icon: 'success',
-                title: 'تم الحذف',
-                text: 'تم حذف الفرع بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.store_deleted_success'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -539,8 +540,8 @@ const deleteStore = async (store) => {
         } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'خطأ',
-                text: error.userMessage || 'تعذر حذف الفرع',
+                title: trans('common.error'),
+                text: error.userMessage || trans('inventory.store_delete_failed'),
             });
         }
     }
@@ -560,8 +561,8 @@ const saveUserAssignment = async () => {
         });
         Swal.fire({
             icon: 'success',
-            title: 'تم الحفظ',
-            text: 'تم تحديث تعيينات الموظفين بنجاح',
+            title: trans('common.success'),
+            text: trans('inventory.staff_assigned_success'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -570,8 +571,8 @@ const saveUserAssignment = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تحديث تعيينات الموظفين',
+            title: trans('common.error'),
+            text: error.userMessage || trans('inventory.staff_assign_failed'),
         });
     } finally {
         isSubmitting.value = false;

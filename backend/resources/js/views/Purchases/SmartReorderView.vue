@@ -12,13 +12,13 @@
           </router-link>
           <div>
             <h1 class="text-xl font-black text-white flex items-center gap-2">
-              <span>رادار إعادة الطلب الذكي</span>
+              <span>{{ $t('purchases.reorder_radar_title') }}</span>
               <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                 AI Powered ⚡
               </span>
             </h1>
             <p class="text-xs text-slate-400 font-bold">
-              تحليل استهلاك الخامات ومعدل السحب اليومي وتوقع تاريخ نفاد المخزون
+              {{ $t('purchases.reorder_radar_subtitle') }}
             </p>
           </div>
         </div>
@@ -31,7 +31,7 @@
             class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-40 cursor-pointer"
           >
             <ShoppingCart class="w-4 h-4" />
-            <span>إنشاء أمر شراء مجمع ({{ selectedItems.length }})</span>
+            <span>{{ $t('purchases.create_batch_po_btn', { count: selectedItems.length }) }}</span>
           </button>
         </div>
       </div>
@@ -41,49 +41,49 @@
         <!-- Critical Items -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-rose-500/30 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">نواقص حرجة (0 - 3 أيام)</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('purchases.critical_shortage_range') }}</span>
             <AlertTriangle class="w-4 h-4 text-rose-400" />
           </div>
           <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ metrics.critical_count || 0 }} <span class="text-xs text-slate-400">صنف</span>
+            {{ metrics.critical_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">عرضة للنفاد الفوري خلال 72 ساعة</span>
+          <span class="text-[10px] text-slate-500">{{ $t('purchases.critical_shortage_desc') }}</span>
         </div>
 
         <!-- Warning Items -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-amber-500/30 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">تنبيه توريد (4 - 7 أيام)</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('purchases.warning_supply_range') }}</span>
             <Clock class="w-4 h-4 text-amber-400" />
           </div>
           <div class="text-2xl font-black text-amber-400 font-mono">
-            {{ metrics.warning_count || 0 }} <span class="text-xs text-slate-400">صنف</span>
+            {{ metrics.warning_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">بحاجة للتواصل مع الموردين</span>
+          <span class="text-[10px] text-slate-500">{{ $t('purchases.warning_supply_desc') }}</span>
         </div>
 
         <!-- Safe Items -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/30 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">رصيد آمن (+8 أيام)</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('purchases.safe_stock_range') }}</span>
             <ShieldCheck class="w-4 h-4 text-emerald-400" />
           </div>
           <div class="text-2xl font-black text-emerald-400 font-mono">
-            {{ metrics.safe_count || 0 }} <span class="text-xs text-slate-400">صنف</span>
+            {{ metrics.safe_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">المخزون يكفي الفترة المحددة</span>
+          <span class="text-[10px] text-slate-500">{{ $t('purchases.safe_stock_desc') }}</span>
         </div>
 
         <!-- Estimated Total Cost -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/30 shadow-md space-y-1">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">التكلفة التقديرية لإعادة التغذية</span>
+            <span class="text-xs font-bold text-slate-400">{{ $t('purchases.estimated_reorder_cost') }}</span>
             <Sparkles class="w-4 h-4 text-purple-400" />
           </div>
           <div class="text-xl font-black text-purple-400 font-mono">
-            {{ formatMoney(metrics.total_estimated_cost || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(metrics.total_estimated_cost || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500">لتغطية الاستهلاك المطلوب</span>
+          <span class="text-[10px] text-slate-500">{{ $t('purchases.estimated_reorder_sub') }}</span>
         </div>
       </div>
 
@@ -96,36 +96,36 @@
             @input="debounceFetch"
             type="text"
             class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            placeholder="بحث عن صنف أو خامة..."
+            :placeholder="$t('purchases.search_item_material')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
         </div>
 
         <!-- Analysis Days -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-400 whitespace-nowrap">تحليل استهلاك:</span>
+          <span class="text-xs font-bold text-slate-400 whitespace-nowrap">{{ $t('purchases.consumption_analysis') }}</span>
           <select
             v-model="analysisDays"
             @change="fetchSuggestions"
             class="h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
-            <option :value="7">آخر 7 أيام</option>
-            <option :value="14">آخر 14 يوم (موصى به)</option>
-            <option :value="30">آخر 30 يوم</option>
+            <option :value="7">{{ $t('purchases.last_7_days') }}</option>
+            <option :value="14">{{ $t('purchases.last_14_days') }}</option>
+            <option :value="30">{{ $t('purchases.last_30_days') }}</option>
           </select>
         </div>
 
         <!-- Target Cover Days -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-400 whitespace-nowrap">فترة التغطية المطلوبة:</span>
+          <span class="text-xs font-bold text-slate-400 whitespace-nowrap">{{ $t('purchases.target_period') }}</span>
           <select
             v-model="targetCoverDays"
             @change="fetchSuggestions"
             class="h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
-            <option :value="7">تغطية 7 أيام</option>
-            <option :value="15">تغطية 15 يوم</option>
-            <option :value="30">تغطية شهر كامل</option>
+            <option :value="7">{{ $t('purchases.cover_7_days') }}</option>
+            <option :value="15">{{ $t('purchases.cover_15_days') }}</option>
+            <option :value="30">{{ $t('purchases.cover_30_days') }}</option>
           </select>
         </div>
 
@@ -136,10 +136,10 @@
             @change="fetchSuggestions"
             class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
-            <option value="all">كافة المستويات</option>
-            <option value="critical">🚨 حرجة فقط</option>
-            <option value="warning">⚠️ تنبيه فقط</option>
-            <option value="safe">✅ آمن فقط</option>
+            <option value="all">{{ $t('purchases.urgency_all') }}</option>
+            <option value="critical">{{ $t('purchases.urgency_critical_only') }}</option>
+            <option value="warning">{{ $t('purchases.urgency_warning_only') }}</option>
+            <option value="safe">{{ $t('purchases.urgency_safe_only') }}</option>
           </select>
         </div>
       </div>
@@ -163,13 +163,13 @@
                     class="rounded border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
                   >
                 </th>
-                <th class="py-3 px-4 text-start font-bold">الصنف / الكود</th>
-                <th class="py-3 px-4 text-end font-bold">الرصيد الحالي</th>
-                <th class="py-3 px-4 text-end font-bold">السحب اليومي</th>
-                <th class="py-3 px-4 text-center font-bold">الرصيد يكفي لمدة</th>
-                <th class="py-3 px-4 text-end font-bold">الكمية المقترحة للطلب</th>
-                <th class="py-3 px-4 text-end font-bold">التكلفة التقديرية</th>
-                <th class="py-3 px-4 text-center font-bold">مستوى الخطورة</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('purchases.item_and_code') }}</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('purchases.daily_usage') }}</th>
+                <th class="py-3 px-4 text-center font-bold">{{ $t('purchases.stock_lasts_for') }}</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('purchases.suggested_qty') }}</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('purchases.estimated_cost') }}</th>
+                <th class="py-3 px-4 text-center font-bold">{{ $t('purchases.risk_level') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 font-sans">
@@ -195,16 +195,16 @@
                   {{ it.current_stock }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono text-slate-400">
-                  {{ it.avg_daily_consumption || '0.00' }} / يوم
+                  {{ it.avg_daily_consumption || '0.00' }} {{ $t('purchases.per_day') }}
                 </td>
                 <td class="py-3.5 px-4 text-center font-mono font-bold" :class="it.days_remaining <= 3 ? 'text-rose-400' : 'text-amber-400'">
-                  {{ it.days_remaining !== null ? `${it.days_remaining} يوم` : 'غير محدد' }}
+                  {{ it.days_remaining !== null ? $t('purchases.days_count', { count: it.days_remaining }) : $t('purchases.not_specified') }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black text-amber-400 text-sm">
                   {{ it.suggested_reorder_qty }} {{ it.unit }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-400">
-                  {{ formatMoney(it.estimated_cost || 0) }} ج.م
+                  {{ formatMoney(it.estimated_cost || 0) }} {{ $t('common.currency') }}
                 </td>
                 <td class="py-3.5 px-4 text-center font-tajawal">
                   <span
@@ -221,8 +221,8 @@
 
         <EmptyState
           v-else
-          :title="'لا توجد نواقص في المخزون حالياً'"
-          :description="'كافة الأصناف والمخازن تتمتع بمستويات رصيد آمنة وفقاً لمعدل السحب الحالي.'"
+          :title="$t('purchases.no_shortages_found_title')"
+          :description="$t('purchases.no_shortages_found_desc')"
           :icon="'✨'"
         />
       </div>
@@ -234,6 +234,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import api from '../../services/api';
+import { trans } from '../../helpers/trans';
 import {
     ArrowRight,
     Sparkles,
@@ -282,11 +283,11 @@ const getUrgencyBadge = (urgency) => {
 const getUrgencyText = (urgency) => {
     switch (urgency) {
         case 'critical':
-            return '🚨 حرج فوري';
+            return trans('purchases.urgency_critical_badge');
         case 'warning':
-            return '⚠️ تنبيه وشيك';
+            return trans('purchases.urgency_warning_badge');
         default:
-            return '✅ رصيد آمن';
+            return trans('purchases.urgency_safe_badge');
     }
 };
 

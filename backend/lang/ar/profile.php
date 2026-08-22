@@ -16,4 +16,11 @@ return [
     'confirm_new_password'      => 'تأكيد كلمة المرور الجديدة',
     'save_profile_btn'          => 'حفظ بيانات الملف الشخصي',
     'saving_profile'            => 'جاري الحفظ...',
+    'profile_loading'           => 'جاري تحميل بيانات الملف الشخصي...',
+    'security_password_title'   => 'الأمان وتغيير كلمة المرور',
+    'password_leave_blank_hint' => 'اترك هذه الحقول فارغة إذا لم تكن ترغب في تغيير كلمة المرور الحالية.',
+    'theme_dark_slate'          => 'الوضع الليلي (Dark Slate)',
+    'theme_light_shell'         => 'الوضع الفاتح (Light Shell)',
+    'profile_updated_success'   => 'تم تحديث بيانات الملف الشخصي بنجاح ✓',
+    'save_changes'              => 'حفظ التعديلات',
 ];

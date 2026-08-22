@@ -4,8 +4,9 @@ import api from '../services/api';
 export const useAppConfigStore = defineStore('appConfig', {
     state: () => ({
         system: {
-            company_name: 'سرور كوفي',
-            company_subtitle: 'لتوريدات خامات مطاحن البن',
+            platform_name: 'منظومة ERP السحابية',
+            company_name: 'مؤسسة تجارية',
+            company_subtitle: 'لإدارة المبيعات والمخزون والفروع',
             system_theme_color: 'amber',
             server_time: null,
         },
@@ -25,6 +26,7 @@ export const useAppConfigStore = defineStore('appConfig', {
 
     getters: {
         isDark: (state) => state.theme === 'dark',
+        platformName: (state) => state.system.platform_name || state.system.company_name || 'منظومة ERP',
         companyName: (state) => state.system.company_name,
         companySubtitle: (state) => state.system.company_subtitle,
         currentShiftNumber: (state) => state.activeShift?.shift_number || null,

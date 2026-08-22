@@ -39,28 +39,28 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Total Purchases (Credit) -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.total_purchases_label') }} (مشتريات/دائن)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.total_purchases_label') }} ({{ $t('contacts.withdrawals') }}/{{ $t('contacts.credit_balance') }})</div>
           <div class="text-xl font-black text-white font-mono">
-            {{ formatMoney(summary.total_purchases || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(summary.total_purchases || 0) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
           </div>
         </div>
 
         <!-- Total Paid (Debit) -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.total_payments_label') }} (مدفوعات/مدين)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.total_payments_label') }} ({{ $t('contacts.payments_received') }}/{{ $t('contacts.debt_due') }})</div>
           <div class="text-xl font-black text-emerald-400 font-mono">
-            {{ formatMoney(summary.total_paid || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(summary.total_paid || 0) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
           </div>
         </div>
 
         <!-- Closing Balance -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.closing_balance') }} (مستحق للمورد)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('contacts.closing_balance') }} ({{ $t('contacts.due_to_supplier') }})</div>
           <div
             class="text-xl font-black font-mono"
             :class="supplier?.current_balance > 0 ? 'text-amber-400' : 'text-emerald-400'"
           >
-            {{ formatMoney(supplier?.current_balance || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(supplier?.current_balance || 0) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
           </div>
         </div>
       </div>
@@ -141,13 +141,13 @@
         <div v-else-if="ledger.length > 0" class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800">
+              <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800 font-tajawal">
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.transaction_type') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.reference_no') }}</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.period_credit') }} (مشتريات)</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.period_debit') }} (سدادات)</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.period_credit') }} ({{ $t('contacts.withdrawals') }})</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.period_debit') }} ({{ $t('contacts.payments_received') }})</th>
                 <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.closing_balance') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('common.notes') }}</th>
               </tr>
@@ -169,7 +169,7 @@
                   {{ formatMoney(row.debit) }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black" :class="row.balance_after > 0 ? 'text-amber-400' : 'text-emerald-400'">
-                  {{ formatMoney(row.balance_after) }} ج.م
+                  {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
                 </td>
                 <td class="py-3.5 px-4 font-tajawal text-slate-400 max-w-xs truncate">{{ row.notes || '—' }}</td>
               </tr>

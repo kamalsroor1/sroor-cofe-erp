@@ -40,7 +40,7 @@ const customerColumns = computed(() => [
         <DataTable
             :columns="customerColumns"
             :rows="customerSales"
-            :empty-title="$t('reports.no_data_available')"
+            :empty-title="$t('common.no_data_available')"
             empty-icon="👥"
         >
             <!-- Name -->

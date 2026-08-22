@@ -9,4 +9,12 @@ return [
     'permissions_for'           => 'Permissions for:',
     'permissions_sub'           => 'Toggle permissions granted to this specific role',
     'save_permissions_btn'      => 'Save Permissions 💾',
+    'users_and_employees'       => 'Users & Employees',
+    'full_permissions_badge'    => 'Full Permissions ⚡',
+    'admin_role_notice'         => 'The System Administrator (Admin) role automatically possesses all permissions and does not need manual editing.',
+    'select_all'                => 'Select All',
+    'deselect_all'              => 'Deselect All',
+    'loading_roles_matrix'      => 'Loading roles & permissions matrix...',
+    'permissions_saved_success' => 'Permissions matrix updated successfully',
+    'permissions_save_failed'   => 'Failed to save permissions',
 ];

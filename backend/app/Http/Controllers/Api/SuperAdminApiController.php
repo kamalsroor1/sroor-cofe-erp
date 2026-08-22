@@ -20,6 +20,7 @@ use App\Http\Requests\ToggleTenantStatusRequest;
 use App\Http\Requests\UpdatePlanRequest;
 use App\Http\Resources\PlanResource;
 use App\Models\Plan;
+use App\Models\Setting;
 use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -187,5 +188,59 @@ final class SuperAdminApiController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Get Central Platform Branding & Settings
+     */
+    public function getPlatformSettings(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'platform_name'     => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
+                'platform_subtitle' => Setting::get('platform_subtitle', 'منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع'),
+                'support_email'     => Setting::get('support_email', 'support@baraa-solutions.com'),
+                'support_phone'     => Setting::get('support_phone', '01000000000'),
+            ],
+        ]);
+    }
+
+    /**
+     * Update Central Platform Branding & Settings
+     */
+    public function updatePlatformSettings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'platform_name'     => ['required', 'string', 'max:100'],
+            'platform_subtitle' => ['nullable', 'string', 'max:255'],
+            'support_email'     => ['nullable', 'email', 'max:100'],
+            'support_phone'     => ['nullable', 'string', 'max:50'],
+        ]);
+
+        Setting::set('platform_name', $validated['platform_name']);
+        Setting::set('app_name', $validated['platform_name']);
+        if (isset($validated['platform_subtitle'])) {
+            Setting::set('platform_subtitle', $validated['platform_subtitle']);
+        }
+        if (isset($validated['support_email'])) {
+            Setting::set('support_email', $validated['support_email']);
+        }
+        if (isset($validated['support_phone'])) {
+            Setting::set('support_phone', $validated['support_phone']);
+        }
+
+        Setting::clearCache();
+
+        return response()->json([
+            'success' => true,
+            'message' => __('common.success') ?: 'تم حفظ إعدادات واسم المنصة بنجاح ✓',
+            'data'    => [
+                'platform_name'     => Setting::get('platform_name'),
+                'platform_subtitle' => Setting::get('platform_subtitle'),
+                'support_email'     => Setting::get('support_email'),
+                'support_phone'     => Setting::get('support_phone'),
+            ],
+        ]);
     }
 }

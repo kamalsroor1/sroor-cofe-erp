@@ -42,7 +42,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Total In (الوارد) -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_in') }} (توريد/إيداع)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_in') }} {{ $t('inventory.total_in_sub') }}</div>
           <div class="text-xl font-black text-emerald-400 font-mono">
             +{{ formatQty(stats.total_in || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
           </div>
@@ -50,7 +50,7 @@
 
         <!-- Total Out (المنصرف) -->
         <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
-          <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_out') }} (مبيعات/هالك)</div>
+          <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_out') }} {{ $t('inventory.total_out_sub') }}</div>
           <div class="text-xl font-black text-rose-400 font-mono">
             -{{ formatQty(stats.total_out || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
           </div>
@@ -150,9 +150,9 @@
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.movement_type') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.reference_no') }}</th>
                 <th class="py-3 px-4 text-end font-bold">{{ $t('common.quantity') }}</th>
-                <th class="py-3 px-4 text-end font-bold">قبل الحركة</th>
-                <th class="py-3 px-4 text-end font-bold">بعد الحركة</th>
-                <th class="py-3 px-4 text-start font-bold">{{ $t('common.store') }} / المستخدم</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.stock_before') }}</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.stock_after') }}</th>
+                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.store_user') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60 font-sans">
@@ -179,8 +179,8 @@
                   {{ formatQty(row.stock_after) }}
                 </td>
                 <td class="py-3.5 px-4 font-tajawal text-slate-300">
-                  <div>{{ row.store?.name || 'المخزن الرئيسي' }}</div>
-                  <div class="text-[10px] text-slate-500">{{ row.user?.name || 'النظام' }}</div>
+                  <div>{{ row.store?.name || $t('common.main_branch') }}</div>
+                  <div class="text-[10px] text-slate-500">{{ row.user?.name || $t('common.system') }}</div>
                 </td>
               </tr>
             </tbody>
@@ -202,6 +202,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import api from '../../services/api';
+import { trans } from '../../helpers/trans';
 import {
     ArrowRight,
     Printer
@@ -231,17 +232,17 @@ const formatQty = (val) => {
 
 const formatMovementLabel = (type) => {
     const map = {
-        purchase_in: '🚛 توريد مشتريات',
-        sales_out: '🛒 مبيعات فواتير',
-        transfer_in: '📥 تحويل وارد',
-        transfer_out: '📤 تحويل منصرف',
-        sales_return_in: '↩️ مرتجع مبيعات',
-        purchase_return_out: '↪️ مرتجع مشتريات',
-        stock_adjustment_in: '➕ تسوية جردية (إضافة)',
-        stock_adjustment_out: '➖ تسوية جردية (خصم)',
-        cancellation_in: '🚫 إلغاء فاتورة',
-        waste_out: '🗑️ هالك وتالف',
-        stock_deposit_in: '📦 رصيد افتتاحي / إيداع',
+        purchase_in: `🚛 ${trans('inventory.movement_purchase')}`,
+        sales_out: `🛒 ${trans('inventory.movement_sale')}`,
+        transfer_in: `📥 ${trans('inventory.movement_transfer_in')}`,
+        transfer_out: `📤 ${trans('inventory.movement_transfer_out')}`,
+        sales_return_in: `↩️ ${trans('inventory.movement_sale_return')}`,
+        purchase_return_out: `↪️ ${trans('inventory.movement_purchase_return')}`,
+        stock_adjustment_in: `➕ ${trans('inventory.movement_adjustment')}`,
+        stock_adjustment_out: `➖ ${trans('inventory.movement_adjustment')}`,
+        cancellation_in: `🚫 ${trans('invoices.cancelled_badge')}`,
+        waste_out: `🗑️ ${trans('inventory.movement_waste')}`,
+        stock_deposit_in: `📦 ${trans('inventory.movement_initial')}`,
     };
     return map[type] || type;
 };

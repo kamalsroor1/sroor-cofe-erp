@@ -36,7 +36,7 @@ Route::get('/daily-journal/print', function (\Illuminate\Http\Request $request) 
     $storeId = $request->query('store_id', 'all');
     $storeFilter = ($storeId !== 'all' && is_numeric($storeId)) ? (int)$storeId : null;
 
-    $storeName = 'كافة الفروع والعربيات';
+    $storeName = trans('common.all_stores');
     if ($storeFilter) {
         $st = \App\Models\Store::find($storeFilter);
         if ($st) $storeName = $st->name;
@@ -104,7 +104,7 @@ Route::get('/items/{id}/movements/print', function ($id, \Illuminate\Http\Reques
     $outTypes = ['sales_out', 'waste_out', 'stock_adjustment_out', 'transfer_out', 'purchase_cancel_out', 'purchase_return_out'];
     $adjTypes = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in'];
 
-    $storeName = 'كافة الفروع والمخازن';
+    $storeName = trans('common.all_stores');
     if ($storeId) {
         $st = \App\Models\Store::find($storeId);
         if ($st) $storeName = $st->name;
@@ -142,6 +142,104 @@ Route::get('/items/{id}/movements/print', function ($id, \Illuminate\Http\Reques
     ));
 })->name('items.movements.print');
 
+// 🖨️ General Reports A4 Print
+Route::get('/reports/print', function (\Illuminate\Http\Request $request) {
+    $tab = $request->query('tab', 'sales');
+    $storeId = ($request->query('store_id') && $request->query('store_id') !== 'all') ? (int)$request->query('store_id') : null;
+    $fromDate = $request->query('from');
+    $toDate = $request->query('to');
+
+    $storeName = trans('common.all_stores');
+    if ($storeId) {
+        $st = \App\Models\Store::find($storeId);
+        if ($st) $storeName = $st->name;
+    }
+
+    $titles = [
+        'sales'     => 'تقرير المبيعات والفواتير',
+        'items'     => 'تقرير حركة وأرباح الأصناف',
+        'stores'    => 'تقرير مقارنة أداء الفروع والمخازن',
+        'customers' => 'تقرير مبيعات ومديونيات العملاء',
+        'expenses'  => 'تقرير المصروفات والنفقات التشغيلية',
+        'inventory' => 'تقرير تقييم وجرد المخزون',
+        'treasury'  => 'تقرير الخزائن والسيولة وسجل التحويلات المالية',
+    ];
+    $reportTitle = $titles[$tab] ?? 'تقرير عام للنظام';
+
+    $kpis = [
+        ['label' => 'الفترة الزمنية', 'value' => ($fromDate ?: 'البداية') . ' إلى ' . ($toDate ?: now()->toDateString())],
+        ['label' => 'النطاق', 'value' => $storeName],
+    ];
+
+    $tableHeaders = [
+        ['title' => 'البيان / الوصف', 'align' => 'text-right'],
+        ['title' => 'التاريخ', 'align' => 'text-center'],
+        ['title' => 'القيمة', 'align' => 'text-center'],
+        ['title' => 'الحالة', 'align' => 'text-center'],
+    ];
+    $tableRows = [];
+
+    if ($tab === 'treasury') {
+        $tableHeaders = [
+            ['title' => 'الخزينة / الحساب', 'align' => 'text-right'],
+            ['title' => 'رصيد البداية', 'align' => 'text-center'],
+            ['title' => 'إجمالي الوارد', 'align' => 'text-center'],
+            ['title' => 'إجمالي المنصرف', 'align' => 'text-center'],
+            ['title' => 'الرصيد الحالي', 'align' => 'text-center'],
+        ];
+        $tableRows = [
+            [
+                ['value' => 'درج النقدية (كاش)', 'class' => 'font-bold'],
+                ['value' => '0.000', 'class' => 'font-mono text-center'],
+                ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
+                ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
+                ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
+            ],
+            [
+                ['value' => 'إنستاباي (InstaPay)', 'class' => 'font-bold'],
+                ['value' => '0.000', 'class' => 'font-mono text-center'],
+                ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
+                ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
+                ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
+            ],
+            [
+                ['value' => 'المحافظ الذكية', 'class' => 'font-bold'],
+                ['value' => '0.000', 'class' => 'font-mono text-center'],
+                ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
+                ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
+                ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
+            ],
+        ];
+    }
+
+    return view('layouts.print-report-a4', compact(
+        'reportTitle', 'storeName', 'fromDate', 'toDate', 'kpis', 'tableHeaders', 'tableRows'
+    ));
+})->name('reports.print');
+
+Route::get('/stock-transfers', function () {
+    return view('app');
+})->name('stock-transfers');
+
+Route::post('/store/switch', function (\Illuminate\Http\Request $request) {
+    $storeId = $request->input('store_id');
+    session(['current_store_id' => $storeId]);
+    return response()->json(['success' => true, 'store_id' => $storeId]);
+})->name('store.switch');
+
+Route::post('/stores/switch', function (\Illuminate\Http\Request $request) {
+    $storeId = $request->input('store_id');
+    session(['current_store_id' => $storeId]);
+    return response()->json(['success' => true, 'store_id' => $storeId]);
+});
+
+Route::post('/logout', function (\Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Auth::guard('web')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/login');
+})->name('logout');
+
 // 📊 CSV & Excel Export Routes
 Route::get('/items/{id}/export-movements-csv', [App\Http\Controllers\ExportController::class, 'exportItemMovements'])->name('items.movements.export');
 Route::get('/customers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportCustomerStatement'])->name('customers.export.csv');
@@ -151,12 +249,12 @@ Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogContro
 
 // 📱 PWA Manifest & Service Worker
 Route::get('/manifest.json', function () {
-    $baseUrl = url('/');
+    $platformName = \App\Models\Setting::get('platform_name') ?: \App\Models\Setting::get('app_name') ?: config('app.name', 'منظومة ERP');
     $manifest = [
-        'id' => 'sroor-erp-pos-app',
-        'name' => 'سرور كوفي ERP | منصة إدارة الفواتير والمخزون',
-        'short_name' => 'سرور POS',
-        'description' => 'منصة سرور السحابية لإدارة مبيعات وفواتير ومخزون المؤسسات والمطاحن',
+        'id' => 'cloud-erp-pos-app',
+        'name' => $platformName . ' | ' . trans('dashboard.app_badge_sub'),
+        'short_name' => $platformName,
+        'description' => \App\Models\Setting::get('platform_subtitle', 'منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع'),
         'start_url' => $baseUrl . '/',
         'scope' => $baseUrl . '/',
         'display' => 'standalone',

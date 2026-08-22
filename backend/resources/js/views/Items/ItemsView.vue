@@ -29,10 +29,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-emerald-400 font-mono">
-            {{ formatMoney(metrics.total_stock_value || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+            {{ formatMoney(metrics.total_stock_value || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            إجمالي التقييم المالي للمخزون الفعلي الحالي
+            {{ $t('inventory.total_stock_value_sub') }}
           </div>
         </div>
 
@@ -45,10 +45,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ metrics.low_stock_count || 0 }} <span class="text-xs text-slate-400">صنف</span>
+            {{ metrics.low_stock_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            أصناف وصلت للحد الأدنى وبحاجة لإعادة الطلب
+            {{ $t('inventory.low_stock_count_sub') }}
           </div>
         </div>
 
@@ -61,10 +61,10 @@
             </div>
           </div>
           <div class="text-2xl font-black text-white font-mono">
-            {{ metrics.total_items || 0 }} <span class="text-xs text-slate-400">صنف</span>
+            {{ metrics.total_items || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
-            إجمالي بطاقات الأصناف المسجلة بالنظام
+            {{ $t('inventory.total_items_sub') }}
           </div>
         </div>
       </div>
@@ -186,10 +186,10 @@
                   <span v-else class="text-slate-500">—</span>
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono text-slate-400">
-                  {{ formatMoney(item.cost_price) }} <span class="text-[10px]">ج.م</span>
+                  {{ formatMoney(item.cost_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-400">
-                  {{ formatMoney(item.selling_price) }} <span class="text-[10px]">ج.م</span>
+                  {{ formatMoney(item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
                 </td>
                 <td class="py-3.5 px-4 text-end">
                   <div
@@ -200,7 +200,7 @@
                   </div>
                   <div v-if="item.is_low_stock" class="text-[10px] text-rose-400 font-tajawal font-bold mt-0.5 flex items-center justify-end gap-1">
                     <AlertTriangle class="w-3 h-3" />
-                    <span>حد أدنى ({{ formatQty(item.min_stock_level) }})</span>
+                    <span>{{ $t('inventory.min_stock_reorder_badge', { qty: formatQty(item.min_stock_level) }) }}</span>
                   </div>
                 </td>
                 <td class="py-3.5 px-4 text-center">
@@ -280,7 +280,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
-            إجمالي النتائج: <span class="font-mono text-amber-400">{{ pagination.total }}</span> صنف
+            {{ $t('inventory.total_results_items', { count: pagination.total }) }}
           </div>
           <div class="flex items-center gap-1">
             <button
@@ -289,7 +289,7 @@
               :disabled="pagination.current_page <= 1"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              السابق
+              {{ $t('common.previous') }}
             </button>
             <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
               {{ pagination.current_page }} / {{ pagination.last_page }}
@@ -300,7 +300,7 @@
               :disabled="pagination.current_page >= pagination.last_page"
               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
-              التالي
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -330,13 +330,13 @@
 
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
-                {{ $t('inventory.code') }} (باركود)
+                {{ $t('inventory.code') }} ({{ $t('inventory.barcode') }})
               </label>
               <input
                 v-model="form.code"
                 type="text"
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                placeholder="توليد تلقائي إذا تُرك فارغاً"
+                :placeholder="$t('inventory.auto_code_placeholder')"
               >
             </div>
           </div>
@@ -351,7 +351,7 @@
                 v-model="form.category"
                 type="text"
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                placeholder="مثال: بن حبوب، بهارات، مشروبات"
+                :placeholder="$t('inventory.category_hint_placeholder')"
               >
             </div>
 
@@ -364,13 +364,13 @@
                 required
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option value="كجم">كيلوجرام (كجم)</option>
-                <option value="جرام">جرام (جم)</option>
-                <option value="قطعة">قطعة / حبة</option>
-                <option value="شيكارة">شيكارة / جوال</option>
-                <option value="علبة">علبة / باكت</option>
-                <option value="كرتونة">كرتونة</option>
-                <option value="لتر">لتر</option>
+                <option value="كجم">{{ $t('inventory.unit_kg') }}</option>
+                <option value="جرام">{{ $t('inventory.unit_g') }}</option>
+                <option value="قطعة">{{ $t('inventory.unit_pcs') }}</option>
+                <option value="شيكارة">{{ $t('inventory.unit_sack') }}</option>
+                <option value="علبة">{{ $t('inventory.unit_box') }}</option>
+                <option value="كرتونة">{{ $t('inventory.unit_carton') }}</option>
+                <option value="لتر">{{ $t('inventory.unit_liter') }}</option>
               </select>
             </div>
           </div>
@@ -428,7 +428,7 @@
               v-model="form.notes"
               rows="2"
               class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              placeholder="أي ملاحظات أو مواصفات خاصة بالصنف..."
+              :placeholder="$t('inventory.item_notes_placeholder')"
             ></textarea>
           </div>
 
@@ -479,10 +479,10 @@
               required
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
-              <option value="stock_adjustment_in">➕ تسوية جردية بالزيادة (إيداع مخزني)</option>
-              <option value="stock_adjustment_out">➖ تسوية جردية بالعجز (خصم مخزني)</option>
-              <option value="waste_out">🗑️ تسجيل هالك / تالف</option>
-              <option value="stock_deposit_in">📦 توريد / رصيد افتتاحي إضافي</option>
+              <option value="stock_adjustment_in">{{ $t('inventory.movement_adj_in') }}</option>
+              <option value="stock_adjustment_out">{{ $t('inventory.movement_adj_out') }}</option>
+              <option value="waste_out">{{ $t('inventory.movement_waste') }}</option>
+              <option value="stock_deposit_in">{{ $t('inventory.movement_deposit') }}</option>
             </select>
           </div>
 
@@ -505,13 +505,13 @@
           <!-- Notes -->
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">
-              سبب التسوية / ملاحظات
+              {{ $t('inventory.adjust_reason_prompt') }}
             </label>
             <input
               v-model="adjustForm.notes"
               type="text"
               class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              placeholder="مثال: جرد دوري، عجز في الوزن، هالك تحميص..."
+              :placeholder="$t('inventory.adjust_reason_placeholder')"
             >
           </div>
 
@@ -531,7 +531,7 @@
               class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-              <span>تأكيد التسوية المخزنية</span>
+              <span>{{ $t('inventory.confirm_stock_adjustment') }}</span>
             </button>
           </div>
         </form>
@@ -546,6 +546,7 @@ import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     Plus,
     Search,
@@ -695,8 +696,8 @@ const saveItem = async () => {
             await api.put(`/items/${editingItem.value.id}`, form);
             Swal.fire({
                 icon: 'success',
-                title: 'تم التعديل',
-                text: 'تم تعديل بيانات الصنف بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.item_updated'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -704,8 +705,8 @@ const saveItem = async () => {
             await api.post('/items', form);
             Swal.fire({
                 icon: 'success',
-                title: 'تمت الإضافة',
-                text: 'تم إضافة الصنف بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.item_added'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -715,8 +716,8 @@ const saveItem = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر حفظ بيانات الصنف',
+            title: trans('common.error'),
+            text: error.userMessage || trans('common.error'),
         });
     } finally {
         isSubmitting.value = false;
@@ -727,7 +728,7 @@ const openAdjustModal = (item) => {
     targetItem.value = item;
     adjustForm.movement_type = 'stock_adjustment_in';
     adjustForm.quantity = '';
-    adjustForm.notes = 'تسوية مخزنية وجرد';
+    adjustForm.notes = trans('inventory.movement_adjustment');
     showAdjustModal.value = true;
 };
 
@@ -735,8 +736,8 @@ const saveAdjustment = async () => {
     if (!adjustForm.quantity || parseFloat(adjustForm.quantity) <= 0) {
         Swal.fire({
             icon: 'warning',
-            title: 'تنبيه',
-            text: 'يرجى إدخال كمية تسوية صحيحة أكبر من الصفر',
+            title: trans('common.warning'),
+            text: trans('inventory.enter_valid_adjustment_qty'),
         });
         return;
     }
@@ -749,8 +750,8 @@ const saveAdjustment = async () => {
         });
         Swal.fire({
             icon: 'success',
-            title: 'تمت التسوية',
-            text: 'تم تسجيل الحركة وتحديث رصيد المخزون بنجاح',
+            title: trans('common.success'),
+            text: trans('inventory.stock_adjusted_success'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -759,8 +760,8 @@ const saveAdjustment = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ',
-            text: error.userMessage || 'تعذر تسجيل تسوية المخزون',
+            title: trans('common.error'),
+            text: error.userMessage || trans('inventory.stock_adjustment_failed'),
         });
     } finally {
         isSubmitting.value = false;
@@ -772,19 +773,19 @@ const deleteItem = async (item) => {
         const blockers = item.deletion_blockers?.join('\n- ') || '';
         Swal.fire({
             icon: 'warning',
-            title: 'لا يمكن حذف الصنف',
-            text: `يوجد ارتباطات عمليات تمنع الحذف:\n- ${blockers}`,
+            title: trans('inventory.cannot_delete_item'),
+            text: `${trans('contacts.deletion_blockers_found')}\n- ${blockers}`,
         });
         return;
     }
 
     const result = await Swal.fire({
-        title: `حذف الصنف (${item.name})؟`,
-        text: 'هل أنت متأكد من حذف هذا الصنف من النظام؟',
+        title: trans('inventory.delete_item_confirm_title', { name: item.name }),
+        text: trans('inventory.delete_item_confirm_text'),
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء',
+        confirmButtonText: trans('common.delete'),
+        cancelButtonText: trans('common.cancel'),
         confirmButtonColor: '#f43f5e',
     });
 
@@ -793,8 +794,8 @@ const deleteItem = async (item) => {
             await api.delete(`/items/${item.id}`);
             Swal.fire({
                 icon: 'success',
-                title: 'تم الحذف',
-                text: 'تم حذف الصنف بنجاح',
+                title: trans('common.success'),
+                text: trans('inventory.item_deleted'),
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -802,8 +803,8 @@ const deleteItem = async (item) => {
         } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'خطأ',
-                text: error.userMessage || 'تعذر حذف الصنف',
+                title: trans('common.error'),
+                text: error.userMessage || trans('common.error'),
             });
         }
     }

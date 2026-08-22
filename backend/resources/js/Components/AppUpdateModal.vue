@@ -19,19 +19,19 @@
               </div>
 
               <div class="space-y-1.5">
-                <h2 class="text-lg font-black text-white">تم تنزيل حزمة التحديث بنجاح! 🎉</h2>
+                <h2 class="text-lg font-black text-white">{{ $t('app_update.download_success_title') }}</h2>
                 <p class="text-xs text-slate-300 leading-relaxed px-2">
-                  تم تنزيل ملف <span class="text-amber-400 font-mono font-bold">APK</span> على جهازك. يرجى فتح الإشعار أو الضغط على ملف التثبيت للمتابعة.
+                  {{ $t('app_update.download_success_desc') }}
                 </p>
               </div>
 
               <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-400 text-start space-y-1">
                 <div class="flex items-center gap-2 text-emerald-400 font-bold">
                   <Sparkles class="w-4 h-4" />
-                  <span>خطوات تثبيت الـ APK على الأندرويد:</span>
+                  <span>{{ $t('app_update.install_steps_title') }}</span>
                 </div>
-                <p>1. اضغط على ملف التنزيل في إشعارات الهاتف.</p>
-                <p>2. اختر <strong>تثبيت (Install)</strong> عند ظهور رسالة النظام.</p>
+                <p>{{ $t('app_update.install_step_1') }}</p>
+                <p>{{ $t('app_update.install_step_2') }}</p>
               </div>
 
               <div class="pt-2 flex items-center gap-3">
@@ -41,16 +41,16 @@
                   class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition active:scale-95 cursor-pointer"
                 >
                   <Check class="w-4.5 h-4.5" />
-                  <span>تم وإغلاق النافذة</span>
+                  <span>{{ $t('app_update.done_and_close') }}</span>
                 </button>
 
                 <button
                   type="button"
                   @click="startDownloadAndInstall"
                   class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition active:scale-95 cursor-pointer"
-                  title="إعادة التنزيل"
+                  :title="$t('app_update.re_download')"
                 >
-                  إعادة التنزيل
+                  {{ $t('app_update.re_download') }}
                 </button>
               </div>
             </div>
@@ -65,7 +65,7 @@
                   type="button"
                   @click="closeModal"
                   class="absolute top-4 start-4 w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
-                  title="إغلاق"
+                  :title="$t('common.close')"
                 >
                   <X class="w-4.5 h-4.5" />
                 </button>
@@ -76,12 +76,12 @@
                 </div>
 
                 <h2 class="text-lg font-black text-white">
-                  {{ isForceUpdate ? 'تحديث إلزامي جديد للتطبيق' : 'يتوفر تحديث جديد للتطبيق 🚀' }}
+                  {{ isForceUpdate ? $t('app_update.mandatory_update_title') : $t('app_update.update_available_title') }}
                 </h2>
 
                 <!-- Version Comparison Badge -->
                 <div class="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-bold">
-                  <span class="text-slate-400">الإصدار الحالي: v{{ currentVersionName }}</span>
+                  <span class="text-slate-400">{{ $t('app_update.current_version') }} v{{ currentVersionName }}</span>
                   <span class="text-amber-400 font-mono">➔</span>
                   <span class="text-emerald-400 font-black">v{{ latestVersionData?.latest_version || '1.1.0' }}</span>
                 </div>
@@ -93,9 +93,9 @@
                 <div v-if="isForceUpdate" class="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2.5">
                   <AlertTriangle class="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
                   <div>
-                    <div class="font-bold">تحديث أمني إلزامي</div>
+                    <div class="font-bold">{{ $t('app_update.security_update_badge') }}</div>
                     <p class="text-[11px] text-rose-300/80 mt-0.5 leading-relaxed">
-                      يتضمن هذا الإصدار تعديلات هيكلية وأمنية هامة تتطلب التحديث للاستمرار في استخدام النظام.
+                      {{ $t('app_update.mandatory_update_desc') }}
                     </p>
                   </div>
                 </div>
@@ -104,14 +104,14 @@
                 <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-400 text-[11px]">
                   <div class="flex items-center gap-1.5">
                     <HardDrive class="w-4 h-4 text-amber-400" />
-                    <span>حجم الملف:</span>
+                    <span>{{ $t('app_update.file_size') }}</span>
                     <span class="text-white font-bold">{{ latestVersionData?.file_size || '18.5 MB' }}</span>
                   </div>
 
                   <div class="flex items-center gap-1.5">
                     <Calendar class="w-4 h-4 text-emerald-400" />
-                    <span>تاريخ النشر:</span>
-                    <span class="text-white font-bold">{{ latestVersionData?.published_at?.split(' ')[0] || 'اليوم' }}</span>
+                    <span>{{ $t('app_update.publish_date') }}</span>
+                    <span class="text-white font-bold">{{ latestVersionData?.published_at?.split(' ')[0] || $t('app_update.today') }}</span>
                   </div>
                 </div>
 
@@ -119,7 +119,7 @@
                 <div>
                   <div class="font-bold text-slate-300 mb-2 flex items-center gap-1.5">
                     <Sparkles class="w-4 h-4 text-amber-400" />
-                    <span>أبرز المميزات والتحسينات الجديدة:</span>
+                    <span>{{ $t('app_update.changelog_title') }}</span>
                   </div>
 
                   <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed">
@@ -134,7 +134,7 @@
                       </div>
                     </template>
                     <p v-else class="text-[11px] text-slate-400">
-                      {{ latestVersionData?.release_notes_ar || 'تحسينات عامة في الأداء والسرعة واستقرار النظام.' }}
+                      {{ latestVersionData?.release_notes_ar || $t('app_update.general_improvements') }}
                     </p>
                   </div>
                 </div>
@@ -142,7 +142,7 @@
                 <!-- Download Progress Bar (When Downloading) -->
                 <div v-if="isDownloading" class="space-y-2 pt-2">
                   <div class="flex items-center justify-between text-[11px] font-bold">
-                    <span class="text-amber-400 animate-pulse">جاري تحميل حزمة الـ APK...</span>
+                    <span class="text-amber-400 animate-pulse">{{ $t('app_update.downloading_package') }}</span>
                     <span class="text-white font-mono">{{ downloadProgress }}%</span>
                   </div>
                   <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
@@ -164,7 +164,7 @@
                 >
                   <Download v-if="!isDownloading" class="w-4.5 h-4.5" />
                   <div v-else class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
-                  <span>{{ isDownloading ? `جاري التحميل (${downloadProgress}%)...` : 'تحديث وتثبيت الآن ⚡' }}</span>
+                  <span>{{ isDownloading ? $t('app_update.downloading', { progress: downloadProgress }) : $t('app_update.update_and_install_now') }}</span>
                 </button>
 
                 <button
@@ -173,7 +173,7 @@
                   @click="closeModal"
                   class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition active:scale-95 cursor-pointer"
                 >
-                  تذكيري لاحقاً
+                  {{ $t('app_update.remind_later') }}
                 </button>
               </div>
             </template>

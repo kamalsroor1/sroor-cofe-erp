@@ -51,7 +51,7 @@ const handleLogoDarkChange = (e) => {
                             <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200 p-2 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
                                 <img
                                     :src="logoLightPreview || '/logo-light.png'"
-                                    alt="شعار الوضع الفاتح"
+                                    :alt="$t('settings.company_logo_light')"
                                     class="w-full h-full object-contain"
                                 >
                             </div>
@@ -74,7 +74,7 @@ const handleLogoDarkChange = (e) => {
                             <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 p-2 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
                                 <img
                                     :src="logoDarkPreview || '/logo-dark.png'"
-                                    alt="شعار الوضع الداكن"
+                                    :alt="$t('settings.company_logo_dark')"
                                     class="w-full h-full object-contain"
                                 >
                             </div>

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Palette, Paintbrush, Check, Eye, Zap, CheckCircle2 } from 'lucide-vue-next';
 import { useTheme } from '@/Composables/useTheme';
+import { trans } from '@/helpers/trans';
 
 const props = defineProps({
     form: {
@@ -14,16 +15,16 @@ const emit = defineEmits(['save']);
 
 const { applyColorTheme } = useTheme();
 
-const palettes = [
-    { id: 'amber', name: 'الكهرمان / الذهبي الأصيل', sub: 'الهوية الرسمية الافتراضية لسرور كوفي', hex: '#f59e0b', ring: 'ring-amber-500', bg: 'bg-amber-500', icon: '🌟' },
-    { id: 'emerald', name: 'الأخضر الزمردي الملكي', sub: 'طابع مالي فاخر ونقاء عالي', hex: '#10b981', ring: 'ring-emerald-500', bg: 'bg-emerald-500', icon: '🌿' },
-    { id: 'blue', name: 'الأزرق الملكي (Sapphire)', sub: 'أناقة كلاسيكية احترافية للمؤسسات', hex: '#3b82f6', ring: 'ring-blue-500', bg: 'bg-blue-500', icon: '🔵' },
-    { id: 'purple', name: 'البنفسجي الإمبراطوري', sub: 'فخامة وتميز إداري جذاب', hex: '#a855f7', ring: 'ring-purple-500', bg: 'bg-purple-500', icon: '🟣' },
-    { id: 'rose', name: 'الياقوتي القرمزي (Ruby Rose)', sub: 'طاقة وحيوية واضحة للشاشات', hex: '#f43f5e', ring: 'ring-rose-500', bg: 'bg-rose-500', icon: '🌹' },
-    { id: 'orange', name: 'البرتقالي الدافئ / بن محمص', sub: 'دفء الكافيهات وحبوب القهوة المحمصة', hex: '#f97316', ring: 'ring-orange-500', bg: 'bg-orange-500', icon: '☕' },
-    { id: 'teal', name: 'السماوي التركوازي (Ocean Teal)', sub: 'طابع عصري متجدد ومريح للعين', hex: '#14b8a6', ring: 'ring-teal-500', bg: 'bg-teal-500', icon: '🌊' },
-    { id: 'indigo', name: 'النيلي الداكن (Deep Indigo)', sub: 'هدوء تكنولوجي عصري حديث', hex: '#6366f1', ring: 'ring-indigo-500', bg: 'bg-indigo-500', icon: '🌌' },
-];
+const palettes = computed(() => [
+    { id: 'amber', name: trans('settings.palette_amber_name'), sub: trans('settings.palette_amber_sub'), hex: '#f59e0b', ring: 'ring-amber-500', bg: 'bg-amber-500', icon: '🌟' },
+    { id: 'emerald', name: trans('settings.palette_emerald_name'), sub: trans('settings.palette_emerald_sub'), hex: '#10b981', ring: 'ring-emerald-500', bg: 'bg-emerald-500', icon: '🌿' },
+    { id: 'blue', name: trans('settings.palette_blue_name'), sub: trans('settings.palette_blue_sub'), hex: '#3b82f6', ring: 'ring-blue-500', bg: 'bg-blue-500', icon: '🔵' },
+    { id: 'purple', name: trans('settings.palette_purple_name'), sub: trans('settings.palette_purple_sub'), hex: '#a855f7', ring: 'ring-purple-500', bg: 'bg-purple-500', icon: '🟣' },
+    { id: 'rose', name: trans('settings.palette_rose_name'), sub: trans('settings.palette_rose_sub'), hex: '#f43f5e', ring: 'ring-rose-500', bg: 'bg-rose-500', icon: '🌹' },
+    { id: 'orange', name: trans('settings.palette_orange_name'), sub: trans('settings.palette_orange_sub'), hex: '#f97316', ring: 'ring-orange-500', bg: 'bg-orange-500', icon: '☕' },
+    { id: 'teal', name: trans('settings.palette_teal_name'), sub: trans('settings.palette_teal_sub'), hex: '#14b8a6', ring: 'ring-teal-500', bg: 'bg-teal-500', icon: '🌊' },
+    { id: 'indigo', name: trans('settings.palette_indigo_name'), sub: trans('settings.palette_indigo_sub'), hex: '#6366f1', ring: 'ring-indigo-500', bg: 'bg-indigo-500', icon: '🌌' },
+]);
 
 const extendedSwatches = [
     { hex: '#06b6d4', name: 'Cyan' },
@@ -41,11 +42,11 @@ const extendedSwatches = [
 ];
 
 const isPreset = computed(() => {
-    return palettes.some(p => p.id === props.form.system_theme_color);
+    return palettes.value.some(p => p.id === props.form.system_theme_color);
 });
 
 const activeHexColor = computed(() => {
-    const preset = palettes.find(p => p.id === props.form.system_theme_color);
+    const preset = palettes.value.find(p => p.id === props.form.system_theme_color);
     if (preset) return preset.hex;
     if (props.form.system_theme_color && props.form.system_theme_color.startsWith('#')) return props.form.system_theme_color;
     return '#f59e0b';
@@ -55,7 +56,7 @@ const customPickerColor = ref(activeHexColor.value);
 
 const selectPalette = (paletteId) => {
     props.form.system_theme_color = paletteId;
-    const preset = palettes.find(p => p.id === paletteId);
+    const preset = palettes.value.find(p => p.id === paletteId);
     if (preset) customPickerColor.value = preset.hex;
     applyColorTheme(paletteId);
 };
@@ -204,7 +205,7 @@ const onHexTextInput = (val) => {
                                 <Zap class="w-4 h-4 text-theme-primary" />
                             </div>
                             <div class="text-2xl font-black font-mono text-theme-primary">
-                                24,850.00 <span class="text-xs font-bold text-slate-500">ج.م</span>
+                                24,850.00 <span class="text-xs font-bold text-slate-500">{{ $t('common.currency') }}</span>
                             </div>
                         </div>
 
@@ -221,7 +222,7 @@ const onHexTextInput = (val) => {
                         <div class="flex flex-col items-center sm:items-start gap-2">
                             <span class="px-3 py-1.5 rounded-xl text-xs font-black badge-theme flex items-center gap-1.5 shadow-xs">
                                 <CheckCircle2 class="w-3.5 h-3.5" />
-                                <span>الفرع النشط: محمص سرور الرئيسي</span>
+                                <span>{{ $t('settings.preview_active_branch_sample') }}</span>
                             </span>
                         </div>
                     </div>

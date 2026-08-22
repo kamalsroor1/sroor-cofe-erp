@@ -17,7 +17,7 @@
         />
         <LayoutDashboard class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isDashboardActive ? 'scale-110' : 'group-hover:scale-105'" />
       </div>
-      <span class="text-[10px] tracking-tight truncate">الرئيسية</span>
+      <span class="text-[10px] tracking-tight truncate">{{ $t('nav.dashboard_short') }}</span>
     </router-link>
 
     <!-- 2. Invoices / Sales -->
@@ -33,7 +33,7 @@
         />
         <FileText class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isInvoicesActive ? 'scale-110' : 'group-hover:scale-105'" />
       </div>
-      <span class="text-[10px] tracking-tight truncate">الفواتير</span>
+      <span class="text-[10px] tracking-tight truncate">{{ $t('nav.invoices_short') }}</span>
     </router-link>
 
     <!-- 3. Primary Center Action: Raised Fast POS Button -->
@@ -42,7 +42,7 @@
         to="/pos"
         class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-slate-950 group"
         :class="isPosActive ? 'scale-110 ring-amber-400/50' : ''"
-        title="نقطة البيع السريعة (POS)"
+        :title="$t('nav.pos_fast')"
       >
         <ShoppingCart class="w-6 h-6 text-slate-950 fill-current transition-transform group-hover:rotate-12 duration-300" />
       </router-link>
@@ -61,7 +61,7 @@
         />
         <Package class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isItemsActive ? 'scale-110' : 'group-hover:scale-105'" />
       </div>
-      <span class="text-[10px] tracking-tight truncate">الأصناف</span>
+      <span class="text-[10px] tracking-tight truncate">{{ $t('nav.items_short') }}</span>
     </router-link>
 
     <!-- 5. Shift & Cash Drawer -->
@@ -82,7 +82,7 @@
           class="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse"
         />
       </div>
-      <span class="text-[10px] tracking-tight truncate">الخزينة</span>
+      <span class="text-[10px] tracking-tight truncate">{{ $t('nav.treasury_short') }}</span>
     </router-link>
 
     <!-- 6. More / Drawer Menu -->
@@ -90,12 +90,12 @@
       @click="$emit('open-drawer')"
       type="button"
       class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 active:scale-90 text-slate-400 hover:text-slate-200 cursor-pointer group"
-      title="المزيد من القوائم"
+      :title="$t('nav.more_menu')"
     >
       <div class="relative flex items-center justify-center">
         <Menu class="w-5 h-5 mb-0.5 transition-transform duration-200 group-hover:scale-105" />
       </div>
-      <span class="text-[10px] tracking-tight truncate">المزيد</span>
+      <span class="text-[10px] tracking-tight truncate">{{ $t('nav.more_short') }}</span>
     </button>
   </nav>
 </template>

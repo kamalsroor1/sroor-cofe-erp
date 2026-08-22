@@ -4,13 +4,13 @@
       <div class="p-6 rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-bold text-amber-400 mb-2">
-            <span>☕ نظام سرور لإدارة محامص ومبيعات البن</span>
+            <span>{{ $t('dashboard.app_badge_sub') }}</span>
           </div>
           <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            مرحباً بك، {{ authStore.userName }} 👋
+            {{ $t('dashboard.welcome_user', { name: authStore.userName }) }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-400 font-bold mt-1">
-            الفرع النشط: <span class="text-amber-400 font-mono">{{ dashboardData?.active_store?.name || authStore.activeStoreName || 'الفرع الرئيسي' }}</span>
+            {{ $t('dashboard.active_branch_label') }} <span class="text-amber-400 font-mono">{{ dashboardData?.active_store?.name || authStore.activeStoreName || $t('common.main_branch') }}</span>
           </p>
         </div>
 
@@ -20,15 +20,15 @@
             class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer"
           >
             <ShoppingCart class="w-4 h-4" />
-            <span>نقطة البيع (POS)</span>
+            <span>{{ $t('dashboard.pos_fast_btn') }}</span>
           </router-link>
 
           <router-link
             to="/coffee-blender"
             class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs rounded-2xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
           >
-            <Coffee class="w-4 h-4" />
-            <span>توليفة بن</span>
+            <Layers class="w-4 h-4" />
+            <span>{{ $t('dashboard.coffee_blend_btn') }}</span>
           </router-link>
         </div>
       </div>
@@ -36,7 +36,7 @@
       <!-- Loading State -->
       <div v-if="isLoading && !dashboardData" class="p-16 text-center">
         <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        <p class="text-xs text-slate-400 font-bold">جاري تحميل مؤشرات وتحليلات لوحة التحكم اللحظية...</p>
+        <p class="text-xs text-slate-400 font-bold">{{ $t('dashboard.loading_dashboard') }}</p>
       </div>
 
       <div v-else class="space-y-6">
@@ -45,64 +45,64 @@
           <!-- Today Sales -->
           <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400">مبيعات اليوم</span>
+              <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.today_sales_card') }}</span>
               <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <TrendingUp class="w-4 h-4" />
               </div>
             </div>
             <div class="text-2xl font-black text-white font-mono">
-              {{ formatMoney(metrics.today_sales || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+              {{ formatMoney(metrics.today_sales || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
             </div>
             <div class="text-[11px] text-slate-500">
-              عدد الفواتير: <span class="font-mono text-slate-300 font-bold">{{ metrics.today_invoices_count || 0 }}</span> فاتورة
+              {{ $t('dashboard.today_invoices_count', { count: metrics.today_invoices_count || 0 }) }}
             </div>
           </div>
 
           <!-- Monthly Gross Profit & Margin -->
           <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400">أرباح الشهر التقديرية</span>
+              <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.monthly_gross_profit_card') }}</span>
               <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
                 <BarChart3 class="w-4 h-4" />
               </div>
             </div>
             <div class="text-2xl font-black text-amber-400 font-mono">
-              {{ formatMoney(metrics.monthly_gross_profit || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+              {{ formatMoney(metrics.monthly_gross_profit || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
             </div>
             <div class="text-[11px] text-slate-500">
-              هامش الربح: <span class="font-mono text-emerald-400 font-bold">{{ metrics.monthly_margin || '0.00' }}%</span>
+              {{ $t('dashboard.profit_margin_label') }} <span class="font-mono text-emerald-400 font-bold">{{ metrics.monthly_margin || '0.00' }}%</span>
             </div>
           </div>
 
           <!-- Customer Debts -->
           <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400">مديونيات العملاء الآجلة</span>
+              <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.customers_debt_card') }}</span>
               <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
                 <Users class="w-4 h-4" />
               </div>
             </div>
             <div class="text-2xl font-black text-cyan-400 font-mono">
-              {{ formatMoney(metrics.customers_debt || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+              {{ formatMoney(metrics.customers_debt || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
             </div>
             <div class="text-[11px] text-slate-500">
-              مستحقات آجلة للتحصيل
+              {{ $t('dashboard.due_collections_label') }}
             </div>
           </div>
 
           <!-- Net Cash Collected Today -->
           <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-400">صافي نقدية اليوم</span>
+              <span class="text-xs font-bold text-slate-400">{{ $t('dashboard.net_cash') }}</span>
               <div class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
                 <Wallet class="w-4 h-4" />
               </div>
             </div>
             <div class="text-2xl font-black font-mono" :class="metrics.net_cash_today >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-              {{ formatMoney(metrics.net_cash_today || 0) }} <span class="text-xs text-slate-400">ج.م</span>
+              {{ formatMoney(metrics.net_cash_today || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
             </div>
             <div class="text-[11px] text-slate-500">
-              مقبوضات - (مصروفات + توريدات)
+              {{ $t('dashboard.net_cash_formula_sub') }}
             </div>
           </div>
         </div>
@@ -114,9 +114,9 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <TrendingUp class="w-4 h-4 text-emerald-400" />
-                <span>حركة المبيعات لآخر 7 أيام</span>
+                <span>{{ $t('dashboard.seven_days_trend_title') }}</span>
               </h2>
-              <span class="text-[11px] text-slate-500 font-mono">مبيعات يومية</span>
+              <span class="text-[11px] text-slate-500 font-mono">{{ $t('dashboard.daily_invoices_sub') }}</span>
             </div>
 
             <!-- Trend Bars -->
@@ -124,7 +124,7 @@
               <div v-for="day in trendDays" :key="day.date" class="space-y-1">
                 <div class="flex justify-between text-xs font-mono">
                   <span class="text-slate-400 font-sans">{{ day.day_name || day.date }}</span>
-                  <span class="text-emerald-400 font-bold">{{ formatMoney(day.total_sales) }} ج.م</span>
+                  <span class="text-emerald-400 font-bold">{{ formatMoney(day.total_sales) }} {{ $t('common.currency') }}</span>
                 </div>
                 <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden">
                   <div
@@ -136,7 +136,7 @@
             </div>
 
             <div v-else class="p-8 text-center text-xs text-slate-500 font-bold">
-              لا توجد مبيعات مسجلة في الأيام السابقة بعد.
+              {{ $t('dashboard.no_sales_previous_days') }}
             </div>
           </div>
 
@@ -145,42 +145,42 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <Wallet class="w-4 h-4 text-amber-400" />
-                <span>وردية الكاشير الحالية</span>
+                <span>{{ $t('dashboard.active_shift_widget_title') }}</span>
               </h2>
               <span
                 class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
                 :class="dashboardData?.active_shift ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
               >
-                {{ dashboardData?.active_shift ? 'مفتوحة ✅' : 'مغلقة 🚫' }}
+                {{ dashboardData?.active_shift ? $t('dashboard.shift_open_badge') : $t('dashboard.shift_closed_badge') }}
               </span>
             </div>
 
             <div v-if="dashboardData?.active_shift" class="space-y-3 font-mono text-xs">
               <div class="flex justify-between text-slate-400 font-sans">
-                <span>رقم الوردية:</span>
+                <span>{{ $t('treasury.shift_number', { number: '' }) }}</span>
                 <span class="text-amber-400 font-bold font-mono">{{ dashboardData.active_shift.shift_number }}</span>
               </div>
               <div class="flex justify-between text-slate-400 font-sans">
-                <span>الكاشير المسؤول:</span>
+                <span>{{ $t('dashboard.responsible_cashier') }}</span>
                 <span class="text-white font-bold font-sans">{{ dashboardData.active_shift.user_name }}</span>
               </div>
               <div class="flex justify-between text-slate-400 font-sans">
-                <span>رصيد الافتتاح:</span>
-                <span class="text-slate-300">{{ formatMoney(dashboardData.active_shift.starting_cash) }} ج.م</span>
+                <span>{{ $t('dashboard.opening_balance_short') }}</span>
+                <span class="text-slate-300">{{ formatMoney(dashboardData.active_shift.starting_cash) }} {{ $t('common.currency') }}</span>
               </div>
               <div class="flex justify-between text-slate-400 font-sans pt-2 border-t border-slate-800">
-                <span>النقدية المتوقعة بالدرج:</span>
-                <span class="text-emerald-400 font-black text-base">{{ formatMoney(dashboardData.active_shift.current_cash) }} ج.م</span>
+                <span>{{ $t('dashboard.expected_drawer_cash') }}</span>
+                <span class="text-emerald-400 font-black text-base">{{ formatMoney(dashboardData.active_shift.current_cash) }} {{ $t('common.currency') }}</span>
               </div>
             </div>
 
             <div v-else class="p-6 text-center text-xs text-slate-500 font-bold space-y-2">
-              <p>لا توجد وردية مفتوحة حالياً بالفرع.</p>
+              <p>{{ $t('dashboard.no_shift_open_notice') }}</p>
               <router-link
                 to="/daily-journal"
                 class="inline-block px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-xl text-[11px] font-bold transition"
               >
-                فتح وردية جديدة ←
+                {{ $t('dashboard.open_new_shift_link') }}
               </router-link>
             </div>
           </div>
@@ -193,10 +193,10 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <AlertOctagon class="w-4 h-4 text-rose-400" />
-                <span>رادار النواقص ({{ lowStockItems.length }})</span>
+                <span>{{ $t('dashboard.low_stock_radar_count', { count: lowStockItems.length }) }}</span>
               </h2>
               <router-link to="/purchases/smart-reorder" class="text-[11px] text-amber-400 hover:underline">
-                إعادة الطلب الذكي ←
+                {{ $t('dashboard.smart_reorder_link') }}
               </router-link>
             </div>
 
@@ -212,13 +212,13 @@
                 </div>
                 <div class="text-end font-mono">
                   <div class="font-black text-rose-400">{{ it.current_stock }} {{ it.unit }}</div>
-                  <div class="text-[10px] text-slate-500">الحد: {{ it.min_stock }}</div>
+                  <div class="text-[10px] text-slate-500">{{ $t('dashboard.min_limit_label') }} {{ it.min_stock }}</div>
                 </div>
               </div>
             </div>
 
             <div v-else class="p-6 text-center text-xs text-emerald-400 font-bold">
-              جميع الأصناف متوفرة فوق حد الأمان ✓
+              {{ $t('dashboard.all_items_safe_radar') }}
             </div>
           </div>
 
@@ -227,10 +227,10 @@
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <FileText class="w-4 h-4 text-blue-400" />
-                <span>أحدث فواتير اليوم</span>
+                <span>{{ $t('dashboard.recent_invoices_today') }}</span>
               </h2>
               <router-link to="/invoices" class="text-[11px] text-amber-400 hover:underline">
-                سجل الفواتير ←
+                {{ $t('dashboard.invoices_log_link') }}
               </router-link>
             </div>
 
@@ -245,14 +245,14 @@
                   <div class="text-[10px] text-slate-300 font-sans">{{ inv.customer_name }}</div>
                 </div>
                 <div class="text-end font-mono">
-                  <div class="font-black text-white">{{ formatMoney(inv.net_total) }} ج.م</div>
+                  <div class="font-black text-white">{{ formatMoney(inv.net_total) }} {{ $t('common.currency') }}</div>
                   <div class="text-[10px] text-slate-400">{{ inv.created_at }}</div>
                 </div>
               </div>
             </div>
 
             <div v-else class="p-6 text-center text-xs text-slate-500 font-bold">
-              لم تصدر أي فواتير مبيعات اليوم بعد.
+              {{ $t('dashboard.no_invoices_today_sub') }}
             </div>
           </div>
 
@@ -260,11 +260,11 @@
           <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
-                <Coffee class="w-4 h-4 text-amber-400" />
-                <span>الأكثر مبيعاً هذا الشهر</span>
+                <PackageCheck class="w-4 h-4 text-amber-400" />
+                <span>{{ $t('dashboard.top_selling_month') }}</span>
               </h2>
               <router-link to="/reports" class="text-[11px] text-amber-400 hover:underline">
-                تقارير الربحية ←
+                {{ $t('dashboard.profitability_reports_link') }}
               </router-link>
             </div>
 
@@ -280,13 +280,13 @@
                 </div>
                 <div class="text-end font-mono">
                   <div class="font-black text-cyan-400">{{ top.total_qty }} {{ top.unit }}</div>
-                  <div class="text-[10px] text-slate-400">{{ formatMoney(top.total_revenue) }} ج.م</div>
+                  <div class="text-[10px] text-slate-400">{{ formatMoney(top.total_revenue) }} {{ $t('common.currency') }}</div>
                 </div>
               </div>
             </div>
 
             <div v-else class="p-6 text-center text-xs text-slate-500 font-bold">
-              لم يتم تجميع مبيعات الأصناف بعد.
+              {{ $t('dashboard.no_top_items_month') }}
             </div>
           </div>
         </div>
@@ -300,7 +300,8 @@ import { useAuthStore } from '../stores/auth';
 import api from '../services/api';
 import {
     ShoppingCart,
-    Coffee,
+    Layers,
+    PackageCheck,
     TrendingUp,
     BarChart3,
     Users,

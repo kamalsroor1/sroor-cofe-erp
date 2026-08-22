@@ -23,6 +23,10 @@ final class RoleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        if ($request->user() && !$request->user()->can('roles.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $roleId = $request->input('role_id') ? (int)$request->input('role_id') : null;
         $matrix = $this->getRolesMatrixAction->execute($roleId);
 

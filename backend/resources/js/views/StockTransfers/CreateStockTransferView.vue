@@ -12,7 +12,7 @@
             class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
           >
             <ArrowRight class="w-4 h-4" />
-            <span>العودة للتحويلات</span>
+            <span>{{ $t('inventory.back_to_transfers') }}</span>
           </router-link>
         </template>
       </PageHeader>
@@ -22,38 +22,40 @@
         <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
           <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
             <span>🏢</span>
-            <span>بيانات الفروع وتاريخ التحويل</span>
+            <span>{{ $t('inventory.branches_and_date_section') }}</span>
           </h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- From Store -->
             <div class="space-y-1">
               <label class="block text-xs font-bold text-slate-300">
-                من مخزن / فرع <span class="text-rose-500">*</span>
+                {{ $t('inventory.from_store_label') }} <span class="text-rose-500">*</span>
               </label>
               <select
                 v-model="form.from_store_id"
                 required
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option :value="null" disabled>اختر المخزن المصدر...</option>
-                <option v-for="s in stores" :key="s.id" :value="s.id">{{ s.name }} ({{ s.type === 'warehouse' ? 'مستودع' : 'فرع' }})</option>
+                <option :value="null" disabled>{{ $t('inventory.choose_source_store') }}</option>
+                <option v-for="s in stores" :key="s.id" :value="s.id">
+                  {{ s.name }} ({{ s.type === 'warehouse' ? $t('inventory.store_type_warehouse_short') : $t('inventory.store_type_branch_short') }})
+                </option>
               </select>
             </div>
 
             <!-- To Store -->
             <div class="space-y-1">
               <label class="block text-xs font-bold text-slate-300">
-                إلى مخزن / فرع <span class="text-rose-500">*</span>
+                {{ $t('inventory.to_store_label') }} <span class="text-rose-500">*</span>
               </label>
               <select
                 v-model="form.to_store_id"
                 required
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
-                <option :value="null" disabled>اختر المخزن المستلم...</option>
+                <option :value="null" disabled>{{ $t('inventory.choose_dest_store') }}</option>
                 <option v-for="s in stores" :key="s.id" :value="s.id" :disabled="s.id === form.from_store_id">
-                  {{ s.name }} ({{ s.type === 'warehouse' ? 'مستودع' : 'فرع' }})
+                  {{ s.name }} ({{ s.type === 'warehouse' ? $t('inventory.store_type_warehouse_short') : $t('inventory.store_type_branch_short') }})
                 </option>
               </select>
             </div>
@@ -61,7 +63,7 @@
             <!-- Transfer Date -->
             <div class="space-y-1">
               <label class="block text-xs font-bold text-slate-300">
-                تاريخ إذن التحويل <span class="text-rose-500">*</span>
+                {{ $t('inventory.transfer_date_label') }} <span class="text-rose-500">*</span>
               </label>
               <input
                 v-model="form.transfer_date"
@@ -73,12 +75,12 @@
 
             <!-- Notes -->
             <div class="sm:col-span-3 space-y-1">
-              <label class="block text-xs font-bold text-slate-300">ملاحظات التحويل</label>
+              <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.blend_notes') }}</label>
               <input
                 v-model="form.notes"
                 type="text"
                 class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                placeholder="أسباب التحويل أو أرقام أمر الشحن..."
+                :placeholder="$t('inventory.transfer_notes_placeholder')"
               >
             </div>
           </div>
@@ -89,7 +91,7 @@
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
               <span>📦</span>
-              <span>الأصناف المحولة</span>
+              <span>{{ $t('inventory.transferred_items_section') }}</span>
             </h2>
           </div>
 
@@ -99,9 +101,9 @@
               v-model="selectedItemToAdd"
               class="flex-1 h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
-              <option :value="null">اختر صنفاً لتحويله...</option>
+              <option :value="null">{{ $t('inventory.select_item_to_transfer') }}</option>
               <option v-for="it in items" :key="it.id" :value="it">
-                {{ it.name }} ({{ it.code || '—' }}) — الرصيد: {{ it.current_stock }} {{ it.unit }}
+                {{ it.name }} ({{ it.code || '—' }}) — {{ $t('inventory.current_stock') }}: {{ it.current_stock }} {{ it.unit }}
               </option>
             </select>
 
@@ -111,7 +113,7 @@
               :disabled="!selectedItemToAdd"
               class="px-4 h-10 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black transition disabled:opacity-30 cursor-pointer shrink-0"
             >
-              + إضافة
+              {{ $t('returns.add_item_btn') }}
             </button>
           </div>
 
@@ -120,15 +122,15 @@
             <table class="w-full text-start text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
-                  <th class="p-3 text-start font-bold">الصنف</th>
-                  <th class="p-3 text-start font-bold">الكود</th>
-                  <th class="p-3 text-center font-bold w-36">الكمية المحولة</th>
+                  <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
+                  <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
+                  <th class="p-3 text-center font-bold w-36">{{ $t('inventory.transferred_qty_col') }}</th>
                   <th class="p-3 text-center font-bold w-12"></th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/50 font-sans">
                 <tr v-for="(item, idx) in form.items" :key="item.item_id" class="hover:bg-slate-900/40">
-                  <td class="p-3 font-bold text-white">
+                  <td class="p-3 font-bold text-white font-tajawal">
                     <div>{{ item.name }}</div>
                   </td>
                   <td class="p-3 font-mono text-slate-400">
@@ -143,7 +145,7 @@
                         min="0.001"
                         class="w-24 h-8 px-2 text-center bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
                       >
-                      <span class="text-slate-400 text-[10px]">{{ item.unit }}</span>
+                      <span class="text-slate-400 text-[10px] font-tajawal">{{ item.unit }}</span>
                     </div>
                   </td>
                   <td class="p-3 text-center">
@@ -160,8 +162,8 @@
             </table>
           </div>
 
-          <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-800 rounded-xl">
-            لم يتم إضافة أي أصناف للإذن بعد. اختر صنفاً من القائمة واضغط إضافة.
+          <div v-else class="p-8 text-center text-slate-500 text-xs font-bold border border-dashed border-slate-800 rounded-xl font-tajawal">
+            {{ $t('inventory.no_items_in_transfer_prompt') }}
           </div>
         </div>
 
@@ -173,7 +175,7 @@
         >
           <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
           <Truck v-else class="w-4 h-4" />
-          <span>تنفيذ التحويل المخزني ونقل البضاعة فوراً 🚚</span>
+          <span>{{ $t('inventory.execute_transfer_now_btn') }}</span>
         </button>
       </form>
     </div>
@@ -185,6 +187,7 @@ import { useRouter } from 'vue-router';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
+import { trans } from '../../helpers/trans';
 import {
     ArrowRight,
     Trash2,
@@ -231,7 +234,7 @@ const addItemRow = () => {
     const it = selectedItemToAdd.value;
 
     if (form.items.some(i => i.item_id === it.id)) {
-        Swal.fire({ icon: 'info', title: 'تنبيه', text: 'هذا الصنف مضاف بالفعل في إذن التحويل' });
+        Swal.fire({ icon: 'info', title: trans('common.warning'), text: trans('inventory.item_already_in_transfer') });
         return;
     }
 
@@ -252,11 +255,11 @@ const removeItemRow = (idx) => {
 
 const submitTransfer = async () => {
     if (form.from_store_id === form.to_store_id) {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: 'لا يمكن إجراء تحويل مخزني لنفس المخزن أو الفرع' });
+        Swal.fire({ icon: 'error', title: trans('common.error'), text: trans('inventory.same_store_transfer_error') });
         return;
     }
     if (form.items.length === 0) {
-        Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى إضافة صنف واحد على الأقل لإجراء التحويل' });
+        Swal.fire({ icon: 'warning', title: trans('common.warning'), text: trans('inventory.add_at_least_one_item_transfer') });
         return;
     }
 
@@ -276,8 +279,8 @@ const submitTransfer = async () => {
         const response = await api.post('/transfers', payload);
         Swal.fire({
             icon: 'success',
-            title: 'تم التحويل بنجاح',
-            text: response.data?.message || 'تم نقل البضاعة وتحديث أرصدة المخازن بنجاح ✓',
+            title: trans('inventory.transfer_executed_title'),
+            text: response.data?.message || trans('inventory.transfer_executed_msg'),
             timer: 1500,
             showConfirmButton: false,
         });
@@ -286,8 +289,8 @@ const submitTransfer = async () => {
     } catch (error) {
         Swal.fire({
             icon: 'error',
-            title: 'خطأ في التحويل المخزني',
-            text: error.userMessage || 'تعذر تنفيذ إذن التحويل المخزني',
+            title: trans('common.error'),
+            text: error.userMessage || trans('inventory.transfer_execution_failed'),
         });
     } finally {
         isSubmitting.value = false;

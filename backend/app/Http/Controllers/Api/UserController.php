@@ -35,6 +35,10 @@ final class UserController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        if ($request->user() && !$request->user()->can('users.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $role = (string)$request->input('role', 'all');
         $perPage = (int)$request->input('per_page', 15);
