@@ -614,6 +614,16 @@ const sections = computed(() => [
         iconColor: 'text-cyan-500 dark:text-cyan-400',
         badge: trans('settings.sec_telegram_badge')
     },
+    {
+        id: 'units',
+        label: 'وحدات القياس للأصناف',
+        subtitle: 'إدارة وتخصيص وحدات القياس المعتمدة للمخزون والأصناف',
+        description: 'تحديد وتفعيل وحدات القياس (مثل قطعة، علبة، كرتونة، كجم، جرام، لتر...) أو إضافة وحدات مخصصة',
+        icon: Package,
+        iconBg: 'bg-emerald-500/10 border border-emerald-500/20',
+        iconColor: 'text-emerald-500 dark:text-emerald-400',
+        badge: 'مخزون'
+    },
 ]);
 
 const currentSectionTitle = computed(() => {
@@ -640,10 +650,44 @@ const form = ref({
     thermal_show_customer_balance: true,
     print_show_qr: true,
     system_theme_color: 'amber',
+    inventory_units: 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر',
     telegram_notifications_enabled: true,
     telegram_bot_token: '',
     telegram_chat_id: '',
 });
+
+const newUnitInput = ref('');
+const defaultPresets = ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'باكت', 'حبة', 'لتر', 'مل', 'متر', 'طقم', 'زوج', 'باليتة'];
+
+const activeUnitsList = computed(() => {
+    if (!form.value.inventory_units) return [];
+    return form.value.inventory_units.split(',').map(u => u.trim()).filter(Boolean);
+});
+
+const addCustomUnit = () => {
+    const u = newUnitInput.value.trim();
+    if (!u) return;
+    const current = activeUnitsList.value;
+    if (!current.includes(u)) {
+        current.push(u);
+        form.value.inventory_units = current.join(',');
+    }
+    newUnitInput.value = '';
+};
+
+const addPresetUnit = (preset) => {
+    const current = activeUnitsList.value;
+    if (!current.includes(preset)) {
+        current.push(preset);
+        form.value.inventory_units = current.join(',');
+    }
+};
+
+const removeUnit = (idx) => {
+    const current = activeUnitsList.value;
+    current.splice(idx, 1);
+    form.value.inventory_units = current.join(',');
+};
 
 const customHexColor = ref('#10b981');
 

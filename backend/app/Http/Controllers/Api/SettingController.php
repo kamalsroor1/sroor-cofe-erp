@@ -42,6 +42,7 @@ final class SettingController extends Controller
             'print_show_qr'                  => Setting::getBool('print_show_qr', true),
             'invoice_primary_color'          => Setting::get('invoice_primary_color', 'emerald'),
             'system_theme_color'             => Setting::get('system_theme_color', 'emerald'),
+            'inventory_units'                => Setting::get('inventory_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر'),
             'telegram_bot_token'             => Setting::get('telegram_bot_token', ''),
             'telegram_chat_id'               => Setting::get('telegram_chat_id', ''),
             'telegram_notifications_enabled' => Setting::getBool('telegram_notifications_enabled', true),

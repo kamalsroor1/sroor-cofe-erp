@@ -364,13 +364,9 @@
                 required
                 class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
               >
-                <option value="كجم">{{ $t('inventory.unit_kg') }}</option>
-                <option value="جرام">{{ $t('inventory.unit_g') }}</option>
-                <option value="قطعة">{{ $t('inventory.unit_pcs') }}</option>
-                <option value="شيكارة">{{ $t('inventory.unit_sack') }}</option>
-                <option value="علبة">{{ $t('inventory.unit_box') }}</option>
-                <option value="كرتونة">{{ $t('inventory.unit_carton') }}</option>
-                <option value="لتر">{{ $t('inventory.unit_liter') }}</option>
+                <option v-for="u in systemUnits" :key="u" :value="u">
+                  {{ u }}
+                </option>
               </select>
             </div>
           </div>
@@ -586,6 +582,22 @@ const stockStatus = ref('all');
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 
+const systemUnits = ref(['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر']);
+
+const fetchSystemUnits = async () => {
+    try {
+        const res = await api.get('/settings');
+        const unitsStr = res.data?.data?.settings?.inventory_units;
+        if (unitsStr) {
+            const list = unitsStr.split(',').map(u => u.trim()).filter(Boolean);
+            if (list.length > 0) {
+                systemUnits.value = list;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load system units:', e);
+    }
+};
 const pagination = ref({
     current_page: 1,
     last_page: 1,
