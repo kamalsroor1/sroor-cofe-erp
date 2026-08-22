@@ -368,5 +368,14 @@ return [
     'financial_accountant_sig'  => 'المحاسب المالي',
     'signature_line'            => 'التوقيع: ............................',
     'no_movements_period'       => 'لا توجد حركات مسجلة لهذا الصنف خلال الفترة المحددة',
-];
 
+    'no_movements_found' => 'لا توجد حركات مسجلة لهذا الصنف',
+    'movement_purchase' => 'شراء وتوريد',
+    'movement_sale' => 'فاتورة مبيعات',
+    'movement_transfer_out' => 'تحويل مخزني صادر',
+    'movement_sale_return' => 'مرتجع مبيعات',
+    'movement_purchase_return' => 'مرتجع مشتريات',
+    'item_updated' => 'تم تحديث الصنف بنجاح',
+    'item_added' => 'تمت إضافة الصنف بنجاح',
+    'phone' => 'رقم الهاتف',
+];

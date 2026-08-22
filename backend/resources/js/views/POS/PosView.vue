@@ -24,7 +24,7 @@
       </div>
 
       <!-- Center: Active Shift Indicator -->
-      <div class="hidden sm:flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1 rounded-xl text-xs">
+      <div class="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl text-xs">
         <div class="w-2 h-2 rounded-full" :class="activeShift ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"></div>
         <span v-if="activeShift" class="font-bold text-slate-300">
           {{ $t('pos.shift_label') }} <span class="font-mono text-amber-400">{{ activeShift.shift_number }}</span>
@@ -60,7 +60,7 @@
               v-model="searchQuery"
               @keydown.enter="handleBarcodeScan"
               type="text"
-              class="w-full h-11 pr-10 pl-4 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-11 pr-10 pl-4 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('pos.search_scan_placeholder')"
               autofocus
             >
@@ -145,7 +145,7 @@
               <select
                 v-model="selectedCustomerId"
                 @change="onCustomerChange"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option v-for="c in customers" :key="c.id" :value="c.id">
                   {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}
@@ -185,7 +185,7 @@
           <div
             v-for="(item, idx) in cart"
             :key="item.item_id"
-            class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl flex items-center justify-between gap-2 text-xs"
+            class="p-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-2 text-xs"
           >
             <div class="flex-1 min-w-0">
               <div class="font-bold text-white truncate">{{ item.name }}</div>
@@ -247,12 +247,12 @@
                   type="number"
                   step="0.001"
                   min="0"
-                  class="w-20 h-7 px-2 text-end bg-slate-900 border border-slate-700 rounded-lg text-xs text-rose-400 font-mono font-bold focus:outline-none"
+                  class="w-20 h-7 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-rose-400 font-mono font-bold focus:outline-none"
                   placeholder="0.00"
                 >
                 <select
                   v-model="discountType"
-                  class="h-7 px-1.5 bg-slate-900 border border-slate-700 rounded-lg text-[10px] text-white focus:outline-none"
+                  class="h-7 px-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-[10px] text-white focus:outline-none"
                 >
                   <option value="fixed">{{ $t('common.currency') }}</option>
                   <option value="percentage">%</option>
@@ -310,7 +310,7 @@
               type="number"
               step="0.001"
               min="0"
-              class="w-28 h-8 px-2 text-end bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-emerald-400 focus:outline-none"
+              class="w-28 h-8 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-emerald-400 focus:outline-none"
               placeholder="0.00"
             >
           </div>
@@ -346,7 +346,7 @@
             type="text"
             required
             autofocus
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('pos.customer_name_placeholder')"
           >
         </div>
@@ -358,7 +358,7 @@
           <input
             v-model="quickCustomerForm.phone"
             type="tel"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('contacts.phone_placeholder')"
           >
         </div>
@@ -369,7 +369,7 @@
           </label>
           <select
             v-model="quickCustomerForm.price_tier"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="retail">🛍️ {{ $t('pos.retail') }}</option>
             <option value="wholesale">📦 {{ $t('pos.wholesale') }}</option>
@@ -410,7 +410,7 @@
           <div class="text-xs text-slate-400 mt-0.5">{{ $t('invoices.customer') }}: {{ lastCreatedInvoice.customer_name }}</div>
         </div>
 
-        <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1 font-mono text-xs">
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-1 font-mono text-xs">
           <div class="flex justify-between text-slate-300 font-tajawal">
             <span>{{ $t('invoices.net_invoice') }}</span>
             <span class="font-black text-emerald-400 font-mono">{{ formatMoney(lastCreatedInvoice.net_total) }} {{ $t('common.currency') }}</span>

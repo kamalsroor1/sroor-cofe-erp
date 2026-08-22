@@ -21,7 +21,7 @@
       <!-- Summary Metrics Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Total Month Expenses -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('expenses.total_month_expenses') }}</span>
             <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
@@ -37,7 +37,7 @@
         </div>
 
         <!-- Total Cash Expenses -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('expenses.cash_expenses') }}</span>
             <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
@@ -53,14 +53,14 @@
         </div>
 
         <!-- Total Filtered Period Expenses -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('expenses.filtered_total') }}</span>
             <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
               <Receipt class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-white font-mono">
+          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ formatMoney(metrics.total_filtered || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
@@ -70,14 +70,14 @@
       </div>
 
       <!-- Filters & Search Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
             @input="debounceSearch"
             type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
             :placeholder="$t('expenses.search_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -88,7 +88,7 @@
           <select
             v-model="selectedCostCenter"
             @change="fetchExpenses(1)"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
           >
             <option value="all">{{ $t('expenses.all_cost_centers') }}</option>
             <option v-for="(label, key) in costCenters" :key="key" :value="key">
@@ -103,7 +103,7 @@
             v-model="dateFrom"
             @change="fetchExpenses(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :title="$t('common.from')"
           >
           <span class="text-xs text-slate-500 font-bold">—</span>
@@ -111,7 +111,7 @@
             v-model="dateTo"
             @change="fetchExpenses(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :title="$t('common.to')"
           >
         </div>
@@ -141,7 +141,7 @@
       </div>
 
       <!-- Expenses Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Loading Spinner -->
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -251,7 +251,7 @@
               type="button"
               @click="fetchExpenses(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.previous') }}
             </button>
@@ -262,7 +262,7 @@
               type="button"
               @click="fetchExpenses(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.next') }}
             </button>
@@ -286,7 +286,7 @@
               v-model="form.title"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('expenses.title_placeholder')"
             >
           </div>
@@ -300,7 +300,7 @@
               <select
                 v-model="form.cost_center"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option v-for="(label, key) in costCenters" :key="key" :value="key">
                   {{ label }}
@@ -316,7 +316,7 @@
                 v-model="form.category"
                 type="text"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('expenses.category_placeholder')"
               >
             </div>
@@ -347,7 +347,7 @@
                 type="number"
                 step="0.001"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-base font-bold text-rose-400 font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-rose-400 font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
                 placeholder="0.00"
               >
             </div>
@@ -360,7 +360,7 @@
                 v-model="form.expense_date"
                 type="date"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
             </div>
           </div>
@@ -373,7 +373,7 @@
             <select
               v-model="form.payment_method"
               required
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="cash">💵 {{ $t('treasury.method_cash_drawer') }}</option>
               <option value="instapay">⚡ {{ $t('contacts.instapay') }}</option>
@@ -392,7 +392,7 @@
             <textarea
               v-model="form.notes"
               rows="2"
-              class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('expenses.notes_placeholder')"
             ></textarea>
           </div>

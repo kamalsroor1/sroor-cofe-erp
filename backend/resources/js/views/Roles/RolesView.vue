@@ -7,7 +7,7 @@
             <ShieldCheck class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('roles.title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('roles.title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('roles.subtitle') }}</p>
           </div>
         </div>
@@ -67,7 +67,7 @@
           <div
             v-for="(mod, modKey) in permissionModules"
             :key="modKey"
-            class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3"
+            class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3"
           >
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <div class="flex items-center gap-2">

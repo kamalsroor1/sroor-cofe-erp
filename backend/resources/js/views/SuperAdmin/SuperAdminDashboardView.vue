@@ -7,7 +7,7 @@
             <Crown class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('super.super_admin_title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('super.super_admin_title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('super.super_admin_subtitle') }}</p>
           </div>
         </div>
@@ -40,31 +40,31 @@
       <div v-else class="space-y-6">
         <!-- 4 Platform Metric Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
             <span class="text-slate-400 text-xs font-bold">{{ $t('super.total_tenants') }}</span>
-            <div class="text-2xl font-black text-white font-mono">{{ metrics.total_tenants || 0 }}</div>
+            <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">{{ metrics.total_tenants || 0 }}</div>
             <div class="text-[10px] text-slate-500">{{ $t('super.platform_accounts') }}</div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
             <span class="text-emerald-400 text-xs font-bold">{{ $t('super.active_tenants') }}</span>
             <div class="text-2xl font-black text-emerald-400 font-mono">{{ metrics.active_tenants || 0 }}</div>
             <div class="text-[10px] text-slate-500">{{ $t('super.active_subscriptions') }}</div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
             <span class="text-amber-400 text-xs font-bold">{{ $t('super.trial_tenants') }}</span>
             <div class="text-2xl font-black text-amber-400 font-mono">{{ metrics.trial_tenants || 0 }}</div>
             <div class="text-[10px] text-slate-500">{{ $t('super.under_trial') }}</div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
             <span class="text-rose-400 text-xs font-bold">{{ $t('super.suspended_tenants') }}</span>
             <div class="text-2xl font-black text-rose-400 font-mono">{{ metrics.suspended_tenants || 0 }}</div>
             <div class="text-[10px] text-slate-500">{{ $t('super.suspended_or_expired') }}</div>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1 sm:col-span-2 lg:col-span-1">
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1 sm:col-span-2 lg:col-span-1">
             <span class="text-purple-400 text-xs font-bold">{{ $t('super.mrr') }}</span>
             <div class="text-2xl font-black text-purple-400 font-mono">{{ formatMoney(metrics.mrr || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <div class="text-[10px] text-slate-500">Monthly Recurring Revenue</div>
@@ -74,7 +74,7 @@
         <!-- Plans Distribution & Recent Tenants (2 Cols) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Plans Distribution (Col 1) -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <Layers class="w-4 h-4 text-amber-400" />
@@ -102,7 +102,7 @@
           </div>
 
           <!-- Recent Tenants (Col 2-3) -->
-          <div class="lg:col-span-2 bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="lg:col-span-2 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
                 <Building2 class="w-4 h-4 text-purple-400" />
@@ -146,7 +146,7 @@
         </div>
 
         <!-- Central Platform Whitelabel & Branding Card -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg space-y-4">
+        <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
@@ -171,7 +171,7 @@
                   v-model="platformSettings.platform_name"
                   type="text"
                   required
-                  class="w-full h-11 px-3.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   :placeholder="$t('super.platform_name_placeholder')"
                 >
               </div>
@@ -184,7 +184,7 @@
                 <input
                   v-model="platformSettings.platform_subtitle"
                   type="text"
-                  class="w-full h-11 px-3.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   :placeholder="$t('super.platform_subtitle_placeholder')"
                 >
               </div>
@@ -198,7 +198,7 @@
                   v-model="platformSettings.support_email"
                   type="email"
                   dir="ltr"
-                  class="w-full h-11 px-3.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   placeholder="support@domain.com"
                 >
               </div>
@@ -212,7 +212,7 @@
                   v-model="platformSettings.support_phone"
                   type="text"
                   dir="ltr"
-                  class="w-full h-11 px-3.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   placeholder="010XXXXXXXX"
                 >
               </div>

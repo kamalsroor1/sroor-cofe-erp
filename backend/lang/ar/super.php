@@ -201,4 +201,6 @@ return [
     'save_platform_settings_btn' => 'حفظ وتحديث اسم المنصة 💾',
     'saving_platform_settings' => 'جاري حفظ الإعدادات...',
     'platform_settings_saved_success' => 'تم حفظ وتحديث اسم وإعدادات المنصة بنجاح ✓',
+
+    'version_delete_failed' => 'فشل حذف الإصدار',
 ];

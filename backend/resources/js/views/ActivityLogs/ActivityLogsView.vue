@@ -7,7 +7,7 @@
             <Activity class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('activity.title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('activity.title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('activity.subtitle') }}</p>
           </div>
         </div>
@@ -25,25 +25,25 @@
 
       <!-- 4 Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-slate-400 text-xs font-bold">{{ $t('activity.today_total') }}</div>
-          <div class="text-2xl font-black text-white font-mono">{{ stats.today_total || 0 }}</div>
+          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">{{ stats.today_total || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_total_desc') }}</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-rose-400 text-xs font-bold">{{ $t('activity.today_critical') }}</div>
           <div class="text-2xl font-black text-rose-400 font-mono">{{ stats.today_critical || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_critical_desc') }}</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-amber-400 text-xs font-bold">{{ $t('activity.today_users') }}</div>
           <div class="text-2xl font-black text-amber-400 font-mono">{{ stats.today_users || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_users_desc') }}</div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
           <div class="text-cyan-400 text-xs font-bold">{{ $t('activity.today_stores') }}</div>
           <div class="text-2xl font-black text-cyan-400 font-mono">{{ stats.today_stores || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_stores_desc') }}</div>
@@ -61,7 +61,7 @@
               @input="debouncedFetch"
               type="text"
               :placeholder="$t('activity.search_placeholder')"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
             />
           </div>
 
@@ -69,7 +69,7 @@
           <select
             v-model="filters.module"
             @change="fetchLogs"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
           >
             <option value="all">{{ $t('activity.all_modules') }}</option>
             <option v-for="(label, key) in modulesList" :key="key" :value="key">{{ label }}</option>
@@ -79,7 +79,7 @@
           <select
             v-model="filters.user_id"
             @change="fetchLogs"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
           >
             <option value="all">{{ $t('activity.all_users') }}</option>
             <option v-for="u in usersList" :key="u.id" :value="u.id">{{ u.name }}</option>
@@ -89,7 +89,7 @@
           <select
             v-model="filters.store_id"
             @change="fetchLogs"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
           >
             <option value="all">{{ $t('activity.all_stores') }}</option>
             <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
@@ -175,7 +175,7 @@
 
       <!-- Payload Details Modal -->
       <div v-if="selectedLog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-slate-950 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <Activity class="w-4 h-4 text-cyan-400" />

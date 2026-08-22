@@ -20,7 +20,7 @@
 
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg sm:text-xl font-black text-white">
+            <h1 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
               {{ currentSectionTitle }}
             </h1>
             <span v-if="selectedSection" class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
@@ -63,7 +63,7 @@
             v-for="sec in sections"
             :key="sec.id"
             @click="selectedSection = sec.id"
-            class="p-4.5 rounded-3xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all active:scale-[0.98] cursor-pointer shadow-lg flex items-center justify-between gap-4 group"
+            class="p-4.5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-700 transition-all active:scale-[0.98] cursor-pointer shadow-lg flex items-center justify-between gap-4 group"
           >
             <div class="flex items-center gap-4 min-w-0">
               <div
@@ -87,7 +87,7 @@
               </div>
             </div>
 
-            <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-amber-400 group-hover:bg-slate-800 transition-all shrink-0">
+            <div class="w-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-amber-400 group-hover:bg-slate-800 transition-all shrink-0">
               <ChevronLeft class="w-5 h-5" />
             </div>
           </div>
@@ -169,7 +169,7 @@
                     v-model="form.company_name"
                     type="text"
                     :placeholder="$t('settings.company_name_placeholder')"
-                    class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
                   />
                 </div>
 
@@ -179,7 +179,7 @@
                     v-model="form.company_subtitle"
                     type="text"
                     :placeholder="$t('settings.company_subtitle_placeholder')"
-                    class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
                   />
                 </div>
 
@@ -189,7 +189,7 @@
                     v-model="form.company_phone"
                     type="text"
                     :placeholder="$t('settings.company_phone_placeholder')"
-                    class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
                     dir="ltr"
                   />
                 </div>
@@ -200,7 +200,7 @@
                     v-model="form.company_address"
                     type="text"
                     :placeholder="$t('settings.company_address_placeholder')"
-                    class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition"
                   />
                 </div>
               </div>
@@ -310,7 +310,7 @@
                   v-model="form.invoice_footer_note"
                   rows="3"
                   :placeholder="$t('settings.invoice_footer_placeholder')"
-                  class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition leading-relaxed"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none transition leading-relaxed"
                 ></textarea>
               </div>
             </div>
@@ -361,7 +361,7 @@
                     v-model="form.telegram_bot_token"
                     type="text"
                     :placeholder="$t('settings.bot_token_placeholder')"
-                    class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
                     dir="ltr"
                   />
                 </div>
@@ -372,7 +372,7 @@
                     v-model="form.telegram_chat_id"
                     type="text"
                     :placeholder="$t('settings.chat_id_input_placeholder')"
-                    class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
+                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-slate-600 focus:border-amber-500 rounded-2xl px-4 py-3 text-sm text-white font-mono focus:outline-none transition text-start"
                     dir="ltr"
                   />
                 </div>

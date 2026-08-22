@@ -9,7 +9,7 @@
         <template #actions>
           <div class="flex items-center gap-2 flex-wrap">
             <!-- Date Filter Picker -->
-            <div class="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
+            <div class="flex items-center gap-1.5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
               <Calendar class="w-4 h-4 text-amber-400" />
               <input
                 v-model="selectedDate"
@@ -114,7 +114,7 @@
       <!-- Financial Metrics Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <!-- Total Inflow -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.total_receipts_in') }}</span>
           <div class="text-xl font-black text-emerald-400 font-mono">
             +{{ formatMoney(summary.total_cash_in || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
@@ -123,7 +123,7 @@
         </div>
 
         <!-- Total Outflow -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.total_disbursements_out') }}</span>
           <div class="text-xl font-black text-rose-400 font-mono">
             -{{ formatMoney(summary.total_cash_out || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
@@ -132,7 +132,7 @@
         </div>
 
         <!-- Net Cash Today -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.net_cash_flow') }}</span>
           <div
             class="text-xl font-black font-mono"
@@ -154,7 +154,7 @@
       </div>
 
       <!-- Journal Tabs (Invoices vs Expenses) -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Tabs Header -->
         <div class="flex items-center border-b border-slate-800 bg-slate-900/60 p-2">
           <button
@@ -294,7 +294,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-lg font-bold text-amber-400 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-amber-400 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
               placeholder="0.00"
             >
           </div>
@@ -306,7 +306,7 @@
             <input
               v-model="openShiftForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('treasury.open_shift_notes_placeholder')"
             >
           </div>
@@ -339,7 +339,7 @@
         @close="showCloseShiftModal = false"
       >
         <form @submit.prevent="submitCloseShift" class="space-y-4 font-tajawal">
-          <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2">
+          <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
             <div class="flex items-center justify-between text-xs">
               <span class="text-slate-400 font-bold">{{ $t('treasury.shift_opening_balance_label') }}</span>
               <span class="font-mono text-slate-200 font-bold">{{ formatMoney(activeShift?.opening_cash_balance || 0) }} {{ $t('common.currency') }}</span>
@@ -360,7 +360,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-lg font-bold text-emerald-400 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-emerald-400 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="0.00"
             >
           </div>
@@ -378,7 +378,7 @@
             <input
               v-model="closeShiftForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('treasury.close_shift_notes_placeholder')"
             >
           </div>
@@ -419,7 +419,7 @@
               v-model="expenseForm.title"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               :placeholder="$t('treasury.expense_title_placeholder')"
             >
           </div>
@@ -434,7 +434,7 @@
                 type="number"
                 step="0.001"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-sm font-bold text-rose-400 font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-rose-400 font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
                 placeholder="0.00"
               >
             </div>
@@ -446,7 +446,7 @@
               <select
                 v-model="expenseForm.cost_center"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option value="operational">{{ $t('treasury.cost_center_operational') }}</option>
                 <option value="hospitality">{{ $t('treasury.cost_center_hospitality') }}</option>
@@ -465,7 +465,7 @@
             <select
               v-model="expenseForm.payment_method"
               required
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option value="cash">{{ $t('treasury.method_cash_drawer') }}</option>
               <option value="instapay">{{ $t('treasury.method_instapay') }}</option>

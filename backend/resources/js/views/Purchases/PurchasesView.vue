@@ -32,7 +32,7 @@
       <!-- Summary Metrics Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Total Purchases -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.total_purchases') }}</span>
             <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
@@ -48,7 +48,7 @@
         </div>
 
         <!-- Unpaid Debt to Suppliers -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.unpaid_total') }}</span>
             <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
@@ -64,14 +64,14 @@
         </div>
 
         <!-- Confirmed Purchases Count -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.confirmed_count') }}</span>
             <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
               <FileCheck class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-white font-mono">
+          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ metrics.confirmed_count || 0 }} <span class="text-xs text-slate-400">{{ $t('invoices.invoices_count_label') }}</span>
           </div>
           <div class="text-[11px] text-slate-500">
@@ -81,14 +81,14 @@
       </div>
 
       <!-- Filters & Search Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
             @input="debounceSearch"
             type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('purchases.search_purchases_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -99,7 +99,7 @@
           <select
             v-model="selectedStatus"
             @change="fetchPurchases(1)"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('purchases.status_all') }}</option>
             <option value="confirmed">{{ $t('purchases.status_confirmed_badge') }}</option>
@@ -113,20 +113,20 @@
             v-model="dateFrom"
             @change="fetchPurchases(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
           <span class="text-xs text-slate-500 font-bold">—</span>
           <input
             v-model="dateTo"
             @change="fetchPurchases(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
         </div>
       </div>
 
       <!-- Purchases Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Loading Spinner -->
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -243,7 +243,7 @@
               type="button"
               @click="fetchPurchases(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.previous') }}
             </button>
@@ -254,7 +254,7 @@
               type="button"
               @click="fetchPurchases(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.next') }}
             </button>
@@ -270,7 +270,7 @@
       >
         <div v-if="selectedPurchase" class="space-y-4 font-tajawal text-xs">
           <!-- Summary Header -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-900/80 border border-slate-800 rounded-2xl">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('purchases.supplier') }}:</span>
               <span class="text-white font-bold">{{ selectedPurchase.supplier_name }}</span>
@@ -314,7 +314,7 @@
           </div>
 
           <!-- Financial Breakdown -->
-          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-1.5 font-mono text-xs">
+          <div class="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5 font-mono text-xs">
             <div class="flex justify-between text-slate-300 font-tajawal">
               <span>{{ $t('purchases.items_subtotal') }}</span>
               <span class="font-mono">{{ formatMoney(selectedPurchase.subtotal) }} {{ $t('common.currency') }}</span>

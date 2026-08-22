@@ -146,4 +146,6 @@ return [
     'total_purchases_label'     => 'Total Purchases',
     'total_payments_label'      => 'Total Payments',
     'total_results_suppliers'   => 'Total results: :count suppliers',
+
+    'name' => 'Name',
 ];

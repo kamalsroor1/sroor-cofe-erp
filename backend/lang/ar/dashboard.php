@@ -70,4 +70,6 @@ return [
     'profitability_reports_link' => 'تقارير الربحية ←',
     'no_top_items_month'        => 'لم يتم تجميع مبيعات الأصناف بعد.',
     'net_cash_formula_sub'      => 'مقبوضات - (مصروفات + توريدات)',
+
+    'profit_margin_pct' => 'هامش الربح',
 ];

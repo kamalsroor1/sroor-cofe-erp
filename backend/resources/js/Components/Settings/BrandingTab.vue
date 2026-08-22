@@ -71,7 +71,7 @@ const handleLogoDarkChange = (e) => {
 
                         <!-- 🌙 Dark Mode Logo Card -->
                         <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center gap-4 shadow-xs">
-                            <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 p-2 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
+                            <div class="w-20 h-20 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 flex items-center justify-center overflow-hidden shadow-xs shrink-0">
                                 <img
                                     :src="logoDarkPreview || '/logo-dark.png'"
                                     :alt="$t('settings.company_logo_dark')"

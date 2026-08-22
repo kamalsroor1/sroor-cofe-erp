@@ -23,7 +23,7 @@
       <!-- Financial Metrics Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Total Sales -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('common.total_sales') }}</span>
             <TrendingUp class="w-4 h-4 text-emerald-400" />
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Total Paid -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('invoices.collected_cash_electronic') }}</span>
             <CheckCircle2 class="w-4 h-4 text-cyan-400" />
@@ -47,7 +47,7 @@
         </div>
 
         <!-- Total Due -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('invoices.remaining_credit_due') }}</span>
             <Clock class="w-4 h-4 text-rose-400" />
@@ -59,12 +59,12 @@
         </div>
 
         <!-- Invoices Count -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('invoices.invoices_count_label') }}</span>
             <FileText class="w-4 h-4 text-amber-400" />
           </div>
-          <div class="text-2xl font-black text-white font-mono">
+          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">{{ $t('invoices.invoice_unit') }}</span>
           </div>
           <span class="text-[10px] text-slate-500">{{ $t('invoices.sales_log_sub') }}</span>
@@ -72,14 +72,14 @@
       </div>
 
       <!-- Search & Filters Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
             @input="debounceSearch"
             type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('invoices.search_invoices_field_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -90,7 +90,7 @@
           <select
             v-model="selectedPaymentType"
             @change="fetchInvoices(1)"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('invoices.payment_type_all') }}</option>
             <option value="cash">{{ $t('invoices.payment_cash_option') }}</option>
@@ -104,7 +104,7 @@
           <select
             v-model="selectedStatus"
             @change="fetchInvoices(1)"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('invoices.status_all') }}</option>
             <option value="confirmed">{{ $t('invoices.status_confirmed_option') }}</option>
@@ -118,20 +118,20 @@
             v-model="dateFrom"
             @change="fetchInvoices(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
           <span class="text-xs text-slate-500 font-bold">—</span>
           <input
             v-model="dateTo"
             @change="fetchInvoices(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
         </div>
       </div>
 
       <!-- Invoices Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>
@@ -252,7 +252,7 @@
               type="button"
               @click="fetchInvoices(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.previous') }}
             </button>
@@ -263,7 +263,7 @@
               type="button"
               @click="fetchInvoices(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.next') }}
             </button>
@@ -279,7 +279,7 @@
       >
         <div v-if="selectedInvoiceDetails" class="space-y-4 font-tajawal text-xs">
           <!-- Top Info Cards -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-900/80 border border-slate-800 rounded-2xl">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('invoices.customer') }}:</span>
               <span class="text-white font-bold">{{ selectedInvoiceDetails.customer_name }}</span>
@@ -321,7 +321,7 @@
           </div>
 
           <!-- Financial Breakdown -->
-          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-1.5 font-mono text-xs">
+          <div class="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5 font-mono text-xs">
             <div class="flex justify-between text-slate-300 font-tajawal">
               <span>{{ $t('invoices.subtotal_before_discount') }}</span>
               <span class="font-mono">{{ formatMoney(selectedInvoiceDetails.subtotal) }} {{ $t('common.currency') }}</span>

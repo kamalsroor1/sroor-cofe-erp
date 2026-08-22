@@ -21,7 +21,7 @@
         <!-- Main Form (Col Span 2) -->
         <div class="lg:col-span-2 space-y-5">
           <!-- Return Type & Party Info -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>🔄</span>
               <span>{{ $t('returns.type_and_party_section') }}</span>
@@ -58,7 +58,7 @@
                 <select
                   v-model="form.customer_id"
                   required
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
                   <option :value="null" disabled>{{ $t('pos.choose_invoice_customer') }}</option>
                   <option v-for="c in customers" :key="c.id" :value="c.id">
@@ -75,7 +75,7 @@
                 <select
                   v-model="form.supplier_id"
                   required
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
                   <option :value="null" disabled>{{ $t('purchases.select_supplier') }}</option>
                   <option v-for="s in suppliers" :key="s.id" :value="s.id">
@@ -93,7 +93,7 @@
                   v-model="form.return_date"
                   type="date"
                   required
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 >
               </div>
 
@@ -103,7 +103,7 @@
                 <input
                   v-model="form.reason"
                   type="text"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   :placeholder="$t('returns.reason_input_placeholder')"
                 >
               </div>
@@ -111,7 +111,7 @@
           </div>
 
           <!-- Items Selection Table -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
                 <span>📦</span>
@@ -123,7 +123,7 @@
             <div class="flex items-center gap-2">
               <select
                 v-model="selectedItemToAdd"
-                class="flex-1 h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null">{{ $t('returns.select_item_to_return') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
@@ -165,7 +165,7 @@
                         type="number"
                         step="0.001"
                         min="0.001"
-                        class="w-20 h-8 px-2 text-center bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white focus:outline-none"
+                        class="w-20 h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-white focus:outline-none"
                       >
                     </td>
                     <td class="p-3 text-end">
@@ -174,7 +174,7 @@
                         type="number"
                         step="0.001"
                         min="0"
-                        class="w-24 h-8 px-2 text-end bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
+                        class="w-24 h-8 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
                       >
                     </td>
                     <td class="p-3 text-end font-mono font-bold text-rose-400">
@@ -202,7 +202,7 @@
 
         <!-- Sidebar Summary (Col Span 1) -->
         <div class="space-y-4">
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
               <span>{{ $t('returns.document_financial_summary') }}</span>
@@ -229,7 +229,7 @@
                   type="number"
                   step="0.001"
                   min="0"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:outline-none"
                   placeholder="0.00"
                 >
                 <span class="text-[10px] text-slate-500 font-sans font-tajawal">{{ $t('returns.refund_zero_hint') }}</span>

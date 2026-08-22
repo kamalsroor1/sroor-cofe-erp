@@ -7,7 +7,7 @@
             <Building2 class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('super.tenants_page_title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('super.tenants_page_title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('super.tenants_page_subtitle') }}</p>
           </div>
         </div>
@@ -40,7 +40,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('super.search_tenants_placeholder')"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
           />
         </div>
 
@@ -48,7 +48,7 @@
           <select
             v-model="filters.status"
             @change="fetchTenants"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 font-tajawal"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 font-tajawal"
           >
             <option value="all">{{ $t('super.all_statuses') }}</option>
             <option value="active">{{ $t('super.status_active') }}</option>
@@ -59,7 +59,7 @@
           <select
             v-model="filters.plan_id"
             @change="fetchTenants"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 font-tajawal"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500 font-tajawal"
           >
             <option value="all">{{ $t('super.all_plans') }}</option>
             <option v-for="p in plansList" :key="p.id" :value="p.id">{{ p.name }}</option>
@@ -152,7 +152,7 @@
 
       <!-- Create Tenant Modal -->
       <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <Building2 class="w-4 h-4 text-purple-400" />
@@ -168,7 +168,7 @@
                 v-model="createForm.name"
                 required
                 type="text"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
                 :placeholder="$t('super.org_name_placeholder')"
               />
             </div>
@@ -180,7 +180,7 @@
                   v-model="createForm.slug"
                   required
                   type="text"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
                   :placeholder="$t('super.slug_placeholder')"
                 />
               </div>
@@ -190,7 +190,7 @@
                 <select
                   v-model="createForm.plan_id"
                   required
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
                 >
                   <option v-for="p in plansList" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
@@ -204,7 +204,7 @@
                   v-model="createForm.email"
                   required
                   type="email"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
                   :placeholder="$t('super.admin_email_placeholder')"
                 />
               </div>
@@ -214,7 +214,7 @@
                 <input
                   v-model="createForm.phone"
                   type="text"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
                   :placeholder="$t('super.admin_phone_placeholder')"
                 />
               </div>
@@ -227,7 +227,7 @@
                   v-model="createForm.password"
                   required
                   type="password"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
                   placeholder="••••••••"
                 />
               </div>
@@ -239,7 +239,7 @@
                   type="number"
                   min="0"
                   max="90"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
@@ -312,7 +312,7 @@
 
       <!-- Status Modal -->
       <div v-if="showStatusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-slate-950 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white">{{ $t('super.edit_tenant_status_title', { name: selectedTenant?.name || '' }) }}</h2>
             <button @click="showStatusModal = false" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
@@ -323,7 +323,7 @@
               <label class="block text-slate-400 font-bold mb-1">{{ $t('super.new_status_label') }}</label>
               <select
                 v-model="statusForm.status"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
               >
                 <option value="active">{{ $t('super.status_active_opt') }}</option>
                 <option value="trial">{{ $t('super.status_trial_opt') }}</option>
@@ -339,7 +339,7 @@
                 type="number"
                 min="0"
                 max="365"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
                 placeholder="0"
               />
             </div>

@@ -55,7 +55,7 @@
                 <span class="text-xl">
                   {{ store.type === 'van' ? '🚚' : (store.type === 'warehouse' ? '🏭' : '🏬') }}
                 </span>
-                <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
+                <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400">
                   {{ store.code }}
                 </span>
                 <span v-if="store.is_main" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 font-tajawal">
@@ -95,15 +95,15 @@
 
             <!-- Statistics Counters -->
             <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/80 text-center">
-              <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800/50">
+              <div class="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.items_count') }}</div>
                 <div class="text-sm font-black text-amber-400 font-mono mt-0.5">{{ store.stocks_count || 0 }}</div>
               </div>
-              <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800/50">
+              <div class="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.invoices_count') }}</div>
                 <div class="text-sm font-black text-emerald-400 font-mono mt-0.5">{{ store.invoices_count || 0 }}</div>
               </div>
-              <div class="p-2 rounded-xl bg-slate-900/80 border border-slate-800/50">
+              <div class="p-2 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/50">
                 <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.purchases_count') }}</div>
                 <div class="text-sm font-black text-blue-400 font-mono mt-0.5">{{ store.purchases_count || 0 }}</div>
               </div>
@@ -128,7 +128,7 @@
                   <span
                     v-for="user in store.assigned_users"
                     :key="user.id"
-                    class="px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-300 font-tajawal"
+                    class="px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-300 font-tajawal"
                   >
                     👤 {{ user.name }}
                   </span>
@@ -207,7 +207,7 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
               :placeholder="$t('inventory.store_name_placeholder')"
             >
           </div>
@@ -221,7 +221,7 @@
               <input
                 v-model="form.code"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono uppercase focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono uppercase focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('inventory.store_code_placeholder')"
               >
             </div>
@@ -233,7 +233,7 @@
               <select
                 v-model="form.type"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
               >
                 <option value="retail_shop">🏬 {{ $t('inventory.retail_shop') }}</option>
                 <option value="warehouse">🏭 {{ $t('inventory.warehouse') }}</option>
@@ -251,7 +251,7 @@
               <input
                 v-model="form.address"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
                 :placeholder="$t('inventory.address_placeholder')"
               >
             </div>
@@ -264,7 +264,7 @@
                 v-model="form.phone"
                 type="text"
                 dir="ltr"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('inventory.phone_placeholder')"
               >
             </div>
@@ -328,7 +328,7 @@
             <label
               v-for="user in allUsers"
               :key="user.id"
-              class="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 cursor-pointer select-none transition-all"
+              class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:border-slate-700 cursor-pointer select-none transition-all"
             >
               <div class="flex items-center gap-2.5">
                 <input

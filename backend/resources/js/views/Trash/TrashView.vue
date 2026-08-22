@@ -7,7 +7,7 @@
             <Trash2 class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('trash.trash_title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('trash.trash_title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('trash.trash_subtitle') }}</p>
           </div>
         </div>
@@ -50,7 +50,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('trash.search_trash_placeholder')"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
           />
         </div>
       </div>

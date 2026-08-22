@@ -7,7 +7,7 @@
             <Layers class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('super.plans_page_title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('super.plans_page_title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('super.plans_page_subtitle') }}</p>
           </div>
         </div>
@@ -107,7 +107,7 @@
 
       <!-- Edit Plan Modal -->
       <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white">{{ $t('super.edit_plan_modal_title', { name: editForm.name }) }}</h2>
             <button @click="showEditModal = false" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
@@ -120,7 +120,7 @@
                 v-model="editForm.name"
                 required
                 type="text"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -132,7 +132,7 @@
                   required
                   type="number"
                   step="0.01"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -143,7 +143,7 @@
                   required
                   type="number"
                   step="0.01"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                 />
               </div>
             </div>
@@ -155,7 +155,7 @@
                   v-model="editForm.max_users"
                   required
                   type="number"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
                 />
               </div>
 
@@ -165,7 +165,7 @@
                   v-model="editForm.max_stores"
                   required
                   type="number"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
                 />
               </div>
 
@@ -175,7 +175,7 @@
                   v-model="editForm.max_items"
                   required
                   type="number"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
                 />
               </div>
 
@@ -185,18 +185,18 @@
                   v-model="editForm.max_invoices_per_month"
                   required
                   type="number"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono"
                 />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 pt-2">
-              <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+              <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
                 <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-500" />
                 <span class="text-slate-300 font-bold">{{ $t('super.plan_active_checkbox') }}</span>
               </label>
 
-              <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+              <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
                 <input type="checkbox" v-model="editForm.is_popular" class="w-4 h-4 rounded text-amber-500 focus:ring-amber-500" />
                 <span class="text-slate-300 font-bold">{{ $t('super.popular_plan_checkbox') }}</span>
               </label>

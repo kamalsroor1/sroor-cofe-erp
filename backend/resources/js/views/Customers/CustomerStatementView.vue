@@ -12,7 +12,7 @@
               <ArrowRight class="w-5 h-5" />
             </router-link>
             <div>
-              <h1 class="text-base sm:text-xl font-black text-white flex flex-wrap items-center gap-1.5">
+              <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5">
                 <span>{{ $t('contacts.ledger_title') }}:</span>
                 <span class="text-amber-400">{{ customer?.name }}</span>
               </h1>
@@ -38,15 +38,15 @@
       <!-- Customer Summary Profile & Financial Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Total Debit -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('contacts.period_debit') }} ({{ $t('contacts.withdrawals') }})</div>
-          <div class="text-xl font-black text-white font-mono">
+          <div class="text-xl font-black text-slate-900 dark:text-white font-mono">
             {{ formatMoney(summary.total_debit || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
         </div>
 
         <!-- Total Credit -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('contacts.period_credit') }} ({{ $t('contacts.payments_received') }})</div>
           <div class="text-xl font-black text-emerald-400 font-mono">
             {{ formatMoney(summary.total_credit || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
@@ -54,7 +54,7 @@
         </div>
 
         <!-- Closing Balance -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('contacts.closing_balance') }} ({{ $t('contacts.net_balance') }})</div>
           <div
             class="text-xl font-black font-mono"
@@ -66,7 +66,7 @@
       </div>
 
       <!-- Date Range Filter Presets Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
         <!-- Date Inputs -->
         <div class="flex items-center gap-2 flex-wrap">
           <div class="flex items-center gap-1.5">
@@ -74,7 +74,7 @@
             <input
               v-model="dateFrom"
               type="date"
-              class="h-9 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
           </div>
           <div class="flex items-center gap-1.5">
@@ -82,7 +82,7 @@
             <input
               v-model="dateTo"
               type="date"
-              class="h-9 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
           </div>
           <button
@@ -132,7 +132,7 @@
       </div>
 
       <!-- Ledger Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>

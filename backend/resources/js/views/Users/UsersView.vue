@@ -7,7 +7,7 @@
             <Users class="w-5 h-5" />
           </div>
           <div>
-            <h1 class="text-xl font-black text-white">{{ $t('users.users_title') }}</h1>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('users.users_title') }}</h1>
             <p class="text-xs text-slate-400">{{ $t('users.users_subtitle') }}</p>
           </div>
         </div>
@@ -40,7 +40,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('users.search_users_placeholder')"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
           />
         </div>
 
@@ -48,7 +48,7 @@
           <select
             v-model="filters.role"
             @change="fetchUsers"
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-tajawal"
           >
             <option value="all">{{ $t('users.all_roles_filter') }}</option>
             <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -164,7 +164,7 @@
 
       <!-- Create / Edit User Modal -->
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 class="text-base font-black text-white flex items-center gap-2">
               <UserPlus class="w-4 h-4 text-amber-400" />
@@ -180,7 +180,7 @@
                 v-model="form.name"
                 required
                 type="text"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                 :placeholder="$t('users.fullname_placeholder')"
               />
             </div>
@@ -193,7 +193,7 @@
                   required
                   type="text"
                   dir="ltr"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                   placeholder="010XXXXXXXX"
                 />
               </div>
@@ -204,7 +204,7 @@
                   v-model="form.email"
                   type="email"
                   dir="ltr"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                   placeholder="user@example.com"
                 />
               </div>
@@ -216,7 +216,7 @@
                 <select
                   v-model="form.role"
                   required
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
                 >
                   <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
                 </select>
@@ -226,7 +226,7 @@
                 <label class="block text-slate-400 font-bold mb-1">{{ $t('users.default_store_label') }}</label>
                 <select
                   v-model="form.default_store_id"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-tajawal"
                 >
                   <option :value="null">{{ $t('users.no_store_assigned') }}</option>
                   <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
@@ -242,7 +242,7 @@
                 v-model="form.password"
                 :required="!isEditing"
                 type="password"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                 placeholder="••••••••"
               />
             </div>

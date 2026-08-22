@@ -19,7 +19,7 @@
 
       <form @submit.prevent="submitTransfer" class="space-y-6">
         <!-- Stores & Date Selection Card -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
           <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
             <span>🏢</span>
             <span>{{ $t('inventory.branches_and_date_section') }}</span>
@@ -34,7 +34,7 @@
               <select
                 v-model="form.from_store_id"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null" disabled>{{ $t('inventory.choose_source_store') }}</option>
                 <option v-for="s in stores" :key="s.id" :value="s.id">
@@ -51,7 +51,7 @@
               <select
                 v-model="form.to_store_id"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null" disabled>{{ $t('inventory.choose_dest_store') }}</option>
                 <option v-for="s in stores" :key="s.id" :value="s.id" :disabled="s.id === form.from_store_id">
@@ -69,7 +69,7 @@
                 v-model="form.transfer_date"
                 type="date"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
             </div>
 
@@ -79,7 +79,7 @@
               <input
                 v-model="form.notes"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('inventory.transfer_notes_placeholder')"
               >
             </div>
@@ -87,7 +87,7 @@
         </div>
 
         <!-- Items Selection Card -->
-        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
               <span>📦</span>
@@ -99,7 +99,7 @@
           <div class="flex items-center gap-2">
             <select
               v-model="selectedItemToAdd"
-              class="flex-1 h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
               <option :value="null">{{ $t('inventory.select_item_to_transfer') }}</option>
               <option v-for="it in items" :key="it.id" :value="it">
@@ -143,7 +143,7 @@
                         type="number"
                         step="0.001"
                         min="0.001"
-                        class="w-24 h-8 px-2 text-center bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
+                        class="w-24 h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
                       >
                       <span class="text-slate-400 text-[10px] font-tajawal">{{ item.unit }}</span>
                     </div>

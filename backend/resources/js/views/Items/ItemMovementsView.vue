@@ -12,7 +12,7 @@
               <ArrowRight class="w-5 h-5" />
             </router-link>
             <div>
-              <h1 class="text-base sm:text-xl font-black text-white flex flex-wrap items-center gap-1.5">
+              <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5">
                 <span>{{ $t('inventory.movements_title') }}:</span>
                 <span class="text-amber-400">{{ item?.name }}</span>
                 <span v-if="item?.code" class="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">
@@ -41,7 +41,7 @@
       <!-- Item Financial & Movement Summary Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Total In (الوارد) -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_in') }} {{ $t('inventory.total_in_sub') }}</div>
           <div class="text-xl font-black text-emerald-400 font-mono">
             +{{ formatQty(stats.total_in || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Total Out (المنصرف) -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.total_out') }} {{ $t('inventory.total_out_sub') }}</div>
           <div class="text-xl font-black text-rose-400 font-mono">
             -{{ formatQty(stats.total_out || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Net Movement (صافي الحركة) -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.net_movement') }}</div>
           <div
             class="text-xl font-black font-mono"
@@ -68,16 +68,16 @@
         </div>
 
         <!-- Current Stock (الرصيد الفعلي) -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.current_stock') }}</div>
-          <div class="text-xl font-black text-white font-mono">
+          <div class="text-xl font-black text-slate-900 dark:text-white font-mono">
             {{ formatQty(stats.current_scope_stock || item?.current_stock || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
           </div>
         </div>
       </div>
 
       <!-- Date Range & Movement Type Filter Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
         <!-- Date Inputs -->
         <div class="flex items-center gap-2 flex-wrap">
           <div class="flex items-center gap-1.5">
@@ -85,7 +85,7 @@
             <input
               v-model="dateFrom"
               type="date"
-              class="h-9 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
           </div>
           <div class="flex items-center gap-1.5">
@@ -93,7 +93,7 @@
             <input
               v-model="dateTo"
               type="date"
-              class="h-9 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
             >
           </div>
           <button
@@ -135,7 +135,7 @@
       </div>
 
       <!-- Movements Ledger Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>

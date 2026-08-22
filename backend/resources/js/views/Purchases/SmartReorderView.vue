@@ -11,7 +11,7 @@
             <ArrowRight class="w-5 h-5" />
           </router-link>
           <div>
-            <h1 class="text-xl font-black text-white flex items-center gap-2">
+            <h1 class="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
               <span>{{ $t('purchases.reorder_radar_title') }}</span>
               <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                 AI Powered ⚡
@@ -88,14 +88,14 @@
       </div>
 
       <!-- Filter Controls Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search -->
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
             @input="debounceFetch"
             type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('purchases.search_item_material')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -107,7 +107,7 @@
           <select
             v-model="analysisDays"
             @change="fetchSuggestions"
-            class="h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option :value="7">{{ $t('purchases.last_7_days') }}</option>
             <option :value="14">{{ $t('purchases.last_14_days') }}</option>
@@ -121,7 +121,7 @@
           <select
             v-model="targetCoverDays"
             @change="fetchSuggestions"
-            class="h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option :value="7">{{ $t('purchases.cover_7_days') }}</option>
             <option :value="15">{{ $t('purchases.cover_15_days') }}</option>
@@ -134,7 +134,7 @@
           <select
             v-model="selectedUrgency"
             @change="fetchSuggestions"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('purchases.urgency_all') }}</option>
             <option value="critical">{{ $t('purchases.urgency_critical_only') }}</option>
@@ -145,7 +145,7 @@
       </div>
 
       <!-- Reorder Suggestions Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>

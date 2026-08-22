@@ -21,7 +21,7 @@
         <!-- Left: Blender Studio Workspace (Col span 8) -->
         <div class="lg:col-span-8 space-y-5">
           <!-- Blend Settings Card -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>⚙️</span>
               <span>{{ $t('inventory.blend_specs_title') }}</span>
@@ -34,7 +34,7 @@
                 <input
                   v-model="blendName"
                   type="text"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   :placeholder="$t('inventory.blend_name_placeholder')"
                 >
               </div>
@@ -65,7 +65,7 @@
                     type="number"
                     min="1"
                     step="1"
-                    class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono font-bold text-amber-400 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-amber-400 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   >
                 </div>
 
@@ -73,7 +73,7 @@
                   <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.roast_type') }}</label>
                   <select
                     v-model="roastType"
-                    class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   >
                     <option value="فاتح">{{ $t('inventory.roast_light') }}</option>
                     <option value="وسط">{{ $t('inventory.roast_medium') }}</option>
@@ -86,7 +86,7 @@
                   <label class="block text-xs font-bold text-slate-400">{{ $t('inventory.grind_level') }}</label>
                   <select
                     v-model="grindLevel"
-                    class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                   >
                     <option value="تركي ناعم">{{ $t('inventory.grind_turkish') }}</option>
                     <option value="إسبريسو">{{ $t('inventory.grind_espresso') }}</option>
@@ -99,7 +99,7 @@
           </div>
 
           <!-- Components Formulation Card -->
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
               <h2 class="text-xs font-bold text-slate-400 flex items-center gap-2">
                 <span>🫘</span>
@@ -117,7 +117,7 @@
             <div class="flex items-center gap-2">
               <select
                 v-model="selectedItemIdToAdd"
-                class="flex-1 h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option :value="null">{{ $t('inventory.select_blend_item_prompt') }}</option>
                 <option v-for="it in items" :key="it.id" :value="it">
@@ -140,7 +140,7 @@
               <div
                 v-for="(comp, idx) in calculatedComponents"
                 :key="comp.item_id"
-                class="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs"
+                class="p-3.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs"
               >
                 <div class="sm:w-1/3 min-w-0">
                   <div class="font-bold text-white truncate">{{ comp.name }}</div>
@@ -198,7 +198,7 @@
                   type="number"
                   min="0"
                   step="1"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:outline-none"
                   placeholder="0"
                 >
               </div>
@@ -208,7 +208,7 @@
                 <input
                   v-model="notes"
                   type="text"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
                   :placeholder="$t('inventory.notes_placeholder')"
                 >
               </div>
@@ -218,7 +218,7 @@
 
         <!-- Right: Financial Breakdown & Direct Cashier (Col span 4) -->
         <div class="lg:col-span-4 space-y-5">
-          <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4 sticky top-6">
+          <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4 sticky top-6">
             <h2 class="text-xs font-bold text-slate-400 border-b border-slate-800 pb-2 flex items-center gap-2">
               <span>📊</span>
               <span>{{ $t('inventory.blend_cost_summary') }}</span>
@@ -253,7 +253,7 @@
               </label>
               <select
                 v-model="selectedCustomerId"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option v-for="c in customers" :key="c.id" :value="c.id">
                   {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}

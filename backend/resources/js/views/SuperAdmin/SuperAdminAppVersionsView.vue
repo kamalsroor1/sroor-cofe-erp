@@ -8,7 +8,7 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg sm:text-xl font-black text-white">{{ $t('super.app_versions_page_title') }}</h1>
+            <h1 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">{{ $t('super.app_versions_page_title') }}</h1>
             <span class="px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold">
               OTA Updater
             </span>
@@ -31,7 +31,7 @@
 
     <!-- KPI Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="p-5 rounded-3xl bg-slate-950/80 border border-slate-800 shadow-lg flex items-center justify-between">
+      <div class="p-5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.current_active_version') }}</span>
           <span class="text-xl font-black text-emerald-400 mt-1 block font-mono">
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div class="p-5 rounded-3xl bg-slate-950/80 border border-slate-800 shadow-lg flex items-center justify-between">
+      <div class="p-5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.total_inapp_downloads') }}</span>
           <span class="text-xl font-black text-amber-400 mt-1 block font-mono">
@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <div class="p-5 rounded-3xl bg-slate-950/80 border border-slate-800 shadow-lg flex items-center justify-between">
+      <div class="p-5 rounded-3xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.published_releases_count') }}</span>
           <span class="text-xl font-black text-purple-400 mt-1 block font-mono">
@@ -200,7 +200,7 @@
               type="text"
               placeholder="1.1.0"
               required
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
             />
           </div>
 
@@ -212,7 +212,7 @@
               min="1"
               placeholder="2"
               required
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
             />
           </div>
 
@@ -220,7 +220,7 @@
             <label class="block font-bold text-slate-300">{{ $t('super.target_platform_label') }}</label>
             <select
               v-model="form.platform"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
             >
               <option value="android">📱 Android (APK)</option>
               <option value="windows">💻 Windows</option>
@@ -235,13 +235,13 @@
               type="number"
               min="1"
               placeholder="1"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
             />
           </div>
         </div>
 
         <!-- Force update toggle -->
-        <label class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 cursor-pointer">
+        <label class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 cursor-pointer">
           <div>
             <div class="font-bold text-white">{{ $t('super.force_update_label') }}</div>
             <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('super.force_update_desc') }}</div>
@@ -261,7 +261,7 @@
             rows="3"
             required
             placeholder="• ميزة 1...&#10;• ميزة 2..."
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 leading-relaxed font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 leading-relaxed font-tajawal"
           ></textarea>
         </div>
 
@@ -272,7 +272,7 @@
             type="file"
             accept=".apk"
             @change="handleFileUpload"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs file:me-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white text-xs file:me-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white"
           />
           <span class="text-[10px] text-slate-500 block">{{ $t('super.apk_max_size_hint') }}</span>
         </div>

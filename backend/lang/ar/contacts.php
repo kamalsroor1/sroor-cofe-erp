@@ -146,4 +146,6 @@ return [
     'total_purchases_label'     => 'إجمالي المشتريات',
     'total_payments_label'      => 'إجمالي المدفوعات',
     'total_results_suppliers'   => 'إجمالي النتائج: :count مورد',
+
+    'name' => 'الاسم',
 ];

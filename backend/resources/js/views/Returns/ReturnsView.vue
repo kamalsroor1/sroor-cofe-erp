@@ -20,7 +20,7 @@
       <!-- Financial Metrics Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <!-- Total Returns Value -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('returns.total_returns_value') }}</span>
             <TrendingDown class="w-4 h-4 text-rose-400" />
@@ -32,7 +32,7 @@
         </div>
 
         <!-- Sales Returns Count -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('returns.sales_returns_title') }}</span>
             <RotateCcw class="w-4 h-4 text-cyan-400" />
@@ -44,7 +44,7 @@
         </div>
 
         <!-- Purchase Returns Count -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('returns.purchase_returns_title') }}</span>
             <RotateCw class="w-4 h-4 text-amber-400" />
@@ -56,12 +56,12 @@
         </div>
 
         <!-- Total Count -->
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('returns.total_documents') }}</span>
             <FileText class="w-4 h-4 text-slate-400" />
           </div>
-          <div class="text-2xl font-black text-white font-mono">
+          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">{{ $t('common.actions') }}</span>
           </div>
           <span class="text-[10px] text-slate-500">{{ $t('returns.total_documents_sub') }}</span>
@@ -69,14 +69,14 @@
       </div>
 
       <!-- Filters & Search Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
             @input="debounceSearch"
             type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             :placeholder="$t('returns.search_returns_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -87,7 +87,7 @@
           <select
             v-model="selectedType"
             @change="fetchReturns(1)"
-            class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
             <option value="all">{{ $t('returns.all_return_types') }}</option>
             <option value="sales_return">{{ $t('returns.sales_return_option') }}</option>
@@ -101,20 +101,20 @@
             v-model="dateFrom"
             @change="fetchReturns(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
           <span class="text-xs text-slate-500 font-bold">—</span>
           <input
             v-model="dateTo"
             @change="fetchReturns(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
           >
         </div>
       </div>
 
       <!-- Returns Ledger Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
           <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>
@@ -223,7 +223,7 @@
               type="button"
               @click="fetchReturns(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.previous') }}
             </button>
@@ -234,7 +234,7 @@
               type="button"
               @click="fetchReturns(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.next') }}
             </button>
@@ -250,7 +250,7 @@
       >
         <div v-if="selectedReturnDetails" class="space-y-4 font-tajawal text-xs">
           <!-- Header info -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-900/80 border border-slate-800 rounded-2xl">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('returns.return_type') }}:</span>
               <span class="font-bold text-white">
@@ -294,7 +294,7 @@
           </div>
 
           <!-- Total Footer -->
-          <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs font-tajawal">
+          <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs font-tajawal">
             <span class="font-bold text-slate-300">{{ $t('returns.total_returns_val') }}:</span>
             <span class="text-base font-black text-rose-400 font-mono">{{ formatMoney(selectedReturnDetails.total_amount) }} {{ $t('common.currency') }}</span>
           </div>

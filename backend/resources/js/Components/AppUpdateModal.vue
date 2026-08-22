@@ -10,7 +10,7 @@
         <Transition name="modal-zoom">
           <div
             v-if="isModalOpen"
-            class="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden text-slate-100 relative"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden text-slate-100 relative"
           >
             <!-- 🌟 State 1: Download Complete / Success State -->
             <div v-if="isDownloaded" class="p-6 text-center space-y-4">
@@ -19,7 +19,7 @@
               </div>
 
               <div class="space-y-1.5">
-                <h2 class="text-lg font-black text-white">{{ $t('app_update.download_success_title') }}</h2>
+                <h2 class="text-lg font-black text-slate-900 dark:text-white">{{ $t('app_update.download_success_title') }}</h2>
                 <p class="text-xs text-slate-300 leading-relaxed px-2">
                   {{ $t('app_update.download_success_desc') }}
                 </p>
@@ -75,7 +75,7 @@
                   <Rocket class="w-8 h-8" />
                 </div>
 
-                <h2 class="text-lg font-black text-white">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white">
                   {{ isForceUpdate ? $t('app_update.mandatory_update_title') : $t('app_update.update_available_title') }}
                 </h2>
 
@@ -101,7 +101,7 @@
                 </div>
 
                 <!-- Metadata Chips -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-400 text-[11px]">
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-400 text-[11px]">
                   <div class="flex items-center gap-1.5">
                     <HardDrive class="w-4 h-4 text-amber-400" />
                     <span>{{ $t('app_update.file_size') }}</span>

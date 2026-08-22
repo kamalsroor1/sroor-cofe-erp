@@ -11,7 +11,7 @@
           <Building2 class="w-10 h-10" />
         </div>
         <div>
-          <h1 class="text-2xl font-black text-white font-tajawal tracking-tight">
+          <h1 class="text-2xl font-black text-slate-900 dark:text-white font-tajawal tracking-tight">
             {{ isCentralHub ? 'منظومة ERP السحابية' : (appConfigStore.tenant?.name || appConfigStore.companyName || 'منظومة المحل') }}
           </h1>
           <p class="text-xs text-slate-400 font-bold mt-1">

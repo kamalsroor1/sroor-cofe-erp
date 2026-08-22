@@ -83,4 +83,16 @@ return [
     'no'                 => 'لا',
     'loading'            => 'جاري التحميل...',
     'item_default_name'  => 'هذا العنصر',
+
+    'total_sales'        => 'إجمالي المبيعات',
+    'main_branch'        => 'الفرع الرئيسي',
+    'previous'           => 'السابق',
+    'next'               => 'التالي',
+    'from'               => 'من',
+    'to'                 => 'إلى',
+    'amount'             => 'المبلغ',
+    'add'                => 'إضافة',
+    'refresh'            => 'تحديث',
+    'restore'            => 'استعادة',
+    'force_delete'       => 'حذف نهائي',
 ];

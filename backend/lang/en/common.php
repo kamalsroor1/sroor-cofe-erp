@@ -83,4 +83,16 @@ return [
     'no'                 => 'No',
     'loading'            => 'Loading...',
     'item_default_name'  => 'this item',
+
+    'total_sales'        => 'Total Sales',
+    'main_branch'        => 'Main Branch',
+    'previous'           => 'Previous',
+    'next'               => 'Next',
+    'from'               => 'From',
+    'to'                 => 'To',
+    'amount'             => 'Amount',
+    'add'                => 'Add',
+    'refresh'            => 'Refresh',
+    'restore'            => 'Restore',
+    'force_delete'       => 'Permanent Delete',
 ];

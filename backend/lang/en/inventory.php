@@ -341,4 +341,6 @@ return [
     'financial_accountant_sig'  => 'Financial Accountant',
     'signature_line'            => 'Signature: ............................',
     'no_movements_period'       => 'No movements recorded for this item during the selected period',
+
+    'phone' => 'Phone Number',
 ];

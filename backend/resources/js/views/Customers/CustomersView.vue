@@ -21,7 +21,7 @@
       <!-- Summary Metrics Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Total Receivables (Debt) -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.total_receivables') }}</span>
             <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
@@ -37,7 +37,7 @@
         </div>
 
         <!-- Debtors Count -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.debtors_count') }}</span>
             <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
@@ -53,14 +53,14 @@
         </div>
 
         <!-- Total Customers Count -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-lg space-y-2">
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.total_customers_count') }}</span>
             <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
               <Users class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-white font-mono">
+          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ metrics.total_customers || 0 }} <span class="text-xs text-slate-400">{{ $t('contacts.customer_unit') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
@@ -70,14 +70,14 @@
       </div>
 
       <!-- Filters & Search Bar -->
-      <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
         <div class="relative flex-1">
           <input
             v-model="searchQuery"
             @input="debounceSearch"
             type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
             :placeholder="$t('contacts.search_customer_placeholder')"
           >
           <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
@@ -124,7 +124,7 @@
       </div>
 
       <!-- Customers Table -->
-      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Loading Spinner -->
         <div v-if="isLoading" class="p-12 text-center">
           <div class="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -261,7 +261,7 @@
               type="button"
               @click="fetchCustomers(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.previous') }}
             </button>
@@ -272,7 +272,7 @@
               type="button"
               @click="fetchCustomers(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.next') }}
             </button>
@@ -296,7 +296,7 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
               :placeholder="$t('contacts.customer_name_placeholder')"
             >
           </div>
@@ -311,7 +311,7 @@
                 v-model="form.phone"
                 type="text"
                 dir="ltr"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('contacts.phone_placeholder')"
               >
             </div>
@@ -323,7 +323,7 @@
               <input
                 v-model="form.address"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
                 :placeholder="$t('contacts.address_placeholder')"
               >
             </div>
@@ -338,7 +338,7 @@
               <input
                 v-model="form.tax_number"
                 type="text"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('contacts.tax_number_placeholder')"
               >
             </div>
@@ -351,7 +351,7 @@
                 v-model="form.opening_balance"
                 type="number"
                 step="0.001"
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 placeholder="0.000"
               >
             </div>
@@ -365,7 +365,7 @@
             <textarea
               v-model="form.notes"
               rows="2"
-              class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
+              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-tajawal"
               :placeholder="$t('contacts.notes_placeholder')"
             ></textarea>
           </div>
@@ -400,7 +400,7 @@
       >
         <form @submit.prevent="savePayment" class="space-y-4">
           <!-- Current Debt Alert -->
-          <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center justify-between">
+          <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.current_balance') }}:</span>
             <span class="text-base font-black font-mono" :class="targetCustomer?.current_balance > 0 ? 'text-rose-400' : 'text-emerald-400'">
               {{ formatMoney(targetCustomer?.current_balance || 0) }} {{ $t('common.currency') }}
@@ -418,7 +418,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-base font-bold text-emerald-400 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-emerald-400 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="0.00"
             >
           </div>
@@ -432,7 +432,7 @@
               <select
                 v-model="paymentForm.payment_method"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-tajawal"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-tajawal"
               >
                 <option value="cash">💵 {{ $t('contacts.cash') }}</option>
                 <option value="instapay">⚡ {{ $t('contacts.instapay') }}</option>
@@ -449,7 +449,7 @@
                 v-model="paymentForm.payment_date"
                 type="date"
                 required
-                class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               >
             </div>
           </div>
@@ -462,7 +462,7 @@
             <input
               v-model="paymentForm.notes"
               type="text"
-              class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-tajawal"
+              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-tajawal"
               :placeholder="$t('contacts.receipt_voucher')"
             >
           </div>

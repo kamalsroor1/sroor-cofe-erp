@@ -11,7 +11,7 @@
             <ArrowRight class="w-5 h-5" />
           </router-link>
           <div>
-            <h1 class="text-xl font-black text-white">
+            <h1 class="text-xl font-black text-slate-900 dark:text-white">
               {{ $t('purchases.new_purchase') }}
             </h1>
             <p class="text-xs text-slate-400 font-bold">
@@ -23,7 +23,7 @@
 
       <form @submit.prevent="submitPurchase" class="space-y-6">
         <!-- Supplier & Metadata Card -->
-        <div class="p-5 bg-slate-950/80 border border-slate-800 rounded-2xl shadow-lg space-y-4">
+        <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
           <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
             <Factory class="w-4 h-4" />
             <span>{{ $t('purchases.supplier_po_section') }}</span>
@@ -38,7 +38,7 @@
               <select
                 v-model="form.supplier_id"
                 required
-                class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
                 <option value="">{{ $t('purchases.select_supplier') }}</option>
                 <option v-for="s in suppliers" :key="s.id" :value="s.id">
@@ -56,7 +56,7 @@
                 v-model="form.purchase_date"
                 type="date"
                 required
-                class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
               >
             </div>
 
@@ -68,7 +68,7 @@
               <input
                 v-model="form.supplier_invoice_ref"
                 type="text"
-                class="w-full h-11 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 placeholder="INV-SUP-1234..."
               >
             </div>
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Items Table Card -->
-        <div class="p-5 bg-slate-950/80 border border-slate-800 rounded-2xl shadow-lg space-y-4">
+        <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
               <Package class="w-4 h-4" />
@@ -111,7 +111,7 @@
                       v-model="line.item_id"
                       @change="onItemSelect(line)"
                       required
-                      class="w-full h-10 px-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      class="w-full h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                     >
                       <option value="">{{ $t('purchases.select_item_from_list') }}</option>
                       <option v-for="it in availableItems" :key="it.id" :value="it.id">
@@ -127,7 +127,7 @@
                       step="0.001"
                       min="0.001"
                       required
-                      class="w-full h-10 px-2 text-center bg-slate-900 border border-slate-700 rounded-xl text-xs text-amber-400 font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-amber-400 font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none"
                       placeholder="1.000"
                     >
                   </td>
@@ -139,7 +139,7 @@
                       step="0.001"
                       min="0"
                       required
-                      class="w-full h-10 px-2 text-center bg-slate-900 border border-slate-700 rounded-xl text-xs text-emerald-400 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-400 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                       placeholder="0.00"
                     >
                   </td>
@@ -165,7 +165,7 @@
         </div>
 
         <!-- Financial Summary Card -->
-        <div class="p-5 bg-slate-950/80 border border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="space-y-3">
             <div>
               <label class="block text-xs font-bold text-slate-300 mb-1">
@@ -174,7 +174,7 @@
               <textarea
                 v-model="form.notes"
                 rows="3"
-                class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 :placeholder="$t('purchases.invoice_notes_placeholder')"
               ></textarea>
             </div>
@@ -189,7 +189,7 @@
                   type="number"
                   step="0.001"
                   min="0"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-emerald-400 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-400 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   placeholder="0.00"
                 >
               </div>
@@ -203,7 +203,7 @@
                   type="number"
                   step="0.001"
                   min="0"
-                  class="w-full h-10 px-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-rose-400 font-mono font-bold focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                  class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-rose-400 font-mono font-bold focus:ring-2 focus:ring-rose-500 focus:outline-none"
                   placeholder="0.00"
                 >
               </div>
@@ -211,7 +211,7 @@
           </div>
 
           <!-- Total Calculation Ledger -->
-          <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-2.5 font-mono text-xs self-center">
+          <div class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2.5 font-mono text-xs self-center">
             <div class="flex justify-between text-slate-300 font-sans font-tajawal">
               <span>{{ $t('purchases.items_total_value') }}</span>
               <span class="font-mono font-bold">{{ formatMoney(subtotal) }} {{ $t('common.currency') }}</span>

@@ -70,4 +70,6 @@ return [
     'profitability_reports_link' => 'Profitability Reports ←',
     'no_top_items_month'        => 'No item sales aggregated yet.',
     'net_cash_formula_sub'      => 'Inflows - (Expenses + Outflows)',
+
+    'profit_margin_pct' => 'Profit Margin',
 ];
