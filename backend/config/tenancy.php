@@ -55,15 +55,15 @@ return [
          * prefix + tenant_id + suffix.
          */
         'prefix' => env('TENANT_DB_PREFIX', 'tenant_'),
-        'suffix' => env('TENANT_DB_SUFFIX', ''),
+        'suffix' => env('TENANT_DB_SUFFIX', (env('DB_CONNECTION') === 'sqlite' || config('database.default') === 'sqlite') ? '.sqlite' : ''),
 
         /**
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
          */
         'managers' => [
             'sqlite' => Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager::class,
-            'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'mariadb' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
+            'mysql' => \App\Services\Tenancy\SafeMySQLDatabaseManager::class,
+            'mariadb' => \App\Services\Tenancy\SafeMySQLDatabaseManager::class,
             'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
 
         /**
