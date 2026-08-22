@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
@@ -183,6 +183,12 @@ const form = reactive({
 const showPassword = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref('');
+
+onMounted(async () => {
+    if (!window.spaTranslations || Object.keys(window.spaTranslations).length === 0) {
+        await appConfigStore.fetchTranslations('ar');
+    }
+});
 
 const fillAccount = (phone, password) => {
     form.login = phone;

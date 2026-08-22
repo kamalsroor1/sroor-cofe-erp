@@ -314,7 +314,7 @@
         </div>
 
         <div class="p-3 border-t border-slate-800/80 text-center">
-          <div class="text-[10px] text-slate-500 font-mono">Pure API SPA v1.0</div>
+          <div class="text-[10px] text-slate-500 font-mono">Pure API SPA v1.0.1</div>
         </div>
       </aside>
 

@@ -42,6 +42,17 @@
     <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
+    <!-- Injected Global Translations & System Context -->
+    <script>
+        @php
+            $translationsAction = app(\App\Actions\System\GetTranslationsAction::class);
+            $locale = app()->getLocale() ?: 'ar';
+            $initialTranslations = $translationsAction->execute($locale);
+        @endphp
+        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+        window.spaLocale = '{{ $locale }}';
+    </script>
+
     <!-- Vite Scripts (Vue 3 Pure SPA) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
