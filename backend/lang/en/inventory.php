@@ -343,4 +343,23 @@ return [
     'no_movements_period'       => 'No movements recorded for this item during the selected period',
 
     'phone' => 'Phone Number',
+
+    // Categories Management
+    'categories_management'        => 'Item Categories & Classifications',
+    'categories_subtitle'          => 'Organize products for easy access and quick POS category filter bar',
+    'add_category'                 => 'Add New Category',
+    'edit_category'                => 'Edit Category',
+    'category_name'                => 'Category Name',
+    'category_name_placeholder'    => 'e.g. Hot Drinks, Ground Coffee, Pastries',
+    'category_icon_emoji'          => 'Category Icon or Emoji',
+    'sort_order'                   => 'Display Order in POS Bar',
+    'category_active_desc'         => 'Enable visibility of this category in POS and cashier screens',
+    'create_category_btn'          => 'Create Category',
+    'category_created_success'     => 'Category created successfully ✓',
+    'category_updated_success'     => 'Category updated successfully ✓',
+    'category_deleted_success'     => 'Category deleted successfully ✓',
+    'no_categories_yet'            => 'No categories registered yet',
+    'create_first_category_hint'   => 'Start by adding categories to group your products',
+    'add_first_category'           => 'Add First Category',
+    'items_unit'                   => 'item(s)',
 ];

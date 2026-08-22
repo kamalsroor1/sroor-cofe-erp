@@ -63,6 +63,8 @@ final class UserController extends Controller
             ->get();
         $stores = Store::where('is_active', true)->select('id', 'name', 'code')->get();
 
+        $users = $query->latest('id')->paginate($perPage);
+
         $formattedUsers = collect($users->items())->map(function ($u) {
             return [
                 'id'                 => $u->id,

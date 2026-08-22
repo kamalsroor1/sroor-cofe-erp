@@ -68,25 +68,47 @@
           </div>
         </div>
 
-        <!-- Category Tabs -->
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <!-- 📂 Category Bar (Horizontal Touch-Scrollable Filter Bar) -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar touch-pan-x select-none shrink-0">
+          <!-- All Items Button -->
           <button
             type="button"
             @click="selectedCategory = 'all'"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer"
-            :class="selectedCategory === 'all' ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
+            class="h-10 px-4 rounded-2xl text-xs font-black whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 shrink-0"
+            :class="selectedCategory === 'all'
+              ? 'bg-theme-primary text-slate-950 shadow-md shadow-theme-primary/30 scale-105'
+              : 'bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 hover:border-theme-primary/40 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
           >
-            {{ $t('common.all') }} ({{ items.length }})
+            <span class="text-sm">📦</span>
+            <span>{{ $t('common.all_items') || 'كل الأصناف' }}</span>
+            <span
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+              :class="selectedCategory === 'all' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
+            >
+              {{ items.length }}
+            </span>
           </button>
+
+          <!-- Category Item Buttons -->
           <button
             v-for="cat in categories"
-            :key="cat"
+            :key="typeof cat === 'object' ? cat.id : cat"
             type="button"
-            @click="selectedCategory = cat"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer"
-            :class="selectedCategory === cat ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-transparent dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'"
+            @click="selectedCategory = (typeof cat === 'object' ? (cat.name || cat.id) : cat)"
+            class="h-10 px-4 rounded-2xl text-xs font-black whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-2 shrink-0"
+            :class="(selectedCategory === (typeof cat === 'object' ? (cat.name || cat.id) : cat))
+              ? 'bg-theme-primary text-slate-950 shadow-md shadow-theme-primary/30 scale-105'
+              : 'bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 hover:border-theme-primary/40 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
           >
-            {{ cat }}
+            <span class="text-base">{{ typeof cat === 'object' ? (cat.icon || '☕') : '☕' }}</span>
+            <span>{{ typeof cat === 'object' ? cat.name : cat }}</span>
+            <span
+              v-if="typeof cat === 'object' && cat.items_count !== undefined"
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+              :class="(selectedCategory === (typeof cat === 'object' ? (cat.name || cat.id) : cat)) ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
+            >
+              {{ cat.items_count }}
+            </span>
           </button>
         </div>
 
@@ -140,7 +162,7 @@
         <!-- Customer & Price Tier Header -->
         <div class="space-y-2 pb-2 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2">
-            <!-- Clickable Customer Selector (Opens Modal) -->
+            <!-- Customer Selector Button -->
             <button
               type="button"
               @click="openCustomerPicker"
@@ -161,10 +183,7 @@
               </div>
 
               <div class="flex items-center gap-1.5 shrink-0">
-                <span
-                  v-if="selectedCustomer?.current_balance && Number(selectedCustomer.current_balance) > 0"
-                  class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                >
+                <span v-if="selectedCustomer?.current_balance && Number(selectedCustomer.current_balance) > 0" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
                   {{ formatMoney(selectedCustomer.current_balance) }} {{ $t('common.currency') }}
                 </span>
                 <Search class="w-3.5 h-3.5 text-slate-400 group-hover:text-theme-primary" />
@@ -181,7 +200,7 @@
               <UserPlus class="w-4 h-4" />
             </button>
 
-            <!-- Price Tier Toggle -->
+            <!-- Retail / Wholesale Switcher -->
             <button
               type="button"
               @click="togglePriceTier"
@@ -193,7 +212,7 @@
           </div>
         </div>
 
-        <!-- Cart Items List (Scrollable) -->
+        <!-- Cart Items List -->
         <div class="flex-1 overflow-y-auto space-y-2 max-h-[calc(100vh-420px)] pr-1">
           <div v-if="cart.length === 0" class="h-48 flex flex-col items-center justify-center text-slate-600 text-xs space-y-2">
             <ShoppingCart class="w-8 h-8 opacity-30" />
@@ -259,114 +278,439 @@
           </div>
         </div>
 
-        <!-- Checkout Bottom Area -->
+        <!-- Cart Quick Summary & Open Payment Modal Button -->
         <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <!-- Discount & Totals -->
           <div class="space-y-1.5 font-mono text-xs">
-            <div class="flex justify-between text-slate-400 font-sans">
+            <div class="flex justify-between text-slate-500 font-sans">
               <span>{{ $t('common.total') }}:</span>
               <span class="font-mono text-slate-900 dark:text-white font-bold">{{ formatMoney(cartSubtotal) }} {{ $t('common.currency') }}</span>
             </div>
 
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-slate-400 font-sans text-xs">{{ $t('invoices.discount') }}:</span>
-              <div class="flex items-center gap-1">
-                <input
-                  v-model="discountValue"
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  class="w-20 h-7 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-rose-400 font-mono font-bold focus:outline-none"
-                  placeholder="0.00"
-                >
-                <select
-                  v-model="discountType"
-                  class="h-7 px-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-[10px] text-slate-900 dark:text-white focus:outline-none"
-                >
-                  <option value="fixed">{{ $t('common.currency') }}</option>
-                  <option value="percentage">%</option>
-                </select>
-              </div>
+            <div v-if="parseFloat(discountAmount) > 0" class="flex justify-between text-rose-500 font-sans">
+              <span>{{ $t('invoices.discount') }}:</span>
+              <span class="font-mono font-bold">-{{ formatMoney(discountAmount) }} {{ $t('common.currency') }}</span>
+            </div>
+
+            <div v-if="customerExpensesTotal > 0" class="flex justify-between text-cyan-500 font-sans">
+              <span>{{ $t('pos.shipping_and_services') || 'مصاريف إضافية / شحن' }}:</span>
+              <span class="font-mono font-bold">+{{ formatMoney(customerExpensesTotal) }} {{ $t('common.currency') }}</span>
             </div>
 
             <div class="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-800 font-sans">
               <span>{{ $t('invoices.net_total') }}:</span>
-              <span class="font-mono text-emerald-400 text-base">{{ formatMoney(cartNetTotal) }} {{ $t('common.currency') }}</span>
+              <span class="font-mono text-emerald-500 dark:text-emerald-400 text-lg font-black">{{ formatMoney(cartNetTotal) }} {{ $t('common.currency') }}</span>
             </div>
           </div>
 
-          <!-- Payment Type & Method Selectors -->
-          <div class="grid grid-cols-4 gap-1.5">
-            <button
-              type="button"
-              @click="setPaymentType('cash')"
-              class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'cash' ? 'bg-emerald-600 text-white font-black border-emerald-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
-            >
-              💵 {{ $t('invoices.cash') }}
-            </button>
-            <button
-              type="button"
-              @click="setPaymentType('bank_transfer')"
-              class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'bank_transfer' ? 'bg-theme-primary text-white font-black border-theme-primary shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
-            >
-              ⚡ {{ $t('contacts.instapay') }}
-            </button>
-            <button
-              type="button"
-              @click="setPaymentType('partial')"
-              class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'partial' ? 'bg-cyan-600 text-white font-black border-cyan-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
-            >
-              ⚖️ {{ $t('invoices.partial') }}
-            </button>
-            <button
-              type="button"
-              @click="setPaymentType('credit')"
-              class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'credit' ? 'bg-rose-600 text-white font-black border-rose-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
-            >
-              📝 {{ $t('invoices.credit') }}
-            </button>
-          </div>
-
-          <!-- Paid Amount Field (for partial) -->
-          <div v-if="paymentType === 'partial'" class="flex items-center justify-between gap-2">
-            <span class="text-xs font-bold text-slate-400 font-sans">{{ $t('pos.paid_cash_now') }}</span>
-            <input
-              v-model="paidAmount"
-              type="number"
-              step="0.001"
-              min="0"
-              class="w-28 h-8 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-emerald-400 focus:outline-none"
-              placeholder="0.00"
-            >
-          </div>
-
-          <!-- Big Submit Checkout Button -->
+          <!-- Big Action Button: Open Redesigned Payment Modal -->
           <button
             type="button"
-            @click="submitCheckout"
-            :disabled="isSubmitting || cart.length === 0"
-            class="w-full h-12 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-sm shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
+            @click="openPaymentModal"
+            :disabled="cart.length === 0"
+            class="w-full h-13 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-sm sm:text-base shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
           >
-            <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <Zap v-else class="w-5 h-5 fill-white text-white" />
-            <span>{{ $t('pos.checkout_btn_f9') }}</span>
+            <Zap class="w-5 h-5 fill-white text-white" />
+            <span>{{ $t('pos.proceed_to_payment') || 'سداد وإنهاء الفاتورة' }}</span>
+            <span class="text-xs opacity-80 font-mono">(F9)</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 👥 Comprehensive Customer Picker & Quick Add Modal -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- 💳 REDESIGNED COMPREHENSIVE POS PAYMENT MODAL (Photos 2,3,4) -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <AppModal
+      :show="showPaymentModal"
+      :title="$t('pos.payment_screen_title') || '💳 تفاصيل وسداد الفاتورة'"
+      @close="showPaymentModal = false"
+      max-width="2xl"
+    >
+      <div class="space-y-5 font-tajawal text-slate-900 dark:text-slate-100 max-h-[80vh] overflow-y-auto pr-1 custom-scrollbar">
+        <!-- Customer & Order Summary Pill -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center font-bold">👤</span>
+            <div>
+              <span class="text-slate-500 text-[10px]">{{ $t('invoices.customer') }}:</span>
+              <div class="font-black text-slate-900 dark:text-white">{{ selectedCustomer?.name || $t('pos.walk_in_customer') }}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 font-mono">
+            <span class="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
+              {{ cart.length }} {{ $t('inventory.items_unit') || 'أصناف' }}
+            </span>
+            <span class="px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-black text-sm">
+              {{ formatMoney(cartNetTotal) }} {{ $t('common.currency') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- 📌 1. قسم نوع الفاتورة والسداد (Photo 2 - Top) -->
+        <div class="space-y-2">
+          <label class="block text-xs font-black text-slate-700 dark:text-slate-300">
+            1. {{ $t('pos.payment_type_section') || 'نوع الفاتورة والسداد' }}
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <!-- كاش فوري كامل -->
+            <button
+              type="button"
+              @click="setPaymentType('cash')"
+              class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 shadow-xs"
+              :class="paymentType === 'cash'
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20 ring-2 ring-emerald-500/30'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-500/50'"
+            >
+              <span class="text-lg">💵</span>
+              <span class="text-xs font-black">{{ $t('pos.full_cash') || 'كاش فوري كامل' }}</span>
+              <span class="text-[10px] opacity-80">{{ $t('pos.full_cash_desc') || 'سداد كامل المبلغ الآن' }}</span>
+            </button>
+
+            <!-- آجل (ذمم) بالكامل -->
+            <button
+              type="button"
+              @click="setPaymentType('credit')"
+              class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 shadow-xs"
+              :class="paymentType === 'credit'
+                ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/20 ring-2 ring-rose-500/30'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-500/50'"
+            >
+              <span class="text-lg">📝</span>
+              <span class="text-xs font-black">{{ $t('pos.full_credit') || 'آجل (ذمم بالكامل)' }}</span>
+              <span class="text-[10px] opacity-80">{{ $t('pos.full_credit_desc') || 'تسجيل على حساب العميل' }}</span>
+            </button>
+
+            <!-- دفع جزئي -->
+            <button
+              type="button"
+              @click="setPaymentType('partial')"
+              class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1.5 shadow-xs"
+              :class="paymentType === 'partial'
+                ? 'bg-cyan-600 text-white border-cyan-500 shadow-md shadow-cyan-600/20 ring-2 ring-cyan-500/30'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-cyan-500/50'"
+            >
+              <span class="text-lg">⚖️</span>
+              <span class="text-xs font-black">{{ $t('pos.partial_payment') || 'دفع جزئي' }}</span>
+              <span class="text-[10px] opacity-80">{{ $t('pos.partial_payment_desc') || 'مقدم + متبقي آجل' }}</span>
+            </button>
+          </div>
+
+          <!-- Partial Payment Details -->
+          <div v-if="paymentType === 'partial'" class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl space-y-2">
+            <div class="grid grid-cols-2 gap-3">
+              <BaseNumberInput
+                v-model="paidAmount"
+                :label="$t('pos.paid_now_amount') || 'المبلغ المسدد الآن'"
+                step="0.001"
+                :min="0"
+                :suffix="$t('common.currency')"
+              />
+              <div class="flex flex-col justify-center">
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1">{{ $t('invoices.remaining_due') }}:</span>
+                <span class="text-base font-black text-rose-500 font-mono">
+                  {{ formatMoney(Math.max(0, cartNetTotal - (parseFloat(paidAmount) || 0))) }} {{ $t('common.currency') }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📌 2. قسم وسيلة التحصيل والدفع الفعلية -->
+        <div v-if="paymentType !== 'credit'" class="space-y-2">
+          <label class="block text-xs font-black text-slate-700 dark:text-slate-300">
+            2. {{ $t('pos.payment_method_section') || 'وسيلة التحصيل والدفع' }}
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <!-- كاش نقدي -->
+            <button
+              type="button"
+              @click="paymentMethod = 'cash'"
+              class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+              :class="paymentMethod === 'cash'
+                ? 'bg-theme-primary text-slate-950 font-black border-theme-primary shadow-md shadow-theme-primary/20'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
+            >
+              <span>💵</span>
+              <span class="text-xs font-bold">{{ $t('invoices.cash') }}</span>
+            </button>
+
+            <!-- إنستاباي -->
+            <button
+              type="button"
+              @click="paymentMethod = 'instapay'"
+              class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+              :class="paymentMethod === 'instapay'
+                ? 'bg-theme-primary text-slate-950 font-black border-theme-primary shadow-md shadow-theme-primary/20'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
+            >
+              <span>⚡</span>
+              <span class="text-xs font-bold">{{ $t('contacts.instapay') || 'إنستاباي' }}</span>
+            </button>
+
+            <!-- محفظة ذكية / فودافون كاش -->
+            <button
+              type="button"
+              @click="paymentMethod = 'smart_wallet'"
+              class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+              :class="paymentMethod === 'smart_wallet'
+                ? 'bg-theme-primary text-slate-950 font-black border-theme-primary shadow-md shadow-theme-primary/20'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
+            >
+              <span>📱</span>
+              <span class="text-xs font-bold">{{ $t('pos.smart_wallet') || 'محفظة ذكية' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 📌 3. سداد نقدي سريع وحساب الباقي (Quick Cash & Change Due) -->
+        <div v-if="paymentType === 'cash' && paymentMethod === 'cash'" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-black text-slate-700 dark:text-slate-300">
+              3. {{ $t('pos.quick_cash_section') || 'سداد نقدي سريع وحساب الباقي' }}
+            </label>
+            <span v-if="changeDue > 0" class="text-xs font-black text-emerald-500 font-mono">
+              {{ $t('pos.change_due') || 'الباقي للعميل' }}: {{ formatMoney(changeDue) }} {{ $t('common.currency') }}
+            </span>
+          </div>
+
+          <!-- Quick Cash Amount Buttons -->
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              @click="setQuickCash(cartNetTotal)"
+              class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-black transition active:scale-95 cursor-pointer"
+            >
+              🎯 {{ $t('pos.exact_amount') || 'المبلغ بالظبط' }} ({{ formatMoney(cartNetTotal) }})
+            </button>
+            <button
+              v-for="amt in [50, 100, 200, 500, 1000]"
+              :key="amt"
+              type="button"
+              @click="setQuickCash(amt)"
+              class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold transition active:scale-95 cursor-pointer shadow-2xs"
+            >
+              {{ amt }} {{ $t('common.currency') }}
+            </button>
+          </div>
+
+          <!-- Cash Received Input & Change Box -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <BaseNumberInput
+              v-model="cashReceived"
+              :label="$t('pos.received_from_customer') || 'المبلغ المستلم من العميل'"
+              step="0.001"
+              :min="0"
+              :suffix="$t('common.currency')"
+            />
+            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-center">
+              <span class="text-[10px] text-slate-500 font-bold">{{ $t('pos.change_due_label') || 'المتبقي إرجاعه للعميل' }}</span>
+              <span
+                class="text-base font-black font-mono"
+                :class="changeDue > 0 ? 'text-emerald-500' : (changeDue < 0 ? 'text-rose-500' : 'text-slate-400')"
+              >
+                {{ formatMoney(Math.max(0, changeDue)) }} {{ $t('common.currency') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📌 4. خصم سريع (Quick Discount Presets) -->
+        <div class="space-y-2">
+          <label class="block text-xs font-black text-slate-700 dark:text-slate-300">
+            4. {{ $t('pos.quick_discount_section') || 'خصم سريع على الفاتورة' }}
+          </label>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              @click="applyDiscountPreset(0, 'percentage')"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer border"
+              :class="parseFloat(discountValue) === 0 ? 'bg-theme-primary text-slate-950 font-black border-theme-primary shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'"
+            >
+              {{ $t('pos.no_discount') || 'بدون خصم' }}
+            </button>
+            <button
+              v-for="rate in [5, 10, 15, 20]"
+              :key="rate"
+              type="button"
+              @click="applyDiscountPreset(rate, 'percentage')"
+              class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition active:scale-95 cursor-pointer border"
+              :class="(discountType === 'percentage' && parseFloat(discountValue) === rate) ? 'bg-theme-primary text-slate-950 font-black border-theme-primary shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'"
+            >
+              {{ rate }}%
+            </button>
+          </div>
+
+          <!-- Custom Discount Inputs -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <BaseNumberInput
+              v-model="discountValue"
+              :label="$t('invoices.discount')"
+              step="0.001"
+              :min="0"
+            />
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('invoices.discount_type') || 'نوع الخصم' }}</label>
+              <select
+                v-model="discountType"
+                class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary font-tajawal focus:outline-none"
+              >
+                <option value="fixed">{{ $t('common.currency') }} (مبلغ ثابت)</option>
+                <option value="percentage">% (نسبة مئوية)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📌 5. مصاريف الشحن والخدمات الإضافية (Photos 2,3) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-black text-slate-700 dark:text-slate-300">
+              5. {{ $t('pos.additional_expenses_section') || 'مصاريف الشحن والخدمات الإضافية' }}
+            </label>
+            <span class="text-[10px] text-slate-500 font-bold">
+              {{ additionalExpenses.length }} {{ $t('pos.expenses_added') || 'بنود مضافة' }}
+            </span>
+          </div>
+
+          <!-- Quick Add Expense Chips -->
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              @click="addQuickExpense('🚚 مصاريف شحن وتوصيل', 20, 'customer_account')"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold border border-slate-300 dark:border-slate-700 transition active:scale-95 cursor-pointer shadow-2xs"
+            >
+              🚚 شحن
+            </button>
+            <button
+              type="button"
+              @click="addQuickExpense('🎁 مصاريف تغليف وهدايا', 15, 'customer_account')"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold border border-slate-300 dark:border-slate-700 transition active:scale-95 cursor-pointer shadow-2xs"
+            >
+              🎁 تغليف
+            </button>
+            <button
+              type="button"
+              @click="addQuickExpense('☕ خدمة / إكرامية', 10, 'customer_account')"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold border border-slate-300 dark:border-slate-700 transition active:scale-95 cursor-pointer shadow-2xs"
+            >
+              ☕ إكرامية
+            </button>
+            <button
+              type="button"
+              @click="addCustomExpense"
+              class="px-3 py-1.5 rounded-xl bg-theme-light text-theme-primary font-black text-xs border border-theme-primary/40 transition active:scale-95 cursor-pointer"
+            >
+              + {{ $t('pos.add_custom_expense') || 'بند مخصص' }}
+            </button>
+          </div>
+
+          <!-- List of Added Additional Expenses -->
+          <div v-if="additionalExpenses.length > 0" class="space-y-2 pt-2">
+            <div
+              v-for="(exp, expIdx) in additionalExpenses"
+              :key="expIdx"
+              class="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2 shadow-2xs"
+            >
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="exp.title"
+                  type="text"
+                  class="flex-1 h-9 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                  :placeholder="$t('pos.expense_title_placeholder') || 'اسم البند (مثال: شحن سريع)'"
+                >
+                <div class="w-28">
+                  <input
+                    v-model.number="exp.amount"
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    class="w-full h-9 px-2 text-end bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-theme-primary focus:outline-none"
+                    placeholder="0.00"
+                  >
+                </div>
+                <button
+                  type="button"
+                  @click="removeExpense(expIdx)"
+                  class="p-2 text-slate-400 hover:text-rose-500 rounded-xl transition cursor-pointer"
+                >
+                  <Trash2 class="w-4 h-4" />
+                </button>
+              </div>
+
+              <!-- Cost Allocation Dropdown (Photo 3) -->
+              <div class="flex items-center gap-2 text-xs">
+                <span class="text-slate-500 dark:text-slate-400 text-[11px] font-bold shrink-0">
+                  {{ $t('pos.who_bears_cost') || 'من يتحمل التكلفة؟' }}:
+                </span>
+                <select
+                  v-model="exp.paid_by"
+                  class="flex-1 h-8 px-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-900 dark:text-white focus:outline-none font-tajawal"
+                >
+                  <option value="customer_account">👤 {{ $t('pos.add_to_customer_invoice') || 'مضاف على حساب العميل بالفاتورة (الزبون يدفعه)' }}</option>
+                  <option value="treasury_cash">🏛️ {{ $t('pos.voucher_treasury_cash') || 'سند صرف: مسدد كاش من الخزينة الآن (مصروف على المحل)' }}</option>
+                  <option value="treasury_instapay">⚡ {{ $t('pos.voucher_treasury_instapay') || 'سند صرف: مسدد عبر إنستاباي من الحساب (مصروف على المحل)' }}</option>
+                  <option value="treasury_smart_wallet">📱 {{ $t('pos.voucher_treasury_wallet') || 'سند صرف: مسدد من المحفظة الذكية (مصروف على المحل)' }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📌 6. شريط الإجمالي النهائي والأزرار الثابتة (Photo 4 - Sticky Bottom) -->
+      <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 space-y-3 font-tajawal">
+        <!-- Financial Summary Row -->
+        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+          <div class="space-y-0.5 text-xs text-slate-500">
+            <div>{{ $t('common.total') }}: <span class="font-mono text-slate-900 dark:text-white font-bold">{{ formatMoney(cartSubtotal) }}</span></div>
+            <div v-if="parseFloat(discountAmount) > 0" class="text-rose-500">{{ $t('invoices.discount') }}: <span class="font-mono">-{{ formatMoney(discountAmount) }}</span></div>
+            <div v-if="customerExpensesTotal > 0" class="text-cyan-500">شحن/إضافي: <span class="font-mono">+{{ formatMoney(customerExpensesTotal) }}</span></div>
+          </div>
+
+          <div class="text-end">
+            <span class="text-[10px] text-slate-400 font-bold">{{ $t('invoices.net_total') }}</span>
+            <div class="text-xl font-black text-emerald-500 dark:text-emerald-400 font-mono">
+              {{ formatMoney(cartNetTotal) }} <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons: Save & Print vs Save & Confirm -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <!-- Save & Print Button -->
+          <button
+            type="button"
+            @click="submitCheckoutAndPrint"
+            :disabled="isSubmitting || cart.length === 0"
+            class="h-12 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
+          >
+            <Printer class="w-4 h-4 text-theme-primary" />
+            <span>{{ $t('pos.save_and_print') || 'حفظ وطباعة الفاتورة' }}</span>
+          </button>
+
+          <!-- Save & Confirm Button (Enter) -->
+          <button
+            type="button"
+            @click="submitCheckout"
+            :disabled="isSubmitting || cart.length === 0"
+            class="h-12 px-5 rounded-2xl bg-theme-gradient text-white shadow-theme-primary font-black text-xs sm:text-sm shadow-lg transition active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <Zap v-else class="w-4 h-4 fill-white text-white" />
+            <span>{{ $t('pos.save_and_confirm') || 'حفظ واعتماد' }}</span>
+            <span class="text-[10px] opacity-80 font-mono">(Enter)</span>
+          </button>
+        </div>
+      </div>
+    </AppModal>
+
+    <!-- 👥 Customer Picker & Quick Add Modal -->
     <AppModal
       :show="showCustomerPickerModal"
       :title="isAddingNewCustomer ? '➕ تسجيل عميل جديد فوري' : '🔍 اختيار وتحديد العميل'"
       @close="showCustomerPickerModal = false"
       max-width="lg"
     >
-      <!-- Modal Navigation Tabs -->
       <div class="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800 font-tajawal mb-3">
         <button
           type="button"
@@ -377,7 +721,6 @@
           <Search class="w-3.5 h-3.5" />
           <span>بحث واختيار عميل</span>
         </button>
-
         <button
           type="button"
           @click="isAddingNewCustomer = true"
@@ -389,9 +732,8 @@
         </button>
       </div>
 
-      <!-- Tab 1: Search & Pick Customer -->
+      <!-- Search Existing Customer Tab -->
       <div v-if="!isAddingNewCustomer" class="space-y-3 font-tajawal">
-        <!-- Search input box -->
         <div class="relative">
           <input
             v-model="customerSearchQuery"
@@ -399,11 +741,11 @@
             autofocus
             class="w-full h-11 pr-10 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-theme-primary focus:outline-none"
             placeholder="ابحث باسم العميل أو رقم الهاتف أو الكود..."
-          />
+          >
           <Search class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
         </div>
 
-        <!-- 1-Click Walk-in / Cash Customer button -->
+        <!-- Default Cash Customer Pill -->
         <div
           @click="selectCustomerAndClose({ id: null, name: 'عميل نقدي (نقدي فوري)', price_tier: 'retail' })"
           class="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-2xl flex items-center justify-between cursor-pointer transition active:scale-[0.99] group shadow-2xs"
@@ -420,38 +762,31 @@
           <span class="text-xs font-bold text-emerald-500 group-hover:translate-x-[-4px] transition-transform">اختيار ←</span>
         </div>
 
-        <!-- Matching Customers List -->
         <div class="max-h-60 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
           <div
-            v-for="cust in filteredCustomerList"
-            :key="cust.id"
-            @click="selectCustomerAndClose(cust)"
+            v-for="c in filteredCustomerList"
+            :key="c.id"
+            @click="selectCustomerAndClose(c)"
             class="p-2.5 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-xl flex items-center justify-between cursor-pointer transition text-xs group"
           >
             <div class="flex items-center gap-2.5 min-w-0">
               <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
-                {{ cust.name?.charAt(0) || 'ع' }}
+                {{ c.name?.charAt(0) || 'ع' }}
               </div>
               <div class="min-w-0">
-                <div class="font-black text-slate-900 dark:text-white truncate group-hover:text-theme-primary">
-                  {{ cust.name }}
-                </div>
+                <div class="font-black text-slate-900 dark:text-white truncate group-hover:text-theme-primary">{{ c.name }}</div>
                 <div class="text-[10px] text-slate-400 font-mono flex items-center gap-2">
-                  <span v-if="cust.phone">{{ cust.phone }}</span>
-                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold" :class="cust.price_tier === 'wholesale' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'">
-                    {{ cust.price_tier === 'wholesale' ? 'جملة' : 'قطاعي' }}
+                  <span v-if="c.phone">{{ c.phone }}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold" :class="c.price_tier === 'wholesale' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'">
+                    {{ c.price_tier === 'wholesale' ? 'جملة' : 'قطاعي' }}
                   </span>
                 </div>
               </div>
             </div>
 
             <div class="text-end shrink-0">
-              <div
-                v-if="cust.current_balance && Number(cust.current_balance) !== 0"
-                class="text-[10px] font-mono font-bold"
-                :class="Number(cust.current_balance) > 0 ? 'text-rose-500' : 'text-emerald-500'"
-              >
-                {{ Number(cust.current_balance) > 0 ? `عليه: ${formatMoney(cust.current_balance)}` : `له: ${formatMoney(Math.abs(cust.current_balance))}` }}
+              <div v-if="c.current_balance && Number(c.current_balance) !== 0" class="text-[10px] font-mono font-bold" :class="Number(c.current_balance) > 0 ? 'text-rose-500' : 'text-emerald-500'">
+                {{ Number(c.current_balance) > 0 ? `عليه: ${formatMoney(c.current_balance)}` : `له: ${formatMoney(Math.abs(c.current_balance))}` }}
               </div>
               <span class="text-[11px] font-bold text-slate-400 group-hover:text-theme-primary transition">اختيار ←</span>
             </div>
@@ -470,7 +805,7 @@
         </div>
       </div>
 
-      <!-- Tab 2: Quick Add Customer Form -->
+      <!-- Quick Add New Customer Form -->
       <form v-else @submit.prevent="submitQuickCustomer" class="space-y-3 font-tajawal">
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -483,25 +818,21 @@
             autofocus
             class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
             placeholder="مثال: كمال سرور"
-          />
+          >
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            رقم الهاتف
-          </label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">رقم الهاتف</label>
           <input
             v-model="quickCustomerForm.phone"
             type="tel"
             class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             placeholder="01012345678"
-          />
+          >
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            شريحة السعر الافتراضية
-          </label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">شريحة السعر الافتراضية</label>
           <select
             v-model="quickCustomerForm.price_tier"
             class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
@@ -532,7 +863,7 @@
       </form>
     </AppModal>
 
-    <!-- Post-Checkout Success Modal -->
+    <!-- 🎉 Success Invoice Modal -->
     <AppModal
       :show="showSuccessModal"
       :title="$t('pos.invoice_success_title')"
@@ -545,7 +876,9 @@
         </div>
 
         <div>
-          <div class="text-base font-black text-theme-primary font-mono tracking-wide">{{ lastCreatedInvoice.invoice_number }}</div>
+          <div class="text-base font-black text-theme-primary font-mono tracking-wide">
+            {{ lastCreatedInvoice.invoice_number }}
+          </div>
           <div class="text-xs text-slate-600 dark:text-slate-400 mt-1 font-bold">
             {{ $t('invoices.customer') }}: <span class="text-slate-900 dark:text-slate-200">{{ lastCreatedInvoice.customer_name }}</span>
           </div>
@@ -604,6 +937,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import api from '../../services/api';
 import AppModal from '../../Components/Common/AppModal.vue';
+import BaseNumberInput from '../../Components/Form/BaseNumberInput.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import {
@@ -611,11 +945,13 @@ import {
     RotateCcw,
     Search,
     UserPlus,
+    Users,
     ShoppingCart,
     Trash2,
     Zap,
     Share2,
-    Printer
+    Printer,
+    Plus
 } from 'lucide-vue-next';
 
 const items = ref([]);
@@ -635,9 +971,13 @@ const cart = ref([]);
 const discountType = ref('fixed');
 const discountValue = ref('0.000');
 const paymentType = ref('cash');
+const paymentMethod = ref('cash');
 const paidAmount = ref('0.000');
+const cashReceived = ref('0.000');
+const additionalExpenses = ref([]);
 
 const searchInputRef = ref(null);
+const showPaymentModal = ref(false);
 const showCustomerPickerModal = ref(false);
 const customerSearchQuery = ref('');
 const isAddingNewCustomer = ref(false);
@@ -667,7 +1007,7 @@ const openQuickAddFromCart = () => {
     isAddingNewCustomer.value = true;
     quickCustomerForm.name = '';
     quickCustomerForm.phone = '';
-    quickCustomerForm.address = '';
+    quickCustomerForm.price_tier = 'retail';
     showCustomerPickerModal.value = true;
 };
 
@@ -707,7 +1047,9 @@ const getItemPrice = (item) => {
 
 const filteredItems = computed(() => {
     return items.value.filter(it => {
-        const matchesCategory = selectedCategory.value === 'all' || it.category === selectedCategory.value;
+        const matchesCategory = selectedCategory.value === 'all' || 
+            it.category === selectedCategory.value || 
+            (it.category_id && it.category_id === selectedCategory.value);
         const matchesSearch = !searchQuery.value || 
             it.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
             (it.code && it.code.toLowerCase().includes(searchQuery.value.toLowerCase()));
@@ -719,15 +1061,90 @@ const cartSubtotal = computed(() => {
     return cart.value.reduce((sum, it) => sum + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0), 0);
 });
 
-const cartNetTotal = computed(() => {
+const discountAmount = computed(() => {
     const sub = cartSubtotal.value;
     const disc = parseFloat(discountValue.value) || 0;
     if (discountType.value === 'percentage') {
-        const discAmount = (sub * disc) / 100;
-        return Math.max(0, sub - discAmount);
+        return ((sub * disc) / 100).toFixed(3);
     }
-    return Math.max(0, sub - disc);
+    return Math.min(sub, disc).toFixed(3);
 });
+
+const customerExpensesTotal = computed(() => {
+    return additionalExpenses.value
+        .filter(exp => exp.paid_by === 'customer_account' || !exp.paid_by)
+        .reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+});
+
+const cartNetTotal = computed(() => {
+    const sub = cartSubtotal.value;
+    const disc = parseFloat(discountAmount.value) || 0;
+    const extra = customerExpensesTotal.value;
+    return Math.max(0, sub - disc + extra);
+});
+
+const changeDue = computed(() => {
+    const received = parseFloat(cashReceived.value) || 0;
+    return received - cartNetTotal.value;
+});
+
+const openPaymentModal = () => {
+    if (cart.value.length === 0) return;
+    cashReceived.value = cartNetTotal.value.toString();
+    paidAmount.value = cartNetTotal.value.toString();
+    showPaymentModal.value = true;
+};
+
+const setPaymentType = (type) => {
+    paymentType.value = type;
+    if (type === 'cash') {
+        paidAmount.value = cartNetTotal.value.toString();
+        cashReceived.value = cartNetTotal.value.toString();
+    } else if (type === 'credit') {
+        paidAmount.value = '0.000';
+        cashReceived.value = '0.000';
+    } else if (type === 'partial') {
+        if (parseFloat(paidAmount.value) <= 0 || parseFloat(paidAmount.value) >= cartNetTotal.value) {
+            paidAmount.value = (cartNetTotal.value / 2).toFixed(3);
+        }
+    }
+};
+
+const setQuickCash = (amt) => {
+    cashReceived.value = parseFloat(amt).toFixed(3);
+    if (paymentType.value === 'partial') {
+        paidAmount.value = Math.min(cartNetTotal.value, parseFloat(amt)).toFixed(3);
+    }
+};
+
+const applyDiscountPreset = (rate, type = 'percentage') => {
+    discountType.value = type;
+    discountValue.value = rate.toString();
+};
+
+const addQuickExpense = (title, defaultAmt = 10, paidBy = 'customer_account') => {
+    additionalExpenses.value.push({
+        title,
+        amount: defaultAmt,
+        allocation_method: 'by_quantity',
+        paid_by: paidBy,
+        notes: '',
+    });
+};
+
+const addCustomExpense = () => {
+    additionalExpenses.value.push({
+        title: '',
+        amount: 0,
+        allocation_method: 'by_quantity',
+        paid_by: 'customer_account',
+        notes: '',
+    });
+};
+
+const removeExpense = (idx) => {
+    additionalExpenses.value.splice(idx, 1);
+};
 
 const loadPOSBootstrap = async () => {
     isLoading.value = true;
@@ -816,19 +1233,17 @@ const addToCart = (item) => {
 
 const incrementQty = (idx) => {
     const isDiscrete = isDiscreteUnit(cart.value[idx].unit);
-    const step = 1;
     cart.value[idx].quantity = isDiscrete
-        ? Math.round(cart.value[idx].quantity + step)
-        : parseFloat((cart.value[idx].quantity + step).toFixed(3));
+        ? Math.round(cart.value[idx].quantity + 1)
+        : parseFloat((cart.value[idx].quantity + 1).toFixed(3));
 };
 
 const decrementQty = (idx) => {
     const isDiscrete = isDiscreteUnit(cart.value[idx].unit);
-    const step = 1;
-    if (cart.value[idx].quantity > step) {
+    if (cart.value[idx].quantity > 1) {
         cart.value[idx].quantity = isDiscrete
-            ? Math.round(cart.value[idx].quantity - step)
-            : parseFloat((cart.value[idx].quantity - step).toFixed(3));
+            ? Math.round(cart.value[idx].quantity - 1)
+            : parseFloat((cart.value[idx].quantity - 1).toFixed(3));
     } else {
         removeFromCart(idx);
     }
@@ -842,33 +1257,29 @@ const clearCart = () => {
     cart.value = [];
     discountValue.value = '0.000';
     paidAmount.value = '0.000';
+    cashReceived.value = '0.000';
+    additionalExpenses.value = [];
     paymentType.value = 'cash';
+    paymentMethod.value = 'cash';
 };
 
 const togglePriceTier = () => {
     activePriceTier.value = activePriceTier.value === 'retail' ? 'wholesale' : 'retail';
     cart.value.forEach(line => {
-        const it = items.value.find(i => i.id === line.item_id);
-        if (it) {
-            line.unit_price = getItemPrice(it);
+        const product = items.value.find(p => p.id === line.item_id);
+        if (product) {
+            line.unit_price = getItemPrice(product);
         }
     });
 };
 
-const setPaymentType = (type) => {
-    paymentType.value = type;
-    if (type === 'cash') {
-        paidAmount.value = cartNetTotal.value.toString();
-    } else if (type === 'credit') {
-        paidAmount.value = '0.000';
-    }
-};
-
 const handleBarcodeScan = () => {
     if (!searchQuery.value) return;
-    const matched = items.value.find(i => i.code && i.code.toLowerCase() === searchQuery.value.trim().toLowerCase());
-    if (matched) {
-        addToCart(matched);
+    const found = items.value.find(
+        p => p.code && p.code.toLowerCase() === searchQuery.value.trim().toLowerCase()
+    );
+    if (found) {
+        addToCart(found);
         searchQuery.value = '';
     }
 };
@@ -885,10 +1296,13 @@ const submitQuickCustomer = async () => {
             showCustomerPickerModal.value = false;
             quickCustomerForm.name = '';
             quickCustomerForm.phone = '';
-            quickCustomerForm.address = '';
         }
-    } catch (error) {
-        Swal.fire({ icon: 'error', title: trans('common.error'), text: error.userMessage || trans('pos.add_customer_failed') });
+    } catch (e) {
+        Swal.fire({
+            icon: 'error',
+            title: trans('common.error'),
+            text: e.userMessage || trans('pos.add_customer_failed')
+        });
     } finally {
         isSubmittingQuickCustomer.value = false;
     }
@@ -904,31 +1318,46 @@ const submitCheckout = async () => {
             store_id: activeStore.value?.id || 1,
             invoice_date: new Date().toISOString().split('T')[0],
             payment_type: paymentType.value,
-            payment_method: paymentType.value === 'bank_transfer' ? 'instapay' : 'cash',
+            payment_method: paymentMethod.value,
             discount_type: discountType.value,
             discount_value: parseFloat(discountValue.value) || 0,
-            paid_amount: paymentType.value === 'cash' ? cartNetTotal.value : (parseFloat(paidAmount.value) || 0),
-            items: cart.value.map(c => ({
-                item_id: c.item_id,
-                quantity: parseFloat(c.quantity),
-                unit_price: parseFloat(c.unit_price),
+            paid_amount: paymentType.value === 'cash' ? cartNetTotal.value : (paymentType.value === 'credit' ? 0 : parseFloat(paidAmount.value) || 0),
+            additional_expenses: additionalExpenses.value.map(exp => ({
+                title: exp.title || 'مصروف إضافي',
+                amount: parseFloat(exp.amount) || 0,
+                allocation_method: exp.allocation_method || 'by_quantity',
+                paid_by: exp.paid_by || 'customer_account',
+                notes: exp.notes || '',
             })),
+            items: cart.value.map(line => ({
+                item_id: line.item_id,
+                quantity: parseFloat(line.quantity),
+                unit_price: parseFloat(line.unit_price)
+            }))
         };
 
-        const response = await api.post('/pos/checkout', payload);
-        lastCreatedInvoice.value = response.data?.data;
-        lastWhatsAppData.value = response.data?.whatsapp;
+        const res = await api.post('/pos/checkout', payload);
+        lastCreatedInvoice.value = res.data?.data;
+        lastWhatsAppData.value = res.data?.whatsapp;
+        showPaymentModal.value = false;
         showSuccessModal.value = true;
         clearCart();
-    } catch (error) {
+    } catch (e) {
         Swal.fire({
             icon: 'error',
             title: trans('pos.checkout_failed'),
-            text: error.userMessage || trans('pos.checkout_failed_desc'),
+            text: e.userMessage || trans('pos.checkout_failed_desc')
         });
     } finally {
         isSubmitting.value = false;
     }
+};
+
+const submitCheckoutAndPrint = async () => {
+    await submitCheckout();
+    setTimeout(() => {
+        window.print();
+    }, 400);
 };
 
 const closeSuccessModal = () => {
@@ -936,22 +1365,29 @@ const closeSuccessModal = () => {
     searchInputRef.value?.focus();
 };
 
-const handleKeyDown = (e) => {
+const handleGlobalShortcuts = (e) => {
     if (e.key === 'F9') {
         e.preventDefault();
-        submitCheckout();
+        if (!showPaymentModal.value) {
+            openPaymentModal();
+        } else {
+            submitCheckout();
+        }
     } else if (e.key === 'F2') {
         e.preventDefault();
         searchInputRef.value?.focus();
+    } else if (e.key === 'Enter' && showPaymentModal.value && !isSubmitting.value) {
+        e.preventDefault();
+        submitCheckout();
     }
 };
 
 onMounted(() => {
     loadPOSBootstrap();
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleGlobalShortcuts);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('keydown', handleGlobalShortcuts);
 });
 </script>

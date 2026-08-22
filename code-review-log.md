@@ -385,3 +385,39 @@
 - `backend/resources/js/Pages/Users/Index.vue`
 - `backend/resources/js/Components/ActionMenu.vue`
 - `backend/resources/js/Composables/useNativeBridge.js`
+---
+
+## إضافة Categories + تحسين شاشة الدفع — بتاريخ 2026-08-22
+
+### 1. شريط وإدارة الفئات (Categories):
+- **Backend**:
+  - `Category` Model & Migrations: `categories` table with `name`, `icon` (emoji), `sort_order`, `is_active`, `timestamps`, `softDeletes`.
+  - Added `category_id` foreign key to `items` table.
+  - Actions: `CreateCategoryAction`, `UpdateCategoryAction`, `DeleteCategoryAction`.
+  - Controller: `CategoryApiController` with endpoints `GET/POST/PUT/DELETE /api/v1/categories`.
+  - Rich Categories auto-population and integration in `GetPOSBootstrapDataAction`.
+  - Feature test: `CategoryApiTest.php` (100% passing).
+- **Frontend**:
+  - `CategoriesView.vue`: New Category Management dashboard view with Emoji presets selector, `BaseInput`, `BaseNumberInput`, and `BaseSwitch`.
+  - Added `/categories` route in `router/index.js` and linked under Inventory in `SpaLayout.vue` sidebar & mobile drawer.
+  - `ItemFormModal.vue`: Integrated dynamic Category selection with `BaseSelect`.
+  - `PosView.vue`: Horizontal scrolling touch-friendly Category Bar with 'All Items' fixed tab, category icons/emojis, active states, and instant reactive item filtering.
+
+### 2. شاشة الدفع الجديدة (POS Payment Screen Redesign - المرجع الصور 2، 3، 4):
+- **الأقسام المنفذة**:
+  1. **نوع الفاتورة والسداد (Photo 2 - Top)**: 3 خيارات تفاعلية لمسية كبيرة (كاش فوري كامل / آجل ذمم بالكامل / دفع جزئي) مع حقل المبلغ المسدد وحساب المتبقي الحي.
+  2. **وسيلة التحصيل والدفع الفعلية**: أزرار منفصلة (كاش نقدي 💵 / إنستاباي ⚡ / محفظة ذكية 📱).
+  3. **سداد نقدي سريع وحساب الباقي**: أزرار مبالغ شائعة (المبلغ بالظبط / 50 / 100 / 200 / 500 / 1000) وحاسبة فكة وباقي العميل الحية (Change Due Calculator).
+  4. **خصم سريع على الفاتورة**: أزرار نسب الخصم (بدون خصم / 5% / 10% / 15% / 20%) مع حقل الخصم المخصص.
+  5. **مصاريف الشحن والخدمات الإضافية (Photos 2, 3)**:
+     - أزرار سريعة (🚚 شحن / 🎁 تغليف / ☕ إكرامية / + بند مخصص).
+     - توجيه التكلفة المحاسبي الدقيق:
+       - 👤 `customer_account`: مضاف على حساب العميل بالفاتورة (يضاف لصافي المطلوب).
+       - 🏛️ `treasury_cash`: سند صرف مسدد كاش من الخزينة (مصروف على المحل).
+       - ⚡ `treasury_instapay`: سند صرف مسدد عبر إنستاباي (مصروف على المحل).
+       - 📱 `treasury_smart_wallet`: سند صرف مسدد من المحفظة الذكية (مصروف على المحل).
+  6. **شريط الإجمالي النهائي والأزرار الثابتة (Photo 4 - Bottom)**:
+     - ملخص مالي فوري (إجمالي الأصناف - الخصم + الشحن المضاف على العميل = الصافي المطلوب).
+     - زر ثانوي "حفظ وطباعة الفاتورة 🖨️" + زر أساسي مميز "حفظ واعتماد (Enter / F9) ⚡".
+- **القرارات المحاسبية**:
+  - تم ربط منطق مصاريف الشحن والسندات بالكامل مع `InvoiceService` بحيث يتم إنشاء سجل `Expense` مستقل في الخزينة عند اختيار سند صرف ولا يُحمّل على العميل، بينما يُضاف للإجمالي المطلوب فقط في حالة `customer_account`.

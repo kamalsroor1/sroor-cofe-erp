@@ -378,4 +378,23 @@ return [
     'item_updated' => 'تم تحديث الصنف بنجاح',
     'item_added' => 'تمت إضافة الصنف بنجاح',
     'phone' => 'رقم الهاتف',
+
+    // Categories Management
+    'categories_management'        => 'إدارة فئات وتصنيفات الأصناف',
+    'categories_subtitle'          => 'تنظيم وتصنيف المنتجات لسهولة الوصول إليها وشريط الفئات في نقطة البيع (POS)',
+    'add_category'                 => 'إضافة فئة جديدة',
+    'edit_category'                => 'تعديل بيانات الفئة',
+    'category_name'                => 'اسم الفئة',
+    'category_name_placeholder'    => 'مثال: مشروبات ساخنة، بن مطحون، حلويات',
+    'category_icon_emoji'          => 'أيقونة أو إيموجي الفئة',
+    'sort_order'                   => 'ترتيب الظهور في شريط الفئات',
+    'category_active_desc'         => 'تفعيل ظهور هذه الفئة في شاشات الكاشير ونقاط البيع',
+    'create_category_btn'          => 'إضافة الفئة',
+    'category_created_success'     => 'تم إنشاء الفئة بنجاح ✓',
+    'category_updated_success'     => 'تم تعديل الفئة بنجاح ✓',
+    'category_deleted_success'     => 'تم حذف الفئة بنجاح ✓',
+    'no_categories_yet'            => 'لا توجد فئات مسجلة حالياً',
+    'create_first_category_hint'   => 'ابدأ بإضافة فئات لتقسيم أصنافك مثل (قهوة، مشروبات، حلويات، سندوتشات)',
+    'add_first_category'           => 'إضافة أول فئة',
+    'items_unit'                   => 'صنف',
 ];

@@ -45,13 +45,29 @@ class GetPOSBootstrapDataAction
             ->orderBy('name')
             ->get();
 
-        // 4. Categories list
-        $categories = Item::where('is_active', true)
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->distinct()
-            ->pluck('category')
-            ->values();
+        // 4. Categories list with icons
+        if (\App\Models\Category::count() === 0) {
+            $distinctCats = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
+            $icons = ['☕', '🧃', '🍰', '🥪', '🍪', '🫘', '🥤', '🧊', '🎁', '📦'];
+            $i = 0;
+            foreach ($distinctCats as $cName) {
+                $icon = $icons[$i % count($icons)];
+                $cat = \App\Models\Category::create([
+                    'name'       => $cName,
+                    'icon'       => $icon,
+                    'sort_order' => $i,
+                    'is_active'  => true,
+                ]);
+                Item::where('category', $cName)->update(['category_id' => $cat->id]);
+                $i++;
+            }
+        }
+
+        $categories = \App\Models\Category::where('is_active', true)
+            ->withCount('items')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'icon']);
 
         // 5. Active Customers via POSCustomerResource
         $customers = Customer::where('is_active', true)

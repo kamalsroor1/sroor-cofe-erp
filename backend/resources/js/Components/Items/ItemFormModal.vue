@@ -1,11 +1,12 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AppModal from '@/Components/Common/AppModal.vue';
 import BaseInput from '@/Components/Form/BaseInput.vue';
 import BaseNumberInput from '@/Components/Form/BaseNumberInput.vue';
 import BaseSelect from '@/Components/Form/BaseSelect.vue';
 import { Package } from 'lucide-vue-next';
 import { trans } from '@/helpers/trans';
+import api from '@/services/api';
 
 const props = defineProps({
     show: { type: Boolean, required: true },
@@ -14,6 +15,27 @@ const props = defineProps({
 });
 
 defineEmits(['close', 'submit']);
+
+const categoriesList = ref([]);
+const loadCategories = async () => {
+    try {
+        const res = await api.get('/categories');
+        categoriesList.value = res.data?.data || [];
+    } catch (e) {
+        console.error('Failed to load categories in ItemFormModal', e);
+    }
+};
+
+onMounted(() => {
+    loadCategories();
+});
+
+const categoryOptions = computed(() => {
+    return categoriesList.value.map(c => ({
+        value: c.name,
+        label: `${c.icon || '☕'} ${c.name}`
+    }));
+});
 
 const unitOptions = computed(() => [
     { value: 'كجم', label: `${trans('inventory.unit_weight_short')} (كجم)` },
@@ -51,10 +73,11 @@ const unitOptions = computed(() => [
                     dir="ltr"
                 />
 
-                <BaseInput
+                <BaseSelect
                     v-model="form.category"
                     :label="$t('inventory.category')"
-                    :placeholder="$t('inventory.category_placeholder')"
+                    :placeholder="$t('inventory.category_placeholder') || 'اختر الفئة أو التصنيف'"
+                    :options="categoryOptions"
                     :error="form.errors?.category"
                 />
             </div>

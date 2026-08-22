@@ -475,6 +475,36 @@
 
           <div
             class="relative"
+            @mouseenter="handleItemHover($event, 'فئات وتصنيفات الأصناف')"
+            @mouseleave="handleItemLeave"
+          >
+            <router-link
+              to="/categories"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
+              :class="$route.name?.startsWith('categories')
+                ? 'font-black border shadow-xs'
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
+              :style="$route.name?.startsWith('categories') ? {
+                color: 'var(--color-primary, #f59e0b)',
+                borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
+                backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
+              } : {}"
+            >
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('categories')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('categories') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Tags class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">فئات وتصنيفات الأصناف</span>
+            </router-link>
+          </div>
+
+          <div
+            class="relative"
             @mouseenter="handleItemHover($event, 'فواتير المشتريات')"
             @mouseleave="handleItemLeave"
           >
@@ -945,6 +975,15 @@
             </router-link>
 
             <router-link
+              to="/categories"
+              @click="isSidebarOpen = false"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
+            >
+              <Tags class="w-4 h-4" />
+              <span>فئات وتصنيفات الأصناف</span>
+            </router-link>
+
+            <router-link
               to="/purchases"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -1000,6 +1039,7 @@ import {
     RotateCcw,
     Layers,
     Package,
+    Tags,
     Store as StoreIcon,
     Users,
     Building2,

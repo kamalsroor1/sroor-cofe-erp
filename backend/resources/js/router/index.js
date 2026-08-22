@@ -101,6 +101,16 @@ const routes = [
         },
     },
     {
+        path: '/categories',
+        name: 'categories.index',
+        component: () => import('../views/Items/CategoriesView.vue'),
+        meta: {
+            title: 'فئات الأصناف',
+            requiresAuth: true,
+            permission: 'items.manage',
+        },
+    },
+    {
         path: '/items/:id/movements',
         name: 'items.movements',
         component: () => import('../views/Items/ItemMovementsView.vue'),

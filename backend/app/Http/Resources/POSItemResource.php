@@ -19,6 +19,7 @@ class POSItemResource extends JsonResource
             'name' => $this->name,
             'code' => $this->code,
             'category' => $this->category ?: 'عام',
+            'category_id' => $this->category_id,
             'price_retail' => (float)($this->price_retail ?? $this->selling_price ?? 0),
             'price_wholesale' => (float)(($this->min_selling_price && $this->min_selling_price > 0) ? $this->min_selling_price : ($this->price_wholesale ?? $this->selling_price ?? 0)),
             'min_selling_price' => (float)($this->min_selling_price ?? $this->cost_price ?? 0),

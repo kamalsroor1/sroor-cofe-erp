@@ -15,6 +15,7 @@ class Item extends Model
         'code',
         'name',
         'category',
+        'category_id',
         'unit',
         'current_stock',
         'cost_price',
@@ -37,6 +38,11 @@ class Item extends Model
             'min_stock_level'   => 'decimal:3',
             'is_active'         => 'boolean',
         ];
+    }
+
+    public function categoryRel()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function invoiceItems()

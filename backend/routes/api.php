@@ -89,6 +89,12 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/items/{id}/adjust-stock', [ItemController::class, 'adjustStock'])->name('api.items.adjust_stock');
         Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements');
 
+        // Categories Management
+        Route::get('/categories', [\App\Http\Controllers\Api\CategoryApiController::class, 'index'])->name('api.categories.index');
+        Route::post('/categories', [\App\Http\Controllers\Api\CategoryApiController::class, 'store'])->name('api.categories.store');
+        Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'update'])->name('api.categories.update');
+        Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
+
         // Audit Trail & Activity Logs
         Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
 
