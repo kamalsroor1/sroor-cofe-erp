@@ -42,7 +42,7 @@
                 type="button"
                 @click="onTypeChange('purchase_return')"
                 class="py-3 px-4 rounded-xl text-xs font-black transition border text-center cursor-pointer active:scale-95"
-                :class="form.return_type === 'purchase_return' ? 'bg-theme-primary text-white font-bold border-amber-400 shadow-md shadow-theme-primary' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
+                :class="form.return_type === 'purchase_return' ? 'bg-theme-primary text-white font-bold border-theme-primary shadow-md shadow-theme-primary' : 'bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-800'"
               >
                 <span>{{ $t('returns.purchase_return_option') }}</span>
               </button>
@@ -174,7 +174,7 @@
                         type="number"
                         step="0.001"
                         min="0"
-                        class="w-24 h-8 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
+                        class="w-24 h-8 px-2 text-end bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-theme-primary focus:outline-none"
                       >
                     </td>
                     <td class="p-3 text-end font-mono font-bold text-rose-400">

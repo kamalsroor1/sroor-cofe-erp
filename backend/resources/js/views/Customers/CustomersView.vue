@@ -40,11 +40,11 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.debtors_count') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
               <AlertCircle class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-amber-400 font-mono">
+          <div class="text-2xl font-black text-theme-primary font-mono">
             {{ metrics.debtors_count || 0 }} <span class="text-xs text-slate-400">{{ $t('contacts.customer_unit') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
@@ -201,7 +201,7 @@
                     <!-- Statement Button -->
                     <router-link
                       :to="`/customers/${customer.id}/statement`"
-                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
+                      class="p-2 text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
                       :title="$t('contacts.statement')"
                     >
                       <FileText class="w-4 h-4" />
@@ -254,7 +254,7 @@
         <!-- Pagination Bar -->
         <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div class="text-xs text-slate-400 font-tajawal">
-            {{ $t('activity.total_records') }} <span class="font-mono text-amber-400">{{ pagination.total }}</span> {{ $t('contacts.customer_unit') }}
+            {{ $t('activity.total_records') }} <span class="font-mono text-theme-primary">{{ pagination.total }}</span> {{ $t('contacts.customer_unit') }}
           </div>
           <div class="flex items-center gap-1">
             <button

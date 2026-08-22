@@ -56,7 +56,7 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('inventory.total_items_count') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
               <Package class="w-4 h-4" />
             </div>
           </div>
@@ -121,7 +121,7 @@
             type="button"
             @click="setStockStatus('out')"
             class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'out' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
+            :class="stockStatus === 'out' ? 'bg-theme-light text-theme-primary border border-theme-border' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
           >
             ❌ {{ $t('inventory.out_of_stock_only') }}
           </button>
@@ -217,7 +217,7 @@
                     <button
                       type="button"
                       @click="openAdjustModal(item)"
-                      class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1 font-tajawal cursor-pointer"
+                      class="px-2.5 py-1.5 bg-theme-light hover:bg-theme-hover/20 text-theme-primary border border-theme-border rounded-xl text-xs font-bold transition-all flex items-center gap-1 font-tajawal cursor-pointer"
                       :title="$t('inventory.adjust_stock')"
                     >
                       <Sliders class="w-3.5 h-3.5" />
@@ -227,7 +227,7 @@
                     <!-- Movements Button -->
                     <router-link
                       :to="`/items/${item.id}/movements`"
-                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
+                      class="p-2 text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
                       :title="$t('inventory.movements_log')"
                     >
                       <History class="w-4 h-4" />
@@ -473,7 +473,7 @@
           <!-- Current Stock Info -->
           <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('inventory.current_stock') }}:</span>
-            <span class="text-base font-black text-amber-400 font-mono">
+            <span class="text-base font-black text-theme-primary font-mono">
               {{ formatQty(targetItem?.current_stock || 0) }} {{ targetItem?.unit }}
             </span>
           </div>
@@ -506,7 +506,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-amber-400 font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-theme-primary font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
               placeholder="0.000"
             >
           </div>

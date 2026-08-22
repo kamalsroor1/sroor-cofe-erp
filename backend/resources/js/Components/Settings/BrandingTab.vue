@@ -58,7 +58,7 @@ const handleLogoDarkChange = (e) => {
 
                             <div class="space-y-1.5 flex-1 min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <Sun class="w-4 h-4 text-amber-500" />
+                                    <Sun class="w-4 h-4 text-theme-primary" />
                                     <h4 class="text-xs font-black text-slate-900 dark:text-white truncate">{{ $t('settings.company_logo_light') }}</h4>
                                 </div>
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">{{ $t('settings.logo_light_hint') }}</p>

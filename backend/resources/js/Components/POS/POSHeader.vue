@@ -20,7 +20,7 @@ defineEmits(['toggle-numpad']);
 <template>
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 mb-3 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-black text-lg flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-theme-primary/15 border border-theme-border text-theme-primary text-theme-primary font-black text-lg flex items-center justify-center">
                 ⚡
             </div>
             <div>
@@ -29,7 +29,7 @@ defineEmits(['toggle-numpad']);
                 </h1>
                 <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                     <span>{{ $t('common.store') }}:</span>
-                    <span class="text-amber-600 dark:text-amber-400 font-bold font-mono">{{ activeStore?.name || $t('common.main_store_default') }}</span>
+                    <span class="text-theme-primary text-theme-primary font-bold font-mono">{{ activeStore?.name || $t('common.main_store_default') }}</span>
                     <span>•</span>
                     <span
                         class="px-2 py-0.2 rounded-md font-mono font-bold"
@@ -45,7 +45,7 @@ defineEmits(['toggle-numpad']);
             <button
                 type="button"
                 class="h-9 px-3 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                :class="showNumpad ? 'bg-theme-primary text-white font-bold font-black border-amber-400 shadow-md' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
+                :class="showNumpad ? 'bg-theme-primary text-white font-bold font-black border-theme-primary shadow-md' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
                 @click="$emit('toggle-numpad')"
             >
                 <span>🔢</span>

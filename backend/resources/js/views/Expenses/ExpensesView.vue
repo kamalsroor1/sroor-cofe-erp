@@ -40,11 +40,11 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('expenses.cash_expenses') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
               <Wallet class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-amber-400 font-mono">
+          <div class="text-2xl font-black text-theme-primary font-mono">
             {{ formatMoney(metrics.total_cash || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
@@ -126,7 +126,7 @@
           type="button"
           @click="filterByCategory(cat)"
           class="px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border"
-          :class="selectedCategory === cat ? 'bg-theme-primary text-white font-bold border-amber-500 shadow-sm' : 'bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:text-slate-200'"
+          :class="selectedCategory === cat ? 'bg-theme-primary text-white font-bold border-theme-primary shadow-sm' : 'bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:text-slate-200'"
         >
           {{ cat }}
         </button>
@@ -171,7 +171,7 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
                 </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
                   {{ expense.expense_number }}
                 </td>
                 <td class="py-3.5 px-4">

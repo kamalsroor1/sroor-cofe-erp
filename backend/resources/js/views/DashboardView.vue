@@ -97,11 +97,11 @@
         <div class="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-2.5 relative overflow-hidden group">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400">مستحقات العملاء (الآجل)</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
               <CreditCard class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-amber-500 dark:text-amber-400 font-mono">
+          <div class="text-2xl font-black text-theme-primary text-theme-primary font-mono">
             {{ formatMoney(metrics.customers_debt || 0) }} <span class="text-xs font-sans text-slate-400 font-bold">ج.م</span>
           </div>
           <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold flex items-center justify-between">
@@ -210,7 +210,7 @@
           <div>
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <div class="w-7 h-7 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
                   <CreditCard class="w-4 h-4" />
                 </div>
                 <div>
@@ -427,7 +427,7 @@
               </div>
               <router-link
                 to="/smart-reorder"
-                class="text-xs font-bold text-amber-500 hover:text-amber-400 transition flex items-center gap-1 cursor-pointer"
+                class="text-xs font-bold text-theme-primary hover:text-theme-primary transition flex items-center gap-1 cursor-pointer"
               >
                 <span>مساعد المشتريات</span>
                 <span>←</span>
@@ -443,7 +443,7 @@
               >
                 <!-- Right: Name & Code -->
                 <div class="min-w-0 flex-1">
-                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-amber-500 transition">
+                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-theme-primary transition">
                     {{ item.name }}
                   </div>
                   <div class="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -540,7 +540,7 @@ const getPaymentMethodColor = (key) => {
         cash: 'bg-emerald-500',
         instapay: 'bg-indigo-500',
         visa: 'bg-sky-500',
-        e_wallet: 'bg-amber-500',
+        e_wallet: 'bg-theme-primary',
         bank_transfer: 'bg-teal-500',
     };
     return colors[key] || 'bg-emerald-500';
@@ -561,7 +561,7 @@ const getInvoiceStatusBadge = (inv) => {
         return 'bg-rose-500/10 text-rose-500 border-rose-500/30';
     }
     if (inv.remaining_amount > 0) {
-        return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
+        return 'bg-theme-light text-theme-primary border-theme-border';
     }
     return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
 };

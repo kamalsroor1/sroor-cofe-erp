@@ -24,11 +24,11 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.total_payables') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
               <TrendingDown class="w-4 h-4" />
             </div>
           </div>
-          <div class="text-2xl font-black text-amber-400 font-mono">
+          <div class="text-2xl font-black text-theme-primary font-mono">
             {{ formatMoney(metrics.total_payable || 0) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-tajawal">
@@ -140,7 +140,7 @@
                 v-for="(supplier, idx) in suppliers"
                 :key="supplier.id"
                 class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
-                :class="supplier.current_balance > 0 ? 'bg-amber-500/5' : ''"
+                :class="supplier.current_balance > 0 ? 'bg-theme-light' : ''"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
@@ -160,7 +160,7 @@
                 <td class="py-3.5 px-4 text-end">
                   <div
                     class="font-mono font-black text-sm"
-                    :class="supplier.current_balance > 0 ? 'text-amber-400' : 'text-emerald-400'"
+                    :class="supplier.current_balance > 0 ? 'text-theme-primary' : 'text-emerald-400'"
                   >
                     {{ formatMoney(supplier.current_balance) }} <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
                   </div>
@@ -182,7 +182,7 @@
                     <button
                       type="button"
                       @click="openPaymentModal(supplier)"
-                      class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1 font-tajawal cursor-pointer"
+                      class="px-2.5 py-1.5 bg-theme-light hover:bg-theme-hover/20 text-theme-primary border border-theme-border rounded-xl text-xs font-bold transition-all flex items-center gap-1 font-tajawal cursor-pointer"
                       :title="$t('contacts.pay_supplier')"
                     >
                       <CreditCard class="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@
                     <!-- Statement Button -->
                     <router-link
                       :to="`/suppliers/${supplier.id}/statement`"
-                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
+                      class="p-2 text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
                       :title="$t('contacts.statement')"
                     >
                       <FileText class="w-4 h-4" />
@@ -393,7 +393,7 @@
           <!-- Current Payable Alert -->
           <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('contacts.payable_balance_label') }}:</span>
-            <span class="text-base font-black font-mono" :class="targetSupplier?.current_balance > 0 ? 'text-amber-400' : 'text-emerald-400'">
+            <span class="text-base font-black font-mono" :class="targetSupplier?.current_balance > 0 ? 'text-theme-primary' : 'text-emerald-400'">
               {{ formatMoney(targetSupplier?.current_balance || 0) }} {{ $t('common.currency') }}
             </span>
           </div>
@@ -409,7 +409,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-amber-400 font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-theme-primary font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
               placeholder="0.00"
             >
           </div>

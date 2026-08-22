@@ -93,10 +93,10 @@
         <button
           type="button"
           @click="toggleTheme"
-          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-amber-400 flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-2xl text-xs font-bold text-slate-800 text-theme-primary flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
           :title="appConfigStore.isDark ? 'التحويل للوضع النهاري' : 'التحويل للوضع الليلي'"
         >
-          <Sun v-if="appConfigStore.isDark" class="w-3.5 h-3.5 text-amber-400" />
+          <Sun v-if="appConfigStore.isDark" class="w-3.5 h-3.5 text-theme-primary" />
           <Moon v-else class="w-3.5 h-3.5 text-indigo-600" />
           <span class="hidden md:inline">{{ appConfigStore.isDark ? 'الوضع النهاري' : 'الوضع الليلي' }}</span>
         </button>
@@ -109,7 +109,7 @@
             class="relative p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer active:scale-95 shadow-2xs"
             title="الإشعارات والتنبيهات"
           >
-            <Bell class="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <Bell class="w-4 h-4 text-theme-primary text-theme-primary" />
             <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
               {{ notificationsList.length }}
             </span>
@@ -126,7 +126,7 @@
                   <span>🔔</span>
                   <span>مركز التنبيهات والإشعارات</span>
                 </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-theme-light text-theme-primary">
                   {{ notificationsList.length }} تنبيهات
                 </span>
               </div>
@@ -136,7 +136,7 @@
                 <div
                   v-for="(n, idx) in notificationsList"
                   :key="idx"
-                  class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-amber-500/30 transition flex items-start gap-2.5"
+                  class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-theme-border transition flex items-start gap-2.5"
                 >
                   <span class="text-base">{{ n.icon }}</span>
                   <div class="flex-1 min-w-0">
@@ -166,7 +166,7 @@
             <select
               :value="authStore.currentStore?.id"
               @change="handleStoreSwitch($event.target.value)"
-              class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer font-tajawal shadow-2xs"
+              class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-theme-primary cursor-pointer font-tajawal shadow-2xs"
             >
               <option v-for="s in authStore.stores" :key="s.id" :value="s.id">
                 🏬 {{ s.name }}

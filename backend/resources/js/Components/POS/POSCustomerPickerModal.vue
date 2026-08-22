@@ -156,7 +156,7 @@ const onTouchEnd = () => {
                         <button
                             @click="onOpenCreate"
                             type="button"
-                            class="w-full h-11 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
+                            class="w-full h-11 rounded-2xl bg-theme-light hover:bg-theme-hover/20 border border-theme-border text-theme-primary text-theme-primary font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
                         >
                             <span>➕</span>
                             <span>{{ $t('contacts.add_new_customer') }}</span>

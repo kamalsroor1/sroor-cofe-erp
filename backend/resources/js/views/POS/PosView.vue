@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-amber-500 selection:text-slate-950" dir="rtl">
+  <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950" dir="rtl">
     <!-- POS Top Header -->
     <header class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-xs">
       <!-- Right: Back to Invoices & Brand -->
@@ -102,7 +102,7 @@
             :key="item.id"
             type="button"
             @click="addToCart(item)"
-            class="p-3 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl text-start transition active:scale-95 flex flex-col justify-between space-y-2 cursor-pointer group shadow-xs dark:shadow-md"
+            class="p-3 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl text-start transition active:scale-95 flex flex-col justify-between space-y-2 cursor-pointer group shadow-xs dark:shadow-md"
           >
             <div>
               <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
@@ -309,7 +309,7 @@
               type="button"
               @click="setPaymentType('bank_transfer')"
               class="py-1.5 rounded-xl text-xs font-bold transition border text-center cursor-pointer"
-              :class="paymentType === 'bank_transfer' ? 'bg-amber-600 text-white font-black border-amber-500 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
+              :class="paymentType === 'bank_transfer' ? 'bg-theme-primary text-white font-black border-theme-primary shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'"
             >
               ⚡ {{ $t('contacts.instapay') }}
             </button>

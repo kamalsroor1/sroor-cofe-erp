@@ -17,7 +17,7 @@
             to="/users"
             class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition"
           >
-            <Users class="w-4 h-4 text-amber-400" />
+            <Users class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('roles.users_and_employees') }}</span>
           </router-link>
 
@@ -47,9 +47,9 @@
             :key="r.id"
             @click="selectRole(r)"
             class="p-4 rounded-2xl border text-start transition cursor-pointer"
-            :class="selectedRole?.id === r.id ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30 shadow-md' : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'"
+            :class="selectedRole?.id === r.id ? 'bg-theme-primary/15 border-theme-primary ring-2 ring-theme-primary/30 shadow-md' : 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'"
           >
-            <div class="text-sm font-bold mb-1" :class="selectedRole?.id === r.id ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-900 dark:text-white'">{{ r.label }}</div>
+            <div class="text-sm font-bold mb-1" :class="selectedRole?.id === r.id ? 'text-theme-primary text-theme-primary font-black' : 'text-slate-900 dark:text-white'">{{ r.label }}</div>
             <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
               {{ r.name === 'admin' ? $t('roles.full_permissions_badge') : $t('roles.active_permissions_count', { count: r.permissions_count }) }}
             </div>
@@ -78,7 +78,7 @@
               <div v-if="selectedRole?.name !== 'admin'" class="flex items-center gap-2 text-[10px]">
                 <button
                   @click="toggleModule(mod.permissions, true)"
-                  class="text-amber-400 hover:underline"
+                  class="text-theme-primary hover:underline"
                 >
                   {{ $t('roles.select_all') }}
                 </button>

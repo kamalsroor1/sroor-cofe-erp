@@ -87,7 +87,7 @@ const onPaidAmountInput = (e) => {
                 <div class="flex items-center gap-1.5">
                     <button
                         type="button"
-                        class="h-7 px-2 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-black text-amber-600 dark:text-amber-400 cursor-pointer"
+                        class="h-7 px-2 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-black text-theme-primary text-theme-primary cursor-pointer"
                         @click="toggleDiscountType"
                     >
                         {{ discountType === 'fixed' ? $t('common.currency') : '%' }}

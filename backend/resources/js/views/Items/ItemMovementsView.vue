@@ -14,7 +14,7 @@
             <div>
               <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5">
                 <span>{{ $t('inventory.movements_title') }}:</span>
-                <span class="text-amber-400">{{ item?.name }}</span>
+                <span class="text-theme-primary">{{ item?.name }}</span>
                 <span v-if="item?.code" class="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">
                   {{ item.code }}
                 </span>
@@ -32,7 +32,7 @@
             @click="printReport"
             class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
           >
-            <Printer class="w-4 h-4 text-amber-400" />
+            <Printer class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('common.print') }}</span>
           </button>
         </div>
@@ -61,7 +61,7 @@
           <div class="text-xs font-bold text-slate-400">{{ $t('inventory.net_movement') }}</div>
           <div
             class="text-xl font-black font-mono"
-            :class="stats.net_movement >= 0 ? 'text-cyan-400' : 'text-amber-400'"
+            :class="stats.net_movement >= 0 ? 'text-cyan-400' : 'text-theme-primary'"
           >
             {{ stats.net_movement > 0 ? '+' : '' }}{{ formatQty(stats.net_movement || 0) }} <span class="text-xs font-normal text-slate-400">{{ item?.unit }}</span>
           </div>
@@ -168,7 +168,7 @@
                     {{ formatMovementLabel(row.movement_type) }}
                   </span>
                 </td>
-                <td class="py-3.5 px-4 font-mono text-amber-400">{{ row.document_number || '—' }}</td>
+                <td class="py-3.5 px-4 font-mono text-theme-primary">{{ row.document_number || '—' }}</td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold" :class="isPositiveMovement(row.movement_type) ? 'text-emerald-400' : 'text-rose-400'">
                   {{ isPositiveMovement(row.movement_type) ? '+' : '-' }}{{ formatQty(row.quantity) }}
                 </td>

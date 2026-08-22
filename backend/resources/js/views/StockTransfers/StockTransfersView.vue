@@ -23,7 +23,7 @@
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('inventory.total_transfers_count') }}</span>
-            <Truck class="w-4 h-4 text-amber-400" />
+            <Truck class="w-4 h-4 text-theme-primary" />
           </div>
           <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.transfer_doc_unit') }}</span>
@@ -143,7 +143,7 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
                 </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
                   {{ trf.transfer_number }}
                 </td>
                 <td class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300 font-tajawal">
@@ -251,7 +251,7 @@
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('inventory.from_store') }}:</span>
-              <span class="font-bold text-amber-400">{{ selectedTransferDetails.from_store_name }}</span>
+              <span class="font-bold text-theme-primary">{{ selectedTransferDetails.from_store_name }}</span>
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('inventory.to_store') }}:</span>

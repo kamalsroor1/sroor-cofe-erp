@@ -3,7 +3,7 @@
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+          <div class="w-10 h-10 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
             <Layers class="w-5 h-5" />
           </div>
           <div>
@@ -43,7 +43,7 @@
           v-for="plan in plans"
           :key="plan.id"
           class="bg-white dark:bg-slate-900/90 border rounded-3xl p-6 shadow-xl flex flex-col justify-between relative space-y-6"
-          :class="plan.is_popular ? 'border-amber-500/50 ring-1 ring-amber-500/30' : 'border-slate-200 dark:border-slate-800'"
+          :class="plan.is_popular ? 'border-theme-primary ring-1 ring-theme-primary/30' : 'border-slate-200 dark:border-slate-800'"
         >
           <!-- Popular Badge -->
           <div v-if="plan.is_popular" class="absolute -top-3 start-1/2 -translate-x-1/2 px-3 py-0.5 bg-theme-primary text-white font-bold font-black text-[10px] rounded-full uppercase tracking-wider">
@@ -66,7 +66,7 @@
 
             <!-- Pricing -->
             <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 text-center space-y-1">
-              <div class="text-2xl font-black text-amber-400 font-mono">
+              <div class="text-2xl font-black text-theme-primary font-mono">
                 {{ formatMoney(plan.price_monthly) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }} / {{ $t('super.per_month') }}</span>
               </div>
               <div class="text-xs text-slate-400 font-mono">
@@ -192,12 +192,12 @@
 
             <div class="grid grid-cols-2 gap-3 pt-2">
               <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4 rounded text-amber-500 focus:ring-theme-primary" />
+                <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary" />
                 <span class="text-slate-300 font-bold">{{ $t('super.plan_active_checkbox') }}</span>
               </label>
 
               <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input type="checkbox" v-model="editForm.is_popular" class="w-4 h-4 rounded text-amber-500 focus:ring-theme-primary" />
+                <input type="checkbox" v-model="editForm.is_popular" class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary" />
                 <span class="text-slate-300 font-bold">{{ $t('super.popular_plan_checkbox') }}</span>
               </label>
             </div>

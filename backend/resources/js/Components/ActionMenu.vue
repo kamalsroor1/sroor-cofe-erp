@@ -138,7 +138,7 @@ onUnmounted(() => {
                                 item.variant === 'danger'
                                     ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                                     : (item.variant === 'warning'
-                                        ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                                        ? 'text-theme-primary hover:bg-theme-light hover:bg-theme-light/40'
                                         : (item.variant === 'success'
                                             ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
                                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'))
@@ -161,7 +161,7 @@ onUnmounted(() => {
                                 item.variant === 'danger'
                                     ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                                     : (item.variant === 'warning'
-                                        ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                                        ? 'text-theme-primary hover:bg-theme-light hover:bg-theme-light/40'
                                         : (item.variant === 'success'
                                             ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
                                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'))
@@ -236,7 +236,7 @@ onUnmounted(() => {
                                             item.variant === 'danger'
                                                 ? 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
                                                 : (item.variant === 'warning'
-                                                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                                                    ? 'bg-theme-light border-theme-primary/25 text-theme-primary text-theme-primary hover:bg-theme-hover/20'
                                                     : (item.variant === 'success'
                                                         ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                                                         : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'))
@@ -260,7 +260,7 @@ onUnmounted(() => {
                                             item.variant === 'danger'
                                                 ? 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
                                                 : (item.variant === 'warning'
-                                                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                                                    ? 'bg-theme-light border-theme-primary/25 text-theme-primary text-theme-primary hover:bg-theme-hover/20'
                                                     : (item.variant === 'success'
                                                         ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                                                         : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'))

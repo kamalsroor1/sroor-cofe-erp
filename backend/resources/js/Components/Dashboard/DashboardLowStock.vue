@@ -25,7 +25,7 @@ defineProps({
             <div
                 v-for="item in lowStockItems"
                 :key="item.id"
-                class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3 hover:border-amber-500/30 transition"
+                class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3 hover:border-theme-border transition"
             >
                 <div class="flex-1 truncate font-tajawal">
                     <div class="font-bold text-sm text-slate-900 dark:text-white truncate">{{ item.name }}</div>

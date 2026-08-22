@@ -33,7 +33,7 @@ const { formatMoney } = useMoney();
 
         <button
             type="button"
-            class="h-10 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-black text-xs flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-xs shrink-0"
+            class="h-10 px-3 rounded-xl bg-theme-light hover:bg-theme-hover/30 border border-theme-border text-theme-primary text-theme-primary font-black text-xs flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-xs shrink-0"
             :title="$t('pos.add_new_customer')"
             @click="$emit('open-new-customer-modal')"
         >

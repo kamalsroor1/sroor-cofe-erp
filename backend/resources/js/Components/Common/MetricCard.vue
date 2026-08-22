@@ -37,7 +37,7 @@ const valueColorClass = computed(() => {
         case 'danger':
             return 'text-rose-600 dark:text-rose-400';
         case 'warning':
-            return 'text-amber-600 dark:text-amber-400';
+            return 'text-theme-primary text-theme-primary';
         case 'slate':
             return 'text-slate-700 dark:text-slate-300';
         default:

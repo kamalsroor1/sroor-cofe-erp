@@ -25,7 +25,7 @@
             to="/super-admin/plans"
             class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition"
           >
-            <Layers class="w-4 h-4 text-amber-400" />
+            <Layers class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('super.plans_management') }}</span>
           </router-link>
         </div>
@@ -53,8 +53,8 @@
           </div>
 
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
-            <span class="text-amber-400 text-xs font-bold">{{ $t('super.trial_tenants') }}</span>
-            <div class="text-2xl font-black text-amber-400 font-mono">{{ metrics.trial_tenants || 0 }}</div>
+            <span class="text-theme-primary text-xs font-bold">{{ $t('super.trial_tenants') }}</span>
+            <div class="text-2xl font-black text-theme-primary font-mono">{{ metrics.trial_tenants || 0 }}</div>
             <div class="text-[10px] text-slate-500">{{ $t('super.under_trial') }}</div>
           </div>
 
@@ -77,7 +77,7 @@
           <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Layers class="w-4 h-4 text-amber-400" />
+                <Layers class="w-4 h-4 text-theme-primary" />
                 <span>{{ $t('super.tenants_distribution') }}</span>
               </h2>
             </div>
@@ -108,7 +108,7 @@
                 <Building2 class="w-4 h-4 text-purple-400" />
                 <span>{{ $t('super.recent_tenants') }}</span>
               </h2>
-              <router-link to="/super-admin/tenants" class="text-[11px] text-amber-400 hover:underline">
+              <router-link to="/super-admin/tenants" class="text-[11px] text-theme-primary hover:underline">
                 {{ $t('super.view_all_tenants_link') }}
               </router-link>
             </div>
@@ -124,7 +124,7 @@
                     <span>{{ t.name }}</span>
                     <span class="text-[10px] text-slate-400 font-mono">({{ t.domain }})</span>
                   </div>
-                  <div class="text-[10px] text-slate-400">{{ $t('super.subscribed_plan_col') }}: <span class="text-amber-400 font-bold">{{ t.plan_name }}</span></div>
+                  <div class="text-[10px] text-slate-400">{{ $t('super.subscribed_plan_col') }}: <span class="text-theme-primary font-bold">{{ t.plan_name }}</span></div>
                 </div>
 
                 <div class="flex items-center gap-3 self-end sm:self-center">
@@ -149,7 +149,7 @@
         <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg space-y-4">
           <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
                 <Sliders class="w-4 h-4" />
               </div>
               <div>
@@ -291,12 +291,12 @@
 
             <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg bg-theme-light text-theme-primary flex items-center justify-center">
                   <Server class="w-4 h-4" />
                 </div>
                 <div>
                   <span class="text-slate-400 text-[11px] block">بيئة التشغيل (Environment)</span>
-                  <span class="text-amber-500 font-bold font-mono text-xs">{{ systemInfo.environment || 'Production' }}</span>
+                  <span class="text-theme-primary font-bold font-mono text-xs">{{ systemInfo.environment || 'Production' }}</span>
                 </div>
               </div>
               <span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold">LIVE</span>
@@ -347,7 +347,7 @@ const formatMoney = (val) => {
 const getStatusBadgeClass = (status) => {
     switch (status) {
         case 'active': return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
-        case 'trial': return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+        case 'trial': return 'bg-theme-light border-theme-border text-theme-primary';
         case 'suspended': return 'bg-rose-500/10 border-rose-500/30 text-rose-400';
         default: return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
     }

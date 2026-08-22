@@ -2,7 +2,7 @@
   <div class="space-y-6 max-w-3xl mx-auto font-tajawal">
       <!-- Page Header -->
       <div class="flex items-center gap-3 bg-white dark:bg-slate-900/90 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+        <div class="w-10 h-10 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
           <User class="w-5 h-5" />
         </div>
         <div>
@@ -103,7 +103,7 @@
               type="button"
               @click="form.theme_preference = 'dark'"
               class="p-4 rounded-xl border text-center transition cursor-pointer"
-              :class="form.theme_preference === 'dark' ? 'bg-amber-500/10 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-400'"
+              :class="form.theme_preference === 'dark' ? 'bg-theme-light border-theme-primary text-theme-primary' : 'bg-slate-900 border-slate-700 text-slate-400'"
             >
               <div class="text-lg mb-1">🌙</div>
               <div class="font-bold">{{ $t('profile.theme_dark_slate') }}</div>
@@ -113,7 +113,7 @@
               type="button"
               @click="form.theme_preference = 'light'"
               class="p-4 rounded-xl border text-center transition cursor-pointer"
-              :class="form.theme_preference === 'light' ? 'bg-amber-500/10 border-amber-500 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-400'"
+              :class="form.theme_preference === 'light' ? 'bg-theme-light border-theme-primary text-theme-primary' : 'bg-slate-900 border-slate-700 text-slate-400'"
             >
               <div class="text-lg mb-1">☀️</div>
               <div class="font-bold">{{ $t('profile.theme_light_shell') }}</div>

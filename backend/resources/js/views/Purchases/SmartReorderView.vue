@@ -51,12 +51,12 @@
         </div>
 
         <!-- Warning Items -->
-        <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
+        <div class="p-4 rounded-2xl bg-theme-light/60 dark:bg-slate-900/90 border border-theme-border dark:border-theme-border shadow-sm dark:shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.warning_supply_range') }}</span>
-            <Clock class="w-4 h-4 text-amber-400" />
+            <Clock class="w-4 h-4 text-theme-primary" />
           </div>
-          <div class="text-2xl font-black text-amber-400 font-mono">
+          <div class="text-2xl font-black text-theme-primary font-mono">
             {{ metrics.warning_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
           </div>
           <span class="text-[10px] text-slate-500">{{ $t('purchases.warning_supply_desc') }}</span>
@@ -160,7 +160,7 @@
                     type="checkbox"
                     @change="toggleSelectAll"
                     :checked="isAllSelected"
-                    class="rounded border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+                    class="rounded border-slate-700 text-theme-primary focus:ring-0 cursor-pointer"
                   >
                 </th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('purchases.item_and_code') }}</th>
@@ -184,7 +184,7 @@
                     type="checkbox"
                     :value="it"
                     v-model="selectedItems"
-                    class="rounded border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+                    class="rounded border-slate-700 text-theme-primary focus:ring-0 cursor-pointer"
                   >
                 </td>
                 <td class="py-3.5 px-4">
@@ -197,10 +197,10 @@
                 <td class="py-3.5 px-4 text-end font-mono text-slate-400">
                   {{ it.avg_daily_consumption || '0.00' }} {{ $t('purchases.per_day') }}
                 </td>
-                <td class="py-3.5 px-4 text-center font-mono font-bold" :class="it.days_remaining <= 3 ? 'text-rose-400' : 'text-amber-400'">
+                <td class="py-3.5 px-4 text-center font-mono font-bold" :class="it.days_remaining <= 3 ? 'text-rose-400' : 'text-theme-primary'">
                   {{ it.days_remaining !== null ? $t('purchases.days_count', { count: it.days_remaining }) : $t('purchases.not_specified') }}
                 </td>
-                <td class="py-3.5 px-4 text-end font-mono font-black text-amber-400 text-sm">
+                <td class="py-3.5 px-4 text-end font-mono font-black text-theme-primary text-sm">
                   {{ it.suggested_reorder_qty }} {{ it.unit }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-400">
@@ -274,7 +274,7 @@ const getUrgencyBadge = (urgency) => {
         case 'critical':
             return 'bg-rose-500/10 border-rose-500/30 text-rose-400';
         case 'warning':
-            return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+            return 'bg-theme-light border-theme-border text-theme-primary';
         default:
             return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
     }

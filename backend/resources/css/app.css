@@ -352,7 +352,7 @@ input, textarea, [contenteditable="true"] {
     background-color: var(--color-primary) !important;
 }
 
-.hover\:bg-theme-hover:hover, .bg-theme-hover:hover {
+.hover\:bg-theme-hover:hover, .bg-theme-hover:hover, .hover\:bg-theme-primary:hover {
     background-color: var(--color-primary-hover) !important;
 }
 
@@ -364,7 +364,19 @@ input, textarea, [contenteditable="true"] {
     background-color: var(--color-primary-light) !important;
 }
 
+.hover\:bg-theme-light:hover {
+    background-color: var(--color-primary-light) !important;
+}
+
 .text-theme-primary {
+    color: var(--color-primary) !important;
+}
+
+.hover\:text-theme-primary:hover {
+    color: var(--color-primary) !important;
+}
+
+.group:hover .group-hover\:text-theme-primary {
     color: var(--color-primary) !important;
 }
 
@@ -372,14 +384,31 @@ input, textarea, [contenteditable="true"] {
     border-color: var(--color-primary) !important;
 }
 
+.hover\:border-theme-primary:hover {
+    border-color: var(--color-primary) !important;
+}
+
 .border-theme-border {
     border-color: var(--color-primary-border) !important;
 }
 
-.ring-theme-primary {
+.hover\:border-theme-border:hover {
+    border-color: var(--color-primary-border) !important;
+}
+
+.ring-theme-primary, .focus\:ring-theme-primary:focus {
     --tw-ring-color: var(--color-primary) !important;
+}
+
+.focus\:border-theme-primary:focus {
+    border-color: var(--color-primary) !important;
 }
 
 .shadow-theme-primary {
     box-shadow: 0 10px 20px -3px rgba(var(--color-primary-rgb), 0.35) !important;
+}
+
+::selection, .selection\:bg-theme-primary::selection {
+    background-color: var(--color-primary) !important;
+    color: #ffffff !important;
 }

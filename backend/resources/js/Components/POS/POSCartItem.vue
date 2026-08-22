@@ -142,7 +142,7 @@ const increaseQty = () => {
                         type="number"
                         inputmode="decimal"
                         step="0.001"
-                        class="w-16 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xs font-mono font-black text-amber-600 dark:text-amber-400 focus:outline-none focus:border-theme-primary shadow-inner"
+                        class="w-16 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xs font-mono font-black text-theme-primary text-theme-primary focus:outline-none focus:border-theme-primary shadow-inner"
                     />
 
                     <button
@@ -177,21 +177,21 @@ const increaseQty = () => {
                 <button
                     @click="setExactWeight(0.125)"
                     type="button"
-                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
+                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
                 >
                     1/8
                 </button>
                 <button
                     @click="setExactWeight(0.250)"
                     type="button"
-                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
+                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
                 >
                     1/4
                 </button>
                 <button
                     @click="setExactWeight(0.500)"
                     type="button"
-                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
+                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
                 >
                     1/2
                 </button>
@@ -206,13 +206,13 @@ const increaseQty = () => {
 
             <!-- Last Customer Price Tag (if available) -->
             <div v-if="line.last_sold_price" class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-900 text-[11px]">
-                <span class="text-amber-600 dark:text-amber-400 font-mono">
+                <span class="text-theme-primary text-theme-primary font-mono">
                     🏷️ {{ $t('pos.last_customer_price') }}: {{ formatMoney(line.last_sold_price.unit_price) }} {{ $t('common.currency') }}
                 </span>
                 <button
                     @click="emit('apply-last-price', line)"
                     type="button"
-                    class="h-7 px-3 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 font-black text-[10px] transition cursor-pointer"
+                    class="h-7 px-3 rounded-lg bg-theme-light hover:bg-theme-hover/30 text-theme-primary text-theme-primary font-black text-[10px] transition cursor-pointer"
                 >
                     {{ $t('pos.apply_btn') }}
                 </button>

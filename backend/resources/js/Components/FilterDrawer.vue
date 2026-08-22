@@ -43,7 +43,7 @@ onUnmounted(() => {
                         <!-- Drawer Header -->
                         <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between shrink-0">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-base shadow-xs">
+                                <div class="w-10 h-10 rounded-2xl bg-theme-primary/15 border border-theme-border text-theme-primary text-theme-primary flex items-center justify-center font-bold text-base shadow-xs">
                                     🔍
                                 </div>
                                 <div>

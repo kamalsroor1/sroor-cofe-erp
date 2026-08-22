@@ -16,7 +16,7 @@
           @click="fetchRecords"
           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition cursor-pointer"
         >
-          <RefreshCw class="w-4 h-4 text-amber-400" :class="{ 'animate-spin': isLoading }" />
+          <RefreshCw class="w-4 h-4 text-theme-primary" :class="{ 'animate-spin': isLoading }" />
           <span>{{ $t('trash.refresh_trash') }}</span>
         </button>
       </div>

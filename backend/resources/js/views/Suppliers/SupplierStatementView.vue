@@ -14,7 +14,7 @@
             <div>
               <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5">
                 <span>{{ $t('contacts.supplier_ledger_title') }}:</span>
-                <span class="text-amber-400">{{ supplier?.name }}</span>
+                <span class="text-theme-primary">{{ supplier?.name }}</span>
               </h1>
               <p class="text-xs text-slate-400 font-bold">
                 {{ $t('contacts.supplier_ledger_subtitle') }}
@@ -29,7 +29,7 @@
             @click="printStatement"
             class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
           >
-            <Printer class="w-4 h-4 text-amber-400" />
+            <Printer class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('common.print') }}</span>
           </button>
         </div>
@@ -58,7 +58,7 @@
           <div class="text-xs font-bold text-slate-400">{{ $t('contacts.closing_balance') }} ({{ $t('contacts.due_to_supplier') }})</div>
           <div
             class="text-xl font-black font-mono"
-            :class="supplier?.current_balance > 0 ? 'text-amber-400' : 'text-emerald-400'"
+            :class="supplier?.current_balance > 0 ? 'text-theme-primary' : 'text-emerald-400'"
           >
             {{ formatMoney(supplier?.current_balance || 0) }} <span class="text-xs text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
           </div>
@@ -161,14 +161,14 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
                 <td class="py-3.5 px-4 font-mono text-slate-300">{{ row.date }}</td>
                 <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ row.type }}</td>
-                <td class="py-3.5 px-4 font-mono text-amber-400">{{ row.ref_number || '—' }}</td>
+                <td class="py-3.5 px-4 font-mono text-theme-primary">{{ row.ref_number || '—' }}</td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold" :class="row.credit > 0 ? 'text-white' : 'text-slate-500'">
                   {{ formatMoney(row.credit) }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold" :class="row.debit > 0 ? 'text-emerald-400' : 'text-slate-500'">
                   {{ formatMoney(row.debit) }}
                 </td>
-                <td class="py-3.5 px-4 text-end font-mono font-black" :class="row.balance_after > 0 ? 'text-amber-400' : 'text-emerald-400'">
+                <td class="py-3.5 px-4 text-end font-mono font-black" :class="row.balance_after > 0 ? 'text-theme-primary' : 'text-emerald-400'">
                   {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
                 </td>
                 <td class="py-3.5 px-4 font-tajawal text-slate-400 max-w-xs truncate">{{ row.notes || '—' }}</td>

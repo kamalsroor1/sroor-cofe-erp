@@ -47,9 +47,9 @@
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('returns.purchase_returns_title') }}</span>
-            <RotateCw class="w-4 h-4 text-amber-400" />
+            <RotateCw class="w-4 h-4 text-theme-primary" />
           </div>
-          <div class="text-2xl font-black text-amber-400 font-mono">
+          <div class="text-2xl font-black text-theme-primary font-mono">
             {{ summary.purchase_count || 0 }} <span class="text-xs text-slate-400">{{ $t('returns.doc_unit') }}</span>
           </div>
           <span class="text-[10px] text-slate-500">{{ $t('returns.purchase_returns_sub') }}</span>
@@ -143,13 +143,13 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
                 </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
                   {{ ret.return_number }}
                 </td>
                 <td class="py-3.5 px-4">
                   <span
                     class="px-2.5 py-1 rounded-full text-[10px] font-bold border font-tajawal"
-                    :class="ret.return_type === 'sales_return' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'"
+                    :class="ret.return_type === 'sales_return' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-theme-light border-theme-border text-theme-primary'"
                   >
                     {{ ret.return_type === 'sales_return' ? $t('returns.sales_return_option') : $t('returns.purchase_return_option') }}
                   </span>
@@ -259,7 +259,7 @@
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('returns.party_name') }}:</span>
-              <span class="text-amber-400 font-bold">{{ selectedReturnDetails.party_name }}</span>
+              <span class="text-theme-primary font-bold">{{ selectedReturnDetails.party_name }}</span>
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('common.date') }}:</span>
@@ -285,7 +285,7 @@
               <tbody class="divide-y divide-slate-800/50">
                 <tr v-for="it in selectedReturnDetails.items" :key="it.id">
                   <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ it.item_name }}</td>
-                  <td class="p-2.5 text-end font-mono text-amber-400">{{ it.quantity }} {{ it.unit }}</td>
+                  <td class="p-2.5 text-end font-mono text-theme-primary">{{ it.quantity }} {{ it.unit }}</td>
                   <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(it.unit_price) }} {{ $t('common.currency') }}</td>
                   <td class="p-2.5 text-end font-mono font-bold text-rose-400">{{ formatMoney(it.total_price) }} {{ $t('common.currency') }}</td>
                 </tr>

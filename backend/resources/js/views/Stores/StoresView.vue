@@ -12,7 +12,7 @@
               to="/stores/stocks"
               class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2 font-tajawal shadow-sm"
             >
-              <Package class="w-4 h-4 text-amber-400" />
+              <Package class="w-4 h-4 text-theme-primary" />
               <span>{{ $t('inventory.branch_stocks_balance') }}</span>
             </router-link>
 
@@ -154,7 +154,7 @@
               <button
                 type="button"
                 @click="openEditModal(store)"
-                class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
+                class="p-2 text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
                 :title="$t('common.edit')"
               >
                 <Pencil class="w-4 h-4" />
@@ -276,7 +276,7 @@
               <input
                 v-model="form.is_main"
                 type="checkbox"
-                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
+                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-theme-primary focus:ring-theme-primary/20"
               >
               <span class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ $t('inventory.is_main_branch') }}</span>
             </label>
@@ -285,7 +285,7 @@
               <input
                 v-model="form.is_active"
                 type="checkbox"
-                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
+                class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-theme-primary focus:ring-theme-primary/20"
               >
               <span class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ $t('inventory.is_active_branch') }}</span>
             </label>
@@ -335,7 +335,7 @@
                   type="checkbox"
                   :value="user.id"
                   v-model="assignedUserIds"
-                  class="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
+                  class="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-700 text-theme-primary focus:ring-theme-primary/20"
                 >
                 <div>
                   <div class="text-xs font-bold text-slate-900 dark:text-white font-tajawal">{{ user.name }}</div>

@@ -62,7 +62,7 @@
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('invoices.invoices_count_label') }}</span>
-            <FileText class="w-4 h-4 text-amber-400" />
+            <FileText class="w-4 h-4 text-theme-primary" />
           </div>
           <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
             {{ summary.total_count || 0 }} <span class="text-xs text-slate-400">{{ $t('invoices.invoice_unit') }}</span>
@@ -163,7 +163,7 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
                 </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
                   {{ inv.invoice_number }}
                 </td>
                 <td class="py-3.5 px-4">
@@ -294,7 +294,7 @@
             </div>
             <div>
               <span class="text-slate-400 block font-bold">{{ $t('invoices.payment_method') }}:</span>
-              <span class="font-bold text-amber-400">{{ formatPaymentType(selectedInvoiceDetails.payment_type) }}</span>
+              <span class="font-bold text-theme-primary">{{ formatPaymentType(selectedInvoiceDetails.payment_type) }}</span>
             </div>
           </div>
 
@@ -312,7 +312,7 @@
               <tbody class="divide-y divide-slate-800/50">
                 <tr v-for="it in selectedInvoiceDetails.items" :key="it.id">
                   <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ it.item_name }}</td>
-                  <td class="p-2.5 text-end font-mono text-amber-400">{{ it.quantity }} {{ it.unit }}</td>
+                  <td class="p-2.5 text-end font-mono text-theme-primary">{{ it.quantity }} {{ it.unit }}</td>
                   <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(it.unit_price) }} {{ $t('common.currency') }}</td>
                   <td class="p-2.5 text-end font-mono font-bold text-emerald-400">{{ formatMoney(it.total_price) }} {{ $t('common.currency') }}</td>
                 </tr>
@@ -361,7 +361,7 @@
               @click="window.print()"
               class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <Printer class="w-4 h-4 text-amber-400" />
+              <Printer class="w-4 h-4 text-theme-primary" />
               <span>{{ $t('invoices.print_receipt_btn') }}</span>
             </button>
           </div>

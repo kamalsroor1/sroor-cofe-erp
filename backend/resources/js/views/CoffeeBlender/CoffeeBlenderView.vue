@@ -242,7 +242,7 @@
 
               <div class="flex justify-between text-xs text-slate-400 font-sans">
                 <span>{{ $t('inventory.profit_margin') }}:</span>
-                <span class="font-mono font-bold text-amber-400">{{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }} {{ $t('common.currency') }})</span>
+                <span class="font-mono font-bold text-theme-primary">{{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }} {{ $t('common.currency') }})</span>
               </div>
             </div>
 

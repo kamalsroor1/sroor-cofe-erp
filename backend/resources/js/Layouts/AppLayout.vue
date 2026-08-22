@@ -242,7 +242,7 @@ const getUserRoleLabel = computed(() => {
 </script>
 
 <template>
-    <div class="h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-amber-500 selection:text-white transition-colors duration-200" dir="rtl">
+    <div class="h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-theme-primary selection:text-white transition-colors duration-200" dir="rtl">
         <!-- Desktop Sidebar Navigation (Static in Flow on lg) -->
         <aside
             id="main-sidebar"
@@ -451,8 +451,8 @@ const getUserRoleLabel = computed(() => {
             <!-- Super Admin Impersonation Alert Banner -->
             <div v-if="$page.props.auth?.is_impersonating" class="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-900 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs font-bold font-tajawal z-40 border-b border-purple-500/30 shadow-md shrink-0">
                 <div class="flex items-center gap-2">
-                    <Crown class="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
-                    <span>أنت تتصفح متجر <strong class="text-amber-400 font-black">({{ tenant?.name }})</strong> حالياً كمسؤول من لوحة السوبر أدمن المركزية</span>
+                    <Crown class="w-4 h-4 text-theme-primary animate-pulse shrink-0" />
+                    <span>أنت تتصفح متجر <strong class="text-theme-primary font-black">({{ tenant?.name }})</strong> حالياً كمسؤول من لوحة السوبر أدمن المركزية</span>
                 </div>
                 <button
                     @click="router.post('/impersonate/leave')"
@@ -616,7 +616,7 @@ const getUserRoleLabel = computed(() => {
                         class="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/90 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer shrink-0 shadow-xs hover:text-theme-primary"
                         :title="currentTheme === 'dark' ? 'التحويل للوضع النهاري (Light)' : 'التحويل للوضع الليلي (Dark)'"
                     >
-                        <Sun v-if="currentTheme === 'dark'" class="w-4 h-4 text-amber-400" />
+                        <Sun v-if="currentTheme === 'dark'" class="w-4 h-4 text-theme-primary" />
                         <Moon v-else class="w-4 h-4 text-slate-700" />
                     </button>
 
@@ -730,7 +730,7 @@ const getUserRoleLabel = computed(() => {
                             class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition"
                         >
                             <div class="flex items-center gap-2.5">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="n.type === 'danger' ? 'bg-rose-500 animate-pulse' : (n.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500')"></span>
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="n.type === 'danger' ? 'bg-rose-500 animate-pulse' : (n.type === 'warning' ? 'bg-theme-primary' : 'bg-blue-500')"></span>
                                 <span class="text-xs font-black text-slate-900 dark:text-white">{{ n.title }}</span>
                             </div>
                             <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{{ n.description }}</p>

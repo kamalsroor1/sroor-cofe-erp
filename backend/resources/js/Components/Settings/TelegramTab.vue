@@ -95,7 +95,7 @@ defineEmits([
                             type="button"
                             class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
-                            <RotateCcw class="w-4 h-4 text-amber-500" />
+                            <RotateCcw class="w-4 h-4 text-theme-primary" />
                             <span>{{ $t('settings.send_overdue_shifts') }}</span>
                         </button>
 

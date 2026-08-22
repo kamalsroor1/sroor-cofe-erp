@@ -17,7 +17,7 @@
             @click="fetchLogs"
             class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition cursor-pointer"
           >
-            <RefreshCw class="w-4 h-4 text-amber-400" :class="{ 'animate-spin': isLoading }" />
+            <RefreshCw class="w-4 h-4 text-theme-primary" :class="{ 'animate-spin': isLoading }" />
             <span>{{ $t('activity.refresh_log') }}</span>
           </button>
         </div>
@@ -38,8 +38,8 @@
         </div>
 
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
-          <div class="text-amber-400 text-xs font-bold">{{ $t('activity.today_users') }}</div>
-          <div class="text-2xl font-black text-amber-400 font-mono">{{ stats.today_users || 0 }}</div>
+          <div class="text-theme-primary text-xs font-bold">{{ $t('activity.today_users') }}</div>
+          <div class="text-2xl font-black text-theme-primary font-mono">{{ stats.today_users || 0 }}</div>
           <div class="text-[10px] text-slate-500">{{ $t('activity.sub_users_desc') }}</div>
         </div>
 
@@ -284,7 +284,7 @@ const getActionBadgeClass = (action) => {
         return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
     }
     if (['updated', 'shift_opened', 'shift_closed'].includes(action)) {
-        return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+        return 'bg-theme-light border-theme-border text-theme-primary';
     }
     return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
 };

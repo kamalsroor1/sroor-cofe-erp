@@ -82,7 +82,7 @@
                 <!-- Version Comparison Badge -->
                 <div class="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-bold">
                   <span class="text-slate-400">{{ $t('app_update.current_version') }} v{{ currentVersionName }}</span>
-                  <span class="text-amber-400 font-mono">➔</span>
+                  <span class="text-theme-primary font-mono">➔</span>
                   <span class="text-emerald-400 font-black">v{{ latestVersionData?.latest_version || '1.1.0' }}</span>
                 </div>
               </div>
@@ -103,7 +103,7 @@
                 <!-- Metadata Chips -->
                 <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-slate-400 text-[11px]">
                   <div class="flex items-center gap-1.5">
-                    <HardDrive class="w-4 h-4 text-amber-400" />
+                    <HardDrive class="w-4 h-4 text-theme-primary" />
                     <span>{{ $t('app_update.file_size') }}</span>
                     <span class="text-white font-bold">{{ latestVersionData?.file_size || '18.5 MB' }}</span>
                   </div>
@@ -118,7 +118,7 @@
                 <!-- Changelog / Release Notes -->
                 <div>
                   <div class="font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                    <Sparkles class="w-4 h-4 text-amber-400" />
+                    <Sparkles class="w-4 h-4 text-theme-primary" />
                     <span>{{ $t('app_update.changelog_title') }}</span>
                   </div>
 
@@ -129,7 +129,7 @@
                         :key="idx"
                         class="flex items-start gap-2 text-[11px]"
                       >
-                        <span class="text-amber-400 shrink-0">•</span>
+                        <span class="text-theme-primary shrink-0">•</span>
                         <span>{{ note }}</span>
                       </div>
                     </template>
@@ -142,7 +142,7 @@
                 <!-- Download Progress Bar (When Downloading) -->
                 <div v-if="isDownloading" class="space-y-2 pt-2">
                   <div class="flex items-center justify-between text-[11px] font-bold">
-                    <span class="text-amber-400 animate-pulse">{{ $t('app_update.downloading_package') }}</span>
+                    <span class="text-theme-primary animate-pulse">{{ $t('app_update.downloading_package') }}</span>
                     <span class="text-white font-mono">{{ downloadProgress }}%</span>
                   </div>
                   <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">

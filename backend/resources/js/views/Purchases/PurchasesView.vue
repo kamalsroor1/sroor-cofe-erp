@@ -13,7 +13,7 @@
               to="/purchases/smart-reorder"
               class="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-purple-500/20"
             >
-              <Sparkles class="w-4 h-4 text-amber-300" />
+              <Sparkles class="w-4 h-4 text-theme-primary" />
               <span>{{ $t('purchases.smart_reorder_radar') }}</span>
             </router-link>
 
@@ -67,7 +67,7 @@
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-400">{{ $t('purchases.confirmed_count') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
               <FileCheck class="w-4 h-4" />
             </div>
           </div>
@@ -158,7 +158,7 @@
                 <td class="py-3.5 px-4 font-mono text-slate-500">
                   {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
                 </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
+                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
                   {{ p.purchase_number }}
                 </td>
                 <td class="py-3.5 px-4">
@@ -305,7 +305,7 @@
               <tbody class="divide-y divide-slate-800/50">
                 <tr v-for="item in selectedPurchase.items" :key="item.id">
                   <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ item.item_name }}</td>
-                  <td class="p-2.5 text-end font-mono text-amber-400">{{ item.quantity }} {{ item.unit }}</td>
+                  <td class="p-2.5 text-end font-mono text-theme-primary">{{ item.quantity }} {{ item.unit }}</td>
                   <td class="p-2.5 text-end font-mono text-slate-300">{{ formatMoney(item.cost_price) }} {{ $t('common.currency') }}</td>
                   <td class="p-2.5 text-end font-mono font-bold text-emerald-400">{{ formatMoney(item.total_price) }} {{ $t('common.currency') }}</td>
                 </tr>
@@ -323,7 +323,7 @@
               <span>{{ $t('purchases.discount_earned') }}</span>
               <span class="font-mono">-{{ formatMoney(selectedPurchase.discount_amount) }} {{ $t('common.currency') }}</span>
             </div>
-            <div v-if="selectedPurchase.additional_expenses_total > 0" class="flex justify-between text-amber-400 font-tajawal">
+            <div v-if="selectedPurchase.additional_expenses_total > 0" class="flex justify-between text-theme-primary font-tajawal">
               <span>{{ $t('purchases.additional_expenses_loaded') }}</span>
               <span class="font-mono">+{{ formatMoney(selectedPurchase.additional_expenses_total) }} {{ $t('common.currency') }}</span>
             </div>

@@ -16,7 +16,7 @@ const emit = defineEmits(['save']);
 const { applyColorTheme } = useTheme();
 
 const palettes = computed(() => [
-    { id: 'amber', name: trans('settings.palette_amber_name'), sub: trans('settings.palette_amber_sub'), hex: '#f59e0b', ring: 'ring-amber-500', bg: 'bg-amber-500', icon: '🌟' },
+    { id: 'amber', name: trans('settings.palette_amber_name'), sub: trans('settings.palette_amber_sub'), hex: '#f59e0b', ring: 'ring-theme-primary', bg: 'bg-theme-primary', icon: '🌟' },
     { id: 'emerald', name: trans('settings.palette_emerald_name'), sub: trans('settings.palette_emerald_sub'), hex: '#10b981', ring: 'ring-emerald-500', bg: 'bg-emerald-500', icon: '🌿' },
     { id: 'blue', name: trans('settings.palette_blue_name'), sub: trans('settings.palette_blue_sub'), hex: '#3b82f6', ring: 'ring-blue-500', bg: 'bg-blue-500', icon: '🔵' },
     { id: 'purple', name: trans('settings.palette_purple_name'), sub: trans('settings.palette_purple_sub'), hex: '#a855f7', ring: 'ring-purple-500', bg: 'bg-purple-500', icon: '🟣' },

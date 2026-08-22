@@ -40,7 +40,7 @@
                 <span>↗</span>
               </a>
               <span>•</span>
-              <span>الباقة: <strong class="text-amber-500">{{ tenant.plan?.name || 'مخصصة' }}</strong></span>
+              <span>الباقة: <strong class="text-theme-primary">{{ tenant.plan?.name || 'مخصصة' }}</strong></span>
             </div>
           </div>
         </div>
@@ -123,7 +123,7 @@
             <span>فواتير المبيعات</span>
             <span class="text-base">🧾</span>
           </div>
-          <div class="text-2xl font-black text-amber-500 font-mono mt-3">
+          <div class="text-2xl font-black text-theme-primary font-mono mt-3">
             {{ stats.invoices_count || 0 }}
           </div>
           <div class="text-[10px] text-slate-400 mt-1 font-sans">فاتورة صادرة</div>
@@ -362,7 +362,7 @@ const getStatusBadgeClass = (status) => {
         case 'active':
             return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
         case 'trial':
-            return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30';
+            return 'bg-theme-light text-theme-primary text-theme-primary border-theme-border';
         case 'suspended':
             return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30';
         default:

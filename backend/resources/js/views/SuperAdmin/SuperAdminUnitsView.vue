@@ -58,7 +58,7 @@
             <span class="text-sm font-black">{{ u }}</span>
             <span
               class="px-1.5 py-0.2 rounded text-[10px] font-bold"
-              :class="isDiscrete(u) ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300'"
+              :class="isDiscrete(u) ? 'bg-theme-light text-theme-primary text-theme-primary' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300'"
             >
               {{ isDiscrete(u) ? 'عددية (ممنوع الكسور)' : 'وزن/حجم (تقبل الكسور)' }}
             </span>

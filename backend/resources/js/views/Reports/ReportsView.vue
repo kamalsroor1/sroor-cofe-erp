@@ -132,7 +132,7 @@
           <!-- Operating Expenses -->
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.operating_expenses_label') }}</span>
-            <div class="text-2xl font-black text-amber-400 font-mono">{{ formatMoney(summary.total_expenses) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
+            <div class="text-2xl font-black text-theme-primary font-mono">{{ formatMoney(summary.total_expenses) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.expenses_count_label', { count: summary.expenses_count }) }}</span>
           </div>
 
@@ -158,7 +158,7 @@
           <!-- Receivables in Period -->
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.remaining_receivables_period') }}</span>
-            <div class="text-xl font-black text-amber-400 font-mono">{{ formatMoney(summary.total_remaining) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
+            <div class="text-xl font-black text-theme-primary font-mono">{{ formatMoney(summary.total_remaining) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-slate-500">{{ $t('reports.total_customers_debt_sub', { amount: formatMoney(summary.total_customers_debt) }) }}</span>
           </div>
         </div>
@@ -193,7 +193,7 @@
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(it.total_revenue) }}</td>
                 <td class="p-3 text-end font-mono text-rose-400">{{ formatMoney(it.total_cogs) }}</td>
                 <td class="p-3 text-end font-mono font-black text-emerald-400">{{ formatMoney(it.profit) }}</td>
-                <td class="p-3 text-end font-mono font-bold text-amber-400">{{ it.margin }}%</td>
+                <td class="p-3 text-end font-mono font-bold text-theme-primary">{{ it.margin }}%</td>
               </tr>
             </tbody>
           </table>
@@ -225,10 +225,10 @@
                 <td class="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">{{ st.invoice_count }}</td>
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(st.total_sales) }}</td>
                 <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(st.total_paid) }}</td>
-                <td class="p-3 text-end font-mono text-amber-400">{{ formatMoney(st.total_remaining) }}</td>
+                <td class="p-3 text-end font-mono text-theme-primary">{{ formatMoney(st.total_remaining) }}</td>
                 <td class="p-3 text-end font-mono font-black text-emerald-400">{{ formatMoney(st.gross_profit) }}</td>
                 <td class="p-3 text-end font-mono font-bold text-cyan-400">{{ st.margin }}%</td>
-                <td class="p-3 text-end font-mono font-black text-amber-400">{{ st.share_pct }}%</td>
+                <td class="p-3 text-end font-mono font-black text-theme-primary">{{ st.share_pct }}%</td>
               </tr>
             </tbody>
           </table>
@@ -261,7 +261,7 @@
                 <td class="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">{{ c.total_invoices }}</td>
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(c.total_bought) }}</td>
                 <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(c.total_paid) }}</td>
-                <td class="p-3 text-end font-mono text-amber-400">{{ formatMoney(c.total_debt_in_period) }}</td>
+                <td class="p-3 text-end font-mono text-theme-primary">{{ formatMoney(c.total_debt_in_period) }}</td>
                 <td class="p-3 text-end font-mono font-bold" :class="c.current_balance > 0 ? 'text-rose-400' : 'text-emerald-400'">
                   {{ formatMoney(c.current_balance) }} {{ $t('common.currency') }}
                 </td>
@@ -283,7 +283,7 @@
             class="p-4 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2"
           >
             <div class="flex items-center justify-between text-xs font-bold">
-              <span class="text-amber-400 font-tajawal">{{ e.category }}</span>
+              <span class="text-theme-primary font-tajawal">{{ e.category }}</span>
               <span class="text-slate-400 font-mono">{{ $t('reports.vouchers_count', { count: e.count }) }}</span>
             </div>
             <div class="text-xl font-black text-slate-900 dark:text-white font-mono">

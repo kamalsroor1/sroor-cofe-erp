@@ -10,7 +10,7 @@
           <div class="flex items-center gap-2 flex-wrap">
             <!-- Date Filter Picker -->
             <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
-              <Calendar class="w-4 h-4 text-amber-400" />
+              <Calendar class="w-4 h-4 text-theme-primary" />
               <input
                 v-model="selectedDate"
                 @change="fetchDailyJournal"
@@ -86,7 +86,7 @@
             @click="printActiveZReport"
             class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Printer class="w-3.5 h-3.5 text-amber-400" />
+            <Printer class="w-3.5 h-3.5 text-theme-primary" />
             <span>{{ $t('treasury.print_z_report') }}</span>
           </button>
         </div>
@@ -94,11 +94,11 @@
 
       <div
         v-else
-        class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 shadow-md flex items-center justify-between gap-3"
+        class="p-4 rounded-2xl bg-theme-light border border-theme-border shadow-md flex items-center justify-between gap-3"
       >
         <div class="flex items-center gap-3">
-          <AlertCircle class="w-5 h-5 text-amber-400 shrink-0" />
-          <span class="text-xs font-bold text-amber-300">
+          <AlertCircle class="w-5 h-5 text-theme-primary shrink-0" />
+          <span class="text-xs font-bold text-theme-primary">
             {{ $t('treasury.no_open_shift_warning') }}
           </span>
         </div>
@@ -136,7 +136,7 @@
           <span class="text-[11px] font-bold text-slate-400 block">{{ $t('treasury.net_cash_flow') }}</span>
           <div
             class="text-xl font-black font-mono"
-            :class="(summary.net_cash_today || 0) >= 0 ? 'text-cyan-400' : 'text-amber-400'"
+            :class="(summary.net_cash_today || 0) >= 0 ? 'text-cyan-400' : 'text-theme-primary'"
           >
             {{ (summary.net_cash_today || 0) > 0 ? '+' : '' }}{{ formatMoney(summary.net_cash_today || 0) }} <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
           </div>
@@ -144,10 +144,10 @@
         </div>
 
         <!-- Expected Cash In Drawer -->
-        <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-slate-900 dark:to-slate-950 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
-          <span class="text-[11px] font-bold text-amber-600 dark:text-amber-300 block">{{ $t('treasury.expected_drawer_balance') }}</span>
-          <div class="text-xl font-black text-amber-600 dark:text-theme-primary font-mono">
-            {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-amber-600/80 dark:text-amber-300/80 font-normal">{{ $t('common.currency') }}</span>
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-slate-900 dark:to-slate-950 border border-theme-border dark:border-theme-border shadow-sm dark:shadow-md space-y-1">
+          <span class="text-[11px] font-bold text-theme-primary text-theme-primary block">{{ $t('treasury.expected_drawer_balance') }}</span>
+          <div class="text-xl font-black text-theme-primary dark:text-theme-primary font-mono">
+            {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-theme-primary/80 text-theme-primary/80 font-normal">{{ $t('common.currency') }}</span>
           </div>
           <span class="text-[10px] text-slate-400 block">{{ $t('treasury.expected_drawer_sub') }}</span>
         </div>
@@ -203,7 +203,7 @@
               <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
                 <tr v-for="(inv, idx) in invoices" :key="inv.id" class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
                   <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
-                  <td class="py-3.5 px-4 font-mono font-bold text-amber-400">{{ inv.invoice_number }}</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">{{ inv.invoice_number }}</td>
                   <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ inv.customer_name }}</td>
                   <td class="py-3.5 px-4 font-mono text-slate-400">{{ inv.time || '—' }}</td>
                   <td class="py-3.5 px-4 text-center">
@@ -252,7 +252,7 @@
               <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
                 <tr v-for="(e, idx) in expenses" :key="e.id" class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
                   <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
-                  <td class="py-3.5 px-4 font-mono font-bold text-amber-400">{{ e.expense_number }}</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">{{ e.expense_number }}</td>
                   <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ e.title }}</td>
                   <td class="py-3.5 px-4 font-tajawal text-slate-300">{{ e.cost_center_label || e.cost_center }}</td>
                   <td class="py-3.5 px-4 text-center">
@@ -649,7 +649,7 @@ const getDiffClass = () => {
     const expected = parseFloat(summary.value?.expected_cash_in_drawer) || 0;
     const diff = actual - expected;
     if (Math.abs(diff) < 0.001) return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
-    if (diff > 0) return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+    if (diff > 0) return 'bg-theme-light border-theme-border text-theme-primary';
     return 'bg-rose-500/10 border-rose-500/30 text-rose-400';
 };
 

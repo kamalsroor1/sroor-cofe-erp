@@ -64,7 +64,7 @@
               type="button"
               @click="setStockStatus('low')"
               class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all cursor-pointer"
-              :class="stockStatus === 'low' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
+              :class="stockStatus === 'low' ? 'bg-theme-light text-theme-primary border border-theme-border' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
             >
               ⚠️ {{ $t('inventory.low_stock') }}
             </button>
@@ -109,18 +109,18 @@
                 v-for="(stock, idx) in stocks"
                 :key="stock.id"
                 class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
-                :class="stock.is_out_of_stock ? 'bg-rose-500/5' : (stock.is_low_stock ? 'bg-amber-500/5' : '')"
+                :class="stock.is_out_of_stock ? 'bg-rose-500/5' : (stock.is_low_stock ? 'bg-theme-light' : '')"
               >
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}</td>
                 <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ stock.item_name }}</td>
                 <td class="py-3.5 px-4 font-mono text-slate-400">{{ stock.item_code }}</td>
                 <td class="py-3.5 px-4 text-center font-tajawal text-slate-300">{{ stock.unit || $t('inventory.unit_piece_short') }}</td>
-                <td class="py-3.5 px-4 text-center font-mono font-black text-sm" :class="stock.is_out_of_stock ? 'text-rose-400' : (stock.is_low_stock ? 'text-amber-400' : 'text-emerald-400')">
+                <td class="py-3.5 px-4 text-center font-mono font-black text-sm" :class="stock.is_out_of_stock ? 'text-rose-400' : (stock.is_low_stock ? 'text-theme-primary' : 'text-emerald-400')">
                   {{ formatDecimal(stock.quantity) }}
                 </td>
                 <td class="py-3.5 px-4 text-center font-mono text-slate-400">{{ formatDecimal(stock.min_stock_level) }}</td>
                 <td class="py-3.5 px-4 text-end font-mono text-slate-300">{{ formatMoney(stock.cost_price) }} {{ $t('common.currency') }}</td>
-                <td class="py-3.5 px-4 text-end font-mono font-bold text-amber-400">{{ formatMoney(stock.total_valuation) }} {{ $t('common.currency') }}</td>
+                <td class="py-3.5 px-4 text-end font-mono font-bold text-theme-primary">{{ formatMoney(stock.total_valuation) }} {{ $t('common.currency') }}</td>
                 <td class="py-3.5 px-4 text-center">
                   <span
                     v-if="stock.is_out_of_stock"
@@ -130,7 +130,7 @@
                   </span>
                   <span
                     v-else-if="stock.is_low_stock"
-                    class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 font-tajawal"
+                    class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-theme-light text-theme-primary border border-theme-border font-tajawal"
                   >
                     {{ $t('inventory.low_stock_badge') }}
                   </span>

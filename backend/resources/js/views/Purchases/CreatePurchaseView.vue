@@ -24,7 +24,7 @@
       <form @submit.prevent="submitPurchase" class="space-y-6">
         <!-- Supplier & Metadata Card -->
         <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
-          <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
+          <h2 class="text-xs font-black text-theme-primary flex items-center gap-2">
             <Factory class="w-4 h-4" />
             <span>{{ $t('purchases.supplier_po_section') }}</span>
           </h2>
@@ -78,7 +78,7 @@
         <!-- Items Table Card -->
         <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-xs font-black text-amber-400 flex items-center gap-2">
+            <h2 class="text-xs font-black text-theme-primary flex items-center gap-2">
               <Package class="w-4 h-4" />
               <span>{{ $t('purchases.supply_items_section') }}</span>
             </h2>
@@ -86,7 +86,7 @@
             <button
               type="button"
               @click="addItemLine"
-              class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              class="px-3 py-1.5 bg-theme-light hover:bg-theme-hover/20 text-theme-primary border border-theme-border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Plus class="w-3.5 h-3.5" />
               <span>{{ $t('purchases.add_item_line') }}</span>
@@ -127,7 +127,7 @@
                       step="0.001"
                       min="0.001"
                       required
-                      class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-amber-400 font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                      class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-theme-primary font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
                       placeholder="1.000"
                     >
                   </td>

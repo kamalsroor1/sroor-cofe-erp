@@ -141,7 +141,7 @@
 
                     <button
                       @click="openStatusModal(t)"
-                      class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-amber-500 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
+                      class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-theme-primary border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
                       title="تعديل الحالة"
                     >
                       ⚙️
@@ -259,7 +259,7 @@
             <!-- Custom MySQL Database Credentials (for Hostinger Manual/Custom DBs) -->
             <div class="bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-amber-400">🗄️ إعدادات قاعدة بيانات MySQL (لهوستنجر / اختياري)</span>
+                <span class="text-xs font-bold text-theme-primary">🗄️ إعدادات قاعدة بيانات MySQL (لهوستنجر / اختياري)</span>
               </div>
               
               <div>
@@ -558,7 +558,7 @@ const confirmDeleteTenant = async (tenant) => {
 const getStatusBadgeClass = (status) => {
     switch (status) {
         case 'active': return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
-        case 'trial': return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+        case 'trial': return 'bg-theme-light border-theme-border text-theme-primary';
         case 'suspended': return 'bg-rose-500/10 border-rose-500/30 text-rose-400';
         default: return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
     }

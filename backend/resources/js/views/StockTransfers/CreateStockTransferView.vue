@@ -143,7 +143,7 @@
                         type="number"
                         step="0.001"
                         min="0.001"
-                        class="w-24 h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
+                        class="w-24 h-8 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-theme-primary focus:outline-none"
                       >
                       <span class="text-slate-400 text-[10px] font-tajawal">{{ item.unit }}</span>
                     </div>

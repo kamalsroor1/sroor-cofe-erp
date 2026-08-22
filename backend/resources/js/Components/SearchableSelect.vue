@@ -129,7 +129,7 @@ onUnmounted(() => {
             @click="toggleDropdown"
             class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-theme-primary/50 shadow-inner"
             :class="[
-                isOpen ? 'border-amber-500 ring-2 ring-amber-500/20' : '',
+                isOpen ? 'border-theme-primary ring-2 ring-theme-primary/20' : '',
                 selectedOption ? 'font-bold' : 'text-slate-500 dark:text-slate-400'
             ]"
         >
@@ -154,7 +154,7 @@ onUnmounted(() => {
                 </button>
 
                 <!-- Arrow Indicator -->
-                <span class="text-xs text-slate-400 dark:text-slate-500 transition-transform duration-200" :class="isOpen ? 'rotate-180 text-amber-500' : ''">
+                <span class="text-xs text-slate-400 dark:text-slate-500 transition-transform duration-200" :class="isOpen ? 'rotate-180 text-theme-primary' : ''">
                     ▼
                 </span>
             </div>
@@ -191,7 +191,7 @@ onUnmounted(() => {
                     class="px-3 py-2.5 rounded-xl flex items-center justify-between gap-2 cursor-pointer transition text-xs sm:text-sm active:scale-98 min-h-[40px]"
                     :class="[
                         getOptionValue(opt) == modelValue
-                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-black border border-amber-500/30'
+                            ? 'bg-theme-primary/15 text-theme-primary text-theme-primary font-black border border-theme-border'
                             : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                     ]"
                 >
@@ -203,7 +203,7 @@ onUnmounted(() => {
                         </div>
                     </slot>
 
-                    <span v-if="getOptionValue(opt) == modelValue" class="text-amber-500 font-bold text-xs">
+                    <span v-if="getOptionValue(opt) == modelValue" class="text-theme-primary font-bold text-xs">
                         ✓
                     </span>
                 </div>

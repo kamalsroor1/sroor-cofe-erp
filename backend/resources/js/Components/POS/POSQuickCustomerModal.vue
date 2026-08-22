@@ -82,7 +82,7 @@ const handleSave = saveCustomer;
                                     type="button"
                                     @click="form.price_tier = 'retail'"
                                     class="p-2.5 rounded-xl border text-center transition active:scale-95 cursor-pointer font-bold"
-                                    :class="form.price_tier === 'retail' ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-400' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
+                                    :class="form.price_tier === 'retail' ? 'bg-theme-primary/15 border-theme-primary text-theme-primary text-theme-primary' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
                                 >
                                     {{ $t('customers.retail') }}
                                 </button>

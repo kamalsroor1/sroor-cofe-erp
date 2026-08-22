@@ -8,7 +8,7 @@
           v-if="selectedSection && isMobileView"
           type="button"
           @click="selectedSection = null"
-          class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs shrink-0"
+          class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 text-theme-primary flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs shrink-0"
           :title="$t('settings.back_to_hub')"
         >
           <ArrowRight class="w-5 h-5" />
@@ -151,7 +151,7 @@
               >
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-2xl bg-theme-light border border-theme-border text-theme-primary flex items-center justify-center">
                       <Building2 class="w-5 h-5" />
                     </div>
                     <div>
@@ -317,7 +317,7 @@
                       class="p-4 rounded-2xl border transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                       :class="appConfigStore.isDark ? 'border-theme-primary bg-slate-900 text-white font-bold ring-1 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600'"
                     >
-                      <Moon class="w-5 h-5 text-amber-400" />
+                      <Moon class="w-5 h-5 text-theme-primary" />
                       <span>الوضع الداكن (Dark Mode)</span>
                     </button>
 
@@ -327,7 +327,7 @@
                       class="p-4 rounded-2xl border transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                       :class="!appConfigStore.isDark ? 'border-theme-primary bg-white text-slate-900 font-bold shadow-md ring-1 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-900/40 text-slate-400'"
                     >
-                      <Sun class="w-5 h-5 text-amber-500" />
+                      <Sun class="w-5 h-5 text-theme-primary" />
                       <span>الوضع الفاتح (Light Mode)</span>
                     </button>
                   </div>
@@ -364,7 +364,7 @@
                     </div>
                     <div
                       class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
-                      :class="form.show_print_company_name ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"
+                      :class="form.show_print_company_name ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-700'"
                     >
                       <div
                         class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
@@ -383,7 +383,7 @@
                     </div>
                     <div
                       class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
-                      :class="form.show_print_subtitle ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"
+                      :class="form.show_print_subtitle ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-700'"
                     >
                       <div
                         class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
@@ -402,7 +402,7 @@
                     </div>
                     <div
                       class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
-                      :class="form.thermal_show_customer_balance ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"
+                      :class="form.thermal_show_customer_balance ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-700'"
                     >
                       <div
                         class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
@@ -421,7 +421,7 @@
                     </div>
                     <div
                       class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"
-                      :class="form.print_show_qr ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'"
+                      :class="form.print_show_qr ? 'bg-theme-primary' : 'bg-slate-300 dark:bg-slate-700'"
                     >
                       <div
                         class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
@@ -580,8 +580,8 @@ const sections = computed(() => [
         subtitle: trans('settings.sec_branding_subtitle'),
         description: trans('settings.sec_branding_desc'),
         icon: Building2,
-        iconBg: 'bg-amber-500/10 border border-amber-500/20',
-        iconColor: 'text-amber-500 dark:text-amber-400',
+        iconBg: 'bg-theme-light border border-theme-border',
+        iconColor: 'text-theme-primary text-theme-primary',
         badge: trans('settings.sec_branding_badge')
     },
     {

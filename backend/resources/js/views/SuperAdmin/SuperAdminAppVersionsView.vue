@@ -46,11 +46,11 @@
       <div class="p-5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-between">
         <div>
           <span class="text-xs text-slate-400 block font-bold">{{ $t('super.total_inapp_downloads') }}</span>
-          <span class="text-xl font-black text-amber-400 mt-1 block font-mono">
+          <span class="text-xl font-black text-theme-primary mt-1 block font-mono">
             {{ summary.total_downloads || 0 }} {{ $t('super.download_unit') }}
           </span>
         </div>
-        <div class="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+        <div class="w-11 h-11 rounded-2xl bg-theme-light border border-theme-border text-theme-primary flex items-center justify-center">
           <Download class="w-5 h-5" />
         </div>
       </div>
@@ -142,7 +142,7 @@
               <td class="py-3.5 font-mono text-slate-300">
                 {{ formatBytes(v.apk_size_bytes) }}
               </td>
-              <td class="py-3.5 font-mono font-bold text-amber-400">
+              <td class="py-3.5 font-mono font-bold text-theme-primary">
                 {{ v.download_count }}
               </td>
               <td class="py-3.5 text-slate-400 text-[11px] font-sans">
@@ -162,7 +162,7 @@
                 <div class="flex items-center justify-end gap-2">
                   <a
                     :href="`/api/v1/app/download-apk?platform=${v.platform}`"
-                    class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl transition cursor-pointer"
+                    class="p-2 bg-slate-800 hover:bg-slate-700 text-theme-primary rounded-xl transition cursor-pointer"
                     :title="$t('super.download_package_hint')"
                     download
                   >
