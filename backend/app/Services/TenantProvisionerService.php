@@ -20,8 +20,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
      */
     public function provision(CreateTenantDTO $dto): Tenant
     {
-        $plan = Plan::findOrFail($dto->planId);
-        $tenantId = 'tenant_' . $dto->slug;
+        $tenantId = $dto->slug;
 
         $tenantData = [
             'id' => $tenantId,
