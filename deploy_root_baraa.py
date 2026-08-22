@@ -124,6 +124,7 @@ $PHP_BIN artisan migrate --force
 $PHP_BIN artisan tenants:migrate --force
 $PHP_BIN artisan db:seed --class=PermissionsSeeder --force
 $PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
+$PHP_BIN artisan tenants:seed --class=PhoneAndAccessoriesSeeder --force
 
 echo "7. Clearing and refreshing all Laravel caches..."
 $PHP_BIN artisan optimize:clear
