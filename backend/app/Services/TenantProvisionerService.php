@@ -122,6 +122,13 @@ class TenantProvisionerService implements TenantProvisionerInterface
 
             $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
             $user->syncRoles([$adminRole]);
+
+            // Automatically set tenant company branding from creation DTO
+            \App\Models\Setting::set('company_name', $dto->name);
+            \App\Models\Setting::set('company_subtitle', 'لإدارة المبيعات والمخزون والفروع');
+            if ($dto->phone) {
+                \App\Models\Setting::set('company_phone', $dto->phone);
+            }
         });
 
         return $tenant;

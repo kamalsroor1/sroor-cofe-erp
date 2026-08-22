@@ -21,13 +21,13 @@ return new class extends Migration
             DB::table('settings')->insert([
                 [
                     'key' => 'company_name',
-                    'value' => 'سرور كوفي',
+                    'value' => 'منظومة ERP السحابية',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
                     'key' => 'company_subtitle',
-                    'value' => 'لتوزيع خامات مطاحن البن',
+                    'value' => 'لوحة الإدارة المركزية والفوترة السحابية',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
