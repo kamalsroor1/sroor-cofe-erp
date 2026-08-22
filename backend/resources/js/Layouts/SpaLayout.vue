@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200" dir="rtl">
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- 🔝 TOP HEADER BAR (Exact match to reference image)          -->
+    <!-- 🔝 TOP HEADER BAR                                           -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <header class="h-16 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800/80 sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between shadow-xs select-none backdrop-blur-xs">
       <!-- Right Side: User Dropdown, Theme Switcher, Notifications, Store & Shift Context -->
@@ -16,7 +16,7 @@
           <Menu class="w-6 h-6" />
         </button>
 
-        <!-- 👤 User Profile Dropdown Pill (Matching Screenshot 100%) -->
+        <!-- 👤 User Profile Dropdown Pill -->
         <div class="relative" ref="userDropdownRef">
           <button
             type="button"
@@ -25,7 +25,7 @@
           >
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <span class="font-black">{{ authStore.userName }} - {{ authStore.roles?.[0] || 'المدير العام' }}</span>
-            <span class="text-[10px] text-slate-400">▼</span>
+            <ChevronDown class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': isUserDropdownOpen }" />
           </button>
 
           <!-- User Dropdown Menu -->
@@ -34,7 +34,6 @@
               v-if="isUserDropdownOpen"
               class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 font-tajawal space-y-1"
             >
-              <!-- Dropdown Header -->
               <div class="p-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1">
                 <div class="font-black text-xs text-slate-900 dark:text-white">{{ authStore.userName }} - {{ authStore.roles?.[0] || 'المدير العام' }}</div>
                 <div class="text-[11px] text-slate-400 font-mono mt-0.5">{{ authStore.user?.phone || authStore.user?.email || '01012316954' }}</div>
@@ -94,7 +93,7 @@
         <button
           type="button"
           @click="toggleTheme"
-          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-amber-400 flex items-center gap-1.5 transition cursor-pointer active:scale-95"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-amber-400 flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
           :title="appConfigStore.isDark ? 'التحويل للوضع النهاري' : 'التحويل للوضع الليلي'"
         >
           <Sun v-if="appConfigStore.isDark" class="w-3.5 h-3.5 text-amber-400" />
@@ -107,7 +106,7 @@
           <button
             type="button"
             @click="isNotificationsOpen = !isNotificationsOpen"
-            class="relative p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer active:scale-95"
+            class="relative p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer active:scale-95 shadow-2xs"
             title="الإشعارات والتنبيهات"
           >
             <Bell class="w-4 h-4 text-amber-500 dark:text-amber-400" />
@@ -167,7 +166,7 @@
             <select
               :value="authStore.currentStore?.id"
               @change="handleStoreSwitch($event.target.value)"
-              class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer font-tajawal"
+              class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer font-tajawal shadow-2xs"
             >
               <option v-for="s in authStore.stores" :key="s.id" :value="s.id">
                 🏬 {{ s.name }}
@@ -175,15 +174,15 @@
             </select>
           </div>
           <!-- Single Store Badge -->
-          <div v-else class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5">
+          <div v-else class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 shadow-2xs">
             <StoreIcon class="w-3.5 h-3.5" />
             <span>{{ authStore.activeStoreName || 'المخزن والفرع الرئيسي' }}</span>
           </div>
 
-          <!-- 🔴/🟢 Shift Status Badge (Red when closed, Green when open) -->
+          <!-- 🔴/🟢 Shift Status Badge -->
           <router-link
             to="/daily-journal"
-            class="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer"
+            class="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer shadow-2xs"
             :class="appConfigStore.hasOpenShift
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
               : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'"
@@ -206,7 +205,7 @@
         <router-link
           v-if="canAccessSuperAdmin"
           to="/super-admin/dashboard"
-          class="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-black transition"
+          class="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-black transition shadow-2xs"
         >
           <span>👑</span>
           <span>السوبر أدمن</span>
@@ -228,14 +227,14 @@
     <!-- 🖥️ MAIN BODY: SIDEBAR + CONTENT                             -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="flex-1 flex overflow-hidden relative">
-      <!-- 💻 DESKTOP SIDEBAR (Collapsible, Sticky Header, Sticky Footer, Non-Clipped Teleported Tooltips) -->
+      <!-- 💻 DESKTOP SIDEBAR -->
       <aside
         class="hidden md:flex bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-sm"
         :class="isSidebarCollapsed ? 'w-20' : 'w-72'"
       >
-        <!-- 📌 1. STICKY TOP HEADER OF SIDEBAR (Fixed overlap in mini mode) -->
+        <!-- 📌 1. STICKY TOP HEADER OF SIDEBAR (Modern Redesigned Toggle Button) -->
         <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 shrink-0 sticky top-0 bg-white dark:bg-slate-950 z-20">
-          <!-- Expanded Mode Top Header -->
+          <!-- Expanded Mode -->
           <div v-if="!isSidebarCollapsed" class="flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
               <div
@@ -254,38 +253,40 @@
               </div>
             </div>
 
+            <!-- Sleek Icon Toggle Button -->
             <button
               type="button"
               @click="toggleSidebarCollapse"
-              class="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer text-xs font-mono"
-              title="تصغير القائمة"
+              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-slate-300 dark:border-slate-800 transition-all duration-200 flex items-center justify-center cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+              title="تصغير القائمة الجانبية"
             >
-              «
+              <ChevronRight class="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
 
-          <!-- Collapsed Mode Top Header (Centered Logo + Expand Button Stacked) -->
-          <div v-else class="flex flex-col items-center gap-2">
+          <!-- Collapsed Mode (Mini Sidebar Header) -->
+          <div v-else class="flex flex-col items-center gap-2.5 py-1">
             <div
               class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-colors"
               :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
             >
               ☕
             </div>
+            <!-- Expand Button -->
             <button
               type="button"
               @click="toggleSidebarCollapse"
-              class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer text-xs font-mono"
-              title="توسيع القائمة"
+              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-slate-300 dark:border-slate-800 transition-all duration-200 flex items-center justify-center cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+              title="توسيع القائمة الجانبية"
             >
-              »
+              <ChevronLeft class="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
         </div>
 
-        <!-- 📌 2. SCROLLABLE NAVIGATION LIST -->
-        <div class="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
-          <!-- 🌟 Big Action Button: New Invoice (F2) -->
+        <!-- 📌 2. SCROLLABLE NAVIGATION LIST (Solid Tactile Icon Tiles) -->
+        <div class="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
+          <!-- 🌟 Big Action Button: New Sale Invoice (F2) -->
           <div
             class="relative"
             @mouseenter="handleItemHover($event, '+ فاتورة بيع جديدة (F2)')"
@@ -293,8 +294,8 @@
           >
             <router-link
               to="/pos"
-              class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-black text-xs text-slate-950 transition-all active:scale-95 cursor-pointer mb-3 shadow-md"
-              :class="isSidebarCollapsed ? 'px-2' : 'px-4'"
+              class="flex items-center justify-center gap-2.5 w-full py-3 rounded-2xl font-black text-xs text-slate-950 transition-all active:scale-95 cursor-pointer mb-3 shadow-md hover:brightness-105"
+              :class="isSidebarCollapsed ? 'px-0' : 'px-4'"
               :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
             >
               <Plus class="w-4 h-4 stroke-[3] shrink-0" />
@@ -310,23 +311,32 @@
           >
             <router-link
               to="/"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name === 'dashboard'
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name === 'dashboard' ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <LayoutDashboard class="w-4 h-4 shrink-0" :style="$route.name === 'dashboard' ? { color: 'var(--color-primary, #f59e0b)' } : {}" />
-              <span v-if="!isSidebarCollapsed" class="truncate">لوحة التحكم (Dashboard)</span>
+              <!-- Solid Tactile Icon Tile -->
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name === 'dashboard'
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name === 'dashboard' ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <LayoutDashboard class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">لوحة التحكم (Dashboard)</span>
             </router-link>
           </div>
 
           <!-- 📂 Section 1: المبيعات والفواتير -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             المبيعات والفواتير
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
@@ -338,18 +348,26 @@
           >
             <router-link
               to="/invoices"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('invoices')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('invoices') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <FileText class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">فواتير المبيعات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('invoices')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('invoices') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <FileText class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">فواتير المبيعات</span>
             </router-link>
           </div>
 
@@ -360,23 +378,31 @@
           >
             <router-link
               to="/daily-journal"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('daily_journal')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('daily_journal') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Wallet class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">اليومية وحركة الدرج</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('daily_journal')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('daily_journal') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Wallet class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">اليومية وحركة الدرج</span>
             </router-link>
           </div>
 
           <!-- 📂 Section 2: العملاء والحسابات -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             العملاء والحسابات
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
@@ -388,23 +414,31 @@
           >
             <router-link
               to="/customers"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('customers')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('customers') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Users class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">العملاء والشركات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('customers')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('customers') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Users class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">العملاء والشركات</span>
             </router-link>
           </div>
 
           <!-- 📂 Section 3: المخزون والفروع والتوزيع -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             المخزون والفروع والتوزيع
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
@@ -416,18 +450,26 @@
           >
             <router-link
               to="/items"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('items')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('items') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Package class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">الأصناف والأسعار</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('items')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('items') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Package class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">الأصناف والأسعار</span>
             </router-link>
           </div>
 
@@ -438,18 +480,26 @@
           >
             <router-link
               to="/purchases"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('purchases')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('purchases') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <ShoppingCart class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">فواتير المشتريات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('purchases')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('purchases') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <ShoppingCart class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">فواتير المشتريات</span>
             </router-link>
           </div>
 
@@ -460,18 +510,26 @@
           >
             <router-link
               to="/suppliers"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('suppliers')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('suppliers') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Building2 class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">الموردون والشركات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('suppliers')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('suppliers') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Building2 class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">الموردون والشركات</span>
             </router-link>
           </div>
 
@@ -482,18 +540,26 @@
           >
             <router-link
               to="/stores"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('stores')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('stores') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <StoreIcon class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">المخازن والفروع</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('stores')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('stores') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <StoreIcon class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">المخازن والفروع</span>
             </router-link>
           </div>
 
@@ -504,23 +570,31 @@
           >
             <router-link
               to="/coffee-blender"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('coffee_blender')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('coffee_blender') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Layers class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">صانع الخلطات والبن</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('coffee_blender')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('coffee_blender') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Layers class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">صانع الخلطات والبن</span>
             </router-link>
           </div>
 
           <!-- 📂 Section 4: المرتجعات والمصروفات والتقارير -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             المرتجعات والمصروفات والتقارير
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
@@ -532,18 +606,26 @@
           >
             <router-link
               to="/expenses"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('expenses')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('expenses') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Receipt class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">المصروفات والنثريات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('expenses')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('expenses') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Receipt class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">المصروفات والنثريات</span>
             </router-link>
           </div>
 
@@ -554,18 +636,26 @@
           >
             <router-link
               to="/returns"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('returns')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('returns') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <RotateCcw class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">سجل المرتجعات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('returns')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('returns') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <RotateCcw class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">سجل المرتجعات</span>
             </router-link>
           </div>
 
@@ -576,23 +666,31 @@
           >
             <router-link
               to="/reports"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('reports')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('reports') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <BarChart3 class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">التقارير المالية والأرباح</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('reports')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('reports') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <BarChart3 class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">التقارير المالية والأرباح</span>
             </router-link>
           </div>
 
           <!-- 📂 Section 5: إدارة النظام والمستخدمين -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             إدارة النظام والمستخدمين
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
@@ -604,18 +702,26 @@
           >
             <router-link
               to="/users"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('users')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('users') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Users class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">المستخدمون والكاشير</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('users')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('users') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Users class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">المستخدمون والكاشير</span>
             </router-link>
           </div>
 
@@ -626,18 +732,26 @@
           >
             <router-link
               to="/roles"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('roles')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('roles') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <ShieldCheck class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">الأدوار والصلاحيات</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('roles')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('roles') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <ShieldCheck class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">الأدوار والصلاحيات</span>
             </router-link>
           </div>
 
@@ -648,18 +762,26 @@
           >
             <router-link
               to="/activity-logs"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('activity_logs')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('activity_logs') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Activity class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">سجل العمليات والرقابة</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('activity_logs')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('activity_logs') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Activity class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">سجل العمليات والرقابة</span>
             </router-link>
           </div>
 
@@ -670,18 +792,26 @@
           >
             <router-link
               to="/settings"
-              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
               :class="$route.name?.startsWith('settings')
                 ? 'font-black border shadow-xs'
-                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+                : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
               :style="$route.name?.startsWith('settings') ? {
                 color: 'var(--color-primary, #f59e0b)',
                 borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                 backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
               } : {}"
             >
-              <Sliders class="w-4 h-4 shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">إعدادات المؤسسة</span>
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
+                :class="$route.name?.startsWith('settings')
+                  ? 'text-slate-950 shadow-md font-bold'
+                  : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
+                :style="$route.name?.startsWith('settings') ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+              >
+                <Sliders class="w-4 h-4 stroke-[2.4]" />
+              </div>
+              <span v-if="!isSidebarCollapsed" class="truncate font-bold">إعدادات المؤسسة</span>
             </router-link>
           </div>
         </div>
@@ -690,7 +820,7 @@
         <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 sticky bottom-0 bg-white/95 dark:bg-slate-950/95 z-20">
           <div class="flex items-center gap-2.5 overflow-hidden">
             <div
-              class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0"
+              class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs"
               :style="{ backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))', color: 'var(--color-primary, #f59e0b)' }"
             >
               {{ authStore.userName?.charAt(0) || 'U' }}
@@ -704,10 +834,10 @@
           <button
             type="button"
             @click="confirmLogout"
-            class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer shrink-0"
+            class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
             title="تسجيل الخروج"
           >
-            <LogOut class="w-4 h-4" />
+            <LogOut class="w-4 h-4 stroke-[2.2]" />
           </button>
         </div>
       </aside>
@@ -726,10 +856,10 @@
       <Transition name="tooltip-fade">
         <div
           v-if="hoveredTooltip.show && isSidebarCollapsed"
-          class="fixed z-[99999] pointer-events-none -translate-y-1/2 px-3 py-1.5 bg-slate-950 text-white text-xs font-black rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2 font-tajawal whitespace-nowrap"
+          class="fixed z-[99999] pointer-events-none -translate-y-1/2 px-3 py-2 bg-slate-950 text-white text-xs font-black rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 font-tajawal whitespace-nowrap"
           :style="{ top: `${hoveredTooltip.top}px`, right: `${hoveredTooltip.right}px` }"
         >
-          <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"></span>
+          <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"></span>
           <span>{{ hoveredTooltip.text }}</span>
         </div>
       </Transition>
@@ -885,6 +1015,9 @@ import {
     Bell,
     Menu,
     Plus,
+    ChevronDown,
+    ChevronRight,
+    ChevronLeft,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
@@ -917,7 +1050,7 @@ const handleItemHover = (e, text) => {
         show: true,
         text,
         top: rect.top + (rect.height / 2),
-        right: window.innerWidth - rect.left + 14,
+        right: window.innerWidth - rect.left + 16,
     };
 };
 
@@ -1032,7 +1165,7 @@ onUnmounted(() => {
 
 .tooltip-fade-enter-active,
 .tooltip-fade-leave-active {
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tooltip-fade-enter-from,
 .tooltip-fade-leave-to {
