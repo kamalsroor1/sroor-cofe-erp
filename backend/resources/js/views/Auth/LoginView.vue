@@ -215,9 +215,16 @@ const handleLogin = async () => {
         // Initialize system context in background
         await appConfigStore.fetchBootstrapContext();
 
-        // Redirect to intended route or dashboard
-        const redirectPath = route.query.redirect || '/';
-        router.push(redirectPath);
+        // Redirect to intended route or super admin / tenant dashboard
+        if (authStore.isSuperAdmin) {
+            const redirectPath = route.query.redirect && route.query.redirect !== '/'
+                ? route.query.redirect
+                : '/super-admin/dashboard';
+            router.push(redirectPath);
+        } else {
+            const redirectPath = route.query.redirect || '/';
+            router.push(redirectPath);
+        }
     } catch (error) {
         errorMessage.value = error.userMessage || error.response?.data?.message || trans('auth.failed');
     } finally {
