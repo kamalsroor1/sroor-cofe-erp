@@ -78,7 +78,7 @@
         <div class="flex items-center gap-4 self-stretch md:self-auto justify-between md:justify-end border-t md:border-t-0 border-slate-200 dark:border-slate-800 pt-2 md:pt-0">
           <div class="text-start md:text-end">
             <span class="text-[10px] text-slate-400 block font-bold">{{ $t('treasury.opening_float_balance') }}</span>
-            <span class="text-sm font-black text-amber-400 font-mono">{{ formatMoney(activeShift.opening_cash_balance) }} {{ $t('common.currency') }}</span>
+            <span class="text-sm font-black text-theme-primary font-mono">{{ formatMoney(activeShift.opening_cash_balance) }} {{ $t('common.currency') }}</span>
           </div>
 
           <button
@@ -146,7 +146,7 @@
         <!-- Expected Cash In Drawer -->
         <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-slate-900 dark:to-slate-950 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
           <span class="text-[11px] font-bold text-amber-600 dark:text-amber-300 block">{{ $t('treasury.expected_drawer_balance') }}</span>
-          <div class="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">
+          <div class="text-xl font-black text-amber-600 dark:text-theme-primary font-mono">
             {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-amber-600/80 dark:text-amber-300/80 font-normal">{{ $t('common.currency') }}</span>
           </div>
           <span class="text-[10px] text-slate-400 block">{{ $t('treasury.expected_drawer_sub') }}</span>
@@ -294,7 +294,7 @@
               step="0.001"
               required
               autofocus
-              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-amber-400 font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-theme-primary font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
               placeholder="0.00"
             >
           </div>
@@ -323,7 +323,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              class="px-5 py-2 bg-theme-gradient text-white rounded-xl text-xs font-black shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               <span>{{ $t('treasury.confirm_open_shift_btn') }}</span>
@@ -346,7 +346,7 @@
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-slate-400 font-bold">{{ $t('treasury.shift_expected_balance_label') }}</span>
-              <span class="font-mono text-amber-400 font-black text-sm">{{ formatMoney(summary.expected_cash_in_drawer || 0) }} {{ $t('common.currency') }}</span>
+              <span class="font-mono text-theme-primary font-black text-sm">{{ formatMoney(summary.expected_cash_in_drawer || 0) }} {{ $t('common.currency') }}</span>
             </div>
           </div>
 
