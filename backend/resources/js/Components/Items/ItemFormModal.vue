@@ -73,17 +73,8 @@ const unitOptions = computed(() => [
                     dir="ltr"
                 />
 
-                <BaseSelect
-                    v-model="form.category"
-                    :label="$t('inventory.category')"
-                    :placeholder="$t('inventory.category_placeholder') || 'اختر الفئة أو التصنيف'"
-                    :options="categoryOptions"
-                    :error="form.errors?.category"
-                />
-            </div>
-
-            <!-- Unit, Cost Price, Selling Price -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- Unit & Category -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <BaseSelect
                     v-model="form.unit"
                     :label="$t('inventory.unit')"
@@ -93,9 +84,20 @@ const unitOptions = computed(() => [
                     :error="form.errors?.unit"
                 />
 
+                <BaseSelect
+                    v-model="form.category"
+                    :label="$t('inventory.category')"
+                    :placeholder="$t('inventory.category_placeholder') || 'اختر الفئة أو التصنيف'"
+                    :options="categoryOptions"
+                    :error="form.errors?.category"
+                />
+            </div>
+
+            <!-- Pricing Grid (Cost Price, Retail Price, Min Selling/Wholesale Price) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <BaseNumberInput
                     v-model="form.cost_price"
-                    :label="$t('inventory.purchase_price')"
+                    :label="$t('inventory.cost_price') || 'سعر التكلفة'"
                     :required="true"
                     step="0.001"
                     :suffix="$t('common.currency')"
@@ -104,11 +106,19 @@ const unitOptions = computed(() => [
 
                 <BaseNumberInput
                     v-model="form.selling_price"
-                    :label="$t('inventory.retail_price')"
+                    :label="($t('inventory.selling_price') || 'سعر البيع') + ' (قطاعي)'"
                     :required="true"
                     step="0.001"
                     :suffix="$t('common.currency')"
                     :error="form.errors?.selling_price"
+                />
+
+                <BaseNumberInput
+                    v-model="form.min_selling_price"
+                    :label="$t('inventory.min_selling_price') || 'أقل سعر للبيع (جملة)'"
+                    step="0.001"
+                    :suffix="$t('common.currency')"
+                    :error="form.errors?.min_selling_price"
                 />
             </div>
 

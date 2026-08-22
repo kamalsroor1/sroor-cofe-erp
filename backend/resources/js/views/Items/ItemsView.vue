@@ -154,7 +154,8 @@
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.category') }}</th>
                 <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.cost_price') }}</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.selling_price') }}</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.selling_price') }} (قطاعي)</th>
+                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.min_selling_price') || 'أقل بيع (جملة)' }}</th>
                 <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
                 <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
@@ -190,6 +191,9 @@
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-400">
                   {{ formatMoney(item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
+                </td>
+                <td class="py-3.5 px-4 text-end font-mono font-bold text-purple-400">
+                  {{ formatMoney(item.min_selling_price || item.price_wholesale || item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
                 </td>
                 <td class="py-3.5 px-4 text-end">
                   <div
