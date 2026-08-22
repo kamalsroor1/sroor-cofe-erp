@@ -287,7 +287,7 @@
               type="button"
               @click="fetchItems(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.previous') }}
             </button>
@@ -298,7 +298,7 @@
               type="button"
               @click="fetchItems(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.next') }}
             </button>
@@ -316,7 +316,7 @@
           <!-- Name & Code Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.item_name') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -329,7 +329,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.code') }} ({{ $t('inventory.barcode') }})
               </label>
               <input
@@ -344,7 +344,7 @@
           <!-- Category & Unit Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.category') }}
               </label>
               <input
@@ -356,7 +356,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.unit') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -378,7 +378,7 @@
           <!-- Cost Price, Selling Price & Min Stock Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.cost_price') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -392,7 +392,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.selling_price') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -406,7 +406,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('inventory.min_stock_level') }}
               </label>
               <input
@@ -421,7 +421,7 @@
 
           <!-- Notes -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('common.notes') }}
             </label>
             <textarea
@@ -471,7 +471,7 @@
 
           <!-- Movement Type -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('inventory.movement_type') }} <span class="text-rose-500">*</span>
             </label>
             <select
@@ -488,7 +488,7 @@
 
           <!-- Quantity -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('common.quantity') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -504,7 +504,7 @@
 
           <!-- Notes -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('inventory.adjust_reason_prompt') }}
             </label>
             <input

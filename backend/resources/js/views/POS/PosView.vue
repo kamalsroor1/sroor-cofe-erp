@@ -26,7 +26,7 @@
       <!-- Center: Active Shift Indicator -->
       <div class="hidden sm:flex items-center gap-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1 rounded-xl text-xs">
         <div class="w-2 h-2 rounded-full" :class="activeShift ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"></div>
-        <span v-if="activeShift" class="font-bold text-slate-300">
+        <span v-if="activeShift" class="font-bold text-slate-700 dark:text-slate-300">
           {{ $t('pos.shift_label') }} <span class="font-mono text-theme-primary">{{ activeShift.shift_number }}</span>
         </span>
         <span v-else class="text-rose-400 font-bold">
@@ -356,7 +356,7 @@
     >
       <form @submit.prevent="submitQuickCustomer" class="space-y-4 font-tajawal">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             {{ $t('contacts.customer_name') }} <span class="text-rose-500">*</span>
           </label>
           <input
@@ -370,7 +370,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             {{ $t('contacts.phone') }}
           </label>
           <input
@@ -382,7 +382,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             {{ $t('pos.price_tier') }}
           </label>
           <select

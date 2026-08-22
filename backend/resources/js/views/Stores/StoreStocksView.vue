@@ -21,7 +21,7 @@
       <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Store Selector Dropdown -->
         <div class="flex items-center gap-2">
-          <label class="text-xs font-bold text-slate-400 whitespace-nowrap font-tajawal">
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap font-tajawal">
             🏬 {{ $t('inventory.store') }}:
           </label>
           <select
@@ -163,7 +163,7 @@
               type="button"
               @click="fetchStocks(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.previous') }}
             </button>
@@ -174,7 +174,7 @@
               type="button"
               @click="fetchStocks(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.next') }}
             </button>

@@ -200,7 +200,7 @@
         <form @submit.prevent="saveStore" class="space-y-4">
           <!-- Store Name -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
               {{ $t('inventory.store_name') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -215,7 +215,7 @@
           <!-- Code & Type Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('inventory.store_code') }}
               </label>
               <input
@@ -227,7 +227,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('inventory.store_type') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -245,7 +245,7 @@
           <!-- Address & Phone Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('inventory.address') }}
               </label>
               <input
@@ -257,7 +257,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('inventory.phone') }}
               </label>
               <input
@@ -278,7 +278,7 @@
                 type="checkbox"
                 class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
               >
-              <span class="text-xs font-bold text-slate-300 font-tajawal">{{ $t('inventory.is_main_branch') }}</span>
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ $t('inventory.is_main_branch') }}</span>
             </label>
 
             <label v-if="editingStore" class="flex items-center gap-2 cursor-pointer select-none">
@@ -287,7 +287,7 @@
                 type="checkbox"
                 class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary/20"
               >
-              <span class="text-xs font-bold text-slate-300 font-tajawal">{{ $t('inventory.is_active_branch') }}</span>
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ $t('inventory.is_active_branch') }}</span>
             </label>
           </div>
 

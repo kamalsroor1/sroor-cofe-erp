@@ -146,7 +146,7 @@
                 <td class="py-3.5 px-4 font-mono font-bold text-amber-400">
                   {{ trf.transfer_number }}
                 </td>
-                <td class="py-3.5 px-4 font-bold text-slate-300 font-tajawal">
+                <td class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300 font-tajawal">
                   {{ trf.from_store_name }}
                 </td>
                 <td class="py-3.5 px-4 font-bold text-emerald-400 font-tajawal">
@@ -221,7 +221,7 @@
               type="button"
               @click="fetchTransfers(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.previous') }}
             </button>
@@ -232,7 +232,7 @@
               type="button"
               @click="fetchTransfers(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.next') }}
             </button>
@@ -290,7 +290,7 @@
           </div>
 
           <div v-if="selectedTransferDetails.notes" class="p-3 bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 rounded-xl text-slate-400">
-            <span class="font-bold text-slate-300">{{ $t('inventory.transfer_notes_label') }}</span>
+            <span class="font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.transfer_notes_label') }}</span>
             <span>{{ selectedTransferDetails.notes }}</span>
           </div>
         </div>

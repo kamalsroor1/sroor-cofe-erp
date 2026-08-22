@@ -252,7 +252,7 @@
               type="button"
               @click="fetchSuppliers(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.previous') }}
             </button>
@@ -263,7 +263,7 @@
               type="button"
               @click="fetchSuppliers(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.next') }}
             </button>
@@ -281,7 +281,7 @@
           <!-- Name & Company Name Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('contacts.supplier_name') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -294,7 +294,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('contacts.company_name') }}
               </label>
               <input
@@ -309,7 +309,7 @@
           <!-- Phone & Address Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('contacts.phone') }}
               </label>
               <input
@@ -322,7 +322,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('contacts.address') }}
               </label>
               <input
@@ -336,7 +336,7 @@
 
           <!-- Opening Balance (Create Only) -->
           <div v-if="!editingSupplier">
-            <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
               {{ $t('contacts.opening_balance') }}
             </label>
             <input
@@ -350,7 +350,7 @@
 
           <!-- Notes -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
               {{ $t('common.notes') }}
             </label>
             <textarea
@@ -400,7 +400,7 @@
 
           <!-- Payment Amount -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
               {{ $t('contacts.amount') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -417,7 +417,7 @@
           <!-- Payment Method & Date Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('contacts.payment_method') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -433,7 +433,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
                 {{ $t('contacts.payment_date') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -447,7 +447,7 @@
 
           <!-- Notes -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1 font-tajawal">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">
               {{ $t('common.notes') }}
             </label>
             <input

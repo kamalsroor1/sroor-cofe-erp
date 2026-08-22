@@ -32,7 +32,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Supplier Select -->
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('purchases.supplier') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -49,7 +49,7 @@
 
             <!-- Purchase Date -->
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('purchases.purchase_date') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -62,7 +62,7 @@
 
             <!-- Supplier Invoice Ref -->
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('purchases.supplier_invoice_ref_label') }}
               </label>
               <input
@@ -168,7 +168,7 @@
         <div class="p-5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="space-y-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('purchases.invoice_notes') }}
               </label>
               <textarea
@@ -181,7 +181,7 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {{ $t('purchases.paid_to_supplier') }}
                 </label>
                 <input
@@ -195,7 +195,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {{ $t('purchases.discount_earned') }}
                 </label>
                 <input

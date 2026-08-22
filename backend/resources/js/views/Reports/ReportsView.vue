@@ -167,7 +167,7 @@
       <!-- TAB 2: Items Profitability -->
       <div v-else-if="activeTab === 'items'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.items_profitability_title') }}</h3>
+          <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.items_profitability_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.items_count_badge', { count: itemProfits.length }) }}</span>
         </div>
         <div class="overflow-x-auto">
@@ -203,7 +203,7 @@
       <!-- TAB 3: Stores Comparison -->
       <div v-else-if="activeTab === 'stores'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.stores_comparison_sub') }}</h3>
+          <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.stores_comparison_sub') }}</h3>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
@@ -222,7 +222,7 @@
             <tbody class="divide-y divide-slate-800/50 font-sans">
               <tr v-for="st in storeBreakdown" :key="st.id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
                 <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ st.name }}</td>
-                <td class="p-3 text-center font-mono font-bold text-slate-300">{{ st.invoice_count }}</td>
+                <td class="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">{{ st.invoice_count }}</td>
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(st.total_sales) }}</td>
                 <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(st.total_paid) }}</td>
                 <td class="p-3 text-end font-mono text-amber-400">{{ formatMoney(st.total_remaining) }}</td>
@@ -238,7 +238,7 @@
       <!-- TAB 4: Customers Analytics -->
       <div v-else-if="activeTab === 'customers'" :key="activeTab" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.top_customers_title') }}</h3>
+          <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.top_customers_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.top_50_customers_sub') }}</span>
         </div>
         <div class="overflow-x-auto">
@@ -258,7 +258,7 @@
               <tr v-for="c in customerSales" :key="c.customer_id" class="hover:bg-slate-100 dark:hover:bg-slate-900/40">
                 <td class="p-3 font-bold text-slate-900 dark:text-white font-tajawal">{{ c.name }}</td>
                 <td class="p-3 font-mono text-slate-400">{{ c.phone || '—' }}</td>
-                <td class="p-3 text-center font-mono font-bold text-slate-300">{{ c.total_invoices }}</td>
+                <td class="p-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300">{{ c.total_invoices }}</td>
                 <td class="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(c.total_bought) }}</td>
                 <td class="p-3 text-end font-mono text-emerald-400">{{ formatMoney(c.total_paid) }}</td>
                 <td class="p-3 text-end font-mono text-amber-400">{{ formatMoney(c.total_debt_in_period) }}</td>
@@ -274,7 +274,7 @@
       <!-- TAB 5: Operational Expenses -->
       <div v-else-if="activeTab === 'expenses'" :key="activeTab" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.expenses_breakdown_by_cat') }}</h3>
+          <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.expenses_breakdown_by_cat') }}</h3>
         </div>
         <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
@@ -314,7 +314,7 @@
         <!-- Inventory Table -->
         <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
           <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.items_stock_valuation_title') }}</h3>
+            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.items_stock_valuation_title') }}</h3>
             <span class="text-xs text-slate-500 font-mono">{{ $t('reports.items_count_badge', { count: inventoryData.items?.length || 0 }) }}</span>
           </div>
           <div class="overflow-x-auto">

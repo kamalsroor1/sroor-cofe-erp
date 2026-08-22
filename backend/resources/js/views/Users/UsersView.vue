@@ -65,7 +65,7 @@
 
         <div v-else-if="users.length === 0" class="p-16 text-center">
           <Users class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1 font-tajawal">{{ $t('users.no_users_found') }}</h3>
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 font-tajawal">{{ $t('users.no_users_found') }}</h3>
           <p class="text-xs text-slate-500 font-tajawal">{{ $t('users.no_users_hint') }}</p>
         </div>
 
@@ -175,7 +175,7 @@
 
           <form @submit.prevent="submitForm" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('users.fullname_label') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('users.fullname_label') }}</label>
               <input
                 v-model="form.name"
                 required
@@ -187,7 +187,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.phone_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('users.phone_label') }}</label>
                 <input
                   v-model="form.phone"
                   required
@@ -199,7 +199,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.email_optional_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('users.email_optional_label') }}</label>
                 <input
                   v-model="form.email"
                   type="email"
@@ -212,7 +212,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.job_role_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('users.job_role_label') }}</label>
                 <select
                   v-model="form.role"
                   required
@@ -223,7 +223,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('users.default_store_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('users.default_store_label') }}</label>
                 <select
                   v-model="form.default_store_id"
                   class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-theme-primary font-tajawal"
@@ -235,7 +235,7 @@
             </div>
 
             <div>
-              <label class="block text-slate-400 font-bold mb-1">
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                 {{ isEditing ? $t('users.password_edit_label') : $t('users.password_create_label') }}
               </label>
               <input
@@ -254,7 +254,7 @@
                 id="is_active_check"
                 class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-theme-primary"
               />
-              <label for="is_active_check" class="text-slate-300 font-bold cursor-pointer">{{ $t('users.account_active_login_checkbox') }}</label>
+              <label for="is_active_check" class="text-slate-700 dark:text-slate-300 font-bold cursor-pointer">{{ $t('users.account_active_login_checkbox') }}</label>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">

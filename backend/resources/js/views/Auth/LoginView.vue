@@ -30,7 +30,7 @@
       <form @submit.prevent="handleLogin" class="space-y-4">
         <!-- Phone / Username Field -->
         <div>
-          <label for="login" class="block text-xs font-bold text-slate-300 mb-1.5 font-tajawal">
+          <label for="login" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 font-tajawal">
             {{ isCentralHub ? $t('auth.phone') : 'البريد الإلكتروني أو رقم الهاتف' }} <span class="text-rose-500">*</span>
           </label>
           <div class="relative">
@@ -53,7 +53,7 @@
 
         <!-- Password Field with Toggle -->
         <div>
-          <label for="password" class="block text-xs font-bold text-slate-300 mb-1.5 font-tajawal">
+          <label for="password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 font-tajawal">
             {{ $t('auth.password_label') }} <span class="text-rose-500">*</span>
           </label>
           <div class="relative">

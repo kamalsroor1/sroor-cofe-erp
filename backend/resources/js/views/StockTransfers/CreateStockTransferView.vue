@@ -28,7 +28,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- From Store -->
             <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-300">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 {{ $t('inventory.from_store_label') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -45,7 +45,7 @@
 
             <!-- To Store -->
             <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-300">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 {{ $t('inventory.to_store_label') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -62,7 +62,7 @@
 
             <!-- Transfer Date -->
             <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-300">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 {{ $t('inventory.transfer_date_label') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -75,7 +75,7 @@
 
             <!-- Notes -->
             <div class="sm:col-span-3 space-y-1">
-              <label class="block text-xs font-bold text-slate-300">{{ $t('inventory.blend_notes') }}</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.blend_notes') }}</label>
               <input
                 v-model="form.notes"
                 type="text"

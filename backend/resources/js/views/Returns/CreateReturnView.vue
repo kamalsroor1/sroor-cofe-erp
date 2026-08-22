@@ -52,7 +52,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <!-- Customer Field -->
               <div v-if="form.return_type === 'sales_return'" class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('returns.customer_from') }}
                 </label>
                 <select
@@ -69,7 +69,7 @@
 
               <!-- Supplier Field -->
               <div v-else class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('returns.supplier_to') }}
                 </label>
                 <select
@@ -86,7 +86,7 @@
 
               <!-- Return Date -->
               <div class="space-y-1">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('returns.return_date') }} <span class="text-rose-500">*</span>
                 </label>
                 <input
@@ -99,7 +99,7 @@
 
               <!-- Reason -->
               <div class="sm:col-span-2 space-y-1">
-                <label class="block text-xs font-bold text-slate-300">{{ $t('returns.reason') }}</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('returns.reason') }}</label>
                 <input
                   v-model="form.reason"
                   type="text"
@@ -221,7 +221,7 @@
 
               <!-- Refund cash from drawer -->
               <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                <label class="block text-xs font-bold text-slate-300 font-sans font-tajawal">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-sans font-tajawal">
                   {{ $t('returns.refund_cash_from_drawer') }}
                 </label>
                 <input

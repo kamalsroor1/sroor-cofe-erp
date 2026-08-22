@@ -115,7 +115,7 @@
 
           <form @submit.prevent="submitEditPlan" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.plan_name_label') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.plan_name_label') }}</label>
               <input
                 v-model="editForm.name"
                 required
@@ -126,7 +126,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.monthly_price_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.monthly_price_label') }}</label>
                 <input
                   v-model="editForm.price_monthly"
                   required
@@ -137,7 +137,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.yearly_price_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.yearly_price_label') }}</label>
                 <input
                   v-model="editForm.price_yearly"
                   required
@@ -150,7 +150,7 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.users_limit_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.users_limit_label') }}</label>
                 <input
                   v-model="editForm.max_users"
                   required
@@ -160,7 +160,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.stores_limit_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.stores_limit_label') }}</label>
                 <input
                   v-model="editForm.max_stores"
                   required
@@ -170,7 +170,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.items_limit_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.items_limit_label') }}</label>
                 <input
                   v-model="editForm.max_items"
                   required
@@ -180,7 +180,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.invoices_limit_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.invoices_limit_label') }}</label>
                 <input
                   v-model="editForm.max_invoices_per_month"
                   required

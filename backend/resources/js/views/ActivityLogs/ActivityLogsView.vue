@@ -106,7 +106,7 @@
 
         <div v-else-if="logs.length === 0" class="p-16 text-center">
           <Activity class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1">{{ $t('activity.no_logs_match') }}</h3>
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ $t('activity.no_logs_match') }}</h3>
           <p class="text-xs text-slate-500">{{ $t('activity.adjust_filter_hint') }}</p>
         </div>
 

@@ -285,7 +285,7 @@
       >
         <form @submit.prevent="submitOpenShift" class="space-y-4 font-tajawal">
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('treasury.opening_cash_prompt') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -300,7 +300,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('treasury.open_shift_notes_prompt') }}
             </label>
             <input
@@ -351,7 +351,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('treasury.actual_counted_cash_prompt') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -372,7 +372,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('treasury.close_shift_notes_prompt') }}
             </label>
             <input
@@ -412,7 +412,7 @@
       >
         <form @submit.prevent="submitExpense" class="space-y-4 font-tajawal">
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('expenses.expense_item') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -426,7 +426,7 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('common.amount') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -440,7 +440,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('treasury.cost_center') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -459,7 +459,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('treasury.payment_method') }} <span class="text-rose-500">*</span>
             </label>
             <select

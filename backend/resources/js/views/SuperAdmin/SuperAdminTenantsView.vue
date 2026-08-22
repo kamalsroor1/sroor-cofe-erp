@@ -76,7 +76,7 @@
 
         <div v-else-if="tenants.length === 0" class="p-16 text-center">
           <Building2 class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1">{{ $t('super.no_tenants_registered') }}</h3>
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ $t('super.no_tenants_registered') }}</h3>
         </div>
 
         <div v-else class="overflow-x-auto">
@@ -163,7 +163,7 @@
 
           <form @submit.prevent="submitCreateTenant" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.org_name_label') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.org_name_label') }}</label>
               <input
                 v-model="createForm.name"
                 required
@@ -175,7 +175,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.slug_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.slug_label') }}</label>
                 <input
                   v-model="createForm.slug"
                   required
@@ -186,7 +186,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.selected_plan_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.selected_plan_label') }}</label>
                 <select
                   v-model="createForm.plan_id"
                   required
@@ -199,7 +199,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.admin_email_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.admin_email_label') }}</label>
                 <input
                   v-model="createForm.email"
                   required
@@ -210,7 +210,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.admin_phone_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.admin_phone_label') }}</label>
                 <input
                   v-model="createForm.phone"
                   type="text"
@@ -222,7 +222,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.admin_password_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.admin_password_label') }}</label>
                 <input
                   v-model="createForm.password"
                   required
@@ -233,7 +233,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('super.trial_days_label') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.trial_days_label') }}</label>
                 <input
                   v-model="createForm.trial_days"
                   type="number"
@@ -251,7 +251,7 @@
               </div>
               
               <div>
-                <label class="block text-slate-400 font-bold mb-1">
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                   اسم قاعدة البيانات الكامل
                 </label>
                 <input
@@ -264,7 +264,7 @@
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-slate-400 font-bold mb-1">
+                  <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                     اسم مستخدم MySQL (إن كان مختلفاً)
                   </label>
                   <input
@@ -276,7 +276,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-slate-400 font-bold mb-1">
+                  <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                     كلمة مرور MySQL (إن كانت مختلفة)
                   </label>
                   <input
@@ -320,7 +320,7 @@
 
           <form @submit.prevent="submitStatusChange" class="space-y-3.5 text-xs font-tajawal">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.new_status_label') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.new_status_label') }}</label>
               <select
                 v-model="statusForm.status"
                 class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 font-tajawal"
@@ -333,7 +333,7 @@
             </div>
 
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('super.extend_days_label') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.extend_days_label') }}</label>
               <input
                 v-model="statusForm.extend_days"
                 type="number"

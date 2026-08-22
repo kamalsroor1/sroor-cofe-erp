@@ -123,7 +123,7 @@
                 </div>
               </td>
               <td class="py-3.5 font-sans">
-                <span class="capitalize font-bold text-slate-300">{{ v.platform }}</span>
+                <span class="capitalize font-bold text-slate-700 dark:text-slate-300">{{ v.platform }}</span>
               </td>
               <td class="py-3.5 font-sans">
                 <span
@@ -194,7 +194,7 @@
       <form @submit.prevent="submitCreateVersion" class="space-y-4 text-xs font-tajawal">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <label class="block font-bold text-slate-300">{{ $t('super.readable_version_name') }}</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.readable_version_name') }}</label>
             <input
               v-model="form.version_name"
               type="text"
@@ -205,7 +205,7 @@
           </div>
 
           <div class="space-y-1.5">
-            <label class="block font-bold text-slate-300">{{ $t('super.version_code_label') }}</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.version_code_label') }}</label>
             <input
               v-model.number="form.version_code"
               type="number"
@@ -217,7 +217,7 @@
           </div>
 
           <div class="space-y-1.5">
-            <label class="block font-bold text-slate-300">{{ $t('super.target_platform_label') }}</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.target_platform_label') }}</label>
             <select
               v-model="form.platform"
               class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 font-tajawal"
@@ -229,7 +229,7 @@
           </div>
 
           <div class="space-y-1.5">
-            <label class="block font-bold text-slate-300">{{ $t('super.min_supported_version') }}</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.min_supported_version') }}</label>
             <input
               v-model.number="form.min_version_code"
               type="number"
@@ -255,7 +255,7 @@
 
         <!-- Release notes textarea -->
         <div class="space-y-1.5">
-          <label class="block font-bold text-slate-300">{{ $t('super.release_notes_ar_label') }}</label>
+          <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.release_notes_ar_label') }}</label>
           <textarea
             v-model="form.release_notes_ar"
             rows="3"
@@ -267,7 +267,7 @@
 
         <!-- File Upload -->
         <div class="space-y-1.5">
-          <label class="block font-bold text-slate-300">{{ $t('super.apk_file_label') }}</label>
+          <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.apk_file_label') }}</label>
           <input
             type="file"
             accept=".apk"

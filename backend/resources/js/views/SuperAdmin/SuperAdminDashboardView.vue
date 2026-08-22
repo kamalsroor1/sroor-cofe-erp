@@ -76,7 +76,7 @@
           <!-- Plans Distribution (Col 1) -->
           <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Layers class="w-4 h-4 text-amber-400" />
                 <span>{{ $t('super.tenants_distribution') }}</span>
               </h2>
@@ -104,7 +104,7 @@
           <!-- Recent Tenants (Col 2-3) -->
           <div class="lg:col-span-2 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
-              <h2 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+              <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Building2 class="w-4 h-4 text-purple-400" />
                 <span>{{ $t('super.recent_tenants') }}</span>
               </h2>
@@ -164,7 +164,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Platform Name -->
               <div class="space-y-1.5">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('super.platform_name_label') }}
                 </label>
                 <input
@@ -178,7 +178,7 @@
 
               <!-- Platform Subtitle -->
               <div class="space-y-1.5">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('super.platform_subtitle_label') }}
                 </label>
                 <input
@@ -191,7 +191,7 @@
 
               <!-- Support Email -->
               <div class="space-y-1.5">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('super.support_email_label') }}
                 </label>
                 <input
@@ -205,7 +205,7 @@
 
               <!-- Support Phone -->
               <div class="space-y-1.5">
-                <label class="block text-xs font-bold text-slate-300">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   {{ $t('super.support_phone_label') }}
                 </label>
                 <input

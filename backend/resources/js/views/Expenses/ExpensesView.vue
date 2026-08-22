@@ -181,7 +181,7 @@
                   </div>
                 </td>
                 <td class="py-3.5 px-4">
-                  <div class="text-xs font-bold text-slate-300 font-tajawal">{{ expense.cost_center_label || expense.cost_center }}</div>
+                  <div class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ expense.cost_center_label || expense.cost_center }}</div>
                   <div class="text-[10px] text-slate-500 font-tajawal mt-0.5">{{ expense.category }}</div>
                 </td>
                 <td class="py-3.5 px-4 font-mono text-slate-300">
@@ -191,7 +191,7 @@
                   {{ formatMoney(expense.amount) }} <span class="text-xs font-normal">{{ $t('common.currency') }}</span>
                 </td>
                 <td class="py-3.5 px-4 text-center">
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-300">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-700 dark:text-slate-300">
                     {{ formatPaymentMethod(expense.payment_method) }}
                   </span>
                 </td>
@@ -251,7 +251,7 @@
               type="button"
               @click="fetchExpenses(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.previous') }}
             </button>
@@ -262,7 +262,7 @@
               type="button"
               @click="fetchExpenses(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
             >
               {{ $t('common.next') }}
             </button>
@@ -279,7 +279,7 @@
         <form @submit.prevent="saveExpense" class="space-y-4 font-tajawal">
           <!-- Title -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('expenses.expense_item') }} <span class="text-rose-500">*</span>
             </label>
             <input
@@ -294,7 +294,7 @@
           <!-- Cost Center & Category Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('expenses.cost_center') }} <span class="text-rose-500">*</span>
               </label>
               <select
@@ -309,7 +309,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('expenses.category') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -339,7 +339,7 @@
           <!-- Amount & Date Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('common.amount') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -353,7 +353,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {{ $t('common.date') }} <span class="text-rose-500">*</span>
               </label>
               <input
@@ -367,7 +367,7 @@
 
           <!-- Payment Method -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('invoices.payment_method') }} <span class="text-rose-500">*</span>
             </label>
             <select
@@ -386,7 +386,7 @@
 
           <!-- Notes -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {{ $t('common.notes') }}
             </label>
             <textarea

@@ -223,7 +223,7 @@
               type="button"
               @click="fetchReturns(pagination.current_page - 1)"
               :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.previous') }}
             </button>
@@ -234,7 +234,7 @@
               type="button"
               @click="fetchReturns(pagination.current_page + 1)"
               :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer"
+              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               {{ $t('common.next') }}
             </button>
@@ -295,12 +295,12 @@
 
           <!-- Total Footer -->
           <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs font-tajawal">
-            <span class="font-bold text-slate-300">{{ $t('returns.total_returns_val') }}:</span>
+            <span class="font-bold text-slate-700 dark:text-slate-300">{{ $t('returns.total_returns_val') }}:</span>
             <span class="text-base font-black text-rose-400 font-mono">{{ formatMoney(selectedReturnDetails.total_amount) }} {{ $t('common.currency') }}</span>
           </div>
 
           <div v-if="selectedReturnDetails.reason" class="p-3 bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 rounded-xl text-slate-400 font-tajawal">
-            <span class="font-bold text-slate-300">{{ $t('returns.return_reason_label') }}</span>
+            <span class="font-bold text-slate-700 dark:text-slate-300">{{ $t('returns.return_reason_label') }}</span>
             <span>{{ selectedReturnDetails.reason }}</span>
           </div>
         </div>

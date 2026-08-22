@@ -62,7 +62,7 @@ const handleLogout = async () => {
             <div class="flex items-center gap-2 sm:gap-3">
                 <router-link
                     to="/"
-                    class="h-10 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition active:scale-95 border border-slate-700 shadow-xs cursor-pointer"
+                    class="h-10 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition active:scale-95 border border-slate-700 shadow-xs cursor-pointer"
                 >
                     <span>☕</span>
                     <span class="hidden sm:inline">{{ $t('super.back_to_pos') }}</span>
@@ -114,7 +114,7 @@ const handleLogout = async () => {
                         :to="item.href"
                         @click="mobileMenuOpen = false"
                         class="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition active:scale-98"
-                        :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-300 hover:bg-slate-800 hover:text-white'"
+                        :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-800 hover:text-white'"
                     >
                         <span class="text-lg">{{ item.icon }}</span>
                         <span>{{ item.name }}</span>
@@ -147,7 +147,7 @@ const handleLogout = async () => {
                         :key="idx"
                         :to="item.href"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group"
-                        :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-300 hover:bg-slate-800 hover:text-white'"
+                        :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-800 hover:text-white'"
                     >
                         <span class="text-base">{{ item.icon }}</span>
                         <span>{{ item.name }}</span>

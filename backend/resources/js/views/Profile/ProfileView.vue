@@ -24,7 +24,7 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('profile.full_name') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('profile.full_name') }}</label>
               <input
                 v-model="form.name"
                 required
@@ -34,7 +34,7 @@
             </div>
 
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('profile.phone_for_login') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('profile.phone_for_login') }}</label>
               <input
                 v-model="form.phone"
                 required
@@ -44,7 +44,7 @@
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('profile.email_optional') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('profile.email_optional') }}</label>
               <input
                 v-model="form.email"
                 type="email"
@@ -61,7 +61,7 @@
 
           <div class="space-y-3">
             <div>
-              <label class="block text-slate-400 font-bold mb-1">{{ $t('profile.current_password') }}</label>
+              <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('profile.current_password') }}</label>
               <input
                 v-model="form.current_password"
                 type="password"
@@ -72,7 +72,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('profile.new_password') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('profile.new_password') }}</label>
                 <input
                   v-model="form.new_password"
                   type="password"
@@ -82,7 +82,7 @@
               </div>
 
               <div>
-                <label class="block text-slate-400 font-bold mb-1">{{ $t('profile.confirm_new_password') }}</label>
+                <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('profile.confirm_new_password') }}</label>
                 <input
                   v-model="form.new_password_confirmation"
                   type="password"
