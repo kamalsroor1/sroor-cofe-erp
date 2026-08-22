@@ -46,7 +46,7 @@ final class InvoiceController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = (int)$request->input('per_page', 15);
 
-        $query = Invoice::query()->with(['customer:id,name,phone,code,balance', 'user:id,name', 'store:id,name']);
+        $query = Invoice::query()->with(['customer:id,name,phone,current_balance', 'user:id,name', 'store:id,name']);
 
         if ($storeId) {
             $query->where('store_id', $storeId);
