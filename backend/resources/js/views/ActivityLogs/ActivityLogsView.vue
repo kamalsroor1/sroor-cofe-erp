@@ -52,48 +52,38 @@
 
       <!-- Filter Controls -->
       <div class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
           <!-- Search -->
-          <div class="relative">
-            <Search class="w-4 h-4 text-slate-400 absolute start-3 top-2.5" />
-            <input
-              v-model="filters.search"
-              @input="debouncedFetch"
-              type="text"
-              :placeholder="$t('activity.search_placeholder')"
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-theme-primary"
-            />
-          </div>
+          <BaseSearchInput
+            v-model="filters.search"
+            :placeholder="$t('activity.search_placeholder')"
+            :debounce="300"
+            @search="fetchLogs"
+          />
 
           <!-- Module -->
-          <select
+          <BaseSelect
             v-model="filters.module"
+            :options="moduleOptions"
+            :searchable="false"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary"
-          >
-            <option value="all">{{ $t('activity.all_modules') }}</option>
-            <option v-for="(label, key) in modulesList" :key="key" :value="key">{{ label }}</option>
-          </select>
+          />
 
           <!-- User -->
-          <select
+          <BaseSelect
             v-model="filters.user_id"
+            :options="userOptions"
+            :searchable="true"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary"
-          >
-            <option value="all">{{ $t('activity.all_users') }}</option>
-            <option v-for="u in usersList" :key="u.id" :value="u.id">{{ u.name }}</option>
-          </select>
+          />
 
           <!-- Store -->
-          <select
+          <BaseSelect
             v-model="filters.store_id"
+            :options="storeOptions"
+            :searchable="true"
             @change="fetchLogs"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-theme-primary"
-          >
-            <option value="all">{{ $t('activity.all_stores') }}</option>
-            <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
-          </select>
+          />
         </div>
       </div>
 
@@ -209,8 +199,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
+import BaseSelect from '../../Components/Form/BaseSelect.vue';
+import { trans } from '../../helpers/trans';
 import {
     Activity,
     Search,
@@ -233,6 +226,21 @@ const filters = ref({
     store_id: 'all',
     page: 1,
 });
+
+const moduleOptions = computed(() => [
+    { value: 'all', label: trans('activity.all_modules') },
+    ...Object.entries(modulesList.value).map(([k, v]) => ({ value: k, label: v }))
+]);
+
+const userOptions = computed(() => [
+    { value: 'all', label: trans('activity.all_users') },
+    ...usersList.value.map(u => ({ value: u.id, label: u.name }))
+]);
+
+const storeOptions = computed(() => [
+    { value: 'all', label: trans('activity.all_stores') },
+    ...storesList.value.map(s => ({ value: s.id, label: s.name }))
+]);
 
 const pagination = ref({
     current_page: 1,

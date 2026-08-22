@@ -74,59 +74,50 @@
       <!-- Search & Filters Bar -->
       <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
-        <div class="relative flex-1">
-          <input
+        <div class="flex-1">
+          <BaseSearchInput
             v-model="searchQuery"
-            @input="debounceSearch"
-            type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none"
             :placeholder="$t('invoices.search_invoices_field_placeholder')"
-          >
-          <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
+            :debounce="300"
+            @search="fetchInvoices(1)"
+          />
         </div>
 
         <!-- Payment Type Filter -->
-        <div class="w-full md:w-36">
-          <select
+        <div class="w-full md:w-40">
+          <BaseSelect
             v-model="selectedPaymentType"
+            :options="paymentTypeOptions"
+            :searchable="false"
             @change="fetchInvoices(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          >
-            <option value="all">{{ $t('invoices.payment_type_all') }}</option>
-            <option value="cash">{{ $t('invoices.payment_cash_option') }}</option>
-            <option value="credit">{{ $t('invoices.payment_credit_option') }}</option>
-            <option value="partial">{{ $t('invoices.payment_partial_option') }}</option>
-          </select>
+          />
         </div>
 
         <!-- Status Filter -->
-        <div class="w-full md:w-36">
-          <select
+        <div class="w-full md:w-40">
+          <BaseSelect
             v-model="selectedStatus"
+            :options="statusOptions"
+            :searchable="false"
             @change="fetchInvoices(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          >
-            <option value="all">{{ $t('invoices.status_all') }}</option>
-            <option value="confirmed">{{ $t('invoices.status_confirmed_option') }}</option>
-            <option value="cancelled">{{ $t('invoices.status_cancelled_option') }}</option>
-          </select>
+          />
         </div>
 
         <!-- Date Range Filter -->
         <div class="flex items-center gap-2">
-          <input
+          <BaseInput
             v-model="dateFrom"
-            @change="fetchInvoices(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          >
+            input-class="min-h-[44px] text-xs font-mono"
+            @change="fetchInvoices(1)"
+          />
           <span class="text-xs text-slate-500 font-bold">—</span>
-          <input
+          <BaseInput
             v-model="dateTo"
-            @change="fetchInvoices(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          >
+            input-class="min-h-[44px] text-xs font-mono"
+            @change="fetchInvoices(1)"
+          />
         </div>
       </div>
 
@@ -392,6 +383,19 @@ import {
 } from 'lucide-vue-next';
 
 const invoices = ref([]);
+const paymentTypeOptions = computed(() => [
+  { value: 'all', label: trans('invoices.payment_type_all') },
+  { value: 'cash', label: trans('invoices.payment_cash_option') },
+  { value: 'credit', label: trans('invoices.payment_credit_option') },
+  { value: 'partial', label: trans('invoices.payment_partial_option') }
+]);
+
+const statusOptions = computed(() => [
+  { value: 'all', label: trans('invoices.status_all') },
+  { value: 'confirmed', label: trans('invoices.status_confirmed_option') },
+  { value: 'cancelled', label: trans('invoices.status_cancelled_option') }
+]);
+
 const summary = ref({
     total_sales: 0,
     total_paid: 0,

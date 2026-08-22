@@ -34,6 +34,7 @@
         "@capacitor/status-bar": "^8.0.3",
         "@capacitor/toast": "^8.0.1",
         "@vitejs/plugin-vue": "^6.0.8",
+        "@vuepic/vue-datepicker": "^14.0.0",
         "axios": "^1.19.0",
         "flatpickr": "^4.6.13",
         "lucide-vue-next": "^1.0.0",

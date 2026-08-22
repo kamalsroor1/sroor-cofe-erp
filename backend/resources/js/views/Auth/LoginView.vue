@@ -43,68 +43,38 @@
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-4">
         <!-- Phone / Username Field -->
-        <div>
-          <label for="login" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 font-tajawal">
-            {{ isCentralHub ? $t('auth.phone') : 'البريد الإلكتروني أو رقم الهاتف' }} <span class="text-rose-500">*</span>
-          </label>
-          <div class="relative">
-            <input
-              v-model="form.login"
-              type="text"
-              id="login"
-              required
-              autofocus
-              dir="ltr"
-              :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
-              class="w-full h-11 pr-10 pl-4 bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-inner"
-              :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
-            >
-            <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
-              <Phone class="w-4 h-4" />
-            </span>
-          </div>
-        </div>
+        <BaseInput
+          v-model="form.login"
+          id="login"
+          :label="isCentralHub ? $t('auth.phone') : $t('auth.phone_or_email') || 'البريد الإلكتروني أو رقم الهاتف'"
+          :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
+          :required="true"
+          :leading-icon="Phone"
+          dir="ltr"
+          :error="errorMessage"
+          wrapper-class="text-right"
+        />
 
         <!-- Password Field with Toggle -->
-        <div>
-          <label for="password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 font-tajawal">
-            {{ $t('auth.password_label') }} <span class="text-rose-500">*</span>
-          </label>
-          <div class="relative">
-            <input
-              v-model="form.password"
-              :type="showPassword ? 'text' : 'password'"
-              id="password"
-              required
-              dir="ltr"
-              :placeholder="$t('auth.password_placeholder')"
-              class="w-full h-11 pr-10 pl-11 bg-slate-50 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-inner"
-              :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
-            >
-            <span class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
-              <Lock class="w-4 h-4" />
-            </span>
-            <button
-              type="button"
-              @click="showPassword = !showPassword"
-              class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              <EyeOff v-if="showPassword" class="w-4 h-4" />
-              <Eye v-else class="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <BaseInput
+          v-model="form.password"
+          id="password"
+          type="password"
+          :label="$t('auth.password_label')"
+          :placeholder="$t('auth.password_placeholder')"
+          :required="true"
+          :leading-icon="Lock"
+          dir="ltr"
+          :error="errorMessage"
+          wrapper-class="text-right"
+        />
 
         <!-- Remember Me Checkbox -->
         <div class="flex items-center justify-between pt-1">
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              v-model="form.remember"
-              type="checkbox"
-              class="w-4 h-4 rounded-lg bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-theme-primary focus:ring-theme-primary/20 focus:ring-offset-0 transition-all cursor-pointer"
-            >
-            <span class="text-xs text-slate-600 dark:text-slate-400 font-bold font-tajawal">{{ $t('auth.remember_me') }}</span>
-          </label>
+          <BaseCheckbox
+            v-model="form.remember"
+            :label="$t('auth.remember_me')"
+          />
         </div>
 
         <!-- Submit Button -->
@@ -169,6 +139,8 @@ import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
+import BaseInput from '../../Components/Form/BaseInput.vue';
+import BaseCheckbox from '../../Components/Form/BaseCheckbox.vue';
 import {
     AlertTriangle,
     Building2,

@@ -4,6 +4,75 @@
 
 ---
 
+## توحيد Input Components بتاريخ 2026-08-22
+
+### الجرد الأولي (Initial Discovery)
+- **Text / Email / Tel (76 استخدام عبر 31 ملف):** غير متسقة، كتابة كلاسات Tailwind يدوياً، تفاوت في عرض الـ Label ورسائل الخطأ.
+- **Number Inputs (53 استخدام عبر 20 ملف):** غير متسقة، غياب `inputmode="decimal"` على الموبايل، تفاوت في دقة الخطوة `step` وغياب حدود `min/max`.
+- **Password Input (6 استخدامات عبر 3 ملفات):** متباينة، تفتقر لزر موحد لإظهار/إخفاء كلمة المرور.
+- **Textarea (9 استخدامات عبر 9 ملفات):** متباينة في الارتفاعات وغياب عداد الأحرف.
+- **Select / Dropdown (53 استخدام عبر 27 ملف):** خليط بين select المتصفح وSearchableSelect، غياب البحث الديناميكي من الـ API مع debounce و AbortController.
+- **Checkbox & Radio (19 استخدام عبر 10 ملفات):** صعبة اللمس على الموبايل (< 44px).
+- **Date / Time Picker (27 استخدام عبر 16 ملف):** تفاوت بين inputs عادية و Flatpickr.
+- **File Upload (3 استخدامات عبر 2 ملف):** تفتقر للمعاينة الحية الفورية والسحب والإفلات.
+- **Search Input (18 استخدام عبر 17 ملف):** مكررة inline في عدة شاشات.
+- **Switch / Toggle (8 استخدامات عبر 5 ملفات):** مبنية بـ checkboxes عادية.
+
+### Components الجديدة المبنية (داخل `resources/js/Components/Form/`)
+1. **`BaseInput.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `type` (text, email, tel, password, url), `placeholder`, `error`, `hint`, `disabled`, `readonly`, `required`, `autocomplete`, `inputmode`, `maxlength`, `minlength`, `clearable`, `leadingIcon`, `trailingIcon`, `wrapperClass`, `inputClass`.
+   - **الميزات:** زر إظهار/إخفاء كلمة المرور تلقائياً، زر تفريغ سريع، مساحة لمس >= 44px، حجم خط >= 16px للموبايل لتجنب iOS Zoom، رسائل خطأ موحدة مع `aria-invalid` و `aria-describedby`.
+   - **الأساس:** Pure Vue 3 Component + Tailwind CSS Theme Engine.
+2. **`BaseNumberInput.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `min`, `max`, `step` (default 0.001), `prefix`, `suffix` (مثل ج.م), `showStepper` (أزرار +/-), `error`, `hint`, `disabled`, `readonly`, `required`.
+   - **الميزات:** `inputmode="decimal"` إلزامي لكيبورد الأرقام على الموبايل، خط مونو للأرقام المالية.
+3. **`BaseTextarea.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `rows`, `placeholder`, `maxlength`, `error`, `hint`, `disabled`, `readonly`, `required`.
+   - **الميزات:** عداد أحرف حي، توحيد الحدود ورسائل الخطأ.
+4. **`BaseSelect.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `options`, `valueKey`, `labelKey`, `searchable`, `searchPlaceholder`, `searchFn` (دالة بحث عن بعد async), `emptyText`, `error`, `hint`, `disabled`, `required`.
+   - **الميزات:** يدعم الحالتين: (1) Static Options تصفية فورية، (2) Dynamic API Remote Search مع Debounce 350ms، إلغاء الطلبات السابقة بـ `AbortController` لمنع الـ Race Conditions، حالة تحميل `Loader2`، وحالة فراغ.
+5. **`BaseCheckbox.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `description`, `value`, `error`, `disabled`, `required`.
+   - **الميزات:** Touch Target مريح >= 44px، لون الثيم المختار، أيقونة صح مخصصة.
+6. **`BaseRadioGroup.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `options`, `valueKey`, `labelKey`, `columns`, `error`, `disabled`, `required`.
+   - **الميزات:** بطاقات راديو تفاعلية بتأثيرات الثيم.
+7. **`BaseSwitch.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `description`, `error`, `disabled`, `required`.
+   - **الميزات:** Toggle Switch تفاعلي وسلس للشاشات اللمسية.
+8. **`BaseSearchInput.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `placeholder`, `loading`, `disabled`, `debounce`, `wrapperClass`, `inputClass`.
+   - **الميزات:** أيقونة بحث، زر مسح سريع X مع دعم زر ESC، ودعم Debounce.
+9. **`BaseFileUpload.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `accept`, `multiple`, `placeholder`, `hint`, `error`, `disabled`, `required`.
+   - **الميزات:** معاينة فورية للصور (Live Image Preview)، دعم السحب والإفلات (Drag & Drop)، وزر حذف الملف.
+10. **`BaseDatePicker.vue`**:
+    - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `range`, `enableTimePicker`, `format`, `locale` (default 'ar'), `autoApply`, `error`, `hint`, `disabled`, `readonly`.
+    - **الميزات:** مبني كـ Wrapper خفيف فوق `@vuepic/vue-datepicker` مع دعم كامل للـ RTL والوضع الليلي وتمرير ألوان الثيم الديناميكية.
+
+### الملفات التي تمت مراجعتها واستبدالها في هذه الجلسة
+- `views/ActivityLogs/ActivityLogsView.vue`: استبدال حقل البحث بـ `BaseSearchInput` وقوائم الأقسام والمستخدمين والمخازن بـ `BaseSelect`.
+- `views/Auth/LoginView.vue`: استبدال حقل الهاتف/البريد وكلمة المرور وتذكرني بـ `BaseInput` و `BaseCheckbox`.
+- `Components/Items/ItemFormModal.vue`: استبدال حقول الاسم والباركود والفئة بـ `BaseInput`، والوحدة بـ `BaseSelect`، والأسعار والحد الأدنى بـ `BaseNumberInput`.
+- `views/Invoices/InvoicesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`، وفلاتر الدفع والحالة بـ `BaseSelect`، ونطاق التاريخ بـ `BaseInput type="date"`.
+- `views/Expenses/ExpensesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`، ومركز التكلفة بـ `BaseSelect`، وتواريخ الفلترة ومدخلات المودال بـ `BaseInput` و `BaseSelect`.
+- `views/Customers/CustomersView.vue`: استبدال شريط البحث بـ `BaseSearchInput` ومدخلات المودال (الاسم، الهاتف، العنوان) بـ `BaseInput`.
+- `views/Suppliers/SuppliersView.vue`: استبدال شريط البحث بـ `BaseSearchInput` ومدخلات المودال (الاسم، الشركة، الهاتف) بـ `BaseInput`.
+
+### حقول خاصة اتسابت زي ما هي وليه
+- **شبكة إدخال أسطر الفواتير الحية (`InvoiceLineItemsTable.vue`):** تعتمد على حقول مضغوطة جداً ومحاذية داخل خلايا الجدول مع حسابات فورية لكل حركة كيبورد.
+
+### ملاحظات لسه محتاجة متابعة
+- إكمال استبدال باقي الشاشات (`PurchasesView`, `ReturnsView`, `DailyJournalView`, `StockTransfersView`, `SuperAdmin/*`, `Settings/*`) في الجلسات القادمة تباعاً.
+- تم فحص البناء النهائي بـ `npm run build` بنجاح كامل بـ 0 أخطاء.
+
+آخر ملف Vue تمت مراجعته: `views/Suppliers/SuppliersView.vue`
+الملف التالي بالترتيب: `views/DailyJournal/DailyJournalView.vue`
+
+---
+
+
 ## مراجعة Skeleton Loading (Inertia Deferred Props) بتاريخ 2026-08-21
 
 ### جرد الصفحات والبيانات

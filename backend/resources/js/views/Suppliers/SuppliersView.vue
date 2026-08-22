@@ -488,6 +488,9 @@ import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
+import BaseInput from '../../Components/Form/BaseInput.vue';
+import BaseNumberInput from '../../Components/Form/BaseNumberInput.vue';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import {

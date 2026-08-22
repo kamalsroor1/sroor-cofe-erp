@@ -72,48 +72,40 @@
       <!-- Filters & Search Bar -->
       <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input -->
-        <div class="relative flex-1">
-          <input
+        <div class="flex-1">
+          <BaseSearchInput
             v-model="searchQuery"
-            @input="debounceSearch"
-            type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
             :placeholder="$t('expenses.search_placeholder')"
-          >
-          <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
+            :debounce="300"
+            @search="fetchExpenses(1)"
+          />
         </div>
 
         <!-- Cost Center Dropdown -->
         <div class="w-full md:w-56">
-          <select
+          <BaseSelect
             v-model="selectedCostCenter"
+            :options="costCenterFilterOptions"
+            :searchable="false"
             @change="fetchExpenses(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
-          >
-            <option value="all">{{ $t('expenses.all_cost_centers') }}</option>
-            <option v-for="(label, key) in costCenters" :key="key" :value="key">
-              {{ label }}
-            </option>
-          </select>
+          />
         </div>
 
         <!-- Date Range Filter -->
         <div class="flex items-center gap-2">
-          <input
+          <BaseInput
             v-model="dateFrom"
-            @change="fetchExpenses(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :title="$t('common.from')"
-          >
+            input-class="min-h-[44px] text-xs font-mono"
+            @change="fetchExpenses(1)"
+          />
           <span class="text-xs text-slate-500 font-bold">—</span>
-          <input
+          <BaseInput
             v-model="dateTo"
-            @change="fetchExpenses(1)"
             type="date"
-            class="h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :title="$t('common.to')"
-          >
+            input-class="min-h-[44px] text-xs font-mono"
+            @change="fetchExpenses(1)"
+          />
         </div>
       </div>
 
@@ -278,48 +270,29 @@
       >
         <form @submit.prevent="saveExpense" class="space-y-4 font-tajawal">
           <!-- Title -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {{ $t('expenses.expense_item') }} <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="form.title"
-              type="text"
-              required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              :placeholder="$t('expenses.title_placeholder')"
-            >
-          </div>
+          <BaseInput
+            v-model="form.title"
+            :label="$t('expenses.expense_item')"
+            :required="true"
+            :placeholder="$t('expenses.title_placeholder')"
+          />
 
           <!-- Cost Center & Category Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('expenses.cost_center') }} <span class="text-rose-500">*</span>
-              </label>
-              <select
-                v-model="form.cost_center"
-                required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              >
-                <option v-for="(label, key) in costCenters" :key="key" :value="key">
-                  {{ label }}
-                </option>
-              </select>
-            </div>
+            <BaseSelect
+              v-model="form.cost_center"
+              :label="$t('expenses.cost_center')"
+              :required="true"
+              :options="costCenterModalOptions"
+              :searchable="false"
+            />
 
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('expenses.category') }} <span class="text-rose-500">*</span>
-              </label>
-              <input
-                v-model="form.category"
-                type="text"
-                required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                :placeholder="$t('expenses.category_placeholder')"
-              >
-            </div>
+            <BaseInput
+              v-model="form.category"
+              :label="$t('expenses.category')"
+              :required="true"
+              :placeholder="$t('expenses.category_placeholder')"
+            />
           </div>
 
           <!-- Quick Category Tags in Modal -->
@@ -427,8 +400,13 @@ import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
-import Swal from 'sweetalert2';
+import BaseInput from '../../Components/Form/BaseInput.vue';
+import BaseNumberInput from '../../Components/Form/BaseNumberInput.vue';
+import BaseSelect from '../../Components/Form/BaseSelect.vue';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
+import BaseTextarea from '../../Components/Form/BaseTextarea.vue';
 import { trans } from '../../helpers/trans';
+import Swal from 'sweetalert2';
 import {
     Plus,
     Search,
@@ -440,6 +418,15 @@ import {
 } from 'lucide-vue-next';
 
 const expenses = ref([]);
+const costCenterFilterOptions = computed(() => [
+  { value: 'all', label: trans('expenses.all_cost_centers') },
+  ...Object.entries(costCenters.value).map(([k, v]) => ({ value: k, label: v }))
+]);
+
+const costCenterModalOptions = computed(() => [
+  ...Object.entries(costCenters.value).map(([k, v]) => ({ value: k, label: v }))
+]);
+
 const metrics = ref({
     total_month: 0,
     total_cash: 0,
