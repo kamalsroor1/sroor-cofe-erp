@@ -29,7 +29,7 @@
                 v-model="form.name"
                 required
                 type="text"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-theme-primary"
               />
             </div>
 
@@ -39,7 +39,7 @@
                 v-model="form.phone"
                 required
                 type="text"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
               />
             </div>
 
@@ -48,7 +48,7 @@
               <input
                 v-model="form.email"
                 type="email"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
               />
             </div>
           </div>
@@ -66,7 +66,7 @@
                 v-model="form.current_password"
                 type="password"
                 placeholder="••••••••"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
               />
             </div>
 
@@ -77,7 +77,7 @@
                   v-model="form.new_password"
                   type="password"
                   placeholder="••••••••"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
                 />
               </div>
 
@@ -87,7 +87,7 @@
                   v-model="form.new_password_confirmation"
                   type="password"
                   placeholder="••••••••"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
                 />
               </div>
             </div>

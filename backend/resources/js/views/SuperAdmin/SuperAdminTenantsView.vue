@@ -40,7 +40,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('super.search_tenants_placeholder')"
-            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
           />
         </div>
 
@@ -168,7 +168,7 @@
                 v-model="createForm.name"
                 required
                 type="text"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
                 :placeholder="$t('super.org_name_placeholder')"
               />
             </div>
@@ -180,7 +180,7 @@
                   v-model="createForm.slug"
                   required
                   type="text"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
                   :placeholder="$t('super.slug_placeholder')"
                 />
               </div>
@@ -190,7 +190,7 @@
                 <select
                   v-model="createForm.plan_id"
                   required
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 font-tajawal"
                 >
                   <option v-for="p in plansList" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
@@ -204,7 +204,7 @@
                   v-model="createForm.email"
                   required
                   type="email"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
                   :placeholder="$t('super.admin_email_placeholder')"
                 />
               </div>
@@ -214,7 +214,7 @@
                 <input
                   v-model="createForm.phone"
                   type="text"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
                   :placeholder="$t('super.admin_phone_placeholder')"
                 />
               </div>
@@ -227,7 +227,7 @@
                   v-model="createForm.password"
                   required
                   type="password"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
                   placeholder="••••••••"
                 />
               </div>
@@ -239,7 +239,7 @@
                   type="number"
                   min="0"
                   max="90"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
@@ -323,7 +323,7 @@
               <label class="block text-slate-400 font-bold mb-1">{{ $t('super.new_status_label') }}</label>
               <select
                 v-model="statusForm.status"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 font-tajawal"
               >
                 <option value="active">{{ $t('super.status_active_opt') }}</option>
                 <option value="trial">{{ $t('super.status_trial_opt') }}</option>
@@ -339,7 +339,7 @@
                 type="number"
                 min="0"
                 max="365"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
                 placeholder="0"
               />
             </div>

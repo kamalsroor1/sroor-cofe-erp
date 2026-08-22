@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-900 dark:text-white" dir="rtl">
     <!-- Top Navigation Header (Desktop & Mobile) -->
     <header class="h-16 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 px-4 flex items-center justify-between shadow-xs select-none">
       <!-- Right: Brand Logo & Mobile Toggle -->

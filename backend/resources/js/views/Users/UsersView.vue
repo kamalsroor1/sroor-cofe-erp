@@ -180,7 +180,7 @@
                 v-model="form.name"
                 required
                 type="text"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-theme-primary"
                 :placeholder="$t('users.fullname_placeholder')"
               />
             </div>
@@ -193,7 +193,7 @@
                   required
                   type="text"
                   dir="ltr"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
                   placeholder="010XXXXXXXX"
                 />
               </div>
@@ -204,7 +204,7 @@
                   v-model="form.email"
                   type="email"
                   dir="ltr"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
                   placeholder="user@example.com"
                 />
               </div>
@@ -216,7 +216,7 @@
                 <select
                   v-model="form.role"
                   required
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-theme-primary font-tajawal"
                 >
                   <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
                 </select>
@@ -226,7 +226,7 @@
                 <label class="block text-slate-400 font-bold mb-1">{{ $t('users.default_store_label') }}</label>
                 <select
                   v-model="form.default_store_id"
-                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-theme-primary font-tajawal"
+                  class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-theme-primary font-tajawal"
                 >
                   <option :value="null">{{ $t('users.no_store_assigned') }}</option>
                   <option v-for="st in storesList" :key="st.id" :value="st.id">{{ st.name }}</option>
@@ -242,7 +242,7 @@
                 v-model="form.password"
                 :required="!isEditing"
                 type="password"
-                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-theme-primary"
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-theme-primary"
                 placeholder="••••••••"
               />
             </div>

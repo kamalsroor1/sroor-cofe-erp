@@ -74,7 +74,7 @@
             <input
               v-model="dateFrom"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
           </div>
           <div class="flex items-center gap-1.5">
@@ -82,13 +82,13 @@
             <input
               v-model="dateTo"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
           </div>
           <button
             type="button"
             @click="fetchStatement"
-            class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black transition-all cursor-pointer"
+            class="px-4 py-2 bg-theme-gradient text-white shadow-theme-primary font-black rounded-xl text-xs font-black transition-all cursor-pointer"
           >
             {{ $t('common.filter') }}
           </button>

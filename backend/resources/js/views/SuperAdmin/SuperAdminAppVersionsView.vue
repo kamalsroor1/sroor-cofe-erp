@@ -200,7 +200,7 @@
               type="text"
               placeholder="1.1.0"
               required
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
             />
           </div>
 
@@ -212,7 +212,7 @@
               min="1"
               placeholder="2"
               required
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
             />
           </div>
 
@@ -220,7 +220,7 @@
             <label class="block font-bold text-slate-300">{{ $t('super.target_platform_label') }}</label>
             <select
               v-model="form.platform"
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 font-tajawal"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 font-tajawal"
             >
               <option value="android">📱 Android (APK)</option>
               <option value="windows">💻 Windows</option>
@@ -235,7 +235,7 @@
               type="number"
               min="1"
               placeholder="1"
-              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+              class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500"
             />
           </div>
         </div>
@@ -261,7 +261,7 @@
             rows="3"
             required
             placeholder="• ميزة 1...&#10;• ميزة 2..."
-            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500 leading-relaxed font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 leading-relaxed font-tajawal"
           ></textarea>
         </div>
 
@@ -272,7 +272,7 @@
             type="file"
             accept=".apk"
             @change="handleFileUpload"
-            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-white text-xs file:me-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-xs file:me-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white"
           />
           <span class="text-[10px] text-slate-500 block">{{ $t('super.apk_max_size_hint') }}</span>
         </div>
@@ -281,7 +281,7 @@
           <button
             type="button"
             @click="isCreateModalOpen = false"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition cursor-pointer"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold transition cursor-pointer"
           >
             {{ $t('common.cancel') }}
           </button>

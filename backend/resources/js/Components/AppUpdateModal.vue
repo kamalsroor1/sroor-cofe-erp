@@ -20,7 +20,7 @@
 
               <div class="space-y-1.5">
                 <h2 class="text-lg font-black text-slate-900 dark:text-white">{{ $t('app_update.download_success_title') }}</h2>
-                <p class="text-xs text-slate-300 leading-relaxed px-2">
+                <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed px-2">
                   {{ $t('app_update.download_success_desc') }}
                 </p>
               </div>
@@ -47,7 +47,7 @@
                 <button
                   type="button"
                   @click="startDownloadAndInstall"
-                  class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition active:scale-95 cursor-pointer"
+                  class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-white font-bold text-xs transition active:scale-95 cursor-pointer"
                   :title="$t('app_update.re_download')"
                 >
                   {{ $t('app_update.re_download') }}
@@ -117,12 +117,12 @@
 
                 <!-- Changelog / Release Notes -->
                 <div>
-                  <div class="font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+                  <div class="font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
                     <Sparkles class="w-4 h-4 text-amber-400" />
                     <span>{{ $t('app_update.changelog_title') }}</span>
                   </div>
 
-                  <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed">
+                  <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed">
                     <template v-if="latestVersionData?.release_notes?.length">
                       <div
                         v-for="(note, idx) in latestVersionData.release_notes"
@@ -171,7 +171,7 @@
                   v-if="!isForceUpdate && !isDownloading"
                   type="button"
                   @click="closeModal"
-                  class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition active:scale-95 cursor-pointer"
+                  class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-white font-bold text-xs transition active:scale-95 cursor-pointer"
                 >
                   {{ $t('app_update.remind_later') }}
                 </button>

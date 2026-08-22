@@ -457,7 +457,7 @@ const getUserRoleLabel = computed(() => {
                 <button
                     @click="router.post('/impersonate/leave')"
                     type="button"
-                    class="h-7 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition transform active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5"
+                    class="h-7 px-3 rounded-lg bg-theme-gradient text-white shadow-theme-primary font-black font-black text-xs transition transform active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
                     <X class="w-3.5 h-3.5" />
                     <span>العودة للوحة السوبر أدمن المركزية</span>
