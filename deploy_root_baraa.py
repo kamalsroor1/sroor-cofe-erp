@@ -103,21 +103,28 @@ $PHP_BIN artisan tenants:migrate --force
 $PHP_BIN artisan db:seed --class=PermissionsSeeder --force
 $PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
 
-echo "7. Caching configurations and routes for high performance..."
+echo "7. Clearing and refreshing all Laravel caches..."
 $PHP_BIN artisan optimize:clear
+$PHP_BIN artisan cache:clear
+$PHP_BIN artisan view:clear
+$PHP_BIN artisan route:clear
+$PHP_BIN artisan config:clear
+$PHP_BIN artisan event:clear
+
 $PHP_BIN artisan config:cache
 $PHP_BIN artisan route:cache
 $PHP_BIN artisan view:cache
 $PHP_BIN artisan event:cache
 
-echo "8. Publishing assets to public_html..."
+echo "8. Publishing assets to public_html with fresh build wipe..."
 cd "$PUBLIC_DIR"
 if [ -f "default.php" ]; then
     mv default.php default.php.bak || true
 fi
 
-# Copy built frontend assets
-mkdir -p build
+# Clean and copy built frontend assets
+rm -rf "$PUBLIC_DIR/build"
+mkdir -p "$PUBLIC_DIR/build"
 cp -rf "$BACKEND_DIR/public/build/"* "$PUBLIC_DIR/build/"
 cp -f "$BACKEND_DIR/public/logo.png" "$PUBLIC_DIR/" 2>/dev/null || true
 cp -f "$BACKEND_DIR/public/favicon.ico" "$PUBLIC_DIR/" 2>/dev/null || true
