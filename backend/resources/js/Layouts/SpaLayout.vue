@@ -987,7 +987,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
@@ -1027,6 +1027,17 @@ const router = useRouter();
 
 const isSidebarOpen = ref(false);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
+
+// Force collapse mini-sidebar on POS page for maximum cashier workspace
+watch(
+    () => route.path,
+    (path) => {
+        if (path === '/pos' || path.startsWith('/pos')) {
+            isSidebarCollapsed.value = true;
+        }
+    },
+    { immediate: true }
+);
 const isUserDropdownOpen = ref(false);
 const isNotificationsOpen = ref(false);
 const userDropdownRef = ref(null);
