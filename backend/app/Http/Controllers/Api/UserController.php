@@ -57,8 +57,10 @@ final class UserController extends Controller
             $query->role($role);
         }
 
-        $users = $query->latest('id')->paginate($perPage);
-        $roles = Role::select('id', 'name')->get();
+        $isTenant = function_exists('tenant') && tenant();
+        $roles = Role::when($isTenant, fn($q) => $q->where('name', '!=', 'super_admin'))
+            ->select('id', 'name')
+            ->get();
         $stores = Store::where('is_active', true)->select('id', 'name', 'code')->get();
 
         $formattedUsers = collect($users->items())->map(function ($u) {

@@ -14,7 +14,14 @@ final class GetRolesMatrixAction
      */
     public function execute(?int $selectedRoleId = null): array
     {
-        $roles = Role::with('permissions')->get();
+        $isTenant = function_exists('tenant') && tenant();
+
+        $query = Role::with('permissions');
+        if ($isTenant) {
+            $query->where('name', '!=', 'super_admin');
+        }
+
+        $roles = $query->get();
 
         $selectedRole = $selectedRoleId
             ? $roles->firstWhere('id', $selectedRoleId)
