@@ -44,6 +44,14 @@ class TenantProvisionerService implements TenantProvisionerInterface
             $tenantData['tenancy_db_name'] = $dto->tenancyDbName;
         }
 
+        if (!empty($dto->tenancyDbUsername)) {
+            $tenantData['tenancy_db_username'] = $dto->tenancyDbUsername;
+        }
+
+        if (!empty($dto->tenancyDbPassword)) {
+            $tenantData['tenancy_db_password'] = $dto->tenancyDbPassword;
+        }
+
         $tenant = Tenant::create($tenantData);
 
         // 2. Provision Primary Subdomain

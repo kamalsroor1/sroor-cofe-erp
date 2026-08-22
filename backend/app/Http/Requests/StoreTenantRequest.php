@@ -23,6 +23,8 @@ class StoreTenantRequest extends FormRequest
             'custom_domain' => 'nullable|string|max:255|unique:domains,domain',
             'trial_days' => 'nullable|integer|min:0|max:90',
             'tenancy_db_name' => 'nullable|string|max:100',
+            'tenancy_db_username' => 'nullable|string|max:100',
+            'tenancy_db_password' => 'nullable|string|max:255',
         ];
     }
 }
