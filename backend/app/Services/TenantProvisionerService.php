@@ -96,17 +96,29 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 ]
             );
 
-            $user = User::firstOrCreate(
-                ['phone' => $dto->phone ?? '01000000000'],
-                [
+            $user = User::where('email', $dto->email)
+                ->orWhere('phone', $dto->phone ?: '01000000000')
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $dto->name,
+                    'email' => $dto->email,
+                    'phone' => $dto->phone ?: ($dto->slug . '_admin'),
+                    'password' => Hash::make($dto->password),
+                    'is_active' => true,
+                    'default_store_id' => $mainStore->id,
+                    'theme_preference' => 'dark',
+                ]);
+            } else {
+                $user->update([
                     'name' => $dto->name,
                     'email' => $dto->email,
                     'password' => Hash::make($dto->password),
                     'is_active' => true,
                     'default_store_id' => $mainStore->id,
-                    'theme_preference' => 'dark',
-                ]
-            );
+                ]);
+            }
 
             $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
             $user->syncRoles([$adminRole]);

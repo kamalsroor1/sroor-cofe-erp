@@ -38,6 +38,32 @@ class ResolveApiTenancy
             }
         }
 
+        // 3. Resolve by Request Host (Subdomains and Custom Domains)
+        $host = $request->getHost();
+        $centralDomains = config('tenancy.central_domains', [
+            '127.0.0.1',
+            'localhost',
+            'baraa-solutions.com',
+            'www.baraa-solutions.com',
+        ]);
+
+        if (!in_array($host, $centralDomains, true)) {
+            // A. Search by domain record
+            $tenant = Tenant::whereHas('domains', fn ($q) => $q->where('domain', $host))->first();
+
+            // B. Search by slug if host is a subdomain like 2m.baraa-solutions.com
+            if (!$tenant) {
+                $subdomain = explode('.', $host)[0] ?? null;
+                if ($subdomain && !in_array($subdomain, ['www', 'mail', 'cpanel', 'webmail'], true)) {
+                    $tenant = Tenant::find($subdomain) ?? Tenant::where('slug', $subdomain)->first();
+                }
+            }
+
+            if ($tenant) {
+                tenancy()->initialize($tenant);
+            }
+        }
+
         return $next($request);
     }
 }
