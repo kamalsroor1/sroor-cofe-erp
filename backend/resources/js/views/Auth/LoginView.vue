@@ -32,7 +32,7 @@
         <!-- Phone / Username Field -->
         <div>
           <label for="login" class="block text-xs font-bold text-slate-300 mb-1.5 font-tajawal">
-            {{ $t('auth.phone') }} <span class="text-rose-500">*</span>
+            {{ isCentralHub ? $t('auth.phone') : 'البريد الإلكتروني أو رقم الهاتف' }} <span class="text-rose-500">*</span>
           </label>
           <div class="relative">
             <input
@@ -42,7 +42,7 @@
               required
               autofocus
               dir="ltr"
-              :placeholder="$t('auth.phone_placeholder')"
+              :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
               class="w-full h-11 pr-10 pl-4 bg-slate-950/80 border border-slate-700 rounded-2xl text-white text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition-all placeholder:text-slate-500 shadow-inner"
               :class="{ 'border-rose-500 focus:ring-rose-500': errorMessage }"
             >
@@ -111,8 +111,8 @@
         </button>
       </form>
 
-      <!-- Quick Account Switcher (For Demo & Fast Access) -->
-      <div class="pt-4 border-t border-slate-800/80 space-y-2.5">
+      <!-- Quick Account Switcher (Only on Central Hub Baraa Solutions) -->
+      <div v-if="isCentralHub" class="pt-4 border-t border-slate-800/80 space-y-2.5">
         <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold font-tajawal">
           <span class="flex items-center gap-1">
             <Key class="w-3.5 h-3.5 text-amber-400" />
@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
@@ -173,6 +173,11 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+
+const isCentralHub = computed(() => {
+    const host = window.location.hostname;
+    return host === 'baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1';
+});
 
 const form = reactive({
     login: '',
