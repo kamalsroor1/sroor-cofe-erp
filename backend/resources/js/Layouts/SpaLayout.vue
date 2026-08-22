@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200" dir="rtl">
+  <div class="h-screen max-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200" dir="rtl">
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- 🔝 TOP HEADER BAR                                           -->
+    <!-- 🔝 TOP HEADER BAR (Fixed At Top)                            -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <header class="h-16 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 sticky top-0 z-40 px-3 sm:px-6 flex items-center justify-between shadow-xs select-none backdrop-blur-md">
+    <header class="h-16 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-3 sm:px-6 flex items-center justify-between shadow-xs select-none backdrop-blur-md">
       <!-- Right Side: User Dropdown, Theme Switcher, Notifications, Store & Shift Context -->
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Mobile Menu Toggle -->
@@ -226,14 +226,14 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🖥️ MAIN BODY: SIDEBAR + CONTENT                             -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div class="flex-1 flex overflow-hidden relative">
+    <div class="flex-1 flex overflow-hidden relative min-h-0">
       <!-- 💻 DESKTOP SIDEBAR -->
       <aside
-        class="hidden md:flex bg-white dark:bg-slate-900/95 border-l border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-sm"
+        class="hidden md:flex h-full max-h-full bg-white dark:bg-slate-900/95 border-l border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-sm z-30 overflow-hidden"
         :class="isSidebarCollapsed ? 'w-20' : 'w-72'"
       >
-        <!-- 📌 1. STICKY TOP HEADER OF SIDEBAR (Modern Redesigned Toggle Button) -->
-        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 shrink-0 sticky top-0 bg-white dark:bg-slate-900/95 z-20">
+        <!-- 📌 1. PERMANENTLY FIXED TOP HEADER OF SIDEBAR -->
+        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 shrink-0 bg-white dark:bg-slate-900/95 z-20">
           <!-- Expanded Mode -->
           <div v-if="!isSidebarCollapsed" class="flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
@@ -285,7 +285,7 @@
         </div>
 
         <!-- 📌 2. SCROLLABLE NAVIGATION LIST (Solid Tactile Icon Tiles) -->
-        <div class="flex-1 overflow-y-auto p-2.5 space-y-1.5 custom-scrollbar">
+        <div class="flex-1 overflow-y-auto min-h-0 p-2.5 space-y-1.5 custom-scrollbar">
           <!-- 🌟 Big Action Button: New Sale Invoice (F2) -->
           <div
             class="relative"
@@ -816,8 +816,8 @@
           </div>
         </div>
 
-        <!-- 📌 3. STICKY BOTTOM FOOTER OF SIDEBAR -->
-        <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 sticky bottom-0 bg-white/95 dark:bg-slate-900/95 z-20">
+        <!-- 📌 3. PERMANENTLY FIXED BOTTOM FOOTER OF SIDEBAR -->
+        <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-white/95 dark:bg-slate-900/95 z-20">
           <div class="flex items-center gap-2.5 overflow-hidden">
             <div
               class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs"
@@ -843,7 +843,7 @@
       </aside>
 
       <!-- Main Content Stage (Dark Canvas Base) -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 pb-24 md:pb-8">
+      <main class="flex-1 h-full overflow-y-auto min-h-0 p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 pb-24 md:pb-8 custom-scrollbar">
         <slot />
       </main>
 
