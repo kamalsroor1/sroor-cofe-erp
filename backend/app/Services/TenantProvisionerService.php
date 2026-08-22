@@ -122,9 +122,6 @@ class TenantProvisionerService implements TenantProvisionerInterface
 
             $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
             $user->syncRoles([$adminRole]);
-
-            // Seed default coffee inventory items
-            (new \Database\Seeders\CoffeeItemsSeeder)->run();
         });
 
         return $tenant;
