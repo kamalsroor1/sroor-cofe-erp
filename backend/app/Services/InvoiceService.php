@@ -61,6 +61,14 @@ class InvoiceService
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
 
                 $qty = (string)$line['quantity'];
+                
+                // Enforce integer-only quantity for discrete units
+                $discreteUnits = ['قطعة', 'حبة', 'علبة', 'باكت', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'جوال', 'piece', 'pcs', 'box', 'carton', 'pack', 'unit'];
+                $itemUnit = trim(mb_strtolower((string)$item->unit));
+                if (in_array($itemUnit, $discreteUnits, true) && fmod((float)$qty, 1.0) != 0.0) {
+                    throw new \DomainException("الصنف '{$item->name}' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور ({$qty} {$item->unit}).");
+                }
+
                 $unitPrice = (string)$line['unit_price'];
                 $itemDiscount = (string)($line['discount_amount'] ?? '0.000');
 

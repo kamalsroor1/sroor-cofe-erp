@@ -15,6 +15,7 @@ const navItems = computed(() => [
     { name: trans('super.dashboard'), href: '/super-admin', icon: '📊', active: route.path === '/super-admin' },
     { name: trans('super.tenants'), href: '/super-admin/tenants', icon: '🏪', active: route.path.startsWith('/super-admin/tenants') },
     { name: trans('super.plans'), href: '/super-admin/plans', icon: '💼', active: route.path.startsWith('/super-admin/plans') },
+    { name: 'وحدات القياس', href: '/super-admin/units', icon: '⚖️', active: route.path.startsWith('/super-admin/units') },
     { name: trans('super.app_versions'), href: '/super-admin/app-versions', icon: '📱', active: route.path.startsWith('/super-admin/app-versions') },
 ]);
 

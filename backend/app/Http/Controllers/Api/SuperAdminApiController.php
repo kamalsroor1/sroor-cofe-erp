@@ -308,6 +308,40 @@ final class SuperAdminApiController extends Controller
     }
 
     /**
+     * Get system units configuration (Super Admin)
+     */
+    public function getUnits(): JsonResponse
+    {
+        $unitsStr = Setting::get('global_system_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,باكت,حبة,لتر,مل,متر,طقم,زوج,باليتة');
+        $units = array_values(array_filter(array_map('trim', explode(',', $unitsStr))));
+
+        return response()->json([
+            'success' => true,
+            'units'   => $units,
+        ]);
+    }
+
+    /**
+     * Update system units configuration (Super Admin)
+     */
+    public function updateUnits(Request $request): JsonResponse
+    {
+        $request->validate([
+            'units'   => ['required', 'array', 'min:1'],
+            'units.*' => ['required', 'string', 'max:50'],
+        ]);
+
+        $unitsStr = implode(',', $request->input('units'));
+        Setting::set('global_system_units', $unitsStr);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حفظ وتحديث وحدات القياس للنظام بنجاح ✓',
+            'units'   => $request->input('units'),
+        ]);
+    }
+
+    /**
      * تحويل الأخطاء البرمجية وقواعد البيانات إلى رسائل عربية واضحة ومفهومة للمستخدم
      */
     private function formatTenantException(\Throwable $e): string

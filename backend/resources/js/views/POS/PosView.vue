@@ -232,7 +232,8 @@
               </button>
               <input
                 :value="item.quantity"
-                @input="onCartQtyInput(idx, $event.target.value)"
+                @input="onCartQtyInput(idx, $event)"
+                @change="onCartQtyChange(idx, $event)"
                 type="number"
                 :step="isDiscreteUnit(item.unit) ? '1' : '0.001'"
                 :min="isDiscreteUnit(item.unit) ? '1' : '0.001'"
@@ -649,15 +650,36 @@ const isDiscreteUnit = (unit) => {
     return discrete.includes(u);
 };
 
-const onCartQtyInput = (idx, rawVal) => {
+const onCartQtyInput = (idx, event) => {
+    const rawVal = event?.target?.value ?? event;
     let val = parseFloat(rawVal);
     if (isNaN(val) || val <= 0) val = 1;
+
     if (isDiscreteUnit(cart.value[idx].unit)) {
         val = Math.max(1, Math.round(val));
+        if (event?.target && event.target.value != val) {
+            event.target.value = val;
+        }
     } else {
         val = parseFloat(val.toFixed(3));
     }
     cart.value[idx].quantity = val;
+};
+
+const onCartQtyChange = (idx, event) => {
+    const rawVal = event?.target?.value;
+    if (isDiscreteUnit(cart.value[idx].unit)) {
+        if (rawVal && (rawVal.includes('.') || rawVal.includes(','))) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: `الوحدة (${cart.value[idx].unit}) تقبل أعداداً صحيحة فقط ولا يمكن بيع أجزاء أو كسور`,
+                showConfirmButton: false,
+                timer: 2500,
+            });
+        }
+    }
 };
 
 const addToCart = (item) => {

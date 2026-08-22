@@ -330,6 +330,16 @@ const routes = [
         },
     },
     {
+        path: '/super-admin/units',
+        name: 'super_admin.units',
+        component: () => import('../views/SuperAdmin/SuperAdminUnitsView.vue'),
+        meta: {
+            title: 'إدارة وحدات القياس للنظام',
+            requiresAuth: true,
+            superAdminOnly: true,
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',

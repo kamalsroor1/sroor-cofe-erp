@@ -196,9 +196,11 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
             Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
             Route::put('/plans/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
 
-            // Central Platform Settings & Whitelabel
+            // Central Platform Settings & Whitelabel & Units
             Route::get('/settings', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'getPlatformSettings'])->name('api.super_admin.settings.get');
             Route::post('/settings', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlatformSettings'])->name('api.super_admin.settings.update');
+            Route::get('/units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'getUnits'])->name('api.super_admin.units.get');
+            Route::post('/units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateUnits'])->name('api.super_admin.units.update');
 
             // App Versions & APK Releases Management
             Route::get('/app-versions', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'index'])->name('api.super_admin.app_versions.index');
