@@ -14,7 +14,7 @@
           <ArrowRight class="w-5 h-5" />
         </button>
 
-        <div v-else class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center shadow-md shadow-amber-500/10 shrink-0">
+        <div v-else class="w-12 h-12 rounded-2xl bg-theme-light border border-theme-border text-theme-primary flex items-center justify-center shadow-md shadow-amber-500/10 shrink-0">
           <Sliders class="w-6 h-6" />
         </div>
 
@@ -23,7 +23,7 @@
             <h1 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
               {{ currentSectionTitle }}
             </h1>
-            <span v-if="selectedSection" class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+            <span v-if="selectedSection" class="px-2.5 py-0.5 rounded-full bg-theme-light border border-theme-border text-theme-primary text-[10px] font-bold">
               {{ $t('settings.subpage_badge') }}
             </span>
           </div>
@@ -39,7 +39,7 @@
           type="button"
           @click="saveSettings"
           :disabled="isSaving || isLoading"
-          class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
+          class="w-full sm:w-auto px-6 py-3 bg-theme-gradient text-white font-black text-xs sm:text-sm rounded-2xl shadow-theme-primary flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
         >
           <Save class="w-4.5 h-4.5" />
           <span>{{ isSaving ? $t('common.loading') : $t('profile.save_changes') }}</span>
@@ -236,7 +236,7 @@
                       type="button"
                       @click="selectThemeColor(color.id)"
                       class="p-3.5 rounded-2xl border transition-all flex flex-col items-center gap-2.5 cursor-pointer relative"
-                      :class="form.system_theme_color === color.id ? 'border-amber-500 bg-amber-500/10 ring-2 ring-amber-500/30' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'"
+                      :class="form.system_theme_color === color.id ? 'border-theme-primary bg-theme-light ring-2 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'"
                     >
                       <div class="w-8 h-8 rounded-full shadow-md flex items-center justify-center" :style="{ backgroundColor: color.hex }">
                         <span v-if="form.system_theme_color === color.id" class="text-white text-xs font-black">✓</span>
@@ -257,7 +257,7 @@
                       type="button"
                       @click="appConfigStore.setTheme('dark')"
                       class="p-4 rounded-2xl border transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-                      :class="appConfigStore.isDark ? 'border-amber-500 bg-slate-900 text-white font-bold' : 'border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600'"
+                      :class="appConfigStore.isDark ? 'border-theme-primary bg-slate-900 text-white font-bold ring-1 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600'"
                     >
                       <Moon class="w-5 h-5 text-amber-400" />
                       <span>الوضع الداكن (Dark Mode)</span>
@@ -267,7 +267,7 @@
                       type="button"
                       @click="appConfigStore.setTheme('light')"
                       class="p-4 rounded-2xl border transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-                      :class="!appConfigStore.isDark ? 'border-amber-500 bg-white text-slate-900 font-bold shadow-md' : 'border-slate-200 dark:border-slate-800 bg-slate-900/40 text-slate-400'"
+                      :class="!appConfigStore.isDark ? 'border-theme-primary bg-white text-slate-900 font-bold shadow-md ring-1 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-900/40 text-slate-400'"
                     >
                       <Sun class="w-5 h-5 text-amber-500" />
                       <span>الوضع الفاتح (Light Mode)</span>

@@ -18,7 +18,7 @@
             <img :src="appConfigStore.branding?.logo || '/logo.png'" alt="Logo" class="w-full h-full object-contain">
           </div>
           <div>
-            <h1 class="font-black text-sm text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors font-tajawal">
+            <h1 class="font-black text-sm text-slate-900 dark:text-white group-hover:text-theme-primary transition-colors font-tajawal">
               {{ isSuperAdminPanel ? 'منظومة ERP السحابية المركزية' : (appConfigStore.companyName || appConfigStore.platformName) }}
             </h1>
             <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold -mt-0.5 font-tajawal">
@@ -128,7 +128,7 @@
               class="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('super_admin.plans') ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Layers class="w-4 h-4" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-amber-400'" />
+              <Layers class="w-4 h-4" :class="$route.name?.startsWith('super_admin.plans') ? 'text-white' : 'text-theme-primary'" />
               <span>{{ $t('super.plans') }}</span>
             </router-link>
 
@@ -191,7 +191,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('coffee_blender') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-amber-400'" />
+              <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.coffee_blender') }}</span>
             </router-link>
 
@@ -213,7 +213,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('items') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-slate-950' : 'text-amber-400'" />
+              <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.items_catalog') }}</span>
             </router-link>
 
@@ -289,7 +289,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('users') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-amber-400'" />
+              <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.users') }}</span>
             </router-link>
 
@@ -316,7 +316,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('settings') ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-amber-400'" />
+              <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-theme-primary'" />
               <span>{{ $t('nav.settings') }}</span>
             </router-link>
 
