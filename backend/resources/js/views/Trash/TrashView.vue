@@ -135,6 +135,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import {

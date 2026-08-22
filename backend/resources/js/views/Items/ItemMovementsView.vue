@@ -202,6 +202,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import api from '../../services/api';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
 import { trans } from '../../helpers/trans';
 import {
     ArrowRight,

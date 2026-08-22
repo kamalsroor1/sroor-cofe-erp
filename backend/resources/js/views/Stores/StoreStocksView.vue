@@ -38,16 +38,7 @@
         <!-- Search & Status Filters -->
         <div class="flex flex-col sm:flex-row items-center gap-2 flex-1 md:justify-end">
           <!-- Search Input -->
-          <div class="relative w-full sm:w-64">
-            <input
-              v-model="searchQuery"
-              @input="debounceSearch"
-              type="text"
-              class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
-              :placeholder="$t('inventory.search_item_code')"
-            >
-            <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
-          </div>
+          <BaseSearchInput v-model="searchQuery" placeholder="$t('inventory.search_item_code')" :debounce="300" />
 
           <!-- Stock Status Filter -->
           <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 w-full sm:w-auto">
@@ -190,6 +181,7 @@ import { useRoute } from 'vue-router';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import api from '../../services/api';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
 import {
     ArrowRight,
     Search

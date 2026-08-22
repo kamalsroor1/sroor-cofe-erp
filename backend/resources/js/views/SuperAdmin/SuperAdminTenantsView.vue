@@ -379,10 +379,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../../services/api';
-import DarkSwal from '../../helpers/alert';
+import BaseInput from '../../Components/Form/BaseInput.vue';
+import BaseSelect from '../../Components/Form/BaseSelect.vue';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
 import { trans } from '../../helpers/trans';
+import DarkSwal from '../../helpers/alert';
 import {
     Building2,
     Crown,

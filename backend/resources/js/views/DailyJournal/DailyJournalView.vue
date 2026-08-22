@@ -350,20 +350,14 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {{ $t('treasury.actual_counted_cash_prompt') }} <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="closeShiftForm.actual_cash_balance"
-              type="number"
-              step="0.001"
-              required
-              autofocus
-              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-lg font-bold text-emerald-400 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              placeholder="0.00"
-            >
-          </div>
+          <BaseNumberInput
+            v-model="closeShiftForm.actual_cash_balance"
+            :label="$t('treasury.actual_counted_cash_prompt')"
+            :required="true"
+            step="0.001"
+            :suffix="$t('common.currency')"
+            input-class="text-emerald-400 text-lg"
+          />
 
           <!-- Live Discrepancy Preview -->
           <div v-if="closeShiftForm.actual_cash_balance !== ''" class="p-3 rounded-xl border text-xs font-bold flex items-center justify-between" :class="getDiffClass()">
@@ -503,6 +497,10 @@ import PageHeader from '../../Components/Common/PageHeader.vue';
 import EmptyState from '../../Components/Common/EmptyState.vue';
 import AppModal from '../../Components/Common/AppModal.vue';
 import api from '../../services/api';
+import BaseInput from '../../Components/Form/BaseInput.vue';
+import BaseNumberInput from '../../Components/Form/BaseNumberInput.vue';
+import BaseSelect from '../../Components/Form/BaseSelect.vue';
+import BaseTextarea from '../../Components/Form/BaseTextarea.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import {

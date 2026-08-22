@@ -121,6 +121,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
+import BaseInput from '../../Components/Form/BaseInput.vue';
+import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
 import Swal from 'sweetalert2';
 
 const units = ref(['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'باكت', 'حبة', 'لتر', 'مل', 'متر', 'طقم', 'زوج', 'باليتة']);
