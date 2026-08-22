@@ -7,16 +7,15 @@
     <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative z-10">
       <!-- Header / Brand Logo -->
       <div class="text-center space-y-3">
-        <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white dark:bg-slate-800 p-2 shadow-2xl shadow-theme-primary border border-slate-200 dark:border-slate-700">
-          <img :src="appConfigStore.branding?.logo_light || '/logo-light.png'" alt="Logo Light" class="w-full h-full object-contain filter drop-shadow-sm dark:hidden">
-          <img :src="appConfigStore.branding?.logo_dark || '/logo-dark.png'" alt="Logo Dark" class="w-full h-full object-contain filter drop-shadow-sm hidden dark:block">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-amber-500/30 text-amber-400 shadow-2xl shadow-amber-500/10">
+          <Building2 class="w-10 h-10" />
         </div>
         <div>
           <h1 class="text-2xl font-black text-white font-tajawal tracking-tight">
-            {{ appConfigStore.companyName || $t('auth.app_name') }}
+            {{ isCentralHub ? 'منظومة ERP السحابية' : (appConfigStore.tenant?.name || appConfigStore.companyName || 'منظومة المحل') }}
           </h1>
           <p class="text-xs text-slate-400 font-bold mt-1">
-            {{ appConfigStore.companySubtitle || $t('auth.subtitle') }}
+            {{ isCentralHub ? 'لوحة الإدارة المركزية والفوترة السحابية' : (appConfigStore.companySubtitle || 'لإدارة المبيعات والمخزون والفروع') }}
           </p>
         </div>
       </div>
@@ -158,6 +157,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
 import {
     AlertTriangle,
+    Building2,
     Phone,
     Lock,
     Eye,
