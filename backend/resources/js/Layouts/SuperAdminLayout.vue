@@ -11,13 +11,18 @@ const router = useRouter();
 const user = computed(() => authStore.user || {});
 const mobileMenuOpen = ref(false);
 
+const telescopeUrl = computed(() => {
+    const token = localStorage.getItem('auth_token') || '';
+    return `/telescope-access?token=${encodeURIComponent(token)}`;
+});
+
 const navItems = computed(() => [
     { name: trans('super.dashboard'), href: '/super-admin/dashboard', icon: '📊', active: route.path === '/super-admin' || route.path === '/super-admin/dashboard' },
     { name: trans('super.tenants'), href: '/super-admin/tenants', icon: '🏪', active: route.path.startsWith('/super-admin/tenants') },
     { name: trans('super.plans'), href: '/super-admin/plans', icon: '💼', active: route.path.startsWith('/super-admin/plans') },
     { name: 'وحدات القياس', href: '/super-admin/units', icon: '⚖️', active: route.path.startsWith('/super-admin/units') },
     { name: trans('super.app_versions'), href: '/super-admin/app-versions', icon: '📱', active: route.path.startsWith('/super-admin/app-versions') },
-    { name: 'مراقب النظام (Telescope)', href: '/telescope', icon: '🔭', external: true, active: false },
+    { name: 'مراقب النظام (Telescope)', href: telescopeUrl.value, icon: '🔭', external: true, active: false },
 ]);
 
 const handleLogout = async () => {

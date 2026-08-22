@@ -13,6 +13,40 @@ use App\Models\Invoice;
 |
 */
 
+// 🔭 Telescope Web Authentication Bridge for Super Admins
+Route::get('/telescope-access', function (\Illuminate\Http\Request $request) {
+    $token = $request->query('token');
+    $user = null;
+
+    if ($token) {
+        $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+        if ($pat && $pat->tokenable instanceof \App\Models\User) {
+            $user = $pat->tokenable;
+        }
+
+        if (!$user) {
+            $user = \App\Models\User::where('api_token', $token)->first();
+        }
+    }
+
+    if (!$user && auth()->check()) {
+        $user = auth()->user();
+    }
+
+    $isAllowed = $user && (
+        (method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || $user->hasRole('admin'))) ||
+        (isset($user->phone) && in_array($user->phone, ['01012316954', '01558088841'])) ||
+        (isset($user->email) && in_array($user->email, ['01012316954@sroor.com', '01558088841@sroor.com', 'admin@baraa-solutions.com']))
+    );
+
+    if ($isAllowed) {
+        auth('web')->login($user, true);
+        return redirect('/telescope');
+    }
+
+    abort(403, 'غير مصرح لك بالوصول إلى لوحة المراقبة (Telescope). مخصص للسوبر أدمن فقط.');
+})->name('telescope.access');
+
 // 📄 Public Marketing Brochure & Pricing PDF Presentation
 Route::get('/brochure', function () {
     return view('marketing-brochure');
