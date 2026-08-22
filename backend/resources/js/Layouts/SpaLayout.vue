@@ -164,7 +164,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('pos') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <ShoppingCart class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('pos') ? 'text-slate-950' : 'text-emerald-400'" />
+              <ShoppingCart class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('pos') ? 'text-white' : 'text-emerald-400'" />
               <span>{{ $t('nav.pos_fast') }}</span>
             </router-link>
 
@@ -173,7 +173,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('invoices') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <FileText class="w-4 h-4 text-blue-400" :class="$route.name?.startsWith('invoices') ? 'text-slate-950' : 'text-blue-400'" />
+              <FileText class="w-4 h-4 text-blue-400" :class="$route.name?.startsWith('invoices') ? 'text-white' : 'text-blue-400'" />
               <span>{{ $t('nav.invoices_log') }}</span>
             </router-link>
 
@@ -182,7 +182,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('returns') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <RotateCcw class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('returns') ? 'text-slate-950' : 'text-cyan-400'" />
+              <RotateCcw class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('returns') ? 'text-white' : 'text-cyan-400'" />
               <span>{{ $t('nav.returns_adjustments') }}</span>
             </router-link>
 
@@ -191,7 +191,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('coffee_blender') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-slate-950' : 'text-theme-primary'" />
+              <Layers class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('coffee_blender') ? 'text-white' : 'text-theme-primary'" />
               <span>{{ $t('nav.coffee_blender') }}</span>
             </router-link>
 
@@ -213,7 +213,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('items') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-slate-950' : 'text-theme-primary'" />
+              <Package class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('items') ? 'text-white' : 'text-theme-primary'" />
               <span>{{ $t('nav.items_catalog') }}</span>
             </router-link>
 
@@ -222,7 +222,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('stock_transfers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Truck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('stock_transfers') ? 'text-slate-950' : 'text-purple-400'" />
+              <Truck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('stock_transfers') ? 'text-white' : 'text-purple-400'" />
               <span>{{ $t('nav.stock_transfers') }}</span>
             </router-link>
 
@@ -231,7 +231,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('purchases') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Truck class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('purchases') ? 'text-slate-950' : 'text-emerald-400'" />
+              <Truck class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('purchases') ? 'text-white' : 'text-emerald-400'" />
               <span>{{ $t('nav.purchases') }}</span>
             </router-link>
 
@@ -240,7 +240,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('customers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Users class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('customers') ? 'text-slate-950' : 'text-cyan-400'" />
+              <Users class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('customers') ? 'text-white' : 'text-cyan-400'" />
               <span>{{ $t('nav.customers') }}</span>
             </router-link>
 
@@ -249,7 +249,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('suppliers') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Factory class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('suppliers') ? 'text-slate-950' : 'text-indigo-400'" />
+              <Factory class="w-4 h-4 text-indigo-400" :class="$route.name?.startsWith('suppliers') ? 'text-white' : 'text-indigo-400'" />
               <span>{{ $t('nav.suppliers') }}</span>
             </router-link>
 
@@ -258,7 +258,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('expenses') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Receipt class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('expenses') ? 'text-slate-950' : 'text-rose-400'" />
+              <Receipt class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('expenses') ? 'text-white' : 'text-rose-400'" />
               <span>{{ $t('nav.expenses') }}</span>
             </router-link>
 
@@ -267,7 +267,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('daily_journal') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Wallet class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('daily_journal') ? 'text-slate-950' : 'text-emerald-400'" />
+              <Wallet class="w-4 h-4 text-emerald-400" :class="$route.name?.startsWith('daily_journal') ? 'text-white' : 'text-emerald-400'" />
               <span>{{ $t('nav.daily_journal') }}</span>
             </router-link>
 
@@ -276,7 +276,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('reports') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <BarChart3 class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('reports') ? 'text-slate-950' : 'text-purple-400'" />
+              <BarChart3 class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('reports') ? 'text-white' : 'text-purple-400'" />
               <span>{{ $t('nav.reports') }}</span>
             </router-link>
 
@@ -289,7 +289,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('users') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-slate-950' : 'text-theme-primary'" />
+              <Users class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('users') ? 'text-white' : 'text-theme-primary'" />
               <span>{{ $t('nav.users') }}</span>
             </router-link>
 
@@ -298,7 +298,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('roles') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <ShieldCheck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('roles') ? 'text-slate-950' : 'text-purple-400'" />
+              <ShieldCheck class="w-4 h-4 text-purple-400" :class="$route.name?.startsWith('roles') ? 'text-white' : 'text-purple-400'" />
               <span>{{ $t('nav.roles') }}</span>
             </router-link>
 
@@ -307,7 +307,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('activity_logs') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-slate-950' : 'text-cyan-400'" />
+              <Activity class="w-4 h-4 text-cyan-400" :class="$route.name?.startsWith('activity_logs') ? 'text-white' : 'text-cyan-400'" />
               <span>{{ $t('nav.audit_logs') }}</span>
             </router-link>
 
@@ -316,7 +316,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('settings') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-slate-950' : 'text-theme-primary'" />
+              <Sliders class="w-4 h-4 text-amber-400" :class="$route.name?.startsWith('settings') ? 'text-white' : 'text-theme-primary'" />
               <span>{{ $t('nav.settings') }}</span>
             </router-link>
 
@@ -325,7 +325,7 @@
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all"
               :class="$route.name?.startsWith('trash') ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
             >
-              <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-slate-950' : 'text-rose-400'" />
+              <Trash2 class="w-4 h-4 text-rose-400" :class="$route.name?.startsWith('trash') ? 'text-white' : 'text-rose-400'" />
               <span>{{ $t('nav.trash') }}</span>
             </router-link>
           </template>

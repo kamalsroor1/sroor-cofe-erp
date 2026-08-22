@@ -86,12 +86,12 @@
       <router-link
         to="/"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isDashboardActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isDashboardActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isDashboardActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-amber-400 animate-pulse"
+            class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
           <LayoutDashboard class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isDashboardActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
@@ -102,12 +102,12 @@
       <router-link
         to="/invoices"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isInvoicesActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isInvoicesActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isInvoicesActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-amber-400 animate-pulse"
+            class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
           <FileText class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isInvoicesActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
@@ -118,11 +118,11 @@
       <div class="flex-1 flex items-center justify-center">
         <router-link
           to="/pos"
-          class="relative -top-4 w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-950 group"
-          :class="isPosActive ? 'scale-110 ring-amber-400/50' : ''"
+          class="relative -top-4 w-12 h-12 rounded-2xl bg-theme-gradient flex items-center justify-center shadow-lg shadow-theme-primary transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-950 group"
+          :class="isPosActive ? 'scale-110 ring-theme-primary' : ''"
           :title="$t('nav.pos_fast')"
         >
-          <ShoppingCart class="w-6 h-6 text-slate-950 fill-current transition-transform group-hover:rotate-12 duration-300" />
+          <ShoppingCart class="w-6 h-6 text-white fill-current transition-transform group-hover:rotate-12 duration-300" />
         </router-link>
       </div>
 
@@ -130,12 +130,12 @@
       <router-link
         to="/items"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isItemsActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isItemsActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isItemsActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-amber-400 animate-pulse"
+            class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
           <Package class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isItemsActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
@@ -146,12 +146,12 @@
       <router-link
         to="/daily-journal"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isShiftActive ? 'text-amber-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="isShiftActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isShiftActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-amber-400 animate-pulse"
+            class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
           <Wallet class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isShiftActive ? 'scale-110' : 'group-hover:scale-105'" />
           <!-- Open Shift Indicator Dot -->
