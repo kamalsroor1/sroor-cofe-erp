@@ -1027,13 +1027,26 @@ const router = useRouter();
 
 const isSidebarOpen = ref(false);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
+let wasCollapsedBeforePos = localStorage.getItem('sidebar_collapsed') === 'true';
 
-// Force collapse mini-sidebar on POS page for maximum cashier workspace
+// 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit
 watch(
     () => route.path,
-    (path) => {
-        if (path === '/pos' || path.startsWith('/pos')) {
+    (newPath, oldPath) => {
+        const isGoingToPos = newPath === '/pos' || newPath.startsWith('/pos');
+        const isComingFromPos = oldPath && (oldPath === '/pos' || oldPath.startsWith('/pos'));
+
+        if (isGoingToPos) {
+            // Remember original preference before entering POS
+            wasCollapsedBeforePos = localStorage.getItem('sidebar_collapsed') === 'true';
             isSidebarCollapsed.value = true;
+        } else if (isComingFromPos) {
+            // Restoring state upon leaving POS
+            const savedPref = localStorage.getItem('sidebar_collapsed') === 'true';
+            isSidebarCollapsed.value = savedPref;
+        } else {
+            // Normal navigation: ensure state follows saved preference
+            isSidebarCollapsed.value = localStorage.getItem('sidebar_collapsed') === 'true';
         }
     },
     { immediate: true }
