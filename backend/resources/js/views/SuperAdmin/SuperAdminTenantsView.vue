@@ -127,12 +127,22 @@
                 </td>
 
                 <td class="p-4 text-end font-sans">
-                  <button
-                    @click="openStatusModal(t)"
-                    class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
-                  >
-                    {{ $t('super.edit_status_and_sub_btn') }}
-                  </button>
+                  <div class="flex items-center justify-end gap-2">
+                    <button
+                      @click="openStatusModal(t)"
+                      class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 rounded-lg text-xs font-bold transition font-tajawal cursor-pointer"
+                    >
+                      {{ $t('super.edit_status_and_sub_btn') }}
+                    </button>
+
+                    <button
+                      @click="confirmDeleteTenant(t)"
+                      class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer"
+                      title="حذف المستأجر"
+                    >
+                      <Trash2 class="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -366,7 +376,8 @@ import {
     Crown,
     Plus,
     Search,
-    ExternalLink
+    ExternalLink,
+    Trash2
 } from 'lucide-vue-next';
 
 const tenants = ref([]);
@@ -497,6 +508,38 @@ const submitStatusChange = async () => {
         });
     } finally {
         isSubmitting.value = false;
+    }
+};
+
+const confirmDeleteTenant = async (tenant) => {
+    const result = await DarkSwal.fire({
+        title: `هل أنت متأكد من حذف ${tenant.name}؟`,
+        text: 'سيتم إلغاء ربط الدومين وحذف بيانات المستأجر من لوحة الإدارة.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء',
+    });
+
+    if (result.isConfirmed) {
+        try {
+            await api.delete(`/super-admin/tenants/${tenant.id}`);
+            DarkSwal.fire({
+                icon: 'success',
+                title: 'تم الحذف',
+                text: 'تم حذف المستأجر بنجاح ✓',
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            fetchTenants();
+        } catch (e) {
+            DarkSwal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: e.response?.data?.message || 'تعذر حذف المستأجر',
+                confirmButtonText: 'حسناً',
+            });
+        }
     }
 };
 

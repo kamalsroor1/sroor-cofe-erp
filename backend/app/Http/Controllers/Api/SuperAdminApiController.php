@@ -158,6 +158,54 @@ final class SuperAdminApiController extends Controller
     }
 
     /**
+     * Delete / Destroy Tenant and all domains
+     */
+    public function destroyTenant(string $id, \App\Actions\Tenants\DeleteTenantAction $action): JsonResponse
+    {
+        try {
+            $tenant = Tenant::findOrFail($id);
+            $action->execute($tenant);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حذف المستأجر بنجاح ✓',
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذر حذف المستأجر: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Update Tenant Database Credentials
+     */
+    public function updateDatabaseConfig(Request $request, string $id, \App\Actions\Tenants\UpdateTenantDatabaseConfigAction $action): JsonResponse
+    {
+        try {
+            $tenant = Tenant::findOrFail($id);
+            $data = $request->validate([
+                'tenancy_db_name' => 'nullable|string|max:100',
+                'tenancy_db_username' => 'nullable|string|max:100',
+                'tenancy_db_password' => 'nullable|string|max:255',
+            ]);
+
+            $action->execute($tenant, $data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث بيانات قاعدة بيانات المستأجر بنجاح ✓',
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
      * Plans and Pricing Management
      */
     public function plans(): JsonResponse

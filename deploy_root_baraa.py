@@ -58,15 +58,14 @@ chmod -R 775 storage bootstrap/cache database
 
 echo "3. Setting up isolated .env file..."
 cat << 'EOF' > .env
-APP_NAME="منظومة ERP | Cloud POS"
+APP_NAME="Baraa ERP"
 APP_ENV=production
-APP_KEY=
+APP_KEY=base64:tXF3QONxB/cYe60Ot3W2alvTg8xocTqFr+K2gXfobB8=
 APP_DEBUG=false
-APP_TIMEZONE=Africa/Cairo
 APP_URL=https://baraa-solutions.com
 CENTRAL_DOMAIN=baraa-solutions.com
 
-LOG_CHANNEL=stack
+LOG_CHANNEL=daily
 LOG_DEPRECATIONS_CHANNEL=null
 LOG_LEVEL=error
 
@@ -75,12 +74,13 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=u910151740_baraa_central
 DB_USERNAME=u910151740_baraa_admin
-DB_PASSWORD='BaraaErp@2026#Secure'
-TENANT_DB_PREFIX=u910151740_
-AUTO_CREATE_TENANT_DB=false
+DB_PASSWORD=BaraaErp@2026#Secure
 
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
+TENANT_DB_PREFIX=u910151740_
+TENANT_DB_SUFFIX=
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=43200
 SESSION_ENCRYPT=false
 SESSION_PATH=/
 SESSION_DOMAIN=null
@@ -97,11 +97,10 @@ EOF
 echo "4. Installing Composer dependencies..."
 $PHP_BIN $(which composer) install --no-dev --optimize-autoloader --no-interaction
 
-echo "5. Generating App Key..."
-$PHP_BIN artisan key:generate --force
-
-echo "6. Running MySQL Migrations with Seeders on u910151740_baraa_central..."
-$PHP_BIN artisan migrate:fresh --force --seed
+echo "5. Running MySQL Migrations safely on u910151740_baraa_central..."
+$PHP_BIN artisan migrate --force
+$PHP_BIN artisan db:seed --class=PermissionsSeeder --force
+$PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
 
 echo "7. Caching configurations and routes for high performance..."
 $PHP_BIN artisan optimize:clear
