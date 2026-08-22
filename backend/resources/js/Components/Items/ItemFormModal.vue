@@ -50,7 +50,7 @@ const unitOptions = computed(() => [
         :show="show"
         :title="editingItem ? $t('inventory.edit_item') : $t('inventory.add_new_item')"
         :icon="Package"
-        max-width="lg"
+        max-width="3xl"
         @close="$emit('close')"
     >
         <form id="item-form" @submit.prevent="$emit('submit')" class="space-y-4">

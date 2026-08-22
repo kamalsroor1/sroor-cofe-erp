@@ -314,6 +314,7 @@
       <AppModal
         :show="showItemModal"
         :title="editingItem ? $t('inventory.edit_item') : $t('inventory.add_item')"
+        max-width="3xl"
         @close="showItemModal = false"
       >
         <form @submit.prevent="saveItem" class="space-y-4 font-tajawal">
