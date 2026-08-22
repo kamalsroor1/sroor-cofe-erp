@@ -249,6 +249,7 @@ Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogContro
 
 // 📱 PWA Manifest & Service Worker
 Route::get('/manifest.json', function () {
+    $baseUrl = url('/');
     $platformName = \App\Models\Setting::get('platform_name') ?: \App\Models\Setting::get('app_name') ?: config('app.name', 'منظومة ERP');
     $manifest = [
         'id' => 'cloud-erp-pos-app',

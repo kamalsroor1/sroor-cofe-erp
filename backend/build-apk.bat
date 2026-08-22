@@ -5,10 +5,12 @@ echo   Building Android APK via Capacitor.js - Cloud ERP POS
 echo ====================================================
 
 :: Set Java 17 Home & Android SDK
-if exist "C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot" (
-    set "JAVA_HOME=C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot"
-) else if exist "C:\Program Files\Java\jdk-17" (
-    set "JAVA_HOME=C:\Program Files\Java\jdk-17"
+for /d %%i in ("C:\Program Files\Microsoft\jdk-17*") do set "JAVA_HOME=%%i"
+if not defined JAVA_HOME (
+    for /d %%i in ("C:\Program Files\Java\jdk-17*") do set "JAVA_HOME=%%i"
+)
+if not defined JAVA_HOME (
+    for /d %%i in ("C:\Program Files\Eclipse Adoptium\jdk-17*") do set "JAVA_HOME=%%i"
 )
 
 set "ANDROID_HOME=C:\Android\Sdk"
