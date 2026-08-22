@@ -327,7 +327,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../../services/api';
-import Swal from 'sweetalert2';
+import DarkSwal from '../../helpers/alert';
 import { trans } from '../../helpers/trans';
 import {
     Building2,
@@ -410,20 +410,21 @@ const submitCreateTenant = async () => {
     isSubmitting.value = true;
     try {
         await api.post('/super-admin/tenants', createForm.value);
-        Swal.fire({
+        DarkSwal.fire({
             icon: 'success',
-            title: trans('super.tenant_created_title'),
-            text: trans('super.tenant_created_msg'),
+            title: trans('super.tenant_created_title') || 'تم إنشاء المستأجر بنجاح',
+            text: trans('super.tenant_created_msg') || 'تمت تهيئة قاعدة البيانات والحساب بنجاح',
             timer: 2000,
             showConfirmButton: false,
         });
         showCreateModal.value = false;
         fetchTenants();
     } catch (e) {
-        Swal.fire({
+        DarkSwal.fire({
             icon: 'error',
-            title: trans('common.error'),
-            text: e.response?.data?.message || trans('super.tenant_create_failed'),
+            title: trans('common.error') || 'تنبيه',
+            text: e.response?.data?.message || trans('super.tenant_create_failed') || 'فشل إنشاء المستأجر',
+            confirmButtonText: 'حسناً، فهمت',
         });
     } finally {
         isSubmitting.value = false;
@@ -444,20 +445,21 @@ const submitStatusChange = async () => {
     isSubmitting.value = true;
     try {
         await api.post(`/super-admin/tenants/${selectedTenant.value.id}/toggle-status`, statusForm.value);
-        Swal.fire({
+        DarkSwal.fire({
             icon: 'success',
-            title: trans('common.success'),
-            text: trans('super.status_updated_msg'),
+            title: trans('common.success') || 'تم الحفظ',
+            text: trans('super.status_updated_msg') || 'تم تحديث حالة المستأجر بنجاح',
             timer: 1500,
             showConfirmButton: false,
         });
         showStatusModal.value = false;
         fetchTenants();
     } catch (e) {
-        Swal.fire({
+        DarkSwal.fire({
             icon: 'error',
-            title: trans('common.error'),
-            text: e.response?.data?.message || trans('super.status_update_failed'),
+            title: trans('common.error') || 'تنبيه',
+            text: e.response?.data?.message || trans('super.status_update_failed') || 'فشل تحديث الحالة',
+            confirmButtonText: 'حسناً',
         });
     } finally {
         isSubmitting.value = false;
