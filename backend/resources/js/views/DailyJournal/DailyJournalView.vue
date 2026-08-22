@@ -15,7 +15,7 @@
                 v-model="selectedDate"
                 @change="fetchDailyJournal"
                 type="date"
-                class="bg-transparent border-0 text-xs font-mono text-white focus:outline-none focus:ring-0 cursor-pointer"
+                class="bg-transparent border-0 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-0 cursor-pointer"
               >
             </div>
 
@@ -23,7 +23,7 @@
             <button
               type="button"
               @click="showExpenseModal = true"
-              class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <MinusCircle class="w-4 h-4" />
               <span>{{ $t('treasury.record_journal_expense') }}</span>
@@ -70,7 +70,7 @@
               </span>
             </div>
             <p class="text-[11px] text-slate-400 mt-0.5">
-              {{ $t('treasury.cashier_label') }}: <span class="font-bold text-slate-200">{{ activeShift.user_name || $t('treasury.cashier_label') }}</span> — {{ $t('treasury.opened_at_time') }} <span class="font-mono text-slate-300">{{ activeShift.opened_at }}</span>
+              {{ $t('treasury.cashier_label') }}: <span class="font-bold text-slate-900 dark:text-slate-200">{{ activeShift.user_name || $t('treasury.cashier_label') }}</span> — {{ $t('treasury.opened_at_time') }} <span class="font-mono text-slate-300">{{ activeShift.opened_at }}</span>
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@
         <button
           type="button"
           @click="showOpenShiftModal = true"
-          class="px-3.5 py-1.5 bg-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-md cursor-pointer"
+          class="px-3.5 py-1.5 bg-theme-primary text-white font-black text-xs rounded-xl shadow-sm cursor-pointer"
         >
           {{ $t('treasury.open_shift_now') }}
         </button>
@@ -144,10 +144,10 @@
         </div>
 
         <!-- Expected Cash In Drawer -->
-        <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-950 border border-amber-500/30 shadow-md space-y-1">
-          <span class="text-[11px] font-bold text-amber-300 block">{{ $t('treasury.expected_drawer_balance') }}</span>
-          <div class="text-xl font-black text-amber-400 font-mono">
-            {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-amber-300/80 font-normal">{{ $t('common.currency') }}</span>
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-slate-900 dark:to-slate-950 border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-md space-y-1">
+          <span class="text-[11px] font-bold text-amber-600 dark:text-amber-300 block">{{ $t('treasury.expected_drawer_balance') }}</span>
+          <div class="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">
+            {{ formatMoney(summary.expected_cash_in_drawer || 0) }} <span class="text-xs text-amber-600/80 dark:text-amber-300/80 font-normal">{{ $t('common.currency') }}</span>
           </div>
           <span class="text-[10px] text-slate-400 block">{{ $t('treasury.expected_drawer_sub') }}</span>
         </div>
@@ -156,12 +156,12 @@
       <!-- Journal Tabs (Invoices vs Expenses) -->
       <div class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <!-- Tabs Header -->
-        <div class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-900/60 p-2">
+        <div class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/60 p-1.5 rounded-xl gap-2">
           <button
             type="button"
             @click="activeTab = 'invoices'"
             class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-            :class="activeTab === 'invoices' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="activeTab === 'invoices' ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'"
           >
             <ShoppingCart class="w-4 h-4" />
             <span>{{ $t('treasury.journal_invoices_tab') }} ({{ invoices.length }})</span>
@@ -171,7 +171,7 @@
             type="button"
             @click="activeTab = 'expenses'"
             class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-            :class="activeTab === 'expenses' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'"
+            :class="activeTab === 'expenses' ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'"
           >
             <Receipt class="w-4 h-4" />
             <span>{{ $t('treasury.journal_expenses_tab') }} ({{ expenses.length }})</span>
@@ -189,7 +189,7 @@
           <div v-if="invoices.length > 0" class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="py-3 px-4 text-start font-bold">#</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.customer') }}</th>
@@ -207,11 +207,11 @@
                   <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ inv.customer_name }}</td>
                   <td class="py-3.5 px-4 font-mono text-slate-400">{{ inv.time || '—' }}</td>
                   <td class="py-3.5 px-4 text-center">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                       {{ formatPaymentMethod(inv.payment_method) }}
                     </span>
                   </td>
-                  <td class="py-3.5 px-4 text-end font-mono font-bold text-slate-200">
+                  <td class="py-3.5 px-4 text-end font-mono font-bold text-slate-900 dark:text-slate-200">
                     {{ formatMoney(inv.net_total) }} {{ $t('common.currency') }}
                   </td>
                   <td class="py-3.5 px-4 text-end font-mono font-black text-emerald-400">
@@ -240,7 +240,7 @@
           <div v-if="expenses.length > 0" class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="py-3 px-4 text-start font-bold">#</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                   <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
@@ -256,7 +256,7 @@
                   <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ e.title }}</td>
                   <td class="py-3.5 px-4 font-tajawal text-slate-300">{{ e.cost_center_label || e.cost_center }}</td>
                   <td class="py-3.5 px-4 text-center">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-800 border border-slate-700 text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                       {{ formatPaymentMethod(e.payment_method) }}
                     </span>
                   </td>
@@ -342,7 +342,7 @@
           <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
             <div class="flex items-center justify-between text-xs">
               <span class="text-slate-400 font-bold">{{ $t('treasury.shift_opening_balance_label') }}</span>
-              <span class="font-mono text-slate-200 font-bold">{{ formatMoney(activeShift?.opening_cash_balance || 0) }} {{ $t('common.currency') }}</span>
+              <span class="font-mono text-slate-900 dark:text-slate-200 font-bold">{{ formatMoney(activeShift?.opening_cash_balance || 0) }} {{ $t('common.currency') }}</span>
             </div>
             <div class="flex items-center justify-between text-xs">
               <span class="text-slate-400 font-bold">{{ $t('treasury.shift_expected_balance_label') }}</span>

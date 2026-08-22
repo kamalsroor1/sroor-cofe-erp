@@ -14,7 +14,7 @@
 
         <button
           @click="fetchRecords"
-          class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition cursor-pointer"
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition cursor-pointer"
         >
           <RefreshCw class="w-4 h-4 text-amber-400" :class="{ 'animate-spin': isLoading }" />
           <span>{{ $t('trash.refresh_trash') }}</span>
@@ -28,13 +28,13 @@
           :key="t.id"
           @click="changeTab(t.id)"
           class="px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer font-tajawal"
-          :class="currentTab === t.id ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          :class="currentTab === t.id ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800'"
         >
           <span>{{ t.icon }}</span>
           <span>{{ t.label }}</span>
           <span
             class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold"
-            :class="counts[t.id] > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500'"
+            :class="currentTab === t.id ? 'bg-white/25 text-white' : (counts[t.id] > 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400')"
           >
             {{ counts[t.id] || 0 }}
           </span>
@@ -50,7 +50,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('trash.search_trash_placeholder')"
-            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-theme-primary font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-theme-primary font-tajawal"
           />
         </div>
       </div>
@@ -64,13 +64,13 @@
 
         <div v-else-if="records.length === 0" class="p-16 text-center">
           <Trash2 class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-300 mb-1 font-tajawal">{{ $t('trash.empty_trash_title') }}</h3>
-          <p class="text-xs text-slate-500 font-tajawal">{{ $t('trash.empty_trash_desc') }}</p>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1 font-tajawal">{{ $t('trash.empty_trash_title') }}</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('trash.empty_trash_desc') }}</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-start text-xs">
-            <thead class="bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold font-tajawal">
+            <thead class="bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 font-bold font-tajawal">
               <tr>
                 <th class="p-4 text-start">{{ $t('trash.item_name_col') }}</th>
                 <th class="p-4 text-start">{{ $t('trash.description_code_col') }}</th>
@@ -87,7 +87,7 @@
                   <div class="flex items-center justify-end gap-2">
                     <button
                       @click="restoreRecord(item)"
-                      class="px-3 py-1.5 bg-slate-900 hover:bg-emerald-950/40 border border-slate-700 hover:border-emerald-700 text-emerald-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 font-tajawal cursor-pointer"
+                      class="px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 dark:bg-slate-900 dark:hover:bg-emerald-950/40 border border-slate-300 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 font-tajawal cursor-pointer"
                     >
                       <RotateCcw class="w-3.5 h-3.5" />
                       <span>{{ $t('common.restore') }}</span>
@@ -95,7 +95,7 @@
 
                     <button
                       @click="forceDeleteRecord(item)"
-                      class="px-3 py-1.5 bg-slate-900 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-800 text-rose-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 font-tajawal cursor-pointer"
+                      class="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 dark:bg-slate-900 dark:hover:bg-rose-950/40 border border-slate-300 dark:border-slate-700 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold transition flex items-center gap-1.5 font-tajawal cursor-pointer"
                     >
                       <Trash2 class="w-3.5 h-3.5" />
                       <span>{{ $t('common.force_delete') }}</span>
@@ -114,7 +114,7 @@
             <button
               :disabled="pagination.current_page === 1"
               @click="changePage(pagination.current_page - 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl cursor-pointer"
+              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-50 border border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer"
             >
               {{ $t('common.previous') }}
             </button>
@@ -122,7 +122,7 @@
             <button
               :disabled="pagination.current_page === pagination.last_page"
               @click="changePage(pagination.current_page + 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl cursor-pointer"
+              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-50 border border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer"
             >
               {{ $t('common.next') }}
             </button>

@@ -10,7 +10,7 @@
           <button
             type="button"
             @click="printReport"
-            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Printer class="w-4 h-4" />
             <span>{{ $t('reports.print_a4_report') }}</span>
@@ -29,7 +29,7 @@
               type="button"
               @click="setPeriod(p.key)"
               class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
-              :class="filters.period === p.key ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-200 dark:border-slate-800'"
+              :class="filters.period === p.key ? 'bg-theme-primary text-white font-black shadow-sm' : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'"
             >
               {{ p.label }}
             </button>
@@ -56,14 +56,14 @@
               v-model="filters.from"
               @change="customDateChanged"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
             <span class="text-xs text-slate-400 font-bold">{{ $t('common.to') }}:</span>
             <input
               v-model="filters.to"
               @change="customDateChanged"
               type="date"
-              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
             >
           </div>
 
@@ -90,7 +90,7 @@
           type="button"
           @click="activeTab = t.key"
           class="px-4 py-2.5 rounded-xl transition flex items-center gap-2 whitespace-nowrap cursor-pointer"
-          :class="activeTab === t.key ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-theme-primary' : 'text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'"
+          :class="activeTab === t.key ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800'"
         >
           <span>{{ t.icon }}</span>
           <span>{{ t.label }}</span>
@@ -103,8 +103,9 @@
         <p class="text-xs text-slate-400 font-bold">{{ $t('reports.loading_reports') }}</p>
       </div>
 
-      <!-- TAB 1: Sales & Executive Profit & Loss -->
-      <div v-else-if="activeTab === 'sales'" class="space-y-6">
+      <Transition name="report-tab-fade" mode="out-in">
+        <!-- TAB 1: Sales & Executive Profit & Loss -->
+        <div v-if="activeTab === 'sales'" :key="activeTab" class="space-y-6">
         <!-- 9 Metrics Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Total Sales -->
@@ -122,9 +123,9 @@
           </div>
 
           <!-- Gross Profit & Margin -->
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-emerald-500/30 bg-emerald-500/5 shadow-md space-y-1">
-            <span class="text-xs font-bold text-emerald-400">{{ $t('reports.gross_profit_label') }}</span>
-            <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(summary.gross_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
+          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{ $t('reports.gross_profit_label') }}</span>
+            <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(summary.gross_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
             <span class="text-[10px] text-emerald-500 font-bold">{{ $t('reports.gross_margin_label', { pct: summary.margin_percentage }) }}</span>
           </div>
 
@@ -136,15 +137,15 @@
           </div>
 
           <!-- Net True Profit -->
-          <div class="sm:col-span-2 lg:col-span-2 p-5 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-slate-950/80 border border-emerald-500/40 shadow-xl space-y-1">
+          <div class="sm:col-span-2 lg:col-span-2 p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 dark:from-emerald-950/60 dark:to-slate-950/80 border border-emerald-200 dark:border-emerald-500/40 shadow-sm dark:shadow-xl space-y-1">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-black text-emerald-300">{{ $t('reports.net_true_profit_label') }}</span>
-              <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-mono font-bold text-[10px]">{{ $t('reports.formula_badge') }}</span>
+              <span class="text-xs font-black text-emerald-700 dark:text-emerald-300">{{ $t('reports.net_true_profit_label') }}</span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-[10px] border border-emerald-200 dark:border-emerald-500/30">{{ $t('reports.formula_badge') }}</span>
             </div>
             <div class="text-3xl font-black font-mono" :class="summary.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'">
               {{ formatMoney(summary.net_profit) }} <span class="text-sm">{{ $t('common.currency') }}</span>
             </div>
-            <span class="text-[11px] text-slate-400">{{ $t('reports.net_profit_desc') }}</span>
+            <span class="text-[11px] text-slate-600 dark:text-slate-400">{{ $t('reports.net_profit_desc') }}</span>
           </div>
 
           <!-- Cash Collected -->
@@ -172,7 +173,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('inventory.category') }}</th>
@@ -207,7 +208,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3 text-start font-bold">{{ $t('inventory.store_name') }}</th>
                 <th class="p-3 text-center font-bold">{{ $t('invoices.invoices_count_label') }}</th>
                 <th class="p-3 text-end font-bold">{{ $t('reports.total_sales_revenue') }}</th>
@@ -235,7 +236,7 @@
       </div>
 
       <!-- TAB 4: Customers Analytics -->
-      <div v-else-if="activeTab === 'customers'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div v-else-if="activeTab === 'customers'" :key="activeTab" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.top_customers_title') }}</h3>
           <span class="text-xs text-slate-500 font-mono">{{ $t('reports.top_50_customers_sub') }}</span>
@@ -243,7 +244,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr class="bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <th class="p-3 text-start font-bold">{{ $t('contacts.customer') }}</th>
                 <th class="p-3 text-start font-bold">{{ $t('contacts.phone') }}</th>
                 <th class="p-3 text-center font-bold">{{ $t('invoices.invoices_count_label') }}</th>
@@ -271,7 +272,7 @@
       </div>
 
       <!-- TAB 5: Operational Expenses -->
-      <div v-else-if="activeTab === 'expenses'" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div v-else-if="activeTab === 'expenses'" :key="activeTab" class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 class="text-xs font-bold text-slate-300">{{ $t('reports.expenses_breakdown_by_cat') }}</h3>
         </div>
@@ -293,7 +294,7 @@
       </div>
 
       <!-- TAB 6: Inventory Valuation & ABC -->
-      <div v-else-if="activeTab === 'inventory'" class="space-y-6">
+      <div v-else-if="activeTab === 'inventory'" :key="activeTab" class="space-y-6">
         <!-- Stock Valuation Top Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
@@ -302,11 +303,11 @@
           </div>
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.stock_sell_val_label') }}</span>
-            <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(inventoryData.stock_selling_valuation) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
+            <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(inventoryData.stock_selling_valuation) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
-          <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-emerald-500/30 bg-emerald-500/5 shadow-md space-y-1">
+          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-950/80 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1">
             <span class="text-xs font-bold text-emerald-400">{{ $t('reports.expected_profit_val') }}</span>
-            <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(inventoryData.expected_stock_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
+            <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(inventoryData.expected_stock_profit) }} <span class="text-xs text-emerald-500">{{ $t('common.currency') }}</span></div>
           </div>
         </div>
 
@@ -319,7 +320,7 @@
           <div class="overflow-x-auto">
             <table class="w-full text-start text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-900 text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <tr class="bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <th class="p-3 text-start font-bold">{{ $t('inventory.item_name') }}</th>
                   <th class="p-3 text-start font-bold">{{ $t('inventory.code') }}</th>
                   <th class="p-3 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
@@ -348,11 +349,11 @@
       </div>
 
       <!-- TAB 7: Treasury Cash Flow -->
-      <div v-else-if="activeTab === 'treasury'" class="space-y-6">
+      <div v-else-if="activeTab === 'treasury'" :key="activeTab" class="space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.total_inflow_label') }}</span>
-            <div class="text-2xl font-black text-emerald-400 font-mono">{{ formatMoney(treasuryData.total_inflow || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
+            <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{{ formatMoney(treasuryData.total_inflow || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span></div>
           </div>
           <div class="p-4 rounded-2xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-md space-y-1">
             <span class="text-xs font-bold text-slate-400">{{ $t('reports.total_outflow_label') }}</span>
@@ -364,6 +365,7 @@
           </div>
         </div>
       </div>
+      </Transition>
     </div>
 </template>
 
