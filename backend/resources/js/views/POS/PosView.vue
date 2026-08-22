@@ -927,8 +927,10 @@ const submitInvoice = async (printAfter = false) => {
     try {
         const payload = {
             customer_id: selectedCustomerId.value,
-            invoice_type: paymentType.value,
-            payment_method: paymentMethod.value,
+            store_id: activeStore.value?.id || parseInt(localStorage.getItem('current_store_id')) || 1,
+            invoice_date: new Date().toISOString().split('T')[0],
+            payment_type: paymentType.value,
+            payment_method: paymentMethod.value === 'smart_wallet' ? 'e_wallet' : paymentMethod.value,
             paid_amount: parseFloat(paidAmount.value || 0),
             discount_type: discountType.value,
             discount_value: parseFloat(discountValue.value || 0),

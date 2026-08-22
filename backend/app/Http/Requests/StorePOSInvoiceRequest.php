@@ -11,6 +11,28 @@ class StorePOSInvoiceRequest extends FormRequest
         return $this->user()?->can('pos.access') ?? true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $storeId = $this->input('store_id')
+            ?? $this->header('X-Store-Id')
+            ?? session('current_store_id')
+            ?? $this->user()?->getCurrentStore()?->id
+            ?? \App\Models\Store::first()?->id;
+
+        $paymentType = $this->input('payment_type') ?? $this->input('invoice_type') ?? 'cash';
+        $paymentMethod = $this->input('payment_method') ?? 'cash';
+        if ($paymentMethod === 'smart_wallet') {
+            $paymentMethod = 'e_wallet';
+        }
+
+        $this->merge([
+            'store_id' => $storeId ? (int)$storeId : null,
+            'invoice_date' => $this->input('invoice_date') ?? now()->toDateString(),
+            'payment_type' => $paymentType,
+            'payment_method' => $paymentMethod,
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -18,7 +40,7 @@ class StorePOSInvoiceRequest extends FormRequest
             'store_id' => 'required|exists:stores,id',
             'invoice_date' => 'required|date',
             'payment_type' => 'required|in:cash,credit,partial',
-            'payment_method' => 'nullable|string|in:cash,instapay,e_wallet,visa,bank_transfer',
+            'payment_method' => 'nullable|string|in:cash,instapay,e_wallet,smart_wallet,visa,bank_transfer',
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
