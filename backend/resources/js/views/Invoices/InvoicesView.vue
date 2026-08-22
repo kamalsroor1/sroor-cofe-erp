@@ -349,7 +349,7 @@
 
             <button
               type="button"
-              @click="window.print()"
+              @click="openPrintWindow(selectedInvoice.id)"
               class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-900 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Printer class="w-4 h-4 text-theme-primary" />
@@ -520,6 +520,11 @@ const cancelInvoice = async (inv) => {
             });
         }
     }
+};
+
+const openPrintWindow = (id) => {
+    if (!id) return;
+    window.open(`/invoices/${id}/print`, '_blank', 'width=800,height=600');
 };
 
 onMounted(() => {

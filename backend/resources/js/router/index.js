@@ -177,6 +177,8 @@ const routes = [
         meta: {
             title: 'طباعة الفاتورة',
             requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
             permission: 'invoices.view',
         },
     },

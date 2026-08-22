@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white" dir="rtl">
-    <!-- 1. Standalone Guest Views (Login, Marketing Brochure) -->
-    <template v-if="isGuestRoute">
+    <!-- 1. Standalone / Print / Guest Views (Completely Isolated with ZERO Sidebar or Navbars) -->
+    <template v-if="isStandaloneRoute">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.fullPath" />
@@ -9,7 +9,7 @@
       </router-view>
     </template>
 
-    <!-- 2. Super Admin Dedicated Layout (Completely Isolated Shell for Central Platform Admins) -->
+    <!-- 2. Super Admin Dedicated Layout (Isolated Shell for Central Platform Admins) -->
     <SuperAdminLayout v-else-if="isSuperAdminRoute">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
@@ -27,8 +27,10 @@
       </router-view>
     </SpaLayout>
 
-    <!-- 4. Global In-App APK Auto-Updater Modal (Renders seamlessly across all views) -->
-    <AppUpdateModal />
+    <!-- 4. Global In-App APK Auto-Updater Modal (Hidden on Print) -->
+    <div class="no-print">
+      <AppUpdateModal />
+    </div>
   </div>
 </template>
 
@@ -47,13 +49,18 @@ const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
 const { checkForUpdates } = useAppUpdate();
 
-const isGuestRoute = computed(() => {
+const isStandaloneRoute = computed(() => {
     const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
-    return route.meta?.guestOnly || 
+    const meta = route.meta || {};
+    return meta.guestOnly || 
+           meta.layout === 'blank' ||
+           meta.isPrintView ||
            route.name === 'login' || 
            route.name === 'marketing.brochure' ||
+           route.name === 'invoices.print' ||
+           path.includes('/print') ||
            path === '/login' ||
-           (typeof window !== 'undefined' && window.location.pathname === '/login');
+           (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname.includes('/print')));
 });
 
 const isSuperAdminRoute = computed(() => {
@@ -73,19 +80,32 @@ onMounted(async () => {
     if (authStore.isAuthenticated) {
         try {
             await appConfigStore.fetchBootstrapContext();
-            window.spaTranslations = appConfigStore.translations;
-        } catch (e) {
-            console.warn('Bootstrapping error, resetting auth session:', e);
-            authStore.clearSession();
+        } catch (error) {
+            console.error('Failed to initialize bootstrap context:', error);
         }
     } else {
-        await appConfigStore.fetchTranslations(appConfigStore.locale);
-        window.spaTranslations = appConfigStore.translations;
+        await appConfigStore.fetchTranslations();
     }
 
-    // 3. Check for app updates in the background (Non-blocking for authenticated users)
-    if (authStore.isAuthenticated) {
-        checkForUpdates(false);
-    }
+    // 3. Native App APK Update Check
+    checkForUpdates();
 });
 </script>
+
+<style>
+/* Page Transition Animations */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>
