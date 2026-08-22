@@ -32,10 +32,10 @@ final class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        $rawStoreId = $request->input('store_id') ?: $request->header('X-Store-Id');
+        $storeId = ($rawStoreId && $rawStoreId !== 'all' && is_numeric($rawStoreId) && (int)$rawStoreId > 0)
+            ? (int)$rawStoreId
+            : null;
 
         $search = trim((string)$request->input('search', ''));
         $status = (string)$request->input('status', 'all');
@@ -49,7 +49,7 @@ final class InvoiceController extends Controller
         $query = Invoice::query()->with(['customer:id,name,phone,code,balance', 'user:id,name', 'store:id,name']);
 
         if ($storeId) {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', $storeId);
         }
 
         if ($customerId && $customerId !== 'all') {
