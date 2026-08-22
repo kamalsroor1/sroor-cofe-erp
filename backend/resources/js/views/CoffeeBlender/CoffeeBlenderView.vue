@@ -157,7 +157,7 @@
                     min="0"
                     max="100"
                     step="5"
-                    class="flex-1 h-2 bg-slate-800 accent-amber-500 cursor-pointer rounded-lg"
+                    class="flex-1 h-2 bg-slate-200 dark:bg-slate-800 accent-theme-primary cursor-pointer rounded-lg"
                   >
                   <div class="flex items-center gap-1 shrink-0">
                     <input
@@ -165,17 +165,17 @@
                       type="number"
                       min="0"
                       max="100"
-                      class="w-12 h-7 text-center bg-white dark:bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono font-bold text-amber-400 focus:outline-none"
+                      class="w-12 h-7 text-center bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-theme-primary focus:outline-none"
                     >
-                    <span class="text-slate-400 text-[10px]">%</span>
+                    <span class="text-slate-500 dark:text-slate-400 text-[10px]">%</span>
                   </div>
                 </div>
 
                 <!-- Calculated Grams & Price -->
                 <div class="sm:w-1/3 flex items-center justify-between sm:justify-end gap-3 font-mono">
                   <div class="text-end">
-                    <div class="font-black text-emerald-400 text-xs">{{ comp.grams }} {{ $t('inventory.unit_gram') }}</div>
-                    <div class="text-[10px] text-slate-400">{{ formatMoney(comp.price) }} {{ $t('common.currency') }}</div>
+                    <div class="font-black text-theme-primary text-xs">{{ comp.grams }} {{ $t('inventory.unit_gram') }}</div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400">{{ formatMoney(comp.price) }} {{ $t('common.currency') }}</div>
                   </div>
 
                   <button

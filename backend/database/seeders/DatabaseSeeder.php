@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 5. Rich Multi-Store Demo Data (Branches, Coffee Items, Shifts, Customers, Suppliers, Ledgers)
-        $this->call(RichDemoDataSeeder::class);
+        // 5. Rich Multi-Store Demo Data disabled for clean production
+        // $this->call(RichDemoDataSeeder::class);
     }
 }
