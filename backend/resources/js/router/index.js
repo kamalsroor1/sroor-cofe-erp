@@ -353,13 +353,16 @@ router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
     const appConfigStore = useAppConfigStore();
 
-    // 1. If user is authenticated, ensure profile and system context are loaded
+    // 1. If user is marked authenticated, ensure profile and system context load cleanly
     if (authStore.isAuthenticated && !appConfigStore.isLoaded) {
         try {
             await appConfigStore.fetchBootstrapContext();
             window.spaTranslations = appConfigStore.translations;
         } catch (e) {
-            console.error('Bootstrap context load error:', e);
+            console.warn('Session expired or bootstrap context failed, clearing auth:', e);
+            authStore.clearSession();
+            appConfigStore.isLoaded = false;
+            return next({ name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined });
         }
     }
 

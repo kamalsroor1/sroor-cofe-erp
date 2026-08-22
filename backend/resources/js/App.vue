@@ -52,7 +52,8 @@ onMounted(async () => {
             await appConfigStore.fetchBootstrapContext();
             window.spaTranslations = appConfigStore.translations;
         } catch (e) {
-            console.error('Error bootstrapping SPA app:', e);
+            console.warn('Bootstrapping error, resetting auth session:', e);
+            authStore.clearSession();
         }
     } else {
         await appConfigStore.fetchTranslations(appConfigStore.locale);

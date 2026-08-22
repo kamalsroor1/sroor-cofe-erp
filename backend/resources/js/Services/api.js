@@ -58,13 +58,14 @@ apiClient.interceptors.response.use(
         if (status === 401) {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
+            localStorage.removeItem('auth_store');
+            localStorage.removeItem('current_store_id');
 
             // Prevent redirect loop if already on login page
             const currentPath = window.location.pathname;
             if (!currentPath.includes('/login')) {
-                // If using Vue Router or SPA
                 if (window.spaRouter) {
-                    window.spaRouter.push({ name: 'login', query: { redirect: currentPath } });
+                    window.spaRouter.replace({ name: 'login', query: { redirect: currentPath !== '/' ? currentPath : undefined } });
                 } else {
                     window.location.href = '/login';
                 }
