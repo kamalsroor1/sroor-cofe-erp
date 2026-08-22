@@ -70,8 +70,13 @@ LOG_CHANNEL=stack
 LOG_DEPRECATIONS_CHANNEL=null
 LOG_LEVEL=error
 
-DB_CONNECTION=sqlite
-DB_DATABASE=/home/u910151740/domains/baraa-solutions.com/erp_repo/backend/database/database.sqlite
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=u910151740_baraa_central
+DB_USERNAME=u910151740_baraa_admin
+DB_PASSWORD='BaraaErp@2026#Secure'
+TENANT_DB_PREFIX=u910151740_
 
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
@@ -94,9 +99,7 @@ $PHP_BIN $(which composer) install --no-dev --optimize-autoloader --no-interacti
 echo "5. Generating App Key..."
 $PHP_BIN artisan key:generate --force
 
-echo "6. Initializing SQLite Database and running Migrations with Seeders..."
-touch database/database.sqlite
-chmod 664 database/database.sqlite
+echo "6. Running MySQL Migrations with Seeders on u910151740_baraa_central..."
 $PHP_BIN artisan migrate:fresh --force --seed
 
 echo "7. Caching configurations and routes for high performance..."

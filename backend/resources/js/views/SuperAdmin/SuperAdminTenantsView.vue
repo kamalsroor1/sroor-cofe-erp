@@ -234,6 +234,20 @@
               </div>
             </div>
 
+            <!-- Custom MySQL Database Name (for Hostinger Manual/Custom DBs) -->
+            <div>
+              <label class="block text-slate-400 font-bold mb-1">
+                اسم قاعدة بيانات MySQL (مخصص لاستضافة هوستنجر / اختياري)
+              </label>
+              <input
+                v-model="createForm.tenancy_db_name"
+                type="text"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                placeholder="مثلاً: u910151740_tenant_golden"
+              />
+              <p class="text-[10px] text-slate-500 mt-1">اتركه فارغاً للاستخدام التلقائي الافتراضي</p>
+            </div>
+
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
               <button
                 type="button"
@@ -346,6 +360,7 @@ const createForm = ref({
     password: '',
     plan_id: null,
     trial_days: 14,
+    tenancy_db_name: '',
 });
 
 const statusForm = ref({
@@ -386,6 +401,7 @@ const openCreateModal = () => {
         password: '',
         plan_id: plansList.value[0]?.id || null,
         trial_days: 14,
+        tenancy_db_name: '',
     };
     showCreateModal.value = true;
 };

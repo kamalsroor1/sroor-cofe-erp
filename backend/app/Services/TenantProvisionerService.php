@@ -23,9 +23,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
         $plan = Plan::findOrFail($dto->planId);
         $tenantId = 'tenant_' . $dto->slug;
 
-        // 1. Create Tenant record in Central Database
-        // Stancl automatically triggers TenantCreated event which creates the isolated DB & runs migrations!
-        $tenant = Tenant::create([
+        $tenantData = [
             'id' => $tenantId,
             'name' => $dto->name,
             'slug' => $dto->slug,
@@ -40,7 +38,13 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 'currency' => config('app.currency', 'EGP'),
             ],
             'enabled_features' => [],
-        ]);
+        ];
+
+        if (!empty($dto->tenancyDbName)) {
+            $tenantData['tenancy_db_name'] = $dto->tenancyDbName;
+        }
+
+        $tenant = Tenant::create($tenantData);
 
         // 2. Provision Primary Subdomain
         $centralDomain = env('CENTRAL_DOMAIN', 'baraa-solutions.com');
