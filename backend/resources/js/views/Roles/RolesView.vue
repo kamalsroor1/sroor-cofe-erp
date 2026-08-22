@@ -1,21 +1,21 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
             <ShieldCheck class="w-5 h-5" />
           </div>
           <div>
             <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('roles.title') }}</h1>
-            <p class="text-xs text-slate-400">{{ $t('roles.subtitle') }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('roles.subtitle') }}</p>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
           <router-link
             to="/users"
-            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition"
           >
             <Users class="w-4 h-4 text-amber-400" />
             <span>{{ $t('roles.users_and_employees') }}</span>
@@ -36,7 +36,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="p-16 text-center">
         <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        <p class="text-xs text-slate-400">{{ $t('roles.loading_roles_matrix') }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('roles.loading_roles_matrix') }}</p>
       </div>
 
       <div v-else class="space-y-6">
@@ -47,10 +47,10 @@
             :key="r.id"
             @click="selectRole(r)"
             class="p-4 rounded-2xl border text-start transition cursor-pointer"
-            :class="selectedRole?.id === r.id ? 'bg-amber-500/10 border-amber-500/50 shadow-lg shadow-amber-500/10' : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'"
+            :class="selectedRole?.id === r.id ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30 shadow-md' : 'bg-white dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'"
           >
-            <div class="text-sm font-bold text-white mb-1">{{ r.label }}</div>
-            <div class="text-[11px] text-slate-400 font-mono">
+            <div class="text-sm font-bold mb-1" :class="selectedRole?.id === r.id ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-900 dark:text-white'">{{ r.label }}</div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
               {{ r.name === 'admin' ? $t('roles.full_permissions_badge') : $t('roles.active_permissions_count', { count: r.permissions_count }) }}
             </div>
           </button>
@@ -69,10 +69,10 @@
             :key="modKey"
             class="bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3"
           >
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <div class="flex items-center gap-2">
                 <span class="text-lg">{{ mod.icon }}</span>
-                <h3 class="text-xs font-bold text-white">{{ mod.title }}</h3>
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white">{{ mod.title }}</h3>
               </div>
 
               <div v-if="selectedRole?.name !== 'admin'" class="flex items-center gap-2 text-[10px]">
@@ -97,15 +97,15 @@
               <label
                 v-for="(label, permKey) in mod.permissions"
                 :key="permKey"
-                class="flex items-center justify-between p-2 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:bg-slate-900 cursor-pointer transition text-xs"
+                class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition text-xs"
               >
-                <span class="text-slate-300">{{ label }}</span>
+                <span class="text-slate-700 dark:text-slate-300 font-medium">{{ label }}</span>
                 <input
                   type="checkbox"
                   :value="permKey"
                   v-model="activePermissions"
                   :disabled="selectedRole?.name === 'admin'"
-                  class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer disabled:opacity-50"
+                  class="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 cursor-pointer disabled:opacity-50"
                 />
               </label>
             </div>

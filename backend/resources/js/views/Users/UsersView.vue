@@ -1,21 +1,21 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
       <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
             <Users class="w-5 h-5" />
           </div>
           <div>
             <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('users.users_title') }}</h1>
-            <p class="text-xs text-slate-400">{{ $t('users.users_subtitle') }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('users.users_subtitle') }}</p>
           </div>
         </div>
 
         <div class="flex items-center gap-3 w-full sm:w-auto">
           <router-link
             to="/roles"
-            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs rounded-xl shadow flex items-center gap-2 transition font-tajawal"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition font-tajawal"
           >
             <ShieldCheck class="w-4 h-4 text-amber-400" />
             <span>{{ $t('users.permissions_matrix_btn') }}</span>
@@ -32,7 +32,7 @@
       </div>
 
       <!-- Filters & Search -->
-      <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="p-4 bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex-1 w-full relative">
           <Search class="w-4 h-4 text-slate-400 absolute start-3 top-3" />
           <input
@@ -40,7 +40,7 @@
             @input="debouncedFetch"
             type="text"
             :placeholder="$t('users.search_users_placeholder')"
-            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl ps-9 pe-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 font-tajawal"
           />
         </div>
 
@@ -48,7 +48,7 @@
           <select
             v-model="filters.role"
             @change="fetchUsers"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500 font-tajawal"
+            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-amber-500 font-tajawal"
           >
             <option value="all">{{ $t('users.all_roles_filter') }}</option>
             <option v-for="r in rolesList" :key="r.id" :value="r.id">{{ r.name }}</option>
@@ -57,7 +57,7 @@
       </div>
 
       <!-- Users Grid / Table -->
-      <div class="bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+      <div class="bg-white dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden">
         <div v-if="isLoading" class="p-16 text-center">
           <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p class="text-xs text-slate-400 font-tajawal">{{ $t('users.loading_users') }}</p>
