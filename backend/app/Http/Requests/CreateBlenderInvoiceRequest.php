@@ -13,6 +13,28 @@ class CreateBlenderInvoiceRequest extends FormRequest
         return $this->user()?->hasRole('admin') || $this->user()?->can('invoices.create') || $this->user()?->can('pos.access') ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $customerId = $this->input('customer_id');
+        if (empty($customerId) || $customerId === 'null' || $customerId === null) {
+            $defaultCustomer = \App\Models\Customer::where('name', 'نقدي عام')
+                ->orWhere('name', 'عميل نقدي')
+                ->orWhere('phone', '0000000000')
+                ->first();
+
+            if (!$defaultCustomer) {
+                $defaultCustomer = \App\Models\Customer::create([
+                    'name' => 'عميل نقدي',
+                    'phone' => '0000000000',
+                    'current_balance' => 0,
+                    'price_tier' => 'retail',
+                    'is_active' => true,
+                ]);
+            }
+            $this->merge(['customer_id' => $defaultCustomer->id]);
+        }
+    }
+
     public function rules(): array
     {
         return [

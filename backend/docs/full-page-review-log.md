@@ -505,3 +505,64 @@
 
 
 
+
+
+---
+
+## 📌 صفحة 7: حاسبة خلطات وتكاليف البن والأصناف المركبة (`CoffeeBlenderView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/coffee-blender`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 498 سطر إلى 3 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 65 سطر + كبسولة المنطق useCoffeeBlender + تجاوب لمسي كامل لكافة المقاسات الـ 5 + استخدام مكتبة Form و Common بنسبة 100% + تعريب كامل بدون نصوص ثابتة + اختبارات E2E و Feature API ناجحة 100%).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** حاسبة خلطات وتكاليف البن والأصناف المركبة (Coffee Blender & Product Formulation Studio)
+* **المسار (Route):** `/coffee-blender`
+* **الملف الرئيسي:** `resources/js/views/CoffeeBlender/CoffeeBlenderView.vue` (Thin Orchestrator: ~65 سطر)
+* **الغرض منها:** حساب وتوليف خلطات القهوة والمنتجات المجمعة، تحديد الأوزان المستهدفة ونسب الخامات، احتساب التكلفة الخام الفعلية وسعر البيع وهامش الربح فورياً، وإصدار فاتورة بيع مباشرة مع خصم الخامات بالجرام آلياً.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وهوية الأيقونة وزر الانتقال السريع لسجل الفواتير.
+2. **بطاقة مواصفات الخلطة (`CoffeeBlenderSpecsCard.vue`):**
+   * حقل اسم الخلطة، أزرار الأوزان السريعة (125جم، 250جم، 500جم، 1000جم)، الوزن المخصص، نوع التحميص، ومستوى الطحن عبر `BaseInput`, `BaseNumberInput`, `BaseSelect`.
+3. **بطاقة مكونات البن الخام والنسب (`CoffeeBlenderFormulationCard.vue`):**
+   * اختيار الصنف، إضافة المكون، سلايدر النسبة المئوية المباشر، حقل النسبة الرقمي، حساب الجرامات والسعر، حقل تحويجة الحبهان، والملاحظات مع زر الحذف اللمسي.
+4. **لوحة ملخص التكلفة والاعتماد (`CoffeeBlenderCostSummary.vue`):**
+   * التلخيص المالي (الوزن الإجمالي، تكلفة الخامات، سعر البيع المقترح، هامش الربح)، اختيار العميل المسجل أو النقدي العام، وزر اعتماد وإصدار الفاتورة المباشر.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/items`, `GET /api/v1/customers`, `POST /api/v1/coffee-blender/calculate`, `POST /api/v1/coffee-blender/invoice`.
+* **Actions:** `CalculateBlendCostAction`, `CreateBlenderInvoiceAction`.
+* **Composables:** `useCoffeeBlender.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseNumberInput.vue`, `BaseSelect.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة من مكتبة `Form/` و `Common/`:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseNumberInput.vue`, `BaseSelect.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/CoffeeBlender/`):**
+  * `CoffeeBlenderSpecsCard.vue`, `CoffeeBlenderFormulationCard.vue`, `CoffeeBlenderCostSummary.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** ترتيب عمودي كامل مع بطاقات لمسية متراصة ومساحات لمس $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** توزيع 8:4 مع لوحة تلخيص ملتصقة وثابتة `sticky top-6`.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل لكافة العناصر والمدخلات.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/inventory.php` و `lang/en/inventory.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الباك إند API:** تشغيل `php artisan test tests/Feature/Api/CoffeeBlenderApiTest.php` -> نجاح 2/2 اختبارات و 6 تأكيدات في 1.2 ثانية.
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/coffee-blender-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.47 ثانية.
