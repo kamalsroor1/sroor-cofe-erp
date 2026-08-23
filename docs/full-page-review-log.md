@@ -918,3 +918,66 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/create-purchase-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.16 ثانية.
+
+
+---
+
+## 📌 صفحة 14: دليل وإدارة الموردين والتجار (`SuppliersView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/suppliers`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 742 سطر إلى 5 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 70 سطر + كبسولة المنطق useSuppliers + نوافذ مودال موحدة لإضافة المورد وسداد الدفعات + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** دليل وإدارة الموردين والتجار (Suppliers Management & Payables Ledger)
+* **المسار (Route):** `/suppliers`
+* **الملف الرئيسي:** `resources/js/views/Suppliers/SuppliersView.vue` (Thin Orchestrator: ~70 سطر)
+* **الغرض منها:** إدارة جهات اتصال الموردين، متابعة الديون والمستحقات، سداد دفعات التوريد، والوصول لكشوف الحساب التفصيلية.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وزر إضافة مورد جديد `BaseButton`.
+2. **شبكة بطاقات المؤشرات المالية (`SuppliersMetricsGrid.vue`):**
+   * إجمالي المستحقات للموردين، عدد الموردين الدائنين، وإجمالي الموردين المسجلين مع `StatCardSkeleton.vue`.
+3. **شريط الفلاتر والبحث (`SuppliersFilterBar.vue`):**
+   * حقل البحث النصي `BaseSearchInput` وأقراص تصفية المديونية (الكل، الدائنون، المسددون).
+4. **جدول وبطاقات الموردين (`SuppliersTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف المتراصة اللمسية، شارات الحالة، وأزرار سداد دفعة، كشف الحساب، التعديل، والحذف مع `TableSkeleton.vue` و `EmptyState.vue`.
+5. **نافذة إضافة وتعديل المورد (`SupplierFormModal.vue`):**
+   * نافذة `AppModal` مخصصة لبيانات المورد والرصيد الافتتاحي.
+6. **نافذة سداد وصرف دفعة للمورد (`SupplierPaymentModal.vue`):**
+   * نافذة `AppModal` مخصصة لسداد الدفعات النقدية والبنكية.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/suppliers`, `POST /api/v1/suppliers`, `PUT /api/v1/suppliers/{id}`, `DELETE /api/v1/suppliers/{id}`, `POST /api/v1/suppliers/{id}/payments`.
+* **Composables:** `useSuppliers.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Suppliers/`):**
+  * `SuppliersMetricsGrid.vue`, `SuppliersFilterBar.vue`, `SuppliersTable.vue`, `SupplierFormModal.vue`, `SupplierPaymentModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة للموردين وأزرار سداد وكشف حساب بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول بيانات منظم عالي الكثافة مع تمييز لوني للحسابات الدائنة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/contacts.php` و `lang/en/contacts.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/suppliers-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.69 ثانية.

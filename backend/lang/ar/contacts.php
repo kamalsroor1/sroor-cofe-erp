@@ -127,6 +127,8 @@ return [
     'due_to_supplier'           => 'مستحق للمورد',
     'fully_settled'             => 'مسدد بالكامل',
     'no_suppliers_description'  => 'لم يتم العثور على أي مورد مطابق للبحث أو الفلتر',
+    'supplier_creditors_only'   => 'مستحق له (دائن) 🚨',
+    'supplier_settled_only'     => 'مسدد بالكامل ✅',
     'supplier_name_placeholder' => 'اكتب اسم المورد أو التاجر...',
     'company_name_placeholder'  => 'اسم الشركة إن وجد...',
     'confirm_payment'           => 'تأكيد السداد والصرف',
