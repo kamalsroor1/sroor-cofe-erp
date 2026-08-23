@@ -798,3 +798,64 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/item-movements-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.52 ثانية.
+
+
+---
+
+## 📌 صفحة 12: سجل فواتير المشتريات والتوريد (`PurchasesView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/purchases`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 461 سطر إلى 4 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 70 سطر + كبسولة المنطق usePurchases + تجاوب لمسي كامل لكافة المقاسات الـ 5 + دعم هياكل الوميض Skeletons + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** سجل فواتير المشتريات والتوريد (Purchases Management & Supply Invoices)
+* **المسار (Route):** `/purchases`
+* **الملف الرئيسي:** `resources/js/views/Purchases/PurchasesView.vue` (Thin Orchestrator: ~70 سطر)
+* **الغرض منها:** استقبال البضائع والخامات من الموردين، مراقبة المديونيات الآجلة وتوزيع التكاليف، وإلغاء الفواتير بأمان.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة، زر الانتقال لرادار الطلب الذكي، وزر إنشاء فاتورة شراء جديدة.
+2. **بطاقات مؤشرات المشتريات (`PurchasesMetricsGrid.vue`):**
+   * 3 بطاقات (إجمالي المشتريات، المستحقات غير المسددة، والفواتير المعتمدة) مدعومة بـ `StatCardSkeleton.vue`.
+3. **شريط الفلاتر والتحكم (`PurchasesFilterBar.vue`):**
+   * حقل البحث النصي `BaseSearchInput`، قائمة الحالة `BaseSelect`، وحقول نطاق التاريخ (من / إلى).
+4. **جدول وبطاقات فواتير الشراء (`PurchasesTable.vue`):**
+   * نمط مزدوج (Desktop Table + Mobile Tactile Cards Stack) مع أزرار المعاينة والإلغاء وشارات الحالات والترقيم.
+5. **نافذة تفاصيل الفاتورة (`PurchaseDetailsModal.vue`):**
+   * استعراض بنود الفاتورة والكميات والتكلفة المحملة والخصومات والملخص المالي عبر `AppModal.vue`.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/purchases`, `POST /api/v1/purchases/{id}/cancel`.
+* **Composables:** `usePurchases.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Purchases/`):**
+  * `PurchasesMetricsGrid.vue`, `PurchasesFilterBar.vue`, `PurchasesTable.vue`, `PurchaseDetailsModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة وتراص مرن وأزرار وحقول بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول منظم عالي الكثافة ومحاذاة مالية دقيقة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وألوان الشارات.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/purchases.php` و `lang/en/purchases.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/purchases-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 3.85 ثانية.
