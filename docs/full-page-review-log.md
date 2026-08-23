@@ -1040,3 +1040,66 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/supplier-statement-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.08 ثانية.
+
+
+---
+
+## 📌 صفحة 16: دليل وإدارة العملاء والزبائن (`CustomersView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/customers`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 751 سطر إلى 5 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 70 سطر + كبسولة المنطق useCustomers + نوافذ مودال موحدة لإضافة العميل وتحصيل الدفعات + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** دليل وإدارة العملاء والزبائن (Customers Management & Receivables Ledger)
+* **المسار (Route):** `/customers`
+* **الملف الرئيسي:** `resources/js/views/Customers/CustomersView.vue` (Thin Orchestrator: ~70 سطر)
+* **الغرض منها:** إدارة جهات اتصال العملاء، متابعة مديونيات الآجل والتحصيل، تسجيل سندات القبض، والوصول لكشوف الحساب التفصيلية.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وزر إضافة عميل جديد `BaseButton`.
+2. **شبكة بطاقات المؤشرات المالية (`CustomersMetricsGrid.vue`):**
+   * إجمالي مديونيات العملاء، عدد العملاء المدينين، وإجمالي العملاء المسجلين مع `StatCardSkeleton.vue`.
+3. **شريط الفلاتر والبحث (`CustomersFilterBar.vue`):**
+   * حقل البحث النصي `BaseSearchInput` وأقراص تصفية المديونية (الكل، المدينون، المسددون، الدائنون).
+4. **جدول وبطاقات العملاء (`CustomersTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف المتراصة اللمسية، شارات الحالة، وأزرار تحصيل دفعة، كشف الحساب، التعديل، والحذف مع `TableSkeleton.vue` و `EmptyState.vue`.
+5. **نافذة إضافة وتعديل العميل (`CustomerFormModal.vue`):**
+   * نافذة `AppModal` مخصصة لبيانات العميل والرصيد الافتتاحي.
+6. **نافذة تحصيل وسند قبض من العميل (`CustomerPaymentModal.vue`):**
+   * نافذة `AppModal` مخصصة لتحصيل الدفعات النقدية والإلكترونية.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/customers`, `POST /api/v1/customers`, `PUT /api/v1/customers/{id}`, `DELETE /api/v1/customers/{id}`, `POST /api/v1/customers/{id}/payments`.
+* **Composables:** `useCustomers.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Customers/`):**
+  * `CustomersMetricsGrid.vue`, `CustomersFilterBar.vue`, `CustomersTable.vue`, `CustomerFormModal.vue`, `CustomerPaymentModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة للعملاء وأزرار تحصيل وكشف حساب بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول بيانات منظم عالي الكثافة مع تمييز لوني للحسابات المدينة والدائنة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/contacts.php` و `lang/en/contacts.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/customers-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.15 ثانية.
