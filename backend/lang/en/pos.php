@@ -102,6 +102,9 @@ return [
     'no_items_found_search'     => 'No items found matching ":query"',
     'no_items_found_search_hint' => 'Make sure the item name or barcode is correct, or add the item from the items screen.',
     'searching_database'        => 'Searching database...',
+    'no_customers_found_search' => 'No customers found matching ":query"',
+    'no_customers_found_hint'   => 'You can quickly create this customer and assign them to the current invoice.',
+    'quick_add_customer_btn'    => 'Quick Add Customer ":name"',
 
     // Redesigned Payment Modal Keys
     'proceed_to_payment'        => 'Proceed to Payment',

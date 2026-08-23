@@ -73,6 +73,7 @@
       v-model:search-query="customerSearchQuery"
       :customers="filteredCustomerList"
       :selected-customer-id="selectedCustomerId"
+      :is-searching="isSearchingCustomers"
       :is-submitting="isSubmittingQuickCustomer"
       @close="showCustomerPickerModal = false"
       @select-customer="selectCustomer"
@@ -205,6 +206,56 @@ watch(searchQuery, (newVal) => {
   performRemoteSearch(newVal);
 });
 
+const isSearchingCustomers = ref(false);
+const remoteCustomerResults = ref([]);
+let customerSearchDebounceTimer = null;
+let customerSearchAbortController = null;
+
+const performRemoteCustomerSearch = (query) => {
+  if (customerSearchDebounceTimer) {
+    clearTimeout(customerSearchDebounceTimer);
+    customerSearchDebounceTimer = null;
+  }
+  if (customerSearchAbortController) {
+    customerSearchAbortController.abort();
+    customerSearchAbortController = null;
+  }
+
+  const q = query.trim();
+  if (!q) {
+    remoteCustomerResults.value = [];
+    isSearchingCustomers.value = false;
+    return;
+  }
+
+  customerSearchDebounceTimer = setTimeout(async () => {
+    customerSearchAbortController = new AbortController();
+    isSearchingCustomers.value = true;
+    try {
+      const res = await api.get('/customers', {
+        params: { search: q, per_page: 30 },
+        signal: customerSearchAbortController.signal,
+      });
+      remoteCustomerResults.value = res.data?.data || res.data?.customers || [];
+      isSearchingCustomers.value = false;
+    } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED' || err.message === 'canceled') {
+        return;
+      }
+      console.error('Remote customer search error:', err);
+      isSearchingCustomers.value = false;
+    } finally {
+      if (customerSearchAbortController && !customerSearchAbortController.signal.aborted) {
+        customerSearchAbortController = null;
+      }
+    }
+  }, 250);
+};
+
+watch(customerSearchQuery, (newVal) => {
+  performRemoteCustomerSearch(newVal);
+});
+
 const searchDropdownResults = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return [];
@@ -233,7 +284,17 @@ const selectedCustomer = computed(() => {
 const filteredCustomerList = computed(() => {
   const q = customerSearchQuery.value.trim().toLowerCase();
   if (!q) return customers.value;
-  return customers.value.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q)));
+
+  const localMatches = customers.value.filter(c => 
+    (c.name && c.name.toLowerCase().includes(q)) || 
+    (c.phone && c.phone.includes(q))
+  );
+
+  const mergedMap = new Map();
+  localMatches.forEach(c => mergedMap.set(c.id, c));
+  remoteCustomerResults.value.forEach(c => mergedMap.set(c.id, c));
+
+  return Array.from(mergedMap.values());
 });
 
 const cartSubtotal = computed(() => {
@@ -462,6 +523,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
   if (searchAbortController) searchAbortController.abort();
+  if (customerSearchDebounceTimer) clearTimeout(customerSearchDebounceTimer);
+  if (customerSearchAbortController) customerSearchAbortController.abort();
   window.removeEventListener('keydown', handleGlobalKeydown);
 });
 </script>
