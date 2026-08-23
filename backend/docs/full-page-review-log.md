@@ -1906,3 +1906,64 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-dashboard-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.16 ثانية.
+
+
+---
+
+## 📌 صفحة 30: إدارة المستأجرين والشركات المركزية (`SuperAdminTenantsView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/super-admin/tenants`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 584 سطراً إلى 4 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useSuperAdminTenants + شريط فلاتر للبحث والحالة والباقة + جدول الشركات وبطاقات الهواتف مع روابط النطاقات وشارات الحالة + نافذة AppModal لإنشاء وتهيئة المستأجر وقاعدة البيانات Auto-Provisioning + نافذة AppModal لتعديل الحالة وتمديد الاشتراك + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إدارة المستأجرين والشركات المركزية (Super Admin Tenants Management)
+* **المسار (Route):** `/super-admin/tenants`
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminTenantsView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** إنشاء وتهيئة حسابات الشركات وتفعيل وإيقاف الاشتراكات والتحكم في قواعد البيانات.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة وإجراءات التنقل (`PageHeader.vue`):**
+   * عنوان الصفحة، وزر العودة للوحة القيادة، وزر إنشاء مستأجر جديد.
+2. **شريط البحث والفلاتر (`TenantsFilterBar.vue`):**
+   * حقل البحث الفوري `BaseSearchInput` وقوائم تصفية الحالة والباقة `BaseSelect`.
+3. **جدول وبطاقات المستأجرين (`TenantsTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف مع شارات الحالة، زر الدخول للتحكم، وزر تعديل الحالة وزر الحذف، مع `TableSkeleton.vue` و `EmptyState.vue`.
+4. **نافذة إنشاء المستأجر (`CreateTenantModal.vue`):**
+   * نافذة `AppModal` لإنشاء الحساب وتحديد الباقة وإعدادات قاعدة البيانات.
+5. **نافذة تعديل الحالة والاشتراك (`EditTenantStatusModal.vue`):**
+   * نافذة `AppModal` لتغيير الحالة وتمديد مدة الاشتراك.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/super-admin/tenants`, `POST /api/v1/super-admin/tenants`, `POST /api/v1/super-admin/tenants/{id}/toggle-status`, `DELETE /api/v1/super-admin/tenants/{id}`.
+* **Composables:** `useSuperAdminTenants.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseSelect.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseSelect.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/SuperAdmin/`):**
+  * `TenantsFilterBar.vue`, `TenantsTable.vue`, `CreateTenantModal.vue`, `EditTenantStatusModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متراصة لكل مستأجر، أزرار بارتفاع $\ge 40	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول مركزي عالي الكثافة مع روابط خارجية للنطاقات وشارات ملونة واضحة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/super.php` و `lang/en/super.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-tenants-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.93 ثانية.
