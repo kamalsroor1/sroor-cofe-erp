@@ -2,6 +2,8 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "lang:export": "php artisan lang:export",
+        "prebuild": "php artisan lang:export",
         "build": "vite build",
         "dev": "vite",
         "cap:sync": "npx cap sync android",

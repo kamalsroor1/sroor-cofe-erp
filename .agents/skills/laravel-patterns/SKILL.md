@@ -201,3 +201,17 @@ class TenantResource extends JsonResource
 * **Asynchronous Heavy Data:** Heavy queries, chart telemetry, and secondary logs must be declared via `Inertia::lazy(fn() => ...)` so initial page load renders instantly.
 * In Vue 3: Reload deferred props on demand using `router.reload({ only: ['heavyData'] })`.
 
+---
+
+## 12. 🌐 Single Source of Truth Translation Protocol (`php artisan lang:export`)
+
+### Rule:
+* **Strict Prohibition of Manual JS Translations:** Never edit translations inside JavaScript/Vue files manually.
+* **Single Source of Truth:** All translation keys MUST be added/modified exclusively in Laravel PHP language files:
+  - Arabic: `backend/lang/ar/{group}.php`
+  - English: `backend/lang/en/{group}.php`
+* **Automated Frontend Synchronization:**
+  - Execute `php artisan lang:export` (or run `npm run build` which triggers it automatically via `prebuild`).
+  - This generates `resources/js/helpers/defaultTranslations.json` and `resources/js/helpers/defaultTranslations.js` automatically.
+* **Zero Fallback Strings:** In Vue templates and scripts, always use `$t('group.key')` or `const { t } = useTrans(); t('group.key')` with ZERO hardcoded text or fallback operators (`|| 'نص'`).
+

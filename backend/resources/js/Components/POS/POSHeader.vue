@@ -133,6 +133,33 @@
             </button>
           </div>
         </div>
+
+        <!-- 🔄 SEARCHING REMOTE DATABASE SPINNER STATE -->
+        <div
+          v-if="isSearchFocused && isSearching && searchResults.length === 0"
+          class="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-slate-900 border-2 border-theme-primary/40 rounded-2xl shadow-2xl p-4 text-center z-50 animate-in fade-in duration-150"
+        >
+          <div class="flex items-center justify-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 font-tajawal">
+            <span class="w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></span>
+            <span>{{ $t('pos.searching_database') }}</span>
+          </div>
+        </div>
+
+        <!-- 🚫 NOT FOUND EMPTY STATE -->
+        <div
+          v-else-if="isSearchFocused && searchQuery.trim().length > 0 && searchResults.length === 0 && !isSearching"
+          class="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 text-center z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+        >
+          <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl mx-auto mb-2">
+            🔍
+          </div>
+          <h3 class="text-sm font-black text-slate-900 dark:text-white font-tajawal">
+            {{ $t('pos.no_items_found_search', { query: searchQuery }) }}
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-tajawal">
+            {{ $t('pos.no_items_found_search_hint') }}
+          </p>
+        </div>
       </div>
 
       <!-- Left: Customer, Tier & Action Buttons -->
@@ -205,6 +232,7 @@ const props = defineProps({
   activePriceTier: { type: String, default: 'retail' },
   selectedCustomer: { type: Object, default: null },
   cartEmpty: { type: Boolean, default: true },
+  isSearching: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([

@@ -32,13 +32,14 @@
     * شاشة الـ POS تُجبر القائمة الجانبية على التصغير لوضع الـ Mini Mode (`w-20`) لتوفير أقصى مساحة للكاشير.
 15. **مراقبة النظام المحمية (Laravel Telescope Access Bridge):**
     * الوصول لـ Telescope محصور حصراً بالسوبر أدمن عبر مسار الجسر الآمن `/telescope-access?token=...` المرتبط بتصريح `Gate::define('viewTelescope')`.
-16. **إلزامية الترجمة التامة ومنع النصوص الثابتة قطعيًا (Mandatory 100% Zero Hardcoded Localization Gate):**
-    * **⚠️ إجباري وقطعي على كل صفحة وكل مكون بدون استثناء:** ممنوع كتابة أي نص ثابت (Hardcoded Text) سواء باللغة العربية أو الإنجليزية داخل الـ template أو الـ script نهائيًا.
-    * **تسجيل كافة النصوص** في ملفات الترجمة الرسمية للغتين (`lang/ar/` و `lang/en/`) وفي قاموس الفرونت إند `resources/js/helpers/defaultTranslations.js`.
+16. **إلزامية الترجمة التامة والمصدر الوحيد للترجمة (Single Source of Truth Localization Gate):**
+    * **⚠️ إجباري وقطعي على كل صفحة وكل مكون بدون استثناء:** ممنوع كتابة أي نص ثابت (Hardcoded Text) سواء باللغة العربية أو الإنجليزية داخل الـ template أو الـ script نهائيًا، وممنوع وضع نصوص بديلة (Fallback strings) داخل دوال `$t()`.
+    * **المصدر الوحيد والنهائي للترجمة:** ملفات Laravel الرسمية فقط في (`backend/lang/ar/*.php` و `backend/lang/en/*.php`). ممنوع تعديل ملفات JS يدوياً.
+    * **التوليد التلقائي للفرونت إند:** يتم توليد ملفات الترجمة للواجهة وتطبيق الموبايل تلقائياً عبر أمر `php artisan lang:export` (الذي يعمل تلقائياً مع `npm run build`).
     * **دوال الترجمة الإلزامية:**
       * في PHP: `__('file.key')` أو `trans('file.key')`.
-      * في Vue 3 Template: `$t('key')` أو `trans('key')`.
-      * في Vue 3 Script Setup: `const { t } = useTrans();` ثم `t('key')`.
+      * في Vue 3 Template: `$t('file.key')` أو `trans('file.key')`.
+      * في Vue 3 Script Setup: `const { t } = useTrans();` ثم `t('file.key')`.
 17. **بروتوكول النشر المركزي:**
     * النشر يتم حصراً عبر اسكريبت النشر الآمن `python deploy_root_baraa.py` الموجه لخادم `baraa-solutions.com` ومستأجريه.
 18. **إلزامية هياكل التحميل التفاعلية بالوميض (Mandatory Facebook-Style Skeletons):**

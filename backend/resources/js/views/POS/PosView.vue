@@ -17,6 +17,7 @@
       :search-results="searchDropdownResults"
       :selected-customer="selectedCustomer"
       :cart-empty="cart.length === 0"
+      :is-searching="isSearchingRemote"
       @add-item="addItemFromDropdown"
       @navigate-dropdown="navigateDropdown"
       @select-highlighted="selectHighlightedOrFirstItem"
@@ -144,12 +145,52 @@ const getItemPrice = (item) => {
   return activePriceTier.value === 'wholesale' ? (item.price_wholesale || item.price_retail) : item.price_retail;
 };
 
+const isSearchingRemote = ref(false);
+const remoteSearchResults = ref([]);
+let searchDebounceTimer = null;
+
+const performRemoteSearch = (query) => {
+  clearTimeout(searchDebounceTimer);
+  const q = query.trim();
+  if (!q) {
+    remoteSearchResults.value = [];
+    isSearchingRemote.value = false;
+    return;
+  }
+  isSearchingRemote.value = true;
+  searchDebounceTimer = setTimeout(async () => {
+    try {
+      const res = await api.get('/items', { params: { search: q, per_page: 30 } });
+      remoteSearchResults.value = res.data?.data || [];
+    } catch (err) {
+      console.error('Remote item search error:', err);
+    } finally {
+      isSearchingRemote.value = false;
+    }
+  }, 150);
+};
+
+watch(searchQuery, (newVal) => {
+  highlightedIndex.value = 0;
+  performRemoteSearch(newVal);
+});
+
 const searchDropdownResults = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return [];
-  return items.value
-    .filter(i => (i.name && i.name.toLowerCase().includes(q)) || (i.code && i.code.toLowerCase().includes(q)))
-    .slice(0, 10);
+
+  // 1. Instant local filter
+  const localMatches = items.value.filter(i => 
+    (i.name && i.name.toLowerCase().includes(q)) || 
+    (i.code && i.code.toLowerCase().includes(q))
+  );
+
+  // 2. Merge with remote 10,000-items database matches (deduplicated by ID)
+  const mergedMap = new Map();
+  localMatches.forEach(item => mergedMap.set(item.id, item));
+  remoteSearchResults.value.forEach(item => mergedMap.set(item.id, item));
+
+  return Array.from(mergedMap.values()).slice(0, 15);
 });
 
 const quickPinnedItems = computed(() => items.value.slice(0, 10));

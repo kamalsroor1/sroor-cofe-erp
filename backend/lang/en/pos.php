@@ -97,6 +97,9 @@ return [
     'checkout_failed'           => 'Checkout Failed',
     'checkout_failed_desc'      => 'Could not save and confirm sales invoice',
     'add_customer_failed'       => 'Failed to add customer',
+    'no_items_found_search'     => 'No items found matching ":query"',
+    'no_items_found_search_hint' => 'Make sure the item name or barcode is correct, or add the item from the items screen.',
+    'searching_database'        => 'Searching database...',
 
     // Redesigned Payment Modal Keys
     'proceed_to_payment'        => 'Proceed to Payment',

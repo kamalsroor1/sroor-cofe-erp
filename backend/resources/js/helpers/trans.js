@@ -1,4 +1,4 @@
-import { defaultArabicTranslations } from './defaultTranslations';
+import { defaultArabicTranslations, defaultEnglishTranslations } from './defaultTranslations';
 
 /**
  * Universal translation helper for Vue 3 Pure SPA (Pinia Store & window.spaTranslations)
@@ -27,9 +27,13 @@ export function trans(key, replace = {}) {
         }
     }
 
-    // 2. Fallback to bundled static default Arabic translations
+    // 2. Fallback to bundled static auto-generated default translations (Arabic or English)
     if (value === undefined) {
-        let fallbackVal = defaultArabicTranslations;
+        const isEnglish = (typeof localStorage !== 'undefined' && localStorage.getItem('sroor_locale') === 'en') ||
+                          (typeof document !== 'undefined' && document.documentElement.lang === 'en');
+        
+        let fallbackVal = isEnglish ? defaultEnglishTranslations : defaultArabicTranslations;
+
         for (const part of parts) {
             if (fallbackVal && typeof fallbackVal === 'object' && fallbackVal[part] !== undefined) {
                 fallbackVal = fallbackVal[part];

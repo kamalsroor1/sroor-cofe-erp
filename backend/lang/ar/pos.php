@@ -96,6 +96,9 @@ return [
     'checkout_failed'           => 'فشل حفظ الفاتورة',
     'checkout_failed_desc'      => 'تعذر حفظ واعتماد فاتورة البيع',
     'add_customer_failed'       => 'تعذر إضافة العميل',
+    'no_items_found_search'     => 'لم يتم العثور على أي صنف مطابق لـ ":query"',
+    'no_items_found_search_hint' => 'تأكد من كتابة الاسم أو الباركود بشكل صحيح، أو أضف الصنف من شاشة الأصناف والمخزون.',
+    'searching_database'        => 'جاري البحث في قاعدة البيانات...',
 
     // Redesigned Payment Modal Keys
     'proceed_to_payment'        => 'سداد وإنهاء الفاتورة',
