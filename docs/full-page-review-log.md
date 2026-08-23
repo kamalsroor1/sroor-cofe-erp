@@ -1597,3 +1597,70 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/trash-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.15 ثانية.
+
+
+---
+
+## 📌 صفحة 25: إعدادات النظام والتحكم الشامل (`SettingsView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/settings`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 823 سطر إلى 7 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useSettings + التنقل الذكي بنمط Mobile Hub وشاشات التفاصيل Drill-Down + تخصيص الهوية والشعار + باليتات الألوان واللون المخصص و EyeDropper + خيارات الطباعة الحرارية + ربط بوت تيليجرام وفحص الاتصال + إدارة وحدات القياس المعتمدة + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إعدادات النظام والتحكم الشامل (System Settings & Customization)
+* **المسار (Route):** `/settings`
+* **الملف الرئيسي:** `resources/js/views/Settings/SettingsView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** لوحة التحكم الشاملة لتخصيص هوية المنشأة، ألوان الواجهة، خيارات الطباعة الحرارية، إشعارات تيليجرام، ووحدات قياس المخزون.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان القسم وزر حفظ التعديلات وزر الرجوع لمركز الإعدادات على الهواتف.
+2. **القائمة الجانبية للشاشات الكبيرة (`SettingsNavigationSidebar.vue`):**
+   * قائمة الأقسام الخمسة مع أيقونات ملونة وصندوق معلومات الحماية.
+3. **مركز الإعدادات للهواتف (`SettingsMobileHub.vue`):**
+   * شبكة بطاقات لمسية أنيقة للأقسام مع أسهم التنقل.
+4. **قسم الهوية المؤسسية (`SettingsBrandingSection.vue`):**
+   * اسم المنشأة، الوصف، الهاتف الرسمي، والعنوان `BaseInput.vue`.
+5. **قسم المظهر ونظام الألوان (`SettingsAppearanceSection.vue`):**
+   * 8 باليتات ألوان جاهزة، حقل اللون المخصص HEX، أداة EyeDropper، وتبديل الوضع الفاتح والداكن.
+6. **قسم الطباعة الحرارية (`SettingsPrintingSection.vue`):**
+   * مفاتيح تبديل إظهار اسم المنشأة، الوصف، رصيد العميل، رمز الـ QR، وملاحظة تذييل الفاتورة.
+7. **قسم إشعارات تيليجرام (`SettingsTelegramSection.vue`):**
+   * مفتاح التفعيل الرئيسي، توكن البوت، معرف المحادثة، وزر الفحص التجريبي.
+8. **قسم وحدات القياس (`SettingsUnitsSection.vue`):**
+   * شرائح الوحدات المعتمدة، حقل إضافة وحدة جديدة، وأزرار الوحدات الجاهزة.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/settings`, `POST /api/v1/settings`, `POST /api/v1/settings/telegram/test`.
+* **Composables:** `useSettings.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Settings/`):**
+  * `SettingsNavigationSidebar.vue`, `SettingsMobileHub.vue`, `SettingsBrandingSection.vue`, `SettingsAppearanceSection.vue`, `SettingsPrintingSection.vue`, `SettingsTelegramSection.vue`, `SettingsUnitsSection.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** نمط Drill-Down ببطاقات هب تفاعلية وزر رجوع ومفاتيح Toggles لمسية بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** تخطيط مقسوم أنيق (Split View) بقائمة جانبية ذات أيقونات ملونة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/settings.php` و `lang/en/settings.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/settings-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح وبدون أي خطأ.
