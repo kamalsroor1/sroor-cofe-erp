@@ -1538,3 +1538,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/activity-logs-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 2.96 ثانية.
+
+
+---
+
+## 📌 صفحة 24: سلة المحذوفات والاسترجاع الآمن (`TrashView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/trash`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 261 سطر إلى 3 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 65 سطر + كبسولة المنطق useTrash + تبويبات الموديولات الـ 6 التفاعلية مع عدادات حية وشارات حمراء + شريط بحث فوري + جدول وسطح مكتب وبطاقات هواتف لمسية مع استرجاع آمن وحذف نهائي + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** سلة المحذوفات والاسترجاع الآمن (Trash & Soft Deletes Recovery)
+* **المسار (Route):** `/trash`
+* **الملف الرئيسي:** `resources/js/views/Trash/TrashView.vue` (Thin Orchestrator: ~65 سطر)
+* **الغرض منها:** توفير طبقة أمان لمنع ضياع البيانات، استعراض العناصر المحذوفة واستعادتها أو حذفها نهائياً.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة، وزر تحديث السلة `BaseButton`.
+2. **شريط تبويبات الموديولات الستة (`TrashModuleTabs.vue`):**
+   * تبويبات الأصناف، العملاء، الموردين، الفروع، المصروفات، المرتجعات مع عداد حي لكل قسم وشارة نشطة.
+3. **شريط البحث الفوري (`TrashFilterBar.vue`):**
+   * حقل البحث الفوري `BaseSearchInput`.
+4. **جدول وبطاقات العناصر المحذوفة (`TrashTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف اللمسية المتراصة مع أزرار الاسترجاع والحذف النهائي والترقيم التلقائي `TableSkeleton.vue` و `EmptyState.vue`.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/trash`, `POST /api/v1/trash/{module}/{id}/restore`, `DELETE /api/v1/trash/{module}/{id}/force`.
+* **Composables:** `useTrash.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Trash/`):**
+  * `TrashModuleTabs.vue`, `TrashFilterBar.vue`, `TrashTable.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** تبويبات أفقية قابلة للتمرير وبطاقات لمسية متكاملة لكل عنصر محذوف.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول محاسبي أنيق مع توقيت الحذف وأزرار واضحة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/trash.php` و `lang/en/trash.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/trash-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.15 ثانية.
