@@ -739,3 +739,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/create-stock-transfer-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.88 ثانية.
+
+
+---
+
+## 📌 صفحة 11: كارت حركة الصنف والبطاقة المخزنية (`ItemMovementsView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/items/:id/movements`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 318 سطر إلى 3 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 60 سطر + كبسولة المنطق useItemMovements + تجاوب لمسي كامل لكافة المقاسات الـ 5 + دعم هياكل الوميض Skeletons + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** كارت حركة الصنف وسجل العمليات (Item Movements Ledger & Bin Card)
+* **المسار (Route):** `/items/:id/movements`
+* **الملف الرئيسي:** `resources/js/views/Items/ItemMovementsView.vue` (Thin Orchestrator: ~60 سطر)
+* **الغرض منها:** تتبع الأستاذ المخزني للصنف، والتحقق من الأرصدة قبل وبعد الحركات، ومراقبة الوارد والمنصرف بدقة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * اسم الصنف وكوده وزر الطباعة وزر العودة لقائمة الأصناف.
+2. **بطاقات ملخص الحركات الكمية (`ItemMovementsSummaryCards.vue`):**
+   * 4 بطاقات (إجمالي الوارد، المنصرف، صافي الحركة، والرصيد الحالي) مدعومة بـ `StatCardSkeleton.vue`.
+3. **شريط الفلاتر والتحكم (`ItemMovementsFilterBar.vue`):**
+   * حقول التاريخ وزر التصفية وأقراص الفترات السريعة (اليوم، الشهر، الكل).
+4. **جدول وبطاقات الحركات التفصيلية (`ItemMovementsTable.vue`):**
+   * نمط مزدوج (Desktop Table + Mobile Tactile Cards Stack) مع شارات أنواع الحركات والرصيد قبل وبعد والفرع والمستخدم.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/items/{id}/movements`.
+* **Composables:** `useItemMovements.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/ItemMovements/`):**
+  * `ItemMovementsSummaryCards.vue`, `ItemMovementsFilterBar.vue`, `ItemMovementsTable.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة وتراص مرن وأزرار بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول منظم عالي الكثافة ومحاذاة كمية دقيقة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وألوان شارات الحركات.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/inventory.php` و `lang/en/inventory.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/item-movements-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.52 ثانية.
