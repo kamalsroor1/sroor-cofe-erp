@@ -1725,3 +1725,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/returns-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 3.08 ثانية.
+
+
+---
+
+## 📌 صفحة 27: تسجيل وإنشاء مستند مرتجع جديد (`CreateReturnView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/returns/create`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 404 أسطر إلى 3 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 65 سطر + كبسولة المنطق useCreateReturn + محول نوع المرتجع التفاعلي + اختيار الطرف والربط بالعملاء والموردين + جدول الأصناف التفاعلي مع حساب الإجمالي الفوري + كارد الملخص المالي وخيار استرداد النقدية + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إنشاء وتسجيل مستند مرتجع جديد (Create Return Document)
+* **المسار (Route):** `/returns/create`
+* **الملف الرئيسي:** `resources/js/views/Returns/CreateReturnView.vue` (Thin Orchestrator: ~65 سطر)
+* **الغرض منها:** توفير واجهة سريعة ودقيقة لتسجيل حركات المرتجعات وعكس الأرصدة المخزنية والمالية.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة، وزر العودة لسجل المرتجعات `router-link`.
+2. **قسم نوع المرتجع والطرف (`ReturnPartySection.vue`):**
+   * محول المبيعات/المشتريات، اختيار العميل أو المورد، تاريخ الإرجاع، وحقل السبب `BaseInput.vue`.
+3. **جدول أصناف المرتجع (`ReturnItemsTable.vue`):**
+   * قائمة اختيار وإضافة الأصناف، جدول الكميات والأسعار والإجمالي، وزر حذف السطر.
+4. **الملخص المالي والاعتماد (`ReturnFinancialSummary.vue`):**
+   * إجمالي قيمة المرتجع، حقل استرداد النقدية من الخزينة، وزر الحفظ والاعتماد `BaseButton.vue`.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/customers`, `GET /api/v1/suppliers`, `GET /api/v1/items`, `POST /api/v1/returns`.
+* **Composables:** `useCreateReturn.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Returns/`):**
+  * `ReturnPartySection.vue`, `ReturnItemsTable.vue`, `ReturnFinancialSummary.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** تدفق عمودي سلس، أزرار ومفاتيح لمسية بارتفاع $\ge 40	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** تقسيم شاشتي 2/3 للبيانات و 1/3 للملخص المالي الثابت.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/returns.php` و `lang/en/returns.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/create-return-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 2.94 ثانية.
