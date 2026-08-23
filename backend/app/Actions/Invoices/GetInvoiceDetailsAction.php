@@ -30,8 +30,10 @@ final class GetInvoiceDetailsAction
             $cleanPhone = '20' . substr($cleanPhone, 1);
         }
 
+        $companyName = \App\Models\Setting::get('company_name') ?: ($store?->name ?: config('app.name', 'منظومة ERP'));
+
         $lines = [];
-        $lines[] = "☕ *فاتورة مبيعات - سرور كوفي ERP*";
+        $lines[] = "🧾 *فاتورة مبيعات - {$companyName}*";
         $lines[] = "--------------------------------";
         $lines[] = "📄 *رقم الفاتورة:* " . $invoice->invoice_number;
         $lines[] = "📅 *التاريخ:* " . $invoice->invoice_date;
@@ -58,7 +60,7 @@ final class GetInvoiceDetailsAction
         }
 
         $lines[] = "--------------------------------";
-        $lines[] = "شكراً لتعاملكم مع سرور كوفي لتوريدات خامات مطاحن البن ☕";
+        $lines[] = "شكراً لتعاملكم مع {$companyName} 🤝";
 
         $messageText = implode("\n", $lines);
         $encodedText = urlencode($messageText);

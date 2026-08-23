@@ -1,6 +1,6 @@
 <script setup>
 /**
- * DataTable.vue — جدول بيانات تفاعلي وديناميكي موحد لمنظومة سرور كوفي ERP
+ * DataTable.vue — جدول بيانات تفاعلي وديناميكي موحد لمنظومة ERP
  *
  * @prop {Array}   columns      قائمة الأعمدة: [{ key, label, sortable?, align?, width?, hideOnMobile?, mono?, class? }]
  * @prop {Array}   rows         البيانات المراد عرضها في الجدول

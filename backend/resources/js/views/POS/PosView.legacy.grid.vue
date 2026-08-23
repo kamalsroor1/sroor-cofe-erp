@@ -858,7 +858,7 @@
             required
             autofocus
             class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            placeholder="مثال: كمال سرور"
+            placeholder="مثال: أحمد محمد"
           >
         </div>
 

@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 use App\Livewire\Traits\RequiresAuth;
 
 #[Layout('components.layouts.app')]
-#[Title('إدارة المستخدمين وصلاحيات الكاشير | سرور POS')]
+#[Title('إدارة المستخدمين وصلاحيات الكاشير | منظومة ERP')]
 class UserManager extends Component
 {
     use WithPagination, RequiresAuth;

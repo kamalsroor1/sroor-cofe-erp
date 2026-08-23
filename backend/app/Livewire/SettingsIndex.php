@@ -13,7 +13,7 @@ use App\Services\DatabaseBackupService;
 use Illuminate\Support\Facades\Artisan;
 
 #[Layout('components.layouts.app')]
-#[Title('إعدادات النظام المتقدمة والطباعة | سرور POS')]
+#[Title('إعدادات النظام المتقدمة والطباعة | منظومة ERP')]
 class SettingsIndex extends Component
 {
     use RequiresAuth, WithFileUploads;
@@ -21,8 +21,8 @@ class SettingsIndex extends Component
     public string $activeTab = 'branding'; // 'branding', 'telegram', 'backup', 'system'
 
     // Branding & Printing Settings
-    public string $company_name = 'سرور كوفي';
-    public string $company_subtitle = 'لتوريدات خامات مطاحن البن';
+    public string $company_name = '';
+    public string $company_subtitle = '';
     public string $invoice_footer_note = 'شكراً لتعاملكم معنا - البضاعة المباعة ترد وتستبدل خلال 14 يوماً';
     public bool $show_print_company_name = true;
     public bool $show_print_subtitle = true;
@@ -43,8 +43,8 @@ class SettingsIndex extends Component
         abort_if(!auth()->user()?->hasRole('admin'), 403, 'غير مصرح لك بالوصول إلى إعدادات النظام');
 
         // Load Branding Settings
-        $this->company_name = Setting::get('company_name', 'سرور كوفي');
-        $this->company_subtitle = Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن');
+        $this->company_name = Setting::get('company_name', config('app.name', 'منظومة ERP'));
+        $this->company_subtitle = Setting::get('company_subtitle', '');
         $this->invoice_footer_note = Setting::get('invoice_footer_note', 'شكراً لتعاملكم معنا - البضاعة المباعة ترد وتستبدل خلال 14 يوماً');
         $this->show_print_company_name = Setting::getBool('show_print_company_name', true);
         $this->show_print_subtitle = Setting::getBool('show_print_subtitle', true);

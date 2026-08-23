@@ -144,6 +144,6 @@ class TrashIndex extends Component
             'counts'  => $counts,
             'records' => $records,
             'totalTrashed' => array_sum($counts),
-        ])->layout('components.layouts.app', ['title' => '🗑️ سلة المحذوفات المركزية | سرور كوفي']);
+        ])->layout('components.layouts.app', ['title' => '🗑️ سلة المحذوفات المركزية | منظومة ERP']);
     }
 }

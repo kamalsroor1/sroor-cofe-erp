@@ -24,10 +24,10 @@ final class SettingController extends Controller
         return Inertia::render('Settings/Index', [
             'active_tab' => $tab,
             'settings'   => [
-                'company_name'                  => Setting::get('company_name', 'سرور كوفي'),
-                'company_subtitle'              => Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن'),
-                'company_phone'                 => Setting::get('company_phone', '01012316954'),
-                'company_address'               => Setting::get('company_address', 'القاهرة - مصر'),
+                'company_name'                  => Setting::get('company_name', config('app.name', 'منظومة ERP')),
+                'company_subtitle'              => Setting::get('company_subtitle', ''),
+                'company_phone'                 => Setting::get('company_phone', ''),
+                'company_address'               => Setting::get('company_address', ''),
                 'invoice_footer_note'           => Setting::get('invoice_footer_note', 'شكراً لتعاملكم معنا - البضاعة المباعة ترد وتستبدل خلال 14 يوماً'),
                 'show_print_company_name'       => Setting::getBool('show_print_company_name', true),
                 'show_print_subtitle'           => Setting::getBool('show_print_subtitle', true),

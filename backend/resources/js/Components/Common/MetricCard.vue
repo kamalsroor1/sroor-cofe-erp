@@ -38,10 +38,10 @@ const valueColorClass = computed(() => {
 </script>
 
 <template>
-    <div class="p-5 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-2.5 relative overflow-hidden group font-tajawal transition hover:border-slate-300 dark:hover:border-slate-700">
+    <div class="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-2 relative overflow-hidden group font-tajawal transition hover:border-slate-300 dark:hover:border-slate-700">
         <!-- Header: Title + Icon -->
-        <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ title }}</span>
+        <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">{{ title }}</span>
             <div
                 v-if="icon"
                 class="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
@@ -53,7 +53,7 @@ const valueColorClass = computed(() => {
         </div>
 
         <!-- Main Value -->
-        <div class="text-2xl font-black font-mono" :class="valueColorClass">
+        <div class="text-xl sm:text-2xl font-black font-mono tracking-tight" :class="valueColorClass">
             {{ value }}
             <span v-if="currency" class="text-xs font-sans text-slate-400 font-bold">{{ currency }}</span>
         </div>

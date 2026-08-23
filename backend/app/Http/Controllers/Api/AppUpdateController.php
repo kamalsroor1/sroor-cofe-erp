@@ -52,7 +52,7 @@ class AppUpdateController extends Controller
             'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
             'title' => $isForce ? 'تحديث إلزامي جديد متاح 🚀' : 'تحديث جديد متاح للتحميل 🚀',
             'message' => $hasUpdate
-                ? "يتوفر إصدار جديد (" . ($latest['version_name'] ?? $versionName) . ") من تطبيق سرور كوفي ERP."
+                ? "يتوفر إصدار جديد (" . ($latest['version_name'] ?? $versionName) . ") من تطبيق ERP."
                 : 'أنت تستخدم أحدث إصدار من التطبيق.',
         ]);
     }

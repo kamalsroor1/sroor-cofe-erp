@@ -11,7 +11,7 @@ use Illuminate\Validation\Rules\Password;
 use App\Livewire\Traits\RequiresAuth;
 
 #[Layout('components.layouts.app')]
-#[Title('الملف الشخصي وإعدادات الحساب | سرور POS')]
+#[Title('الملف الشخصي وإعدادات الحساب | منظومة ERP')]
 class Profile extends Component
 {
     use RequiresAuth;

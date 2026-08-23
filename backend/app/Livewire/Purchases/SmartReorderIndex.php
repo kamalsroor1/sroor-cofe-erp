@@ -10,7 +10,7 @@ use App\Models\Supplier;
 use App\Services\ReorderAssistantService;
 
 #[Layout('components.layouts.app')]
-#[Title('مساعد المشتريات الذكي والتنبؤ بالنواقص | سرور كوفي')]
+#[Title('مساعد المشتريات الذكي والتنبؤ بالنواقص | منظومة ERP')]
 class SmartReorderIndex extends Component
 {
     public string $selectedStoreId = 'all';

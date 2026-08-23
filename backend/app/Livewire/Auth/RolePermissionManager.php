@@ -11,7 +11,7 @@ use Spatie\Permission\PermissionRegistrar;
 use App\Livewire\Traits\RequiresAuth;
 
 #[Layout('components.layouts.app')]
-#[Title('إدارة الأدوار ومصفوفة الصلاحيات | سرور POS')]
+#[Title('إدارة الأدوار ومصفوفة الصلاحيات | منظومة ERP')]
 class RolePermissionManager extends Component
 {
     use RequiresAuth;

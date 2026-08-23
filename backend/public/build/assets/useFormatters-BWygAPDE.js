@@ -1,0 +1,1 @@
+function e(){return{formatMoney:e=>(parseFloat(e)||0).toLocaleString(`en-US`,{minimumFractionDigits:2,maximumFractionDigits:2}),formatQty:e=>(parseFloat(e)||0).toLocaleString(`en-US`,{minimumFractionDigits:2,maximumFractionDigits:2}),formatPercent:(e,t=2)=>(parseFloat(e)||0).toFixed(t)+`%`}}export{e as t};

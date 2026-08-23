@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Traits\RequiresAuth;
 
 #[Layout('components.layouts.app')]
-#[Title('سجل المصروفات والنثريات | سرور كوفي')]
+#[Title('سجل المصروفات والنثريات | منظومة ERP')]
 class ExpenseIndex extends Component
 {
     use WithPagination, RequiresAuth;

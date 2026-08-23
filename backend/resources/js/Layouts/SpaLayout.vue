@@ -245,10 +245,10 @@
               </div>
               <div class="min-w-0">
                 <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
-                  {{ appConfigStore.companyName || 'سرور كوفي' }}
+                  {{ appConfigStore.companyName }}
                 </h2>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
-                  {{ appConfigStore.companySubtitle || 'توزيع خامات ومطاحن البن' }}
+                <p v-if="appConfigStore.companySubtitle" class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+                  {{ appConfigStore.companySubtitle }}
                 </p>
               </div>
             </div>
@@ -941,7 +941,7 @@
           <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-xl">☕</span>
-              <span class="font-black text-sm text-slate-900 dark:text-white">{{ appConfigStore.companyName || 'سرور كوفي' }}</span>
+              <span class="font-black text-sm text-slate-900 dark:text-white">{{ appConfigStore.companyName }}</span>
             </div>
             <button @click="isSidebarOpen = false" class="text-slate-400 p-2 font-bold">✕</button>
           </div>
@@ -1059,7 +1059,7 @@
 
           <!-- Mobile Drawer Footer Version -->
           <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-[11px] font-mono text-slate-500">
-            <span class="font-tajawal font-medium">سرور كوفي ERP</span>
+            <span class="font-tajawal font-medium">{{ appConfigStore.companyName || 'ERP' }}</span>
             <span class="px-2 py-0.5 rounded-md bg-theme-light text-theme-primary font-bold">v{{ appVersion }}</span>
           </div>
         </aside>

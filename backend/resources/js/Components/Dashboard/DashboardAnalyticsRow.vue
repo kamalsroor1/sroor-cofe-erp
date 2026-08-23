@@ -25,14 +25,14 @@
         :highlight-fn="isToday"
         highlight-color="var(--color-primary, #10b981)"
         default-color="#0ea5e9"
-        :height="192"
-        bar-gap="1rem"
+        :height="180"
+        bar-gap="0.5rem"
       >
         <template #footer>
-          <div class="flex items-center justify-between pt-3 text-[11px] text-slate-500 dark:text-slate-400 font-bold">
-            <div class="flex items-center gap-4">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-md bg-theme-primary"></span>{{ $t('dashboard.current_day') }}</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-md bg-sky-500"></span>{{ $t('dashboard.previous_days') }}</span>
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 font-bold">
+            <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-md bg-theme-primary shrink-0"></span>{{ $t('dashboard.current_day') }}</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-md bg-sky-500 shrink-0"></span>{{ $t('dashboard.previous_days') }}</span>
             </div>
             <div class="font-mono text-slate-600 dark:text-slate-300">
               {{ $t('dashboard.avg_basket') }}: <span class="font-black text-emerald-500">{{ formatMoney(period.basket_size || 0) }} {{ $t('common.currency') }}</span>

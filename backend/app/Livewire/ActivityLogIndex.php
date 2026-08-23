@@ -13,7 +13,7 @@ use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[Layout('components.layouts.app')]
-#[Title('سجل العمليات والرقابة الذاتية | سرور POS')]
+#[Title('سجل العمليات والرقابة الذاتية | منظومة ERP')]
 class ActivityLogIndex extends Component
 {
     use WithPagination;

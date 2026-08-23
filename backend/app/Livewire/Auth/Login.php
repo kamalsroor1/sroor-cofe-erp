@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use App\Models\User;
 
 #[Layout('components.layouts.app')]
-#[Title('تسجيل الدخول برقم الهاتف | سرور POS')]
+#[Title('تسجيل الدخول برقم الهاتف | منظومة ERP')]
 class Login extends Component
 {
     public string $phone = '';
@@ -121,7 +121,7 @@ class Login extends Component
         session()->flash('swal:toast', [
             'type'  => 'success',
             'title' => 'مرحباً بك!',
-            'text'  => 'تم تسجيل الدخول بنجاح إلى منظومة سرور POS.'
+            'text'  => 'تم تسجيل الدخول بنجاح إلى منظومة منظومة ERP.'
         ]);
 
         return $this->redirect(route('dashboard'), navigate: false);

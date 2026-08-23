@@ -195,8 +195,8 @@
                     $showLogo = \App\Models\Setting::getBool('show_print_logo', true);
                     $logoPath = public_path('logo.png');
                     $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : asset('logo.png');
-                    $companyName = \App\Models\Setting::get('company_name', 'سرور كوفي');
-                    $companySubtitle = \App\Models\Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن');
+                    $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
+                    $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
                 @endphp
                 @if($showLogo)
                     <img src="{{ $logoSrc }}" alt="Logo" style="max-height: 65px; max-width: 120px; object-fit: contain;">

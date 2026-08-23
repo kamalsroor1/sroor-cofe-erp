@@ -256,7 +256,7 @@ const getUserRoleLabel = computed(() => {
                         href="/"
                         class="rounded-2xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shadow-xs border border-slate-200 dark:border-slate-700/80 shrink-0 transition-transform duration-200 hover:scale-105 group"
                         :class="isSidebarCollapsed ? 'w-12 h-12' : 'w-14 h-14'"
-                        :title="tenant?.name || 'سرور كوفي'"
+                        :title="tenant?.name || ''"
                     >
                         <!-- Light Mode Logo -->
                         <img :src="logoLightSrc" alt="Logo" class="w-full h-full object-contain filter drop-shadow-xs group-hover:brightness-105 dark:hidden">
@@ -268,7 +268,7 @@ const getUserRoleLabel = computed(() => {
                         :class="{ 'lg:hidden': isSidebarCollapsed }"
                     >
                         <h1 class="font-black text-sm sm:text-base tracking-tight text-slate-900 dark:text-white font-tajawal line-clamp-1 leading-snug">
-                            {{ tenant?.name || 'سرور كوفي' }}
+                            {{ tenant?.name }}
                         </h1>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate">{{ $t('nav.cloud_erp_subtitle') }}</p>
                     </div>
@@ -362,14 +362,14 @@ const getUserRoleLabel = computed(() => {
                             href="/"
                             @click="isSidebarOpen = false"
                             class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shadow-xs border border-slate-200 dark:border-slate-700/80 shrink-0"
-                            :title="tenant?.name || 'سرور كوفي'"
+                            :title="tenant?.name || ''"
                         >
                             <img :src="logoLightSrc" alt="Logo" class="w-full h-full object-contain filter drop-shadow-xs dark:hidden">
                             <img :src="logoDarkSrc" alt="Logo" class="w-full h-full object-contain filter drop-shadow-xs hidden dark:block">
                         </Link>
                         <div class="truncate min-w-0">
                             <h1 class="font-black text-sm tracking-tight text-slate-900 dark:text-white font-tajawal line-clamp-1 leading-snug">
-                                {{ tenant?.name || 'سرور كوفي' }}
+                                {{ tenant?.name }}
                             </h1>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate">{{ $t('nav.cloud_erp_subtitle') }}</p>
                         </div>

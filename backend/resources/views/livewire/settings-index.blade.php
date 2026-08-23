@@ -124,7 +124,7 @@
                             type="text"
                             id="company_name"
                             required
-                            placeholder="مثال: سرور كوفي"
+                            placeholder="مثال: اسم المؤسسة أو المتجر"
                             class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
                         >
                         @error('company_name') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
@@ -182,7 +182,7 @@
                         <div>
                             <p class="text-sm font-bold text-slate-900 dark:text-white">إظهار اسم النشاط في رأس الفاتورة</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                إظهار اسم ({{ $company_name ?: 'سرور كوفي' }}) في قمة فواتير A4 وإيصالات الكاشير
+                                إظهار اسم ({{ $company_name ?: 'المؤسسة' }}) في قمة فواتير A4 وإيصالات الكاشير
                             </p>
                         </div>
 

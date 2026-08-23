@@ -134,7 +134,7 @@
       <!-- Version & Platform Badge -->
       <div class="text-center pt-2">
         <span class="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400">
-          منظومة سرور ERP السحابية • <span class="text-theme-primary font-bold">v{{ versionData?.version || '1.0.1' }}</span>
+          {{ appConfigStore.platformName || 'منظومة ERP السحابية' }} • <span class="text-theme-primary font-bold">v{{ versionData?.version || '1.0.1' }}</span>
         </span>
       </div>
     </div>

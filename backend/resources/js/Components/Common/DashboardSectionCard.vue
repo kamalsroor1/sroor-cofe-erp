@@ -1,6 +1,6 @@
 <template>
     <div
-        class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4"
+        class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-4"
         :class="wrapperClass"
     >
         <!-- Card Header -->

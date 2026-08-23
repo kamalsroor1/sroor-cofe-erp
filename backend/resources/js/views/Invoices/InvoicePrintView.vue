@@ -134,7 +134,7 @@
       <div class="pt-2 text-center text-xs space-y-1 font-bold text-black">
         <p class="text-xs font-black">شكراً لتعاملكم معنا!</p>
         <p class="text-[9px]">البضاعة المباعة ترد وتستبدل خلال 14 يوم بالفاتورة</p>
-        <div class="pt-0.5 text-[8px] font-mono text-slate-800">تمت الطباعة بواسطة منظومة سـرور ERP</div>
+        <div class="pt-0.5 text-[8px] font-mono text-slate-800">تمت الطباعة بواسطة {{ appConfigStore.platformName || 'منظومة ERP' }}</div>
       </div>
 
     </div>
@@ -153,19 +153,21 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAppConfigStore } from '../../stores/appConfig';
 import api from '../../services/api';
 import { Printer, ArrowRight } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
+const appConfigStore = useAppConfigStore();
 
 const invoiceId = route.params.id;
 const invoice = ref(null);
 const isLoading = ref(true);
 
-const companyName = ref('سرور كوفي');
-const companySubtitle = ref('لتوريدات ومبيعات الهواتف والإلكترونيات');
-const activeStoreName = ref('الفرع الرئيسي');
+const companyName = computed(() => invoice.value?.company_name || appConfigStore.companyName || '');
+const companySubtitle = computed(() => invoice.value?.company_subtitle || appConfigStore.companySubtitle || '');
+const activeStoreName = computed(() => invoice.value?.store_name || appConfigStore.currentStore?.name || '');
 
 const customerName = computed(() => {
     return invoice.value?.customer?.name || invoice.value?.customer_name || 'عميل نقدي سريع';

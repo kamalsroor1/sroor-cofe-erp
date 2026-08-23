@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $siteCompanyName = \App\Models\Setting::get('company_name', 'سرور ERP');
+        $siteCompanyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
         $siteSubtitle = \App\Models\Setting::get('company_subtitle', 'لإدارة المبيعات والمخزون والتوزيع');
     @endphp
     <title>{{ $title ?? $siteCompanyName }} | {{ $siteCompanyName }} - {{ $siteSubtitle }}</title>

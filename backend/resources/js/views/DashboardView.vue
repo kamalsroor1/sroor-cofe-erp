@@ -2,7 +2,7 @@
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
 
     <DashboardWelcomeBanner
-      :company-name="appConfigStore.companyName || 'سرور كوفي'"
+      :company-name="appConfigStore.companyName"
       :loading="isLoading"
       @refresh="fetchDashboard"
     />

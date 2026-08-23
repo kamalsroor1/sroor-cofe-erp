@@ -158,8 +158,8 @@
     </div>
 
     @php
-        $companyName = \App\Models\Setting::get('company_name', 'سرور كوفي');
-        $companySubtitle = \App\Models\Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن');
+        $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
+        $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
         $showCompanyName = \App\Models\Setting::getBool('show_print_company_name', true);
         $showSubtitle = \App\Models\Setting::getBool('show_print_subtitle', true);
         $showLogo = \App\Models\Setting::getBool('show_print_logo', true);

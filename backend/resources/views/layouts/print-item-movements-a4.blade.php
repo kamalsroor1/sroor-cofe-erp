@@ -74,8 +74,8 @@
     </div>
 
     @php
-        $companyName = \App\Models\Setting::get('company_name', 'مؤسسة سرور التجارية');
-        $companySubtitle = \App\Models\Setting::get('company_subtitle', 'للتجارة والتوزيع وإدارة المخزون');
+        $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
+        $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
     @endphp
 
     <!-- Official Header -->

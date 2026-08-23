@@ -14,11 +14,20 @@
         <span class="font-mono text-emerald-500 font-bold">[{{ formatMoney(peakHour.sales) }} {{ $t('common.currency') }}]</span>
       </div>
     </template>
-    <div class="pt-3 pb-1 overflow-x-auto">
-      <div class="min-w-[700px]">
-        <div class="h-28 flex items-end gap-1.5 justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-          <div v-for="slot in hourlySales" :key="slot.hour" class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer relative">
-            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 bg-slate-900 text-white text-[10px] font-mono py-1 px-2 rounded-xl shadow-xl pointer-events-none whitespace-nowrap border border-slate-700">
+    <div class="pt-3 pb-1 overflow-x-auto scrollbar-none">
+      <div class="min-w-[640px] sm:min-w-[700px]">
+        <div class="h-28 flex items-end gap-1 sm:gap-1.5 justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+          <div
+            v-for="slot in hourlySales"
+            :key="slot.hour"
+            @click="toggleSlot(slot.hour)"
+            class="flex-1 flex flex-col items-center gap-1 sm:gap-1.5 h-full justify-end group cursor-pointer relative select-none"
+          >
+            <!-- Tooltip (Hover & Touch Tap) -->
+            <div
+              class="transition-all duration-200 absolute -top-12 z-20 bg-slate-900 text-white text-[10px] font-mono py-1 px-2 rounded-xl shadow-xl pointer-events-none whitespace-nowrap border border-slate-700"
+              :class="activeHour === slot.hour ? 'opacity-100 scale-100' : 'opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100'"
+            >
               <div class="font-bold">{{ slot.label }}: {{ slot.sales_formatted }}</div>
               <div class="text-slate-400 font-sans">{{ slot.invoices }} {{ $t('dashboard.total_invoices') }}</div>
             </div>
@@ -27,7 +36,12 @@
                 :style="{ height: `${Math.max(slot.intensity, 6)}%`, backgroundColor: slot.intensity > 70 ? '#a855f7' : (slot.intensity > 30 ? 'var(--color-primary, #10b981)' : '#64748b') }"
               ></div>
             </div>
-            <div class="text-[9px] font-mono text-center text-slate-400 dark:text-slate-500 group-hover:text-purple-400 transition-colors">{{ slot.label }}</div>
+            <div
+              class="text-[9px] font-mono text-center text-slate-400 dark:text-slate-500 group-hover:text-purple-400 transition-colors"
+              :class="{ 'text-purple-500 font-black': activeHour === slot.hour }"
+            >
+              {{ slot.label }}
+            </div>
           </div>
         </div>
       </div>
@@ -35,10 +49,17 @@
   </DashboardSectionCard>
 </template>
 <script setup>
+import { ref } from 'vue';
 import { Zap } from 'lucide-vue-next';
 import DashboardSectionCard from '../Common/DashboardSectionCard.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+
 const { formatMoney } = useFormatters();
+const activeHour = ref(null);
+const toggleSlot = (hour) => {
+  activeHour.value = activeHour.value === hour ? null : hour;
+};
+
 defineProps({
   hourlySales: { type: Array, default: () => [] },
   peakHour: { type: Object, default: null },

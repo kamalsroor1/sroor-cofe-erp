@@ -5,7 +5,8 @@
         <span>{{ $t('dashboard.all_invoices') }}</span><span>←</span>
       </router-link>
     </template>
-    <div class="overflow-x-auto">
+    <!-- 1. Desktop & Tablet Tabular View (MD Screens and Up) -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-start text-xs font-tajawal">
         <thead class="text-slate-400 text-[11px] font-bold border-b border-slate-200 dark:border-slate-800/80">
           <tr>
@@ -27,7 +28,7 @@
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border" :class="statusBadge(inv)">{{ statusLabel(inv) }}</span>
             </td>
             <td class="py-3.5 text-end font-sans">
-              <button type="button" @click="$emit('preview', inv)" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-bold transition cursor-pointer border border-slate-300 dark:border-slate-700 active:scale-95">
+              <button type="button" @click="$emit('preview', inv)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-bold transition cursor-pointer border border-slate-300 dark:border-slate-700 active:scale-95">
                 {{ $t('dashboard.preview_print') }}
               </button>
             </td>
@@ -37,6 +38,48 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- 2. Mobile Touch-Friendly Card Stack (Small and Large Phones) -->
+    <div class="block md:hidden space-y-2.5">
+      <div
+        v-for="inv in invoices"
+        :key="inv.id"
+        @click="$emit('preview', inv)"
+        class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 hover:border-theme-primary/50 transition-all active:scale-[0.98] cursor-pointer space-y-2 select-none"
+      >
+        <!-- Top Row: Invoice Number + Status Badge -->
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black font-mono text-cyan-600 dark:text-cyan-400">{{ inv.invoice_number }}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border" :class="statusBadge(inv)">
+            {{ statusLabel(inv) }}
+          </span>
+        </div>
+
+        <!-- Middle Row: Customer + Date -->
+        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-bold font-tajawal">
+          <span class="text-slate-800 dark:text-slate-200 truncate max-w-[180px]">{{ inv.customer_name }}</span>
+          <span class="font-mono text-[10px] text-slate-400">{{ inv.invoice_date || inv.created_at }}</span>
+        </div>
+
+        <!-- Bottom Row: Net Total + 44px Touch Action Button -->
+        <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+          <div class="font-mono font-black text-sm text-slate-900 dark:text-white">
+            {{ formatMoney(inv.net_total) }} <span class="text-[10px] font-sans font-bold text-slate-400">{{ $t('common.currency') }}</span>
+          </div>
+          <button
+            type="button"
+            @click.stop="$emit('preview', inv)"
+            class="min-h-[44px] px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition border border-slate-300 dark:border-slate-700 active:scale-95 shadow-xs flex items-center gap-1.5"
+          >
+            <span>{{ $t('dashboard.preview_print') }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="invoices.length === 0" class="py-10 text-center text-xs text-slate-400 font-bold font-sans">
+        {{ $t('dashboard.no_invoices') }}
+      </div>
     </div>
   </DashboardSectionCard>
 </template>

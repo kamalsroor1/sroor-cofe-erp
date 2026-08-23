@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm">
         <div>
             <h2 class="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>مرحباً بك في نظام سرور لإدارة الفواتير</span>
+                <span>مرحباً بك في لوحة تحكم {{ \App\Models\Setting::get('company_name', config('app.name', 'ERP')) }}</span>
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">نظرة عامة على المبيعات، رصيد الخزينة، المخزون، وحسابات العملاء</p>
         </div>
