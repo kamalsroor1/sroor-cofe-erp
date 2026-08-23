@@ -625,3 +625,60 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/smart-reorder-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.29 ثانية.
+
+
+---
+
+## 📌 صفحة 9: جرد وأرصدة الفروع والمخازن (`StoreStocksView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/stores/stocks`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 274 سطر إلى مكونين فرعيين + نمط المنسق النحيف Thin Orchestrator < 50 سطر + كبسولة المنطق useStoreStocks + تجاوب لمسي كامل لكافة المقاسات الـ 5 + دعم هياكل الوميض TableSkeleton + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** جرد وأرصدة الفروع والمخازن (Branch Stock Valuation & Inventory Audit)
+* **المسار (Route):** `/stores/stocks`
+* **الملف الرئيسي:** `resources/js/views/Stores/StoreStocksView.vue` (Thin Orchestrator: ~50 سطر)
+* **الغرض منها:** الرقابة المباشرة على بضائع كل مخزن وفرع بيع على حدة، متابعة حدود الأمان، واحتساب القيمة المالية والتقييم الإجمالي للأصناف.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وزر العودة لقائمة المخازن والفروع.
+2. **شريط الفلاتر والتحكم (`StoreStocksFilterBar.vue`):**
+   * قائمة اختيار الفرع/المخزن `BaseSelect`، حقل البحث السريع `BaseSearchInput`، وأقراص تصفية حالة الرصيد اللمسية.
+3. **جدول وبطاقات الأرصدة وجرد المخازن (`StoreStocksTable.vue`):**
+   * نمط مزدوج (Desktop Table + Mobile Tactile Cards Stack) مع شارات الحالة، تنسيق الأرقام، دعم `TableSkeleton.vue` و `EmptyState.vue` وشريط الترقيم.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/stores`, `GET /api/v1/stores/stocks`.
+* **Composables:** `useStoreStocks.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseSelect.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseSelect.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/StoreStocks/`):**
+  * `StoreStocksFilterBar.vue`, `StoreStocksTable.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة وتراص مرن وأزرار بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول منظم عالي الكثافة ومحاذاة مالية دقيقة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وألوان شارات الرصيد.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/inventory.php` و `lang/en/inventory.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/store-stocks-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.18 ثانية.
