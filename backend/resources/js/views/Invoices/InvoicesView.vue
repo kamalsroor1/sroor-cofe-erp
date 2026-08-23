@@ -36,14 +36,14 @@
     </PageHeader>
 
     <!-- Financial Metrics Cards -->
-    <InvoicesMetricsCards :summary="summary" />
+    <InvoicesMetricsCards :summary="summary" :is-loading="isLoading" />
 
     <!-- Workspace: Search + Table + Sidebar -->
     <div class="flex flex-col lg:flex-row gap-5 items-start">
       <div class="flex-1 w-full space-y-4 min-w-0">
         <InvoicesQuickSearch v-model="searchQuery" :active-preset="activeDatePreset" :presets="datePresets" @select-preset="applyDatePreset" @update:model-value="debounceSearch" />
         <InvoicesBulkActionsBar :selected-count="selectedInvoiceIds.length" @bulk-print="bulkPrintReceipts" @bulk-export="bulkExportSelected" @bulk-cancel="bulkCancelSelected" @deselect-all="selectedInvoiceIds = []" />
-        <InvoicesTable :invoices="invoices" :loading="isLoading" :selected-ids="selectedInvoiceIds" :is-all-selected="isAllSelected" :pagination="pagination" @toggle-select="toggleSelectInvoice" @toggle-select-all="toggleSelectAll" @preview="openDetailsModal" @print="openPrintReceipt" @cancel="cancelInvoice" @change-page="fetchInvoices" @reset-filters="resetAllFilters" />
+        <InvoicesTable :invoices="invoices" :is-loading="isLoading" :selected-ids="selectedInvoiceIds" :is-all-selected="isAllSelected" :pagination="pagination" @toggle-select="toggleSelectInvoice" @toggle-select-all="toggleSelectAll" @preview="openDetailsModal" @print="openPrintReceipt" @cancel="cancelInvoice" @change-page="fetchInvoices" @reset-filters="resetAllFilters" />
       </div>
 
       <InvoicesFilterSidebar :is-open="isFilterSidebarOpen" v-model:store-id="selectedStoreId" v-model:payment-type="selectedPaymentType" v-model:status="selectedStatus" v-model:date-from="dateFrom" v-model:date-to="dateTo" :store-options="storeOptions" :payment-type-options="paymentTypeOptions" :status-options="statusOptions" @close="isFilterSidebarOpen = false" @apply="fetchInvoices(1)" @reset="resetAllFilters" />
@@ -81,7 +81,7 @@ const selectedPaymentType = ref('all');
 const selectedStatus = ref('all');
 const dateFrom = ref('');
 const dateTo = ref('');
-const isLoading = ref(false);
+const isLoading = ref(true);
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
 const showDetailsModal = ref(false);
 const selectedInvoiceDetails = ref(null);
