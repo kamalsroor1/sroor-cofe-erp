@@ -1784,3 +1784,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/create-return-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 2.94 ثانية.
+
+
+---
+
+## 📌 صفحة 28: الملف الشخصي وإعدادات الحساب والأمان (`ProfileView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/profile`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 203 أسطر إلى 3 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 55 سطر + كبسولة المنطق useProfile + بطاقة البيانات الأساسية والاسم ورقم الهاتف + بطاقة أمان كلمة المرور والتأكيد + بطاقة تفضيل المظهر التفاعلية + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** الملف الشخصي وإعدادات الحساب والأمان (User Profile & Account Settings)
+* **المسار (Route):** `/profile`
+* **الملف الرئيسي:** `resources/js/views/Profile/ProfileView.vue` (Thin Orchestrator: ~55 سطر)
+* **الغرض منها:** تمكين المستخدم من إدارة بياناته الشخصية، وتغيير كلمة المرور، وتحديد المظهر المفضل.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة (`PageHeader.vue`):**
+   * عنوان الصفحة وأيقونة المستخدم.
+2. **بطاقة البيانات الأساسية (`ProfileBasicInfoCard.vue`):**
+   * الاسم الكامل، رقم الهاتف للدخول، والبريد الإلكتروني `BaseInput.vue`.
+3. **بطاقة الأمان وكلمة المرور (`ProfileSecurityCard.vue`):**
+   * كلمة المرور الحالية، كلمة المرور الجديدة، وتأكيدها `BaseInput.vue`.
+4. **بطاقة تفضيل المظهر (`ProfileThemeCard.vue`):**
+   * تبديل الوضع الليلي (Dark Slate) والوضع الفاتح (Light Shell).
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/profile`, `PUT /api/v1/profile`.
+* **Composables:** `useProfile.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Profile/`):**
+  * `ProfileBasicInfoCard.vue`, `ProfileSecurityCard.vue`, `ProfileThemeCard.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات متراصة، حقول إدخال وأزرار بارتفاع $\ge 40	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** حاوية مركزية بحد أقصى `max-w-3xl`.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/profile.php` و `lang/en/profile.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/profile-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 2.84 ثانية.
