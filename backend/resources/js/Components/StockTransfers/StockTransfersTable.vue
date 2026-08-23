@@ -1,10 +1,7 @@
 <template>
   <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl font-tajawal">
-    <!-- 🔄 Loading State -->
-    <div v-if="isLoading" class="p-12 text-center">
-      <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-      <p class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('common.loading') }}</p>
-    </div>
+    <!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer) -->
+    <TableSkeleton v-if="isLoading" :columns-count="7" :rows-count="5" />
 
     <!-- 🚚 Content State -->
     <template v-else-if="transfers.length > 0">
@@ -220,6 +217,7 @@ import { Eye, Ban, Plus } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import ActionMenu from '../ActionMenu.vue';
+import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import { trans } from '../../helpers/trans';
 
 defineProps({

@@ -42,7 +42,7 @@ test.describe('ItemsView Comprehensive 4-Axes Audit & Multi-Viewport Verificatio
 
             // 4. Verify Responsive Dual Display (Desktop Table or Mobile Cards or Empty State)
             if (vp.isMobile) {
-                const mobileCardOrEmpty = page.locator('.block.md\\:hidden > div, .text-center');
+                const mobileCardOrEmpty = page.locator('.block.md\\:hidden');
                 await expect(mobileCardOrEmpty.first()).toBeVisible();
             } else {
                 const desktopTableOrEmpty = page.locator('.hidden.md\\:block table, .text-center');

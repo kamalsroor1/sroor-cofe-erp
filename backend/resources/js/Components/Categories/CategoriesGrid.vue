@@ -1,9 +1,8 @@
 <template>
   <div class="font-tajawal">
-    <!-- 🔄 Loading State -->
-    <div v-if="isLoading" class="p-16 text-center">
-      <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-      <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>
+    <!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer Grid) -->
+    <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <CardSkeleton v-for="n in 8" :key="n" />
     </div>
 
     <!-- 🚫 Empty State -->
@@ -42,6 +41,7 @@
 import { Plus } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import CardSkeleton from '../Common/Skeletons/CardSkeleton.vue';
 import CategoryCard from './CategoryCard.vue';
 
 defineProps({
