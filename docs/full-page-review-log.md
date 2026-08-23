@@ -1664,3 +1664,64 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/settings-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح وبدون أي خطأ.
+
+
+---
+
+## 📌 صفحة 26: سجل المرتجعات وإشعارات الخصم والإرجاع (`ReturnsView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/returns`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 439 سطر إلى 4 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 70 سطر + كبسولة المنطق useReturns + شبكة المؤشرات المالية الأربعة + شريط فلاتر متعددة للنوع وتاريخ البداية والنهاية + جدول محاسبي وشاشات هواتف لمسية + نافذة AppModal لمعاينة تفاصيل الأصناف المرجعة + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** سجل المرتجعات وإشعارات الخصم والإرجاع (Returns & Credit Notes Ledger)
+* **المسار (Route):** `/returns`
+* **الملف الرئيسي:** `resources/js/views/Returns/ReturnsView.vue` (Thin Orchestrator: ~70 سطر)
+* **الغرض منها:** تتبع وإدارة حركات المرتجعات للعملاء والموردين وضبط المخزون وحسابات الأطراف بدقة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة، وزر تسجيل مرتجع جديد `router-link`.
+2. **شبكة المؤشرات المالية الأربعة (`ReturnsMetricsGrid.vue`):**
+   * إجمالي قيمة المرتجعات، عدد مرتجعات المبيعات، عدد مرتجعات المشتريات، وإجمالي المستندات مع `StatCardSkeleton.vue`.
+3. **شريط البحث والفلاتر (`ReturnsFilterBar.vue`):**
+   * حقل البحث الفوري `BaseSearchInput`، قائمة تصفية النوع `BaseSelect`، وحقول التاريخ.
+4. **جدول وبطاقات المرتجعات (`ReturnsTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف مع شارات النوع الملونة وزر المعاينة والحذف والترقيم `TableSkeleton.vue` و `EmptyState.vue`.
+5. **نافذة تفاصيل المرتجع (`ReturnDetailsModal.vue`):**
+   * نافذة `AppModal` مخصصة لعرض معلومات المسؤول والفرع وجدول الأصناف المرجعة بالكميات والأسعار.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/returns`, `GET /api/v1/returns/{id}`, `DELETE /api/v1/returns/{id}`.
+* **Composables:** `useReturns.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Returns/`):**
+  * `ReturnsMetricsGrid.vue`, `ReturnsFilterBar.vue`, `ReturnsTable.vue`, `ReturnDetailsModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات مؤشرات ولمسية متراصة لكل مستند إرجاع.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول محاسبي أنيق مع شارات ملونة وقيم مالية واضحة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/returns.php` و `lang/en/returns.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/returns-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 3.08 ثانية.
