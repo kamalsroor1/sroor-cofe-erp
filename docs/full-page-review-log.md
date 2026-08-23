@@ -566,3 +566,62 @@
 * ✅ **اختبار الباك إند API:** تشغيل `php artisan test tests/Feature/Api/CoffeeBlenderApiTest.php` -> نجاح 2/2 اختبارات و 6 تأكيدات في 1.2 ثانية.
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/coffee-blender-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.47 ثانية.
+
+
+---
+
+## 📌 صفحة 8: رادار إعادة الطلب الذكي ومساعد المشتريات (`SmartReorderView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/purchases/smart-reorder` (والمسار البديل `/smart-reorder`)
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 354 سطر إلى 3 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 65 سطر + كبسولة المنطق useSmartReorder + تجاوب لمسي كامل لكافة المقاسات الـ 5 + دعم هياكل الوميض Skeleton + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** رادار إعادة الطلب الذكي ومساعد المشتريات (Smart Reorder Radar)
+* **المسار (Route):** `/purchases/smart-reorder`
+* **الملف الرئيسي:** `resources/js/views/Purchases/SmartReorderView.vue` (Thin Orchestrator: ~65 سطر)
+* **الغرض منها:** التنبؤ الذكي بالنواقص، قياس معدل الاستهلاك اليومي، حساب فترة صمود المخزون بالأيام، واقتراح كميات الشراء المثالية وتكلفتها التقديرية، وتصدير أوامر الشراء المجمعة بنقرة واحدة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وهوية الـ AI وزر إنشاء أمر الشراء المجمع للبنود المحددة.
+2. **بطاقات مؤشرات مستويات الخطر والتكلفة (`SmartReorderMetricsGrid.vue`):**
+   * 4 بطاقات KPI (النواقص الحرجة، تنبيهات التوريد، الأرصدة الآمنة، والتكلفة التقديرية لإعادة الشراء) مدعومة بـ `StatCardSkeleton.vue`.
+3. **شريط الفلاتر والتحكم (`SmartReorderFilterBar.vue`):**
+   * حقل البحث المباشر `BaseSearchInput`، وقوائم اختيار فترات التحليل والتغطية ومستويات الخطر عبر `BaseSelect`.
+4. **جدول وبطاقات التوصيات الذكية (`SmartReorderTable.vue`):**
+   * نمط مزدوج (Desktop Table + Mobile Tactile Cards Stack) مع التحديد المجمع، حساب الأيام المتبقية، الكميات المقترحة، التكلفة، وشارات الخطر، مع دعم `TableSkeleton.vue` و `EmptyState.vue`.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/purchases/smart-reorder`.
+* **Composables:** `useSmartReorder.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/SmartReorder/`):**
+  * `SmartReorderMetricsGrid.vue`, `SmartReorderFilterBar.vue`, `SmartReorderTable.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة ومربعات اختيار بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول منظم عالي الكثافة ومحاذاة مالية سليمة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وألوان شارات التحذير.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/purchases.php` و `lang/en/purchases.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/smart-reorder-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.29 ثانية.

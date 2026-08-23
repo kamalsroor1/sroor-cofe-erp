@@ -153,6 +153,7 @@ const routes = [
     },
     {
         path: '/purchases/smart-reorder',
+        alias: '/smart-reorder',
         name: 'purchases.smart_reorder',
         component: () => import('../views/Purchases/SmartReorderView.vue'),
         meta: {
