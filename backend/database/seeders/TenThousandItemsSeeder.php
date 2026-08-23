@@ -110,12 +110,12 @@ class TenThousandItemsSeeder extends Seeder
 
                     $code = sprintf("%s-%05d", $prefix, $itemIndex);
 
-                    // Financial Logic
+                    // Financial Logic: Clean integer prices without fractions
                     $costBase = ($tmpl['cost_min'] + (($itemIndex * 137) % ($tmpl['cost_max'] - $tmpl['cost_min'] + 1)));
-                    $costPrice = round($costBase, 3);
+                    $costPrice = (float) round($costBase);
                     $margin = 1.15 + ((($itemIndex * 19) % 25) / 100); // 15% to 40% margin
-                    $sellingPrice = round($costPrice * $margin, 3);
-                    $minSellingPrice = round($costPrice * ($margin * 0.93), 3); // wholesale discount
+                    $sellingPrice = (float) round($costPrice * $margin);
+                    $minSellingPrice = (float) round($costPrice * ($margin * 0.93)); // wholesale discount
                     $qty = 5 + (($itemIndex * 7) % 95); // 5 to 100 stock
 
                     $itemsToInsert[] = [
