@@ -172,9 +172,6 @@ Route::middleware([
         Route::post('/stores/{id}/assign-users', [\App\Http\Controllers\StoreController::class, 'assignUsers'])->name('stores.assign_users')->middleware('can:stores.manage');
         Route::delete('/stores/{id}', [\App\Http\Controllers\StoreController::class, 'destroy'])->name('stores.destroy')->middleware('can:stores.manage');
         Route::get('/store-stocks', [\App\Http\Controllers\StoreController::class, 'stocks'])->name('store-stocks')->middleware('can:items.view');
-        Route::get('/stock-transfers', [\App\Http\Controllers\StockTransferController::class, 'index'])->name('stock-transfers')->middleware('can:transfers.view');
-        Route::get('/stock-transfers/create', [\App\Http\Controllers\StockTransferController::class, 'create'])->name('stock-transfers.create')->middleware('can:transfers.create');
-        Route::post('/stock-transfers', [\App\Http\Controllers\StockTransferController::class, 'store'])->name('stock-transfers.store')->middleware('can:transfers.create');
 
         // Customers & Statements
         Route::get('/customers', [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index')->middleware('can:customers.manage');

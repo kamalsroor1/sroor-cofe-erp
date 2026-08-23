@@ -366,8 +366,78 @@
 
 ---
 
-* **آخر صفحة تمت مراجعتها بالكامل:** فئات وتصنيفات الأصناف (`CategoriesView.vue`)
-* **الصفحة التالية المقترحة للجلسة القادمة:** التحويلات المخزنية بين الفروع والمخازن (`StockTransfersView.vue`)
+---
+
+## 📌 صفحة 5: التحويلات المخزنية بين الفروع والمخازن (`StockTransfersView.vue`) — بتاريخ 2026-08-23
+* **المسار:** `/stock-transfers`
+* **الحالة العامة:** ✅ مكتملة 100% (تقطيع للمكونات الفرعية + نمط المنسق النحيف ~65 سطر + تجاوب ولمس كامل لكافة المقاسات الـ 5 + قائمة إجراءات Dropdown عائمة + تعريب كامل بدون نصوص ثابتة + دعم فائق للوضعين الداكن والفاتح في عناصر النماذج + اختبارات E2E و Feature ناجحة).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** التحويلات المخزنية بين الفروع والمخازن (Stock Transfers)
+* **المسار (Route):** `/stock-transfers`
+* **الملف الرئيسي:** `resources/js/views/StockTransfers/StockTransfersView.vue` (Thin Orchestrator: ~65 سطر).
+* **الغرض منها:** إدارة وتتبع حركة نقل البضائع بين المخازن المركزية والفروع وسيارات التوزيع، فلترة السجلات، استعراض تفاصيل الأصنـاف، والإلغاء الآمن مع عكس المخزون.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * زر إنشاء إذن تحويل مخزني جديد (`/stock-transfers/create`).
+2. **بطاقات المؤشرات المخزنية (`StockTransfersMetricsGrid.vue`):**
+   * 3 بطاقات KPI (إجمالي أذونات التحويل، التحويلات المنفذة، التحويلات الملغاة) مبنية بواسطة `MetricCard.vue`.
+3. **شريط البحث والفلترة (`StockTransfersSearchFilterBar.vue`):**
+   * حقل بحث برقم الإذن أو الملاحظات عبر `BaseSearchInput.vue`.
+   * قوائم اختيار الفرع المصدر والفرع المستلم عبر `BaseSelect.vue`.
+   * منتقي التواريخ المتجاوب عبر `BaseDatePicker.vue` (Flatpickr).
+4. **جدول وبطاقات التحويلات (`StockTransfersTable.vue`):**
+   * نمط عرض مزدوج (Dual Responsive View):
+     * **ديسكتوب وتابلت (`hidden md:block`):** جدول بيانات عالي الكثافة مع قائمة إجراءات منسدلة عائمة `ActionMenu.vue`.
+     * **موبايل (`block md:hidden`):** بطاقات لمسية توضح مسار التحويل وأزرار بارتفاع $\ge 44\text{px}$.
+   * شريط الترقيم والتنقل بين الصفحات (Pagination).
+   * حالة عدم وجود بيانات (`EmptyState.vue`).
+5. **نافذة تفاصيل إذن التحويل (`StockTransferDetailsModal.vue`):**
+   * نافذة تفاعلية عبر `AppModal.vue` تعرض بيانات المسار والتاريخ والمستخدم المسؤول وجدول الأصناف المحولة والملاحظات.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/transfers`, `GET /api/v1/transfers/{id}`, `POST /api/v1/transfers/{id}/cancel`, `GET /api/v1/stores`.
+* **Actions:** `App\Actions\StockTransfers\CreateStockTransferAction`, `CancelStockTransferAction`.
+* **Composables:** `useFormatters.js`, `useTrans.js` / `trans.js`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة من مكتبة `Form/` و `Common/`:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `BaseSelect.vue`, `BaseDatePicker.vue`, `ActionMenu.vue`, `MetricCard.vue`, `AppModal.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/StockTransfers/`):**
+  * `StockTransfersMetricsGrid.vue`, `StockTransfersSearchFilterBar.vue`, `StockTransfersTable.vue`, `StockTransferDetailsModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة وقائمة إجراءات سفلية مريحة للإبهام.
+* **📱 تابلت وديسكتوب (768px - 1280px+):** جدول متناسق وقوائم منسدلة بدون أي قص بالـ Overflow.
+* **🌓 الوضع الداكن والفاتح:** معالجة كاملة لتباين حقول الإدخال، وخيارات منتقي التقويم (`Flatpickr monthDropdown`) لتظهر بوضوح تام وخلفيات داكنة محكمة.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* مفاتيح موثقة ومترجمة في `lang/ar/inventory.php`، `lang/en/inventory.php`، و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الباك إند API (Feature Test):** تشغيل `php artisan test tests/Feature/Api/StockTransfersApiTest.php` -> نجاح 4/4 اختبارات و 25 تأكيد في 1.7 ثانية.
+* ✅ **اختبار الفرونت إند الشامل (Playwright E2E Test):** تشغيل `e2e/flows/stock-transfers-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5.
+* ✅ **اختبار مجمع لكافة الصفحات:** نجاح 25/25 اختبار في 1.7 دقيقة بدون أي خطأ Console.
+* ✅ **فحص البناء (Build Verification):** تشغيل `npm run build` -> تم البناء بنجاح وبدون أي خطأ في 3.8 ثانية.
+
+---
+
+* **آخر صفحة تمت مراجعتها بالكامل:** التحويلات المخزنية بين الفروع والمخازن (`StockTransfersView.vue`)
+* **الصفحة التالية المقترحة للجلسة القادمة:** إدارة الفروع والمخازن (`StoresView.vue`)
 
 
 
