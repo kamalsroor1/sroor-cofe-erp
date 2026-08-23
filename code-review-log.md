@@ -59,6 +59,9 @@
 13. **`FilterToggleButton.vue`** (داخل `resources/js/Components/Common/`):
     - **الـ Props المدعومة:** `isOpen`, `count` (عدد الفلاتر النشطة), `label`, `icon`.
     - **الميزات:** زر موحد لفتح وإغلاق أدراج وسايدبار الفلاتر، يعرض شارة عدد الفلاتر النشطة بديناميكية، ويغير لونه للحالة النشطة.
+14. **`FilterDrawer.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `isOpen`, `title`, `subtitle`, `activeCount`.
+    - **الميزات:** درج وقائمة فلاتر تفاعلية للشاشات الصغيرة والمتوسطة والديسكتوب، مع خلفية معتمة (Backdrop Blur)، إغلاق بـ ESC أو النقر بالخارج، وهيدر وفوتر ثابت (Sticky Footer) به أزرار التطبيق وإعادة التعيين والإلغاء.
 
 ### الملفات التي تمت مراجعتها واستبدالها في هذه الجلسة
 - `views/ActivityLogs/ActivityLogsView.vue`: استبدال حقل البحث بـ `BaseSearchInput` وقوائم الأقسام والمستخدمين والمخازن بـ `BaseSelect`.
