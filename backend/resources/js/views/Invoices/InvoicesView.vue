@@ -4,10 +4,12 @@
     <PageHeader :title="$t('invoices.title')" :subtitle="$t('invoices.subtitle')" :icon="'🛒'">
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
-          <FilterToggleButton
-            :is-open="isFilterSidebarOpen"
-            :count="activeFiltersCount"
+          <BaseButton
+            :active="isFilterSidebarOpen || activeFiltersCount > 0"
+            :icon="SlidersHorizontal"
+            :icon-class="isFilterSidebarOpen || activeFiltersCount > 0 ? 'text-theme-primary' : 'text-slate-500'"
             :label="$t('invoices.filter_search')"
+            :badge="activeFiltersCount > 0 ? activeFiltersCount : null"
             @click="isFilterSidebarOpen = !isFilterSidebarOpen"
           />
 
@@ -54,14 +56,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
+import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import BaseDropdown from '../../Components/Common/BaseDropdown.vue';
-import FilterToggleButton from '../../Components/Common/FilterToggleButton.vue';
 import InvoicesMetricsCards from '../../Components/Invoices/InvoicesMetricsCards.vue';
 import InvoicesQuickSearch from '../../Components/Invoices/InvoicesQuickSearch.vue';
 import InvoicesBulkActionsBar from '../../Components/Invoices/InvoicesBulkActionsBar.vue';
