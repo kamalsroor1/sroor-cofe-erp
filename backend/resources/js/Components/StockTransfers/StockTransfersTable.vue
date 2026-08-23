@@ -63,7 +63,7 @@
               <!-- Items Count -->
               <td class="py-3.5 px-4 text-center font-mono font-bold text-cyan-600 dark:text-cyan-400">
                 <span class="px-2 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs">
-                  {{ trf.items_count }} {{ $t('inventory.item_unit') || 'صنف' }}
+                  {{ trf.items_count }} {{ $t('inventory.item_unit') }}
                 </span>
               </td>
 
@@ -91,7 +91,7 @@
 
                   <ActionMenu
                     :items="getTransferActions(trf)"
-                    :title="`إذن تحويل #${trf.transfer_number}`"
+                    :title="$t('inventory.transfer_details_modal_title', { number: trf.transfer_number })"
                     button-class="h-8 w-8 min-w-[32px] p-0"
                   />
                 </div>
@@ -141,7 +141,7 @@
           <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span class="font-mono text-[11px]">{{ trf.transfer_date }}</span>
             <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400">
-              {{ trf.items_count }} {{ $t('inventory.item_unit') || 'صنف' }}
+              {{ trf.items_count }} {{ $t('inventory.item_unit') }}
             </span>
           </div>
 
@@ -150,15 +150,15 @@
             <button
               type="button"
               @click="$emit('preview', trf)"
-              class="min-h-[44px] px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-center gap-1.5 transition active:scale-95 select-none"
+              class="min-h-[44px] px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-center gap-1.5 transition active:scale-95 select-none cursor-pointer"
             >
               <Eye class="w-4 h-4" />
-              <span>{{ $t('inventory.view_transfer_details') || 'معاينة الإذن' }}</span>
+              <span>{{ $t('inventory.view_transfer_details') }}</span>
             </button>
 
             <ActionMenu
               :items="getTransferActions(trf)"
-              :title="`إذن تحويل #${trf.transfer_number}`"
+              :title="$t('inventory.transfer_details_modal_title', { number: trf.transfer_number })"
               button-class="w-full min-h-[44px] rounded-xl font-bold text-xs"
             />
           </div>
@@ -198,7 +198,7 @@
     <EmptyState
       v-else
       :title="$t('inventory.no_transfers_found')"
-      :description="$t('inventory.no_transfers_description') || 'لم يتم العثور على أذونات تحويل مخزنية سابقة'"
+      :description="$t('inventory.no_movements_description')"
       :icon="'🚚'"
     >
       <template #action>
@@ -207,7 +207,7 @@
           variant="gradient"
           size="md"
           :icon="Plus"
-          :label="$t('inventory.create_first_transfer') || $t('inventory.new_transfer_order')"
+          :label="$t('inventory.create_first_transfer')"
           :to="'/stock-transfers/create'"
         />
       </template>
@@ -235,12 +235,12 @@ const emit = defineEmits(['preview', 'cancel', 'page-change']);
 
 const getTransferActions = (trf) => [
   {
-    label: trans('inventory.view_transfer_details') || 'معاينة تفاصيل التحويل والأصناف',
+    label: trans('inventory.view_transfer_details'),
     icon: Eye,
     onClick: () => emit('preview', trf),
   },
   {
-    label: trans('inventory.cancel_transfer') || 'إلغاء التحويل وعكس المخزون',
+    label: trans('inventory.cancel_transfer'),
     icon: Ban,
     variant: 'danger',
     show: !trf.is_cancelled,

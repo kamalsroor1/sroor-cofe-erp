@@ -272,30 +272,30 @@ const isAllSelected = computed(() => {
 
 const formatPaymentType = (type) => {
   const map = {
-    cash: trans('invoices.payment_cash') || 'نقدي',
-    credit: trans('invoices.payment_credit') || 'آجل (ذمم)',
-    partial: trans('invoices.payment_partial') || 'دفع جزئي',
-    card: trans('invoices.payment_card') || 'بطاقة بنكية',
-    e_wallet: trans('invoices.payment_ewallet') || 'محفظة إلكترونية',
-    instapay: trans('invoices.payment_instapay') || 'إنستاباي',
+    cash: trans('invoices.payment_cash'),
+    credit: trans('invoices.payment_credit'),
+    partial: trans('invoices.payment_partial'),
+    card: trans('invoices.payment_card'),
+    e_wallet: trans('invoices.payment_ewallet'),
+    instapay: trans('invoices.payment_instapay'),
   };
-  return map[type] || type || 'نقدي';
+  return map[type] || type || trans('invoices.payment_cash');
 };
 
 const getInvoiceActions = (inv) => [
   {
-    label: trans('invoices.view_details') || 'معاينة وتفاصيل الفاتورة',
+    label: trans('invoices.view_details'),
     icon: Eye,
     onClick: () => emit('preview', inv),
   },
   {
-    label: trans('invoices.print_cashier_receipt') || 'طباعة إيصال كاشير 80mm',
+    label: trans('invoices.print_cashier_receipt'),
     icon: Printer,
     variant: 'success',
     onClick: () => emit('print', inv.id),
   },
   {
-    label: trans('invoices.cancel_invoice') || 'إلغاء الفاتورة وعكس المخزون',
+    label: trans('invoices.cancel_invoice'),
     icon: Ban,
     variant: 'danger',
     show: !inv.is_cancelled,

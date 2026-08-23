@@ -1,7 +1,7 @@
 <template>
   <AppModal
     :show="show"
-    :title="editingCategory ? ($t('inventory.edit_category') || 'تعديل الفئة') : ($t('inventory.add_category') || 'إضافة فئة جديدة')"
+    :title="editingCategory ? $t('inventory.edit_category') : $t('inventory.add_category')"
     :icon="Tag"
     max-width="md"
     @close="$emit('close')"
@@ -10,16 +10,16 @@
       <!-- Name -->
       <BaseInput
         v-model="form.name"
-        :label="$t('inventory.category_name') || 'اسم الفئة'"
+        :label="$t('inventory.category_name')"
         :required="true"
-        :placeholder="$t('inventory.category_name_placeholder') || 'مثال: مشروبات ساخنة، بن مطحون، حلويات'"
+        :placeholder="$t('inventory.category_name_placeholder')"
         :error="errors?.name"
       />
 
       <!-- Emoji / Icon Selector -->
       <div class="space-y-2">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {{ $t('inventory.category_icon_emoji') || 'أيقونة أو إيموجي الفئة' }}
+          {{ $t('inventory.category_icon_emoji') }}
         </label>
         <div class="flex items-center gap-2">
           <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
@@ -51,7 +51,7 @@
       <!-- Sort Order -->
       <BaseNumberInput
         v-model="form.sort_order"
-        :label="$t('inventory.sort_order') || 'ترتيب الظهور في شريط الفئات'"
+        :label="$t('inventory.sort_order')"
         :step="1"
         :min="0"
         :show-stepper="true"
@@ -60,8 +60,8 @@
       <!-- Active Status -->
       <BaseSwitch
         v-model="form.is_active"
-        :label="$t('common.status') || 'الحالة'"
-        :description="$t('inventory.category_active_desc') || 'تفعيل ظهور هذه الفئة في شاشات الكاشير ونقاط البيع'"
+        :label="$t('common.status')"
+        :description="$t('inventory.category_active_desc')"
       />
 
       <!-- Modal Footer Actions -->
@@ -79,7 +79,7 @@
           variant="gradient"
           size="md"
           :loading="isSubmitting"
-          :label="editingCategory ? $t('common.save_changes') : ($t('inventory.create_category_btn') || 'إضافة الفئة')"
+          :label="editingCategory ? $t('common.save_changes') : $t('inventory.create_category_btn')"
         />
       </div>
     </form>
@@ -104,7 +104,5 @@ defineProps({
 
 defineEmits(['close', 'submit']);
 
-const emojiPresets = [
-  '☕', '🧃', '🍰', '🥪', '🍪', '🫘', '🥤', '🧊', '🎁', '📦', '🥐', '🥗', '🍕', '🍦', '🍨', '🍵'
-];
+const emojiPresets = ['☕', '🍵', '🧃', '🥪', '🍰', '🍫', '🥤', '🍟', '🥐', '🍪', '🍨', '🍳'];
 </script>

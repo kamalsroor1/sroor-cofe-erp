@@ -52,7 +52,7 @@ const handlePageClick = (link) => {
         class="pt-4 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 font-sans select-none"
     >
         <span class="text-xs text-slate-500 dark:text-slate-400 font-tajawal font-bold">
-            {{ $t('common.showing_results', { from: from || 0, to: to || 0, total: total || 0 }) || `عرض ${from || 0} إلى ${to || 0} من إجمالي ${total || 0}` }}
+            {{ $t('common.showing_results', { from: from || 0, to: to || 0, total: total || 0 }) }}
         </span>
 
         <div class="flex items-center gap-1 flex-wrap justify-center font-tajawal">

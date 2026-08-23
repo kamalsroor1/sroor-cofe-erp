@@ -159,7 +159,7 @@ onUnmounted(() => {
             type="button"
             class="h-9 min-w-[36px] px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/70 flex items-center justify-center gap-1 transition active:scale-90 cursor-pointer shadow-xs"
             :class="buttonClass"
-            :title="title || $t('common.actions') || 'الإجراءات'"
+            :title="title || $t('common.actions')"
         >
             <MoreHorizontal v-if="orientation === 'horizontal'" class="w-4.5 h-4.5 text-current" />
             <MoreVertical v-else class="w-4 h-4 text-current" />
@@ -338,7 +338,7 @@ onUnmounted(() => {
                             type="button"
                             class="w-full h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center transition active:scale-95 cursor-pointer shadow-xs shrink-0"
                         >
-                            {{ $t('common.cancel') || 'إلغاء' }}
+                            {{ $t('common.cancel') }}
                         </button>
                     </div>
                 </div>

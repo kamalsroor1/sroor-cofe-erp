@@ -5,7 +5,7 @@
       <BaseSearchInput
         :model-value="search"
         @update:model-value="$emit('update:search', $event)"
-        :placeholder="$t('inventory.search_transfers_placeholder') || 'بحث برقم إذن التحويل أو الملاحظات...'"
+        :placeholder="$t('inventory.search_transfers_placeholder')"
         :debounce="300"
       />
     </div>
@@ -17,7 +17,7 @@
         :model-value="fromStoreId"
         @update:model-value="$emit('update:fromStoreId', $event)"
         :options="fromStoreOptions"
-        :placeholder="$t('inventory.all_from_stores') || 'من مخزن (الكل)'"
+        :placeholder="$t('inventory.all_from_stores')"
       />
 
       <!-- To Store Filter -->
@@ -25,7 +25,7 @@
         :model-value="toStoreId"
         @update:model-value="$emit('update:toStoreId', $event)"
         :options="toStoreOptions"
-        :placeholder="$t('inventory.all_to_stores') || 'إلى مخزن (الكل)'"
+        :placeholder="$t('inventory.all_to_stores')"
       />
 
       <!-- Date Range (BaseDatePicker) -->
@@ -33,13 +33,13 @@
         <BaseDatePicker
           :model-value="dateFrom"
           @update:model-value="$emit('update:dateFrom', $event)"
-          :placeholder="$t('invoices.from_date') || 'من تاريخ'"
+          :placeholder="$t('invoices.from_date')"
         />
         <span class="text-xs text-slate-400 font-bold">—</span>
         <BaseDatePicker
           :model-value="dateTo"
           @update:model-value="$emit('update:dateTo', $event)"
-          :placeholder="$t('invoices.to_date') || 'إلى تاريخ'"
+          :placeholder="$t('invoices.to_date')"
         />
       </div>
     </div>
@@ -71,12 +71,12 @@ defineEmits([
 ]);
 
 const fromStoreOptions = computed(() => [
-  { value: 'all', label: trans('inventory.all_from_stores') || 'من مخزن (الكل)' },
+  { value: 'all', label: trans('inventory.all_from_stores') },
   ...props.stores.map((s) => ({ value: s.id, label: s.name })),
 ]);
 
 const toStoreOptions = computed(() => [
-  { value: 'all', label: trans('inventory.all_to_stores') || 'إلى مخزن (الكل)' },
+  { value: 'all', label: trans('inventory.all_to_stores') },
   ...props.stores.map((s) => ({ value: s.id, label: s.name })),
 ]);
 </script>

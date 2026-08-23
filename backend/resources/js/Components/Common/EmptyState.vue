@@ -44,7 +44,7 @@ const handleAction = () => {
 
         <div class="space-y-1 max-w-sm mx-auto px-4">
             <p class="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
-                {{ title || $t('common.no_data_available') || 'لا توجد بيانات متاحة' }}
+                {{ title || $t('common.no_data_available') }}
             </p>
             <p v-if="description" class="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium leading-relaxed">
                 {{ description }}

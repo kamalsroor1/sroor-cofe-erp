@@ -9,8 +9,8 @@
     <!-- 🚫 Empty State -->
     <EmptyState
       v-else-if="categories.length === 0"
-      :title="$t('inventory.no_categories_yet') || 'لا توجد فئات مسجلة حالياً'"
-      :description="$t('inventory.create_first_category_hint') || 'ابدأ بإضافة فئات لتقسيم أصنافك مثل (قهوة، مشروبات، حلويات، سندوتشات)'"
+      :title="$t('inventory.no_categories_yet')"
+      :description="$t('inventory.create_first_category_hint')"
       :icon="'🗂️'"
     >
       <template #action>
@@ -19,7 +19,7 @@
           variant="gradient"
           size="md"
           :icon="Plus"
-          :label="$t('inventory.add_first_category') || 'إضافة أول فئة'"
+          :label="$t('inventory.add_first_category')"
           @click="$emit('create')"
         />
       </template>

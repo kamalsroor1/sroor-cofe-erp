@@ -1,7 +1,7 @@
 <template>
   <AppModal
     :show="show"
-    :title="`${$t('inventory.adjust_stock') || 'تسوية رصيد الصنف'}: ${targetItem?.name || ''}`"
+    :title="`${$t('inventory.adjust_stock')}: ${targetItem?.name || ''}`"
     :icon="Sliders"
     max-width="lg"
     @close="$emit('close')"
@@ -9,7 +9,7 @@
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Current Stock Live Info Tile -->
       <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('inventory.current_stock') || 'الرصيد المتاح حالياً' }}:</span>
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('inventory.current_stock') }}:</span>
         <span class="text-base font-black text-theme-primary font-mono">
           {{ formatQty(targetItem?.current_stock || 0) }} {{ targetItem?.unit || '' }}
         </span>
@@ -18,7 +18,7 @@
       <!-- Movement Type Select -->
       <BaseSelect
         v-model="adjustForm.movement_type"
-        :label="$t('inventory.movement_type') || 'نوع حركة التسوية'"
+        :label="$t('inventory.movement_type')"
         :required="true"
         :options="movementTypeOptions"
         :searchable="false"
@@ -27,7 +27,7 @@
       <!-- Quantity Input -->
       <BaseNumberInput
         v-model="adjustForm.quantity"
-        :label="$t('common.quantity') || 'الكمية المطلوبة للتسوية'"
+        :label="$t('inventory.quantity')"
         :required="true"
         :min="0.001"
         :step="0.001"
@@ -37,8 +37,8 @@
       <!-- Reason / Notes Input -->
       <BaseInput
         v-model="adjustForm.notes"
-        :label="$t('inventory.adjust_reason_prompt') || 'سبب التسوية / ملاحظات'"
-        :placeholder="$t('inventory.adjust_reason_placeholder') || 'اكتب سبب التسوية الجردية...'"
+        :label="$t('inventory.adjust_reason_prompt')"
+        :placeholder="$t('inventory.adjust_reason_placeholder')"
       />
 
       <!-- Modal Footer Actions -->
@@ -56,7 +56,7 @@
           variant="gradient"
           size="md"
           :loading="isSubmitting"
-          :label="$t('inventory.confirm_stock_adjustment') || 'اعتماد التسوية'"
+          :label="$t('inventory.confirm_stock_adjustment')"
         />
       </div>
     </form>
@@ -86,9 +86,9 @@ defineProps({
 defineEmits(['close', 'submit']);
 
 const movementTypeOptions = computed(() => [
-  { value: 'stock_adjustment_in', label: trans('inventory.movement_adj_in') || 'تسوية بالزيادة (جرد +)' },
-  { value: 'stock_adjustment_out', label: trans('inventory.movement_adj_out') || 'تسوية بالنقصان (عجز جرد -)' },
-  { value: 'waste_out', label: trans('inventory.movement_waste') || 'إهلاك وهالك تالف (-)' },
-  { value: 'stock_deposit_in', label: trans('inventory.movement_deposit') || 'إيداع مخزني إضافي (+)' },
+  { value: 'stock_adjustment_in', label: trans('inventory.movement_adj_in') },
+  { value: 'stock_adjustment_out', label: trans('inventory.movement_adj_out') },
+  { value: 'waste_out', label: trans('inventory.movement_waste') },
+  { value: 'stock_deposit_in', label: trans('inventory.movement_deposit') },
 ]);
 </script>

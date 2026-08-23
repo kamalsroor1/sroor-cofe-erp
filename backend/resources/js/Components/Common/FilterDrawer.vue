@@ -42,7 +42,7 @@
                   <div>
                     <div class="flex items-center gap-2">
                       <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white">
-                        {{ title || $t('common.filter_search') || $t('invoices.advanced_filters') }}
+                        {{ title || $t('common.filter_search') }}
                       </h3>
                       <span
                         v-if="activeCount > 0"
