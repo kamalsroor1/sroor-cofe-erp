@@ -7,10 +7,8 @@
       @refresh="fetchDashboard"
     />
 
-    <div v-if="isLoading && !dashboardData" class="p-20 text-center">
-      <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-      <p class="text-xs text-slate-400 font-bold">{{ $t('dashboard.loading_live') }}</p>
-    </div>
+    <!-- 🔄 Facebook-Style Skeleton Loading State -->
+    <DashboardSkeleton v-if="isLoading && !dashboardData" />
 
     <template v-else>
       <DashboardKpiGrid :metrics="metrics" />
@@ -52,6 +50,7 @@ import DashboardAnalyticsRow   from '../Components/Dashboard/DashboardAnalyticsR
 import DashboardPeakHours      from '../Components/Dashboard/DashboardPeakHours.vue';
 import DashboardRecentInvoices from '../Components/Dashboard/DashboardRecentInvoices.vue';
 import DashboardLowStock       from '../Components/Dashboard/DashboardLowStock.vue';
+import DashboardSkeleton       from '../Components/Dashboard/DashboardSkeleton.vue';
 
 const router = useRouter();
 const appConfigStore = useAppConfigStore();

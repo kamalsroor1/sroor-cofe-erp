@@ -1,5 +1,8 @@
 <template>
   <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white" dir="rtl">
+    <!-- 0. ☕ Global System Initial Boot Splash Screen (Facebook/Native-App Shimmer Loader) -->
+    <SystemBootSplash :show="isBooting" />
+
     <!-- 1. Standalone / Print / Guest Views (Completely Isolated with ZERO Sidebar or Navbars) -->
     <template v-if="isStandaloneRoute">
       <router-view v-slot="{ Component, route }">
@@ -35,7 +38,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
@@ -43,11 +46,14 @@ import { useAppUpdate } from './Composables/useAppUpdate';
 import SpaLayout from './Layouts/SpaLayout.vue';
 import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';
+import SystemBootSplash from './Components/Common/SystemBootSplash.vue';
 
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
 const { checkForUpdates } = useAppUpdate();
+
+const isBooting = ref(true);
 
 const isStandaloneRoute = computed(() => {
     const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
@@ -72,19 +78,24 @@ const isSuperAdminRoute = computed(() => {
 });
 
 onMounted(async () => {
-    // 1. Initialize Theme from storage or preference
-    const savedTheme = localStorage.getItem('theme_preference') || 'dark';
-    appConfigStore.setTheme(savedTheme);
+    try {
+        // 1. Initialize Theme from storage or preference
+        const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+        appConfigStore.setTheme(savedTheme);
 
-    // 2. Fetch translations if guest or bootstrap context if authenticated
-    if (authStore.isAuthenticated) {
-        try {
+        // 2. Fetch translations if guest or bootstrap context if authenticated
+        if (authStore.isAuthenticated) {
             await appConfigStore.fetchBootstrapContext();
-        } catch (error) {
-            console.error('Failed to initialize bootstrap context:', error);
+        } else {
+            await appConfigStore.fetchTranslations();
         }
-    } else {
-        await appConfigStore.fetchTranslations();
+    } catch (error) {
+        console.error('Failed to initialize bootstrap context:', error);
+    } finally {
+        // Smooth transition out of boot splash
+        setTimeout(() => {
+            isBooting.value = false;
+        }, 350);
     }
 
     // 3. Native App APK Update Check
@@ -98,12 +109,10 @@ onMounted(async () => {
 .page-leave-active {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
-
 .page-enter-from {
   opacity: 0;
   transform: translateY(4px);
 }
-
 .page-leave-to {
   opacity: 0;
   transform: translateY(-4px);

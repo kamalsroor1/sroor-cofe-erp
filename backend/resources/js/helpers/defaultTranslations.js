@@ -54,6 +54,10 @@ export const defaultArabicTranslations = {
         previous: 'السابق',
         next: 'التالي',
         save_changes: 'حفظ التعديلات',
+        app_title: 'منظومة إدارة المؤسسات والمخزون ERP',
+        app_subtitle: 'منظومة إدارة المبيعات، المخزون، ونقاط البيع السريعة',
+        system_booting: 'جاري تحميل وتهيئة المنظومة...',
+        pos_badge: 'ERP & POS',
     },
     nav: {
         dashboard: 'لوحة التحكم',

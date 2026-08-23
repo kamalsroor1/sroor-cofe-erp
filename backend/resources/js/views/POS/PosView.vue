@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
+  <!-- 🔄 POS Skeleton Loading State -->
+  <POSSkeleton v-if="isLoading" />
+
+  <div v-else class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
     
     <!-- 🔝 1. Header & Search Command Bar -->
     <POSHeader
@@ -99,6 +102,7 @@ import POSQuickPinnedItems from '../../Components/POS/POSQuickPinnedItems.vue';
 import POSCheckoutPanel    from '../../Components/POS/POSCheckoutPanel.vue';
 import POSCustomerModal    from '../../Components/POS/POSCustomerModal.vue';
 import POSSuccessModal     from '../../Components/POS/POSSuccessModal.vue';
+import POSSkeleton         from '../../Components/POS/POSSkeleton.vue';
 
 const appVersion = ref(versionData?.version || '1.0.10');
 const headerRef = ref(null);
@@ -109,7 +113,7 @@ const customers = ref([]);
 const activeStore = ref(null);
 const activeShift = ref(null);
 
-const isLoading = ref(false);
+const isLoading = ref(true);
 const isSubmitting = ref(false);
 
 const cart = ref([]);

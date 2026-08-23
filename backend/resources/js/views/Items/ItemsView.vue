@@ -2,8 +2,8 @@
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
     <!-- 1. 🔝 Page Header & Actions -->
     <PageHeader
-      :title="$t('inventory.items_title') || 'إدارة المخزون وبطاقات الأصناف'"
-      :subtitle="$t('inventory.items_subtitle') || 'متابعة أرصدة البضاعة في المخازن، أسعار البيع والشراء، وحد الطلب والنواقص'"
+      :title="$t('inventory.items_title')"
+      :subtitle="$t('inventory.items_subtitle')"
       :icon="'☕'"
     >
       <template #actions>
@@ -12,14 +12,14 @@
           variant="gradient"
           size="md"
           :icon="Plus"
-          :label="$t('inventory.add_item') || 'إضافة صنف جديد'"
+          :label="$t('inventory.add_item')"
           @click="openCreateModal"
         />
       </template>
     </PageHeader>
 
     <!-- 2. 📊 Summary KPIs Grid -->
-    <ItemsMetricsGrid :metrics="metrics" />
+    <ItemsMetricsGrid :metrics="metrics" :is-loading="isLoading" />
 
     <!-- 3. 🔍 Search & Status Filters Bar -->
     <ItemsSearchFilterBar
@@ -91,7 +91,7 @@ const metrics = ref({
 const searchQuery = ref('');
 const selectedCategory = ref('all');
 const stockStatus = ref('all');
-const isLoading = ref(false);
+const isLoading = ref(true);
 const isSubmitting = ref(false);
 
 const systemUnits = ref(['كجم', 'جرام', 'قطعة', 'علبة', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'لتر']);

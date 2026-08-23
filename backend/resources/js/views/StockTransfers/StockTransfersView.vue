@@ -18,7 +18,7 @@
     </PageHeader>
 
     <!-- 📊 Summary Metrics Grid -->
-    <StockTransfersMetricsGrid :summary="summary" />
+    <StockTransfersMetricsGrid :summary="summary" :is-loading="isLoading" />
 
     <!-- 🔍 Search & Filters Bar -->
     <StockTransfersSearchFilterBar
@@ -72,7 +72,7 @@ const fromStoreId = ref('all');
 const toStoreId = ref('all');
 const dateFrom = ref('');
 const dateTo = ref('');
-const isLoading = ref(false);
+const isLoading = ref(true);
 
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
 

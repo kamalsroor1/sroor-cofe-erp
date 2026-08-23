@@ -4,7 +4,7 @@
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-theme-primary/10 text-theme-primary font-black text-sm">☕</span>
         <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          {{ $t('dashboard.welcome') }} {{ companyName }}
+          {{ $t('dashboard.welcome') }} {{ companyName || $t('common.app_title') }}
         </h1>
       </div>
       <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">
