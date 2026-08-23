@@ -1,584 +1,91 @@
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto">
-      <!-- Page Header -->
-      <PageHeader
-        :title="$t('inventory.items_title')"
-        :subtitle="$t('inventory.items_subtitle')"
-        :icon="'☕'"
-      >
-        <template #actions>
-          <button
-            type="button"
-            @click="openCreateModal"
-            class="px-4 py-2.5 bg-theme-gradient text-white font-black shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
-          >
-            <Plus class="w-4 h-4" />
-            <span>{{ $t('inventory.add_item') }}</span>
-          </button>
-        </template>
-      </PageHeader>
+  <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
+    <!-- 1. 🔝 Page Header & Actions -->
+    <PageHeader
+      :title="$t('inventory.items_title') || 'إدارة المخزون وبطاقات الأصناف'"
+      :subtitle="$t('inventory.items_subtitle') || 'متابعة أرصدة البضاعة في المخازن، أسعار البيع والشراء، وحد الطلب والنواقص'"
+      :icon="'☕'"
+    >
+      <template #actions>
+        <BaseButton
+          type="button"
+          variant="gradient"
+          size="md"
+          :icon="Plus"
+          :label="$t('inventory.add_item') || 'إضافة صنف جديد'"
+          @click="openCreateModal"
+        />
+      </template>
+    </PageHeader>
 
-      <!-- Summary Metrics Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <!-- Total Stock Valuation -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('inventory.total_stock_value') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <TrendingUp class="w-4 h-4" />
-            </div>
-          </div>
-          <div class="text-2xl font-black text-emerald-400 font-mono">
-            {{ formatMoney(metrics.total_stock_value || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
-          </div>
-          <div class="text-[11px] text-slate-500 font-tajawal">
-            {{ $t('inventory.total_stock_value_sub') }}
-          </div>
-        </div>
+    <!-- 2. 📊 Summary KPIs Grid -->
+    <ItemsMetricsGrid :metrics="metrics" />
 
-        <!-- Low Stock Count -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('inventory.low_stock_count') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
-              <AlertTriangle class="w-4 h-4" />
-            </div>
-          </div>
-          <div class="text-2xl font-black text-rose-400 font-mono">
-            {{ metrics.low_stock_count || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
-          </div>
-          <div class="text-[11px] text-slate-500 font-tajawal">
-            {{ $t('inventory.low_stock_count_sub') }}
-          </div>
-        </div>
+    <!-- 3. 🔍 Search & Status Filters Bar -->
+    <ItemsSearchFilterBar
+      v-model:search-query="searchQuery"
+      v-model:selected-category="selectedCategory"
+      v-model:stock-status="stockStatus"
+      :categories="categories"
+      @search="fetchItems(1)"
+    />
 
-        <!-- Total Items Count -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400 font-tajawal">{{ $t('inventory.total_items_count') }}</span>
-            <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
-              <Package class="w-4 h-4" />
-            </div>
-          </div>
-          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
-            {{ metrics.total_items || 0 }} <span class="text-xs text-slate-400">{{ $t('inventory.item_unit') }}</span>
-          </div>
-          <div class="text-[11px] text-slate-500 font-tajawal">
-            {{ $t('inventory.total_items_sub') }}
-          </div>
-        </div>
-      </div>
+    <!-- 4. 📦 Items Table (Dual Responsive: Desktop Table + Mobile Cards Stack) -->
+    <ItemsTable
+      :items="items"
+      :pagination="pagination"
+      :is-loading="isLoading"
+      @create="openCreateModal"
+      @edit="openEditModal"
+      @adjust="openAdjustModal"
+      @delete="deleteItem"
+      @page-change="fetchItems"
+    />
 
-      <!-- Filters & Search Bar -->
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        <!-- Search Input -->
-        <div class="relative flex-1">
-          <input
-            v-model="searchQuery"
-            @input="debounceSearch"
-            type="text"
-            class="w-full h-10 pr-9 pl-4 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
-            :placeholder="$t('inventory.search_item_placeholder')"
-          >
-          <Search class="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
-        </div>
+    <!-- 5. 📝 Add / Edit Item Modal -->
+    <ItemFormModal
+      :show="showItemModal"
+      :editing-item="editingItem"
+      :form="form"
+      :categories="categories"
+      :units="systemUnits"
+      :is-submitting="isSubmitting"
+      @close="showItemModal = false"
+      @submit="saveItem"
+    />
 
-        <!-- Category Dropdown -->
-        <div class="w-full md:w-48">
-          <select
-            v-model="selectedCategory"
-            @change="fetchItems(1)"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none font-tajawal"
-          >
-            <option value="all">{{ $t('inventory.all_categories') }}</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">
-              {{ cat }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Stock Status Filter Pills -->
-        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
-          <button
-            type="button"
-            @click="setStockStatus('all')"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'all' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
-          >
-            {{ $t('common.all') }}
-          </button>
-
-          <button
-            type="button"
-            @click="setStockStatus('low')"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'low' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
-          >
-            🚨 {{ $t('inventory.low_stock_only') }}
-          </button>
-
-          <button
-            type="button"
-            @click="setStockStatus('out')"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'out' ? 'bg-theme-light text-theme-primary border border-theme-border' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
-          >
-            ❌ {{ $t('inventory.out_of_stock_only') }}
-          </button>
-
-          <button
-            type="button"
-            @click="setStockStatus('in_stock')"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
-            :class="stockStatus === 'in_stock' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-slate-200'"
-          >
-            ✅ {{ $t('inventory.available_only') }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Items Table -->
-      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <!-- Loading Spinner -->
-        <div v-if="isLoading" class="p-12 text-center">
-          <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('common.loading') }}</p>
-        </div>
-
-        <div v-else-if="items.length > 0" class="overflow-x-auto">
-          <table class="w-full text-start text-xs border-collapse">
-            <thead>
-              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800">
-                <th class="py-3 px-4 text-start font-bold">#</th>
-                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.code') }}</th>
-                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_name') }}</th>
-                <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.category') }}</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.cost_price') }}</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.selling_price') }} (قطاعي)</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.min_selling_price') || 'أقل بيع (جملة)' }}</th>
-                <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
-                <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
-                <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-              <tr
-                v-for="(item, idx) in items"
-                :key="item.id"
-                class="hover:bg-slate-50 dark:hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors"
-                :class="item.is_low_stock ? 'bg-rose-500/5' : ''"
-              >
-                <td class="py-3.5 px-4 font-mono text-slate-500">
-                  {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
-                </td>
-                <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
-                  {{ item.code || '—' }}
-                </td>
-                <td class="py-3.5 px-4">
-                  <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ item.name }}</div>
-                  <div v-if="item.notes" class="text-[10px] text-slate-500 font-tajawal mt-0.5 max-w-xs truncate">
-                    {{ item.notes }}
-                  </div>
-                </td>
-                <td class="py-3.5 px-4 font-tajawal text-slate-300">
-                  <span v-if="item.category" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
-                    {{ item.category }}
-                  </span>
-                  <span v-else class="text-slate-500">—</span>
-                </td>
-                <td class="py-3.5 px-4 text-end font-mono text-slate-400">
-                  {{ formatMoney(item.cost_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
-                </td>
-                <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-400">
-                  {{ formatMoney(item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
-                </td>
-                <td class="py-3.5 px-4 text-end font-mono font-bold text-purple-400">
-                  {{ formatMoney(item.min_selling_price || item.price_wholesale || item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
-                </td>
-                <td class="py-3.5 px-4 text-end">
-                  <div
-                    class="font-mono font-black text-sm"
-                    :class="item.current_stock <= 0 ? 'text-slate-500' : (item.is_low_stock ? 'text-rose-500 dark:text-rose-400' : 'text-slate-900 dark:text-white')"
-                  >
-                    {{ formatQty(item.current_stock) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ item.unit }}</span>
-                  </div>
-                  <div v-if="item.is_low_stock" class="text-[10px] text-rose-400 font-tajawal font-bold mt-0.5 flex items-center justify-end gap-1">
-                    <AlertTriangle class="w-3 h-3" />
-                    <span>{{ $t('inventory.min_stock_reorder_badge', { qty: formatQty(item.min_stock_level) }) }}</span>
-                  </div>
-                </td>
-                <td class="py-3.5 px-4 text-center">
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[10px] font-bold font-tajawal border"
-                    :class="item.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-800 border-slate-700 text-slate-500'"
-                  >
-                    {{ item.is_active ? $t('common.active') : $t('common.inactive') }}
-                  </span>
-                </td>
-                <td class="py-3.5 px-4 text-center">
-                  <div class="flex items-center justify-center gap-1">
-                    <!-- Stock Adjustment Button -->
-                    <button
-                      type="button"
-                      @click="openAdjustModal(item)"
-                      class="px-2.5 py-1.5 bg-theme-light hover:bg-theme-hover/20 text-theme-primary border border-theme-border rounded-xl text-xs font-bold transition-all flex items-center gap-1 font-tajawal cursor-pointer"
-                      :title="$t('inventory.adjust_stock')"
-                    >
-                      <Sliders class="w-3.5 h-3.5" />
-                      <span>{{ $t('inventory.adjust') }}</span>
-                    </button>
-
-                    <!-- Movements Button -->
-                    <router-link
-                      :to="`/items/${item.id}/movements`"
-                      class="p-2 text-slate-400 hover:text-theme-primary hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all"
-                      :title="$t('inventory.movements_log')"
-                    >
-                      <History class="w-4 h-4" />
-                    </router-link>
-
-                    <!-- Edit Button -->
-                    <button
-                      type="button"
-                      @click="openEditModal(item)"
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all cursor-pointer"
-                      :title="$t('common.edit')"
-                    >
-                      <Pencil class="w-4 h-4" />
-                    </button>
-
-                    <!-- Delete Button -->
-                    <button
-                      type="button"
-                      @click="deleteItem(item)"
-                      class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-                      :title="$t('common.delete')"
-                    >
-                      <Trash2 class="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Empty State -->
-        <EmptyState
-          v-else
-          :title="$t('inventory.no_items_found')"
-          :description="$t('inventory.no_items_description')"
-          :icon="'☕'"
-        >
-          <template #action>
-            <button
-              type="button"
-              @click="openCreateModal"
-              class="px-5 py-2.5 bg-theme-primary text-white font-bold rounded-xl text-xs font-black font-tajawal shadow-lg shadow-theme-primary cursor-pointer"
-            >
-              {{ $t('inventory.add_first_item') }}
-            </button>
-          </template>
-        </EmptyState>
-
-        <!-- Pagination Bar -->
-        <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div class="text-xs text-slate-400 font-tajawal">
-            {{ $t('inventory.total_results_items', { count: pagination.total }) }}
-          </div>
-          <div class="flex items-center gap-1">
-            <button
-              type="button"
-              @click="fetchItems(pagination.current_page - 1)"
-              :disabled="pagination.current_page <= 1"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
-            >
-              {{ $t('common.previous') }}
-            </button>
-            <span class="px-3 py-1.5 text-xs font-mono text-slate-300 font-bold">
-              {{ pagination.current_page }} / {{ pagination.last_page }}
-            </span>
-            <button
-              type="button"
-              @click="fetchItems(pagination.current_page + 1)"
-              :disabled="pagination.current_page >= pagination.last_page"
-              class="px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer font-tajawal"
-            >
-              {{ $t('common.next') }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add / Edit Item Modal -->
-      <AppModal
-        :show="showItemModal"
-        :title="editingItem ? $t('inventory.edit_item') : $t('inventory.add_item')"
-        max-width="3xl"
-        @close="showItemModal = false"
-      >
-        <form @submit.prevent="saveItem" class="space-y-4 font-tajawal">
-          <!-- Name & Code Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.item_name') }} <span class="text-rose-500">*</span>
-              </label>
-              <input
-                v-model="form.name"
-                type="text"
-                required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                :placeholder="$t('inventory.item_name_placeholder')"
-              >
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.code') }} ({{ $t('inventory.barcode') }})
-              </label>
-              <input
-                v-model="form.code"
-                type="text"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                :placeholder="$t('inventory.auto_code_placeholder')"
-              >
-            </div>
-          </div>
-
-          <!-- Category & Unit Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.category') }}
-              </label>
-              <input
-                v-model="form.category"
-                type="text"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                :placeholder="$t('inventory.category_hint_placeholder')"
-              >
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.unit') }} <span class="text-rose-500">*</span>
-              </label>
-              <select
-                v-model="form.unit"
-                required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              >
-                <option v-for="u in systemUnits" :key="u" :value="u">
-                  {{ u }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Cost Price, Retail Price, Min Selling Price (Wholesale) & Min Stock Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.cost_price') }} <span class="text-rose-500">*</span>
-              </label>
-              <input
-                v-model="form.cost_price"
-                type="number"
-                step="0.001"
-                required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                placeholder="0.00"
-              >
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.selling_price') }} (تجزئة) <span class="text-rose-500">*</span>
-              </label>
-              <input
-                v-model="form.selling_price"
-                type="number"
-                step="0.001"
-                required
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-500 font-bold font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                placeholder="0.00"
-              >
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                أقل سعر بيع (الجملة)
-              </label>
-              <input
-                v-model="form.min_selling_price"
-                type="number"
-                step="0.001"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-purple-400 font-bold font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                placeholder="0.00"
-              >
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {{ $t('inventory.min_stock_level') }}
-              </label>
-              <input
-                v-model="form.min_stock_level"
-                type="number"
-                step="0.001"
-                class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-rose-400 font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                placeholder="0.00"
-              >
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {{ $t('common.notes') }}
-            </label>
-            <textarea
-              v-model="form.notes"
-              rows="2"
-              class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              :placeholder="$t('inventory.item_notes_placeholder')"
-            ></textarea>
-          </div>
-
-          <!-- Modal Actions -->
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              @click="showItemModal = false"
-              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold cursor-pointer"
-            >
-              {{ $t('common.cancel') }}
-            </button>
-
-            <button
-              type="submit"
-              :disabled="isSubmitting"
-              class="px-5 py-2 bg-theme-gradient text-white shadow-theme-primary font-black rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
-            >
-              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              <span>{{ $t('common.save') }}</span>
-            </button>
-          </div>
-        </form>
-      </AppModal>
-
-      <!-- Quick Adjust Stock Modal -->
-      <AppModal
-        :show="showAdjustModal"
-        :title="`${$t('inventory.adjust_stock')}: ${targetItem?.name}`"
-        @close="showAdjustModal = false"
-      >
-        <form @submit.prevent="saveAdjustment" class="space-y-4 font-tajawal">
-          <!-- Current Stock Info -->
-          <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-400">{{ $t('inventory.current_stock') }}:</span>
-            <span class="text-base font-black text-theme-primary font-mono">
-              {{ formatQty(targetItem?.current_stock || 0) }} {{ targetItem?.unit }}
-            </span>
-          </div>
-
-          <!-- Movement Type -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {{ $t('inventory.movement_type') }} <span class="text-rose-500">*</span>
-            </label>
-            <select
-              v-model="adjustForm.movement_type"
-              required
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            >
-              <option value="stock_adjustment_in">{{ $t('inventory.movement_adj_in') }}</option>
-              <option value="stock_adjustment_out">{{ $t('inventory.movement_adj_out') }}</option>
-              <option value="waste_out">{{ $t('inventory.movement_waste') }}</option>
-              <option value="stock_deposit_in">{{ $t('inventory.movement_deposit') }}</option>
-            </select>
-          </div>
-
-          <!-- Quantity -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {{ $t('common.quantity') }} <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="adjustForm.quantity"
-              type="number"
-              step="0.001"
-              required
-              autofocus
-              class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-theme-primary font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              placeholder="0.000"
-            >
-          </div>
-
-          <!-- Notes -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {{ $t('inventory.adjust_reason_prompt') }}
-            </label>
-            <input
-              v-model="adjustForm.notes"
-              type="text"
-              class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              :placeholder="$t('inventory.adjust_reason_placeholder')"
-            >
-          </div>
-
-          <!-- Actions -->
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              @click="showAdjustModal = false"
-              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold cursor-pointer"
-            >
-              {{ $t('common.cancel') }}
-            </button>
-
-            <button
-              type="submit"
-              :disabled="isSubmitting"
-              class="px-5 py-2 bg-theme-gradient text-white shadow-theme-primary font-black rounded-xl text-xs font-black shadow-lg shadow-theme-primary disabled:opacity-50 cursor-pointer flex items-center gap-2"
-            >
-              <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              <span>{{ $t('inventory.confirm_stock_adjustment') }}</span>
-            </button>
-          </div>
-        </form>
-      </AppModal>
-    </div>
+    <!-- 6. ⚖️ Quick Stock Adjustment Modal -->
+    <ItemStockAdjustModal
+      :show="showAdjustModal"
+      :target-item="targetItem"
+      :adjust-form="adjustForm"
+      :is-submitting="isSubmitting"
+      @close="showAdjustModal = false"
+      @submit="saveAdjustment"
+    />
+  </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
-import EmptyState from '../../Components/Common/EmptyState.vue';
-import AppModal from '../../Components/Common/AppModal.vue';
+import BaseButton from '../../Components/Common/BaseButton.vue';
+import ItemsMetricsGrid from '../../Components/Items/ItemsMetricsGrid.vue';
+import ItemsSearchFilterBar from '../../Components/Items/ItemsSearchFilterBar.vue';
+import ItemsTable from '../../Components/Items/ItemsTable.vue';
+import ItemFormModal from '../../Components/Items/ItemFormModal.vue';
+import ItemStockAdjustModal from '../../Components/Items/ItemStockAdjustModal.vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
-import {
-    Plus,
-    Search,
-    TrendingUp,
-    AlertTriangle,
-    Package,
-    Sliders,
-    History,
-    Pencil,
-    Trash2
-} from 'lucide-vue-next';
 
 const items = ref([]);
 const categories = ref([]);
 const metrics = ref({
-    total_items: 0,
-    low_stock_count: 0,
-    total_stock_value: 0,
+  total_items: 0,
+  low_stock_count: 0,
+  total_stock_value: 0,
 });
 
 const searchQuery = ref('');
@@ -587,259 +94,219 @@ const stockStatus = ref('all');
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 
-const systemUnits = ref(['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر']);
-
-const fetchSystemUnits = async () => {
-    try {
-        const res = await api.get('/settings');
-        const unitsStr = res.data?.data?.settings?.inventory_units;
-        if (unitsStr) {
-            const list = unitsStr.split(',').map(u => u.trim()).filter(Boolean);
-            if (list.length > 0) {
-                systemUnits.value = list;
-            }
-        }
-    } catch (e) {
-        console.error('Failed to load system units:', e);
-    }
-};
+const systemUnits = ref(['كجم', 'جرام', 'قطعة', 'علبة', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'لتر']);
 const pagination = ref({
-    current_page: 1,
-    last_page: 1,
-    per_page: 20,
-    total: 0,
+  current_page: 1,
+  last_page: 1,
+  per_page: 20,
+  total: 0,
 });
 
-let debounceTimeout = null;
-
-// Add / Edit State
+// Modals State
 const showItemModal = ref(false);
 const editingItem = ref(null);
 const form = reactive({
-    name: '',
-    code: '',
-    category: '',
-    unit: 'كجم',
-    cost_price: '0.000',
-    selling_price: '0.000',
-    min_selling_price: '0.000',
-    min_stock_level: '0.000',
-    notes: '',
+  name: '',
+  code: '',
+  category: '',
+  unit: 'كجم',
+  cost_price: 0,
+  selling_price: 0,
+  min_selling_price: 0,
+  min_stock_level: 0,
+  notes: '',
 });
 
-// Adjust Stock State
 const showAdjustModal = ref(false);
 const targetItem = ref(null);
 const adjustForm = reactive({
-    movement_type: 'stock_adjustment_in',
-    quantity: '',
-    notes: '',
+  movement_type: 'stock_adjustment_in',
+  quantity: 0,
+  notes: '',
 });
-
-const formatMoney = (val) => {
-    const num = parseFloat(val) || 0;
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
-
-const formatQty = (val) => {
-    const num = parseFloat(val) || 0;
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 });
-};
 
 const fetchItems = async (page = 1) => {
-    isLoading.value = true;
-    try {
-        const response = await api.get('/items', {
-            params: {
-                search: searchQuery.value,
-                category: selectedCategory.value !== 'all' ? selectedCategory.value : undefined,
-                stock_status: stockStatus.value !== 'all' ? stockStatus.value : undefined,
-                page: page,
-                per_page: 20,
-            },
-        });
-        items.value = response.data?.data || [];
-        metrics.value = response.data?.summary || {
-            total_items: 0,
-            low_stock_count: 0,
-            total_stock_value: 0,
-        };
-        categories.value = response.data?.categories || [];
-        pagination.value = response.data?.meta || {
-            current_page: page,
-            last_page: 1,
-            per_page: 20,
-            total: items.value.length,
-        };
-    } catch (error) {
-        console.error('Failed to load items:', error);
-    } finally {
-        isLoading.value = false;
-    }
+  isLoading.value = true;
+  try {
+    const response = await api.get('/items', {
+      params: {
+        search: searchQuery.value,
+        category: selectedCategory.value !== 'all' ? selectedCategory.value : undefined,
+        stock_status: stockStatus.value !== 'all' ? stockStatus.value : undefined,
+        page,
+        per_page: 20,
+      },
+    });
+    items.value = response.data?.data || [];
+    metrics.value = response.data?.summary || {
+      total_items: 0,
+      low_stock_count: 0,
+      total_stock_value: 0,
+    };
+    categories.value = response.data?.categories || [];
+    pagination.value = response.data?.meta || {
+      current_page: page,
+      last_page: 1,
+      per_page: 20,
+      total: items.value.length,
+    };
+  } catch (error) {
+    console.error('Failed to load items:', error);
+  } finally {
+    isLoading.value = false;
+  }
 };
-
-const debounceSearch = () => {
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
-        fetchItems(1);
-    }, 300);
-};
-
-const setStockStatus = (status) => {
-    stockStatus.value = status;
-    fetchItems(1);
-};
-
-onMounted(() => {
-    fetchItems(1);
-});
 
 const openCreateModal = () => {
-    editingItem.value = null;
-    form.name = '';
-    form.code = '';
-    form.category = '';
-    form.unit = 'كجم';
-    form.cost_price = '0.000';
-    form.selling_price = '0.000';
-    form.min_selling_price = '0.000';
-    form.min_stock_level = '0.000';
-    form.notes = '';
-    showItemModal.value = true;
+  editingItem.value = null;
+  form.name = '';
+  form.code = '';
+  form.category = '';
+  form.unit = 'كجم';
+  form.cost_price = 0;
+  form.selling_price = 0;
+  form.min_selling_price = 0;
+  form.min_stock_level = 0;
+  form.notes = '';
+  showItemModal.value = true;
 };
 
 const openEditModal = (item) => {
-    editingItem.value = item;
-    form.name = item.name;
-    form.code = item.code || '';
-    form.category = item.category || '';
-    form.unit = item.unit || 'كجم';
-    form.cost_price = item.cost_price;
-    form.selling_price = item.selling_price;
-    form.min_selling_price = item.min_selling_price || item.cost_price || '0.000';
-    form.min_stock_level = item.min_stock_level;
-    form.notes = item.notes || '';
-    showItemModal.value = true;
+  editingItem.value = item;
+  form.name = item.name;
+  form.code = item.code || '';
+  form.category = item.category || '';
+  form.unit = item.unit || 'كجم';
+  form.cost_price = Number(item.cost_price) || 0;
+  form.selling_price = Number(item.selling_price) || 0;
+  form.min_selling_price = Number(item.min_selling_price || item.price_wholesale || item.selling_price) || 0;
+  form.min_stock_level = Number(item.min_stock_level) || 0;
+  form.notes = item.notes || '';
+  showItemModal.value = true;
 };
 
 const saveItem = async () => {
-    isSubmitting.value = true;
-    try {
-        if (editingItem.value) {
-            await api.put(`/items/${editingItem.value.id}`, form);
-            Swal.fire({
-                icon: 'success',
-                title: trans('common.success'),
-                text: trans('inventory.item_updated'),
-                timer: 1500,
-                showConfirmButton: false,
-            });
-        } else {
-            await api.post('/items', form);
-            Swal.fire({
-                icon: 'success',
-                title: trans('common.success'),
-                text: trans('inventory.item_added'),
-                timer: 1500,
-                showConfirmButton: false,
-            });
-        }
-        showItemModal.value = false;
-        await fetchItems(pagination.value.current_page);
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: trans('common.error'),
-            text: error.userMessage || trans('common.error'),
-        });
-    } finally {
-        isSubmitting.value = false;
+  isSubmitting.value = true;
+  try {
+    if (editingItem.value) {
+      await api.put(`/items/${editingItem.value.id}`, form);
+      Swal.fire({
+        icon: 'success',
+        title: trans('common.success'),
+        text: trans('inventory.item_updated') || 'تم تعديل بيانات الصنف بنجاح',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } else {
+      await api.post('/items', form);
+      Swal.fire({
+        icon: 'success',
+        title: trans('common.success'),
+        text: trans('inventory.item_added') || 'تم إضافة الصنف الجديد بنجاح',
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
+    showItemModal.value = false;
+    await fetchItems(pagination.value.current_page);
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: trans('common.error'),
+      text: error.userMessage || trans('common.error'),
+    });
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 const openAdjustModal = (item) => {
-    targetItem.value = item;
-    adjustForm.movement_type = 'stock_adjustment_in';
-    adjustForm.quantity = '';
-    adjustForm.notes = trans('inventory.movement_adjustment');
-    showAdjustModal.value = true;
+  targetItem.value = item;
+  adjustForm.movement_type = 'stock_adjustment_in';
+  adjustForm.quantity = '';
+  adjustForm.notes = trans('inventory.movement_adjustment') || 'تسوية مخزنية جردية';
+  showAdjustModal.value = true;
 };
 
 const saveAdjustment = async () => {
-    if (!adjustForm.quantity || parseFloat(adjustForm.quantity) <= 0) {
-        Swal.fire({
-            icon: 'warning',
-            title: trans('common.warning'),
-            text: trans('inventory.enter_valid_adjustment_qty'),
-        });
-        return;
-    }
+  if (!adjustForm.quantity || parseFloat(adjustForm.quantity) <= 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: trans('common.warning'),
+      text: trans('inventory.enter_valid_adjustment_qty') || 'يرجى إدخال كمية صحيحة للتسوية',
+    });
+    return;
+  }
 
-    isSubmitting.value = true;
-    try {
-        await api.post(`/items/${targetItem.value.id}/adjust-stock`, {
-            ...adjustForm,
-            store_id: targetItem.value.store_stocks?.[0]?.store_id || 1,
-        });
-        Swal.fire({
-            icon: 'success',
-            title: trans('common.success'),
-            text: trans('inventory.stock_adjusted_success'),
-            timer: 1500,
-            showConfirmButton: false,
-        });
-        showAdjustModal.value = false;
-        await fetchItems(pagination.value.current_page);
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: trans('common.error'),
-            text: error.userMessage || trans('inventory.stock_adjustment_failed'),
-        });
-    } finally {
-        isSubmitting.value = false;
-    }
+  isSubmitting.value = true;
+  try {
+    await api.post(`/items/${targetItem.value.id}/adjust-stock`, {
+      ...adjustForm,
+      store_id: targetItem.value.store_stocks?.[0]?.store_id || 1,
+    });
+    Swal.fire({
+      icon: 'success',
+      title: trans('common.success'),
+      text: trans('inventory.stock_adjusted_success') || 'تم اعتماد التسوية المخزنية وتحديث الرصيد بنجاح',
+      timer: 1500,
+      showConfirmButton: false,
+    });
+    showAdjustModal.value = false;
+    await fetchItems(pagination.value.current_page);
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: trans('common.error'),
+      text: error.userMessage || trans('inventory.stock_adjustment_failed'),
+    });
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 const deleteItem = async (item) => {
-    if (!item.can_be_deleted) {
-        const blockers = item.deletion_blockers?.join('\n- ') || '';
-        Swal.fire({
-            icon: 'warning',
-            title: trans('inventory.cannot_delete_item'),
-            text: `${trans('contacts.deletion_blockers_found')}\n- ${blockers}`,
-        });
-        return;
-    }
-
-    const result = await Swal.fire({
-        title: trans('inventory.delete_item_confirm_title', { name: item.name }),
-        text: trans('inventory.delete_item_confirm_text'),
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: trans('common.delete'),
-        cancelButtonText: trans('common.cancel'),
-        confirmButtonColor: '#f43f5e',
+  if (!item.can_be_deleted) {
+    const blockers = item.deletion_blockers?.join('\n- ') || '';
+    Swal.fire({
+      icon: 'warning',
+      title: trans('inventory.cannot_delete_item') || 'لا يمكن حذف هذا الصنف',
+      text: `${trans('contacts.deletion_blockers_found') || 'توجد عمليات وسجلات مرتبطة بهذا الصنف:'}\n- ${blockers}`,
     });
+    return;
+  }
 
-    if (result.isConfirmed) {
-        try {
-            await api.delete(`/items/${item.id}`);
-            Swal.fire({
-                icon: 'success',
-                title: trans('common.success'),
-                text: trans('inventory.item_deleted'),
-                timer: 1500,
-                showConfirmButton: false,
-            });
-            await fetchItems(pagination.value.current_page);
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: trans('common.error'),
-                text: error.userMessage || trans('common.error'),
-            });
-        }
+  const result = await Swal.fire({
+    title: trans('inventory.delete_item_confirm_title', { name: item.name }) || `حذف الصنف (${item.name})؟`,
+    text: trans('inventory.delete_item_confirm_text') || 'سيتم نقل الصنف لسلة المحذوفات.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: trans('common.delete'),
+    cancelButtonText: trans('common.cancel'),
+    confirmButtonColor: '#f43f5e',
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await api.delete(`/items/${item.id}`);
+      Swal.fire({
+        icon: 'success',
+        title: trans('common.success'),
+        text: trans('inventory.item_deleted') || 'تم حذف الصنف بنجاح',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      await fetchItems(pagination.value.current_page);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: trans('common.error'),
+        text: error.userMessage || trans('common.error'),
+      });
     }
+  }
 };
+
+onMounted(() => {
+  fetchItems(1);
+});
 </script>

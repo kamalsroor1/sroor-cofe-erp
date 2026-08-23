@@ -1,0 +1,284 @@
+<template>
+  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+    <!-- 🔄 Loading State -->
+    <div v-if="isLoading" class="p-12 text-center">
+      <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+      <p class="text-xs text-slate-400 font-bold font-tajawal">{{ $t('common.loading') }}</p>
+    </div>
+
+    <!-- 📦 Items List Content -->
+    <template v-else-if="items.length > 0">
+      <!-- 1. 🖥️ Desktop / Tablet High-Density Table (hidden on mobile < md) -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-start text-xs border-collapse font-tajawal">
+          <thead>
+            <tr class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <th class="py-3 px-4 text-start font-bold">#</th>
+              <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.code') }}</th>
+              <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.item_name') }}</th>
+              <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.category') }}</th>
+              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.cost_price') }}</th>
+              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.retail_price') || 'سعر البيع (قطاعي)' }}</th>
+              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.wholesale_price') || 'أقل بيع (جملة)' }}</th>
+              <th class="py-3 px-4 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
+              <th class="py-3 px-4 text-center font-bold">{{ $t('common.status') }}</th>
+              <th class="py-3 px-4 text-center font-bold">{{ $t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
+            <tr
+              v-for="(item, idx) in items"
+              :key="item.id"
+              class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              :class="item.is_low_stock ? 'bg-rose-500/5' : ''"
+            >
+              <td class="py-3.5 px-4 font-mono text-slate-500">
+                {{ idx + 1 + (pagination.current_page - 1) * pagination.per_page }}
+              </td>
+              <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
+                {{ item.code || '—' }}
+              </td>
+              <td class="py-3.5 px-4">
+                <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ item.name }}</div>
+                <div v-if="item.notes" class="text-[10px] text-slate-500 font-tajawal mt-0.5 max-w-xs truncate">
+                  {{ item.notes }}
+                </div>
+              </td>
+              <td class="py-3.5 px-4 font-tajawal">
+                <span v-if="item.category" class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
+                  {{ item.category }}
+                </span>
+                <span v-else class="text-slate-400">—</span>
+              </td>
+              <td class="py-3.5 px-4 text-end font-mono text-slate-400">
+                {{ formatMoney(item.cost_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
+              </td>
+              <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-500">
+                {{ formatMoney(item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
+              </td>
+              <td class="py-3.5 px-4 text-end font-mono font-bold text-purple-500 dark:text-purple-400">
+                {{ formatMoney(item.min_selling_price || item.price_wholesale || item.selling_price) }} <span class="text-[10px]">{{ $t('common.currency') }}</span>
+              </td>
+              <td class="py-3.5 px-4 text-end">
+                <div
+                  class="font-mono font-black text-sm"
+                  :class="item.current_stock <= 0 ? 'text-slate-400' : (item.is_low_stock ? 'text-rose-500' : 'text-slate-900 dark:text-white')"
+                >
+                  {{ formatQty(item.current_stock) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ item.unit }}</span>
+                </div>
+                <div v-if="item.is_low_stock" class="text-[10px] text-rose-500 font-tajawal font-bold mt-0.5 flex items-center justify-end gap-1">
+                  <AlertTriangle class="w-3 h-3" />
+                  <span>{{ $t('inventory.min_stock_reorder_badge', { qty: formatQty(item.min_stock_level) }) }}</span>
+                </div>
+              </td>
+              <td class="py-3.5 px-4 text-center">
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border"
+                  :class="item.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500'"
+                >
+                  {{ item.is_active ? $t('common.active') : $t('common.inactive') }}
+                </span>
+              </td>
+              <td class="py-3.5 px-4 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <!-- Adjust Stock -->
+                  <BaseButton
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    :icon="Sliders"
+                    :label="$t('inventory.adjust') || 'تسوية'"
+                    @click="$emit('adjust', item)"
+                  />
+
+                  <!-- Movements Log -->
+                  <BaseButton
+                    type="button"
+                    :to="`/items/${item.id}/movements`"
+                    variant="ghost"
+                    size="xs"
+                    :icon="History"
+                    :title="$t('inventory.movements_log') || 'كارت الحركة'"
+                  />
+
+                  <!-- Edit -->
+                  <BaseButton
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    :icon="Pencil"
+                    :title="$t('common.edit')"
+                    @click="$emit('edit', item)"
+                  />
+
+                  <!-- Delete -->
+                  <BaseButton
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    :icon="Trash2"
+                    icon-color="text-rose-500"
+                    :title="$t('common.delete')"
+                    @click="$emit('delete', item)"
+                  />
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. 📱 Mobile Tactile Cards Stack (block on mobile < md) -->
+      <div class="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-3 space-y-3 font-tajawal">
+        <div
+          v-for="item in items"
+          :key="'mob-' + item.id"
+          class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
+          :class="item.is_low_stock ? 'border-rose-500/30 bg-rose-500/5' : ''"
+        >
+          <!-- Card Header -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="font-black text-sm text-slate-900 dark:text-white truncate">{{ item.name }}</div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="font-mono text-xs font-bold text-theme-primary">{{ item.code || `ITM-${item.id}` }}</span>
+                <span v-if="item.category" class="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                  {{ item.category }}
+                </span>
+              </div>
+            </div>
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0"
+              :class="item.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500'"
+            >
+              {{ item.is_active ? $t('common.active') : $t('common.inactive') }}
+            </span>
+          </div>
+
+          <!-- Stock & Pricing Grid -->
+          <div class="grid grid-cols-2 gap-2 p-2.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
+            <div>
+              <span class="text-[10px] text-slate-400 block">{{ $t('inventory.current_stock') }}:</span>
+              <span
+                class="font-mono font-black text-sm"
+                :class="item.current_stock <= 0 ? 'text-slate-400' : (item.is_low_stock ? 'text-rose-500' : 'text-slate-900 dark:text-white')"
+              >
+                {{ formatQty(item.current_stock) }} {{ item.unit }}
+              </span>
+              <div v-if="item.is_low_stock" class="text-[10px] text-rose-500 font-bold mt-0.5">
+                🚨 حد الطلب: {{ formatQty(item.min_stock_level) }}
+              </div>
+            </div>
+
+            <div class="text-end">
+              <span class="text-[10px] text-slate-400 block">{{ $t('inventory.retail_price') || 'سعر البيع' }}:</span>
+              <span class="font-mono font-black text-sm text-emerald-500">
+                {{ formatMoney(item.selling_price) }} <span class="text-[10px] font-normal font-tajawal">{{ $t('common.currency') }}</span>
+              </span>
+              <div class="text-[10px] text-purple-500 dark:text-purple-400 font-mono mt-0.5">
+                أقل بيع: {{ formatMoney(item.min_selling_price || item.selling_price) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Actions Bar (Touch Ergonomics >= 44px) -->
+          <div class="grid grid-cols-3 gap-1.5 pt-1">
+            <BaseButton
+              type="button"
+              variant="outline"
+              size="sm"
+              :icon="Sliders"
+              :label="$t('inventory.adjust') || 'تسوية'"
+              @click="$emit('adjust', item)"
+            />
+
+            <BaseButton
+              type="button"
+              :to="`/items/${item.id}/movements`"
+              variant="secondary"
+              size="sm"
+              :icon="History"
+              :label="$t('inventory.movements_log') || 'الحركات'"
+            />
+
+            <BaseButton
+              type="button"
+              variant="secondary"
+              size="sm"
+              :icon="Pencil"
+              :label="$t('common.edit')"
+              @click="$emit('edit', item)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 📄 Pagination Bar -->
+      <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 font-tajawal">
+        <div class="text-xs text-slate-500 dark:text-slate-400">
+          {{ $t('inventory.total_results_items', { count: pagination.total }) }}
+        </div>
+        <div class="flex items-center gap-1.5">
+          <BaseButton
+            type="button"
+            variant="outline"
+            size="sm"
+            :disabled="pagination.current_page <= 1"
+            :label="$t('common.previous')"
+            @click="$emit('page-change', pagination.current_page - 1)"
+          />
+          <span class="px-3 py-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 rounded-xl">
+            {{ pagination.current_page }} / {{ pagination.last_page }}
+          </span>
+          <BaseButton
+            type="button"
+            variant="outline"
+            size="sm"
+            :disabled="pagination.current_page >= pagination.last_page"
+            :label="$t('common.next')"
+            @click="$emit('page-change', pagination.current_page + 1)"
+          />
+        </div>
+      </div>
+    </template>
+
+    <!-- 🚫 Empty State -->
+    <EmptyState
+      v-else
+      :title="$t('inventory.no_items_found')"
+      :description="$t('inventory.no_items_description') || 'لم يتم العثور على أصناف مطابقة للبحث أو الفلتر المحدد'"
+      :icon="'☕'"
+    >
+      <template #action>
+        <BaseButton
+          type="button"
+          variant="gradient"
+          size="md"
+          :icon="Plus"
+          :label="$t('inventory.add_first_item') || $t('inventory.add_item')"
+          @click="$emit('create')"
+        />
+      </template>
+    </EmptyState>
+  </div>
+</template>
+
+<script setup>
+import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-vue-next';
+import EmptyState from '../Common/EmptyState.vue';
+import BaseButton from '../Common/BaseButton.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { formatMoney, formatQty } = useFormatters();
+
+defineProps({
+  items: { type: Array, default: () => [] },
+  pagination: {
+    type: Object,
+    default: () => ({ current_page: 1, last_page: 1, per_page: 20, total: 0 }),
+  },
+  isLoading: { type: Boolean, default: false },
+});
+
+defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
+</script>
