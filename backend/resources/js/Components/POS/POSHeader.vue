@@ -84,50 +84,58 @@
               type="button"
               @click="$emit('add-item', item)"
               @mouseenter="$emit('update:highlightedIndex', idx)"
-              class="w-full p-3 flex items-center justify-between text-start transition-all cursor-pointer group"
+              class="w-full p-3.5 text-start transition-all cursor-pointer group space-y-2"
               :class="highlightedIndex === idx
                 ? 'bg-theme-light dark:bg-slate-800 text-slate-950 dark:text-white ring-1 ring-inset ring-theme-primary'
                 : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-200'"
             >
-              <!-- Item Info -->
-              <div class="flex items-center gap-3 min-w-0 flex-1">
-                <div
-                  class="w-9 h-9 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0"
-                  :class="highlightedIndex === idx ? 'bg-theme-primary text-slate-950 font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
-                >
-                  +
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="font-black text-sm text-slate-950 dark:text-white truncate flex items-center gap-2">
-                    <span>{{ item.name }}</span>
-                    <span v-if="item.category" class="text-[10px] font-normal px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-tajawal">{{ item.category }}</span>
+              <!-- Top Row: Add Icon + Product Name (multiline break-words) + Retail Price -->
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                  <div
+                    class="w-8 h-8 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0 mt-0.5"
+                    :class="highlightedIndex === idx ? 'bg-theme-primary text-slate-950 font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
+                  >
+                    +
                   </div>
-                  <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-500 font-mono">
-                    <span class="font-bold text-slate-400">{{ item.code || '—' }}</span>
-                    <span>•</span>
-                    <span
-                      class="font-bold px-1.5 py-0.2 rounded text-[11px]"
-                      :class="item.current_stock > 0 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'"
-                    >
-                      {{ item.current_stock > 0 ? $t('pos.available_stock_badge', { qty: formatMoney(item.current_stock), unit: item.unit || '' }) : $t('pos.out_of_stock_badge', { qty: formatMoney(item.current_stock), unit: item.unit || '' }) }}
-                    </span>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-black text-xs sm:text-sm text-slate-950 dark:text-white leading-snug break-words" dir="auto">
+                      {{ item.name }}
+                    </div>
+                    <div v-if="item.category" class="mt-0.5">
+                      <span class="text-[10px] font-normal px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-tajawal inline-block">
+                        {{ item.category }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Price Breakdown Top-End -->
+                <div class="text-end shrink-0 ps-2">
+                  <div class="text-sm sm:text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
+                    {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                  </div>
+                  <div v-if="item.price_wholesale || item.min_selling_price" class="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold mt-0.5">
+                    {{ $t('pos.min_selling_price') }}: {{ formatMoney(item.min_selling_price || item.price_wholesale) }}
                   </div>
                 </div>
               </div>
 
-              <!-- Prices Breakdown & Action -->
-              <div class="flex items-center gap-4 shrink-0 ms-3 text-end">
-                <div class="space-y-0.5">
-                  <div v-if="item.price_wholesale || item.min_selling_price" class="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">
-                    {{ $t('pos.min_selling_price') }}: {{ formatMoney(item.min_selling_price || item.price_wholesale) }}
-                  </div>
-                  <div class="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
-                    {{ formatMoney(getItemPrice(item)) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
-                  </div>
+              <!-- Bottom Row: Item Code & Live Stock Badge -->
+              <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100/60 dark:border-slate-800/40">
+                <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500">
+                  <span class="font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{{ item.code || '—' }}</span>
+                  <span>•</span>
+                  <span
+                    class="font-bold px-1.5 py-0.5 rounded text-[11px]"
+                    :class="item.current_stock > 0 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'"
+                  >
+                    {{ item.current_stock > 0 ? $t('pos.available_stock_badge', { qty: formatMoney(item.current_stock), unit: item.unit || '' }) : $t('pos.out_of_stock_badge', { qty: formatMoney(item.current_stock), unit: item.unit || '' }) }}
+                  </span>
                 </div>
 
-                <span class="hidden sm:inline-block text-xs font-bold px-2.5 py-1 rounded-lg bg-theme-primary text-slate-950 group-hover:scale-105 transition-transform shadow-xs">
-                  {{ $t('pos.add_item_btn') }}
+                <span class="hidden sm:inline-flex text-[11px] font-bold px-2 py-0.5 rounded-md bg-theme-primary text-slate-950 group-hover:scale-105 transition-transform shadow-2xs items-center gap-1">
+                  <span>{{ $t('pos.add_item_btn') }}</span>
                 </span>
               </div>
             </button>

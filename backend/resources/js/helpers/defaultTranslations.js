@@ -1203,9 +1203,14 @@ export const defaultArabicTranslations = {
         "no_items_found_search": "لم يتم العثور على أي صنف مطابق لـ \":query\"",
         "no_items_found_search_hint": "تأكد من كتابة الاسم أو الباركود بشكل صحيح، أو أضف الصنف من شاشة الأصناف والمخزون.",
         "searching_database": "جاري البحث في قاعدة البيانات...",
+        "select_customer": "اختيار العميل \/ الزبون",
+        "customer_name_required": "اسم العميل (مطلوب)...",
+        "customer_phone_optional": "رقم الهاتف (اختياري)...",
+        "no_phone": "بدون هاتف",
         "no_customers_found_search": "لم يتم العثور على أي عميل مطابق لـ \":query\"",
         "no_customers_found_hint": "يمكنك إضافة العميل بضغطة زر وتحديده للفاتورة الحالية فوراً.",
         "quick_add_customer_btn": "إضافة العميل \":name\" فوراً",
+        "quick_add_customer_with_phone_btn": "إضافة عميل جديد بالهاتف \":phone\"",
         "proceed_to_payment": "سداد وإنهاء الفاتورة",
         "payment_screen_title": "تفاصيل وسداد الفاتورة",
         "payment_type_section": "نوع الفاتورة والسداد",
@@ -1273,7 +1278,9 @@ export const defaultArabicTranslations = {
         "no_shift_open": "لا توجد وردية مفتوحة",
         "shift_number_badge": "وردية #:number",
         "available_stock_badge": "📦 متاح: :qty :unit",
-        "out_of_stock_badge": "⚠️ غير متوفر: :qty :unit"
+        "out_of_stock_badge": "⚠️ غير متوفر: :qty :unit",
+        "invoice_number_badge": "فاتورة رقم #:number",
+        "net_amount_label": "الصافي النهائي: :amount ج.م"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -3776,9 +3783,14 @@ export const defaultEnglishTranslations = {
         "no_items_found_search": "No items found matching \":query\"",
         "no_items_found_search_hint": "Make sure the item name or barcode is correct, or add the item from the items screen.",
         "searching_database": "Searching database...",
+        "select_customer": "Select Customer",
+        "customer_name_required": "Customer Name (Required)...",
+        "customer_phone_optional": "Phone Number (Optional)...",
+        "no_phone": "No Phone",
         "no_customers_found_search": "No customers found matching \":query\"",
         "no_customers_found_hint": "You can quickly create this customer and assign them to the current invoice.",
         "quick_add_customer_btn": "Quick Add Customer \":name\"",
+        "quick_add_customer_with_phone_btn": "Quick Add Customer with Phone \":phone\"",
         "proceed_to_payment": "Proceed to Payment",
         "payment_screen_title": "Invoice & Payment Details",
         "payment_type_section": "Invoice & Settlement Type",
@@ -3846,7 +3858,9 @@ export const defaultEnglishTranslations = {
         "no_shift_open": "No open shift",
         "shift_number_badge": "Shift #:number",
         "available_stock_badge": "📦 Available: :qty :unit",
-        "out_of_stock_badge": "⚠️ Out of Stock: :qty :unit"
+        "out_of_stock_badge": "⚠️ Out of Stock: :qty :unit",
+        "invoice_number_badge": "Invoice #:number",
+        "net_amount_label": "Net Amount: :amount EGP"
     },
     "profile": {
         "title": "User Profile & Account Settings",

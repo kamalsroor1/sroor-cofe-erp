@@ -11,12 +11,12 @@
       <div class="flex items-center justify-between gap-2">
         <div class="relative flex-1">
           <input
+            ref="searchInputRef"
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text"
             :placeholder="$t('pos.search_customer_placeholder')"
             class="w-full h-11 ps-9 pe-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-theme-primary transition-all"
-            autofocus
           />
           <span class="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">
             🔍
@@ -47,17 +47,21 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <input
+            ref="nameInputRef"
             v-model="quickCustomerName"
             type="text"
             :placeholder="$t('pos.customer_name_required')"
             class="h-10 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
+            @keydown.enter="submitQuickCustomer"
           />
           <input
+            ref="phoneInputRef"
             v-model="quickCustomerPhone"
             type="text"
             :placeholder="$t('pos.customer_phone_optional')"
             class="h-10 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-theme-primary"
             dir="ltr"
+            @keydown.enter="submitQuickCustomer"
           />
         </div>
 
@@ -80,7 +84,7 @@
         </p>
       </div>
 
-      <!-- 🚫 EMPTY STATE: CUSTOMER NOT FOUND WITH QUICK ADD BUTTON -->
+      <!-- 🚫 EMPTY STATE: CUSTOMER NOT FOUND WITH SMART PHONE/NAME QUICK ADD BUTTON -->
       <div
         v-else-if="searchQuery.trim().length > 0 && customers.length === 0 && !isSearching"
         class="py-8 px-4 text-center space-y-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 animate-in fade-in duration-150"
@@ -102,7 +106,12 @@
           class="min-h-[44px] px-5 py-2.5 bg-theme-primary hover:brightness-110 text-slate-950 rounded-xl text-xs font-black transition cursor-pointer inline-flex items-center gap-1.5 shadow-xs active:scale-95"
         >
           <span>+</span>
-          <span>{{ $t('pos.quick_add_customer_btn', { name: searchQuery.trim() }) }}</span>
+          <span v-if="isPhone(searchQuery)">
+            {{ $t('pos.quick_add_customer_with_phone_btn', { phone: searchQuery.trim() }) }}
+          </span>
+          <span v-else>
+            {{ $t('pos.quick_add_customer_btn', { name: searchQuery.trim() }) }}
+          </span>
         </button>
       </div>
 
@@ -156,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
@@ -173,20 +182,47 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'update:searchQuery', 'select-customer', 'create-customer']);
 
+const searchInputRef = ref(null);
+const nameInputRef = ref(null);
+const phoneInputRef = ref(null);
+
 const isAddingNewCustomer = ref(false);
 const quickCustomerName = ref('');
 const quickCustomerPhone = ref('');
 
+const isPhone = (val) => {
+  if (!val) return false;
+  const cleaned = val.replace(/[\s+\-()]/g, '');
+  return /^\d{5,}$/.test(cleaned);
+};
+
 const toggleAddNewCustomer = () => {
   isAddingNewCustomer.value = !isAddingNewCustomer.value;
-  if (isAddingNewCustomer.value && !quickCustomerName.value && props.searchQuery.trim()) {
-    quickCustomerName.value = props.searchQuery.trim();
+  if (isAddingNewCustomer.value) {
+    applySearchQueryToInputs();
+  }
+};
+
+const applySearchQueryToInputs = () => {
+  const query = props.searchQuery.trim();
+  if (query) {
+    if (isPhone(query)) {
+      quickCustomerPhone.value = query;
+      quickCustomerName.value = '';
+      nextTick(() => nameInputRef.value?.focus());
+    } else {
+      quickCustomerName.value = query;
+      quickCustomerPhone.value = '';
+      nextTick(() => phoneInputRef.value?.focus());
+    }
+  } else {
+    nextTick(() => nameInputRef.value?.focus());
   }
 };
 
 const openQuickAddWithQuery = () => {
-  quickCustomerName.value = props.searchQuery.trim();
   isAddingNewCustomer.value = true;
+  applySearchQueryToInputs();
 };
 
 const submitQuickCustomer = () => {
@@ -201,7 +237,9 @@ const submitQuickCustomer = () => {
 };
 
 watch(() => props.show, (newVal) => {
-  if (!newVal) {
+  if (newVal) {
+    nextTick(() => searchInputRef.value?.focus());
+  } else {
     isAddingNewCustomer.value = false;
     quickCustomerName.value = '';
     quickCustomerPhone.value = '';

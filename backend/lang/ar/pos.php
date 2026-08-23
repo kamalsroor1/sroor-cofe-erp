@@ -101,9 +101,14 @@ return [
     'no_items_found_search'     => 'لم يتم العثور على أي صنف مطابق لـ ":query"',
     'no_items_found_search_hint' => 'تأكد من كتابة الاسم أو الباركود بشكل صحيح، أو أضف الصنف من شاشة الأصناف والمخزون.',
     'searching_database'        => 'جاري البحث في قاعدة البيانات...',
+    'select_customer'           => 'اختيار العميل / الزبون',
+    'customer_name_required'    => 'اسم العميل (مطلوب)...',
+    'customer_phone_optional'   => 'رقم الهاتف (اختياري)...',
+    'no_phone'                  => 'بدون هاتف',
     'no_customers_found_search' => 'لم يتم العثور على أي عميل مطابق لـ ":query"',
     'no_customers_found_hint'   => 'يمكنك إضافة العميل بضغطة زر وتحديده للفاتورة الحالية فوراً.',
     'quick_add_customer_btn'    => 'إضافة العميل ":name" فوراً',
+    'quick_add_customer_with_phone_btn' => 'إضافة عميل جديد بالهاتف ":phone"',
 
     // Redesigned Payment Modal Keys
     'proceed_to_payment'        => 'سداد وإنهاء الفاتورة',
@@ -177,4 +182,6 @@ return [
     'shift_number_badge'        => 'وردية #:number',
     'available_stock_badge'     => '📦 متاح: :qty :unit',
     'out_of_stock_badge'        => '⚠️ غير متوفر: :qty :unit',
+    'invoice_number_badge'      => 'فاتورة رقم #:number',
+    'net_amount_label'          => 'الصافي النهائي: :amount ج.م',
 ];

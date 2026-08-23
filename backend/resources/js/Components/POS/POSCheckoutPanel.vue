@@ -92,9 +92,9 @@
       <div class="flex items-center gap-2">
         <button
           v-for="m in [
-            { key: 'cash', label: '💵 كاش نقدي' },
-            { key: 'instapay', label: '⚡ إنستاباي' },
-            { key: 'smart_wallet', label: '📱 محفظة ذكية' }
+            { key: 'cash', label: $t('pos.payment_cash') },
+            { key: 'instapay', label: $t('pos.instapay') },
+            { key: 'smart_wallet', label: $t('pos.smart_wallet') }
           ]"
           :key="m.key"
           type="button"

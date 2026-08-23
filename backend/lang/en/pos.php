@@ -102,9 +102,14 @@ return [
     'no_items_found_search'     => 'No items found matching ":query"',
     'no_items_found_search_hint' => 'Make sure the item name or barcode is correct, or add the item from the items screen.',
     'searching_database'        => 'Searching database...',
+    'select_customer'           => 'Select Customer',
+    'customer_name_required'    => 'Customer Name (Required)...',
+    'customer_phone_optional'   => 'Phone Number (Optional)...',
+    'no_phone'                  => 'No Phone',
     'no_customers_found_search' => 'No customers found matching ":query"',
     'no_customers_found_hint'   => 'You can quickly create this customer and assign them to the current invoice.',
     'quick_add_customer_btn'    => 'Quick Add Customer ":name"',
+    'quick_add_customer_with_phone_btn' => 'Quick Add Customer with Phone ":phone"',
 
     // Redesigned Payment Modal Keys
     'proceed_to_payment'        => 'Proceed to Payment',
@@ -178,4 +183,6 @@ return [
     'shift_number_badge'        => 'Shift #:number',
     'available_stock_badge'     => '📦 Available: :qty :unit',
     'out_of_stock_badge'        => '⚠️ Out of Stock: :qty :unit',
+    'invoice_number_badge'      => 'Invoice #:number',
+    'net_amount_label'          => 'Net Amount: :amount EGP',
 ];
