@@ -14,7 +14,7 @@
 | **المخزون** | دليل الأصناف والمخزون الحي | `/items` | [items.md](./pages/items.md) | ✅ مكتمل (100%) |
 | **المخزون** | فئات وتصنيفات المنتجات | `/categories` | [categories.md](./pages/categories.md) | ✅ مكتمل (100%) |
 | **المخزون** | التحويلات المخزنية بين الفروع | `/stock-transfers` | [stock-transfers.md](./pages/stock-transfers.md) | ✅ مكتمل (100%) |
-| **المخزون** | الفروع والمخازن | `/stores` | `docs/pages/stores.md` | ⏳ مجدول |
+| **المخزون** | الفروع والمخازن | `/stores` | [stores.md](./pages/stores.md) | ✅ مكتمل (100%) |
 | **المخزون** | حاسبة خلطات وتكاليف البن | `/coffee-blender` | `docs/pages/coffee-blender.md` | ⏳ مجدول |
 | **المخزون** | مساعد المشتريات والطلب الذكي | `/smart-reorder` | `docs/pages/smart-reorder.md` | ⏳ مجدول |
 | **المشتريات** | سجل فواتير المشتريات | `/purchases` | `docs/pages/purchases.md` | ⏳ مجدول |

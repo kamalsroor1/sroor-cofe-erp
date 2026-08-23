@@ -436,8 +436,72 @@
 
 ---
 
-* **آخر صفحة تمت مراجعتها بالكامل:** التحويلات المخزنية بين الفروع والمخازن (`StockTransfersView.vue`)
-* **الصفحة التالية المقترحة للجلسة القادمة:** إدارة الفروع والمخازن (`StoresView.vue`)
+* **آخر صفحة تمت مراجعتها بالكامل:** إدارة الفروع والمخازن (`StoresView.vue`)
+* **الصفحة التالية المقترحة للجلسة القادمة:** حاسبة خلطات وتكاليف البن (`CoffeeBlenderView.vue`)
+
+---
+
+## 📌 صفحة 6: إدارة الفروع والمخازن (`StoresView.vue`) — بتاريخ 2026-08-23
+* **المسار:** `/stores`
+* **الحالة العامة:** ✅ مكتملة 100% (تقطيع للمكونات الفرعية + نمط المنسق النحيف < 70 سطر + تجاوب ولمس كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + معيار هياكل الوميض Skeleton + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إدارة الفروع والمخازن ونقاط التوزيع (Stores & Branches Management)
+* **المسار (Route):** `/stores`
+* **الملف الرئيسي:** `resources/js/views/Stores/StoresView.vue` (Thin Orchestrator: ~70 سطر)
+* **الغرض منها:** إدارة الهيكل الجغرافي للمنشأة متعددة الفروع والمخازن وعربات التوزيع، تعيين وحماية الفرع الرئيسي، إدارة وتعيين الموظفين والكاشيرات، وتتبع إحصائيات الأداء الحية لكل فرع.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * زر الوصول السريع لجرد وأرصدة الفروع (`/stores/stocks`).
+   * زر إضافة فرع/مخزن جديد.
+2. **بطاقات المؤشرات العامة (`StoresMetricsGrid.vue`):**
+   * 4 بطاقات KPI (إجمالي الفروع، الفروع النشطة، الفرع الرئيسي، وتشكيلة الأصناف الـ SKUs) مع هياكل التحميل التفاعلية `StatCardSkeleton.vue`.
+3. **شريط البحث والتصفية (`StoresSearchFilterBar.vue`):**
+   * بحث سريع بالاسم والكود والعنوان ورقم الهاتف، فلاتر نوع الفرع وحالة النشاط، وزر إعادة الضبط السريع.
+4. **شبكة بطاقات الفروع (`StoresGrid.vue`):**
+   * شبكة متجاوبة تدعم `CardSkeleton.vue` أثناء التحميل، شارة الفرع الرئيسي مع Ambient Glow، إحصائيات الـ KPIs الداخلية، وعناصر الإجراءات الموحدة `ActionMenu.vue`.
+5. **نافذة إنشاء وتعديل الفرع (`StoreFormModal.vue`):**
+   * نافذة تفاعلية عبر `AppModal.vue` مع عناصر `BaseInput` و `BaseSelect`.
+6. **نافذة تعيين الموظفين (`StoreStaffModal.vue`):**
+   * قائمة اختيار تفاعلية للموظفين والكاشيرات المصرح لهم بإجراء العمليات على الفرع.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/stores`, `POST /api/v1/stores`, `PUT /api/v1/stores/{id}`, `PATCH /api/v1/stores/{id}/toggle-active`, `POST /api/v1/stores/{id}/assign-users`, `DELETE /api/v1/stores/{id}`.
+* **Actions:** `CreateStoreAction`, `UpdateStoreAction`, `ToggleStoreActiveAction`, `AssignStoreUsersAction`, `DeleteStoreAction`.
+* **Form Requests:** `StoreStoreRequest`, `UpdateStoreRequest`, `AssignStoreUsersRequest`.
+* **DTO:** `StoreDTO`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseSelect.vue`, `ActionMenu.vue`, `MetricCard.vue`, `StatCardSkeleton.vue`, `CardSkeleton.vue`, `AppModal.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Stores/`):**
+  * `StoresMetricsGrid.vue`, `StoresSearchFilterBar.vue`, `StoresGrid.vue`, `StoreFormModal.vue`, `StoreStaffModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** شبكة أحادية العمود `grid-cols-1` مع مساحات لمسية $\ge 44\text{px}$.
+* **📱 تابلت وديسكتوب (768px - 1280px+):** شبكة متجاوبة ثنائية وثلاثية الأعمدة (`grid-cols-2`, `grid-cols-3`) مع قائمة إجراءات منسدلة `ActionMenu.vue` تمنع تداخل النصوص.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل لكافة الحقول والبطاقات وتكيف تلقائي لمتغيرات الثيم.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* مفاتيح موثقة ومترجمة في `lang/ar/inventory.php`، `lang/en/inventory.php`، و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100% بدون أي نصوص ثابتة أو Fallback Strings.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل (Playwright E2E Test):** تشغيل `e2e/flows/stores-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5.
+* ✅ **فحص البناء (Build Verification):** تشغيل `npm run build` -> تم البناء بنجاح وبدون أي خطأ في 4.6 ثانية.
 
 
 
