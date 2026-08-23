@@ -1,0 +1,59 @@
+<template>
+  <div class="font-tajawal">
+    <!-- 🔄 Loading State -->
+    <div v-if="isLoading" class="p-16 text-center">
+      <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+      <p class="text-xs text-slate-400 font-bold">{{ $t('common.loading') }}</p>
+    </div>
+
+    <!-- 🚫 Empty State -->
+    <EmptyState
+      v-else-if="categories.length === 0"
+      :title="$t('inventory.no_categories_yet') || 'لا توجد فئات مسجلة حالياً'"
+      :description="$t('inventory.create_first_category_hint') || 'ابدأ بإضافة فئات لتقسيم أصنافك مثل (قهوة، مشروبات، حلويات، سندوتشات)'"
+      :icon="'🗂️'"
+    >
+      <template #action>
+        <BaseButton
+          type="button"
+          variant="gradient"
+          size="md"
+          :icon="Plus"
+          :label="$t('inventory.add_first_category') || 'إضافة أول فئة'"
+          @click="$emit('create')"
+        />
+      </template>
+    </EmptyState>
+
+    <!-- 🗂️ Categories Responsive Grid -->
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <CategoryCard
+        v-for="cat in categories"
+        :key="cat.id"
+        :category="cat"
+        @edit="$emit('edit', cat)"
+        @delete="$emit('delete', cat)"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { Plus } from 'lucide-vue-next';
+import EmptyState from '../Common/EmptyState.vue';
+import BaseButton from '../Common/BaseButton.vue';
+import CategoryCard from './CategoryCard.vue';
+
+defineProps({
+  categories: {
+    type: Array,
+    default: () => [],
+  },
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+defineEmits(['create', 'edit', 'delete']);
+</script>
