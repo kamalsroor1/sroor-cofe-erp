@@ -682,3 +682,60 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/store-stocks-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.18 ثانية.
+
+
+---
+
+## 📌 صفحة 10: إنشاء إذن تحويل مخزني (`CreateStockTransferView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/stock-transfers/create`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 304 سطر إلى مكونين فرعيين + نمط المنسق النحيف Thin Orchestrator < 55 سطر + كبسولة المنطق useCreateStockTransfer + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إنشاء إذن تحويل مخزني (Create Stock Transfer)
+* **المسار (Route):** `/stock-transfers/create`
+* **الملف الرئيسي:** `resources/js/views/StockTransfers/CreateStockTransferView.vue` (Thin Orchestrator: ~55 سطر)
+* **الغرض منها:** نقل وتوزيع البضائع والأصناف والمواد الخام بين المستودعات المركزية وفروع البيع ذرياً وبشكل آمن داخل Transaction.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وزر العودة لقائمة سجل التحويلات.
+2. **بطاقة اختيار الفروع والتاريخ (`CreateStockTransferHeaderCard.vue`):**
+   * قائمة اختيار المخزن المصدر والمستلم `BaseSelect`، حقل تاريخ الإذن `BaseInput`، وحقل الملاحظات.
+3. **بطاقة وجدول الأصناف المحولة (`CreateStockTransferItemsCard.vue`):**
+   * نمط مزدوج (Desktop Table + Mobile Tactile Cards Stack) لإضافة الأصناف، تعديل الكميات بدقة، وحذف البنود.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/stores`, `GET /api/v1/items`, `POST /api/v1/transfers`.
+* **Composables:** `useCreateStockTransfer.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSelect.vue`, `BaseInput.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSelect.vue`, `BaseInput.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/StockTransfers/`):**
+  * `CreateStockTransferHeaderCard.vue`, `CreateStockTransferItemsCard.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة وتراص مرن وأزرار وحقول بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** شبكة حقول متناسقة وجدول بيانات منظم.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وألوان الحقول.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/inventory.php` و `lang/en/inventory.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/create-stock-transfer-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.88 ثانية.

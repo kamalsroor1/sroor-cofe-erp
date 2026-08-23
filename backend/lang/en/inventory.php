@@ -6,6 +6,7 @@ return [
     'subtitle'                  => 'Track stock levels across branches, cost/selling prices, and safety reorder alerts',
     'items_list'                => 'Items & Inventory List',
     'add_new_item'              => 'Add New Item',
+    'add_item'                  => 'Add Item',
     'edit_item'                 => 'Edit Item Details',
     'item_name'                 => 'Commercial Item Name',
     'item_code'                 => 'Item Code / SKU',
