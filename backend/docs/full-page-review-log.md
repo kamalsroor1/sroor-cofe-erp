@@ -1359,3 +1359,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/reports-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 6.47 ثانية.
+
+
+---
+
+## 📌 صفحة 21: إدارة المستخدمين والموظفين (`UsersView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/users`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 471 سطر إلى 3 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useUsers + نافذة AppModal موحدة لإضافة وتعديل المستخدمين + شريط بحث وتصفية فورية للأدوار + زر تبديل النشاط toggle-active الفوري + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إدارة حسابات المستخدمين والموظفين (Users & Staff Management)
+* **المسار (Route):** `/users`
+* **الملف الرئيسي:** `resources/js/views/Users/UsersView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** إدارة موظفي المنظومة، تعيين الأدوار والصلاحيات، وتحديد الفروع الافتراضية ومتابعة وتعديل بيانات الدخول والحالة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة، زر مصفوفة الصلاحيات، وزر إضافة موظف جديد `BaseButton`.
+2. **شريط الفلاتر والبحث (`UsersFilterBar.vue`):**
+   * حقل البحث الفوري `BaseSearchInput` وقائمة فلترة الأدوار الوظيفية.
+3. **جدول وبطاقات المستخدمين (`UsersTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف اللمسية المتراصة مع شارات الأدوار، زر التفعيل السريع، وأزرار التعديل والحذف والترقيم `TableSkeleton.vue` و `EmptyState.vue`.
+4. **نافذة إنشاء وتعديل المستخدم (`UserFormModal.vue`):**
+   * نافذة `AppModal` مخصصة لإدخال بيانات المستخدم، الهاتف، البريد، الدور، الفرع، كلمة المرور، وتفعيل الحساب.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/users`, `POST /api/v1/users`, `PUT /api/v1/users/{id}`, `PATCH /api/v1/users/{id}/toggle-active`, `DELETE /api/v1/users/{id}`.
+* **Composables:** `useUsers.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `BaseInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `BaseInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Users/`):**
+  * `UsersFilterBar.vue`, `UsersTable.vue`, `UserFormModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة للمستخدمين مع أزرار تفعيل الحالة وتعديل وحذف مريحة للإبهام.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول مستخدمين محاسبي متكامل مع صور رمزية وشارات ملونة للأدوار.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/users.php` و `lang/en/users.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/users-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.08 ثانية.
