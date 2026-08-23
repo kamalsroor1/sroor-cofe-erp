@@ -287,7 +287,7 @@
         <!-- 📌 2. SCROLLABLE NAVIGATION LIST (Solid Tactile Icon Tiles) -->
         <div class="flex-1 overflow-y-auto min-h-0 p-2.5 space-y-1.5 custom-scrollbar">
           <!-- 🌟 Big Action Button: New Sale Invoice (F2) -->
-          <div
+          <div v-if="isModuleEnabled('pos_and_sales')"
             class="relative"
             @mouseenter="handleItemHover($event, '+ فاتورة بيع جديدة (F2)')"
             @mouseleave="handleItemLeave"
@@ -336,13 +336,14 @@
           </div>
 
           <!-- 📂 Section 1: المبيعات والفواتير -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed && (isModuleEnabled('pos_and_sales') || isModuleEnabled('treasury_and_shifts'))" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             المبيعات والفواتير
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
           <div
             class="relative"
+            v-if="isModuleEnabled('pos_and_sales')"
             @mouseenter="handleItemHover($event, 'فواتير المبيعات')"
             @mouseleave="handleItemLeave"
           >
@@ -373,6 +374,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('treasury_and_shifts')"
             @mouseenter="handleItemHover($event, 'اليومية وحركة الدرج')"
             @mouseleave="handleItemLeave"
           >
@@ -402,13 +404,14 @@
           </div>
 
           <!-- 📂 Section 2: العملاء والحسابات -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed && isModuleEnabled('customers')" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             العملاء والحسابات
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
           <div
             class="relative"
+            v-if="isModuleEnabled('customers')"
             @mouseenter="handleItemHover($event, 'العملاء والشركات')"
             @mouseleave="handleItemLeave"
           >
@@ -438,13 +441,14 @@
           </div>
 
           <!-- 📂 Section 3: المخزون والفروع والتوزيع -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed && (isModuleEnabled('inventory_and_stores') || isModuleEnabled('purchases_and_suppliers') || isModuleEnabled('coffee_blends'))" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             المخزون والفروع والتوزيع
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
           <div
             class="relative"
+            v-if="isModuleEnabled('inventory_and_stores')"
             @mouseenter="handleItemHover($event, 'الأصناف والأسعار')"
             @mouseleave="handleItemLeave"
           >
@@ -475,6 +479,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('inventory_and_stores')"
             @mouseenter="handleItemHover($event, 'فئات وتصنيفات الأصناف')"
             @mouseleave="handleItemLeave"
           >
@@ -505,6 +510,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('purchases_and_suppliers')"
             @mouseenter="handleItemHover($event, 'فواتير المشتريات')"
             @mouseleave="handleItemLeave"
           >
@@ -535,6 +541,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('purchases_and_suppliers')"
             @mouseenter="handleItemHover($event, 'الموردون والشركات')"
             @mouseleave="handleItemLeave"
           >
@@ -565,6 +572,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('inventory_and_stores')"
             @mouseenter="handleItemHover($event, 'المخازن والفروع')"
             @mouseleave="handleItemLeave"
           >
@@ -595,6 +603,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('coffee_blends')"
             @mouseenter="handleItemHover($event, 'صانع الخلطات والبن')"
             @mouseleave="handleItemLeave"
           >
@@ -624,13 +633,14 @@
           </div>
 
           <!-- 📂 Section 4: المرتجعات والمصروفات والتقارير -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed && (isModuleEnabled('expenses') || isModuleEnabled('returns') || isModuleEnabled('reports'))" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             المرتجعات والمصروفات والتقارير
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
           <div
             class="relative"
+            v-if="isModuleEnabled('expenses')"
             @mouseenter="handleItemHover($event, 'المصروفات والنثريات')"
             @mouseleave="handleItemLeave"
           >
@@ -661,6 +671,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('returns')"
             @mouseenter="handleItemHover($event, 'سجل المرتجعات')"
             @mouseleave="handleItemLeave"
           >
@@ -691,6 +702,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('reports')"
             @mouseenter="handleItemHover($event, 'التقارير المالية والأرباح')"
             @mouseleave="handleItemLeave"
           >
@@ -720,13 +732,14 @@
           </div>
 
           <!-- 📂 Section 5: إدارة النظام والمستخدمين -->
-          <div v-if="!isSidebarCollapsed" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+          <div v-if="!isSidebarCollapsed && (isModuleEnabled('users_and_auth') || isModuleEnabled('settings'))" class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             إدارة النظام والمستخدمين
           </div>
           <div v-else class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
 
           <div
             class="relative"
+            v-if="isModuleEnabled('users_and_auth')"
             @mouseenter="handleItemHover($event, 'المستخدمون والكاشير')"
             @mouseleave="handleItemLeave"
           >
@@ -757,6 +770,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('users_and_auth')"
             @mouseenter="handleItemHover($event, 'الأدوار والصلاحيات')"
             @mouseleave="handleItemLeave"
           >
@@ -787,6 +801,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('users_and_auth')"
             @mouseenter="handleItemHover($event, 'سجل العمليات والرقابة')"
             @mouseleave="handleItemLeave"
           >
@@ -817,6 +832,7 @@
 
           <div
             class="relative"
+            v-if="isModuleEnabled('settings')"
             @mouseenter="handleItemHover($event, 'إعدادات المؤسسة')"
             @mouseleave="handleItemLeave"
           >
@@ -932,6 +948,7 @@
 
           <div class="flex-1 overflow-y-auto p-4 space-y-2">
             <router-link
+              v-if="isModuleEnabled('pos_and_sales')"
               to="/pos"
               @click="isSidebarOpen = false"
               class="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-slate-950 font-black text-xs shadow-lg mb-3"
@@ -950,6 +967,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('pos_and_sales')"
               to="/invoices"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -959,6 +977,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('treasury_and_shifts')"
               to="/daily-journal"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -968,6 +987,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('customers')"
               to="/customers"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -977,6 +997,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('inventory_and_stores')"
               to="/items"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -986,6 +1007,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('inventory_and_stores')"
               to="/categories"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -995,6 +1017,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('purchases_and_suppliers')"
               to="/purchases"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -1004,6 +1027,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('purchases_and_suppliers')"
               to="/suppliers"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -1013,6 +1037,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('expenses')"
               to="/expenses"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"
@@ -1022,6 +1047,7 @@
             </router-link>
 
             <router-link
+              v-if="isModuleEnabled('reports')"
               to="/reports"
               @click="isSidebarOpen = false"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200"

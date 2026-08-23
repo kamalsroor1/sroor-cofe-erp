@@ -10,7 +10,7 @@
       <router-link
         to="/super-admin/dashboard"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -26,7 +26,7 @@
       <router-link
         to="/super-admin/tenants"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -54,7 +54,7 @@
       <router-link
         to="/super-admin/app-versions"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -86,7 +86,7 @@
       <router-link
         to="/"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isDashboardActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isDashboardActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -98,11 +98,12 @@
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.dashboard_short') || 'الرئيسية' }}</span>
       </router-link>
 
-      <!-- 2. Invoices / Sales -->
+      <!-- 2. Invoices / Sales (Module 2) -->
       <router-link
+        v-if="isModuleEnabled('pos_and_sales')"
         to="/invoices"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isInvoicesActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isInvoicesActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -114,8 +115,8 @@
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.invoices_short') || 'الفواتير' }}</span>
       </router-link>
 
-      <!-- 3. Primary Center Action: Raised Fast POS Button -->
-      <div class="flex-1 flex items-center justify-center">
+      <!-- 3. Primary Center Action: Raised Fast POS Button (Module 2) -->
+      <div v-if="isModuleEnabled('pos_and_sales')" class="flex-1 flex items-center justify-center">
         <router-link
           to="/pos"
           class="relative -top-4 w-12 h-12 rounded-2xl bg-theme-gradient flex items-center justify-center shadow-lg shadow-theme-primary transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-900 group"
@@ -126,11 +127,12 @@
         </router-link>
       </div>
 
-      <!-- 4. Items & Inventory -->
+      <!-- 4. Items & Inventory (Module 3) -->
       <router-link
+        v-if="isModuleEnabled('inventory_and_stores')"
         to="/items"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isItemsActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isItemsActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
@@ -142,25 +144,21 @@
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.items_short') || 'الأصناف' }}</span>
       </router-link>
 
-      <!-- 5. Shift & Cash Drawer -->
+      <!-- 5. Customers & CRM (Module 6) -->
       <router-link
-        to="/daily-journal"
+        v-if="isModuleEnabled('customers')"
+        to="/customers"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isShiftActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200'"
+        :class="isCustomersActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
       >
         <div class="relative flex items-center justify-center">
           <span
-            v-if="isShiftActive"
+            v-if="isCustomersActive"
             class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
-          <Wallet class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isShiftActive ? 'scale-110' : 'group-hover:scale-105'" />
-          <!-- Open Shift Indicator Dot -->
-          <span
-            v-if="hasOpenShift"
-            class="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse"
-          />
+          <Users class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isCustomersActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.treasury_short') || 'الخزينة' }}</span>
+        <span class="text-[10px] tracking-tight truncate">العملاء</span>
       </router-link>
 
       <!-- 6. More / Drawer Menu -->
@@ -184,12 +182,14 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
+import { useModules } from '../../Composables/useModules';
 import {
   LayoutDashboard,
   FileText,
   ShoppingCart,
   Package,
   Wallet,
+  Users,
   Menu,
   Crown,
   Building2,
@@ -202,6 +202,7 @@ defineEmits(['open-drawer']);
 const route = useRoute();
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+const { isModuleEnabled } = useModules();
 
 const isSuperAdminPanel = computed(() => {
   return route.path.startsWith('/super-admin') || route.name?.startsWith('super_admin') || (authStore.isSuperAdmin && !appConfigStore.tenant);
@@ -220,6 +221,7 @@ const isDashboardActive = computed(() => currentPath.value === '/' || currentPat
 const isInvoicesActive = computed(() => currentPath.value.startsWith('/invoices'));
 const isPosActive = computed(() => currentPath.value.startsWith('/pos'));
 const isItemsActive = computed(() => currentPath.value.startsWith('/items'));
+const isCustomersActive = computed(() => currentPath.value.startsWith('/customers'));
 const isShiftActive = computed(() => currentPath.value.startsWith('/daily-journal') || currentPath.value.startsWith('/shifts'));
 const hasOpenShift = computed(() => appConfigStore.hasOpenShift);
 </script>
