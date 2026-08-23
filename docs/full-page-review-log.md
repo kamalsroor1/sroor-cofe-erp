@@ -1288,3 +1288,74 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/daily-journal-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.58 ثانية.
+
+
+---
+
+## 📌 صفحة 20: التقارير الشاملة والإحصائيات والتحليلات (`ReportsView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/reports`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 536 سطر إلى 9 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useReports + شريط فلاتر زمني ومخزني شامل + 7 تبويبات تحليلية لقائمة الدخل وربحية الأصناف ومقارنة الفروع ومسحوبات العملاء والمصروفات وتقييم المخزون والسيولة + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** التقارير الشاملة والإحصائيات والتحليلات (Comprehensive Reports & Analytics)
+* **المسار (Route):** `/reports`
+* **الملف الرئيسي:** `resources/js/views/Reports/ReportsView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** توفير لوحة تحكم تحليلية استراتيجية متكاملة وقائمة الدخل والأرباح والمقارنات بين الفروع وتقييم المخزون والسيولة النقدية.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وزر طباعة التقرير الشامل A4.
+2. **شريط الفلاتر المتقدم (`ReportsFilterBar.vue`):**
+   * أزرار الفترات الزمنية السريعة، اختيار الفرع، منتقي التواريخ من/إلى، وفلتر حالة المخزون.
+3. **شريط التبويبات السبعة (`ReportsNavigationTabs.vue`):**
+   * أزرار التبديل بين محاور التقارير مع تمييز لوني دقيق.
+4. **تبويب المبيعات وقائمة الدخل (`ReportsSalesTab.vue`):**
+   * بطاقات إجمالي المبيعات، تكلفة البضاعة المباعة (COGS)، مجمل الربح وهامش الربحية %، المصروفات، وصافي الربح الحقيقي مع `StatCardSkeleton.vue`.
+5. **تبويب ربحية الأصناف (`ReportsItemsTab.vue`):**
+   * جداول مبيعات وتكلفة وربحية كل منتج بالتفصيل مع شاشات الهواتف اللمسية المتراصة `TableSkeleton.vue` و `EmptyState.vue`.
+6. **تبويب مقارنة الفروع (`ReportsStoresTab.vue`):**
+   * جدول مقارنة الفروع والمخازن وحساب الحصة السوقية وهامش الربح.
+7. **تبويب مسحوبات العملاء (`ReportsCustomersTab.vue`):**
+   * جدول كبار العملاء والمسحوبات والمديونيات والرصيد التراكمي.
+8. **تبويب المصروفات التشغيلية (`ReportsExpensesTab.vue`):**
+   * شبكة بطاقات تصنيف المصروفات ومراكز التكلفة.
+9. **تبويب تقييم المخزون (`ReportsInventoryTab.vue`):**
+   * بطاقات تقييم المخزون بسعر التكلفة وسعر البيع وجدول المخزون بالتفصيل.
+10. **تبويب حركة الخزينة والسيولة (`ReportsTreasuryTab.vue`):**
+    * بطاقات المقبوضات والمدفوعات وصافي التدفق النقدي.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/reports/comprehensive`, `GET /api/v1/stores`.
+* **Composables:** `useReports.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Reports/`):**
+  * `ReportsFilterBar.vue`, `ReportsNavigationTabs.vue`, `ReportsSalesTab.vue`, `ReportsItemsTab.vue`, `ReportsStoresTab.vue`, `ReportsCustomersTab.vue`, `ReportsExpensesTab.vue`, `ReportsInventoryTab.vue`, `ReportsTreasuryTab.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة للمؤشرات والجداول وشريط تمرير تبويبات أفقي مرن.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جداول بيانات محاسبية وإحصائية عالية الكثافة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/reports.php` و `lang/en/reports.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/reports-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 6.47 ثانية.
