@@ -1843,3 +1843,66 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/profile-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 2.84 ثانية.
+
+
+---
+
+## 📌 صفحة 29: لوحة تحكم السوبر أدمن المركزية (`SuperAdminDashboardView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/super-admin`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 425 سطراً إلى 5 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useSuperAdminDashboard + شبكة المؤشرات الخمسة للمنصة و MRR + كارد توزيع المشتركين على الباقات + تدفق أحدث المستأجرين المسجلين بشارات الحالة + كارد إعدادات المنصة والهوية المركزية والتحديث الفوري للـ Store + كارد مواصفات السيرفر المركزي + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** لوحة تحكم السوبر أدمن المركزية (Super Admin Central Dashboard)
+* **المسار (Route):** `/super-admin`
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminDashboardView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** متابعة المستأجرين والاشتراكات والإيراد الشهري والتحكم في إعدادات المنصة ومواصفات السيرفر.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة وإجراءات التنقل (`PageHeader.vue`):**
+   * عنوان الصفحة وأزرار الانتقال لإدارة المستأجرين والباقات.
+2. **شبكة مؤشرات المنصة الخمسة (`SuperAdminMetricsGrid.vue`):**
+   * إجمالي المستأجرين، النشطين، التجريبيين، الموقوفين، و MRR مع `StatCardSkeleton.vue`.
+3. **توزيع الباقات والاشتراكات (`SuperAdminPlansDistribution.vue`):**
+   * قائمة الباقات وعدد المشتركين والأسعار الشهرية.
+4. **أحدث المستأجرين المسجلين (`SuperAdminRecentTenants.vue`):**
+   * قائمة المستأجرين مع الدومين والباقة وشارات الحالة الملونة.
+5. **إعدادات المنصة والهوية المركزية (`SuperAdminPlatformSettingsCard.vue`):**
+   * نموذج تعديل اسم المنصة والوصف وبيانات الدعم مع `BaseInput.vue` و `BaseButton.vue`.
+6. **مواصفات السيرفر المركزي (`SuperAdminServerSpecsCard.vue`):**
+   * بطاقة مواصفات إصدار PHP، Laravel، MySQL، وبيئة التشغيل.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/super-admin/dashboard`, `GET /api/v1/super-admin/settings`, `POST /api/v1/super-admin/settings`.
+* **Composables:** `useSuperAdminDashboard.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `StatCardSkeleton.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `StatCardSkeleton.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/SuperAdmin/`):**
+  * `SuperAdminMetricsGrid.vue`, `SuperAdminPlansDistribution.vue`, `SuperAdminRecentTenants.vue`, `SuperAdminPlatformSettingsCard.vue`, `SuperAdminServerSpecsCard.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات مؤشرات ولمسية متراصة، حقول إدخال وأزرار بارتفاع $\ge 40	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** شبكة خماسية لبطاقات المؤشرات، تقسيم 1/3 للباقات و 2/3 للمستأجرين، وشبكة رباعية لمعلومات السيرفر.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/super.php` و `lang/en/super.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-dashboard-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.16 ثانية.
