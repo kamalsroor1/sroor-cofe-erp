@@ -55,18 +55,16 @@
         <span>{{ $t('invoices.custom_date_range') }}</span>
       </label>
       <div class="space-y-2">
-        <BaseInput
+        <BaseDatePicker
           :model-value="dateFrom"
-          type="date"
           :label="$t('invoices.from_date')"
-          input-class="font-mono text-xs"
+          placeholder="YYYY-MM-DD"
           @update:model-value="$emit('update:dateFrom', $event); $emit('apply')"
         />
-        <BaseInput
+        <BaseDatePicker
           :model-value="dateTo"
-          type="date"
           :label="$t('invoices.to_date')"
-          input-class="font-mono text-xs"
+          placeholder="YYYY-MM-DD"
           @update:model-value="$emit('update:dateTo', $event); $emit('apply')"
         />
       </div>
@@ -78,7 +76,7 @@
 import { Store, CreditCard, CheckCircle2, Calendar } from 'lucide-vue-next';
 import FilterSidebar from '../Common/FilterSidebar.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
-import BaseInput from '../Form/BaseInput.vue';
+import BaseDatePicker from '../Form/BaseDatePicker.vue';
 
 defineProps({
   isOpen: { type: Boolean, default: false },

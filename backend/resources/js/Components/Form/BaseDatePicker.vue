@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col gap-1.5" :class="wrapperClass">
+  <div class="w-full flex flex-col gap-1.5 font-tajawal" :class="wrapperClass">
     <!-- Label -->
     <label
       v-if="label"
@@ -10,33 +10,40 @@
       <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
     </label>
 
-    <!-- VueDatePicker Component Wrapper -->
-    <div class="relative w-full datepicker-rtl-container font-tajawal">
-      <VueDatePicker
-        v-model="model"
-        :range="range"
-        :enable-time-picker="enableTimePicker"
-        :locale="locale"
-        :format="format || (range ? 'yyyy-MM-dd' : 'yyyy-MM-dd')"
-        :auto-apply="autoApply"
-        :disabled="disabled"
-        :readonly="readonly"
-        :placeholder="placeholder || 'اختر التاريخ...'"
-        :dark="isDark"
-        input-class-name="base-datepicker-input"
-        menu-class-name="base-datepicker-menu shadow-2xl rounded-2xl"
-        v-bind="$attrs"
-        @update:model-value="$emit('change', $event)"
-      >
-        <template #input-icon>
-          <Calendar class="w-4 h-4 text-slate-400 dark:text-slate-500 mr-3" />
-        </template>
-        <template #clear-icon="{ clear }">
-          <button type="button" @click="clear" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <X class="w-3.5 h-3.5" />
-          </button>
-        </template>
-      </VueDatePicker>
+    <!-- Input Wrapper with Icon & Clear button -->
+    <div class="relative w-full select-none" :class="{ 'opacity-60 pointer-events-none': disabled }">
+      <div class="relative flex items-center">
+        <!-- Calendar Icon -->
+        <span class="absolute start-3.5 text-sm text-slate-400 pointer-events-none z-10">
+          <Calendar class="w-4 h-4 text-slate-400 dark:text-slate-500" />
+        </span>
+
+        <!-- Flatpickr Input -->
+        <input
+          ref="inputRef"
+          type="text"
+          :placeholder="placeholder || $t('common.select_date') || 'اختر التاريخ...'"
+          :disabled="disabled"
+          readonly
+          class="w-full min-h-[44px] ps-10 pe-9 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-xs cursor-pointer focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary focus:outline-none transition shadow-xs"
+          :class="[
+            modelValue ? 'font-bold text-theme-primary' : '',
+            hasError ? 'border-rose-500 dark:border-rose-500 focus:ring-rose-500/20' : '',
+            inputClass
+          ]"
+        />
+
+        <!-- Clear Button -->
+        <button
+          v-if="clearable && modelValue && !disabled"
+          @click="clearDate"
+          type="button"
+          class="absolute end-2.5 min-h-[32px] min-w-[32px] rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 flex items-center justify-center text-xs transition z-10 active:scale-90 cursor-pointer"
+          :title="$t('common.cancel')"
+        >
+          <X class="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
 
     <!-- Error Message -->
@@ -59,39 +66,72 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import flatpickr from 'flatpickr';
+import { Arabic } from 'flatpickr/dist/l10n/ar.js';
+import 'flatpickr/dist/flatpickr.min.css';
 import { Calendar, X, AlertCircle } from 'lucide-vue-next';
 
-defineOptions({
-  inheritAttrs: false
-});
-
 const props = defineProps({
+  modelValue: { type: [String, Array, Date, null], default: null },
   label: { type: String, default: '' },
   placeholder: { type: String, default: '' },
-  range: { type: Boolean, default: false },
-  enableTimePicker: { type: Boolean, default: false },
-  format: { type: String, default: null },
-  locale: { type: String, default: 'ar' },
-  autoApply: { type: Boolean, default: true },
+  mode: { type: String, default: 'single' }, // 'single' | 'range'
+  enableTime: { type: Boolean, default: false },
+  clearable: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
-  readonly: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
   error: { type: [String, Array], default: null },
   hint: { type: String, default: '' },
-  wrapperClass: { type: String, default: '' }
+  wrapperClass: { type: String, default: '' },
+  inputClass: { type: String, default: '' },
 });
 
-defineEmits(['change']);
+const emit = defineEmits(['update:modelValue', 'change', 'clear']);
 
-const model = defineModel({
-  type: [String, Date, Array, Object],
-  default: null
+const inputRef = ref(null);
+let fpInstance = null;
+
+const isRTL = computed(() => document.documentElement.dir === 'rtl' || !document.documentElement.dir);
+
+onMounted(() => {
+  if (inputRef.value) {
+    fpInstance = flatpickr(inputRef.value, {
+      locale: isRTL.value ? Arabic : undefined,
+      mode: props.mode,
+      enableTime: props.enableTime,
+      dateFormat: props.enableTime ? 'Y-m-d H:i' : 'Y-m-d',
+      defaultDate: props.modelValue || undefined,
+      disableMobile: true,
+      onChange: (selectedDates, dateStr) => {
+        emit('update:modelValue', dateStr);
+        emit('change', dateStr, selectedDates);
+      },
+    });
+  }
 });
 
-const isDark = computed(() => document.documentElement.classList.contains('dark'));
+watch(() => props.modelValue, (newVal) => {
+  if (fpInstance && newVal !== fpInstance.input.value) {
+    fpInstance.setDate(newVal || '', false);
+  }
+});
+
+onUnmounted(() => {
+  if (fpInstance) {
+    fpInstance.destroy();
+  }
+});
+
+const clearDate = (e) => {
+  e?.stopPropagation();
+  if (fpInstance) {
+    fpInstance.clear();
+  }
+  emit('update:modelValue', '');
+  emit('clear');
+  emit('change', '', []);
+};
 
 const hasError = computed(() => {
   if (Array.isArray(props.error)) return props.error.length > 0;
@@ -105,45 +145,58 @@ const errorMessage = computed(() => {
 </script>
 
 <style>
-.datepicker-rtl-container .dp__input {
-  min-height: 44px !important;
-  padding: 0.625rem 2.5rem 0.625rem 1rem !important;
-  font-size: 0.875rem !important;
-  font-weight: 700 !important;
-  border-radius: 0.75rem !important;
-  background-color: var(--dp-background-color, #f8fafc) !important;
-  border: 1px solid #cbd5e1 !important;
-  transition: all 0.2s ease !important;
-  direction: rtl !important;
-  text-align: right !important;
-}
-
-.dark .datepicker-rtl-container .dp__input {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
-}
-
-.datepicker-rtl-container .dp__input:focus {
-  border-color: var(--color-primary, #f59e0b) !important;
-  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb, 245, 158, 11), 0.2) !important;
-}
-
-.datepicker-rtl-container .dp__menu {
-  border-radius: 1rem !important;
+/* Custom Styled Flatpickr Calendar */
+.flatpickr-calendar {
   font-family: 'Tajawal', 'Cairo', sans-serif !important;
+  border-radius: 1.25rem !important;
+  padding: 10px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
   border: 1px solid #e2e8f0 !important;
-  direction: rtl !important;
+  background: #ffffff !important;
+  z-index: 99999 !important;
 }
 
-.dark .datepicker-rtl-container .dp__menu {
-  background-color: #0f172a !important;
+.dark .flatpickr-calendar {
+  background: #0f172a !important;
   border-color: #1e293b !important;
+  color: #f8fafc !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
 }
 
-.datepicker-rtl-container .dp__active_date {
-  background-color: var(--color-primary, #f59e0b) !important;
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--color-primary, #10b981) !important;
+  border-color: var(--color-primary, #10b981) !important;
   color: #020617 !important;
   font-weight: 900 !important;
+  border-radius: 0.75rem !important;
+}
+
+.flatpickr-day.inRange {
+  background: rgba(var(--color-primary-rgb, 16, 185, 129), 0.15) !important;
+  border-color: transparent !important;
+}
+
+.dark .flatpickr-day {
+  color: #e2e8f0 !important;
+}
+
+.dark .flatpickr-day.flatpickr-disabled,
+.dark .flatpickr-day.prevMonthDay,
+.dark .flatpickr-day.nextMonthDay {
+  color: #475569 !important;
+}
+
+.dark .flatpickr-months .flatpickr-month {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+.dark .flatpickr-current-month .numInputWrapper span.arrowUp:after {
+  border-bottom-color: #f8fafc !important;
+}
+.dark .flatpickr-current-month .numInputWrapper span.arrowDown:after {
+  border-top-color: #f8fafc !important;
 }
 </style>
