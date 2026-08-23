@@ -981,3 +981,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/suppliers-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.69 ثانية.
+
+
+---
+
+## 📌 صفحة 15: كشف حساب وأستاذ المورد (`SupplierStatementView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/suppliers/:id/statement`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 282 سطر إلى 4 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 50 سطر + كبسولة المنطق useSupplierStatement + تجاوب لمسي كامل لكافة المقاسات الـ 5 + دعم الطباعة A4 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** كشف حساب وأستاذ المورد (Supplier Ledger & Account Statement)
+* **المسار (Route):** `/suppliers/:id/statement`
+* **الملف الرئيسي:** `resources/js/views/Suppliers/SupplierStatementView.vue` (Thin Orchestrator: ~50 سطر)
+* **الغرض منها:** استعراض الحركات المالية للمورد من فواتير توريد وسندات صرف ومرتجعات، ومتابعة الرصيد التراكمي وتصفية الفترات الزمنية والطباعة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة وزر الطباعة (`SupplierStatementHeader.vue`):**
+   * عنوان الصفحة مع اسم المورد وزر الرجوع وزر الطباعة `BaseButton`.
+2. **بطاقات المؤشرات المالية للفترة (`SupplierStatementSummaryCards.vue`):**
+   * إجمالي المشتريات، إجمالي المدفوع، والرصيد الختامي مع `StatCardSkeleton.vue`.
+3. **شريط الفلاتر الزمنية والأزرار السريعة (`SupplierStatementFilterBar.vue`):**
+   * حقول التاريخ من/إلى وأزرار الفترات السريعة (اليوم، هذا الشهر، هذا العام، الكل).
+4. **جدول الأستاذ المالي وبطاقات الحركات (`SupplierStatementTable.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف المتراصة مع تتبع الرصيد التراكمي و `TableSkeleton.vue` و `EmptyState.vue`.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/suppliers/{id}/statement`.
+* **Composables:** `useSupplierStatement.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `BaseButton.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `BaseButton.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Suppliers/`):**
+  * `SupplierStatementHeader.vue`, `SupplierStatementSummaryCards.vue`, `SupplierStatementFilterBar.vue`, `SupplierStatementTable.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة للحركات وأزرار فلترة سريعة بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جدول أستاذ مالي محاسبي منظم عالي الكثافة مع تمييز دائن/مدين.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/contacts.php` و `lang/en/contacts.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/supplier-statement-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.08 ثانية.
