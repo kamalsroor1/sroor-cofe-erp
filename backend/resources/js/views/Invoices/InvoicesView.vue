@@ -4,18 +4,12 @@
     <PageHeader :title="$t('invoices.title')" :subtitle="$t('invoices.subtitle')" :icon="'🛒'">
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
+          <FilterToggleButton
+            :is-open="isFilterSidebarOpen"
+            :count="activeFiltersCount"
+            :label="$t('invoices.filter_search')"
             @click="isFilterSidebarOpen = !isFilterSidebarOpen"
-            class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border select-none"
-            :class="isFilterSidebarOpen || activeFiltersCount > 0 ? 'bg-theme-primary/10 border-theme-primary text-theme-primary font-black shadow-xs' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'"
-          >
-            <SlidersHorizontal class="w-4 h-4 text-theme-primary" />
-            <span>{{ $t('invoices.filter_search') }}</span>
-            <span v-if="activeFiltersCount > 0" class="w-5 h-5 rounded-full bg-theme-primary text-white text-[10px] font-black flex items-center justify-center">
-              {{ activeFiltersCount }}
-            </span>
-          </button>
+          />
 
           <BaseDropdown
             :label="$t('invoices.options_and_actions')"
@@ -29,10 +23,12 @@
             ]"
           />
 
-          <router-link to="/pos" class="min-h-[44px] px-5 py-2.5 bg-theme-gradient text-white shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary active:scale-95 cursor-pointer select-none">
-            <Zap class="w-4 h-4 fill-white text-white" />
-            <span>{{ $t('invoices.pos_fast_badge') }}</span>
-          </router-link>
+          <BaseButton
+            to="/pos"
+            variant="gradient"
+            :icon="Zap"
+            :label="$t('invoices.pos_fast_badge')"
+          />
         </div>
       </template>
     </PageHeader>
@@ -58,12 +54,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
+import { FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import PageHeader from '../../Components/Common/PageHeader.vue';
+import BaseButton from '../../Components/Common/BaseButton.vue';
 import BaseDropdown from '../../Components/Common/BaseDropdown.vue';
+import FilterToggleButton from '../../Components/Common/FilterToggleButton.vue';
 import InvoicesMetricsCards from '../../Components/Invoices/InvoicesMetricsCards.vue';
 import InvoicesQuickSearch from '../../Components/Invoices/InvoicesQuickSearch.vue';
 import InvoicesBulkActionsBar from '../../Components/Invoices/InvoicesBulkActionsBar.vue';

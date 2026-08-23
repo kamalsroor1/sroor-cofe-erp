@@ -54,8 +54,11 @@
     - **الـ Props المدعومة:** `label`, `icon`, `iconClass`, `triggerClass`, `menuClass`, `align` ('start' | 'end' | 'center'), `items` (`[{ label, icon, iconColor, onClick, danger, badge }]`).
     - **الميزات:** إغلاق تلقائي عند النقر بالخارج (Click-outside) وزر ESC، دعم Slots مخصصة للزر والقائمة، أهداف لمس >= 44px.
 12. **`BaseButton.vue`** (داخل `resources/js/Components/Common/`):
-    - **الـ Props المدعومة:** `type`, `label`, `variant` ('primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost' | 'default'), `size` ('sm' | 'md' | 'lg' | 'icon'), `icon`, `trailingIcon`, `loading`, `disabled`, `fullWidth`.
-    - **الميزات:** دعم مؤشر التحميل Spinner التلقائي، ضبط ارتفاع اللمس >= 44px، وتأثيرات الضغط `active:scale-[0.98]`.
+    - **الـ Props المدعومة:** `to`, `type`, `label`, `variant` ('primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost' | 'gradient' | 'default'), `size` ('sm' | 'md' | 'lg' | 'icon'), `icon`, `trailingIcon`, `active`, `badge`, `loading`, `disabled`, `fullWidth`.
+    - **الميزات:** دعم التحول لـ `<router-link>` تلقائياً، مؤشر التحميل Spinner، شارات العداد، وضبط ارتفاع اللمس >= 44px.
+13. **`FilterToggleButton.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `isOpen`, `count` (عدد الفلاتر النشطة), `label`, `icon`.
+    - **الميزات:** زر موحد لفتح وإغلاق أدراج وسايدبار الفلاتر، يعرض شارة عدد الفلاتر النشطة بديناميكية، ويغير لونه للحالة النشطة.
 
 ### الملفات التي تمت مراجعتها واستبدالها في هذه الجلسة
 - `views/ActivityLogs/ActivityLogsView.vue`: استبدال حقل البحث بـ `BaseSearchInput` وقوائم الأقسام والمستخدمين والمخازن بـ `BaseSelect`.
