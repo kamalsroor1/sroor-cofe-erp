@@ -859,3 +859,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/purchases-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 3.85 ثانية.
+
+
+---
+
+## 📌 صفحة 13: إنشاء واعتماد فاتورة شراء جديدة (`CreatePurchaseView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/purchases/create`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 398 سطر إلى 3 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 55 سطر + كبسولة المنطق useCreatePurchase + تجاوب لمسي كامل لكافة المقاسات الـ 5 + دعم التعبئة المسبقة من رادار الطلب + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إنشاء واعتماد فاتورة شراء جديدة (Create Purchase Invoice & Stock Receiving)
+* **المسار (Route):** `/purchases/create`
+* **الملف الرئيسي:** `resources/js/views/Purchases/CreatePurchaseView.vue` (Thin Orchestrator: ~55 سطر)
+* **الغرض منها:** توريد البضائع والخامات من الموردين، احتساب التكلفة والخصومات، وتحديث المخزون وحساب المورد ذرياً داخل Transaction.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة وزر العودة لسجل فواتير المشتريات.
+2. **بطاقة بيانات المورد وتاريخ الفاتورة (`CreatePurchaseSupplierCard.vue`):**
+   * قائمة اختيار المورد `BaseSelect`، حقل تاريخ الفاتورة، وحقل المرجع الدفتري `BaseInput`.
+3. **بطاقة وجدول بنود الأصناف المستلمة (`CreatePurchaseItemsCard.vue`):**
+   * نمط مزدوج (Desktop Table + Mobile Tactile Cards Stack) لإضافة وحذف بنود الأصناف وضبط الكميات وأسعار التكلفة.
+4. **بطاقة ملخص الحسابات والمدفوع (`CreatePurchaseSummaryCard.vue`):**
+   * حقول الملاحظات، المدفوع، الخصم المكتسب، ومحاسبة الإجمالي الصافي والمتبقي آجل على المنشأة.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/suppliers`, `GET /api/v1/items`, `POST /api/v1/purchases`.
+* **Composables:** `useCreatePurchase.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSelect.vue`, `BaseInput.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseSelect.vue`, `BaseInput.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Purchases/`):**
+  * `CreatePurchaseSupplierCard.vue`, `CreatePurchaseItemsCard.vue`, `CreatePurchaseSummaryCard.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة وتراص مرن وأزرار وحقول بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** شبكة حقول متناسقة وجدول بيانات منظم عالي الكثافة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وألوان الحقول.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/purchases.php` و `lang/en/purchases.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/create-purchase-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.16 ثانية.
