@@ -1,303 +1,91 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
-      <!-- Page Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
-            <Activity class="w-5 h-5" />
-          </div>
-          <div>
-            <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('activity.title') }}</h1>
-            <p class="text-xs text-slate-400">{{ $t('activity.subtitle') }}</p>
-          </div>
-        </div>
+    <!-- Page Header & Action Controls -->
+    <PageHeader
+      :title="$t('activity.title')"
+      :subtitle="$t('activity.subtitle')"
+      icon="📜"
+    >
+      <template #actions>
+        <BaseButton
+          type="button"
+          variant="secondary"
+          size="md"
+          :loading="isLoading"
+          @click="fetchLogs"
+          class="flex items-center gap-2"
+        >
+          <RefreshCw class="w-4 h-4 text-theme-primary" :class="{ 'animate-spin': isLoading }" />
+          <span>{{ $t('activity.refresh_log') }}</span>
+        </BaseButton>
+      </template>
+    </PageHeader>
 
-        <div class="flex items-center gap-2">
-          <button
-            @click="fetchLogs"
-            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs flex items-center gap-2 transition cursor-pointer"
-          >
-            <RefreshCw class="w-4 h-4 text-theme-primary" :class="{ 'animate-spin': isLoading }" />
-            <span>{{ $t('activity.refresh_log') }}</span>
-          </button>
-        </div>
-      </div>
+    <!-- Activity Stats KPI Grid -->
+    <ActivityLogsMetricsGrid
+      :stats="stats"
+      :loading="isLoading && !logs.length"
+    />
 
-      <!-- 4 Stats Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
-          <div class="text-slate-400 text-xs font-bold">{{ $t('activity.today_total') }}</div>
-          <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">{{ stats.today_total || 0 }}</div>
-          <div class="text-[10px] text-slate-500">{{ $t('activity.sub_total_desc') }}</div>
-        </div>
+    <!-- Filter Controls Bar -->
+    <ActivityLogsFilterBar
+      :search="filters.search"
+      :module="filters.module"
+      :user-id="filters.user_id"
+      :store-id="filters.store_id"
+      :module-options="moduleOptions"
+      :user-options="userOptions"
+      :store-options="storeOptions"
+      @update:search="updateSearch"
+      @update:module="updateModule"
+      @update:user-id="updateUserId"
+      @update:store-id="updateStoreId"
+    />
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
-          <div class="text-rose-400 text-xs font-bold">{{ $t('activity.today_critical') }}</div>
-          <div class="text-2xl font-black text-rose-400 font-mono">{{ stats.today_critical || 0 }}</div>
-          <div class="text-[10px] text-slate-500">{{ $t('activity.sub_critical_desc') }}</div>
-        </div>
+    <!-- Logs Timeline & Pagination -->
+    <ActivityLogsTimeline
+      :logs="logs"
+      :pagination="pagination"
+      :loading="isLoading"
+      @inspect="openDetails"
+      @page-change="changePage"
+    />
 
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
-          <div class="text-theme-primary text-xs font-bold">{{ $t('activity.today_users') }}</div>
-          <div class="text-2xl font-black text-theme-primary font-mono">{{ stats.today_users || 0 }}</div>
-          <div class="text-[10px] text-slate-500">{{ $t('activity.sub_users_desc') }}</div>
-        </div>
-
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-1">
-          <div class="text-cyan-400 text-xs font-bold">{{ $t('activity.today_stores') }}</div>
-          <div class="text-2xl font-black text-cyan-400 font-mono">{{ stats.today_stores || 0 }}</div>
-          <div class="text-[10px] text-slate-500">{{ $t('activity.sub_stores_desc') }}</div>
-        </div>
-      </div>
-
-      <!-- Filter Controls -->
-      <div class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-          <!-- Search -->
-          <BaseSearchInput
-            v-model="filters.search"
-            :placeholder="$t('activity.search_placeholder')"
-            :debounce="300"
-            @search="fetchLogs"
-          />
-
-          <!-- Module -->
-          <BaseSelect
-            v-model="filters.module"
-            :options="moduleOptions"
-            :searchable="false"
-            @change="fetchLogs"
-          />
-
-          <!-- User -->
-          <BaseSelect
-            v-model="filters.user_id"
-            :options="userOptions"
-            :searchable="true"
-            @change="fetchLogs"
-          />
-
-          <!-- Store -->
-          <BaseSelect
-            v-model="filters.store_id"
-            :options="storeOptions"
-            :searchable="true"
-            @change="fetchLogs"
-          />
-        </div>
-      </div>
-
-      <!-- Logs Timeline / List -->
-      <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-        <div v-if="isLoading" class="p-16 text-center">
-          <div class="w-10 h-10 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-xs text-slate-400">{{ $t('activity.loading_logs') }}</p>
-        </div>
-
-        <div v-else-if="logs.length === 0" class="p-16 text-center">
-          <Activity class="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">{{ $t('activity.no_logs_match') }}</h3>
-          <p class="text-xs text-slate-500">{{ $t('activity.adjust_filter_hint') }}</p>
-        </div>
-
-        <div v-else class="divide-y divide-slate-200 dark:divide-slate-800/60">
-          <div
-            v-for="log in logs"
-            :key="log.id"
-            class="p-4 hover:bg-slate-100 dark:hover:bg-slate-900/40 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs"
-          >
-            <div class="flex items-start gap-3">
-              <span class="text-xl shrink-0 mt-0.5">{{ log.module_icon || '📋' }}</span>
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-                    :class="getActionBadgeClass(log.action)"
-                  >
-                    {{ log.action }}
-                  </span>
-                  <span class="font-bold text-slate-900 dark:text-white">{{ log.description }}</span>
-                </div>
-
-                <div class="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap font-sans">
-                  <span>{{ $t('activity.staff_label') }} <strong class="text-slate-300">{{ log.user_name }}</strong></span>
-                  <span>{{ $t('activity.branch_label') }} <strong class="text-slate-300">{{ log.store_name }}</strong></span>
-                  <span v-if="log.ip_address" class="font-mono text-slate-500">{{ $t('activity.ip_address') }}: {{ log.ip_address }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3 self-end md:self-center font-mono text-[11px]">
-              <span class="text-slate-400">{{ log.created_at }}</span>
-              <button
-                v-if="log.properties || log.payload"
-                @click="openDetails(log)"
-                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-theme-primary font-sans font-bold transition"
-              >
-                {{ $t('activity.details_btn') }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pagination -->
-        <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
-          <span>{{ $t('activity.total_records') }} {{ pagination.total }}</span>
-          <div class="flex items-center gap-2 font-sans">
-            <button
-              :disabled="pagination.current_page === 1"
-              @click="changePage(pagination.current_page - 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl"
-            >
-              {{ $t('common.previous') }}
-            </button>
-            <span>{{ $t('pagination.page_of', { page: pagination.current_page, total: pagination.last_page }) || `صفحة ${pagination.current_page} من ${pagination.last_page}` }}</span>
-            <button
-              :disabled="pagination.current_page === pagination.last_page"
-              @click="changePage(pagination.current_page + 1)"
-              class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 rounded-xl"
-            >
-              {{ $t('common.next') }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Payload Details Modal -->
-      <div v-if="selectedLog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-            <h2 class="text-base font-black text-white flex items-center gap-2">
-              <Activity class="w-4 h-4 text-cyan-400" />
-              <span>{{ $t('activity.log_details_title', { id: selectedLog.id }) }}</span>
-            </h2>
-            <button @click="selectedLog = null" class="text-slate-400 hover:text-white">✕</button>
-          </div>
-
-          <div class="space-y-3 text-xs">
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div class="text-slate-400 font-bold mb-1">{{ $t('activity.full_description') }}</div>
-              <div class="text-white">{{ selectedLog.description }}</div>
-            </div>
-
-            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-mono text-[11px] overflow-x-auto max-h-60">
-              <pre class="text-emerald-400">{{ JSON.stringify(selectedLog.properties || selectedLog.payload, null, 2) }}</pre>
-            </div>
-          </div>
-
-          <div class="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
-            <button
-              @click="selectedLog = null"
-              class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold text-xs"
-            >
-              {{ $t('common.close') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Payload Details Modal -->
+    <ActivityLogDetailsModal
+      :selected-log="selectedLog"
+      @close="closeDetails"
+    />
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import api from '../../services/api';
-import BaseSearchInput from '../../Components/Form/BaseSearchInput.vue';
-import BaseSelect from '../../Components/Form/BaseSelect.vue';
-import { trans } from '../../helpers/trans';
-import {
-    Activity,
-    Search,
-    RefreshCw
-} from 'lucide-vue-next';
+import { RefreshCw } from 'lucide-vue-next';
+import PageHeader from '../../Components/Common/PageHeader.vue';
+import BaseButton from '../../Components/Common/BaseButton.vue';
+import ActivityLogsMetricsGrid from '../../Components/ActivityLogs/ActivityLogsMetricsGrid.vue';
+import ActivityLogsFilterBar from '../../Components/ActivityLogs/ActivityLogsFilterBar.vue';
+import ActivityLogsTimeline from '../../Components/ActivityLogs/ActivityLogsTimeline.vue';
+import ActivityLogDetailsModal from '../../Components/ActivityLogs/ActivityLogDetailsModal.vue';
+import { useActivityLogs } from '../../Composables/useActivityLogs';
 
-const logs = ref([]);
-const stats = ref({});
-const usersList = ref([]);
-const storesList = ref([]);
-const modulesList = ref({});
-const isLoading = ref(false);
-const selectedLog = ref(null);
-
-const filters = ref({
-    search: '',
-    module: 'all',
-    action: 'all',
-    user_id: 'all',
-    store_id: 'all',
-    page: 1,
-});
-
-const moduleOptions = computed(() => [
-    { value: 'all', label: trans('activity.all_modules') },
-    ...Object.entries(modulesList.value).map(([k, v]) => ({ value: k, label: v }))
-]);
-
-const userOptions = computed(() => [
-    { value: 'all', label: trans('activity.all_users') },
-    ...usersList.value.map(u => ({ value: u.id, label: u.name }))
-]);
-
-const storeOptions = computed(() => [
-    { value: 'all', label: trans('activity.all_stores') },
-    ...storesList.value.map(s => ({ value: s.id, label: s.name }))
-]);
-
-const pagination = ref({
-    current_page: 1,
-    last_page: 1,
-    per_page: 25,
-    total: 0,
-});
-
-let debounceTimer = null;
-const debouncedFetch = () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        filters.value.page = 1;
-        fetchLogs();
-    }, 300);
-};
-
-const fetchLogs = async () => {
-    isLoading.value = true;
-    try {
-        const res = await api.get('/activity-logs', { params: filters.value });
-        logs.value = res.data?.data || [];
-        stats.value = res.data?.stats || {};
-        usersList.value = res.data?.users || [];
-        storesList.value = res.data?.stores || [];
-        modulesList.value = res.data?.modules_list || {};
-        pagination.value = res.data?.pagination || pagination.value;
-    } catch (e) {
-        console.error('Failed to fetch activity logs:', e);
-    } finally {
-        isLoading.value = false;
-    }
-};
-
-const changePage = (page) => {
-    filters.value.page = page;
-    fetchLogs();
-};
-
-const openDetails = (log) => {
-    selectedLog.value = log;
-};
-
-const getActionBadgeClass = (action) => {
-    if (['deleted', 'cancelled', 'login_failed'].includes(action)) {
-        return 'bg-rose-500/10 border-rose-500/30 text-rose-400';
-    }
-    if (['created', 'invoice_created', 'login_success'].includes(action)) {
-        return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
-    }
-    if (['updated', 'shift_opened', 'shift_closed'].includes(action)) {
-        return 'bg-theme-light border-theme-border text-theme-primary';
-    }
-    return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
-};
-
-onMounted(() => {
-    fetchLogs();
-});
+const {
+  logs,
+  stats,
+  filters,
+  pagination,
+  moduleOptions,
+  userOptions,
+  storeOptions,
+  isLoading,
+  selectedLog,
+  updateSearch,
+  updateModule,
+  updateUserId,
+  updateStoreId,
+  fetchLogs,
+  changePage,
+  openDetails,
+  closeDetails,
+} = useActivityLogs();
 </script>
