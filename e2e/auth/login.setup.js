@@ -22,18 +22,26 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         await page.goto('/login', { waitUntil: 'networkidle' });
         await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 15000 });
 
+        // Dismiss update modal if present
+        const closeUpdateModalBtn = page.locator('button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق")').first();
+        if (await closeUpdateModalBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await closeUpdateModalBtn.click().catch(() => {});
+            await page.waitForTimeout(300);
+        }
+
         const phoneInput = page.locator('input[type="text"], input[type="tel"], input[name="phone"]').first();
         const passwordInput = page.locator('input[type="password"]').first();
-        const submitButton = page.locator('button[type="submit"]').first();
 
         await phoneInput.fill(testPhone);
         await passwordInput.fill(testPassword);
-        await submitButton.click();
+        
+        // Submit via enter or click
+        await passwordInput.press('Enter');
 
         // Wait for redirection away from login & wait for Vue SPA to mount
         await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 }).catch(() => {});
         await page.waitForSelector('#app > *', { timeout: 15000 }).catch(() => {});
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1000);
 
         // Get storage state and mirror for both 127.0.0.1 and localhost origins
         const storage = await page.context().storageState();

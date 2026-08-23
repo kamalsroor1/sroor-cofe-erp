@@ -14,6 +14,7 @@ const routes = [
     },
     {
         path: '/',
+        alias: '/dashboard',
         name: 'dashboard',
         component: () => import('../views/DashboardView.vue'),
         meta: {

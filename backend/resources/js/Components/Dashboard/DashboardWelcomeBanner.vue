@@ -1,56 +1,36 @@
-<script setup>
-import { LayoutDashboard, Zap, Truck } from 'lucide-vue-next';
-
-defineProps({
-    tenant: {
-        type: Object,
-        default: null
-    },
-    activeStore: {
-        type: Object,
-        default: null
-    }
-});
-</script>
-
 <template>
-    <div class="bg-gradient-to-l from-slate-100 via-white to-slate-50 dark:from-slate-900/90 dark:via-slate-900 dark:to-slate-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 transition-colors font-tajawal">
-        <div class="space-y-1.5 sm:space-y-2">
-            <div class="flex items-center gap-2.5 sm:gap-3">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-theme-light border border-theme-light text-theme-primary flex items-center justify-center shadow-xs shrink-0">
-                    <LayoutDashboard class="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <h1 class="text-base sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {{ $t('dashboard.welcome_banner_title') }}
-                </h1>
-            </div>
-            <p class="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-300 font-bold flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span>{{ $t('dashboard.current_branch_label') }}</span>
-                <span class="px-2 sm:px-2.5 py-0.5 rounded-xl bg-theme-light text-theme-primary border border-theme-light font-black text-xs sm:text-sm">
-                    {{ activeStore?.name || $t('common.main_store_default') }}
-                </span>
-                <span class="text-slate-400 dark:text-slate-500 hidden sm:inline">•</span>
-                <span class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm hidden sm:inline">{{ $t('dashboard.overview_subtitle') }}</span>
-            </p>
-        </div>
-
-        <div class="flex items-center gap-2.5 w-full md:w-auto">
-            <router-link
-                to="/pos"
-                class="flex-1 md:flex-none h-10 sm:h-12 px-4 sm:px-6 rounded-2xl btn-primary-theme font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer shadow-theme-primary"
-            >
-                <Zap class="w-4 h-4 fill-current" />
-                <span>{{ $t('dashboard.pos_fast_btn') }}</span>
-                <span class="px-1.5 py-0.5 rounded-lg bg-black/20 text-[10px] sm:text-xs font-mono font-black">F2</span>
-            </router-link>
-
-            <router-link
-                to="/purchases/create"
-                class="h-10 sm:h-12 px-3.5 sm:px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-black text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-xs shrink-0"
-            >
-                <Truck class="w-4 h-4" />
-                <span class="hidden sm:inline">{{ $t('dashboard.supply_invoice_btn') }}</span>
-            </router-link>
-        </div>
+  <div class="p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-theme-primary/10 text-theme-primary font-black text-sm">☕</span>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          {{ $t('dashboard.welcome') }} {{ companyName }}
+        </h1>
+      </div>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold mt-1">
+        {{ $t('dashboard.overview_subtitle') }}
+      </p>
     </div>
+    <div class="flex flex-wrap items-center gap-3 shrink-0">
+      <router-link to="/pos" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
+        <Plus class="w-4 h-4" />
+        <span>{{ $t('dashboard.pos_fast') }}</span>
+      </router-link>
+      <router-link to="/purchases" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs rounded-2xl shadow-xs flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
+        <ShoppingCart class="w-4 h-4 text-slate-500 dark:text-slate-400" />
+        <span>{{ $t('dashboard.new_purchase') }}</span>
+      </router-link>
+      <button type="button" @click="$emit('refresh')" :disabled="loading" class="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer" :title="$t('dashboard.refresh_live')">
+        <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
+      </button>
+    </div>
+  </div>
 </template>
+<script setup>
+import { Plus, ShoppingCart, RefreshCw } from 'lucide-vue-next';
+defineProps({
+  companyName: { type: String, default: '' },
+  loading: { type: Boolean, default: false },
+});
+defineEmits(['refresh']);
+</script>
