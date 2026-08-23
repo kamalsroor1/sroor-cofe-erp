@@ -7,6 +7,7 @@ return [
     'all_categories'            => 'كل الأقسام',
     'customer'                  => 'العميل / الزبون',
     'cash_customer'             => 'عميل نقدي (كاش)',
+    'general_cash_customer'     => 'نقدي عام',
     'add_new_customer'          => '+ إضافة زبون جديد',
     'cart_items'                => 'أصناف الفاتورة',
     'empty_cart'                => 'لم يتم اختيار أي أصناف بعد. اضغط على الصنف لإضافته للفاتورة 👈',

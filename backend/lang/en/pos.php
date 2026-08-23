@@ -7,6 +7,7 @@ return [
     'all_categories'            => 'All Categories',
     'customer'                  => 'Customer',
     'cash_customer'             => 'Cash Customer',
+    'general_cash_customer'     => 'General Cash',
     'add_new_customer'          => '+ Add New Customer',
     'cart_items'                => 'Cart Items',
     'empty_cart'                => 'Cart is empty. Click an item to add.',
