@@ -50,6 +50,12 @@
 10. **`BaseDatePicker.vue`**:
     - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `range`, `enableTimePicker`, `format`, `locale` (default 'ar'), `autoApply`, `error`, `hint`, `disabled`, `readonly`.
     - **الميزات:** مبني كـ Wrapper خفيف فوق `@vuepic/vue-datepicker` مع دعم كامل للـ RTL والوضع الليلي وتمرير ألوان الثيم الديناميكية.
+11. **`BaseDropdown.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `label`, `icon`, `iconClass`, `triggerClass`, `menuClass`, `align` ('start' | 'end' | 'center'), `items` (`[{ label, icon, iconColor, onClick, danger, badge }]`).
+    - **الميزات:** إغلاق تلقائي عند النقر بالخارج (Click-outside) وزر ESC، دعم Slots مخصصة للزر والقائمة، أهداف لمس >= 44px.
+12. **`BaseButton.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `type`, `label`, `variant` ('primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost' | 'default'), `size` ('sm' | 'md' | 'lg' | 'icon'), `icon`, `trailingIcon`, `loading`, `disabled`, `fullWidth`.
+    - **الميزات:** دعم مؤشر التحميل Spinner التلقائي، ضبط ارتفاع اللمس >= 44px، وتأثيرات الضغط `active:scale-[0.98]`.
 
 ### الملفات التي تمت مراجعتها واستبدالها في هذه الجلسة
 - `views/ActivityLogs/ActivityLogsView.vue`: استبدال حقل البحث بـ `BaseSearchInput` وقوائم الأقسام والمستخدمين والمخازن بـ `BaseSelect`.

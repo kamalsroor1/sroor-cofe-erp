@@ -17,31 +17,17 @@
             </span>
           </button>
 
-          <div class="relative" ref="globalActionDropdownRef">
-            <button
-              type="button"
-              @click="isGlobalActionOpen = !isGlobalActionOpen"
-              class="min-h-[44px] px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 transition-all flex items-center gap-2 cursor-pointer shadow-xs select-none"
-            >
-              <FileSpreadsheet class="w-4 h-4 text-emerald-500" />
-              <span>{{ $t('invoices.options_and_actions') }}</span>
-              <ChevronDown class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="{ 'rotate-180': isGlobalActionOpen }" />
-            </button>
-            <div v-if="isGlobalActionOpen" class="absolute left-0 top-full mt-2 w-56 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 space-y-1">
-              <button type="button" @click="exportToExcel(); isGlobalActionOpen = false" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition cursor-pointer text-start">
-                <Download class="w-4 h-4 text-emerald-500" />
-                <span>{{ $t('invoices.export_excel_csv') }}</span>
-              </button>
-              <button type="button" @click="printReport(); isGlobalActionOpen = false" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 rounded-xl transition cursor-pointer text-start">
-                <Printer class="w-4 h-4 text-cyan-500" />
-                <span>{{ $t('invoices.print_filtered_report') }}</span>
-              </button>
-              <button type="button" @click="fetchInvoices(pagination.current_page); isGlobalActionOpen = false" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-theme-primary hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer text-start">
-                <RefreshCw class="w-4 h-4 text-theme-primary" />
-                <span>{{ $t('invoices.refresh_now') }}</span>
-              </button>
-            </div>
-          </div>
+          <BaseDropdown
+            :label="$t('invoices.options_and_actions')"
+            :icon="FileSpreadsheet"
+            icon-class="text-emerald-500"
+            align="end"
+            :items="[
+              { label: $t('invoices.export_excel_csv'), icon: Download, iconColor: 'text-emerald-500', onClick: exportToExcel },
+              { label: $t('invoices.print_filtered_report'), icon: Printer, iconColor: 'text-cyan-500', onClick: printReport },
+              { label: $t('invoices.refresh_now'), icon: RefreshCw, iconColor: 'text-theme-primary', onClick: () => fetchInvoices(pagination.current_page) }
+            ]"
+          />
 
           <router-link to="/pos" class="min-h-[44px] px-5 py-2.5 bg-theme-gradient text-white shadow-theme-primary rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-theme-primary active:scale-95 cursor-pointer select-none">
             <Zap class="w-4 h-4 fill-white text-white" />
@@ -72,11 +58,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { SlidersHorizontal, FileSpreadsheet, ChevronDown, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
+import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import PageHeader from '../../Components/Common/PageHeader.vue';
+import BaseDropdown from '../../Components/Common/BaseDropdown.vue';
 import InvoicesMetricsCards from '../../Components/Invoices/InvoicesMetricsCards.vue';
 import InvoicesQuickSearch from '../../Components/Invoices/InvoicesQuickSearch.vue';
 import InvoicesBulkActionsBar from '../../Components/Invoices/InvoicesBulkActionsBar.vue';
@@ -86,7 +73,6 @@ import InvoiceDetailsModal from '../../Components/Invoices/InvoiceDetailsModal.v
 
 const invoices = ref([]);
 const isFilterSidebarOpen = ref(false);
-const isGlobalActionOpen = ref(false);
 const selectedInvoiceIds = ref([]);
 const activeDatePreset = ref('all');
 const summary = ref({ total_sales: 0, total_paid: 0, total_due: 0, total_count: 0 });
