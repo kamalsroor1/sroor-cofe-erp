@@ -150,7 +150,7 @@ onUnmounted(() => {
                                 <span class="block truncate">{{ item.label }}</span>
                                 <span v-if="item.description" class="block text-[10px] text-slate-400 font-normal truncate">{{ item.description }}</span>
                             </div>
-                        </Link>
+                        </router-link>
 
                         <button
                             v-else
@@ -249,7 +249,7 @@ onUnmounted(() => {
                                             <span v-if="item.description" class="block text-[10px] text-slate-400 font-bold truncate">{{ item.description }}</span>
                                         </div>
                                         <span class="text-slate-400 text-xs">←</span>
-                                    </Link>
+                                    </router-link>
 
                                     <button
                                         v-else

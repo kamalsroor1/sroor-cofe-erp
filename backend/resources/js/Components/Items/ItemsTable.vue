@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal">
     <!-- 🔄 Loading State -->
     <div v-if="isLoading" class="p-12 text-center">
       <div class="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -10,7 +10,7 @@
     <template v-else-if="items.length > 0">
       <!-- 1. 🖥️ Desktop / Tablet High-Density Table (hidden on mobile < md) -->
       <div class="hidden md:block overflow-x-auto">
-        <table class="w-full text-start text-xs border-collapse font-tajawal">
+        <table class="w-full text-start text-xs border-collapse">
           <thead>
             <tr class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <th class="py-3 px-4 text-start font-bold">#</th>
@@ -80,8 +80,7 @@
                 </span>
               </td>
               <td class="py-3.5 px-4 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <!-- Adjust Stock -->
+                <div class="flex items-center justify-center gap-1.5">
                   <BaseButton
                     type="button"
                     variant="outline"
@@ -91,35 +90,10 @@
                     @click="$emit('adjust', item)"
                   />
 
-                  <!-- Movements Log -->
-                  <BaseButton
-                    type="button"
-                    :to="`/items/${item.id}/movements`"
-                    variant="ghost"
-                    size="xs"
-                    :icon="History"
-                    :title="$t('inventory.movements_log') || 'كارت الحركة'"
-                  />
-
-                  <!-- Edit -->
-                  <BaseButton
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    :icon="Pencil"
-                    :title="$t('common.edit')"
-                    @click="$emit('edit', item)"
-                  />
-
-                  <!-- Delete -->
-                  <BaseButton
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    :icon="Trash2"
-                    icon-color="text-rose-500"
-                    :title="$t('common.delete')"
-                    @click="$emit('delete', item)"
+                  <ActionMenu
+                    :items="getItemActions(item)"
+                    :title="item.name"
+                    button-class="h-7 w-7 min-w-[28px] p-0"
                   />
                 </div>
               </td>
@@ -181,33 +155,21 @@
             </div>
           </div>
 
-          <!-- Mobile Actions Bar (Touch Ergonomics >= 44px) -->
-          <div class="grid grid-cols-3 gap-1.5 pt-1">
+          <!-- Mobile Actions Bar (>= 44px with ActionMenu) -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
             <BaseButton
               type="button"
               variant="outline"
               size="sm"
               :icon="Sliders"
-              :label="$t('inventory.adjust') || 'تسوية'"
+              :label="$t('inventory.adjust') || 'تسوية سريعة'"
               @click="$emit('adjust', item)"
             />
 
-            <BaseButton
-              type="button"
-              :to="`/items/${item.id}/movements`"
-              variant="secondary"
-              size="sm"
-              :icon="History"
-              :label="$t('inventory.movements_log') || 'الحركات'"
-            />
-
-            <BaseButton
-              type="button"
-              variant="secondary"
-              size="sm"
-              :icon="Pencil"
-              :label="$t('common.edit')"
-              @click="$emit('edit', item)"
+            <ActionMenu
+              :items="getItemActions(item)"
+              :title="item.name"
+              button-class="w-full min-h-[40px] rounded-xl font-bold text-xs"
             />
           </div>
         </div>
@@ -267,7 +229,9 @@
 import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import ActionMenu from '../ActionMenu.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { trans } from '../../helpers/trans';
 
 const { formatMoney, formatQty } = useFormatters();
 
@@ -280,5 +244,29 @@ defineProps({
   isLoading: { type: Boolean, default: false },
 });
 
-defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
+const emit = defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
+
+const getItemActions = (item) => [
+  {
+    label: trans('inventory.adjust_stock') || 'تسوية رصيد الصنف الجردية',
+    icon: Sliders,
+    onClick: () => emit('adjust', item),
+  },
+  {
+    label: trans('inventory.movements_log') || 'كارت حركة الصنف وسجل العمليات',
+    icon: History,
+    href: `/items/${item.id}/movements`,
+  },
+  {
+    label: trans('common.edit') || 'تعديل بيانات الصنف',
+    icon: Pencil,
+    onClick: () => emit('edit', item),
+  },
+  {
+    label: trans('common.delete') || 'حذف الصنف',
+    icon: Trash2,
+    variant: 'danger',
+    onClick: () => emit('delete', item),
+  },
+];
 </script>

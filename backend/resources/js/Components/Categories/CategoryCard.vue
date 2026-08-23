@@ -29,37 +29,25 @@
       </div>
     </div>
 
-    <!-- Bottom Actions -->
+    <!-- Bottom Actions with ActionMenu Standard -->
     <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
       <span class="text-[10px] text-slate-400 font-mono">
         #{{ category.sort_order ?? 0 }}
       </span>
-      <div class="flex items-center gap-1">
-        <BaseButton
-          type="button"
-          variant="ghost"
-          size="xs"
-          :icon="Pencil"
-          :title="$t('common.edit')"
-          @click="$emit('edit', category)"
-        />
-        <BaseButton
-          type="button"
-          variant="ghost"
-          size="xs"
-          :icon="Trash2"
-          icon-color="text-rose-500"
-          :title="$t('common.delete')"
-          @click="$emit('delete', category)"
-        />
-      </div>
+
+      <ActionMenu
+        :items="getCategoryActions(category)"
+        :title="category.name"
+        button-class="h-8 w-8 min-w-[32px] p-0"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { Pencil, Trash2 } from 'lucide-vue-next';
-import BaseButton from '../Common/BaseButton.vue';
+import ActionMenu from '../ActionMenu.vue';
+import { trans } from '../../helpers/trans';
 
 defineProps({
   category: {
@@ -68,5 +56,19 @@ defineProps({
   },
 });
 
-defineEmits(['edit', 'delete']);
+const emit = defineEmits(['edit', 'delete']);
+
+const getCategoryActions = (cat) => [
+  {
+    label: trans('common.edit') || 'تعديل بيانات الفئة',
+    icon: Pencil,
+    onClick: () => emit('edit', cat),
+  },
+  {
+    label: trans('common.delete') || 'حذف الفئة',
+    icon: Trash2,
+    variant: 'danger',
+    onClick: () => emit('delete', cat),
+  },
+];
 </script>
