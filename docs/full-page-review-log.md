@@ -1223,3 +1223,68 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/expenses-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.58 ثانية.
+
+
+---
+
+## 📌 صفحة 19: دفتر اليومية وحركات الخزينة والورديات (`DailyJournalView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/daily-journal`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 724 سطر إلى 6 مكونات فرعية + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useDailyJournal + نوافذ مودال موحدة لفتح وإغلاق الوردية Z-Report وقيد المصروف السريع + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** دفتر اليومية وحركات الخزينة والورديات (Daily Journal & Cash Shifts Ledger)
+* **المسار (Route):** `/daily-journal`
+* **الملف الرئيسي:** `resources/js/views/DailyJournal/DailyJournalView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** مطابقة التدفقات النقدية لليومية ومراقبة وتتبع حركة الدرج وفتح وإغلاق ورديات الكاشير واعتماد تقارير Z-Report.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة والإجراءات العامة (`PageHeader.vue`):**
+   * عنوان الصفحة، منتقي التاريخ، زر قيد مصروف سريع، وزر فتح/إغلاق الوردية `BaseButton`.
+2. **شريط حالة الوردية المفتوحة (`DailyJournalShiftBanner.vue`):**
+   * بيانات الوردية النشطة، الكاشير، العهدة الافتتاحية، وزر طباعة تقرير Z، أو تنبيه فتح وردية جديدة.
+3. **شبكة بطاقات المؤشرات المالية للسيولة (`DailyJournalMetricsGrid.vue`):**
+   * إجمالي المقبوضات (الوارد)، إجمالي المدفوعات (المنصرف)، صافي التدفق اليومي، والرصيد المتوقع في الدرج مع `StatCardSkeleton.vue`.
+4. **تبويبات وجداول فواتير ومصروفات اليومية (`DailyJournalTabs.vue`):**
+   * تبويبات المبيعات والمصروفات، جداول سطح المكتب وبطاقات الهواتف المتراصة اللمسية مع `TableSkeleton.vue` و `EmptyState.vue`.
+5. **نافذة فتح وردية جديدة (`OpenShiftModal.vue`):**
+   * نافذة `AppModal` مخصصة لإدخال الرصيد الافتتاحي للعهدة وبدء الوردية.
+6. **نافذة إغلاق الوردية Z-Report (`CloseShiftModal.vue`):**
+   * نافذة `AppModal` مخصصة لمقارنة الرصيد المتوقع بالرصيد الفعلي وحساب العجز أو الزيادة فورياً.
+7. **نافذة قيد مصروف سريع (`QuickExpenseModal.vue`):**
+   * نافذة `AppModal` مخصصة لقيد المصروف النثري المباشر من اليومية.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/daily-journal`, `POST /api/v1/shifts/open`, `POST /api/v1/shifts/close`, `POST /api/v1/expenses`, `GET /api/v1/shifts/{id}/z-report`.
+* **Composables:** `useDailyJournal.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseNumberInput.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseNumberInput.vue`, `StatCardSkeleton.vue`, `TableSkeleton.vue`, `EmptyState.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/DailyJournal/`):**
+  * `DailyJournalShiftBanner.vue`, `DailyJournalMetricsGrid.vue`, `DailyJournalTabs.vue`, `OpenShiftModal.vue`, `CloseShiftModal.vue`, `QuickExpenseModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** بطاقات لمسية متكاملة للورديات والسيولة وأزرار تحكم بالوردية بارتفاع $\ge 44	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** جداول بيانات مالية ومحاسبية عالية الكثافة مع تمييز لوني دقيق.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/treasury.php` و `lang/en/treasury.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/daily-journal-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.58 ثانية.
