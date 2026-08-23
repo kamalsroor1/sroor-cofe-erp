@@ -142,32 +142,62 @@ const showSuccessModal = ref(false);
 const lastCreatedInvoice = ref(null);
 
 const getItemPrice = (item) => {
-  return activePriceTier.value === 'wholesale' ? (item.price_wholesale || item.price_retail) : item.price_retail;
+  if (!item) return 0;
+  const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
+  const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
+  return activePriceTier.value === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
 };
 
 const isSearchingRemote = ref(false);
 const remoteSearchResults = ref([]);
 let searchDebounceTimer = null;
+let searchAbortController = null;
 
 const performRemoteSearch = (query) => {
-  clearTimeout(searchDebounceTimer);
+  // 1. Cancel any pending debounce timer
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = null;
+  }
+
+  // 2. Cancel any active in-flight HTTP request
+  if (searchAbortController) {
+    searchAbortController.abort();
+    searchAbortController = null;
+  }
+
   const q = query.trim();
   if (!q) {
     remoteSearchResults.value = [];
     isSearchingRemote.value = false;
     return;
   }
-  isSearchingRemote.value = true;
+
+  // 3. Debounce by 250ms so fast typing doesn't spam the server
   searchDebounceTimer = setTimeout(async () => {
+    searchAbortController = new AbortController();
+    isSearchingRemote.value = true;
+
     try {
-      const res = await api.get('/items', { params: { search: q, per_page: 30 } });
+      const res = await api.get('/items', {
+        params: { search: q, per_page: 30 },
+        signal: searchAbortController.signal,
+      });
       remoteSearchResults.value = res.data?.data || [];
-    } catch (err) {
-      console.error('Remote item search error:', err);
-    } finally {
       isSearchingRemote.value = false;
+    } catch (err) {
+      // Gracefully ignore cancellation when user types new character
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED' || err.message === 'canceled') {
+        return;
+      }
+      console.error('Remote item search error:', err);
+      isSearchingRemote.value = false;
+    } finally {
+      if (searchAbortController && !searchAbortController.signal.aborted) {
+        searchAbortController = null;
+      }
     }
-  }, 150);
+  }, 250);
 };
 
 watch(searchQuery, (newVal) => {
@@ -430,6 +460,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  if (searchAbortController) searchAbortController.abort();
   window.removeEventListener('keydown', handleGlobalKeydown);
 });
 </script>

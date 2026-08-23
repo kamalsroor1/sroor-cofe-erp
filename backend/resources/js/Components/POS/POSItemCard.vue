@@ -14,9 +14,9 @@ const { formatMoney, formatQty } = useMoney();
 const { triggerHaptic } = useNativeBridge();
 
 const effectivePrice = computed(() => {
-    return props.customerPriceTier === 'wholesale'
-        ? props.item.price_wholesale
-        : props.item.price_retail;
+    const retail = parseFloat(props.item?.selling_price ?? props.item?.price_retail ?? props.item?.price ?? 0);
+    const wholesale = parseFloat(props.item?.min_selling_price ?? props.item?.price_wholesale ?? retail);
+    return props.customerPriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
 });
 
 const isWeightBased = computed(() => {

@@ -82,6 +82,7 @@ return [
     'shift_label'               => 'Shift:',
     'no_open_shift_alert'       => 'Alert: No shift open',
     'search_scan_placeholder'   => 'Search by name, code, or scan barcode (F2)...',
+    'search_placeholder_long'   => 'Search by item name, code, or scan barcode directly... (F2)',
     'loading_items'             => 'Loading items...',
     'no_matching_items'         => 'No items matching search',
     'quick_add_customer'        => 'Quick Add Customer',

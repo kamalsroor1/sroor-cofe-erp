@@ -82,6 +82,7 @@ return [
     'shift_label'               => 'الوردية:',
     'no_open_shift_alert'       => 'تنبيه: لا توجد وردية مفتوحة',
     'search_scan_placeholder'   => 'بحث بالاسم، الكود، أو مسح الباركود (F2)...',
+    'search_placeholder_long'   => 'ابحث باسم الصنف، الكود، أو امسح الباركود مباشرة... (F2)',
     'loading_items'             => 'جاري تحميل الأصناف...',
     'no_matching_items'         => 'لا توجد أصناف مطابقة للبحث',
     'quick_add_customer'        => 'إضافة عميل سريع',

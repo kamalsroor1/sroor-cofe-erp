@@ -32,7 +32,9 @@ const isDragging = ref(false);
 
 const effectiveKiloPrice = (item) => {
     if (!item) return 0;
-    return props.customerPriceTier === 'wholesale' ? item.price_wholesale : item.price_retail;
+    const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
+    const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
+    return props.customerPriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
 };
 
 const selectPreset = (qty) => {

@@ -27,6 +27,21 @@ class Item extends Model
         'notes',
     ];
 
+    protected $appends = [
+        'price_retail',
+        'price_wholesale',
+    ];
+
+    public function getPriceRetailAttribute(): string
+    {
+        return (string)($this->selling_price ?? '0.000');
+    }
+
+    public function getPriceWholesaleAttribute(): string
+    {
+        return (string)($this->min_selling_price ?? $this->selling_price ?? '0.000');
+    }
+
     protected function casts(): array
     {
         return [

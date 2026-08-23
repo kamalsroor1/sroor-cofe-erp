@@ -1,0 +1,36 @@
+{
+  "summary": {
+    "totalSuccess": 2,
+    "totalFailed": 0,
+    "totalScreenshots": 2,
+    "totalDiscovered": 0,
+    "totalConsoleErrors": 0,
+    "totalSkippedSensitiveButtons": 0,
+    "durationSeconds": 30.6,
+    "runDate": "2026-08-21",
+    "runId": "run-03",
+    "runDirectory": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-03"
+  },
+  "successfulPages": [
+    {
+      "route": "/",
+      "name": "dashboard",
+      "module": "dashboard",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-03\\dashboard\\mobile\\02-dashboard.png",
+      "timestamp": "2026-08-21T17:41:14.121Z"
+    },
+    {
+      "route": "/super-admin/dashboard",
+      "name": "super-admin-dashboard",
+      "module": "super-admin",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-03\\super-admin\\mobile\\30-super-admin-dashboard.png",
+      "timestamp": "2026-08-21T17:41:27.939Z"
+    }
+  ],
+  "failedPages": [],
+  "discoveredNewRoutes": [],
+  "consoleErrors": [],
+  "skippedSensitiveButtons": []
+}

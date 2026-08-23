@@ -41,6 +41,9 @@ const props = defineProps({
 defineEmits(['add-item']);
 
 const getItemPrice = (item) => {
-  return props.activePriceTier === 'wholesale' ? (item.price_wholesale || item.price_retail) : item.price_retail;
+  if (!item) return 0;
+  const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
+  const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
+  return props.activePriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
 };
 </script>
