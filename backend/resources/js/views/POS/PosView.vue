@@ -327,12 +327,13 @@ const changeDue = computed(() => {
 });
 
 watch(cartNetTotal, (newNet) => {
+  const roundedNet = Math.round(newNet);
   if (paymentType.value === 'cash') {
-    paidAmount.value = newNet.toFixed(3);
-    cashReceived.value = newNet.toFixed(3);
+    paidAmount.value = roundedNet.toString();
+    cashReceived.value = roundedNet.toString();
   } else if (paymentType.value === 'credit') {
-    paidAmount.value = '0.000';
-    cashReceived.value = '0.000';
+    paidAmount.value = '0';
+    cashReceived.value = '0';
   }
 });
 

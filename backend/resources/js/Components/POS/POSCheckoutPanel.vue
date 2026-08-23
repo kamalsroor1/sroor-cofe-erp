@@ -110,7 +110,7 @@
       <div class="flex flex-wrap gap-1">
         <button
           type="button"
-          @click="$emit('update:cashReceived', netTotal)"
+          @click="$emit('update:cashReceived', Math.round(netTotal))"
           class="min-h-[34px] px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-black border border-emerald-500/30 cursor-pointer"
         >
           🎯 {{ $t('pos.quick_cash_exact') }}
@@ -134,7 +134,7 @@
             type="number"
             :value="cashReceived"
             @input="$emit('update:cashReceived', $event.target.value)"
-            step="0.001"
+            step="1"
             min="0"
             class="w-full h-10 px-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono font-black text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-theme-primary"
           />
