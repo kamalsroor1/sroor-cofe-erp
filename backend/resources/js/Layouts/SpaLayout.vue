@@ -1070,6 +1070,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useModules } from '../Composables/useModules';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
@@ -1078,6 +1079,7 @@ import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import Swal from 'sweetalert2';
 
 const appVersion = ref(versionData?.version || '1.0.1');
+const { isModuleEnabled } = useModules();
 import {
     LayoutDashboard,
     ShoppingCart,
