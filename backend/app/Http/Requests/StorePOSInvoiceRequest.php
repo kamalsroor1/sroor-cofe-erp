@@ -25,7 +25,27 @@ class StorePOSInvoiceRequest extends FormRequest
             $paymentMethod = 'e_wallet';
         }
 
+        $customerId = $this->input('customer_id');
+        if (empty($customerId) || $customerId === 'null' || $customerId === null) {
+            $defaultCustomer = \App\Models\Customer::where('name', 'نقدي عام')
+                ->orWhere('name', 'عميل نقدي')
+                ->orWhere('phone', '0000000000')
+                ->first();
+
+            if (!$defaultCustomer) {
+                $defaultCustomer = \App\Models\Customer::create([
+                    'name' => 'عميل نقدي',
+                    'phone' => '0000000000',
+                    'current_balance' => 0,
+                    'price_tier' => 'retail',
+                    'is_active' => true,
+                ]);
+            }
+            $customerId = $defaultCustomer->id;
+        }
+
         $this->merge([
+            'customer_id' => $customerId ? (int)$customerId : null,
             'store_id' => $storeId ? (int)$storeId : null,
             'invoice_date' => $this->input('invoice_date') ?? now()->toDateString(),
             'payment_type' => $paymentType,
