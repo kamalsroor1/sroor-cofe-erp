@@ -18,12 +18,21 @@ class DownloadLatestApkAction
             ->first();
 
         if (!$latest || !Storage::disk('public')->exists($latest->apk_path)) {
-            // Check fallback in root/dist if exists
-            $fallbackPath = base_path('../mobile/sroor-coffee-erp-v1.0.apk');
-            if (file_exists($fallbackPath)) {
-                return response()->download($fallbackPath, 'sroor-coffee-erp-latest.apk', [
-                    'Content-Type' => 'application/vnd.android.package-archive',
-                ]);
+            // Check fallback in public folder or root if exists
+            $fallbacks = [
+                public_path('sroor-cofe-erp-2m.apk'),
+                public_path('app.apk'),
+                base_path('../sroor-cofe-erp-2m.apk'),
+                base_path('../mobile/sroor-coffee-erp-v1.0.apk'),
+            ];
+
+            foreach ($fallbacks as $fallbackPath) {
+                if (file_exists($fallbackPath)) {
+                    return response()->download($fallbackPath, 'sroor-cofe-erp-latest.apk', [
+                        'Content-Type' => 'application/vnd.android.package-archive',
+                        'Cache-Control' => 'no-cache, private',
+                    ]);
+                }
             }
 
             throw new NotFoundHttpException('ملف التحديث غير متوفر حالياً على السيرفر.');

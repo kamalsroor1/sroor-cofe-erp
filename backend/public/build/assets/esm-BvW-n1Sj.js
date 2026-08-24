@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-CDuo-g7s.js","assets/app-WlGMhWlJ.js","assets/createLucideIcon-Da1ecqzL.js","assets/app-DGD7NC5b.css"])))=>i.map(i=>d[i]);
-import{B as e,L as t}from"./app-WlGMhWlJ.js";var n;(function(e){e.Heavy=`HEAVY`,e.Medium=`MEDIUM`,e.Light=`LIGHT`})(n||={});var r;(function(e){e.Success=`SUCCESS`,e.Warning=`WARNING`,e.Error=`ERROR`})(r||={});var i=e(`Haptics`,{web:()=>t(()=>import(`./web-CDuo-g7s.js`).then(e=>new e.HapticsWeb),__vite__mapDeps([0,1,2,3]))});export{n,r,i as t};
