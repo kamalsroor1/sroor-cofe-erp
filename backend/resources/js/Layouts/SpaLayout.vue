@@ -474,51 +474,148 @@
           <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
             <!-- 🌟 Quick Action Button: POS -->
             <router-link
-              v-if="isModuleEnabled('pos_and_sales')"
+              v-if="isModuleEnabled('pos_and_sales') && !activeMobileSection"
               to="/pos"
               @click="isSidebarOpen = false"
-              class="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl text-slate-950 font-black text-xs shadow-lg transition active:scale-95"
+              class="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl text-slate-950 font-black text-xs shadow-lg transition active:scale-95 cursor-pointer"
               :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
             >
               <Plus class="w-4 h-4 stroke-[3]" />
-              <span>+ فاتورة بيع جديدة (F2)</span>
+              <span>+ نقطة البيع السريعة (POS)</span>
             </router-link>
 
-            <!-- Dynamic Navigation Sections -->
-            <div v-for="section in navigationSections" :key="'mob-' + section.key" class="space-y-1">
-              <!-- Section Title -->
-              <div v-if="section.title" class="pt-2 pb-1 px-2 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-theme-primary"></span>
-                <span>{{ section.title }}</span>
+            <!-- 📁 LEVEL 1: MODULES CATEGORIES HUB (When No Category Selected) -->
+            <div v-if="!activeMobileSection" class="space-y-2.5">
+              <div class="px-1 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                أقسام وموديولات المنظومة
               </div>
 
-              <!-- Section Links -->
-              <div class="space-y-1">
+              <!-- Module Cards Grid/List -->
+              <div class="space-y-2">
+                <template v-for="section in navigationSections" :key="'mob-sec-' + section.key">
+                  <!-- Direct Dashboard Card -->
+                  <router-link
+                    v-if="section.isDirect"
+                    :to="section.directPath || '/'"
+                    @click="isSidebarOpen = false"
+                    class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 hover:border-theme-primary flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="section.iconBg">
+                        <component :is="section.icon" class="w-5 h-5" />
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-xs font-black text-slate-900 dark:text-white group-hover:text-theme-primary transition truncate">
+                          {{ section.title }}
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
+                          {{ section.subtitle || 'الرئيسية' }}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0" />
+                  </router-link>
+
+                  <!-- Category Card with Drill-Down Sub-menu -->
+                  <button
+                    v-else
+                    type="button"
+                    @click="activeMobileSection = section"
+                    class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 hover:border-theme-primary flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group text-start"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="section.iconBg">
+                        <component :is="section.icon" class="w-5 h-5" />
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-xs font-black text-slate-900 dark:text-white group-hover:text-theme-primary transition truncate">
+                          {{ section.title }}
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
+                          {{ section.subtitle || `${section.items?.length || 0} روابط` }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                      <span class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
+                        {{ section.items?.length || 0 }} روابط
+                      </span>
+                      <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition" />
+                    </div>
+                  </button>
+                </template>
+
+                <!-- Super Admin Section (If Allowed) -->
                 <router-link
-                  v-for="item in section.items"
-                  :key="'mob-item-' + item.key"
-                  :to="item.path"
+                  v-if="canAccessSuperAdmin"
+                  to="/super-admin/dashboard"
                   @click="isSidebarOpen = false"
-                  class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all"
+                  class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 hover:border-purple-500 flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
+                >
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-lg">
+                      👑
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-black text-purple-400 truncate">لوحة السوبر أدمن</div>
+                      <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">إدارة المستأجرين والباقات والمنصة</div>
+                    </div>
+                  </div>
+                  <ChevronLeft class="w-4 h-4 text-purple-400 shrink-0" />
+                </router-link>
+              </div>
+            </div>
+
+            <!-- 📂 LEVEL 2: DRILL-DOWN SUB-MENU (When Category is Active) -->
+            <div v-else class="space-y-3 animate-in fade-in slide-in-from-left duration-200">
+              <!-- Back to Modules Bar -->
+              <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <button
+                  type="button"
+                  @click="activeMobileSection = null"
+                  class="flex items-center gap-1.5 text-xs font-black text-theme-primary hover:opacity-80 transition cursor-pointer active:scale-95"
+                >
+                  <ChevronRight class="w-4 h-4 stroke-[3]" />
+                  <span>العودة لجميع الأقسام</span>
+                </button>
+
+                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <component :is="activeMobileSection.icon" class="w-4 h-4 text-theme-primary" />
+                  <span>{{ activeMobileSection.title }}</span>
+                </div>
+              </div>
+
+              <!-- Module Sub-Links List -->
+              <div class="space-y-1.5 pt-1">
+                <router-link
+                  v-for="item in activeMobileSection.items"
+                  :key="'drill-mob-' + item.key"
+                  :to="item.path"
+                  @click="isSidebarOpen = false; activeMobileSection = null"
+                  class="flex items-center justify-between p-3.5 rounded-2xl text-xs font-bold transition-all border shadow-2xs active:scale-[0.98] cursor-pointer"
                   :class="isItemActive(item)
-                    ? 'font-black border shadow-xs'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900/90'"
+                    ? 'font-black border-theme-primary shadow-sm'
+                    : 'bg-white dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-theme-primary'"
                   :style="isItemActive(item) ? {
                     color: 'var(--color-primary, #f59e0b)',
                     borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
                     backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
                   } : {}"
                 >
-                  <div
-                    class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                    :class="isItemActive(item)
-                      ? 'text-slate-950'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
-                    :style="isItemActive(item) ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
-                  >
-                    <component :is="item.icon" class="w-3.5 h-3.5 stroke-[2.4]" />
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div
+                      class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                      :class="isItemActive(item)
+                        ? 'text-slate-950'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
+                      :style="isItemActive(item) ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
+                    >
+                      <component :is="item.icon" class="w-4 h-4 stroke-[2.4]" />
+                    </div>
+                    <span class="truncate">{{ item.title }}</span>
                   </div>
-                  <span class="truncate">{{ item.title }}</span>
+                  <ChevronLeft class="w-4 h-4 opacity-40 shrink-0" />
                 </router-link>
               </div>
             </div>
@@ -579,6 +676,7 @@ const route = useRoute();
 const router = useRouter();
 
 const isSidebarOpen = ref(false);
+const activeMobileSection = ref(null);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
 let wasCollapsedBeforePos = localStorage.getItem('sidebar_collapsed') === 'true';
 

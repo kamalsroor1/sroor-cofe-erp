@@ -23,6 +23,7 @@ import {
     Activity,
     Trash2,
     Sliders,
+    Truck,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
@@ -33,7 +34,13 @@ export function useNavigation() {
     const sectionsRaw = [
         {
             key: 'main',
-            title: '',
+            title: 'الرئيسية',
+            subtitle: 'لوحة المؤشرات والتحليلات الحية',
+            titleKey: 'nav.dashboard',
+            icon: LayoutDashboard,
+            iconBg: 'bg-amber-500/10 text-amber-500',
+            isDirect: true,
+            directPath: '/',
             items: [
                 {
                     key: 'dashboard',
@@ -47,8 +54,11 @@ export function useNavigation() {
         },
         {
             key: 'sales',
-            title: 'المبيعات والفواتير',
+            title: 'المبيعات ونقاط البيع',
+            subtitle: 'الفواتير، نقطة البيع، اليومية، والعملاء',
             titleKey: 'nav.group_sales',
+            icon: Zap,
+            iconBg: 'bg-emerald-500/10 text-emerald-500',
             module: 'pos_and_sales',
             items: [
                 {
@@ -69,7 +79,7 @@ export function useNavigation() {
                 },
                 {
                     key: 'daily-journal',
-                    title: 'اليومية وحركة الدرج',
+                    title: 'اليومية وحركة الدرج والورديات',
                     titleKey: 'nav.daily_journal',
                     path: '/daily-journal',
                     icon: Wallet,
@@ -87,8 +97,11 @@ export function useNavigation() {
         },
         {
             key: 'inventory',
-            title: 'المخزون والأصناف',
+            title: 'المخزون والأصناف والفروع',
+            subtitle: 'الأصناف، الفئات، المخازن، والتحويلات',
             titleKey: 'nav.group_inventory',
+            icon: Package,
+            iconBg: 'bg-sky-500/10 text-sky-500',
             module: 'inventory_and_stores',
             items: [
                 {
@@ -117,7 +130,7 @@ export function useNavigation() {
                 },
                 {
                     key: 'stores-stocks',
-                    title: 'أرصدة المخازن',
+                    title: 'أرصدة المخازن الحية',
                     titleKey: 'nav.store_stocks',
                     path: '/stores/stocks',
                     icon: StoreIcon,
@@ -141,7 +154,7 @@ export function useNavigation() {
                 },
                 {
                     key: 'coffee-blender',
-                    title: 'صانع الخلطات والبن',
+                    title: 'صانع الخلطات وتوليفات البن',
                     titleKey: 'nav.coffee_blender',
                     path: '/coffee-blender',
                     icon: Layers,
@@ -152,7 +165,10 @@ export function useNavigation() {
         {
             key: 'purchases',
             title: 'المشتريات والموردين',
+            subtitle: 'فواتير التوريد وحسابات الموردين',
             titleKey: 'nav.purchases',
+            icon: Truck,
+            iconBg: 'bg-indigo-500/10 text-indigo-500',
             module: 'purchases_and_suppliers',
             items: [
                 {
@@ -176,7 +192,10 @@ export function useNavigation() {
         {
             key: 'finance',
             title: 'المالية والمرتجعات والتقارير',
+            subtitle: 'المصروفات، المرتجعات، والأرباح',
             titleKey: 'nav.group_financials',
+            icon: BarChart3,
+            iconBg: 'bg-purple-500/10 text-purple-500',
             items: [
                 {
                     key: 'expenses',
@@ -206,8 +225,11 @@ export function useNavigation() {
         },
         {
             key: 'system',
-            title: 'إدارة النظام والمستخدمين',
+            title: 'إدارة النظام والأمان',
+            subtitle: 'المستخدمين، الصلاحيات، وسجل الرقابة',
             titleKey: 'nav.group_management',
+            icon: ShieldCheck,
+            iconBg: 'bg-slate-500/10 text-slate-500',
             items: [
                 {
                     key: 'users',

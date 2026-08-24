@@ -43,7 +43,7 @@
       "key": "purchases_and_suppliers",
       "name_ar": "المشتريات والموردين",
       "name_en": "Purchases & Suppliers",
-      "enabled": false,
+      "enabled": true,
       "routes": [
         "/purchases",
         "/suppliers"
@@ -54,7 +54,7 @@
       "key": "returns",
       "name_ar": "سجل المرتجعات",
       "name_en": "Returns Engine",
-      "enabled": false,
+      "enabled": true,
       "routes": [
         "/returns"
       ]
@@ -74,7 +74,7 @@
       "key": "treasury_and_shifts",
       "name_ar": "الخزينة واليومية وحركة الدرج",
       "name_en": "Treasury & Shifts",
-      "enabled": false,
+      "enabled": true,
       "routes": [
         "/daily-journal",
         "/treasury"
@@ -85,7 +85,7 @@
       "key": "expenses",
       "name_ar": "المصروفات والنثريات",
       "name_en": "Expenses",
-      "enabled": false,
+      "enabled": true,
       "routes": [
         "/expenses"
       ]
@@ -95,7 +95,7 @@
       "key": "coffee_blends",
       "name_ar": "صانع الخلطات وتوليفات البن",
       "name_en": "Coffee Blends",
-      "enabled": false,
+      "enabled": true,
       "routes": [
         "/coffee-blender"
       ]
@@ -105,7 +105,7 @@
       "key": "reports",
       "name_ar": "التقارير المالية والأرباح",
       "name_en": "Reports & Analytics",
-      "enabled": false,
+      "enabled": true,
       "routes": [
         "/reports"
       ]
