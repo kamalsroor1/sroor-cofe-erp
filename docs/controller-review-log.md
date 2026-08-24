@@ -54,7 +54,7 @@
 | 25 | `SupplierController` | `app/Http/Controllers/Api/SupplierController.php` | 2026-08-24 | ✅ 10/10 Pass | ✅ Single Actions + Policy + Reqs | ✅ Statement Ledger & bcmath | ✅ مكتمل ومحصن |
 | 26 | `SystemContextApiController` | `app/Http/Controllers/Api/SystemContextApiController.php` | 2026-08-24 | ✅ 5/5 Pass | ✅ Single Action + Bootstrap DTO | ✅ Single Network Roundtrip | ✅ مكتمل ومحصن |
 | 27 | `TrashController` | `app/Http/Controllers/Api/TrashController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy | ✅ SoftDeletes & Safe Restore | ✅ مكتمل ومحصن |
-| 28 | `TreasuryController` | `app/Http/Controllers/Api/TreasuryController.php` | — | — | — | — | ⚪ بالانتظار |
+| 28 | `TreasuryController` | `app/Http/Controllers/Api/TreasuryController.php` | 2026-08-24 | ✅ 5/5 Pass | ✅ Single Action + TreasuryService | ✅ Multi-Account Liquidity & bcmath | ✅ مكتمل ومحصن |
 | 29 | `UserController` | `app/Http/Controllers/Api/UserController.php` | — | — | — | — | ⚪ بالانتظار |
 
 ---
@@ -140,13 +140,15 @@
 * **التحسينات:** Feature Test شامل (5 اختبارات 100% Pass)، حزمة التهيئة الذرية الموحدة وتحديث قاموس الترجمة.
 
 ### 27. `TrashController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (9 اختبارات 100% Pass)، سياسة صلاحيات `TrashPolicy`، وإدارة سلة المحذوفات SoftDeletes.
+
+### 28. `TreasuryController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/TrashApiTest.php` بـ 9 اختبارات شاملة (100% Pass، 47 Assertions) تغطي استعراض سجلات المحذوفات المصنفة (أصناف، عملاء، موردين، فروع، مصروفات، مرتجعات)، استرجاع السجلات المحذوفة بنجاح، الحذف النهائي للسجلات، والتحقق من الأنواع غير الصالحة ومصفوفة الصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/TrashPolicy.php` والتحقق من صلاحية `trash.access`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/TrashController.php` وتوجيه مسارات `routes/tenant.php` للكنترولر الموحد.
-  4. **الأداء والهندسة:** استخدام Single Actions (`GetTrashRecordsAction`, `RestoreTrashRecordAction`, `ForceDeleteTrashRecordAction`) مع الحذف والاسترجاع الآمن SoftDeletes.
+  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/TreasuryApiTest.php` بـ 5 اختبارات شاملة (100% Pass، 24 Assertions) تغطي تدفقات السيولة اليومية (مبيعات، تحصيلات عملاء، مدفوعات موردين، مصروفات)، أرصدة الحسابات وقنوات الدفع المباشرة، وحالة الوردية المفتوحة بالفرع.
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/TreasuryPolicy.php` والتحقق من صلاحية `daily_journal.view` و `reports.view`.
+  3. **الأداء والهندسة:** الاعتماد على `TreasuryService` لحساب السيولة بدقة `bcmath` و `DECIMAL(12,3)`.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `TrashController`
-## ⏭️ التالي بالترتيب الأبجدي: `TreasuryController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `TreasuryController`
+## ⏭️ التالي بالترتيب الأبجدي: `UserController`
