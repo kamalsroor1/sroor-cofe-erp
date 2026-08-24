@@ -2205,3 +2205,71 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-units-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.33 ثانية.
+
+
+---
+
+## 📌 صفحة 35: لوحة القيادة والمؤشرات الحية (`DashboardView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/dashboard`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك الصفحة إلى 7 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 85 سطر + هيكل تحميل تفاعلي كامل بنمط الوميض DashboardSkeleton + شبكة بطاقات المؤشرات الـ KPIs الأربعة + رسم بياني لتوزيع المبيعات وساعات الذروة 24 ساعة + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب وترجمة كاملة 100% بدون نصوص ثابتة + اختبارات E2E و Feature API ناجحة).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** لوحة القيادة الحية والمؤشرات المالية (Dashboard)
+* **المسار (Route):** `/dashboard` (أو `/`)
+* **الملف الرئيسي:** `resources/js/views/DashboardView.vue` (Thin Orchestrator: ~85 سطر)
+* **الغرض منها:** تقديم نظرة لحظية شاملة على الأداء المالي والتشغيلي للمؤسسة، تتبع مبيعات اليوم، صافي النقدية بالدرج، ساعات الذروة على مدار 24 ساعة، توزيع وسائل الدفع والتحصيل، وتنبيهات النواقص بالمخزن.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الترحيب والإجراءات السريعة (`DashboardWelcomeBanner.vue`):**
+   * عنوان ترحيبي بهوية المنشأة، زر الوصول لنقطة البيع (`/pos`)، زر فاتورة توريد جديدة (`/purchases`)، وزر التحديث الحي.
+2. **شبكة بطاقات المؤشرات المالية (`DashboardKpiGrid.vue`):**
+   * 4 بطاقات KPI (مبيعات اليوم، مجمل أرباح الشهر وهامش الربحية، مستحقات العملاء الآجلة، ومبيعات الشهر الإجمالية) مبنية بواسطة `MetricCard.vue`.
+3. **شريط التحليلات الأسبوعية وتوزيع الدفع (`DashboardAnalyticsRow.vue`):**
+   * مخطط أعمدة بياني تفاعلي للأيام السبعة الماضية بواسطة `SimpleBarChart.vue` يبرز اليوم الحالي ويحسب متوسط السلة.
+   * قائمة توزيع نسب قنوات الدفع والتحصيل (نقدي، إنستاباي، فيزا، محفظة إلكترونية) بواسطة `ProgressDistributionList.vue` وعرض الوردية المفتوحة.
+4. **خريطة ساعات الذروة (`DashboardPeakHours.vue`):**
+   * خريطة كثافة تفاعلية على مدار 24 ساعة لتوضيح فترات الإقبال وتنظيم الورديات مع دعم اللمس والـ Tooltips.
+5. **جدول آخر الفواتير الصادرة (`DashboardRecentInvoices.vue`):**
+   * جدول سطح المكتب وبطاقات الهواتف اللمسية لمعاينة وطباعة آخر الفواتير المعتمدة وشارات الحالات.
+6. **تنبيهات نواقص المخزن (`DashboardLowStock.vue`):**
+   * بطاقات الأصناف التي بلغت حد الطلب الأدنى مع رابط مساعد المشتريات والطلب الذكي.
+7. **هيكل التحميل الوميضي التفاعلي (`DashboardSkeleton.vue`):**
+   * يحاكي كافة البطاقات والرسوم البيانية والجداول لمنع الوميض الأبيض أثناء جلب البيانات.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/dashboard`.
+* **Actions / Controllers:** `App\Http\Controllers\Api\DashboardApiController`.
+* **Composables:** `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `MetricCard.vue`, `DashboardSectionCard.vue`, `SimpleBarChart.vue`, `ProgressDistributionList.vue`, `StatCardSkeleton.vue`, `DashboardSkeleton.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `MetricCard.vue`, `DashboardSectionCard.vue`, `SimpleBarChart.vue`, `ProgressDistributionList.vue`, `StatCardSkeleton.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/Dashboard/`):**
+  * `DashboardWelcomeBanner.vue`, `DashboardKpiGrid.vue`, `DashboardAnalyticsRow.vue`, `DashboardPeakHours.vue`, `DashboardRecentInvoices.vue`, `DashboardLowStock.vue`, `DashboardSkeleton.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** شبكة أحادية العمود لكروت الـ KPI، بطاقات لمسية متراصة لآخر الفواتير مع أزرار $\ge 44\text{px}$، وشريط ساعات ذروة قابل للتمرير الأفقي السلس.
+* **📱 تابلت وديسكتوب (768px - 1280px+):** شبكة ثنائية ورباعية الأعمدة مع توزيع 7/5 للتحليلات الأسبوعية وتوزيع الدفع.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والرسوم البيانية والحواف مع تكيف لوني سلس لمتغيرات الثيم.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية متكاملة في `lang/ar/dashboard.php` و `lang/en/dashboard.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100% بدون أي نصوص ثابتة أو Fallback strings.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الباك إند API (Feature Test):** تشغيل `php artisan test --filter=DashboardApiTest` -> نجاح 4/4 اختبارات و 28 تأكيد.
+* ✅ **اختبار الفرونت إند الشامل (Playwright E2E Test):** تشغيل `e2e/flows/dashboard-responsive-audit.spec.js` و `dashboard-modular-verification.spec.js` -> نجاح كامل عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء (Build Verification):** تشغيل `npm run build` -> تم البناء بنجاح في 6.82 ثانية.

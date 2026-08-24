@@ -52,6 +52,18 @@ export const useAppConfigStore = defineStore('appConfig', {
                     if (data.notifications) this.notifications = data.notifications;
                     if (data.locale) this.locale = data.locale;
                     if (data.translations) this.translations = data.translations;
+                    if (data.stores) {
+                        const { useAuthStore } = await import('./auth');
+                        const authStore = useAuthStore();
+                        authStore.stores = data.stores;
+                    }
+                    if (data.active_store) {
+                        const { useAuthStore } = await import('./auth');
+                        const authStore = useAuthStore();
+                        if (!authStore.currentStore) {
+                            authStore.currentStore = data.active_store;
+                        }
+                    }
                     this.isLoaded = true;
 
                     // Apply theme color
