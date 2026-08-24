@@ -413,18 +413,17 @@ input, textarea, [contenteditable="true"] {
     color: #ffffff !important;
 }
 
-/* 🖨️ Comprehensive Global Print Engine Rules */
-@page {
-    size: 80mm auto;
-    margin: 0mm !important;
-}
-
+/* 🖨️ Comprehensive Global Print Engine Rules (Dual Mode: Thermal & A4) */
 @media print {
-    :root, html, body, #app, div, main, .print-wrapper, .receipt-card, #receipt-print-area {
+    :root, html, body, #app, main {
         background: #ffffff !important;
         background-color: #ffffff !important;
         color: #000000 !important;
         color-scheme: light !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     nav,
@@ -448,17 +447,54 @@ input, textarea, [contenteditable="true"] {
         overflow: hidden !important;
     }
 
-    html, body, #app {
+    * {
+        text-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 🧾 80mm Thermal Receipt Mode */
+    body.print-thermal-mode {
         width: 80mm !important;
         max-width: 80mm !important;
         margin: 0 auto !important;
         padding: 0 !important;
     }
 
-    * {
-        color: #000000 !important;
-        text-shadow: none !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+    body.print-thermal-mode html,
+    body.print-thermal-mode body,
+    body.print-thermal-mode #app {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+    #receipt-print-area {
+        width: 78mm !important;
+        max-width: 78mm !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 2mm !important;
+    }
+
+    /* 📄 A4 Official Tax Document Mode */
+    body.print-a4-mode,
+    body:not(.print-thermal-mode) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #a4-print-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
     }
 }

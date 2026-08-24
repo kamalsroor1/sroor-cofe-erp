@@ -12,7 +12,6 @@
 
       <!-- Badges -->
       <div class="flex items-center gap-2">
-        <!-- Status Badge -->
         <span
           class="px-3 py-1 rounded-full text-xs font-black border flex items-center gap-1.5"
           :class="isCancelled ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'"
@@ -20,7 +19,6 @@
           <span>{{ isCancelled ? '🚫 ' + $t('invoices.cancelled_badge') : '✅ ' + $t('invoices.confirmed_badge') }}</span>
         </span>
 
-        <!-- Payment Status Badge -->
         <span
           class="px-3 py-1 rounded-full text-xs font-bold border"
           :class="paymentBadgeClass"
@@ -56,7 +54,7 @@
         <button
           type="button"
           data-tab="interactive"
-          @click="setMode('interactive')"
+          @click="$emit('set-mode', 'interactive')"
           class="flex-1 md:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95"
           :class="activeMode === 'interactive' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
         >
@@ -66,7 +64,7 @@
         <button
           type="button"
           data-tab="thermal"
-          @click="setMode('thermal')"
+          @click="$emit('set-mode', 'thermal')"
           class="flex-1 md:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95"
           :class="activeMode === 'thermal' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
         >
@@ -76,7 +74,7 @@
         <button
           type="button"
           data-tab="a4"
-          @click="setMode('a4')"
+          @click="$emit('set-mode', 'a4')"
           class="flex-1 md:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95"
           :class="activeMode === 'a4' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
         >
@@ -100,12 +98,7 @@ const props = defineProps({
   isCancelled: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:activeMode', 'update:active-mode']);
-
-const setMode = (mode) => {
-  emit('update:activeMode', mode);
-  emit('update:active-mode', mode);
-};
+defineEmits(['set-mode']);
 
 const paymentBadgeClass = computed(() => {
   if (props.isCancelled) return 'bg-slate-500/10 text-slate-400 border-slate-500/30';

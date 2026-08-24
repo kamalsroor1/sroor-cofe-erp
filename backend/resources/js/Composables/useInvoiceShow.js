@@ -85,10 +85,26 @@ export function useInvoiceShow() {
     };
 
     const triggerPrint = (mode = null) => {
-        if (mode) activeMode.value = mode;
+        const targetMode = mode || activeMode.value;
+        if (targetMode === 'thermal') {
+            activeMode.value = 'thermal';
+            document.body.classList.add('print-thermal-mode');
+            document.body.classList.remove('print-a4-mode');
+        } else {
+            activeMode.value = 'a4';
+            document.body.classList.add('print-a4-mode');
+            document.body.classList.remove('print-thermal-mode');
+        }
+
         setTimeout(() => {
             window.print();
         }, 150);
+
+        const cleanup = () => {
+            document.body.classList.remove('print-thermal-mode', 'print-a4-mode');
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
     };
 
     const copyInvoiceDetails = async () => {
@@ -181,8 +197,13 @@ export function useInvoiceShow() {
         }
     });
 
+    const setMode = (mode) => {
+        activeMode.value = mode;
+    };
+
     return {
         invoice,
+        setMode,
         isLoading,
         error,
         activeMode,

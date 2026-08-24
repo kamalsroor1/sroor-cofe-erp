@@ -7,7 +7,7 @@
         variant="primary"
         size="md"
         @click="$emit('print-thermal')"
-        class="font-black bg-gradient-to-r from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20"
+        class="font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20"
       >
         <Printer class="w-4 h-4" />
         <span>{{ $t('invoices.print_thermal_btn') }}</span>
@@ -18,7 +18,7 @@
         variant="primary"
         size="md"
         @click="$emit('print-a4')"
-        class="font-black bg-gradient-to-r from-sky-500 to-blue-600 shadow-md shadow-sky-500/20"
+        class="font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 bg-gradient-to-r from-sky-500 to-blue-600 shadow-md shadow-sky-500/20"
       >
         <FileText class="w-4 h-4" />
         <span>{{ $t('invoices.print_a4_btn') }}</span>

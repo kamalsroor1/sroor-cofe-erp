@@ -106,3 +106,24 @@ defineProps({
   invoiceTime: { type: String, default: '' },
 });
 </script>
+
+<style scoped>
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0mm !important;
+  }
+  .thermal-receipt-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .receipt-card {
+    width: 78mm !important;
+    max-width: 78mm !important;
+    padding: 2mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
+</style>

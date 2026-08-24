@@ -9,7 +9,7 @@
       <BaseButton variant="secondary" size="md" @click="goBack">{{ $t('common.back') }}</BaseButton>
     </div>
     <div v-else class="space-y-6">
-      <InvoiceShowHeader :invoice="invoice" :active-mode="activeMode" @update:active-mode="activeMode = $event" @update:activeMode="activeMode = $event" :invoice-time="invoiceTime" :is-cancelled="isCancelled" />
+      <InvoiceShowHeader :invoice="invoice" :active-mode="activeMode" @set-mode="setMode" :invoice-time="invoiceTime" :is-cancelled="isCancelled" />
       <InvoiceShowActionsBar :is-cancelled="isCancelled" @print-thermal="triggerPrint('thermal')" @print-a4="triggerPrint('a4')" @whatsapp="openWhatsApp" @copy="copyInvoiceDetails" @open-cancel="showCancelModal = true" @back="goBack" />
       <InvoiceShowInteractiveView v-if="activeMode === 'interactive'" :invoice="invoice" :customer-info="customerInfo" :invoice-items="invoiceItems" :invoice-payments="invoicePayments" />
       <InvoiceShowThermalReceipt v-else-if="activeMode === 'thermal'" :invoice="invoice" :items="invoiceItems" :company-info="companyInfo" :customer-info="customerInfo" :invoice-time="invoiceTime" />
@@ -30,7 +30,7 @@ import InvoiceShowA4Document from '../../Components/Invoices/Show/InvoiceShowA4D
 import CancelInvoiceModal from '../../Components/Invoices/Show/CancelInvoiceModal.vue';
 
 const {
-  invoice, isLoading, error, activeMode, showCancelModal, cancelReason, isCancelling,
+  invoice, isLoading, error, activeMode, setMode, showCancelModal, cancelReason, isCancelling,
   companyInfo, customerInfo, invoiceItems, invoicePayments, invoiceTime, isCancelled,
   triggerPrint, copyInvoiceDetails, openWhatsApp, confirmCancelInvoice, goBack
 } = useInvoiceShow();
