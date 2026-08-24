@@ -213,8 +213,8 @@ Route::middleware([
         Route::delete('/expenses/{id}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->name('expenses.destroy')->middleware('can:expenses.manage');
 
         // Coffee Blending Master & Roastery Recipe
-        Route::get('/coffee-blender', [\App\Http\Controllers\CoffeeBlenderController::class, 'index'])->name('coffee.blender')->middleware('can:items.create');
-        Route::post('/coffee-blender/invoice', [\App\Http\Controllers\CoffeeBlenderController::class, 'createInvoice'])->name('coffee.blender.invoice')->middleware('can:items.create');
+        Route::get('/coffee-blender', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'calculate'])->name('coffee.blender')->middleware('can:items.create');
+        Route::post('/coffee-blender/invoice', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'createInvoice'])->name('coffee.blender.invoice')->middleware('can:items.create');
 
         // Daily Journal & Cashier Shifts (يوم بيوم)
         Route::get('/daily-journal', [\App\Http\Controllers\DailyJournalController::class, 'index'])->name('daily.journal')->middleware('can:daily_journal.view');

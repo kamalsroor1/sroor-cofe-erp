@@ -8,11 +8,11 @@ use App\Actions\Blends\CalculateBlendCostAction;
 use App\Actions\Blends\CreateBlenderInvoiceAction;
 use App\DTOs\Blends\CreateBlenderInvoiceDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CalculateBlendCostRequest;
 use App\Http\Requests\CreateBlenderInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Store;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class CoffeeBlenderController extends Controller
 {
@@ -24,9 +24,9 @@ final class CoffeeBlenderController extends Controller
     /**
      * Real-time calculation of coffee blend formulation costs and profit margins
      */
-    public function calculate(Request $request): JsonResponse
+    public function calculate(CalculateBlendCostRequest $request): JsonResponse
     {
-        $result = $this->calculateBlendCostAction->execute($request->all());
+        $result = $this->calculateBlendCostAction->execute($request->validated());
 
         return response()->json([
             'success' => true,
@@ -49,7 +49,7 @@ final class CoffeeBlenderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "تم إصدار واعتماد فاتورة التوليفة رقم {$invoice->invoice_number} بنجاح ✓",
+            'message' => __('inventory.blend_invoice_success') ?: "تم إصدار واعتماد فاتورة التوليفة رقم {$invoice->invoice_number} بنجاح ✓",
             'data'    => (new InvoiceResource($invoice->load(['customer', 'store', 'user', 'items.item'])))->resolve(),
         ], 201);
     }
