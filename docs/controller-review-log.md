@@ -49,7 +49,7 @@
 | 20 | `SettingController` | `app/Http/Controllers/Api/SettingController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Action + Policy + Req | ✅ Cached Dictionary & Telegram | ✅ مكتمل ومحصن |
 | 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + Reqs | ✅ Z-Report & Drawer Audit | ✅ مكتمل ومحصن |
 | 22 | `StockTransferController` | `app/Http/Controllers/Api/StockTransferController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ Single Actions + Policy + Reqs | ✅ Multi-Store Lock & bcmath | ✅ مكتمل ومحصن |
-| 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | — | — | — | — | ⚪ بالانتظار |
+| 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | 2026-08-24 | ✅ 11/11 Pass | ✅ Single Actions + Policy + Reqs | ✅ Multi-Branch & User Scopes | ✅ مكتمل ومحصن |
 | 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | — | — | — | — | ⚪ بالانتظار |
 | 25 | `SupplierController` | `app/Http/Controllers/Api/SupplierController.php` | — | — | — | — | ⚪ بالانتظار |
 | 26 | `SystemContextApiController` | `app/Http/Controllers/Api/SystemContextApiController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -125,13 +125,16 @@
 * **التحسينات:** Feature Test شامل (8 اختبارات 100% Pass)، سياسة صلاحيات `ShiftPolicy` و Form Requests، وتأمين حركات الورديات وتقرير Z-Report.
 
 ### 22. `StockTransferController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (7 اختبارات 100% Pass)، سياسة صلاحيات `StockTransferPolicy` و Form Requests، وتأمين التحويل المخزني الفوري.
+
+### 23. `StoreController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** تحديث حزمة `tests/Feature/Api/StockTransfersApiTest.php` بـ 7 اختبارات شاملة (100% Pass، 31 Assertions) تغطي إنشاء وتأكيد أذونات التحويل المخزني الفوري بين الفروع والمخازن، إلغاء التحويل وعكس الأرصدة بدقة، والتحقق من عدم النقل لنفس الفرع، ومصفوفة الصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/StockTransferPolicy.php` وتفعيل `authorize()` في `StoreStockTransferRequest` و `CancelStockTransferRequest`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/StockTransferController.php` وتوجيه كافة العمليات للكنترولر الموحد.
-  4. **الأداء والهندسة:** استخدام Single Actions (`CreateStockTransferAction`, `CancelStockTransferAction`) مع القفل السطري `lockForUpdate()` وحسابات `bcmath` المخزنية.
+  1. **Feature Test شامل:** تحديث حزمة `tests/Feature/Api/StoresApiTest.php` بـ 11 اختباراً شاملاً (100% Pass، 44 Assertions) تغطي إنشاء وتحديث الفروع، تعطيل وتفعيل الفروع مع حماية الفرع الرئيسي من الإغلاق، تعيين الموظفين للفروع، جلب أرصدة وتقييم المخزون المالي، وتبديل الفرع النشط للمستخدم مع مصفوفة الصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/StorePolicy.php` وتفعيل Form Requests (`StoreStoreRequest`, `UpdateStoreRequest`, `AssignStoreUsersRequest`, `SwitchStoreRequest`).
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/StoreController.php` وتوجيه مسارات `routes/tenant.php` للكنترولر الموحد.
+  4. **الأداء والهندسة:** استخدام Single Actions (`CreateStoreAction`, `UpdateStoreAction`, `DeleteStoreAction`, `ToggleStoreActiveAction`, `AssignStoreUsersAction`, `GetStoreStocksAction`) وحساب تقييم المخزون المالي للفروع بدقة `bcmath`.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `StockTransferController`
-## ⏭️ التالي بالترتيب الأبجدي: `StoreController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `StoreController`
+## ⏭️ التالي بالترتيب الأبجدي: `SuperAdminApiController`

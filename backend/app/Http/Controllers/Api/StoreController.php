@@ -14,6 +14,7 @@ use App\DTOs\Stores\StoreDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignStoreUsersRequest;
 use App\Http\Requests\StoreStoreRequest;
+use App\Http\Requests\SwitchStoreRequest;
 use App\Http\Requests\UpdateStoreRequest;
 use App\Http\Resources\StoreResource;
 use App\Http\Resources\StoreStockResource;
@@ -103,7 +104,7 @@ final class StoreController extends Controller
     /**
      * Display the specified store
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $store = Store::with(['users' => fn($q) => $q->select('users.id', 'users.name', 'users.email')])
             ->withCount(['stocks', 'invoices', 'purchases'])
@@ -134,8 +135,13 @@ final class StoreController extends Controller
     /**
      * Toggle active status of the store
      */
-    public function toggleActive(int $id): JsonResponse
+    public function toggleActive(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('stores.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $store = Store::findOrFail($id);
         $toggledStore = $this->toggleStoreActiveAction->execute($store);
 
@@ -165,8 +171,13 @@ final class StoreController extends Controller
     /**
      * Delete the specified store
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('stores.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $store = Store::findOrFail($id);
         $this->deleteStoreAction->execute($store);
 
@@ -184,7 +195,7 @@ final class StoreController extends Controller
         $storeId = (int)($request->input('store_id') ?: $request->header('X-Store-Id') ?: 1);
         $search = trim((string)$request->input('search', ''));
         $stockStatus = (string)$request->input('stock_status', 'all');
-        $perPage = (int)$request->input('per_page', 20);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $stocksPaginator = $this->getStoreStocksAction->execute($storeId, $search, $stockStatus, $perPage);
 
@@ -203,11 +214,9 @@ final class StoreController extends Controller
     /**
      * Switch Active Store/Branch
      */
-    public function switchStore(Request $request): JsonResponse
+    public function switchStore(SwitchStoreRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'store_id' => 'required|integer|exists:stores,id',
-        ]);
+        $validated = $request->validated();
 
         /** @var User $user */
         $user = $request->user();
@@ -224,7 +233,7 @@ final class StoreController extends Controller
         if (!$isGlobalAdmin && !$isAssigned) {
             return response()->json([
                 'success' => false,
-                'message' => 'عفواً، ليس لديك صلاحية للوصول إلى هذا الفرع.',
+                'message' => __('inventory.unauthorized_store_access') ?: 'عفواً، ليس لديك صلاحية للوصول إلى هذا الفرع.',
             ], 403);
         }
 
@@ -235,7 +244,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success'      => true,
-            'message'      => 'تم التبديل إلى فرع: ' . $store->name,
+            'message'      => __('inventory.switched_to_store', ['store' => $store->name]) ?: 'تم التبديل إلى فرع: ' . $store->name,
             'active_store' => (new StoreResource($store))->resolve(),
         ], 200);
     }

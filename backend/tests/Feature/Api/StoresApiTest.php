@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -18,14 +20,16 @@ class StoresApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
+    protected User $unauthorizedUser;
+    protected string $unauthorizedToken;
     protected Store $mainStore;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'stores.manage']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
         $this->mainStore = Store::create([
             'name'      => 'المخزن الرئيسي',
@@ -35,6 +39,8 @@ class StoresApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
@@ -42,8 +48,23 @@ class StoresApiTest extends TestCase
             'is_active'        => true,
             'default_store_id' => $this->mainStore->id,
         ]);
-        $this->adminUser->assignRole($role);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        $this->adminUser->assignRole($adminRole);
+        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+
+        $this->unauthorizedUser = User::factory()->create([
+            'name'             => 'مستخدم بدون صلاحيات',
+            'phone'            => '01000000000',
+            'password'         => Hash::make('password'),
+            'is_active'        => true,
+            'default_store_id' => $this->mainStore->id,
+        ]);
+        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
+    }
+
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/stores');
+        $response->assertStatus(401);
     }
 
     public function test_authenticated_user_can_list_stores(): void
@@ -93,6 +114,17 @@ class StoresApiTest extends TestCase
             'name' => 'فرع مدينة نصر',
             'code' => 'NASR-01',
         ]);
+    }
+
+    public function test_create_store_fails_validation_on_missing_fields(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->postJson('/api/v1/stores', [
+                'name' => '',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['name', 'type']);
     }
 
     public function test_can_view_single_store_details(): void
@@ -211,16 +243,19 @@ class StoresApiTest extends TestCase
         $item = Item::create([
             'name'            => 'بن برازيلي كولومبي',
             'code'            => 'COF-001',
-            'cost_price'      => 200.000,
-            'selling_price'   => 280.000,
-            'min_stock_level' => 10.000,
+            'category'        => 'coffee_beans',
+            'cost_price'      => '200.000',
+            'selling_price'   => '280.000',
+            'price_retail'    => '280.000',
+            'price_wholesale' => '250.000',
+            'min_stock_level' => '10.000',
             'is_active'       => true,
         ]);
 
         StoreStock::create([
             'store_id' => $this->mainStore->id,
             'item_id'  => $item->id,
-            'quantity' => 25.000,
+            'quantity' => '25.000',
         ]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
