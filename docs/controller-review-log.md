@@ -50,7 +50,7 @@
 | 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + Reqs | ✅ Z-Report & Drawer Audit | ✅ مكتمل ومحصن |
 | 22 | `StockTransferController` | `app/Http/Controllers/Api/StockTransferController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ Single Actions + Policy + Reqs | ✅ Multi-Store Lock & bcmath | ✅ مكتمل ومحصن |
 | 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | 2026-08-24 | ✅ 11/11 Pass | ✅ Single Actions + Policy + Reqs | ✅ Multi-Branch & User Scopes | ✅ مكتمل ومحصن |
-| 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | — | — | — | — | ⚪ بالانتظار |
+| 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy + Reqs | ✅ Central Whitelabel & Analytics | ✅ مكتمل ومحصن |
 | 25 | `SupplierController` | `app/Http/Controllers/Api/SupplierController.php` | — | — | — | — | ⚪ بالانتظار |
 | 26 | `SystemContextApiController` | `app/Http/Controllers/Api/SystemContextApiController.php` | — | — | — | — | ⚪ بالانتظار |
 | 27 | `TrashController` | `app/Http/Controllers/Api/TrashController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -128,13 +128,16 @@
 * **التحسينات:** Feature Test شامل (7 اختبارات 100% Pass)، سياسة صلاحيات `StockTransferPolicy` و Form Requests، وتأمين التحويل المخزني الفوري.
 
 ### 23. `StoreController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (11 اختباراً 100% Pass)، سياسة صلاحيات `StorePolicy` و Form Requests، وتأمين إدارة الفروع وتبديل الفرع النشط.
+
+### 24. `SuperAdminApiController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** تحديث حزمة `tests/Feature/Api/StoresApiTest.php` بـ 11 اختباراً شاملاً (100% Pass، 44 Assertions) تغطي إنشاء وتحديث الفروع، تعطيل وتفعيل الفروع مع حماية الفرع الرئيسي من الإغلاق، تعيين الموظفين للفروع، جلب أرصدة وتقييم المخزون المالي، وتبديل الفرع النشط للمستخدم مع مصفوفة الصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/StorePolicy.php` وتفعيل Form Requests (`StoreStoreRequest`, `UpdateStoreRequest`, `AssignStoreUsersRequest`, `SwitchStoreRequest`).
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/StoreController.php` وتوجيه مسارات `routes/tenant.php` للكنترولر الموحد.
-  4. **الأداء والهندسة:** استخدام Single Actions (`CreateStoreAction`, `UpdateStoreAction`, `DeleteStoreAction`, `ToggleStoreActiveAction`, `AssignStoreUsersAction`, `GetStoreStocksAction`) وحساب تقييم المخزون المالي للفروع بدقة `bcmath`.
+  1. **Feature Test شامل:** تحديث حزمة `tests/Feature/Api/SuperAdminApiTest.php` بـ 9 اختبارات شاملة (100% Pass، 44 Assertions) تغطي لوحة مؤشرات المنصة المركزية، إنشاء وتهيئة المستأجرين (Provisioning)، تفعيل وتعليق الحسابات وتخصيص الميزات، إدارة الباقات والأسعار، إعدادات وهوية المنصة المركزية، وتخصيص وحدات القياس للنظام ومصفوفة الصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/TenantPolicy.php` وتفعيل Form Requests (`StoreTenantRequest`, `ToggleTenantStatusRequest`, `OverrideTenantFeatureRequest`, `UpdatePlanRequest`, `UpdatePlatformSettingsRequest`, `UpdateTenantUnitsRequest`, `UpdateSystemUnitsRequest`, `UpdateTenantDatabaseConfigRequest`).
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/SuperAdminController.php` وتوجيه كافة العمليات للكنترولر الموحد.
+  4. **الأداء والهندسة:** استخدام Single Actions والـ Analytics Services المركزية الموجهة لقاعدة البيانات المركزية بدقة عالية.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `StoreController`
-## ⏭️ التالي بالترتيب الأبجدي: `SuperAdminApiController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `SuperAdminApiController`
+## ⏭️ التالي بالترتيب الأبجدي: `SupplierController`

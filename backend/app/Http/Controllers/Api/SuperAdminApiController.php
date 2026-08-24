@@ -6,11 +6,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Plans\GetSuperAdminPlansDataAction;
 use App\Actions\Plans\UpdatePlanAction;
+use App\Actions\Tenants\DeleteTenantAction;
 use App\Actions\Tenants\GetTenantDetailsAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
 use App\Actions\Tenants\ProvisionTenantAction;
 use App\Actions\Tenants\ToggleTenantStatusAction;
+use App\Actions\Tenants\UpdateTenantDatabaseConfigAction;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\DTOs\CreateTenantDTO;
 use App\Http\Controllers\Controller;
@@ -18,6 +20,10 @@ use App\Http\Requests\OverrideTenantFeatureRequest;
 use App\Http\Requests\StoreTenantRequest;
 use App\Http\Requests\ToggleTenantStatusRequest;
 use App\Http\Requests\UpdatePlanRequest;
+use App\Http\Requests\UpdatePlatformSettingsRequest;
+use App\Http\Requests\UpdateSystemUnitsRequest;
+use App\Http\Requests\UpdateTenantDatabaseConfigRequest;
+use App\Http\Requests\UpdateTenantUnitsRequest;
 use App\Http\Resources\PlanResource;
 use App\Models\Plan;
 use App\Models\Setting;
@@ -42,7 +48,7 @@ final class SuperAdminApiController extends Controller
     /**
      * Platform Executive Dashboard Overview
      */
-    public function dashboard(): JsonResponse
+    public function dashboard(Request $request): JsonResponse
     {
         $mysqlVersion = '8.0';
         try {
@@ -174,16 +180,11 @@ final class SuperAdminApiController extends Controller
     /**
      * Update allowed units for a specific tenant
      */
-    public function updateTenantUnits(Request $request, string $id): JsonResponse
+    public function updateTenantUnits(UpdateTenantUnitsRequest $request, string $id): JsonResponse
     {
         try {
-            $request->validate([
-                'units'   => ['required', 'array', 'min:1'],
-                'units.*' => ['required', 'string', 'max:50'],
-            ]);
-
             $tenant = Tenant::findOrFail($id);
-            $unitsList = $request->input('units');
+            $unitsList = $request->validated('units');
             $unitsStr = implode(',', $unitsList);
 
             // 1. Save in tenant custom data
@@ -243,7 +244,7 @@ final class SuperAdminApiController extends Controller
     /**
      * Delete / Destroy Tenant and all domains
      */
-    public function destroyTenant(string $id, \App\Actions\Tenants\DeleteTenantAction $action): JsonResponse
+    public function destroyTenant(string $id, DeleteTenantAction $action): JsonResponse
     {
         try {
             $tenant = Tenant::findOrFail($id);
@@ -264,17 +265,11 @@ final class SuperAdminApiController extends Controller
     /**
      * Update Tenant Database Credentials
      */
-    public function updateDatabaseConfig(Request $request, string $id, \App\Actions\Tenants\UpdateTenantDatabaseConfigAction $action): JsonResponse
+    public function updateDatabaseConfig(UpdateTenantDatabaseConfigRequest $request, string $id, UpdateTenantDatabaseConfigAction $action): JsonResponse
     {
         try {
             $tenant = Tenant::findOrFail($id);
-            $data = $request->validate([
-                'tenancy_db_name' => 'nullable|string|max:100',
-                'tenancy_db_username' => 'nullable|string|max:100',
-                'tenancy_db_password' => 'nullable|string|max:255',
-            ]);
-
-            $action->execute($tenant, $data);
+            $action->execute($tenant, $request->validated());
 
             return response()->json([
                 'success' => true,
@@ -341,14 +336,9 @@ final class SuperAdminApiController extends Controller
     /**
      * Update Central Platform Branding & Settings
      */
-    public function updatePlatformSettings(Request $request): JsonResponse
+    public function updatePlatformSettings(UpdatePlatformSettingsRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'platform_name'     => ['required', 'string', 'max:100'],
-            'platform_subtitle' => ['nullable', 'string', 'max:255'],
-            'support_email'     => ['nullable', 'email', 'max:100'],
-            'support_phone'     => ['nullable', 'string', 'max:50'],
-        ]);
+        $validated = $request->validated();
 
         Setting::set('platform_name', $validated['platform_name']);
         Setting::set('app_name', $validated['platform_name']);
@@ -393,20 +383,16 @@ final class SuperAdminApiController extends Controller
     /**
      * Update system units configuration (Super Admin)
      */
-    public function updateUnits(Request $request): JsonResponse
+    public function updateUnits(UpdateSystemUnitsRequest $request): JsonResponse
     {
-        $request->validate([
-            'units'   => ['required', 'array', 'min:1'],
-            'units.*' => ['required', 'string', 'max:50'],
-        ]);
-
-        $unitsStr = implode(',', $request->input('units'));
+        $units = $request->validated('units');
+        $unitsStr = implode(',', $units);
         Setting::set('global_system_units', $unitsStr);
 
         return response()->json([
             'success' => true,
             'message' => 'تم حفظ وتحديث وحدات القياس للنظام بنجاح ✓',
-            'units'   => $request->input('units'),
+            'units'   => $units,
         ]);
     }
 
