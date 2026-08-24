@@ -39,7 +39,7 @@
 | 10 | `InvoiceController` | `app/Http/Controllers/Api/InvoiceController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ Single Actions + DTO + Policy | ✅ LockForUpdate & bcmath | ✅ مكتمل ومحصن |
 | 11 | `ItemController` | `app/Http/Controllers/Api/ItemController.php` | 2026-08-24 | ✅ 12/12 Pass | ✅ Single Actions + DTOs + Policy | ✅ Ledger & LowStock Radar | ✅ مكتمل ومحصن |
 | 12 | `PaymentController` | `app/Http/Controllers/Api/PaymentController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ FormRequests + Policy + Svc | ✅ LockForUpdate & Audit | ✅ مكتمل ومحصن |
-| 13 | `PermissionApiController` | `app/Http/Controllers/Api/PermissionApiController.php` | — | — | — | — | ⚪ بالانتظار |
+| 13 | `PermissionApiController` | `app/Http/Controllers/Api/PermissionApiController.php` | 2026-08-24 | ✅ 3/3 Pass | ✅ Single Action Tree Resolver | ✅ Cached Hierarchy | ✅ مكتمل ومحصن |
 | 14 | `PosController` | `app/Http/Controllers/Api/PosController.php` | — | — | — | — | ⚪ بالانتظار |
 | 15 | `ProfileController` | `app/Http/Controllers/Api/ProfileController.php` | — | — | — | — | ⚪ بالانتظار |
 | 16 | `PurchaseController` | `app/Http/Controllers/Api/PurchaseController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -95,12 +95,15 @@
 * **التحسينات:** Feature Test شامل (12 اختباراً 100% Pass)، سياسة صلاحيات `ItemPolicy` و Form Requests، وتسويات المخزون ورادار النواقص بدوال `bcmath`.
 
 ### 12. `PaymentController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (7 اختبارات 100% Pass)، سياسة صلاحيات `PaymentPolicy` و Form Requests، وتأمين عمليات السندات مع القفل السطري `lockForUpdate()`.
+
+### 13. `PermissionApiController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/PaymentApiTest.php` بـ 7 اختبارات متكاملة (100% Pass، 25 Assertions) تغطي سرد سندات القبض والصرف، سندات تحصيل العملاء وتحديث الأرصدة، سندات سداد الموردين، التحقق من المدخلات (422)، ومصفوفة الصلاحيات (401/403).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/PaymentPolicy.php` واستبدال التحقق اليدوي بـ Form Requests (`StoreCustomerPaymentReceiptRequest`, `StoreSupplierPaymentVoucherRequest`).
-  3. **الأمان المالي والتدقيق:** استخدام `PaymentService` مع القفل السطري `lockForUpdate()` وتحديث الأرصدة عبر `CustomerBalanceService` و `SupplierBalanceService`، وتوثيق سجل التدقيق `AuditLogService`.
+  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/PermissionApiTest.php` بـ 3 اختبارات شاملة (100% Pass، 23 Assertions) تغطي شجرة الصلاحيات الموديلية، أدوار وصلاحيات السوبر أدمن، وصلاحيات الكاشيرين والمستخدمين، ومصفوفة الصلاحيات (401/403).
+  2. **Clean Architecture:** اعتماد النمط النحيف واستدعاء `GetPermissionsTreeAction` لإنشاء شجرة الصلاحيات المنظمة.
+  3. **الأداء:** تجميع شجرة الصلاحيات وحساب `user_permissions` و `user_roles` دفعة واحدة بكفاءة.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `PaymentController`
-## ⏭️ التالي بالترتيب الأبجدي: `PermissionApiController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `PermissionApiController`
+## ⏭️ التالي بالترتيب الأبجدي: `PosController`

@@ -16,7 +16,7 @@ final class PermissionApiController extends Controller
     ) {}
 
     /**
-     * Get system permissions catalog & current user permissions
+     * Get system permissions catalog & current authenticated user permissions
      */
     public function index(Request $request): JsonResponse
     {
