@@ -76,6 +76,15 @@
           <span>{{ $t('invoices.share_whatsapp_btn') }}</span>
         </a>
 
+        <!-- Full Invoice Page Link -->
+        <router-link
+          :to="`/invoices/${invoice.id}`"
+          class="min-h-[44px] px-4 py-2.5 bg-theme-primary hover:opacity-90 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 select-none shadow-md"
+        >
+          <ExternalLink class="w-4 h-4" />
+          <span>{{ $t('invoices.view_details') }}</span>
+        </router-link>
+
         <!-- Print Thermal Receipt Button -->
         <button
           type="button"
@@ -91,7 +100,7 @@
 </template>
 
 <script setup>
-import { Share2, Printer } from 'lucide-vue-next';
+import { Share2, Printer, ExternalLink } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
