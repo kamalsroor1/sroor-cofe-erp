@@ -44,7 +44,7 @@
 | 15 | `ProfileController` | `app/Http/Controllers/Api/ProfileController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ UpdateProfileAction + DTO | ✅ Eager Load Roles & Store | ✅ مكتمل ومحصن |
 | 16 | `PurchaseController` | `app/Http/Controllers/Api/PurchaseController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + Reqs | ✅ bcmath & Inbound Stock Lock | ✅ مكتمل ومحصن |
 | 17 | `ReportController` | `app/Http/Controllers/Api/ReportController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy + DTO | ✅ Multi-Dimension Aggregations | ✅ مكتمل ومحصن |
-| 18 | `ReturnController` | `app/Http/Controllers/Api/ReturnController.php` | — | — | — | — | ⚪ بالانتظار |
+| 18 | `ReturnController` | `app/Http/Controllers/Api/ReturnController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + DTO | ✅ Two-Way Stock & bcmath | ✅ مكتمل ومحصن |
 | 19 | `RoleController` | `app/Http/Controllers/Api/RoleController.php` | — | — | — | — | ⚪ بالانتظار |
 | 20 | `SettingController` | `app/Http/Controllers/Api/SettingController.php` | — | — | — | — | ⚪ بالانتظار |
 | 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -110,13 +110,16 @@
 * **التحسينات:** Feature Test شامل (8 اختبارات 100% Pass)، سياسة صلاحيات `PurchasePolicy` و Form Requests، وتأمين التوريد المخزني بالقفل السطري.
 
 ### 17. `ReportController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (9 اختبارات 100% Pass)، سياسة صلاحيات `ReportPolicy` و Form Requests، وسلسلة Single Actions للتقارير.
+
+### 18. `ReturnController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** بناء وتحديث حزمة `tests/Feature/Api/ReportsApiTest.php` بـ 9 اختبارات شاملة (100% Pass، 49 Assertions) تغطي ملخص الأرباح والخسائر (P&L)، حزمة التقارير الشاملة، ربحية الأصناف، المقارنة بين الفروع، مبيعات ومديونيات العملاء، تفصيل المصروفات، وتقييم المخزون وتحليل ABC.
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/ReportPolicy.php` وتفعيل `authorize()` في `FilterReportRequest`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/ReportController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
-  4. **الأداء والحسابات:** استخدام DTOs و Single Actions (`GetProfitLossReportAction`, `GetItemsProfitabilityReportAction`, `GetStoresComparativeReportAction`, `GetCustomersSalesReportAction`, `GetExpensesBreakdownReportAction`, `GetInventoryValuationReportAction`, `GetTreasuryReportAction`) بحسابات `bcmath` دقيقة.
+  1. **Feature Test شامل:** بناء وتحديث حزمة `tests/Feature/Api/ReturnsApiTest.php` بـ 8 اختبارات شاملة (100% Pass، 29 Assertions) تغطي سرد مستندات المرتجع مع الملخص المالي، مرتجعات المبيعات وزيادة المخزون، مرتجعات المشتريات وخصم المخزون، حذف المرتجعات، وأخطاء التحقق والصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/ReturnPolicy.php` وتفعيل `authorize()` في `StoreReturnRequest`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/ReturnController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
+  4. **الأمان والدقة المالية:** معالجة المرتجعات ثنائية الاتجاه (Sales & Purchases) بدوال `bcmath` و `DB::transaction()` مع القفل السطري للمخزون.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `ReportController`
-## ⏭️ التالي بالترتيب الأبجدي: `ReturnController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `ReturnController`
+## ⏭️ التالي بالترتيب الأبجدي: `RoleController`

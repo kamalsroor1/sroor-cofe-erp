@@ -197,10 +197,10 @@ Route::middleware([
         Route::get('/purchases/smart-reorder', [\App\Http\Controllers\Api\PurchaseController::class, 'smartReorder'])->name('purchases.reorder')->middleware('can:purchases.view');
 
         // Returns & Reversals
-        Route::get('/returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index')->middleware('can:returns.manage');
-        Route::get('/returns/create', [\App\Http\Controllers\ReturnController::class, 'create'])->name('returns.create')->middleware('can:returns.manage');
-        Route::post('/returns', [\App\Http\Controllers\ReturnController::class, 'store'])->name('returns.store')->middleware('can:returns.manage');
-        Route::delete('/returns/{id}', [\App\Http\Controllers\ReturnController::class, 'destroy'])->name('returns.destroy')->middleware('can:returns.manage');
+        Route::get('/returns', [\App\Http\Controllers\Api\ReturnController::class, 'index'])->name('returns.index')->middleware('can:returns.manage');
+        Route::get('/returns/create', [\App\Http\Controllers\Api\ReturnController::class, 'create'])->name('returns.create')->middleware('can:returns.manage');
+        Route::post('/returns', [\App\Http\Controllers\Api\ReturnController::class, 'store'])->name('returns.store')->middleware('can:returns.manage');
+        Route::delete('/returns/{id}', [\App\Http\Controllers\Api\ReturnController::class, 'destroy'])->name('returns.destroy')->middleware('can:returns.manage');
 
         // Financial & Profit Reports (Admin & Accountant / reports.view)
         Route::get('/reports', [\App\Http\Controllers\Api\ReportController::class, 'comprehensive'])->name('reports.index')->middleware('can:reports.view');

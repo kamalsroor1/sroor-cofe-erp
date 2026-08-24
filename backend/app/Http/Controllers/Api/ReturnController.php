@@ -27,20 +27,25 @@ final class ReturnController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('returns.view') && !$user->can('returns.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $type = (string)$request->input('type', 'all');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = (int)$request->input('per_page', 15);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item']);
 
-        if ($storeId) {
+        if ($storeId && $storeId !== 'all') {
             $query->where('store_id', (int)$storeId);
         }
 
@@ -92,8 +97,13 @@ final class ReturnController extends Controller
     /**
      * Show single return document with item lines
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('returns.view') && !$user->can('returns.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $returnDoc = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])->findOrFail($id);
 
         return response()->json([
@@ -117,7 +127,7 @@ final class ReturnController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "تم تسجيل مستند المرتجع رقم {$returnDoc->return_number} بنجاح ✓",
+            'message' => __('returns.created_success', ['number' => $returnDoc->return_number]) ?: "تم تسجيل مستند المرتجع رقم {$returnDoc->return_number} بنجاح ✓",
             'data'    => (new ReturnResource($returnDoc))->resolve(),
         ], 201);
     }
@@ -125,13 +135,18 @@ final class ReturnController extends Controller
     /**
      * Delete/archive return document
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('returns.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $this->deleteReturnAction->execute($id);
 
         return response()->json([
             'success' => true,
-            'message' => 'تم حذف مستند المرتجع بنجاح ✓',
+            'message' => __('returns.deleted_success') ?: 'تم حذف مستند المرتجع بنجاح ✓',
         ], 200);
     }
 }
