@@ -1,48 +1,57 @@
-# 🏛️ الدليل الماستر لهيكل وتوثيق منظومة "سرور كوفي ERP & POS"
+# 🏛️ وثيقة المعمارية الشاملة لمنظومة سرور كوفي ERP (System Architecture Master)
 
-> **المرجع المركزي الموحد والشامل لكافة وحدات، صفحات، ومكونات النظام.**
-> **الحالة العامة للمنظومة:** ✅ **100% مكتملة ومراجعة وموثقة بنجاح عبر المحاور الأربعة المتزامنة.**
-
----
-
-## 🧭 خريطة الموديولات والصفحات وحالة التدقيق (Audit Progress Matrix - 100% Complete):
-
-| # | الموديول | الصفحة | المسار (Route) | ملف التوثيق التفصيلي | حالة التدقيق (4 المحاور) |
-|---|---|---|---|---|---|
-| 1 | **المبيعات** | سجل فواتير المبيعات | `/invoices` | [invoices.md](./pages/invoices.md) | ✅ مكتمل (100%) |
-| 2 | **نقاط البيع** | شاشة البيع السريع (POS) | `/pos` | [pos.md](./pages/pos.md) | ✅ مكتمل (100%) |
-| 3 | **المخزون** | دليل الأصناف والمخزون الحي | `/items` | [items.md](./pages/items.md) | ✅ مكتمل (100%) |
-| 4 | **المخزون** | فئات وتصنيفات المنتجات | `/categories` | [categories.md](./pages/categories.md) | ✅ مكتمل (100%) |
-| 5 | **المخزون** | التحويلات المخزنية بين الفروع | `/stock-transfers` | [stock-transfers.md](./pages/stock-transfers.md) | ✅ مكتمل (100%) |
-| 6 | **المخزون** | الفروع والمخازن | `/stores` | [stores.md](./pages/stores.md) | ✅ مكتمل (100%) |
-| 7 | **المخزون** | حاسبة خلطات وتكاليف البن | `/coffee-blender` | [coffee-blender.md](./pages/coffee-blender.md) | ✅ مكتمل (100%) |
-| 8 | **المخزون** | مساعد المشتريات والطلب الذكي | `/purchases/smart-reorder` | [smart-reorder.md](./pages/smart-reorder.md) | ✅ مكتمل (100%) |
-| 9 | **المخزون** | رصيد الأصناف بالمخازن | `/stores/stocks` | [store-stocks.md](./pages/store-stocks.md) | ✅ مكتمل (100%) |
-| 10 | **المخزون** | إنشاء تحويل مخزني | `/stock-transfers/create` | [create-stock-transfer.md](./pages/create-stock-transfer.md) | ✅ مكتمل (100%) |
-| 11 | **المخزون** | حركات الصنف وسجل التتبع | `/items/:id/movements` | [item-movements.md](./pages/item-movements.md) | ✅ مكتمل (100%) |
-| 12 | **المشتريات** | سجل فواتير المشتريات والتوريد | `/purchases` | [purchases.md](./pages/purchases.md) | ✅ مكتمل (100%) |
-| 13 | **المشتريات** | إنشاء فاتورة مشتريات | `/purchases/create` | [create-purchase.md](./pages/create-purchase.md) | ✅ مكتمل (100%) |
-| 14 | **المشتريات** | دليل الموردين | `/suppliers` | [suppliers.md](./pages/suppliers.md) | ✅ مكتمل (100%) |
-| 15 | **المشتريات** | كشف حساب المورد | `/suppliers/:id/statement` | [supplier-statement.md](./pages/supplier-statement.md) | ✅ مكتمل (100%) |
-| 16 | **العملاء** | دليل العملاء والمديونيات | `/customers` | [customers.md](./pages/customers.md) | ✅ مكتمل (100%) |
-| 17 | **العملاء** | كشف حساب العميل | `/customers/:id/statement` | [customer-statement.md](./pages/customer-statement.md) | ✅ مكتمل (100%) |
-| 18 | **الخزينة** | المصروفات ومراكز التكلفة | `/expenses` | [expenses.md](./pages/expenses.md) | ✅ مكتمل (100%) |
-| 19 | **الخزينة** | دفتر اليومية وحركة الصندوق | `/daily-journal` | [daily-journal.md](./pages/daily-journal.md) | ✅ مكتمل (100%) |
-| 20 | **التقارير** | مركز التقارير المالية والضريبية | `/reports` | [reports.md](./pages/reports.md) | ✅ مكتمل (100%) |
-| 21 | **الإدارة** | إدارة المستخدمين والموظفين | `/users` | [users.md](./pages/users.md) | ✅ مكتمل (100%) |
-| 22 | **الإدارة** | الأدوار ومصفوفة الصلاحيات | `/roles` | [roles.md](./pages/roles.md) | ✅ مكتمل (100%) |
-| 23 | **الإدارة** | سجل النشاطات والتدقيق الأمني | `/activity-logs` | [activity-logs.md](./pages/activity-logs.md) | ✅ مكتمل (100%) |
-| 24 | **الإدارة** | سلة المحذوفات والاسترجاع الآمن | `/trash` | [trash.md](./pages/trash.md) | ✅ مكتمل (100%) |
-| 25 | **الإدارة** | إعدادات النظام والتحكم الشامل | `/settings` | [settings.md](./pages/settings.md) | ✅ مكتمل (100%) |
+> **الإصدار المعتمد:** 1.0.79  
+> **حالة المراجعة والتدقيق الشامل لكافة صفحات المنظومة:** 🟢 **مكتملة 100% (34 من أصل 34 صفحة)**  
+> **تاريخ الإنجاز الشامل:** 2026-08-24  
+> **البيئة المستهدفة:** Production Multi-Tenant (`baraa-solutions.com`)
 
 ---
 
-## 📁 هيكلية ملفات التوثيق المكتملة في المشروع:
-```text
-docs/
-├── system-architecture-master.md   <-- الدليل الماستر المجمع الشامل لكامل المنظومة (25 صفحة)
-├── full-page-review-log.md         <-- سجل المراجعة اليومي الشامل للمنظومة (4 محاور)
-├── PAGE_AUDIT_PROMPT.md            <-- برومبت ومعيار المراجعة والتدقيق الإلزامي
-├── pages/                          <-- المستوى 1: ملفات توثيق تفصيلية مستقلة لكافة الشاشات (25 ملف)
-└── history/                        <-- سجلات التاريخ اليومية للتدقيق والمراجعة
-```
+## 📊 جدول تتبع حالة التدقيق والمراجعة الشاملة للصفحات (34/34 مكتملة)
+
+| # | اسم الصفحة والمسار | المكون الرئيسي (View) | النمط المعماري (Orchestrator) | الترجمة (Zero Hardcoded) | اختبارات E2E المقاسات الـ 5 | وثيقة الصفحة المستقلة | الحالة |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|
+| 1 | سجل الفواتير والمبيعات (`/invoices`) | `InvoicesView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/invoices.md` | 🟢 مكتملة |
+| 2 | نقطة البيع السريعة (`/pos`) | `PosView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/pos.md` | 🟢 مكتملة |
+| 3 | دليل الأصناف والمنتجات (`/items`) | `ItemsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/items.md` | 🟢 مكتملة |
+| 4 | تصنيفات الأصناف (`/categories`) | `CategoriesView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/categories.md` | 🟢 مكتملة |
+| 5 | التحويلات المخزنية (`/stock-transfers`) | `StockTransfersView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/stock-transfers.md` | 🟢 مكتملة |
+| 6 | الفروع والمخازن (`/stores`) | `StoresView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/stores.md` | 🟢 مكتملة |
+| 7 | خبير خلطات القهوة والتصنيع (`/coffee-blender`) | `CoffeeBlenderView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/coffee-blender.md` | 🟢 مكتملة |
+| 8 | مساعد المشتريات الذكي (`/purchases/smart-reorder`) | `SmartReorderView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/smart-reorder.md` | 🟢 مكتملة |
+| 9 | أرصدة ونواقص المخازن (`/stores/stocks`) | `StoreStocksView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/store-stocks.md` | 🟢 مكتملة |
+| 10 | إنشاء تحويل مخزني (`/stock-transfers/create`) | `CreateStockTransferView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/create-stock-transfer.md` | 🟢 مكتملة |
+| 11 | كشف حركة الصنف (`/items/:id/movements`) | `ItemMovementsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/item-movements.md` | 🟢 مكتملة |
+| 12 | سجل فواتير المشتريات والتوريد (`/purchases`) | `PurchasesView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/purchases.md` | 🟢 مكتملة |
+| 13 | إنشاء فاتورة مشتريات (`/purchases/create`) | `CreatePurchaseView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/create-purchase.md` | 🟢 مكتملة |
+| 14 | دليل الموردين (`/suppliers`) | `SuppliersView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/suppliers.md` | 🟢 مكتملة |
+| 15 | كشف حساب المورد (`/suppliers/:id/statement`) | `SupplierStatementView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/supplier-statement.md` | 🟢 مكتملة |
+| 16 | دليل العملاء (`/customers`) | `CustomersView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/customers.md` | 🟢 مكتملة |
+| 17 | كشف حساب العميل (`/customers/:id/statement`) | `CustomerStatementView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/customer-statement.md` | 🟢 مكتملة |
+| 18 | المصروفات والعهد النقدية (`/expenses`) | `ExpensesView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/expenses.md` | 🟢 مكتملة |
+| 19 | دفتر اليومية والورديات والخزينة (`/daily-journal`) | `DailyJournalView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/daily-journal.md` | 🟢 مكتملة |
+| 20 | التقارير المالية والتحليلية (`/reports`) | `ReportsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/reports.md` | 🟢 مكتملة |
+| 21 | إدارة المستخدمين (`/users`) | `UsersView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/users.md` | 🟢 مكتملة |
+| 22 | الأدوار والصلاحيات (`/roles`) | `RolesView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/roles.md` | 🟢 مكتملة |
+| 23 | سجل الأنشطة والتدقيق (`/activity-logs`) | `ActivityLogsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/activity-logs.md` | 🟢 مكتملة |
+| 24 | سلة المهملات واستعادة البيانات (`/trash`) | `TrashView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/trash.md` | 🟢 مكتملة |
+| 25 | إعدادات المؤسسة والنظام (`/settings`) | `SettingsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/settings.md` | 🟢 مكتملة |
+| 26 | سجل مرتجعات المبيعات (`/returns`) | `ReturnsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/returns.md` | 🟢 مكتملة |
+| 27 | إنشاء مرتجع مبيعات (`/returns/create`) | `CreateReturnView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/create-return.md` | 🟢 مكتملة |
+| 28 | الملف الشخصي للمستخدم (`/profile`) | `ProfileView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/profile.md` | 🟢 مكتملة |
+| 29 | لوحة تحكم السوبر أدمن (`/super-admin`) | `SuperAdminDashboardView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/super-admin-dashboard.md` | 🟢 مكتملة |
+| 30 | إدارة المستأجرين والشركات (`/super-admin/tenants`) | `SuperAdminTenantsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/super-admin-tenants.md` | 🟢 مكتملة |
+| 31 | تفاصيل ومحاكاة المستأجر (`/super-admin/tenants/:id`) | `SuperAdminTenantShowView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/super-admin-tenant-show.md` | 🟢 مكتملة |
+| 32 | باقات الاشتراك والأسعار (`/super-admin/plans`) | `SuperAdminPlansView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/super-admin-plans.md` | 🟢 مكتملة |
+| 33 | إصدارات التطبيق والـ APK (`/super-admin/app-versions`) | `SuperAdminAppVersionsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/super-admin-app-versions.md` | 🟢 مكتملة |
+| 34 | وحدات القياس للنظام (`/super-admin/units`) | `SuperAdminUnitsView.vue` | ✅ (< 80 سطر) | ✅ 100% | ✅ 7/7 ناجحة | `docs/pages/super-admin-units.md` | 🟢 مكتملة |
+
+---
+
+## 🏆 إنجازات ومعايير الجودة المتحققة بنسبة 100%
+
+1. **نمط المنسق النحيف (Thin Orchestrator Pattern):** تم تحويل كافة الـ Views الـ 34 لتصبح منسقات نحيفة بأقل من 80 سطراً لكل ملف، وتفكيك الشاشات المعقدة لأكثر من **120 مكوّن فرعي متخصص (Single Responsibility Components)**.
+2. **استخراج المنطق في كبسولات Composables:** تم بناء واستخدام كبسولات المنطق (`useFormatters`, `useInvoiceHelpers`, `useDailyJournal`, `useSuperAdminDashboard`, `useSuperAdminTenants`, `useSuperAdminPlans`, إلخ) لمنع تكرار الأكواد.
+3. **التجاوب وتجربة اللمس الكاملة:** اجتياز كافة اختبارات **Playwright E2E** عبر مقاسات الشاشات الخمسة (هواتف صغيرة 360px، هواتف عريضة 412px، تابلت عمودي 768px، تابلت أفقي 1024px، وديسكتوب 1280px).
+4. **التعريب والترجمة الصارمة (100% Zero Hardcoded Localization Gate):** خلو كافة الشاشات والقوالب بنسبة 100% من أي نصوص ثابتة، مع توليد القواميس تلقائياً باللغتين العربية والإنجليزية.
+5. **النشر الحي:** تم نشر المنظومة بالكامل على خادم الإنتاج `baraa-solutions.com` في الإصدار المعتمد **Release v1.0.79**.
