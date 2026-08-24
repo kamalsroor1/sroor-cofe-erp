@@ -2028,3 +2028,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-tenant-show-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.24 ثانية.
+
+
+---
+
+## 📌 صفحة 32: إدارة باقات الاشتراك والأسعار المركزية (`SuperAdminPlansView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/super-admin/plans`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 320 سطراً إلى 3 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 65 سطر + كبسولة المنطق useSuperAdminPlans + شبكة بطاقات الباقات مع شارات الشعبية والحالة والأسعار الشهرية والسنوية وحدود الموارد + نافذة AppModal لتعديل الباقة والأسعار والحدود + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إدارة باقات الاشتراك والأسعار المركزية (Super Admin Plans & Pricing)
+* **المسار (Route):** `/super-admin/plans`
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminPlansView.vue` (Thin Orchestrator: ~65 سطر)
+* **الغرض منها:** حوكمة باقات المنظومة وتعديل أسعارها وحدود الموارد المخصصة لكل باقة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة وإجراءات التنقل (`PageHeader.vue`):**
+   * عنوان الصفحة، وزر العودة للوحة القيادة وإدارة المستأجرين.
+2. **شبكة بطاقات الباقات (`PlansGrid.vue`):**
+   * عرض البطاقات الثلاثية مع شارات الأكثر طلباً والحالة، وهيكل التحميل الوميضي `CardSkeleton.vue`.
+3. **بطاقة الباقة الفردية (`PlanCard.vue`):**
+   * عرض الأسعار والحدود (مستخدمين، فروع، أصناف، فواتير) وزر التعديل.
+4. **نافذة تعديل الباقة (`EditPlanModal.vue`):**
+   * نافذة `AppModal` لتعديل الأسعار والحدود وتفعيل الباقة وتحديد الشعبية.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/super-admin/plans`, `PUT /api/v1/super-admin/plans/{id}`.
+* **Composables:** `useSuperAdminPlans.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `CardSkeleton.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `CardSkeleton.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/SuperAdmin/`):**
+  * `PlansGrid.vue`, `PlanCard.vue`, `EditPlanModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** ترتيب عمودي لبطاقات الباقات، أزرار بارتفاع $\ge 40	ext{px}$، ونوافذ منبثقة ملائمة للمس.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** شبكة ثلاثية الأبعاد لباقات الاشتراك مع تأثيرات Hover متناسقة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/super.php` و `lang/en/super.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-plans-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.18 ثانية.
