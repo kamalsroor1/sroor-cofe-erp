@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Store;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -18,14 +20,16 @@ class CustomersApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
+    protected User $unauthorizedUser;
+    protected string $unauthorizedToken;
     protected Store $store;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'customers.manage']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
             'name'      => 'المخزن الرئيسي',
@@ -35,6 +39,8 @@ class CustomersApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
@@ -42,8 +48,33 @@ class CustomersApiTest extends TestCase
             'is_active'        => true,
             'default_store_id' => $this->store->id,
         ]);
-        $this->adminUser->assignRole($role);
+        $this->adminUser->assignRole($adminRole);
         $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+
+        $this->unauthorizedUser = User::factory()->create([
+            'name'             => 'مستخدم بدون صلاحيات',
+            'phone'            => '01000000000',
+            'password'         => Hash::make('password'),
+            'is_active'        => true,
+            'default_store_id' => $this->store->id,
+        ]);
+        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
+    }
+
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/customers');
+        $response->assertStatus(401);
+    }
+
+    public function test_unauthorized_user_cannot_create_or_delete_customer(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+            ->postJson('/api/v1/customers', [
+                'name' => 'عميل ممنوع',
+            ]);
+
+        $response->assertStatus(403);
     }
 
     public function test_authenticated_user_can_list_customers_with_metrics(): void
@@ -102,6 +133,17 @@ class CustomersApiTest extends TestCase
             'name'  => 'مطحن الأمل للبن',
             'phone' => '01099887766',
         ]);
+    }
+
+    public function test_create_customer_fails_validation_on_missing_name(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->postJson('/api/v1/customers', [
+                'phone' => '01011112222',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['name']);
     }
 
     public function test_can_view_single_customer_profile(): void
@@ -222,7 +264,6 @@ class CustomersApiTest extends TestCase
             'is_active'       => true,
         ]);
 
-        // Create confirmed invoice
         Invoice::create([
             'store_id'        => $this->store->id,
             'customer_id'     => $customer->id,
@@ -285,5 +326,23 @@ class CustomersApiTest extends TestCase
             ]);
 
         $this->assertFalse((bool)$customer->fresh()->is_active);
+    }
+
+    public function test_can_delete_customer_successfully(): void
+    {
+        $customer = Customer::create([
+            'name'            => 'عميل للحذف',
+            'phone'           => '01033332222',
+            'current_balance' => '0.000',
+            'is_active'       => true,
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->deleteJson('/api/v1/customers/' . $customer->id);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $this->assertSoftDeleted('customers', ['id' => $customer->id]);
     }
 }

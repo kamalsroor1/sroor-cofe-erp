@@ -174,13 +174,13 @@ Route::middleware([
         Route::get('/store-stocks', [\App\Http\Controllers\StoreController::class, 'stocks'])->name('store-stocks')->middleware('can:items.view');
 
         // Customers & Statements
-        Route::get('/customers', [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index')->middleware('can:customers.manage');
-        Route::post('/customers', [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store')->middleware('can:customers.manage');
-        Route::put('/customers/{id}', [\App\Http\Controllers\CustomerController::class, 'update'])->name('customers.update')->middleware('can:customers.manage');
-        Route::delete('/customers/{id}', [\App\Http\Controllers\CustomerController::class, 'destroy'])->name('customers.destroy')->middleware('can:customers.manage');
-        Route::post('/customers/{id}/toggle-active', [\App\Http\Controllers\CustomerController::class, 'toggleActive'])->name('customers.toggle_active')->middleware('can:customers.manage');
-        Route::post('/customers/{id}/payments', [\App\Http\Controllers\CustomerController::class, 'collectPayment'])->name('customers.payments')->middleware('can:customers.manage');
-        Route::get('/customers/{id}/statement', [\App\Http\Controllers\CustomerController::class, 'statement'])->name('customers.statement')->middleware('can:customers.statement');
+        Route::get('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'index'])->name('customers.index')->middleware('can:customers.manage');
+        Route::post('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'store'])->name('customers.store')->middleware('can:customers.manage');
+        Route::put('/customers/{id}', [\App\Http\Controllers\Api\CustomerController::class, 'update'])->name('customers.update')->middleware('can:customers.manage');
+        Route::delete('/customers/{id}', [\App\Http\Controllers\Api\CustomerController::class, 'destroy'])->name('customers.destroy')->middleware('can:customers.manage');
+        Route::post('/customers/{id}/toggle-active', [\App\Http\Controllers\Api\CustomerController::class, 'toggleActive'])->name('customers.toggle_active')->middleware('can:customers.manage');
+        Route::post('/customers/{id}/payments', [\App\Http\Controllers\Api\CustomerController::class, 'collectPayment'])->name('customers.payments')->middleware('can:customers.manage');
+        Route::get('/customers/{id}/statement', [\App\Http\Controllers\Api\CustomerController::class, 'statement'])->name('customers.statement')->middleware('can:customers.statement');
 
         // Suppliers & Purchases & Statements
         Route::get('/suppliers', [\App\Http\Controllers\SupplierController::class, 'index'])->name('suppliers.index')->middleware('can:suppliers.manage');

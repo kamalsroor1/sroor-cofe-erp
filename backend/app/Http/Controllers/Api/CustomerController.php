@@ -37,10 +37,15 @@ final class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $debtStatus = (string)$request->input('debt_status', 'all');
         $status = (string)$request->input('status', 'all');
-        $perPage = (int)$request->input('per_page', 20);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $query = Customer::withCount(['invoices', 'payments']);
 
@@ -108,8 +113,13 @@ final class CustomerController extends Controller
     /**
      * Display the specified customer
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $customer = Customer::withCount(['invoices', 'payments'])->findOrFail($id);
 
         return response()->json([
@@ -157,6 +167,11 @@ final class CustomerController extends Controller
      */
     public function statement(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('customers.statement') && !$user->can('customers.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $customer = Customer::findOrFail($id);
         $fromDate = $request->query('from_date') ?: $request->query('from');
         $toDate = $request->query('to_date') ?: $request->query('to');
@@ -172,8 +187,13 @@ final class CustomerController extends Controller
     /**
      * Toggle Customer Active Status
      */
-    public function toggleActive(int $id): JsonResponse
+    public function toggleActive(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $customer = Customer::findOrFail($id);
         $toggled = $this->toggleCustomerActiveAction->execute($customer);
 
@@ -187,8 +207,13 @@ final class CustomerController extends Controller
     /**
      * Delete the specified customer
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $customer = Customer::findOrFail($id);
         $this->deleteCustomerAction->execute($customer);
 
