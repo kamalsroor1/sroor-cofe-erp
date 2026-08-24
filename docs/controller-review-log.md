@@ -29,7 +29,7 @@
 |---|---|---|:---:|:---:|:---:|:---:|:---:|
 | 1 | `ActivityLogController` | `app/Http/Controllers/Api/ActivityLogController.php` | 2026-08-24 | ✅ 12/12 Pass | ✅ Action + Policy + Req | ✅ Eager Select | ✅ مكتمل ومحصن |
 | 2 | `AppUpdateController` | `app/Http/Controllers/Api/AppUpdateController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ FormRequest + DTO + Actions | ✅ Binary Stream | ✅ مكتمل ومحصن |
-| 3 | `AuthController` | `app/Http/Controllers/Api/AuthController.php` | — | — | — | — | ⚪ بالانتظار |
+| 3 | `AuthController` | `app/Http/Controllers/Api/AuthController.php` | 2026-08-24 | ✅ 10/10 Pass | ✅ Single Actions + DTO + Req | ✅ Eager Load Stores | ✅ مكتمل ومحصن |
 | 4 | `BlenderController` | `app/Http/Controllers/Api/BlenderController.php` | — | — | — | — | ⚪ بالانتظار |
 | 5 | `CategoryApiController` | `app/Http/Controllers/Api/CategoryApiController.php` | — | — | — | — | ⚪ بالانتظار |
 | 6 | `CoffeeBlenderController` | `app/Http/Controllers/Api/CoffeeBlenderController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -63,25 +63,19 @@
 ## 📝 سجل تفاصيل المراجعات (Detailed Audit Logs):
 
 ### 1. `ActivityLogController` — 2026-08-24
-* **الحالة السابقة:**
-  - تكرار مسار الـ Route في `routes/api.php` ووجود ملف قديم `app/Http/Controllers/ActivityLogController.php`.
-* **التحسينات:**
-  - Feature Test شامل (`tests/Feature/Api/ActivityLogApiTest.php` بـ 12 اختباراً، نجاح 100%).
-  - سياسة صلاحيات `ActivityLogPolicy` و Form Request `FilterActivityLogsRequest`.
-  - حذف الملف القديم واستخراج التصدير إلى `ExportActivityLogsCsvAction`.
-  - تحسين استعلامات Eager Loading مع `select` صريح.
+* **التحسينات:** Feature Test شامل (12 اختباراً 100% Pass)، سياسة صلاحيات `ActivityLogPolicy` و Form Request `FilterActivityLogsRequest`، وحذف الكنترولر القديم واستخراج التصدير إلى `ExportActivityLogsCsvAction`.
 
 ### 2. `AppUpdateController` — 2026-08-24
-* **الحالة السابقة:**
-  - وجود ملف ميت مكرر في `app/Http/Controllers/Api/V1/AppUpdateController.php`.
-  - استقبال `Request` عام دون استخدام الـ Form Request المناسب `CheckUpdateRequest`.
-* **التحسينات:**
-  1. **Feature Test شامل:** كتابة `tests/Feature/Api/AppUpdateApiTest.php` بـ 8 اختبارات كاملة (نجاح 100%، 31 Assertions) تغطي فحص التحديث الحالي، التحديث الاختياري، التحديث الإجباري، عزل المنصات (Android vs Windows)، والتحقق من صحة المدخلات وتنزيل الـ APK أو إرجاع 404/422 بدقة.
-  2. **Clean Architecture:** استخدام `CheckUpdateRequest` كـ Form Request رسمي وربطه بـ `CheckUpdateDTO` و `CheckAppUpdateAction`.
-  3. **استئصال الكود الميت:** حذف الملف المكرر غير المستخدم `app/Http/Controllers/Api/V1/AppUpdateController.php`.
-  4. **Strict Typing:** تدقيق أنواع المخرجات (`: JsonResponse`, `: BinaryFileResponse`).
+* **التحسينات:** Feature Test شامل (8 اختبارات 100% Pass)، `CheckUpdateRequest` FormRequest + `CheckUpdateDTO` + `CheckAppUpdateAction` + `DownloadLatestApkAction`، وحذف الكنترولر المكرر `Api/V1/AppUpdateController.php`.
+
+### 3. `AuthController` — 2026-08-24
+* **الحالة والتحسينات:**
+  1. **Feature Test خماسي المحاور:** توسيع حزمة `tests/Feature/Api/AuthApiTest.php` لتغطي 10 اختبارات شاملة (100% Pass، 57 Assertions) تشمل الدخول برقم الهاتف وبالإيميل، فشل الدخول مع أخطاء التحقق، تعطيل الحسابات المعلقة، التحصين ضد محاولات الاختراق عبر Throttling / Rate Limiting، فحص الـ Bearer Token، قراءة سياق الفرع الديناميكي عبر `X-Store-Id`، وتسجيل الخروج وحذف التوكنات.
+  2. **Clean Architecture & Single Actions:** الكنترولر نحيف للغاية يعتمد كلياً على `ApiLoginAction`, `ApiLogoutAction`, `ApiMeAction`, و `ApiLoginDTO` و `ApiLoginRequest`.
+  3. **الأمان وسجلات التدقيق:** تسجيل محاولات الدخول الفاشلة والناجحة والخروج تلقائياً في `activity_logs`.
+  4. **الأداء:** Eager Loading لسياق الفروع والورديات المفتوحة مع استعلام خفيف على الحقول المحددة.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `AppUpdateController`
-## ⏭️ التالي بالترتيب الأبجدي: `AuthController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `AuthController`
+## ⏭️ التالي بالترتيب الأبجدي: `BlenderController`
