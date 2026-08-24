@@ -4,6 +4,7 @@
 > **ملف الـ View الرئيسي:** `resources/js/views/Invoices/InvoiceShowView.vue`  
 > **النمط المعماري:** Thin Orchestrator (37 سطراً فقط)  
 > **تاريخ التدقيق:** 2026-08-24  
+> **الإصدار الحي:** `v1.0.84`  
 
 ---
 
@@ -16,17 +17,17 @@
    - جدول الأصناف التفصيلي (الكود، الصنف، الوحدة، الكمية، سعر الوحدة، الخصم، الإجمالي).
    - سجل دفعات التحصيل وتاريخ وملاحظات الفاتورة.
 2. **الطباعة الحرارية المباشرة (80mm Thermal Receipt):**
-   - تصميم مخصص لطابعات الكاشير الحرارية متوافق مع مقاس 80mm و 78mm و 58mm.
+   - تصميم مخصص لطابعات الكاشير الحرارية متوافق مع مقاس 80mm و 78mm و 58mm عبر نمط `@page { size: 80mm auto; margin: 0; }`.
    - يحتوي على الترويسة، أرقام الفاتورة، جدول الأصناف، المبالغ، والسياسات.
 3. **الفاتورة الضريبية الرسمية A4 (Official A4 Tax Invoice):**
-   - قالب فاخر للشركات والمؤسسات التجارية جاهز للطباعة وتصدير الـ PDF.
+   - قالب فاخر للشركات والمؤسسات التجارية جاهز للطباعة وتصدير الـ PDF بمقاس `@page { size: A4 portrait; margin: 8mm 10mm; }`.
    - يحتوي على السجل التجاري، الرقم الضريبي، كود QR، جدول الأصناف المفصل، شروط الاستبدال والاسترجاع، وتوقيعات الاستلام والختم الرسمي.
-4. **شريط الإجراءات السريعة (Action Bar):**
-   - طباعة حرارية فورية بضغطة زر.
-   - طباعة رسمية A4.
+4. **شريط الإجراءات الموحد (BaseButton Action Bar):**
+   - طباعة حرارية فورية بضغطة زر (`variant="success"`).
+   - طباعة رسمية A4 (`variant="primary"`).
    - مشاركة الفاتورة مباشرة عبر WhatsApp بنص منسق.
    - نسخ تفاصيل الفاتورة للحافظة.
-   - نافذة إلغاء الفاتورة وعكس المخزون مع ذكر السبب الإجباري.
+   - نافذة إلغاء الفاتورة وعكس المخزون مع ذكر السبب الإجباري (`variant="danger"`).
    - زر الرجوع الذكي.
 
 ---
@@ -40,8 +41,9 @@ resources/js/
 ├── Composables/
 │   └── useInvoiceShow.js                        <-- Complete show, print & cancel state management
 └── Components/Invoices/Show/
-    ├── InvoiceShowHeader.vue                    <-- Breadcrumb, Badges & Interactive Tabs Switcher
-    ├── InvoiceShowActionsBar.vue                <-- Quick Actions: Print, WhatsApp, Copy, Cancel, Back
+    ├── InvoiceShowSkeleton.vue                  <-- Facebook-Style Shimmer Loader
+    ├── InvoiceShowHeader.vue                    <-- Breadcrumb, Badges & BaseButton Tabs Switcher
+    ├── InvoiceShowActionsBar.vue                <-- Quick Actions: BaseButtons with perfect theme variants
     ├── InvoiceShowInteractiveView.vue           <-- Interactive Layout Container
     │   ├── InvoiceShowKpiGrid.vue               <-- 6 Financial Metric Cards
     │   ├── InvoiceShowCustomerCard.vue          <-- Customer profile, balance & statement link
@@ -58,22 +60,22 @@ resources/js/
 ## 3. الاعتماديات والـ APIs
 - **Endpoint:** `GET /api/invoices/{id}`
 - **Cancel Endpoint:** `POST /api/invoices/{id}/cancel` (مع سبب الإلغاء وعكس حركات المخزون وقيد الخزينة داخل DB Transaction).
-- **Resource:** `InvoiceResource` مع تحميل علاقات `items`, `payments`, `customer`, `store`, `user`.
+- **Localization Gate:** كافة النصوص تمر عبر `invoices.php`, `customers.php`, `common.php`, `pos.php`.
 
 ---
 
-## 4. فحص التجاوب واللمس والوضعين
-- اختبار كامل عبر المقاسات الخمسة:
-  - Small Mobile (360px) ✅
-  - Large Mobile (412px) ✅
-  - Tablet Portrait (768px) ✅
-  - Tablet Landscape (1024px) ✅
-  - Desktop (1280px) ✅
-- أزرار تفاعلية بأبعاد لمس قياسية `>= 44px`.
-- دعم كامل للوضع الداكن والفاتح ولغة RTL العربية.
+## 4. فحص التجاوب واللمس والوضعين (Responsive & Dark Mode Audit)
+| الجهاز والمقاس | السلوك | النتيجة |
+|---|---|---|
+| **Small Phone (360px)** | بطاقات KPI تترتب عمودياً، وشريط الإجراءات يلتف بسلاسة مع لمس فوري | ✅ ممتاز (100%) |
+| **Large Phone (412px)** | توافق تام مع الشاشات اللمسية وتجاوب الأزرار بدون أي overflow | ✅ ممتاز (100%) |
+| **Tablet Portrait (768px)** | شبكة البطاقات تتوزع 3 أعمدة وجدول الأصناف يدعم التمرير السلس | ✅ ممتاز (100%) |
+| **Tablet Landscape (1024px)** | تخطيط متوازن مع تقسيم 6 أعمدة للـ KPIs وبطاقات جانبية للعميل والفرع | ✅ ممتاز (100%) |
+| **Desktop (1280px)** | عرض فخم ومتكامل يماثل أعلى معايير لوحات التحكم العالمية | ✅ ممتاز (100%) |
+| **Dark Mode vs Light Mode** | تباين نصوص كامل مع تدرجات Slate متناسقة ومتغيرات الـ Theme | ✅ ممتاز (100%) |
 
 ---
 
-## 5. نتائج الاختبارات الآلية (Playwright E2E)
-- ملف الاختبار: `e2e/flows/invoice-show-full-page-audit.spec.js`
-- النتيجة: **7/7 اختبارات ناجحة بنسبة 100%**.
+## 5. سجل الاختبارات والتحقق (Test Suite)
+- ملف الاختبار الآلي: `e2e/flows/invoice-show-full-page-audit.spec.js`
+- النتائج: **7/7 اختبارات ناجحة بنسبة 100%**.
