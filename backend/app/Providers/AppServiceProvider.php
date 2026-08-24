@@ -52,15 +52,6 @@ class AppServiceProvider extends ServiceProvider
         // Register Model Observers
         \App\Models\Tenant::observe(\App\Observers\TenantObserver::class);
 
-        // Multi-Tenant Livewire Universal Routing
-        if (class_exists(\Livewire\Livewire::class)) {
-            \Livewire\Livewire::setUpdateRoute(function ($handle, $path = '/livewire/update') {
-                return \Illuminate\Support\Facades\Route::post($path, $handle)
-                    ->middleware([
-                        'web',
-                        \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
-                    ]);
-            });
-        }
+
     }
 }
