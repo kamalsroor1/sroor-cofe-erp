@@ -5,8 +5,7 @@
     </label>
     <div class="flex items-center gap-2">
       <BaseInput
-        :model-value="modelValue"
-        @update:model-value="$emit('update:modelValue', $event)"
+        v-model="inputValue"
         @keyup.enter="$emit('add')"
         :placeholder="$t('super.add_custom_unit_placeholder')"
         class="flex-1"
@@ -25,12 +24,21 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
-defineProps({
+const props = defineProps({
   modelValue: { type: String, default: '' },
 });
 
-defineEmits(['update:modelValue', 'add']);
+const emit = defineEmits(['update:modelValue', 'update:model-value', 'add']);
+
+const inputValue = computed({
+  get: () => props.modelValue,
+  set: (val) => {
+    emit('update:modelValue', val);
+    emit('update:model-value', val);
+  },
+});
 </script>
