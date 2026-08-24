@@ -85,13 +85,13 @@ Route::middleware([
         Route::post('/pos/customers', [\App\Http\Controllers\POSController::class, 'storeCustomer'])->name('pos.customers.store')->middleware('can:pos.access');
         Route::get('/pos/customer-last-price', [\App\Http\Controllers\POSController::class, 'getCustomerLastPrice'])->name('pos.customer_last_price')->middleware('can:pos.access');
 
-        Route::get('/invoices', [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index')->middleware('can:invoices.view');
-        Route::get('/invoices/{id}', [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show')->middleware('can:invoices.view');
-        Route::get('/invoices/{id}/edit', [\App\Http\Controllers\InvoiceController::class, 'edit'])->name('invoices.edit')->middleware('can:invoices.edit');
-        Route::put('/invoices/{id}', [\App\Http\Controllers\InvoiceController::class, 'update'])->name('invoices.update')->middleware('can:invoices.edit');
-        Route::post('/invoices/{id}/cancel', [\App\Http\Controllers\InvoiceController::class, 'cancel'])->name('invoices.cancel')->middleware('can:invoices.cancel');
-        Route::delete('/invoices/{id}', [\App\Http\Controllers\InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('can:invoices.delete');
-        Route::post('/invoices/{id}/restore', [\App\Http\Controllers\InvoiceController::class, 'restore'])->name('invoices.restore')->middleware('can:trash.access');
+        Route::get('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'index'])->name('invoices.index')->middleware('can:invoices.view');
+        Route::get('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'show'])->name('invoices.show')->middleware('can:invoices.view');
+        Route::get('/invoices/{id}/edit', [\App\Http\Controllers\Api\InvoiceController::class, 'edit'])->name('invoices.edit')->middleware('can:invoices.edit');
+        Route::put('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'update'])->name('invoices.update')->middleware('can:invoices.edit');
+        Route::post('/invoices/{id}/cancel', [\App\Http\Controllers\Api\InvoiceController::class, 'cancel'])->name('invoices.cancel')->middleware('can:invoices.cancel');
+        Route::delete('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('can:invoices.delete');
+        Route::post('/invoices/{id}/restore', [\App\Http\Controllers\Api\InvoiceController::class, 'restore'])->name('invoices.restore')->middleware('can:trash.access');
 
         // Daily Journal A4 Print Route
         Route::get('/daily-journal/print', function (\Illuminate\Http\Request $request) {

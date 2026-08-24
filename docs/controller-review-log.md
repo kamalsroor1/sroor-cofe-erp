@@ -36,7 +36,7 @@
 | 7 | `DailyJournalController` | `app/Http/Controllers/Api/DailyJournalController.php` | 2026-08-24 | ✅ 11/11 Pass | ✅ Single Action + FormRequest | ✅ bcmath Cash Ledger | ✅ مكتمل ومحصن |
 | 8 | `DashboardApiController` | `app/Http/Controllers/Api/DashboardApiController.php` | 2026-08-24 | ✅ 4/4 Pass | ✅ Single Action + Analytics | ✅ bcmath Aggregations | ✅ مكتمل ومحصن |
 | 9 | `ExpenseController` | `app/Http/Controllers/Api/ExpenseController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + DTO + Policy | ✅ Eager User & Store | ✅ مكتمل ومحصن |
-| 10 | `InvoiceController` | `app/Http/Controllers/Api/InvoiceController.php` | — | — | — | — | ⚪ بالانتظار |
+| 10 | `InvoiceController` | `app/Http/Controllers/Api/InvoiceController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ Single Actions + DTO + Policy | ✅ LockForUpdate & bcmath | ✅ مكتمل ومحصن |
 | 11 | `ItemController` | `app/Http/Controllers/Api/ItemController.php` | — | — | — | — | ⚪ بالانتظار |
 | 12 | `PaymentController` | `app/Http/Controllers/Api/PaymentController.php` | — | — | — | — | ⚪ بالانتظار |
 | 13 | `PermissionApiController` | `app/Http/Controllers/Api/PermissionApiController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -86,13 +86,16 @@
 * **التحسينات:** Feature Test شامل (4 اختبارات 100% Pass)، `GetDashboardOverviewAction` و `DashboardAnalyticsService`، وتأمين تدفق مؤشرات الأداء الحية للـ SPA.
 
 ### 9. `ExpenseController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (8 اختبارات 100% Pass)، سياسة صلاحيات `ExpensePolicy` و Form Requests، وحذف الكنترولر القديم، و Eager Loading للعلاقات.
+
+### 10. `InvoiceController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/ExpensesApiTest.php` بـ 8 اختبارات متكاملة (100% Pass، 35 Assertions) تغطي سرد وتصفية المصروفات، الملخص المالي ومراكز التكلفة، التسجيل المتسلسل للأرقام، التعديل، التحقق من الحقول الإلزامية (Validation 422)، الصلاحيات (401/403)، والحذف الآمن (Soft Delete).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/ExpensePolicy.php`، وتفعيل `authorize()` في `StoreExpenseRequest` و `UpdateExpenseRequest`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/ExpenseController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
-  4. **الأداء:** Eager loading للعلاقات (`user`, `store`)، ترقيم صفحات محمي بحد أقصى `200`، وحساب ملخص المصروفات داخل `GetExpensesSummaryAction`.
+  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/InvoiceApiTest.php` بـ 7 اختبارات متكاملة (100% Pass، 37 Assertions) تغطي سرد الفواتير مع الملخص المالي، إنشاء فواتير المبيعات مع خصم المخزون بالقفل السطري `lockForUpdate`، إرجاع روابط ورسائل WhatsApp، إلغاء الفواتير وإرجاع المخزون وعكس التأثير المالي، وفحص الصلاحيات (401/403) وأخطاء التحقق (Validation 422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/InvoicePolicy.php` وتفعيل `authorize()` في `StoreSalesInvoiceRequest` و `CancelInvoiceRequest`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/InvoiceController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
+  4. **الأمان والدقة المالية:** معالجة الفواتير بدوال `bcmath` و `DB::transaction()` مع قفل سطري للمخزون لمنع البيع المزدوج والـ Race Conditions.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `ExpenseController`
-## ⏭️ التالي بالترتيب الأبجدي: `InvoiceController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `InvoiceController`
+## ⏭️ التالي بالترتيب الأبجدي: `ItemController`
