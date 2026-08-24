@@ -244,11 +244,11 @@ Route::middleware([
         Route::get('/settings/backup/download', [\App\Http\Controllers\Api\SettingController::class, 'downloadBackup'])->name('settings.backup.download')->middleware('can:roles.manage');
         Route::post('/settings/clear-cache', [\App\Http\Controllers\Api\SettingController::class, 'clearCache'])->name('settings.clear_cache')->middleware('can:roles.manage');
 
-        Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index')->middleware('can:roles.manage');
-        Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->name('users.store')->middleware('can:roles.manage');
-        Route::put('/users/{id}', [\App\Http\Controllers\UserController::class, 'update'])->name('users.update')->middleware('can:roles.manage');
-        Route::delete('/users/{id}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy')->middleware('can:roles.manage');
-        Route::post('/users/{id}/toggle-active', [\App\Http\Controllers\UserController::class, 'toggleActive'])->name('users.toggle')->middleware('can:roles.manage');
+        Route::get('/users', [\App\Http\Controllers\Api\UserController::class, 'index'])->name('users.index')->middleware('can:roles.manage');
+        Route::post('/users', [\App\Http\Controllers\Api\UserController::class, 'store'])->name('users.store')->middleware('can:roles.manage');
+        Route::put('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'update'])->name('users.update')->middleware('can:roles.manage');
+        Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy'])->name('users.destroy')->middleware('can:roles.manage');
+        Route::post('/users/{id}/toggle-active', [\App\Http\Controllers\Api\UserController::class, 'toggleActive'])->name('users.toggle')->middleware('can:roles.manage');
 
         Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->name('roles.index')->middleware('can:roles.manage');
         Route::put('/roles/{id}', [\App\Http\Controllers\Api\RoleController::class, 'updatePermissions'])->name('roles.update')->middleware('can:roles.manage');
