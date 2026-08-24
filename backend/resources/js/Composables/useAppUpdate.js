@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { App as CapacitorApp } from '@capacitor/app';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
@@ -15,13 +16,31 @@ const isDownloading = ref(false);
 const isDownloaded = ref(false);
 const downloadProgress = ref(0);
 
+// Initialize native app version from Capacitor runtime if available
+const syncNativeVersionInfo = async () => {
+    if (typeof window !== 'undefined') {
+        try {
+            const info = await CapacitorApp.getInfo();
+            if (info) {
+                if (info.version) currentVersionName.value = info.version;
+                if (info.build) currentVersionCode.value = parseInt(info.build) || 1;
+            }
+        } catch (e) {
+            // Not in native Capacitor runtime
+        }
+    }
+};
+
+// Initial sync
+syncNativeVersionInfo();
+
 export function useAppUpdate() {
     /**
      * Check for newer app release from the server
      */
     const checkForUpdates = async (isManual = false) => {
         if (isChecking.value) return;
-        if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed'))) return;
+        if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed') || localStorage.getItem('app_update_dismissed_code') === String(currentVersionCode.value))) return;
         
         isChecking.value = true;
         if (!isManual) {
@@ -29,6 +48,8 @@ export function useAppUpdate() {
         }
 
         try {
+            await syncNativeVersionInfo();
+
             const res = await api.get('/app/check-update', {
                 params: {
                     platform: 'android',
@@ -38,10 +59,13 @@ export function useAppUpdate() {
             });
 
             const data = res.data || {};
-            hasUpdate.value = !!data.has_update;
-            isForceUpdate.value = !!data.force_update;
+            const serverLatestCode = parseInt(data.latest_version_code) || 1;
+            const requiresUpdate = !!data.has_update && serverLatestCode > currentVersionCode.value;
 
-            if (data.has_update && data.latest_version) {
+            hasUpdate.value = requiresUpdate;
+            isForceUpdate.value = requiresUpdate && !!data.force_update;
+
+            if (requiresUpdate && data.latest_version) {
                 latestVersionData.value = data;
                 isDownloaded.value = false;
                 downloadProgress.value = 0;
@@ -79,7 +103,7 @@ export function useAppUpdate() {
         isDownloaded.value = false;
         downloadProgress.value = 0;
 
-        // Smooth simulated chunked download progress
+        // Smooth simulated progress bar
         const interval = setInterval(() => {
             if (downloadProgress.value < 90) {
                 downloadProgress.value += Math.floor(Math.random() * 14) + 6;
@@ -88,6 +112,12 @@ export function useAppUpdate() {
 
         try {
             const downloadUrl = latestVersionData.value?.download_url || '/api/v1/app/download-latest-apk';
+
+            // Mark update as processed in this session
+            sessionStorage.setItem('app_update_dismissed', '1');
+            if (latestVersionData.value?.latest_version_code) {
+                localStorage.setItem('app_update_dismissed_code', String(latestVersionData.value.latest_version_code));
+            }
 
             // Create download anchor and trigger
             const link = document.createElement('a');
@@ -103,6 +133,10 @@ export function useAppUpdate() {
             setTimeout(() => {
                 isDownloading.value = false;
                 isDownloaded.value = true;
+                // Auto-close modal after 2 seconds to let Android native installer dialog take over
+                setTimeout(() => {
+                    isModalOpen.value = false;
+                }, 2000);
             }, 500);
         } catch (e) {
             clearInterval(interval);
@@ -122,6 +156,9 @@ export function useAppUpdate() {
             isDownloaded.value = false;
             downloadProgress.value = 0;
             sessionStorage.setItem('app_update_dismissed', '1');
+            if (latestVersionData.value?.latest_version_code) {
+                localStorage.setItem('app_update_dismissed_code', String(latestVersionData.value.latest_version_code));
+            }
         }
     };
 
