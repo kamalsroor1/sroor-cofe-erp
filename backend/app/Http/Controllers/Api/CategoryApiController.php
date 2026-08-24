@@ -28,6 +28,12 @@ final class CategoryApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('pos.access')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        // Auto-seed missing categories from existing items if table is empty
         if (Category::count() === 0) {
             $distinctCats = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
             $icons = ['☕', '🧃', '🍰', '🥪', '🍪', '🫘', '🥤', '🧊', '🎁', '📦'];
@@ -93,9 +99,15 @@ final class CategoryApiController extends Controller
     /**
      * Delete category
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $category = Category::findOrFail($id);
+
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.delete')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $this->deleteCategoryAction->execute($category);
 
         return response()->json([

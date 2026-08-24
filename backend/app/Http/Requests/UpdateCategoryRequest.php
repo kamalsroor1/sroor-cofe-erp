@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdateCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $id = $this->route('id') ?? $this->route('category');
+        $category = is_numeric($id) ? Category::find((int)$id) : null;
+
+        return $category
+            ? ($this->user()?->can('update', $category) ?? false)
+            : ($this->user()?->hasRole('admin') || $this->user()?->can('items.edit') ?? false);
     }
 
     public function rules(): array

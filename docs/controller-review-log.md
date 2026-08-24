@@ -31,7 +31,7 @@
 | 2 | `AppUpdateController` | `app/Http/Controllers/Api/AppUpdateController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ FormRequest + DTO + Actions | ✅ Binary Stream | ✅ مكتمل ومحصن |
 | 3 | `AuthController` | `app/Http/Controllers/Api/AuthController.php` | 2026-08-24 | ✅ 10/10 Pass | ✅ Single Actions + DTO + Req | ✅ Eager Load Stores | ✅ مكتمل ومحصن |
 | 4 | `CoffeeBlenderController` | `app/Http/Controllers/Api/CoffeeBlenderController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Actions + DTO + Reqs | ✅ bcmath Transaction | ✅ مكتمل ومحصن |
-| 5 | `CategoryApiController` | `app/Http/Controllers/Api/CategoryApiController.php` | — | — | — | — | ⚪ بالانتظار |
+| 5 | `CategoryApiController` | `app/Http/Controllers/Api/CategoryApiController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Actions + Policy + Reqs | ✅ withCount & SoftDeletes | ✅ مكتمل ومحصن |
 | 6 | `CustomerController` | `app/Http/Controllers/Api/CustomerController.php` | — | — | — | — | ⚪ بالانتظار |
 | 7 | `DailyJournalController` | `app/Http/Controllers/Api/DailyJournalController.php` | — | — | — | — | ⚪ بالانتظار |
 | 8 | `DashboardApiController` | `app/Http/Controllers/Api/DashboardApiController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -71,13 +71,16 @@
 * **التحسينات:** Feature Test خماسي المحاور (10 اختبارات 100% Pass)، حماية Rate Limiting ضد الهجمات، ودعم تسجيل الدخول بالهاتف والإيميل، وحفظ سجلات النشاط في `activity_logs`.
 
 ### 4. `CoffeeBlenderController` — 2026-08-24
+* **التحسينات:** Feature Test خماسي المحاور (6 اختبارات 100% Pass)، Form Requests (`CalculateBlendCostRequest`, `CreateBlenderInvoiceRequest`)، حسابات `bcmath` دقيقة، وحذف المسودات والملفات المكررة القديمة.
+
+### 5. `CategoryApiController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test خماسي المحاور:** بناء حزمة `tests/Feature/Api/CoffeeBlenderApiTest.php` بـ 6 اختبارات شاملة (100% Pass، 15 Assertions) تشمل الحساب الفوري لتكاليف التوليفات والنسب ونسب الربحية، إصدار فواتير التوليف المعتمدة، خصم المخزون بالجرامات وربطه بدوال `bcmath`، والتحقق من الصلاحيات ورفض المستخدمين غير المصرح لهم.
-  2. **Clean Architecture & Form Requests:** إنشاء كلاس التحقق `CalculateBlendCostRequest` لضبط مدخلات الحسابات، واستخدام `CreateBlenderInvoiceRequest` لإصدار الفواتير، وربط العمليات بـ `CreateBlenderInvoiceDTO` و `CreateBlenderInvoiceAction` و `CalculateBlendCostAction`.
-  3. **استئصال الكود الميت:** حذف الملفين القديمين المكررين (`Api/BlenderController.php` و `app/Http/Controllers/CoffeeBlenderController.php`).
-  4. **الأداء والحسابات:** استخدام `bcmath` لكافة حسابات الأوزان والأثمان لمنع أخطاء التقريب المالي والمخزني.
+  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/CategoryApiTest.php` بـ 6 اختبارات كاملة (100% Pass، 22 Assertions) تشمل القراءة والإضافة والتعديل والحذف الآمن مع تصفير روابط الأصناف، والتحقق من الصلاحيات وأخطاء المدخلات 422.
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء `app/Policies/CategoryPolicy.php`، وتفعيل التحقق في `StoreCategoryRequest` و `UpdateCategoryRequest` و `destroy()`.
+  3. **الحذف الآمن (Safe Soft Deletes):** حماية الأصناف المرتبطة وتصفير `category_id` تلقائياً عبر `DeleteCategoryAction`.
+  4. **الأداء:** استخدام `withCount('items')` لتحميل عدد الأصناف التابعة في استعلام واحد سريع.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `CoffeeBlenderController`
-## ⏭️ التالي بالترتيب الأبجدي: `CategoryApiController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `CategoryApiController`
+## ⏭️ التالي بالترتيب الأبجدي: `CustomerController`
