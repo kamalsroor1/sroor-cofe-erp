@@ -29,17 +29,22 @@ final class StockTransferController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('stores.view') && !$user->can('stores.manage') && !$user->can('transfers.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $fromStore = $request->input('from_store_id');
         $toStore = $request->input('to_store_id');
         $status = (string)$request->input('status', 'all');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = (int)$request->input('per_page', 15);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $query = StockTransfer::query()->with(['fromStore', 'toStore', 'user', 'items.item']);
@@ -106,8 +111,13 @@ final class StockTransferController extends Controller
     /**
      * Show single Stock Transfer details
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('stores.view') && !$user->can('stores.manage') && !$user->can('transfers.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $transfer = StockTransfer::with(['fromStore', 'toStore', 'user', 'items.item'])->findOrFail($id);
 
         return response()->json([
@@ -126,7 +136,7 @@ final class StockTransferController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "تم تنفيذ إذن التحويل المخزني رقم {$transfer->transfer_number} ونقل البضاعة فوراً بنجاح ✓",
+            'message' => __('inventory.confirm_transfer') ?: "تم تنفيذ إذن التحويل المخزني رقم {$transfer->transfer_number} ونقل البضاعة فوراً بنجاح ✓",
             'data'    => (new StockTransferResource($transfer->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
         ], 201);
     }
@@ -141,7 +151,7 @@ final class StockTransferController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "تم إلغاء إذن التحويل رقم {$cancelled->transfer_number} وعكس حركة الأصناف للفرع المصدر بنجاح ✓",
+            'message' => __('inventory.cancel_transfer') ?: "تم إلغاء إذن التحويل رقم {$cancelled->transfer_number} وعكس حركة الأصناف للفرع المصدر بنجاح ✓",
             'data'    => (new StockTransferResource($cancelled->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
         ], 200);
     }

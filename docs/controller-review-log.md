@@ -48,7 +48,7 @@
 | 19 | `RoleController` | `app/Http/Controllers/Api/RoleController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Actions + Policy + Reqs | ✅ Cached Permissions Matrix | ✅ مكتمل ومحصن |
 | 20 | `SettingController` | `app/Http/Controllers/Api/SettingController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Action + Policy + Req | ✅ Cached Dictionary & Telegram | ✅ مكتمل ومحصن |
 | 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + Reqs | ✅ Z-Report & Drawer Audit | ✅ مكتمل ومحصن |
-| 22 | `StockTransferController` | `app/Http/Controllers/Api/StockTransferController.php` | — | — | — | — | ⚪ بالانتظار |
+| 22 | `StockTransferController` | `app/Http/Controllers/Api/StockTransferController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ Single Actions + Policy + Reqs | ✅ Multi-Store Lock & bcmath | ✅ مكتمل ومحصن |
 | 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | — | — | — | — | ⚪ بالانتظار |
 | 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | — | — | — | — | ⚪ بالانتظار |
 | 25 | `SupplierController` | `app/Http/Controllers/Api/SupplierController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -122,12 +122,16 @@
 * **التحسينات:** Feature Test شامل (6 اختبارات 100% Pass)، سياسة صلاحيات `SettingPolicy` و Form Requests، وتحديث الإعدادات المكيشة.
 
 ### 21. `ShiftController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (8 اختبارات 100% Pass)، سياسة صلاحيات `ShiftPolicy` و Form Requests، وتأمين حركات الورديات وتقرير Z-Report.
+
+### 22. `StockTransferController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/ShiftApiTest.php` بـ 8 اختبارات شاملة (100% Pass، 17 Assertions) تغطي فحص الوردية النشطة، فتح وردية جديدة، غلق الوردية وحساب الفروقات والعجز والزيادة، وتوليد تقرير Z-Report، والتحقق من المدخلات والصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/ShiftPolicy.php` وتفعيل `authorize()` في `OpenShiftRequest` و `CloseShiftRequest`.
-  3. **الأداء والهندسة:** استخدام Single Actions (`GetActiveShiftAction`, `OpenShiftAction`, `CloseShiftAction`, `GetShiftZReportAction`) وتجريد الكنترولر وتطبيق الدقة المالية في حساب الفروقات بدوال `bcmath`.
+  1. **Feature Test شامل:** تحديث حزمة `tests/Feature/Api/StockTransfersApiTest.php` بـ 7 اختبارات شاملة (100% Pass، 31 Assertions) تغطي إنشاء وتأكيد أذونات التحويل المخزني الفوري بين الفروع والمخازن، إلغاء التحويل وعكس الأرصدة بدقة، والتحقق من عدم النقل لنفس الفرع، ومصفوفة الصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/StockTransferPolicy.php` وتفعيل `authorize()` في `StoreStockTransferRequest` و `CancelStockTransferRequest`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/StockTransferController.php` وتوجيه كافة العمليات للكنترولر الموحد.
+  4. **الأداء والهندسة:** استخدام Single Actions (`CreateStockTransferAction`, `CancelStockTransferAction`) مع القفل السطري `lockForUpdate()` وحسابات `bcmath` المخزنية.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `ShiftController`
-## ⏭️ التالي بالترتيب الأبجدي: `StockTransferController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `StockTransferController`
+## ⏭️ التالي بالترتيب الأبجدي: `StoreController`
