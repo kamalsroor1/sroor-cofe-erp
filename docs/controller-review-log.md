@@ -46,7 +46,7 @@
 | 17 | `ReportController` | `app/Http/Controllers/Api/ReportController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy + DTO | ✅ Multi-Dimension Aggregations | ✅ مكتمل ومحصن |
 | 18 | `ReturnController` | `app/Http/Controllers/Api/ReturnController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + DTO | ✅ Two-Way Stock & bcmath | ✅ مكتمل ومحصن |
 | 19 | `RoleController` | `app/Http/Controllers/Api/RoleController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Actions + Policy + Reqs | ✅ Cached Permissions Matrix | ✅ مكتمل ومحصن |
-| 20 | `SettingController` | `app/Http/Controllers/Api/SettingController.php` | — | — | — | — | ⚪ بالانتظار |
+| 20 | `SettingController` | `app/Http/Controllers/Api/SettingController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Action + Policy + Req | ✅ Cached Dictionary & Telegram | ✅ مكتمل ومحصن |
 | 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | — | — | — | — | ⚪ بالانتظار |
 | 22 | `StockTransferController` | `app/Http/Controllers/Api/StockTransferController.php` | — | — | — | — | ⚪ بالانتظار |
 | 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -116,13 +116,16 @@
 * **التحسينات:** Feature Test شامل (8 اختبارات 100% Pass)، سياسة صلاحيات `ReturnPolicy` و Form Requests، وتأمين حركات المخزون المعكوسة.
 
 ### 19. `RoleController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (6 اختبارات 100% Pass)، سياسة صلاحيات `RolePolicy` و Form Requests، ومصفوفة الصلاحيات المجمعة.
+
+### 20. `SettingController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/RoleApiTest.php` بـ 6 اختبارات شاملة (100% Pass، 17 Assertions) تغطي مصفوفة الصلاحيات، استرجاع صلاحيات دور محدد، تحديث الصلاحيات المخصصة لدور، والتحقق من صحة الصلاحيات (422) وحماية الصلاحيات (401/403).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/RolePolicy.php` وتفعيل `authorize()` في `UpdateRolePermissionsRequest`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/RoleController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
-  4. **الأداء والهندسة:** استخدام Single Actions (`GetRolesMatrixAction`, `UpdateRolePermissionsAction`) مع تفريغ الكنترولر وحماية الاستجابات.
+  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/SettingApiTest.php` بـ 6 اختبارات شاملة (100% Pass، 36 Assertions) تغطي جلب إعدادات الهوية والطباعة والتليجرام، تحديث الإعدادات مع إفراغ الكاش تلقائياً، إرسال إشعارات التليجرام التجريبية، والتحقق من الحقول الإلزامية وحماية الصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/SettingPolicy.php` وتفعيل `authorize()` في `UpdateSettingsRequest`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/SettingController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
+  4. **الأداء والهندسة:** استخدام `UpdateSettingsAction` وتخزين الإعدادات المكيشة `Setting::allCached()` مع تفريغ الكاش بعد كل تحديث.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `RoleController`
-## ⏭️ التالي بالترتيب الأبجدي: `SettingController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `SettingController`
+## ⏭️ التالي بالترتيب الأبجدي: `ShiftController`

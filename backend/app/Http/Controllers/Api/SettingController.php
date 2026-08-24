@@ -24,8 +24,13 @@ final class SettingController extends Controller
     /**
      * Get system settings dictionary
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('roles.manage') && !$user->can('settings.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $tenant = function_exists('tenant') ? tenant() : null;
         $defaultName = $tenant?->name ?? 'مؤسسة تجارية';
 
@@ -65,7 +70,7 @@ final class SettingController extends Controller
             'stores'      => $stores,
             'users_count' => $usersCount,
             'system_info' => $systemInfo,
-        ]);
+        ], 200);
     }
 
     /**
@@ -80,7 +85,7 @@ final class SettingController extends Controller
                 'success'  => true,
                 'message'  => __('nav.settings_saved_success') ?: 'تم حفظ وتحديث إعدادات النظام بنجاح ✓',
                 'settings' => $updated,
-            ]);
+            ], 200);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -94,6 +99,11 @@ final class SettingController extends Controller
      */
     public function sendTestTelegram(Request $request, TelegramService $telegramService): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('roles.manage') && !$user->can('settings.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $token = $request->input('bot_token');
         $chatId = $request->input('chat_id');
 
@@ -109,6 +119,6 @@ final class SettingController extends Controller
         return response()->json([
             'success' => (bool)$res['success'],
             'message' => $res['message'],
-        ]);
+        ], 200);
     }
 }

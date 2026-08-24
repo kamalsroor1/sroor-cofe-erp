@@ -234,15 +234,15 @@ Route::middleware([
         Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update'])->name('profile.update');
 
-        Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index')->middleware('can:roles.manage');
-        Route::post('/settings', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/test', [\App\Http\Controllers\SettingController::class, 'sendTestTelegram'])->name('settings.telegram.test')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/daily-summary', [\App\Http\Controllers\SettingController::class, 'sendDailySummaryTelegram'])->name('settings.telegram.daily_summary')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/low-stock', [\App\Http\Controllers\SettingController::class, 'sendLowStockTelegram'])->name('settings.telegram.low_stock')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/overdue-shifts', [\App\Http\Controllers\SettingController::class, 'sendOverdueShiftTelegram'])->name('settings.telegram.overdue_shifts')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/backup', [\App\Http\Controllers\SettingController::class, 'sendBackupTelegram'])->name('settings.telegram.backup')->middleware('can:roles.manage');
-        Route::get('/settings/backup/download', [\App\Http\Controllers\SettingController::class, 'downloadBackup'])->name('settings.backup.download')->middleware('can:roles.manage');
-        Route::post('/settings/clear-cache', [\App\Http\Controllers\SettingController::class, 'clearCache'])->name('settings.clear_cache')->middleware('can:roles.manage');
+        Route::get('/settings', [\App\Http\Controllers\Api\SettingController::class, 'index'])->name('settings.index')->middleware('can:roles.manage');
+        Route::post('/settings', [\App\Http\Controllers\Api\SettingController::class, 'update'])->name('settings.update')->middleware('can:roles.manage');
+        Route::post('/settings/telegram/test', [\App\Http\Controllers\Api\SettingController::class, 'sendTestTelegram'])->name('settings.telegram.test')->middleware('can:roles.manage');
+        Route::post('/settings/telegram/daily-summary', [\App\Http\Controllers\Api\SettingController::class, 'sendDailySummaryTelegram'])->name('settings.telegram.daily_summary')->middleware('can:roles.manage');
+        Route::post('/settings/telegram/low-stock', [\App\Http\Controllers\Api\SettingController::class, 'sendLowStockTelegram'])->name('settings.telegram.low_stock')->middleware('can:roles.manage');
+        Route::post('/settings/telegram/overdue-shifts', [\App\Http\Controllers\Api\SettingController::class, 'sendOverdueShiftTelegram'])->name('settings.telegram.overdue_shifts')->middleware('can:roles.manage');
+        Route::post('/settings/telegram/backup', [\App\Http\Controllers\Api\SettingController::class, 'sendBackupTelegram'])->name('settings.telegram.backup')->middleware('can:roles.manage');
+        Route::get('/settings/backup/download', [\App\Http\Controllers\Api\SettingController::class, 'downloadBackup'])->name('settings.backup.download')->middleware('can:roles.manage');
+        Route::post('/settings/clear-cache', [\App\Http\Controllers\Api\SettingController::class, 'clearCache'])->name('settings.clear_cache')->middleware('can:roles.manage');
 
         Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index')->middleware('can:roles.manage');
         Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->name('users.store')->middleware('can:roles.manage');
