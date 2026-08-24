@@ -10,12 +10,10 @@
       </p>
 
       <!-- Users Search Box -->
-      <div v-if="allUsers.length > 5" class="relative">
-        <input
+      <div v-if="allUsers.length > 5">
+        <BaseSearchInput
           v-model="userSearchQuery"
-          type="text"
           :placeholder="$t('common.search')"
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-theme-primary/20 font-tajawal"
         />
       </div>
 
@@ -48,22 +46,25 @@
 
       <!-- Form Actions Footer -->
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <button
+        <BaseButton
           type="button"
+          variant="secondary"
+          size="md"
           @click="$emit('close')"
-          class="min-h-[44px] px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold font-tajawal cursor-pointer transition-all active:scale-95"
         >
           {{ $t('common.cancel') }}
-        </button>
+        </BaseButton>
 
-        <button
+        <BaseButton
           type="submit"
-          :disabled="isSubmitting"
-          class="min-h-[44px] px-5 py-2 bg-theme-gradient text-white font-black rounded-2xl text-xs font-tajawal shadow-lg shadow-theme-primary/20 disabled:opacity-50 cursor-pointer flex items-center gap-2 transition-all active:scale-95"
+          variant="primary"
+          size="md"
+          :loading="submitting"
+          class="font-black shadow-lg shadow-theme-primary/20"
         >
-          <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>{{ $t('common.save') }}</span>
-        </button>
+          <Users class="w-4 h-4" />
+          <span>{{ $t('inventory.save_staff_assignments') }}</span>
+        </BaseButton>
       </div>
     </form>
   </AppModal>
@@ -71,29 +72,17 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { Users } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
+import BaseSearchInput from '../Form/BaseSearchInput.vue';
+import BaseButton from '../Common/BaseButton.vue';
 
 const props = defineProps({
-  show: {
-    type: Boolean,
-    default: false,
-  },
-  targetStore: {
-    type: Object,
-    default: null,
-  },
-  allUsers: {
-    type: Array,
-    default: () => [],
-  },
-  modelValue: {
-    type: Array,
-    default: () => [],
-  },
-  isSubmitting: {
-    type: Boolean,
-    default: false,
-  },
+  show: { type: Boolean, default: false },
+  targetStore: { type: Object, default: null },
+  allUsers: { type: Array, default: () => [] },
+  modelValue: { type: Array, default: () => [] },
+  submitting: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'submit', 'update:modelValue']);
@@ -103,7 +92,10 @@ const userSearchQuery = ref('');
 const filteredUsers = computed(() => {
   if (!userSearchQuery.value) return props.allUsers;
   const q = userSearchQuery.value.toLowerCase();
-  return props.allUsers.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
+  return props.allUsers.filter(u =>
+    (u.name && u.name.toLowerCase().includes(q)) ||
+    (u.email && u.email.toLowerCase().includes(q))
+  );
 });
 
 const toggleUser = (userId) => {

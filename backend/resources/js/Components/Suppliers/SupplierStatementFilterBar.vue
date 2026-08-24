@@ -2,30 +2,26 @@
   <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print">
     <!-- Date Inputs -->
     <div class="flex items-center gap-2 flex-wrap font-tajawal">
-      <div class="flex items-center gap-1.5">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('common.from') }}:</span>
-        <input
-          :value="dateFrom"
-          @input="$emit('update:dateFrom', $event.target.value)"
-          type="date"
-          class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-        >
+      <div class="w-36">
+        <BaseDatePicker
+          :model-value="dateFrom"
+          @update:model-value="$emit('update:dateFrom', $event)"
+          :placeholder="$t('common.from')"
+        />
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('common.to') }}:</span>
-        <input
-          :value="dateTo"
-          @input="$emit('update:dateTo', $event.target.value)"
-          type="date"
-          class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-        >
+      <div class="w-36">
+        <BaseDatePicker
+          :model-value="dateTo"
+          @update:model-value="$emit('update:dateTo', $event)"
+          :placeholder="$t('common.to')"
+        />
       </div>
 
       <BaseButton
         type="button"
         variant="primary"
-        size="sm"
+        size="md"
         @click="$emit('filter')"
         class="font-black"
       >
@@ -61,26 +57,18 @@
       >
         {{ $t('common.this_year') }}
       </button>
-
-      <button
-        type="button"
-        @click="$emit('preset', 'all')"
-        class="min-h-[32px] px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
-        :class="activePreset === 'all' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-      >
-        {{ $t('common.all') }}
-      </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import BaseDatePicker from '../Form/BaseDatePicker.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
   dateFrom: { type: String, default: '' },
   dateTo: { type: String, default: '' },
-  activePreset: { type: String, default: 'all' },
+  activePreset: { type: String, default: '' },
 });
 
 defineEmits(['update:dateFrom', 'update:dateTo', 'filter', 'preset']);

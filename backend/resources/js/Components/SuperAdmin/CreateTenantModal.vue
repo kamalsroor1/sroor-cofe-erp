@@ -28,15 +28,16 @@
         </div>
 
         <div>
-          <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">{{ $t('super.selected_plan_label') }}</label>
-          <select
-            :value="form.plan_id"
-            @change="$emit('update:field', 'plan_id', Number($event.target.value))"
+          <BaseSelect
+            :model-value="form.plan_id"
+            @update:model-value="$emit('update:field', 'plan_id', Number($event))"
+            :options="plansList"
+            value-key="id"
+            label-key="name"
+            :label="$t('super.selected_plan_label')"
+            :searchable="false"
             required
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-          >
-            <option v-for="p in plansList" :key="p.id" :value="p.id">{{ p.name }}</option>
-          </select>
+          />
         </div>
       </div>
 
@@ -59,7 +60,9 @@
             @update:model-value="$emit('update:field', 'phone', $event)"
             :label="$t('super.admin_phone_label')"
             :placeholder="$t('super.admin_phone_placeholder')"
+            type="tel"
             class="font-mono"
+            required
           />
         </div>
       </div>
@@ -69,10 +72,9 @@
           <BaseInput
             :model-value="form.password"
             @update:model-value="$emit('update:field', 'password', $event)"
-            :label="$t('super.admin_password_label')"
+            :label="$t('super.initial_password_label')"
+            :placeholder="$t('super.initial_password_placeholder')"
             type="password"
-            placeholder="••••••••"
-            class="font-mono"
             required
           />
         </div>
@@ -83,47 +85,68 @@
             @update:model-value="$emit('update:field', 'trial_days', Number($event))"
             :label="$t('super.trial_days_label')"
             type="number"
+            min="0"
             class="font-mono"
           />
         </div>
       </div>
 
-      <!-- Custom MySQL Database Credentials (for Hostinger Manual/Custom DBs) -->
-      <div class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-theme-primary">🗄️ إعدادات قاعدة بيانات MySQL (لهوستنجر / اختياري)</span>
-        </div>
-        
-        <div>
-          <BaseInput
-            :model-value="form.tenancy_db_name"
-            @update:model-value="$emit('update:field', 'tenancy_db_name', $event)"
-            label="اسم قاعدة البيانات الكامل"
-            placeholder="مثلاً: u910151740_tenant_2m"
-            class="font-mono"
-          />
-        </div>
+      <!-- Advanced Custom Database Settings Toggle -->
+      <div class="pt-2">
+        <button
+          type="button"
+          @click="showCustomDb = !showCustomDb"
+          class="text-[11px] text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer"
+        >
+          <span>{{ showCustomDb ? '▼ ' + $t('super.hide_custom_db_settings') : '▶ ' + $t('super.show_custom_db_settings') }}</span>
+        </button>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <BaseInput
-              :model-value="form.tenancy_db_username"
-              @update:model-value="$emit('update:field', 'tenancy_db_username', $event)"
-              label="اسم مستخدم MySQL (إن كان مختلفاً)"
-              placeholder="اتركه فارغاً للافتراضي"
-              class="font-mono"
-            />
+        <div v-if="showCustomDb" class="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+            {{ $t('super.custom_db_warning') }}
           </div>
 
-          <div>
-            <BaseInput
-              :model-value="form.tenancy_db_password"
-              @update:model-value="$emit('update:field', 'tenancy_db_password', $event)"
-              label="كلمة مرور MySQL (إن كانت مختلفة)"
-              type="password"
-              placeholder="اتركه فارغاً للافتراضية"
-              class="font-mono"
-            />
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <BaseInput
+                :model-value="form.db_host"
+                @update:model-value="$emit('update:field', 'db_host', $event)"
+                :label="$t('super.db_host_label')"
+                placeholder="127.0.0.1"
+                class="font-mono"
+              />
+            </div>
+
+            <div>
+              <BaseInput
+                :model-value="form.db_name"
+                @update:model-value="$emit('update:field', 'db_name', $event)"
+                :label="$t('super.db_name_label')"
+                placeholder="tenant_custom_db"
+                class="font-mono"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <BaseInput
+                :model-value="form.db_username"
+                @update:model-value="$emit('update:field', 'db_username', $event)"
+                :label="$t('super.db_user_label')"
+                placeholder="root"
+                class="font-mono"
+              />
+            </div>
+
+            <div>
+              <BaseInput
+                :model-value="form.db_password"
+                @update:model-value="$emit('update:field', 'db_password', $event)"
+                :label="$t('super.db_pass_label')"
+                type="password"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -143,9 +166,9 @@
           variant="primary"
           size="md"
           :loading="isSubmitting"
-          class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black shadow-lg"
+          class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black shadow-lg shadow-purple-500/20"
         >
-          {{ isSubmitting ? $t('super.provisioning_status') : $t('super.create_and_provision_btn') }}
+          {{ isSubmitting ? $t('super.creating_org_status') : $t('super.create_and_provision_btn') }}
         </BaseButton>
       </div>
     </form>
@@ -153,8 +176,10 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
+import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
@@ -165,4 +190,6 @@ defineProps({
 });
 
 defineEmits(['close', 'submit', 'update:field']);
+
+const showCustomDb = ref(false);
 </script>

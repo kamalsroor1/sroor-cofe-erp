@@ -17,65 +17,78 @@
 
       <!-- Store Selector Filter -->
       <div class="w-full sm:w-56">
-        <select
-          :value="storeId"
-          @change="$emit('update:storeId', $event.target.value)"
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none cursor-pointer"
-        >
-          <option value="all">{{ $t('reports.all_stores_branches') }}</option>
-          <option v-for="s in stores" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
+        <BaseSelect
+          :model-value="storeId"
+          @update:model-value="$emit('update:storeId', $event)"
+          :options="storeOptions"
+          :searchable="false"
+        />
       </div>
     </div>
 
     <!-- Custom Dates & Stock Filter Row -->
     <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-200 dark:border-slate-800/80">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('common.from') }}:</span>
-        <input
-          :value="from"
-          @input="$emit('update:from', $event.target.value)"
-          @change="$emit('date-change')"
-          type="date"
-          class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none cursor-pointer"
-        >
-        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('common.to') }}:</span>
-        <input
-          :value="to"
-          @input="$emit('update:to', $event.target.value)"
-          @change="$emit('date-change')"
-          type="date"
-          class="h-9 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none cursor-pointer"
-        >
+        <div class="w-36">
+          <BaseDatePicker
+            :model-value="from"
+            @update:model-value="$emit('update:from', $event); $emit('date-change')"
+            :placeholder="$t('common.from')"
+          />
+        </div>
+        <span class="text-xs text-slate-400 font-bold">—</span>
+        <div class="w-36">
+          <BaseDatePicker
+            :model-value="to"
+            @update:model-value="$emit('update:to', $event); $emit('date-change')"
+            :placeholder="$t('common.to')"
+          />
+        </div>
       </div>
 
       <div v-if="activeTab === 'inventory'" class="flex items-center gap-2">
-        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">{{ $t('reports.stock_filter_label') }}:</span>
-        <select
-          :value="stockFilter"
-          @change="$emit('update:stockFilter', $event.target.value)"
-          class="h-9 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none cursor-pointer"
-        >
-          <option value="all">{{ $t('inventory.all_stock') }}</option>
-          <option value="in_stock">{{ $t('reports.in_stock_only') }}</option>
-          <option value="zero_stock">{{ $t('reports.zero_stock_only') }}</option>
-        </select>
+        <BaseSelect
+          :model-value="stockFilter"
+          @update:model-value="$emit('update:stockFilter', $event)"
+          :options="stockOptions"
+          wrapper-class="w-44"
+          :searchable="false"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+import BaseSelect from '../Form/BaseSelect.vue';
+import BaseDatePicker from '../Form/BaseDatePicker.vue';
+import { useTrans } from '../../Composables/useTrans';
+
+const { t } = useTrans();
+
+const props = defineProps({
   presets: { type: Array, default: () => [] },
-  period: { type: String, default: 'this_month' },
+  period: { type: String, default: 'today' },
   from: { type: String, default: '' },
   to: { type: String, default: '' },
   storeId: { type: [String, Number], default: 'all' },
-  stockFilter: { type: String, default: 'all' },
   stores: { type: Array, default: () => [] },
+  stockFilter: { type: String, default: 'all' },
   activeTab: { type: String, default: 'sales' },
 });
 
-defineEmits(['set-period', 'update:storeId', 'update:from', 'update:to', 'update:stockFilter', 'date-change']);
+defineEmits(['set-period', 'update:from', 'update:to', 'update:storeId', 'update:stockFilter', 'date-change']);
+
+const storeOptions = computed(() => [
+  { value: 'all', label: t('reports.all_stores_branches') },
+  ...props.stores.map(s => ({ value: s.id, label: s.name }))
+]);
+
+const stockOptions = computed(() => [
+  { value: 'all', label: t('inventory.all_stock') },
+  { value: 'in_stock', label: t('reports.in_stock_only') },
+  { value: 'low_stock', label: t('reports.low_stock_only') },
+  { value: 'out_of_stock', label: t('reports.out_of_stock_only') },
+]);
 </script>

@@ -30,17 +30,15 @@
           />
         </div>
 
-        <div class="space-y-1.5">
-          <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.target_platform_label') }}</label>
-          <select
-            :value="form.platform"
-            @change="$emit('update:field', 'platform', $event.target.value)"
-            class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 font-tajawal"
-          >
-            <option value="android">📱 Android (APK)</option>
-            <option value="windows">💻 Windows</option>
-            <option value="ios">🍏 iOS</option>
-          </select>
+        <div>
+          <BaseSelect
+            :model-value="form.platform"
+            @update:model-value="$emit('update:field', 'platform', $event)"
+            :options="platformOptions"
+            :label="$t('super.target_platform_label')"
+            :searchable="false"
+            required
+          />
         </div>
 
         <div>
@@ -57,31 +55,23 @@
       </div>
 
       <!-- Force update toggle -->
-      <label class="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 cursor-pointer">
-        <div>
-          <div class="font-bold text-slate-900 dark:text-white">{{ $t('super.force_update_label') }}</div>
-          <div class="text-[11px] text-slate-400 mt-0.5">{{ $t('super.force_update_desc') }}</div>
-        </div>
-        <input
-          type="checkbox"
-          :checked="form.is_force_update"
-          @change="$emit('update:field', 'is_force_update', $event.target.checked)"
-          class="w-4.5 h-4.5 rounded text-purple-600 focus:ring-purple-500"
-        />
-      </label>
+      <BaseCheckbox
+        :model-value="form.is_force_update"
+        @update:model-value="$emit('update:field', 'is_force_update', $event)"
+        :label="$t('super.force_update_label')"
+        :description="$t('super.force_update_desc')"
+        wrapper-class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800"
+      />
 
       <!-- Release notes textarea -->
-      <div class="space-y-1.5">
-        <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.release_notes_ar_label') }}</label>
-        <textarea
-          :value="form.release_notes_ar"
-          @input="$emit('update:field', 'release_notes_ar', $event.target.value)"
-          rows="3"
-          required
-          placeholder="• ميزة 1...&#10;• ميزة 2..."
-          class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 leading-relaxed font-tajawal"
-        ></textarea>
-      </div>
+      <BaseTextarea
+        :model-value="form.release_notes_ar"
+        @update:model-value="$emit('update:field', 'release_notes_ar', $event)"
+        :label="$t('super.release_notes_ar_label')"
+        :rows="3"
+        placeholder="• ميزة 1...&#10;• ميزة 2..."
+        required
+      />
 
       <!-- File Upload -->
       <div class="space-y-1.5">
@@ -124,6 +114,9 @@
 import { Rocket } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
+import BaseSelect from '../Form/BaseSelect.vue';
+import BaseCheckbox from '../Form/BaseCheckbox.vue';
+import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
@@ -133,4 +126,10 @@ defineProps({
 });
 
 defineEmits(['close', 'submit', 'update:field', 'file-change']);
+
+const platformOptions = [
+  { value: 'android', label: '📱 Android (APK)' },
+  { value: 'windows', label: '💻 Windows' },
+  { value: 'ios', label: '🍏 iOS' },
+];
 </script>

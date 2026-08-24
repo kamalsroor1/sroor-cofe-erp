@@ -19,19 +19,14 @@
 
         <!-- Refund cash from drawer -->
         <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-sans font-tajawal">
-            {{ $t('returns.refund_cash_from_drawer') }}
-          </label>
-          <input
-            :value="refundAmount"
-            @input="$emit('update:refund-amount', $event.target.value)"
-            type="number"
-            step="0.001"
-            min="0"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none"
-            placeholder="0.00"
-          >
-          <span class="text-[10px] text-slate-500 font-sans font-tajawal">{{ $t('returns.refund_zero_hint') }}</span>
+          <BaseNumberInput
+            :model-value="refundAmount"
+            @update:model-value="$emit('update:refund-amount', $event)"
+            :label="$t('returns.refund_cash_from_drawer')"
+            :hint="$t('returns.refund_zero_hint')"
+            :decimals="3"
+            class="font-mono text-emerald-600 dark:text-emerald-400 font-bold"
+          />
         </div>
       </div>
 
@@ -54,19 +49,18 @@
 
 <script setup>
 import { RotateCcw } from 'lucide-vue-next';
+import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { formatMoney } = useFormatters();
 
 defineProps({
   itemsCount: { type: Number, default: 0 },
   netTotal: { type: Number, default: 0 },
-  refundAmount: { type: [String, Number], default: '0.000' },
+  refundAmount: { type: [Number, String], default: 0 },
   isSubmitting: { type: Boolean, default: false },
 });
 
 defineEmits(['update:refund-amount', 'submit-return']);
-
-const formatMoney = (val) => {
-    const num = parseFloat(val) || 0;
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 </script>

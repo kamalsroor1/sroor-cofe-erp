@@ -1,18 +1,15 @@
 <template>
-  <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+  <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 font-tajawal">
     <!-- Search Input -->
-    <div class="relative flex-1 w-full">
-      <Search class="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-      <input
-        :value="modelValue"
-        type="text"
+    <div class="flex-1 w-full">
+      <BaseSearchInput
+        :model-value="modelValue"
+        @update:model-value="$emit('update:modelValue', $event)"
         :placeholder="$t('invoices.search_invoices_field_placeholder')"
-        @input="$emit('update:modelValue', $event.target.value)"
-        class="w-full pr-10 pl-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-theme-primary/30 min-h-[44px]"
       />
     </div>
 
-    <!-- Date Quick Presets Pills (Horizontal scrollable with smooth touch) -->
+    <!-- Date Quick Presets Pills -->
     <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
       <button
         type="button"
@@ -31,7 +28,7 @@
 </template>
 
 <script setup>
-import { Search } from 'lucide-vue-next';
+import BaseSearchInput from '../Form/BaseSearchInput.vue';
 
 defineProps({
   modelValue: { type: String, default: '' },

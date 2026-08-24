@@ -86,26 +86,20 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 pt-2">
-        <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-          <input
-            type="checkbox"
-            :checked="form.is_active"
-            @change="$emit('update:field', 'is_active', $event.target.checked)"
-            class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary"
-          />
-          <span class="text-slate-700 dark:text-slate-300 font-bold">{{ $t('super.plan_active_checkbox') }}</span>
-        </label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <BaseCheckbox
+          :model-value="form.is_active"
+          @update:model-value="$emit('update:field', 'is_active', $event)"
+          :label="$t('super.plan_active_checkbox')"
+          wrapper-class="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+        />
 
-        <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-          <input
-            type="checkbox"
-            :checked="form.is_popular"
-            @change="$emit('update:field', 'is_popular', $event.target.checked)"
-            class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary"
-          />
-          <span class="text-slate-700 dark:text-slate-300 font-bold">{{ $t('super.popular_plan_checkbox') }}</span>
-        </label>
+        <BaseCheckbox
+          :model-value="form.is_popular"
+          @update:model-value="$emit('update:field', 'is_popular', $event)"
+          :label="$t('super.popular_plan_checkbox')"
+          wrapper-class="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+        />
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
@@ -135,6 +129,7 @@
 <script setup>
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
+import BaseCheckbox from '../Form/BaseCheckbox.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({

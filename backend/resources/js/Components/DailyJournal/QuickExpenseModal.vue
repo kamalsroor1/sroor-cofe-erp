@@ -6,80 +6,78 @@
   >
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <div>
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-          {{ $t('expenses.expense_item') }} <span class="text-rose-500">*</span>
-        </label>
-        <input
-          :value="form.title"
-          @input="$emit('update:field', 'title', $event.target.value)"
-          type="text"
-          required
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+        <BaseInput
+          :model-value="form.title"
+          @update:model-value="$emit('update:field', 'title', $event)"
+          :label="$t('expenses.expense_item')"
           :placeholder="$t('treasury.expense_title_placeholder')"
-        >
+          required
+        />
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('common.amount') }} <span class="text-rose-500">*</span>
-          </label>
-          <input
-            :value="form.amount"
-            @input="$emit('update:field', 'amount', $event.target.value)"
-            type="number"
-            step="0.001"
+          <BaseNumberInput
+            :model-value="form.amount"
+            @update:model-value="$emit('update:field', 'amount', $event)"
+            :label="$t('common.amount')"
+            :decimals="3"
+            class="font-mono text-rose-600 dark:text-rose-400 font-bold"
             required
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-rose-500 dark:text-rose-400 font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
-            placeholder="0.00"
-          >
+          />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('treasury.cost_center') }} <span class="text-rose-500">*</span>
-          </label>
-          <select
-            :value="form.cost_center"
-            @change="$emit('update:field', 'cost_center', $event.target.value)"
+          <BaseSelect
+            :model-value="form.cost_center"
+            @update:model-value="$emit('update:field', 'cost_center', $event)"
+            :options="costCenterOptions"
+            :label="$t('treasury.cost_center')"
+            :searchable="false"
             required
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          >
-            <option value="operational">{{ $t('treasury.cost_center_operational') }}</option>
-            <option value="hospitality">{{ $t('treasury.cost_center_hospitality') }}</option>
-            <option value="packaging">{{ $t('treasury.cost_center_packaging') }}</option>
-            <option value="utilities">{{ $t('treasury.cost_center_utilities') }}</option>
-            <option value="salaries">{{ $t('treasury.cost_center_salaries') }}</option>
-            <option value="maintenance">{{ $t('treasury.cost_center_maintenance') }}</option>
-          </select>
+          />
         </div>
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-          {{ $t('treasury.payment_method') }} <span class="text-rose-500">*</span>
-        </label>
-        <select
-          :value="form.payment_method"
-          @change="$emit('update:field', 'payment_method', $event.target.value)"
+        <BaseSelect
+          :model-value="form.payment_method"
+          @update:model-value="$emit('update:field', 'payment_method', $event)"
+          :options="paymentMethodOptions"
+          :label="$t('treasury.payment_method')"
+          :searchable="false"
           required
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-        >
-          <option value="cash">{{ $t('treasury.method_cash_drawer') }}</option>
-          <option value="instapay">{{ $t('treasury.method_instapay') }}</option>
-          <option value="e_wallet">{{ $t('treasury.method_wallet') }}</option>
-          <option value="visa">{{ $t('treasury.method_visa') }}</option>
-        </select>
+        />
+      </div>
+
+      <div>
+        <BaseInput
+          :model-value="form.category"
+          @update:model-value="$emit('update:field', 'category', $event)"
+          :label="$t('expenses.category')"
+          :placeholder="$t('expenses.category_placeholder')"
+          required
+        />
+      </div>
+
+      <div>
+        <BaseInput
+          :model-value="form.notes"
+          @update:model-value="$emit('update:field', 'notes', $event)"
+          :label="$t('common.notes')"
+          :placeholder="$t('expenses.notes_placeholder')"
+        />
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <button
+        <BaseButton
           type="button"
+          variant="secondary"
+          size="md"
           @click="$emit('close')"
-          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold cursor-pointer"
         >
           {{ $t('common.cancel') }}
-        </button>
+        </BaseButton>
 
         <BaseButton
           type="submit"
@@ -88,7 +86,7 @@
           :loading="submitting"
           class="font-black shadow-theme-primary shadow-lg"
         >
-          {{ $t('treasury.submit_expense_btn') }}
+          {{ $t('treasury.record_expense_btn') }}
         </BaseButton>
       </div>
     </form>
@@ -97,7 +95,13 @@
 
 <script setup>
 import AppModal from '../Common/AppModal.vue';
+import BaseInput from '../Form/BaseInput.vue';
+import BaseNumberInput from '../Form/BaseNumberInput.vue';
+import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import { useTrans } from '../../Composables/useTrans';
+
+const { t } = useTrans();
 
 defineProps({
   show: { type: Boolean, default: false },
@@ -106,4 +110,21 @@ defineProps({
 });
 
 defineEmits(['close', 'submit', 'update:field']);
+
+const costCenterOptions = [
+  { value: 'operational', label: t('treasury.cost_center_operational') },
+  { value: 'hospitality', label: t('treasury.cost_center_hospitality') },
+  { value: 'packaging', label: t('treasury.cost_center_packaging') },
+  { value: 'utilities', label: t('treasury.cost_center_utilities') },
+  { value: 'salaries', label: t('treasury.cost_center_salaries') },
+  { value: 'maintenance', label: t('treasury.cost_center_maintenance') },
+];
+
+const paymentMethodOptions = [
+  { value: 'cash', label: '💵 ' + t('treasury.method_cash_drawer') },
+  { value: 'instapay', label: '⚡ ' + t('contacts.instapay') },
+  { value: 'e_wallet', label: '📱 ' + t('contacts.wallet') },
+  { value: 'visa', label: '💳 ' + t('treasury.method_visa') },
+  { value: 'bank_transfer', label: '🏦 ' + t('contacts.bank_transfer') },
+];
 </script>

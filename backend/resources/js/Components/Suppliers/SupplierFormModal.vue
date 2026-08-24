@@ -7,111 +7,81 @@
     <form @submit.prevent="$emit('save')" class="space-y-4 font-tajawal">
       <!-- Name & Company Name Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('contacts.supplier_name') }} <span class="text-rose-500">*</span>
-          </label>
-          <input
-            :value="form.name"
-            @input="$emit('update:field', 'name', $event.target.value)"
-            type="text"
-            required
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :placeholder="$t('contacts.supplier_name_placeholder')"
-          >
-        </div>
+        <BaseInput
+          :model-value="form.name"
+          @update:model-value="$emit('update:field', 'name', $event)"
+          :label="$t('contacts.supplier_name')"
+          :placeholder="$t('contacts.supplier_name_placeholder')"
+          required
+        />
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('contacts.company_name') }}
-          </label>
-          <input
-            :value="form.company_name"
-            @input="$emit('update:field', 'company_name', $event.target.value)"
-            type="text"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :placeholder="$t('contacts.company_name_placeholder')"
-          >
-        </div>
+        <BaseInput
+          :model-value="form.company_name"
+          @update:model-value="$emit('update:field', 'company_name', $event)"
+          :label="$t('contacts.company_name')"
+          :placeholder="$t('contacts.company_name_placeholder')"
+        />
       </div>
 
       <!-- Phone & Address Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('contacts.phone') }}
-          </label>
-          <input
-            :value="form.phone"
-            @input="$emit('update:field', 'phone', $event.target.value)"
-            type="text"
-            dir="ltr"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :placeholder="$t('contacts.phone_placeholder')"
-          >
-        </div>
+        <BaseInput
+          :model-value="form.phone"
+          @update:model-value="$emit('update:field', 'phone', $event)"
+          :label="$t('contacts.phone')"
+          :placeholder="$t('contacts.phone_placeholder')"
+          type="tel"
+          dir="ltr"
+          class="font-mono"
+        />
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {{ $t('contacts.address') }}
-          </label>
-          <input
-            :value="form.address"
-            @input="$emit('update:field', 'address', $event.target.value)"
-            type="text"
-            class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            :placeholder="$t('contacts.address_placeholder')"
-          >
-        </div>
+        <BaseInput
+          :model-value="form.address"
+          @update:model-value="$emit('update:field', 'address', $event)"
+          :label="$t('contacts.address')"
+          :placeholder="$t('contacts.address_placeholder')"
+        />
       </div>
 
-      <!-- Opening Balance (Create Only) -->
+      <!-- Initial Balance (Only for new suppliers) -->
       <div v-if="!editingSupplier">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-          {{ $t('contacts.opening_balance') }}
-        </label>
-        <input
-          :value="form.opening_balance"
-          @input="$emit('update:field', 'opening_balance', $event.target.value)"
-          type="number"
-          step="0.001"
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          placeholder="0.000"
-        >
+        <BaseNumberInput
+          :model-value="form.initial_balance"
+          @update:model-value="$emit('update:field', 'initial_balance', Number($event))"
+          :label="$t('contacts.initial_balance')"
+          :hint="$t('contacts.initial_balance_hint')"
+          :decimals="3"
+        />
       </div>
 
-      <!-- Notes -->
-      <div>
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-          {{ $t('common.notes') }}
-        </label>
-        <textarea
-          :value="form.notes"
-          @input="$emit('update:field', 'notes', $event.target.value)"
-          rows="2"
-          class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          :placeholder="$t('contacts.notes_placeholder')"
-        ></textarea>
-      </div>
+      <!-- Notes Textarea -->
+      <BaseTextarea
+        :model-value="form.notes"
+        @update:model-value="$emit('update:field', 'notes', $event)"
+        :label="$t('common.notes')"
+        :rows="2"
+        :placeholder="$t('contacts.notes_placeholder')"
+      />
 
-      <!-- Modal Actions -->
-      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <button
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <BaseButton
           type="button"
+          variant="secondary"
+          size="md"
           @click="$emit('close')"
-          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold cursor-pointer"
         >
           {{ $t('common.cancel') }}
-        </button>
+        </BaseButton>
 
         <BaseButton
           type="submit"
           variant="primary"
           size="md"
-          :loading="submitting"
-          class="font-black shadow-theme-primary shadow-lg"
+          :loading="saving"
+          class="font-black shadow-lg shadow-theme-primary/20"
         >
-          {{ $t('common.save') }}
+          {{ editingSupplier ? $t('common.save_changes') : $t('contacts.save_supplier') }}
         </BaseButton>
       </div>
     </form>
@@ -120,13 +90,16 @@
 
 <script setup>
 import AppModal from '../Common/AppModal.vue';
+import BaseInput from '../Form/BaseInput.vue';
+import BaseNumberInput from '../Form/BaseNumberInput.vue';
+import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
   show: { type: Boolean, default: false },
   editingSupplier: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
-  submitting: { type: Boolean, default: false },
+  saving: { type: Boolean, default: false },
 });
 
 defineEmits(['close', 'save', 'update:field']);

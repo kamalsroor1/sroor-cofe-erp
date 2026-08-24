@@ -29,62 +29,36 @@
     <!-- Fields -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
       <!-- Customer Field -->
-      <div v-if="form.return_type === 'sales_return'" class="space-y-1">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {{ $t('returns.customer_from') }}
-        </label>
-        <select
-          :value="form.customer_id"
-          @change="$emit('update:field', 'customer_id', Number($event.target.value))"
+      <div v-if="form.return_type === 'sales_return'">
+        <BaseSelect
+          :model-value="form.customer_id"
+          @update:model-value="$emit('update:field', 'customer_id', Number($event))"
+          :options="customerOptions"
+          :label="$t('returns.customer_from')"
+          :placeholder="$t('pos.choose_invoice_customer')"
           required
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-        >
-          <option :value="null" disabled>{{ $t('pos.choose_invoice_customer') }}</option>
-          <option v-for="c in customers" :key="c.id" :value="c.id">
-            {{ c.name }} {{ c.phone ? `(${c.phone})` : '' }}
-          </option>
-        </select>
+        />
       </div>
 
       <!-- Supplier Field -->
-      <div v-else class="space-y-1">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {{ $t('returns.supplier_to') }}
-        </label>
-        <select
-          :value="form.supplier_id"
-          @change="$emit('update:field', 'supplier_id', Number($event.target.value))"
+      <div v-else>
+        <BaseSelect
+          :model-value="form.supplier_id"
+          @update:model-value="$emit('update:field', 'supplier_id', Number($event))"
+          :options="supplierOptions"
+          :label="$t('returns.supplier_to')"
+          :placeholder="$t('purchases.select_supplier')"
           required
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-        >
-          <option :value="null" disabled>{{ $t('purchases.select_supplier') }}</option>
-          <option v-for="s in suppliers" :key="s.id" :value="s.id">
-            {{ s.name }} {{ s.company_name ? `(${s.company_name})` : '' }}
-          </option>
-        </select>
+        />
       </div>
 
       <!-- Return Date -->
-      <div class="space-y-1">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {{ $t('returns.return_date') }} <span class="text-rose-500">*</span>
-        </label>
-        <input
-          :value="form.return_date"
-          @input="$emit('update:field', 'return_date', $event.target.value)"
-          type="date"
+      <div>
+        <BaseDatePicker
+          :model-value="form.return_date"
+          @update:model-value="$emit('update:field', 'return_date', $event)"
+          :label="$t('returns.return_date')"
           required
-          class="w-full h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-theme-primary focus:outline-none"
-        >
-      </div>
-
-      <!-- Reason -->
-      <div class="sm:col-span-2 space-y-1">
-        <BaseInput
-          :model-value="form.reason"
-          @update:model-value="$emit('update:field', 'reason', $event)"
-          :label="$t('returns.reason')"
-          :placeholder="$t('returns.reason_input_placeholder')"
         />
       </div>
     </div>
@@ -92,13 +66,29 @@
 </template>
 
 <script setup>
-import BaseInput from '../Form/BaseInput.vue';
+import { computed } from 'vue';
+import BaseSelect from '../Form/BaseSelect.vue';
+import BaseDatePicker from '../Form/BaseDatePicker.vue';
 
-defineProps({
-  form: { type: Object, default: () => ({}) },
+const props = defineProps({
+  form: { type: Object, required: true },
   customers: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
 });
 
 defineEmits(['type-change', 'update:field']);
+
+const customerOptions = computed(() =>
+  props.customers.map(c => ({
+    value: c.id,
+    label: `${c.name} ${c.phone ? '(' + c.phone + ')' : ''}`
+  }))
+);
+
+const supplierOptions = computed(() =>
+  props.suppliers.map(s => ({
+    value: s.id,
+    label: `${s.name} ${s.phone ? '(' + s.phone + ')' : ''}`
+  }))
+);
 </script>
