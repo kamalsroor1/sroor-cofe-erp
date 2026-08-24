@@ -207,10 +207,10 @@ Route::middleware([
         Route::get('/reports/export-abc', [\App\Http\Controllers\ReportController::class, 'exportAbc'])->name('reports.export.abc')->middleware('can:reports.view');
 
         // Operational Expenses & Supplies
-        Route::get('/expenses', [\App\Http\Controllers\ExpenseController::class, 'index'])->name('expenses.index')->middleware('can:expenses.manage');
-        Route::post('/expenses', [\App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store')->middleware('can:expenses.manage');
-        Route::put('/expenses/{id}', [\App\Http\Controllers\ExpenseController::class, 'update'])->name('expenses.update')->middleware('can:expenses.manage');
-        Route::delete('/expenses/{id}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->name('expenses.destroy')->middleware('can:expenses.manage');
+        Route::get('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'index'])->name('expenses.index')->middleware('can:expenses.manage');
+        Route::post('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'store'])->name('expenses.store')->middleware('can:expenses.manage');
+        Route::put('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'update'])->name('expenses.update')->middleware('can:expenses.manage');
+        Route::delete('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'destroy'])->name('expenses.destroy')->middleware('can:expenses.manage');
 
         // Coffee Blending Master & Roastery Recipe
         Route::get('/coffee-blender', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'calculate'])->name('coffee.blender')->middleware('can:items.create');
