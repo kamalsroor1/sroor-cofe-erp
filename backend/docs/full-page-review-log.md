@@ -1967,3 +1967,64 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-tenants-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 4.93 ثانية.
+
+
+---
+
+## 📌 صفحة 31: تفاصيل المستأجر والتحكم والمحاكاة (`SuperAdminTenantShowView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/super-admin/tenants/:id`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 571 سطراً إلى 5 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 75 سطر + كبسولة المنطق useSuperAdminTenantShow + رأس تنفيذي تفاعلي مع شارات الحالة والدخول كأدمن وتشغيل الميجريشن + شبكة مؤشرات تشغيلية حية + بطاقة إدارة وتخصيص وحدات القياس المعتمدة + بطاقة مصفوفة الميزات والـ Feature Flags + نافذة AppModal لتعديل الحالة وتمديد الاشتراك + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** تفاصيل المستأجر والتحكم والمحاكاة (Super Admin Tenant Show & Control)
+* **المسار (Route):** `/super-admin/tenants/:id`
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminTenantShowView.vue` (Thin Orchestrator: ~75 سطر)
+* **الغرض منها:** الإشراف الدقيق على حساب المؤسسة الفردية والتحكم في ميزاتها ووحدات قياسها وتمديد اشتراكها وتشغيل الميجريشن.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **الرأس التنفيذي وأزرار الإجراءات (`TenantShowHeader.vue`):**
+   * عرض الاسم والشارة والمعرف والنطاق والباقة، وأزرار الدخول كأدمن، تعديل الحالة، تشغيل الميجريشن، والحذف.
+2. **شبكة المؤشرات التشغيلية (`TenantStatsGrid.vue`):**
+   * بطاقات المؤشرات الـ 5 (المستخدمين، الفروع، الأصناف، الفواتير، وحجم العمليات الإجمالي).
+3. **بطاقة إدارة وتخصيص وحدات القياس (`TenantUnitsCard.vue`):**
+   * استعراض الوحدات النشطة، الإضافة من القوالب العامة، وإضافة وحدة مخصصة مع زر الحفظ.
+4. **بطاقة مصفوفة الميزات والـ Feature Flags (`TenantFeaturesMatrixCard.vue`):**
+   * استعراض وتبديل ميزات الباقة الاستثنائية للمستأجر بشكل فوري.
+5. **نافذة تعديل الحالة والاشتراك (`TenantStatusModal.vue`):**
+   * نافذة `AppModal` لتغيير حالة الحساب وتمديد أيام الاشتراك.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/super-admin/tenants/{id}`, `POST /api/v1/super-admin/tenants/{id}/override-feature`, `POST /api/v1/super-admin/tenants/{id}/update-units`, `POST /api/v1/super-admin/tenants/{id}/run-migrations`, `POST /api/v1/super-admin/tenants/{id}/toggle-status`, `DELETE /api/v1/super-admin/tenants/{id}`.
+* **Composables:** `useSuperAdminTenantShow.js`, `useFormatters.js`, `useTrans.js`.
+* **المكونات المشتركة:** `BaseButton.vue`, `BaseInput.vue`, `AppModal.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `BaseButton.vue`, `BaseInput.vue`, `AppModal.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/SuperAdmin/`):**
+  * `TenantShowHeader.vue`, `TenantStatsGrid.vue`, `TenantUnitsCard.vue`, `TenantFeaturesMatrixCard.vue`, `TenantStatusModal.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** ترتيب عمودي للرأس التنفيذي، شبكة مؤشرات مرنة، بطاقات ملائمة للمس مع أزرار بارتفاع $\ge 40	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** تقسيم عمودين 6/6 لوحدات القياس ومصفوفة الميزات، شبكة خماسية للمؤشرات.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/super.php` و `lang/en/super.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-tenant-show-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.24 ثانية.
