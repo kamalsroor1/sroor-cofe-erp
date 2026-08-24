@@ -2146,3 +2146,62 @@
 ### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
 * ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-app-versions-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
 * ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.32 ثانية.
+
+
+---
+
+## 📌 صفحة 34: إدارة وحدات القياس المركزية القياسية (`SuperAdminUnitsView.vue`) — بتاريخ 2026-08-24
+* **المسار:** `/super-admin/units`
+* **الحالة العامة:** ✅ مكتملة 100% (تفكيك 212 سطراً إلى 3 مكونات فرعية متخصصة + نمط المنسق النحيف Thin Orchestrator < 65 سطر + كبسولة المنطق useSuperAdminUnits + شبكة شارات الوحدات المفعلة مع تصنيف العددية/الكسرية وزر الإزالة + قسم إضافة وحدة مخصصة جديدة + قسم المقترحات الشائعة للإضافة الفورية بنقرة واحدة + تجاوب لمسي كامل لكافة المقاسات الـ 5 + تعريب كامل بدون نصوص ثابتة + اختبارات E2E ناجحة 7/7).
+
+---
+
+### 1. التوثيق الكامل (Full Documentation)
+
+#### نظرة عامة:
+* **اسم الصفحة:** إدارة وحدات القياس المركزية للنظام (Super Admin Measurement Units)
+* **المسار (Route):** `/super-admin/units`
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminUnitsView.vue` (Thin Orchestrator: ~65 سطر)
+* **الغرض منها:** تحديد وتخصيص وحدات القياس المركزية القياسية المتاحة لكافة المستأجرين في المنظومة.
+
+#### تقسيم الأجزاء (Sections & Components Hierarchy):
+1. **رأس الصفحة وإجراءات الحفظ (`PageHeader.vue`):**
+   * عنوان الصفحة، زر العودة للوحة القيادة وزر حفظ التعديلات.
+2. **شبكة شارات الوحدات المفعلة (`ActiveUnitsGrid.vue`):**
+   * شارات الوحدات، تصنيف نوع الوحدة (عددية/كسرية)، وزر الحذف.
+3. **قسم إضافة وحدة مخصصة (`AddCustomUnitSection.vue`):**
+   * حقل إدخال الوحدة المخصصة وزر الإضافة.
+4. **قسم المقترحات الشائعة (`UnitPresetSuggestions.vue`):**
+   * أزرار إضافة الوحدات المقترحة بنقرة واحدة.
+
+#### الاعتماديات والمصادر:
+* **API Endpoints:** `GET /api/v1/super-admin/units`, `POST /api/v1/super-admin/units`.
+* **Composables:** `useSuperAdminUnits.js`, `useTrans.js`.
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+
+---
+
+### 2. المكونات المشتركة (Shared Components)
+* **المكونات المشتركة المستخدمة:**
+  * `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+* **المكونات التابعة للصفحة (داخل `resources/js/Components/SuperAdmin/`):**
+  * `ActiveUnitsGrid.vue`, `AddCustomUnitSection.vue`, `UnitPresetSuggestions.vue`.
+
+---
+
+### 3. التجاوب وتجربة اللمس (Responsive & Touch Ergonomics)
+* **📱 هواتف (360px - 430px):** ترتيب عمودي، شارات قابلة للنقر والإزالة بسهولة، أزرار بارتفاع $\ge 40	ext{px}$.
+* **💻 تابلت وديسكتوب (768px - 1280px+):** تنسيق بطاقات وشارات متراصة بمرونة تامة.
+* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+
+---
+
+### 4. الترجمة والتعريب (100% Zero Hardcoded Localization)
+* ترجمة عربية وإنجليزية كاملة في `lang/ar/super.php` و `lang/en/super.php` و `defaultTranslations.js`.
+* نسبة التطابق: ✅ 100%.
+
+---
+
+### 5. الاختبار والتحقق الآلي (Automated Tests Suite)
+* ✅ **اختبار الفرونت إند الشامل:** تشغيل `e2e/flows/super-admin-units-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
+* ✅ **فحص البناء:** تشغيل `npm run build` -> تم البناء بنجاح في 5.33 ثانية.
