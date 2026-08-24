@@ -217,8 +217,8 @@ Route::middleware([
         Route::post('/coffee-blender/invoice', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'createInvoice'])->name('coffee.blender.invoice')->middleware('can:items.create');
 
         // Daily Journal & Cashier Shifts (يوم بيوم)
-        Route::get('/daily-journal', [\App\Http\Controllers\DailyJournalController::class, 'index'])->name('daily.journal')->middleware('can:daily_journal.view');
-        Route::get('/shifts', [\App\Http\Controllers\DailyJournalController::class, 'index'])->name('shifts.index')->middleware('can:daily_journal.view');
+        Route::get('/daily-journal', [\App\Http\Controllers\Api\DailyJournalController::class, 'index'])->name('daily.journal')->middleware('can:daily_journal.view');
+        Route::get('/shifts', [\App\Http\Controllers\Api\DailyJournalController::class, 'index'])->name('shifts.index')->middleware('can:daily_journal.view');
         Route::post('/daily-journal/open-shift', [\App\Http\Controllers\DailyJournalController::class, 'openShift'])->name('daily.journal.open_shift')->middleware('can:daily_journal.view');
         Route::post('/daily-journal/close-shift/{id}', [\App\Http\Controllers\DailyJournalController::class, 'closeShift'])->name('daily.journal.close_shift')->middleware('can:daily_journal.view');
         Route::post('/daily-journal/expense', [\App\Http\Controllers\DailyJournalController::class, 'storeExpense'])->name('daily.journal.expense')->middleware('can:daily_journal.view');
