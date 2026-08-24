@@ -227,9 +227,9 @@ Route::middleware([
         Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('can:logs.view');
         Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
         
-        Route::get('/trash', [\App\Http\Controllers\TrashController::class, 'index'])->name('trash.index')->middleware('can:trash.access');
-        Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\TrashController::class, 'restore'])->name('trash.restore')->middleware('can:trash.access');
-        Route::delete('/trash/{type}/{id}/force-delete', [\App\Http\Controllers\TrashController::class, 'forceDelete'])->name('trash.force-delete')->middleware('can:trash.access');
+        Route::get('/trash', [\App\Http\Controllers\Api\TrashController::class, 'index'])->name('trash.index')->middleware('can:trash.access');
+        Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\Api\TrashController::class, 'restore'])->name('trash.restore')->middleware('can:trash.access');
+        Route::delete('/trash/{type}/{id}/force-delete', [\App\Http\Controllers\Api\TrashController::class, 'forceDelete'])->name('trash.force-delete')->middleware('can:trash.access');
 
         Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update'])->name('profile.update');

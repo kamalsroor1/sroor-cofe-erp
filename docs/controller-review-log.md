@@ -53,7 +53,7 @@
 | 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy + Reqs | ✅ Central Whitelabel & Analytics | ✅ مكتمل ومحصن |
 | 25 | `SupplierController` | `app/Http/Controllers/Api/SupplierController.php` | 2026-08-24 | ✅ 10/10 Pass | ✅ Single Actions + Policy + Reqs | ✅ Statement Ledger & bcmath | ✅ مكتمل ومحصن |
 | 26 | `SystemContextApiController` | `app/Http/Controllers/Api/SystemContextApiController.php` | 2026-08-24 | ✅ 5/5 Pass | ✅ Single Action + Bootstrap DTO | ✅ Single Network Roundtrip | ✅ مكتمل ومحصن |
-| 27 | `TrashController` | `app/Http/Controllers/Api/TrashController.php` | — | — | — | — | ⚪ بالانتظار |
+| 27 | `TrashController` | `app/Http/Controllers/Api/TrashController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy | ✅ SoftDeletes & Safe Restore | ✅ مكتمل ومحصن |
 | 28 | `TreasuryController` | `app/Http/Controllers/Api/TreasuryController.php` | — | — | — | — | ⚪ بالانتظار |
 | 29 | `UserController` | `app/Http/Controllers/Api/UserController.php` | — | — | — | — | ⚪ بالانتظار |
 
@@ -137,12 +137,16 @@
 * **التحسينات:** Feature Test شامل (10 اختبارات 100% Pass)، سياسة صلاحيات `SupplierPolicy` و Form Requests، وتأمين كشوف حسابات الموردين.
 
 ### 26. `SystemContextApiController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (5 اختبارات 100% Pass)، حزمة التهيئة الذرية الموحدة وتحديث قاموس الترجمة.
+
+### 27. `TrashController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/SystemContextApiTest.php` بـ 5 اختبارات شاملة (100% Pass، 27 Assertions) تغطي جلب حزمة التهيئة الموحدة (Bootstrap Payload) للتطبيق والـ SPA، استرجاع الفرع النشط، تنبيهات النواقص بالمخزن ومديونيات العملاء، وقاموس الترجمة الفوري.
-  2. **الهندسة والأداء الفائق:** استبدال طلبات الشبكة المتعددة بطلب واحد ذري وسريع (`GetSystemContextAction` + `GetTranslationsAction`) لتسريع فتح تطبيق الموبايل وواجهة الـ SPA.
-  3. **عزل الصلاحيات:** التحقق من هوية المستخدم النشط وإرجاع بيانات الفروع والورديات والتنبيهات المخصصة لصلاحياته فقط.
+  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/TrashApiTest.php` بـ 9 اختبارات شاملة (100% Pass، 47 Assertions) تغطي استعراض سجلات المحذوفات المصنفة (أصناف، عملاء، موردين، فروع، مصروفات، مرتجعات)، استرجاع السجلات المحذوفة بنجاح، الحذف النهائي للسجلات، والتحقق من الأنواع غير الصالحة ومصفوفة الصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/TrashPolicy.php` والتحقق من صلاحية `trash.access`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/TrashController.php` وتوجيه مسارات `routes/tenant.php` للكنترولر الموحد.
+  4. **الأداء والهندسة:** استخدام Single Actions (`GetTrashRecordsAction`, `RestoreTrashRecordAction`, `ForceDeleteTrashRecordAction`) مع الحذف والاسترجاع الآمن SoftDeletes.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `SystemContextApiController`
-## ⏭️ التالي بالترتيب الأبجدي: `TrashController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `TrashController`
+## ⏭️ التالي بالترتيب الأبجدي: `TreasuryController`
