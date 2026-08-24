@@ -204,4 +204,13 @@ return [
     'cancel_invoice_btn'           => 'إلغاء الفاتورة وعكس المخزون',
     'edit_invoice_btn'             => 'تعديل الفاتورة',
 
+
+    'amount_paid_label' => 'المبلغ المسدد:',
+    'amount_remaining_label' => 'المتبقي (الآجل):',
+    'extra_fees_shipping' => 'الشحن ومصاريف إضافية:',
+    'invoice_time' => 'الوقت:',
+    'preparing_receipt' => 'جاري إعداد وتحميل الفاتورة...',
+    'printed_by_system' => 'تمت الطباعة آلياً عبر منظومة :system',
+    'return_policy_note' => 'البضاعة المباعة ترد وتستبدل خلال 14 يوماً بموجب هذا الإيصال',
+    'thank_you_note' => 'شكراً لتعاملكم معنا ونسعد بزيارتكم دائماً ☕',
 ];

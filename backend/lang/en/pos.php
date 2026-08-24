@@ -185,4 +185,6 @@ return [
     'out_of_stock_badge'        => '⚠️ Out of Stock: :qty :unit',
     'invoice_number_badge'      => 'Invoice #:number',
     'net_amount_label'          => 'Net Amount: :amount EGP',
+
+    'general_walkin_customer' => 'Walk-in Cash Customer',
 ];

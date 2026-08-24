@@ -214,7 +214,11 @@ export const defaultArabicTranslations = {
         "add": "إضافة",
         "refresh": "تحديث",
         "restore": "استعادة",
-        "force_delete": "حذف نهائي"
+        "force_delete": "حذف نهائي",
+        "done": "تم بنجاح ✓",
+        "error_occurred": "حدث خطأ غير متوقع",
+        "no_notes_available": "لا توجد ملاحظات مسجلة لهذه العملية.",
+        "unit_piece": "قطعة"
     },
     "contacts": {
         "customers_title": "دليل العملاء والزبائن",
@@ -368,7 +372,8 @@ export const defaultArabicTranslations = {
     },
     "customers": {
         "retail": "عميل قطاعي",
-        "wholesale": "عميل جملة"
+        "wholesale": "عميل جملة",
+        "view_statement": "عرض كشف الحساب"
     },
     "dashboard": {
         "welcome": "مرحباً بك في :app",
@@ -1062,7 +1067,15 @@ export const defaultArabicTranslations = {
         "print_thermal_btn": "طباعة إيصال حراري 80mm",
         "back_to_invoices": "العودة لسجل الفواتير",
         "cancel_invoice_btn": "إلغاء الفاتورة وعكس المخزون",
-        "edit_invoice_btn": "تعديل الفاتورة"
+        "edit_invoice_btn": "تعديل الفاتورة",
+        "amount_paid_label": "المبلغ المسدد:",
+        "amount_remaining_label": "المتبقي (الآجل):",
+        "extra_fees_shipping": "الشحن ومصاريف إضافية:",
+        "invoice_time": "الوقت:",
+        "preparing_receipt": "جاري إعداد وتحميل الفاتورة...",
+        "printed_by_system": "تمت الطباعة آلياً عبر منظومة :system",
+        "return_policy_note": "البضاعة المباعة ترد وتستبدل خلال 14 يوماً بموجب هذا الإيصال",
+        "thank_you_note": "شكراً لتعاملكم معنا ونسعد بزيارتكم دائماً ☕"
     },
     "nav": {
         "group_sales": "المبيعات والفواتير",
@@ -1324,7 +1337,8 @@ export const defaultArabicTranslations = {
         "available_stock_badge": "📦 متاح: :qty :unit",
         "out_of_stock_badge": "⚠️ غير متوفر: :qty :unit",
         "invoice_number_badge": "فاتورة رقم #:number",
-        "net_amount_label": "الصافي النهائي: :amount ج.م"
+        "net_amount_label": "الصافي النهائي: :amount ج.م",
+        "general_walkin_customer": "عميل نقدي سريع"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -2908,7 +2922,11 @@ export const defaultEnglishTranslations = {
         "add": "Add",
         "refresh": "Refresh",
         "restore": "Restore",
-        "force_delete": "Permanent Delete"
+        "force_delete": "Permanent Delete",
+        "done": "Done Successfully ✓",
+        "error_occurred": "An unexpected error occurred",
+        "no_notes_available": "No notes recorded for this operation.",
+        "unit_piece": "Piece"
     },
     "contacts": {
         "customers_title": "Customers Directory",
@@ -3062,7 +3080,8 @@ export const defaultEnglishTranslations = {
     },
     "customers": {
         "retail": "Retail Customer",
-        "wholesale": "Wholesale Customer"
+        "wholesale": "Wholesale Customer",
+        "view_statement": "View Statement"
     },
     "dashboard": {
         "welcome": "Welcome to :app",
@@ -3756,7 +3775,15 @@ export const defaultEnglishTranslations = {
         "print_thermal_btn": "Print 80mm Thermal Receipt",
         "back_to_invoices": "Back to Invoices Log",
         "cancel_invoice_btn": "Cancel Invoice & Reverse Stock",
-        "edit_invoice_btn": "Edit Invoice"
+        "edit_invoice_btn": "Edit Invoice",
+        "amount_paid_label": "Amount Paid:",
+        "amount_remaining_label": "Remaining (Credit):",
+        "extra_fees_shipping": "Shipping & Extra Fees:",
+        "invoice_time": "Time:",
+        "preparing_receipt": "Preparing & loading invoice...",
+        "printed_by_system": "Printed automatically by :system",
+        "return_policy_note": "Goods sold may be returned\/exchanged within 14 days with this receipt",
+        "thank_you_note": "Thank you for your business! ☕"
     },
     "nav": {
         "group_sales": "Sales & Invoices",
@@ -4019,7 +4046,8 @@ export const defaultEnglishTranslations = {
         "available_stock_badge": "📦 Available: :qty :unit",
         "out_of_stock_badge": "⚠️ Out of Stock: :qty :unit",
         "invoice_number_badge": "Invoice #:number",
-        "net_amount_label": "Net Amount: :amount EGP"
+        "net_amount_label": "Net Amount: :amount EGP",
+        "general_walkin_customer": "Walk-in Cash Customer"
     },
     "profile": {
         "title": "User Profile & Account Settings",

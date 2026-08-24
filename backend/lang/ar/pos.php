@@ -184,4 +184,6 @@ return [
     'out_of_stock_badge'        => '⚠️ غير متوفر: :qty :unit',
     'invoice_number_badge'      => 'فاتورة رقم #:number',
     'net_amount_label'          => 'الصافي النهائي: :amount ج.م',
+
+    'general_walkin_customer' => 'عميل نقدي سريع',
 ];

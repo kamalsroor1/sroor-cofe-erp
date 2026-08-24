@@ -99,4 +99,9 @@ return [
     'refresh'            => 'تحديث',
     'restore'            => 'استعادة',
     'force_delete'       => 'حذف نهائي',
+
+    'done' => 'تم بنجاح ✓',
+    'error_occurred' => 'حدث خطأ غير متوقع',
+    'no_notes_available' => 'لا توجد ملاحظات مسجلة لهذه العملية.',
+    'unit_piece' => 'قطعة',
 ];

@@ -99,4 +99,9 @@ return [
     'refresh'            => 'Refresh',
     'restore'            => 'Restore',
     'force_delete'       => 'Permanent Delete',
+
+    'done' => 'Done Successfully ✓',
+    'error_occurred' => 'An unexpected error occurred',
+    'no_notes_available' => 'No notes recorded for this operation.',
+    'unit_piece' => 'Piece',
 ];

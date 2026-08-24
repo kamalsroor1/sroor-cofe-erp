@@ -204,4 +204,13 @@ return [
     'cancel_invoice_btn'           => 'Cancel Invoice & Reverse Stock',
     'edit_invoice_btn'             => 'Edit Invoice',
 
+
+    'amount_paid_label' => 'Amount Paid:',
+    'amount_remaining_label' => 'Remaining (Credit):',
+    'extra_fees_shipping' => 'Shipping & Extra Fees:',
+    'invoice_time' => 'Time:',
+    'preparing_receipt' => 'Preparing & loading invoice...',
+    'printed_by_system' => 'Printed automatically by :system',
+    'return_policy_note' => 'Goods sold may be returned/exchanged within 14 days with this receipt',
+    'thank_you_note' => 'Thank you for your business! ☕',
 ];

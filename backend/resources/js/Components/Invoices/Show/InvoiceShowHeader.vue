@@ -50,36 +50,36 @@
       </div>
 
       <!-- View Mode Tabs Switcher -->
-      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 self-stretch md:self-auto overflow-x-auto">
-        <button
+      <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 self-stretch md:self-auto overflow-x-auto">
+        <BaseButton
           type="button"
           data-tab="interactive"
+          :variant="activeMode === 'interactive' ? 'primary' : 'ghost'"
+          size="sm"
+          :label="$t('invoices.view_mode_interactive')"
           @click="$emit('set-mode', 'interactive')"
-          class="flex-1 md:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95"
-          :class="activeMode === 'interactive' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-        >
-          {{ $t('invoices.view_mode_interactive') }}
-        </button>
+          class="flex-1 md:flex-initial"
+        />
 
-        <button
+        <BaseButton
           type="button"
           data-tab="thermal"
+          :variant="activeMode === 'thermal' ? 'primary' : 'ghost'"
+          size="sm"
+          :label="$t('invoices.view_mode_thermal')"
           @click="$emit('set-mode', 'thermal')"
-          class="flex-1 md:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95"
-          :class="activeMode === 'thermal' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-        >
-          {{ $t('invoices.view_mode_thermal') }}
-        </button>
+          class="flex-1 md:flex-initial"
+        />
 
-        <button
+        <BaseButton
           type="button"
           data-tab="a4"
+          :variant="activeMode === 'a4' ? 'primary' : 'ghost'"
+          size="sm"
+          :label="$t('invoices.view_mode_a4')"
           @click="$emit('set-mode', 'a4')"
-          class="flex-1 md:flex-initial px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95"
-          :class="activeMode === 'a4' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-        >
-          {{ $t('invoices.view_mode_a4') }}
-        </button>
+          class="flex-1 md:flex-initial"
+        />
       </div>
     </div>
   </div>
@@ -88,6 +88,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useTrans } from '../../../Composables/useTrans';
+import BaseButton from '../../Common/BaseButton.vue';
 
 const { t } = useTrans();
 
