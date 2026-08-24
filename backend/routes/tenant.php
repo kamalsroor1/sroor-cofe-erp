@@ -190,11 +190,11 @@ Route::middleware([
         Route::post('/suppliers/{id}/pay', [\App\Http\Controllers\SupplierController::class, 'pay'])->name('suppliers.pay')->middleware('can:suppliers.manage');
         Route::post('/suppliers/{id}/toggle-active', [\App\Http\Controllers\SupplierController::class, 'toggleActive'])->name('suppliers.toggle_active')->middleware('can:suppliers.manage');
         Route::get('/suppliers/{id}/statement', [\App\Http\Controllers\SupplierController::class, 'statement'])->name('suppliers.statement')->middleware('can:suppliers.statement');
-        Route::get('/purchases', [\App\Http\Controllers\PurchaseController::class, 'index'])->name('purchases.index')->middleware('can:purchases.view');
-        Route::get('/purchases/create', [\App\Http\Controllers\PurchaseController::class, 'create'])->name('purchases.create')->middleware('can:purchases.create');
-        Route::post('/purchases', [\App\Http\Controllers\PurchaseController::class, 'store'])->name('purchases.store')->middleware('can:purchases.create');
-        Route::post('/purchases/{id}/cancel', [\App\Http\Controllers\PurchaseController::class, 'cancel'])->name('purchases.cancel')->middleware('can:purchases.delete');
-        Route::get('/purchases/smart-reorder', [\App\Http\Controllers\PurchaseController::class, 'smartReorder'])->name('purchases.reorder')->middleware('can:purchases.view');
+        Route::get('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'index'])->name('purchases.index')->middleware('can:purchases.view');
+        Route::get('/purchases/create', [\App\Http\Controllers\Api\PurchaseController::class, 'create'])->name('purchases.create')->middleware('can:purchases.create');
+        Route::post('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'store'])->name('purchases.store')->middleware('can:purchases.create');
+        Route::post('/purchases/{id}/cancel', [\App\Http\Controllers\Api\PurchaseController::class, 'cancel'])->name('purchases.cancel')->middleware('can:purchases.delete');
+        Route::get('/purchases/smart-reorder', [\App\Http\Controllers\Api\PurchaseController::class, 'smartReorder'])->name('purchases.reorder')->middleware('can:purchases.view');
 
         // Returns & Reversals
         Route::get('/returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index')->middleware('can:returns.manage');

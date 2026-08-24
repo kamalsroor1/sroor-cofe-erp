@@ -42,7 +42,7 @@
 | 13 | `PermissionApiController` | `app/Http/Controllers/Api/PermissionApiController.php` | 2026-08-24 | ✅ 3/3 Pass | ✅ Single Action Tree Resolver | ✅ Cached Hierarchy | ✅ مكتمل ومحصن |
 | 14 | `PosController` | `app/Http/Controllers/Api/PosController.php` | 2026-08-24 | ✅ 14/14 Pass | ✅ Actions + Policy + FormReqs | ✅ Atomic POS Checkout | ✅ مكتمل ومحصن |
 | 15 | `ProfileController` | `app/Http/Controllers/Api/ProfileController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ UpdateProfileAction + DTO | ✅ Eager Load Roles & Store | ✅ مكتمل ومحصن |
-| 16 | `PurchaseController` | `app/Http/Controllers/Api/PurchaseController.php` | — | — | — | — | ⚪ بالانتظار |
+| 16 | `PurchaseController` | `app/Http/Controllers/Api/PurchaseController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + Reqs | ✅ bcmath & Inbound Stock Lock | ✅ مكتمل ومحصن |
 | 17 | `ReportController` | `app/Http/Controllers/Api/ReportController.php` | — | — | — | — | ⚪ بالانتظار |
 | 18 | `ReturnController` | `app/Http/Controllers/Api/ReturnController.php` | — | — | — | — | ⚪ بالانتظار |
 | 19 | `RoleController` | `app/Http/Controllers/Api/RoleController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -104,12 +104,16 @@
 * **التحسينات:** Feature Test شامل (14 اختباراً 100% Pass)، سياسة صلاحيات `PosPolicy` و Form Requests، والـ Checkout الذري في `DB::transaction()`.
 
 ### 15. `ProfileController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (6 اختبارات 100% Pass)، `UpdateProfileAction` و `UpdateProfileRequest`، وحذف الكنترولر القديم.
+
+### 16. `PurchaseController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/ProfileApiTest.php` بـ 6 اختبارات شاملة (100% Pass، 14 Assertions) تغطي استعراض الملف الشخصي، تحديث البيانات وتفضيل المظهر (Theme)، تغيير كلمة المرور بأمان، رفض كلمة المرور القديمة الخاطئة، ومنع تكرار الهاتف.
-  2. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/ProfileController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
-  3. **الأنماط النظيفة:** استخدام `UpdateProfileAction` و `UpdateProfileRequest` و `UserResource`.
+  1. **Feature Test شامل:** بناء وتحديث حزمة `tests/Feature/Api/PurchasesApiTest.php` بـ 8 اختبارات شاملة (100% Pass، 37 Assertions) تغطي سرد فواتير الشراء، إنشاء الفواتير وتوريد المخزون، إلغاء الفواتير وعكس المخزون والمديونية، اقتراحات إعادة الطلب الذكية (Smart Reorder)، ومصفوفة الصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/PurchasePolicy.php` وتفعيل `authorize()` في `StorePurchaseRequest`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/PurchaseController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
+  4. **الأمان والدقة المالية:** معالجة المشتريات بدوال `bcmath` و `DB::transaction()` مع القفل السطري للمخزون وحساب متوسط التكلفة المرجح.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `ProfileController`
-## ⏭️ التالي بالترتيب الأبجدي: `PurchaseController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `PurchaseController`
+## ⏭️ التالي بالترتيب الأبجدي: `ReportController`
