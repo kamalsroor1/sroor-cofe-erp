@@ -28,7 +28,7 @@
 | # | الكنترولر (API Controller) | المسار (File Path) | تاريخ المراجعة | Feature Test | SOLID Refactor | Performance | الحالة |
 |---|---|---|:---:|:---:|:---:|:---:|:---:|
 | 1 | `ActivityLogController` | `app/Http/Controllers/Api/ActivityLogController.php` | 2026-08-24 | ✅ 12/12 Pass | ✅ Action + Policy + Req | ✅ Eager Select | ✅ مكتمل ومحصن |
-| 2 | `AppUpdateController` | `app/Http/Controllers/Api/AppUpdateController.php` | — | — | — | — | ⚪ بالانتظار |
+| 2 | `AppUpdateController` | `app/Http/Controllers/Api/AppUpdateController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ FormRequest + DTO + Actions | ✅ Binary Stream | ✅ مكتمل ومحصن |
 | 3 | `AuthController` | `app/Http/Controllers/Api/AuthController.php` | — | — | — | — | ⚪ بالانتظار |
 | 4 | `BlenderController` | `app/Http/Controllers/Api/BlenderController.php` | — | — | — | — | ⚪ بالانتظار |
 | 5 | `CategoryApiController` | `app/Http/Controllers/Api/CategoryApiController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -64,22 +64,24 @@
 
 ### 1. `ActivityLogController` — 2026-08-24
 * **الحالة السابقة:**
-  - كان هناك تكرار لمسار الـ Route مرتين في `routes/api.php` (السطر 99 والسطر 177).
-  - كان يوجد ملف كنترولر قديم ميت في الجذر `app/Http/Controllers/ActivityLogController.php` يحتوي فقط على دالة التصدير `exportCsv`.
-  - عدم وجود Policy للموديل ولا Form Request للفلترة، وكان التحقق من الصلاحيات يتم يدوياً داخل الكنترولر.
-* **التحسينات المطبقة (Refactor & Architecture):**
-  1. **Feature Test خماسي المحاور:** كتابة `tests/Feature/Api/ActivityLogApiTest.php` بـ 12 اختباراً شاملاً (Happy path, Validation 422, Authorization 401/403, Tenant isolation, Statistics, Pagination, CSV Streaming) بنسبة نجاح **100% (12/12 Tests Pass)**.
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:**
-     - إنشاء `app/Policies/ActivityLogPolicy.php` بدوال (`viewAny`, `view`, `export`).
-     - إنشاء Form Request مخصص `app/Http/Requests/FilterActivityLogsRequest.php` مع تفعيل `authorize()` الصارم.
-     - حماية المسارات في `routes/api.php` بـ `middleware('can:logs.view')`.
-  3. **استئصال الكود الميت:** حذف الملف القديم `app/Http/Controllers/ActivityLogController.php` بالكامل، ونقل تصدير الـ CSV إلى Action مستقل `app/Actions/Logs/ExportActivityLogsCsvAction.php` واستدعائه من الـ API Controller النحيف.
-  4. **تحسين الأداء (Performance Tuning):**
-     - معالجة Eager Loading عبر تحديد الأعمدة: `ActivityLog::with(['user:id,name,phone', 'store:id,name'])` لمنع تسريب واستعلام حقول كلمات المرور والتوكنات غير الضرورية.
-     - تحديد أعمدة الـ `select` في استعلام `ActivityLog`.
-     - تقييد الترقيم وحمايته بحد أقصى `min(200, $perPage)`.
+  - تكرار مسار الـ Route في `routes/api.php` ووجود ملف قديم `app/Http/Controllers/ActivityLogController.php`.
+* **التحسينات:**
+  - Feature Test شامل (`tests/Feature/Api/ActivityLogApiTest.php` بـ 12 اختباراً، نجاح 100%).
+  - سياسة صلاحيات `ActivityLogPolicy` و Form Request `FilterActivityLogsRequest`.
+  - حذف الملف القديم واستخراج التصدير إلى `ExportActivityLogsCsvAction`.
+  - تحسين استعلامات Eager Loading مع `select` صريح.
+
+### 2. `AppUpdateController` — 2026-08-24
+* **الحالة السابقة:**
+  - وجود ملف ميت مكرر في `app/Http/Controllers/Api/V1/AppUpdateController.php`.
+  - استقبال `Request` عام دون استخدام الـ Form Request المناسب `CheckUpdateRequest`.
+* **التحسينات:**
+  1. **Feature Test شامل:** كتابة `tests/Feature/Api/AppUpdateApiTest.php` بـ 8 اختبارات كاملة (نجاح 100%، 31 Assertions) تغطي فحص التحديث الحالي، التحديث الاختياري، التحديث الإجباري، عزل المنصات (Android vs Windows)، والتحقق من صحة المدخلات وتنزيل الـ APK أو إرجاع 404/422 بدقة.
+  2. **Clean Architecture:** استخدام `CheckUpdateRequest` كـ Form Request رسمي وربطه بـ `CheckUpdateDTO` و `CheckAppUpdateAction`.
+  3. **استئصال الكود الميت:** حذف الملف المكرر غير المستخدم `app/Http/Controllers/Api/V1/AppUpdateController.php`.
+  4. **Strict Typing:** تدقيق أنواع المخرجات (`: JsonResponse`, `: BinaryFileResponse`).
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `ActivityLogController`
-## ⏭️ التالي بالترتيب الأبجدي: `AppUpdateController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `AppUpdateController`
+## ⏭️ التالي بالترتيب الأبجدي: `AuthController`
