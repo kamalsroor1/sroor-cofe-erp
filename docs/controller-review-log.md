@@ -34,7 +34,7 @@
 | 5 | `CategoryApiController` | `app/Http/Controllers/Api/CategoryApiController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Actions + Policy + Reqs | ✅ withCount & SoftDeletes | ✅ مكتمل ومحصن |
 | 6 | `CustomerController` | `app/Http/Controllers/Api/CustomerController.php` | 2026-08-24 | ✅ 11/11 Pass | ✅ Single Actions + DTOs + Reqs | ✅ Ledger & Paginate | ✅ مكتمل ومحصن |
 | 7 | `DailyJournalController` | `app/Http/Controllers/Api/DailyJournalController.php` | 2026-08-24 | ✅ 11/11 Pass | ✅ Single Action + FormRequest | ✅ bcmath Cash Ledger | ✅ مكتمل ومحصن |
-| 8 | `DashboardApiController` | `app/Http/Controllers/Api/DashboardApiController.php` | — | — | — | — | ⚪ بالانتظار |
+| 8 | `DashboardApiController` | `app/Http/Controllers/Api/DashboardApiController.php` | 2026-08-24 | ✅ 4/4 Pass | ✅ Single Action + Analytics | ✅ bcmath Aggregations | ✅ مكتمل ومحصن |
 | 9 | `ExpenseController` | `app/Http/Controllers/Api/ExpenseController.php` | — | — | — | — | ⚪ بالانتظار |
 | 10 | `InvoiceController` | `app/Http/Controllers/Api/InvoiceController.php` | — | — | — | — | ⚪ بالانتظار |
 | 11 | `ItemController` | `app/Http/Controllers/Api/ItemController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -80,13 +80,16 @@
 * **التحسينات:** Feature Test شامل (11 اختباراً 100% Pass)، سياسة صلاحيات `CustomerPolicy`، وحذف الكنترولر القديم، ومعالجة حركات السندات والتحصيل بدوال `bcmath` و `DB::transaction()` الآمنة.
 
 ### 7. `DailyJournalController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (11 اختباراً 100% Pass)، إنشاء `GetDailyJournalRequest`، حذف الكنترولر القديم في الجذر، وتأمين حسابات اليومية النقدية بدقة `bcmath`.
+
+### 8. `DashboardApiController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/DailyJournalApiTest.php` بـ 11 اختباراً كاملاً (100% Pass، 36 Assertions) تغطي حساب المقبوضات النقدية، المصروفات، سداد الموردين، الرصيد الافتتاحي للوردية، النقدية المتوقعة في الدرج، وفلترة التاريخ والفرع `X-Store-Id`.
-  2. **Clean Architecture & Form Request:** إنشاء كلاس التحقق `GetDailyJournalRequest` وتفعيل التحقق من صلاحية `daily_journal.view`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم في الجذر `app/Http/Controllers/DailyJournalController.php` وتوجيه مسار `routes/tenant.php` إلى الكنترولر الموحد.
-  4. **الدقة المحاسبية:** معالجة حركة الدرج وحسابات النقدية الصافية بدوال `bcmath` بدقة 3 خانات عشرية.
+  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/DashboardApiTest.php` بـ 4 اختبارات متكاملة (100% Pass، 28 Assertions) تغطي مبيعات اليوم، الأرباح الشهرية، ديون العملاء، حركة آخر 7 أيام، ساعات الذروة، تنبيهات النواقص بالمخزن، وسياق الفرع الديناميكي `X-Store-Id`.
+  2. **Clean Architecture:** استخدام `GetDashboardOverviewAction` و `DashboardAnalyticsService` مع حسابات دقيقة بـ `bcmath`.
+  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/DashboardController.php` وتوجيه مسار `routes/tenant.php` إلى قالب الـ SPA الموحد.
+  4. **الأداء:** تجميع الاستعلامات وحساب مؤشرات المبيعات والأرباح والورديات بكفاءة مع Eager Loading.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `DailyJournalController`
-## ⏭️ التالي بالترتيب الأبجدي: `DashboardApiController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `DashboardApiController`
+## ⏭️ التالي بالترتيب الأبجدي: `ExpenseController`

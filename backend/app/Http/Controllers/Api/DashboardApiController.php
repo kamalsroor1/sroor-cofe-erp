@@ -21,19 +21,24 @@ final class DashboardApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 401);
+        }
+
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: $request->user()?->getCurrentStore()?->id
+            ?: $user->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $storeId = $storeId ? (int)$storeId : null;
 
-        $data = $this->getDashboardOverviewAction->execute($request->user(), $storeId);
+        $data = $this->getDashboardOverviewAction->execute($user, $storeId);
 
         return response()->json([
             'success' => true,
             'data'    => $data,
-            'metrics' => $data['metrics'],
+            'metrics' => $data['metrics'] ?? [],
         ], 200);
     }
 }

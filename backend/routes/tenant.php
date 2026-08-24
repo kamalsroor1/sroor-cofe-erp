@@ -76,7 +76,7 @@ Route::middleware([
     // 3. Protected POS, ERP & Inventory Routes
     Route::middleware('auth')->group(function () {
         // Dashboard (Inertia.js + Vue 3 SPA)
-        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', fn() => view('app'))->name('dashboard');
 
         // Invoices & POS (Vue 3 Fast Cashier Engine)
         Route::get('/pos', [\App\Http\Controllers\POSController::class, 'index'])->name('pos.index')->middleware('can:pos.access');
