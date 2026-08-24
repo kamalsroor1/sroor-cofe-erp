@@ -910,7 +910,20 @@ export const defaultArabicTranslations = {
         "no_categories_yet": "لا توجد فئات مسجلة حالياً",
         "create_first_category_hint": "ابدأ بإضافة فئات لتقسيم أصنافك مثل (قهوة، مشروبات، حلويات، سندوتشات)",
         "add_first_category": "إضافة أول فئة",
-        "items_unit": "صنف"
+        "items_unit": "صنف",
+        "total_stores_count": "إجمالي عدد الفروع والمخازن",
+        "total_stores_sub": "كافة نقاط البيع والمستودعات النشطة",
+        "active_stores_count": "الفروع والمخازن النشطة",
+        "active_stores_sub": "المتاحة للتشغيل والبيع المباشر",
+        "main_store_title": "الفرع والمستودع الرئيسي",
+        "main_store_sub": "المركز المعتمد للبضاعة المركزية",
+        "total_sku_count": "إجمالي أصناف المخزون المسجلة",
+        "total_sku_sub": "إجمالي أنواع البضاعة بجميع الفروع",
+        "store_unit": "فرع\/مخزن",
+        "search_stores_placeholder": "البحث بالاسم، الكود، العنوان، أو الهاتف...",
+        "all_store_types": "كافة أنواع الفروع والمخازن",
+        "create_store": "حفظ وإنشاء الفرع",
+        "save_staff_assignments": "حفظ وتعيين الموظفين"
     },
     "invoices": {
         "title": "فواتير المبيعات",
@@ -3661,7 +3674,20 @@ export const defaultEnglishTranslations = {
         "no_categories_yet": "No categories registered yet",
         "create_first_category_hint": "Start by adding categories to group your products",
         "add_first_category": "Add First Category",
-        "items_unit": "item(s)"
+        "items_unit": "item(s)",
+        "total_stores_count": "Total Branches & Stores",
+        "total_stores_sub": "All active selling points & warehouses",
+        "active_stores_count": "Active Stores & Branches",
+        "active_stores_sub": "Available for operations and sales",
+        "main_store_title": "Main Store \/ Headquarters",
+        "main_store_sub": "Central repository for inventory",
+        "total_sku_count": "Total Registered SKU Items",
+        "total_sku_sub": "Total product varieties across all branches",
+        "store_unit": "Branch\/Store",
+        "search_stores_placeholder": "Search by name, code, address, or phone...",
+        "all_store_types": "All Store Types",
+        "create_store": "Save & Create Store",
+        "save_staff_assignments": "Save Staff Assignments"
     },
     "invoices": {
         "title": "Sales Invoices",

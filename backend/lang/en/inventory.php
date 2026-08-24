@@ -363,4 +363,19 @@ return [
     'create_first_category_hint'   => 'Start by adding categories to group your products',
     'add_first_category'           => 'Add First Category',
     'items_unit'                   => 'item(s)',
+
+    // Additional Store & Branch Keys
+    'total_stores_count'        => 'Total Branches & Stores',
+    'total_stores_sub'          => 'All active selling points & warehouses',
+    'active_stores_count'       => 'Active Stores & Branches',
+    'active_stores_sub'         => 'Available for operations and sales',
+    'main_store_title'          => 'Main Store / Headquarters',
+    'main_store_sub'            => 'Central repository for inventory',
+    'total_sku_count'           => 'Total Registered SKU Items',
+    'total_sku_sub'             => 'Total product varieties across all branches',
+    'store_unit'                => 'Branch/Store',
+    'search_stores_placeholder' => 'Search by name, code, address, or phone...',
+    'all_store_types'           => 'All Store Types',
+    'create_store'              => 'Save & Create Store',
+    'save_staff_assignments'    => 'Save Staff Assignments',
 ];

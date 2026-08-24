@@ -27,6 +27,21 @@ html.dark, html.dark body {
 }
 
 /* 📱 Native Mobile App UX Foundations */
+:root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+.mobile-safe-header {
+    padding-top: max(var(--safe-area-top), 0px);
+}
+
+@media (max-width: 768px) {
+    .mobile-safe-header {
+        padding-top: max(var(--safe-area-top), 14px);
+        min-height: calc(3.5rem + max(var(--safe-area-top), 14px));
+    }
+}
+
 html, body {
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;

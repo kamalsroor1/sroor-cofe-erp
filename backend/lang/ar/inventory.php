@@ -398,4 +398,19 @@ return [
     'create_first_category_hint'   => 'ابدأ بإضافة فئات لتقسيم أصنافك مثل (قهوة، مشروبات، حلويات، سندوتشات)',
     'add_first_category'           => 'إضافة أول فئة',
     'items_unit'                   => 'صنف',
+
+    // Additional Store & Branch Keys
+    'total_stores_count'        => 'إجمالي عدد الفروع والمخازن',
+    'total_stores_sub'          => 'كافة نقاط البيع والمستودعات النشطة',
+    'active_stores_count'       => 'الفروع والمخازن النشطة',
+    'active_stores_sub'         => 'المتاحة للتشغيل والبيع المباشر',
+    'main_store_title'          => 'الفرع والمستودع الرئيسي',
+    'main_store_sub'            => 'المركز المعتمد للبضاعة المركزية',
+    'total_sku_count'           => 'إجمالي أصناف المخزون المسجلة',
+    'total_sku_sub'             => 'إجمالي أنواع البضاعة بجميع الفروع',
+    'store_unit'                => 'فرع/مخزن',
+    'search_stores_placeholder' => 'البحث بالاسم، الكود، العنوان، أو الهاتف...',
+    'all_store_types'           => 'كافة أنواع الفروع والمخازن',
+    'create_store'              => 'حفظ وإنشاء الفرع',
+    'save_staff_assignments'    => 'حفظ وتعيين الموظفين',
 ];

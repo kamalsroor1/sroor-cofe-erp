@@ -3,7 +3,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <header class="h-14 sm:h-16 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-2.5 sm:px-5 flex items-center justify-between shadow-xs select-none backdrop-blur-md">
+    <header class="min-h-[3.5rem] sm:min-h-[4rem] py-1.5 sm:py-0 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-2.5 sm:px-5 flex items-center justify-between shadow-xs select-none backdrop-blur-md mobile-safe-header transition-all duration-200">
       <!-- Right Side (in RTL): Menu Toggle, User Pill, Theme, Notifications, Branch -->
       <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
         <!-- Mobile Menu Toggle Button -->
@@ -431,7 +431,7 @@
           dir="rtl"
         >
           <!-- Drawer Header -->
-          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 mobile-safe-header">
             <div class="flex items-center gap-2.5 min-w-0">
               <div
                 class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-base shadow-sm shrink-0"
