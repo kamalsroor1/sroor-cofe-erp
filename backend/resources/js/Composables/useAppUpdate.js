@@ -1,11 +1,12 @@
 import { ref } from 'vue';
+import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
 // Global singleton state so any component can listen to or trigger updates
-const currentVersionName = ref('1.0.0');
-const currentVersionCode = ref(1);
+const currentVersionName = ref('1.0.2');
+const currentVersionCode = ref(3);
 const isChecking = ref(false);
 const hasCheckedThisSession = ref(false);
 const hasUpdate = ref(false);
@@ -16,9 +17,14 @@ const isDownloading = ref(false);
 const isDownloaded = ref(false);
 const downloadProgress = ref(0);
 
+// Detect if running inside actual Android/iOS native mobile shell
+const isNativePlatform = () => {
+    return typeof window !== 'undefined' && Capacitor.isNativePlatform();
+};
+
 // Initialize native app version from Capacitor runtime if available
 const syncNativeVersionInfo = async () => {
-    if (typeof window !== 'undefined') {
+    if (isNativePlatform()) {
         try {
             const info = await CapacitorApp.getInfo();
             if (info) {
@@ -26,7 +32,7 @@ const syncNativeVersionInfo = async () => {
                 if (info.build) currentVersionCode.value = parseInt(info.build) || 1;
             }
         } catch (e) {
-            // Not in native Capacitor runtime
+            // Error reading native build info
         }
     }
 };
@@ -39,6 +45,20 @@ export function useAppUpdate() {
      * Check for newer app release from the server
      */
     const checkForUpdates = async (isManual = false) => {
+        // 🛑 Web Browser Check Gate: Web apps are updated automatically via cloud server deployments!
+        if (!isNativePlatform()) {
+            if (isManual) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'نسخة الويب السحابية 🌐',
+                    text: `أنت تستخدم نسخة الويب المحدثة تلقائياً عبر السيرفر السحابي (v${currentVersionName.value}). تنزيل وتثبيت حزم APK مخصص لتطبيق الهاتف المحمول فقط.`,
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#f59e0b',
+                });
+            }
+            return;
+        }
+
         if (isChecking.value) return;
         if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed') || localStorage.getItem('app_update_dismissed_code') === String(currentVersionCode.value))) return;
         
@@ -163,6 +183,7 @@ export function useAppUpdate() {
     };
 
     return {
+        isNative: isNativePlatform(),
         currentVersionName,
         currentVersionCode,
         isChecking,

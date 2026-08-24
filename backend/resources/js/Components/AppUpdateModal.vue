@@ -2,14 +2,14 @@
   <Teleport to="body">
     <Transition name="fade">
       <div
-        v-if="isModalOpen"
+        v-if="isNative && isModalOpen"
         @click.self="closeModal"
         class="fixed inset-0 bg-white dark:bg-slate-900/90 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 select-none font-tajawal"
         dir="rtl"
       >
         <Transition name="modal-zoom">
           <div
-            v-if="isModalOpen"
+            v-if="isNative && isModalOpen"
             class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden text-slate-100 relative"
           >
             <!-- 🌟 State 1: Download Complete / Success State -->
@@ -199,6 +199,7 @@ import {
 } from 'lucide-vue-next';
 
 const {
+    isNative,
     currentVersionName,
     isForceUpdate,
     latestVersionData,
