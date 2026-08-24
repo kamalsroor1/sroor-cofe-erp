@@ -203,8 +203,8 @@ Route::middleware([
         Route::delete('/returns/{id}', [\App\Http\Controllers\ReturnController::class, 'destroy'])->name('returns.destroy')->middleware('can:returns.manage');
 
         // Financial & Profit Reports (Admin & Accountant / reports.view)
-        Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index')->middleware('can:reports.view');
-        Route::get('/reports/export-abc', [\App\Http\Controllers\ReportController::class, 'exportAbc'])->name('reports.export.abc')->middleware('can:reports.view');
+        Route::get('/reports', [\App\Http\Controllers\Api\ReportController::class, 'comprehensive'])->name('reports.index')->middleware('can:reports.view');
+        Route::get('/reports/export-abc', [\App\Http\Controllers\Api\ReportController::class, 'inventory'])->name('reports.export.abc')->middleware('can:reports.view');
 
         // Operational Expenses & Supplies
         Route::get('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'index'])->name('expenses.index')->middleware('can:expenses.manage');
