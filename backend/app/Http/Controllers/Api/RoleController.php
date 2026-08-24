@@ -23,7 +23,8 @@ final class RoleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        if ($request->user() && !$request->user()->can('roles.manage')) {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -33,7 +34,7 @@ final class RoleController extends Controller
         return response()->json([
             'success' => true,
             'data'    => $matrix,
-        ]);
+        ], 200);
     }
 
     /**
@@ -54,6 +55,6 @@ final class RoleController extends Controller
                 'name'        => $role->name,
                 'permissions' => $role->permissions->pluck('name')->toArray(),
             ],
-        ]);
+        ], 200);
     }
 }

@@ -250,8 +250,8 @@ Route::middleware([
         Route::delete('/users/{id}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy')->middleware('can:roles.manage');
         Route::post('/users/{id}/toggle-active', [\App\Http\Controllers\UserController::class, 'toggleActive'])->name('users.toggle')->middleware('can:roles.manage');
 
-        Route::get('/roles', [\App\Http\Controllers\RoleController::class, 'index'])->name('roles.index')->middleware('can:roles.manage');
-        Route::put('/roles/{id}', [\App\Http\Controllers\RoleController::class, 'update'])->name('roles.update')->middleware('can:roles.manage');
+        Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->name('roles.index')->middleware('can:roles.manage');
+        Route::put('/roles/{id}', [\App\Http\Controllers\Api\RoleController::class, 'updatePermissions'])->name('roles.update')->middleware('can:roles.manage');
 
         // Theme Toggle (Dark / Light Mode)
         Route::post('/theme-toggle', function (\Illuminate\Http\Request $request) {
