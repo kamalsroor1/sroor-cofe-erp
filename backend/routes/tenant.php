@@ -157,11 +157,11 @@ Route::middleware([
         })->name('daily.journal.print')->middleware('can:daily_journal.view');
 
         // Items & Inventory Movements
-        Route::get('/items', [\App\Http\Controllers\ItemController::class, 'index'])->name('items.index')->middleware('can:items.view');
-        Route::post('/items', [\App\Http\Controllers\ItemController::class, 'store'])->name('items.store')->middleware('can:items.manage');
-        Route::put('/items/{id}', [\App\Http\Controllers\ItemController::class, 'update'])->name('items.update')->middleware('can:items.manage');
-        Route::delete('/items/{id}', [\App\Http\Controllers\ItemController::class, 'destroy'])->name('items.destroy')->middleware('can:items.manage');
-        Route::get('/items/{id}/movements', [\App\Http\Controllers\ItemController::class, 'movements'])->name('items.movements')->middleware('can:items.view');
+        Route::get('/items', [\App\Http\Controllers\Api\ItemController::class, 'index'])->name('items.index')->middleware('can:items.view');
+        Route::post('/items', [\App\Http\Controllers\Api\ItemController::class, 'store'])->name('items.store')->middleware('can:items.manage');
+        Route::put('/items/{id}', [\App\Http\Controllers\Api\ItemController::class, 'update'])->name('items.update')->middleware('can:items.manage');
+        Route::delete('/items/{id}', [\App\Http\Controllers\Api\ItemController::class, 'destroy'])->name('items.destroy')->middleware('can:items.manage');
+        Route::get('/items/{id}/movements', [\App\Http\Controllers\Api\ItemController::class, 'movements'])->name('items.movements')->middleware('can:items.view');
 
         // Multi-Store, Vans & Warehouse Management
         Route::get('/stores', [\App\Http\Controllers\StoreController::class, 'index'])->name('stores')->middleware('can:stores.manage');

@@ -38,15 +38,20 @@ final class ItemController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage') && !$user->can('pos.access')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $category = (string)$request->input('category', 'all');
         $stockStatus = (string)$request->input('stock_status', 'all');
         $status = (string)$request->input('status', 'all');
-        $perPage = (int)$request->input('per_page', 20);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $query = Item::with(['storeStocks.store']);
@@ -124,6 +129,11 @@ final class ItemController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage') && !$user->can('pos.access')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $item = Item::with(['storeStocks.store'])->findOrFail($id);
 
         return response()->json([
@@ -151,8 +161,13 @@ final class ItemController extends Controller
     /**
      * Delete an item
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $item = Item::findOrFail($id);
         $this->deleteItemAction->execute($item);
 
@@ -165,14 +180,19 @@ final class ItemController extends Controller
     /**
      * Toggle Item Active Status
      */
-    public function toggleActive(int $id): JsonResponse
+    public function toggleActive(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $item = Item::findOrFail($id);
         $toggled = $this->toggleItemActiveAction->execute($item);
 
         return response()->json([
             'success' => true,
-            'message' => 'تم تحديث حالة الصنف بنجاح',
+            'message' => __('inventory.status_updated') ?: 'تم تحديث حالة الصنف بنجاح',
             'data'    => (new ItemResource($toggled))->resolve(),
         ], 200);
     }
@@ -189,7 +209,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success'  => true,
-            'message'  => 'تم تسجيل تسوية المخزون بنجاح',
+            'message'  => __('inventory.stock_adjusted') ?: 'تم تسجيل تسوية المخزون بنجاح',
             'movement' => $movement,
         ], 200);
     }
@@ -199,12 +219,17 @@ final class ItemController extends Controller
      */
     public function movements(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $item = Item::withTrashed()->findOrFail($id);
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
         $storeId = $request->input('store_id') && $request->input('store_id') !== 'all' ? (int)$request->input('store_id') : null;
         $type = $request->input('type');
-        $perPage = (int)$request->input('per_page', 20);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $result = $this->getItemMovementsAction->execute(
             $item,
@@ -226,6 +251,11 @@ final class ItemController extends Controller
      */
     public function lowStock(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage') && !$user->can('pos.access')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $storeId = (int)($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
 
         $items = Item::query()
