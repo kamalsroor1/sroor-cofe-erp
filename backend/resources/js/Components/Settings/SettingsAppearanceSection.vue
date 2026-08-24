@@ -113,11 +113,81 @@
         </button>
       </div>
     </div>
+
+    <!-- 📱 App Version & Biometrics Hub -->
+    <div class="pt-5 border-t border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <Smartphone class="w-5 h-5" />
+          </div>
+          <div>
+            <h3 class="text-xs font-black text-slate-900 dark:text-white">إصدار التطبيق والتحكم بالبصمة</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">فحص التحديثات وإدارة أمان الدخول السريع</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          @click="checkForUpdates(true)"
+          class="px-3.5 py-2 bg-theme-gradient text-white rounded-xl text-xs font-black shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+        >
+          <Rocket class="w-3.5 h-3.5" />
+          <span>فحص التحديثات</span>
+        </button>
+      </div>
+
+      <!-- Details Sub-grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <!-- Current Version Card -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">📦</span>
+            <div>
+              <div class="text-[10px] text-slate-400 font-bold">الإصدار المثبت حالياً</div>
+              <div class="text-xs font-black font-mono text-slate-900 dark:text-white">v{{ currentVersionName }}</div>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            مستقر
+          </span>
+        </div>
+
+        <!-- Biometric Status Card -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <Fingerprint class="w-5 h-5 text-emerald-500" />
+            <div>
+              <div class="text-[10px] text-slate-400 font-bold">الدخول بالبصمة / Face ID</div>
+              <div class="text-xs font-black text-slate-900 dark:text-white">
+                {{ isBiometricEnabled ? 'مفعل على هذا الجهاز' : (isAvailable ? 'متاح للتفعيل' : 'غير مدعوم') }}
+              </div>
+            </div>
+          </div>
+          <button
+            v-if="isBiometricEnabled"
+            type="button"
+            @click="disableBiometrics"
+            class="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 rounded-lg text-[10px] font-bold transition active:scale-95 cursor-pointer"
+          >
+            تعطيل
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { Palette, Pipette, Sun, Moon } from 'lucide-vue-next';
+import { onMounted } from 'vue';
+import { Palette, Pipette, Sun, Moon, Smartphone, Rocket, Fingerprint } from 'lucide-vue-next';
+import { useAppUpdate } from '../../Composables/useAppUpdate';
+import { useBiometricAuth } from '../../Composables/useBiometricAuth';
+
+const { currentVersionName, checkForUpdates } = useAppUpdate();
+const { isAvailable, isBiometricEnabled, checkAvailability, disableBiometrics } = useBiometricAuth();
+
+onMounted(checkAvailability);
 
 defineProps({
   themeColor: { type: String, default: 'amber' },

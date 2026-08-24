@@ -380,13 +380,31 @@
             </button>
           </div>
 
-          <!-- App Version Indicator -->
-          <div v-if="!isSidebarCollapsed" class="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 font-mono">
-            <span class="text-slate-500 dark:text-slate-400 font-tajawal font-medium">إصدار النظام</span>
-            <span class="px-1.5 py-0.5 rounded-md bg-theme-light text-theme-primary font-bold font-mono">v{{ appVersion }}</span>
+          <!-- App Version Indicator & Quick Check -->
+          <div v-if="!isSidebarCollapsed" class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800/60 font-mono">
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500 dark:text-slate-400 font-tajawal font-medium">الإصدار</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-theme-primary/10 text-theme-primary font-bold font-mono">v{{ currentVersionName }}</span>
+            </div>
+            <button
+              type="button"
+              @click="checkForUpdates(true)"
+              class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-tajawal font-bold transition active:scale-95 cursor-pointer flex items-center gap-1"
+              title="فحص التحديثات"
+            >
+              <span>🚀</span>
+              <span>تحديث</span>
+            </button>
           </div>
           <div v-else class="text-center pt-1 border-t border-slate-100 dark:border-slate-800/60">
-            <span class="text-[9px] font-mono font-bold text-theme-primary opacity-80" :title="'الإصدار v' + appVersion">v{{ appVersion }}</span>
+            <button
+              type="button"
+              @click="checkForUpdates(true)"
+              class="text-[9px] font-mono font-bold text-theme-primary opacity-90 hover:opacity-100 transition cursor-pointer"
+              :title="'الإصدار v' + currentVersionName + ' (انقر للفحص)'"
+            >
+              v{{ currentVersionName }}
+            </button>
           </div>
         </div>
       </aside>
@@ -506,10 +524,20 @@
             </div>
           </div>
 
-          <!-- Drawer Footer Version & Logout -->
-          <div class="p-3 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-[11px] font-mono">
-            <span class="font-tajawal font-bold text-slate-600 dark:text-slate-400">إصدار النظام</span>
-            <span class="px-2 py-0.5 rounded-md bg-theme-light text-theme-primary font-bold">v{{ appVersion }}</span>
+          <!-- Drawer Footer Version & Quick Update Check -->
+          <div class="p-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-xs font-mono">
+            <div class="flex items-center gap-2">
+              <span class="font-tajawal font-bold text-slate-700 dark:text-slate-300">الإصدار الحالي:</span>
+              <span class="px-2 py-0.5 rounded-lg bg-theme-primary/10 text-theme-primary font-black font-mono">v{{ currentVersionName }}</span>
+            </div>
+            <button
+              type="button"
+              @click="checkForUpdates(true)"
+              class="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold font-tajawal transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+            >
+              <span>🚀</span>
+              <span>فحص التحديثات</span>
+            </button>
           </div>
         </aside>
       </Transition>
@@ -524,6 +552,7 @@ import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useModules } from '../Composables/useModules';
 import { useNavigation } from '../Composables/useNavigation';
+import { useAppUpdate } from '../Composables/useAppUpdate';
 import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import Swal from 'sweetalert2';
@@ -540,7 +569,7 @@ import {
     ChevronLeft,
 } from 'lucide-vue-next';
 
-const appVersion = ref(versionData?.version || '1.0.1');
+const { currentVersionName, checkForUpdates } = useAppUpdate();
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const { isModuleEnabled } = useModules();
