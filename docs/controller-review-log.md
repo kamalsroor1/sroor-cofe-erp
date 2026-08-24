@@ -47,7 +47,7 @@
 | 18 | `ReturnController` | `app/Http/Controllers/Api/ReturnController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + DTO | ✅ Two-Way Stock & bcmath | ✅ مكتمل ومحصن |
 | 19 | `RoleController` | `app/Http/Controllers/Api/RoleController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Actions + Policy + Reqs | ✅ Cached Permissions Matrix | ✅ مكتمل ومحصن |
 | 20 | `SettingController` | `app/Http/Controllers/Api/SettingController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ Single Action + Policy + Req | ✅ Cached Dictionary & Telegram | ✅ مكتمل ومحصن |
-| 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | — | — | — | — | ⚪ بالانتظار |
+| 21 | `ShiftController` | `app/Http/Controllers/Api/ShiftController.php` | 2026-08-24 | ✅ 8/8 Pass | ✅ Single Actions + Policy + Reqs | ✅ Z-Report & Drawer Audit | ✅ مكتمل ومحصن |
 | 22 | `StockTransferController` | `app/Http/Controllers/Api/StockTransferController.php` | — | — | — | — | ⚪ بالانتظار |
 | 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | — | — | — | — | ⚪ بالانتظار |
 | 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -119,13 +119,15 @@
 * **التحسينات:** Feature Test شامل (6 اختبارات 100% Pass)، سياسة صلاحيات `RolePolicy` و Form Requests، ومصفوفة الصلاحيات المجمعة.
 
 ### 20. `SettingController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (6 اختبارات 100% Pass)، سياسة صلاحيات `SettingPolicy` و Form Requests، وتحديث الإعدادات المكيشة.
+
+### 21. `ShiftController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/SettingApiTest.php` بـ 6 اختبارات شاملة (100% Pass، 36 Assertions) تغطي جلب إعدادات الهوية والطباعة والتليجرام، تحديث الإعدادات مع إفراغ الكاش تلقائياً، إرسال إشعارات التليجرام التجريبية، والتحقق من الحقول الإلزامية وحماية الصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/SettingPolicy.php` وتفعيل `authorize()` في `UpdateSettingsRequest`.
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/SettingController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
-  4. **الأداء والهندسة:** استخدام `UpdateSettingsAction` وتخزين الإعدادات المكيشة `Setting::allCached()` مع تفريغ الكاش بعد كل تحديث.
+  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/ShiftApiTest.php` بـ 8 اختبارات شاملة (100% Pass، 17 Assertions) تغطي فحص الوردية النشطة، فتح وردية جديدة، غلق الوردية وحساب الفروقات والعجز والزيادة، وتوليد تقرير Z-Report، والتحقق من المدخلات والصلاحيات (401/403/422).
+  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/ShiftPolicy.php` وتفعيل `authorize()` في `OpenShiftRequest` و `CloseShiftRequest`.
+  3. **الأداء والهندسة:** استخدام Single Actions (`GetActiveShiftAction`, `OpenShiftAction`, `CloseShiftAction`, `GetShiftZReportAction`) وتجريد الكنترولر وتطبيق الدقة المالية في حساب الفروقات بدوال `bcmath`.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `SettingController`
-## ⏭️ التالي بالترتيب الأبجدي: `ShiftController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `ShiftController`
+## ⏭️ التالي بالترتيب الأبجدي: `StockTransferController`
