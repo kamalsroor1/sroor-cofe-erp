@@ -41,7 +41,7 @@
 | 12 | `PaymentController` | `app/Http/Controllers/Api/PaymentController.php` | 2026-08-24 | ✅ 7/7 Pass | ✅ FormRequests + Policy + Svc | ✅ LockForUpdate & Audit | ✅ مكتمل ومحصن |
 | 13 | `PermissionApiController` | `app/Http/Controllers/Api/PermissionApiController.php` | 2026-08-24 | ✅ 3/3 Pass | ✅ Single Action Tree Resolver | ✅ Cached Hierarchy | ✅ مكتمل ومحصن |
 | 14 | `PosController` | `app/Http/Controllers/Api/PosController.php` | 2026-08-24 | ✅ 14/14 Pass | ✅ Actions + Policy + FormReqs | ✅ Atomic POS Checkout | ✅ مكتمل ومحصن |
-| 15 | `ProfileController` | `app/Http/Controllers/Api/ProfileController.php` | — | — | — | — | ⚪ بالانتظار |
+| 15 | `ProfileController` | `app/Http/Controllers/Api/ProfileController.php` | 2026-08-24 | ✅ 6/6 Pass | ✅ UpdateProfileAction + DTO | ✅ Eager Load Roles & Store | ✅ مكتمل ومحصن |
 | 16 | `PurchaseController` | `app/Http/Controllers/Api/PurchaseController.php` | — | — | — | — | ⚪ بالانتظار |
 | 17 | `ReportController` | `app/Http/Controllers/Api/ReportController.php` | — | — | — | — | ⚪ بالانتظار |
 | 18 | `ReturnController` | `app/Http/Controllers/Api/ReturnController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -101,12 +101,15 @@
 * **التحسينات:** Feature Test شامل (3 اختبارات 100% Pass)، `GetPermissionsTreeAction` لشجرة الصلاحيات، وحماية المصادقة.
 
 ### 14. `PosController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (14 اختباراً 100% Pass)، سياسة صلاحيات `PosPolicy` و Form Requests، والـ Checkout الذري في `DB::transaction()`.
+
+### 15. `ProfileController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/PosApiTest.php` بـ 14 اختباراً متكاملاً (100% Pass، 78 Assertions) تغطي تهيئة نقطة البيع السريعة (POS Bootstrap)، إتمام عمليات الشراء والـ Checkout الذرية وتحديث المخزون الفوري، التسجيل السريع للعملاء، جلب آخر سعر بيع مسجل للعميل على الصنف، وأخطاء التحقق والصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/PosPolicy.php` وتفعيل `authorize()` في `StorePOSInvoiceRequest` و `StoreQuickCustomerRequest`.
-  3. **السرعة والأمان:** اعتماد DTOs و Single Actions (`ProcessPOSInvoiceAction`, `GetPOSBootstrapDataAction`, `QuickCreateCustomerAction`, `GetCustomerLastSoldPriceAction`) مع القفل السطري للمخزون ودقة `bcmath`.
+  1. **Feature Test شامل:** بناء حزمة `tests/Feature/Api/ProfileApiTest.php` بـ 6 اختبارات شاملة (100% Pass، 14 Assertions) تغطي استعراض الملف الشخصي، تحديث البيانات وتفضيل المظهر (Theme)، تغيير كلمة المرور بأمان، رفض كلمة المرور القديمة الخاطئة، ومنع تكرار الهاتف.
+  2. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/ProfileController.php` وتوجيه مسارات `routes/tenant.php` و `routes/api.php` إلى الكنترولر الموحد.
+  3. **الأنماط النظيفة:** استخدام `UpdateProfileAction` و `UpdateProfileRequest` و `UserResource`.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `PosController`
-## ⏭️ التالي بالترتيب الأبجدي: `ProfileController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `ProfileController`
+## ⏭️ التالي بالترتيب الأبجدي: `PurchaseController`

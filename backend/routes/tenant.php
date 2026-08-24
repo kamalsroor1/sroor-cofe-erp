@@ -231,8 +231,8 @@ Route::middleware([
         Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\TrashController::class, 'restore'])->name('trash.restore')->middleware('can:trash.access');
         Route::delete('/trash/{type}/{id}/force-delete', [\App\Http\Controllers\TrashController::class, 'forceDelete'])->name('trash.force-delete')->middleware('can:trash.access');
 
-        Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile');
-        Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('profile');
+        Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update'])->name('profile.update');
 
         Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index')->middleware('can:roles.manage');
         Route::post('/settings', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update')->middleware('can:roles.manage');
