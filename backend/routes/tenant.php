@@ -224,8 +224,8 @@ Route::middleware([
         Route::post('/daily-journal/expense', [\App\Http\Controllers\DailyJournalController::class, 'storeExpense'])->name('daily.journal.expense')->middleware('can:daily_journal.view');
 
         // Auth, Profile, Settings, Trash, Activity Logs & User Management
-        Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('can:logs.view');
-        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('can:logs.view');
+        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
         
         Route::get('/trash', [\App\Http\Controllers\TrashController::class, 'index'])->name('trash.index')->middleware('can:trash.access');
         Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\TrashController::class, 'restore'])->name('trash.restore')->middleware('can:trash.access');

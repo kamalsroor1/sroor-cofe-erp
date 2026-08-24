@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Actions\Logs;
 
 use App\Models\ActivityLog;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class GetActivityLogsAction
 {
@@ -14,16 +13,31 @@ final class GetActivityLogsAction
      */
     public function execute(array $filters): array
     {
-        $search = trim((string)($filters['search'] ?? ''));
-        $module = (string)($filters['module'] ?? 'all');
-        $action = (string)($filters['action'] ?? 'all');
-        $userId = $filters['user_id'] ?? 'all';
-        $storeId = $filters['store_id'] ?? 'all';
+        $search   = trim((string)($filters['search'] ?? ''));
+        $module   = (string)($filters['module'] ?? 'all');
+        $action   = (string)($filters['action'] ?? 'all');
+        $userId   = $filters['user_id'] ?? 'all';
+        $storeId  = $filters['store_id'] ?? 'all';
         $fromDate = $filters['from_date'] ?? $filters['from'] ?? null;
-        $toDate = $filters['to_date'] ?? $filters['to'] ?? null;
-        $perPage = (int)($filters['per_page'] ?? 25);
+        $toDate   = $filters['to_date'] ?? $filters['to'] ?? null;
+        $perPage  = max(1, min(200, (int)($filters['per_page'] ?? 25)));
 
-        $query = ActivityLog::with(['user', 'store']);
+        $query = ActivityLog::select([
+            'id',
+            'user_id',
+            'store_id',
+            'module',
+            'action',
+            'description',
+            'ip_address',
+            'user_agent',
+            'properties',
+            'payload',
+            'created_at',
+        ])->with([
+            'user:id,name,phone',
+            'store:id,name',
+        ]);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -61,10 +75,10 @@ final class GetActivityLogsAction
         $totalCount = (int)(clone $query)->count();
         $logs = $query->latest('id')->paginate($perPage);
 
-        // Stats
+        // Optimized Stats
         $todayLogs = ActivityLog::whereDate('created_at', now()->toDateString());
         $stats = [
-            'today_total'    => (int)$todayLogs->count(),
+            'today_total'    => (int)(clone $todayLogs)->count(),
             'today_critical' => (int)(clone $todayLogs)->whereIn('action', ['cancelled', 'deleted', 'login_failed'])->count(),
             'today_users'    => (int)(clone $todayLogs)->distinct('user_id')->count('user_id'),
             'today_stores'   => (int)(clone $todayLogs)->distinct('store_id')->count('store_id'),
@@ -81,9 +95,9 @@ final class GetActivityLogsAction
                 'action'       => $log->action,
                 'description'  => $log->description,
                 'properties'   => $log->properties,
-                'user_name'    => $log->user?->name ?? 'النظام التلقائي',
+                'user_name'    => $log->user?->name ?? __('common.system'),
                 'user_phone'   => $log->user?->phone,
-                'store_name'   => $log->store?->name ?? 'الفرع الرئيسي',
+                'store_name'   => $log->store?->name ?? __('common.main_store_default'),
                 'ip_address'   => $log->ip_address,
                 'user_agent'   => $log->user_agent,
                 'payload'      => $log->payload,

@@ -279,7 +279,7 @@ Route::get('/items/{id}/export-movements-csv', [App\Http\Controllers\ExportContr
 Route::get('/customers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportCustomerStatement'])->name('customers.export.csv');
 Route::get('/suppliers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportSupplierStatement'])->name('suppliers.export.csv');
 Route::get('/items/export-csv', [App\Http\Controllers\ExportController::class, 'exportInventory'])->name('items.export.csv');
-Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
+Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
 
 // 📱 PWA Manifest & Service Worker
 Route::get('/manifest.json', function () {

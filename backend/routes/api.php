@@ -95,9 +95,6 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'update'])->name('api.categories.update');
         Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
 
-        // Audit Trail & Activity Logs
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
-
         // POS & Sales Invoices & WhatsApp
         Route::get('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'index'])->name('api.invoices.index');
         Route::get('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'show'])->name('api.invoices.show');
@@ -174,7 +171,8 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::put('/roles/{id}/permissions', [\App\Http\Controllers\Api\RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
 
         // Activity & Audit Logs
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index')->middleware('can:logs.view');
+        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('api.activity_logs.export_csv')->middleware('can:logs.view');
 
         // User Profile & Preferences
         Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('api.profile.show');

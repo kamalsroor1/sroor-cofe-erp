@@ -107,7 +107,32 @@ resources/js/
 
 ---
 
-## 3. منهجية مراجعة وتدقيق الصفحات (Step-by-Step Page Audit Protocol)
+---
+
+## 3. معيار وبروتوكول تدقيق ومراجعة API Controllers (Backend API Controller Audit Protocol)
+
+> **⚠️ تنبيه إلزامي لأي مراجعة للباك إند:**
+> المرجع التفصيلي الإلزامي: [`docs/CONTROLLER_AUDIT_PROMPT.md`](docs/CONTROLLER_AUDIT_PROMPT.md)
+> سجل التدقيق المركزي للكنترولرز: [`docs/controller-review-log.md`](docs/controller-review-log.md)
+
+### 🎯 القاعدة الأساسية: Controller واحد فقط في كل جلسة بالكامل وبعمق:
+1. **المرحلة 0 (اكتشاف الأنماط - أول جلسة):** توثيق أنماط المشروع (Actions, Form Requests, DTOs, Pipeline Filters, Stancl Tenancy, PHPUnit 12).
+2. **المرحلة 1 (Feature Test شامل):** كتابة/تدقيق Feature Test كامل يغطي:
+   - Happy Path لكافة الـ Endpoints.
+   - Validation 422 لأخطاء المدخلات.
+   - Authorization 401/403 وحماية الصلاحيات.
+   - Tenant Isolation لضمان عدم تسريب البيانات بين المستأجرين.
+   - Edge Cases (أرقام سالبة، 404، نصوص فارغة).
+3. **المرحلة 2 (الريفاكتور ونظافة الكود SOLID):**
+   - تفريغ الكنترولر إلى Thin Controller.
+   - Form Requests للتحقق و Pipeline للفلاتر و Single Actions للعمليات.
+   - إعادة تشغيل الاختبارات بعد كل خطوة للتأكد من عدم تغير أي سلوك.
+4. **المرحلة 3 (تحسين الأداء Performance):**
+   - حل N+1 Queries عبر Eager Loading (`with()`).
+   - تحديد الحقول `select()` و الترقيم `paginate()`.
+5. **التوثيق:** تحديث `docs/controller-review-log.md` وسجل التاريخ اليومي `docs/history/YYYY-MM-DD/`.
+
+## 4. منهجية مراجعة وتدقيق الصفحات (Step-by-Step Page Audit Protocol)
 
 عند مراجعة أي صفحة من صفحات النظام، يجب اتباع هذه الخطوات بالترتيب دون تخطي:
 
@@ -138,7 +163,7 @@ resources/js/
 
 ---
 
-## 4. مصفوفة تحديد دورك الحالي (Choose Your Role)
+## 5. مصفوفة تحديد دورك الحالي (Choose Your Role)
 
 قبل تنفيذ المهمة المطلوبة، حدد الدور الذي ستمثله والتزم بحدوده:
 
@@ -164,7 +189,7 @@ resources/js/
 
 ---
 
-## 5. البروتوكول الإلزامي لتسجيل التعديلات (AI History Protocol)
+## 6. البروتوكول الإلزامي لتسجيل التعديلات (AI History Protocol)
 
 بعد أي تعديل أو إضافة برمجية، يتم توثيق العمل داخل:
 `docs/history/YYYY-MM-DD/`
@@ -189,7 +214,7 @@ resources/js/
 
 ---
 
-## 6. 📚 نظام التوثيق الثلاثي الإلزامي في `docs/` (Mandatory 3-Tier Documentation System)
+## 7. 📚 نظام التوثيق الثلاثي الإلزامي في `docs/` (Mandatory 3-Tier Documentation System)
 
 بجانب ملف التاريخ اليومي، يجب على كل جلسة مراجعة صفحة توثيق العمل عبر 3 مستويات توثيق متكاملة داخل مجلد `docs/`:
 
