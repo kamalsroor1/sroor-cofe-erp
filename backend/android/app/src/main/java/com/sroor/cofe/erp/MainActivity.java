@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import java.io.File;
 public class MainActivity extends BridgeActivity {
 
     private long downloadId = -1;
+    private File downloadedApkFile = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -30,7 +32,10 @@ public class MainActivity extends BridgeActivity {
             webView.setDownloadListener(new DownloadListener() {
                 @Override
                 public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long contentLength) {
-                    if (url.endsWith(".apk") || (mimeType != null && mimeType.contains("vnd.android.package-archive")) || url.contains("download-apk") || url.contains("download-latest-apk")) {
+                    if (url.toLowerCase().endsWith(".apk") || 
+                        (mimeType != null && mimeType.contains("vnd.android.package-archive")) || 
+                        url.contains("download-apk") || 
+                        url.contains("download-latest-apk")) {
                         downloadAndInstallApk(url);
                     } else {
                         // Open other downloads in standard system browser
@@ -56,14 +61,28 @@ public class MainActivity extends BridgeActivity {
 
     private void downloadAndInstallApk(String url) {
         try {
-            Toast.makeText(this, "جاري تنزيل ملف التحديث في الخلفية...", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "جاري تنزيل ملف التحديث...", Toast.LENGTH_SHORT).show();
+
+            // Prepare destination file inside app's external files dir (isolated, no permission issues)
+            File destDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            if (destDir == null) {
+                destDir = getFilesDir();
+            }
+            if (!destDir.exists()) {
+                destDir.mkdirs();
+            }
+
+            downloadedApkFile = new File(destDir, "sroor-erp-update.apk");
+            if (downloadedApkFile.exists()) {
+                downloadedApkFile.delete();
+            }
 
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
             request.setMimeType("application/vnd.android.package-archive");
             request.setTitle("منظومة ERP | تحديث جديد");
-            request.setDescription("جاري تحميل أحدث إصدار من التطبيق...");
+            request.setDescription("جاري تنزيل ملف التحديث...");
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "sroor-erp-update.apk");
+            request.setDestinationUri(Uri.fromFile(downloadedApkFile));
 
             DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             if (manager != null) {
@@ -83,30 +102,42 @@ public class MainActivity extends BridgeActivity {
         public void onReceive(Context context, Intent intent) {
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             if (downloadId != -1 && downloadId == id) {
-                installDownloadedApk();
+                verifyAndInstallApk();
             }
         }
     };
 
-    private void installDownloadedApk() {
+    private void verifyAndInstallApk() {
         try {
-            File apkFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "sroor-erp-update.apk");
-            if (apkFile.exists()) {
-                Uri apkUri;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    apkUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", apkFile);
-                } else {
-                    apkUri = Uri.fromFile(apkFile);
+            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager != null && downloadId != -1) {
+                DownloadManager.Query query = new DownloadManager.Query();
+                query.setFilterById(downloadId);
+                try (Cursor cursor = manager.query(query)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                        if (statusIndex != -1 && cursor.getInt(statusIndex) != DownloadManager.STATUS_SUCCESSFUL) {
+                            Toast.makeText(this, "تعذر اكتمال تحميل التحديث، يرجى المحاولة مرة أخرى", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                    }
                 }
+            }
+
+            if (downloadedApkFile != null && downloadedApkFile.exists() && downloadedApkFile.length() > 0) {
+                Uri apkUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", downloadedApkFile);
 
                 Intent installIntent = new Intent(Intent.ACTION_VIEW);
                 installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                 installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                installIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(installIntent);
+            } else {
+                Toast.makeText(this, "تعذر العثور على ملف التحديث", Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
-            Toast.makeText(this, "يرجى فتح ملف التحديث من مجلد التحميلات (Downloads)", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "حدث خطأ أثناء فتح التحديث: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

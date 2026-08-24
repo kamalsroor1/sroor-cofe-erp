@@ -40,6 +40,30 @@
         <span>{{ errorMessage }}</span>
       </div>
 
+      <!-- Biometric Quick Login (If Enabled on Device) -->
+      <div v-if="isBiometricEnabled" class="space-y-3">
+        <button
+          type="button"
+          @click="handleBiometricLogin"
+          :disabled="isLoading || isAuthenticating"
+          class="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-500/25 text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer font-tajawal disabled:opacity-50"
+        >
+          <template v-if="isAuthenticating">
+            <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>جاري التحقق من البصمة...</span>
+          </template>
+          <template v-else>
+            <Fingerprint class="w-5 h-5 animate-pulse" />
+            <span>الدخول السريع بالبصمة ({{ biometricUser }})</span>
+          </template>
+        </button>
+
+        <div class="relative flex items-center justify-center my-3">
+          <div class="border-t border-slate-200 dark:border-slate-800 w-full"></div>
+          <span class="bg-white dark:bg-slate-900 px-3 text-[10px] font-bold text-slate-400">أو إدخال كلمة المرور يدويًا</span>
+        </div>
+      </div>
+
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-4">
         <!-- Phone / Username Field -->
@@ -69,18 +93,32 @@
           wrapper-class="text-right"
         />
 
-        <!-- Remember Me Checkbox -->
-        <div class="flex items-center justify-between pt-1">
-          <BaseCheckbox
-            v-model="form.remember"
-            :label="$t('auth.remember_me')"
-          />
+        <!-- Options: Remember Me & Biometric Setup -->
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between">
+            <BaseCheckbox
+              v-model="form.remember"
+              :label="$t('auth.remember_me')"
+            />
+          </div>
+
+          <div v-if="isAvailable && !isBiometricEnabled" class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <Fingerprint class="w-4 h-4 text-emerald-500" />
+              <span>تفعيل الدخول بالبصمة لهذا الحساب</span>
+            </div>
+            <input
+              type="checkbox"
+              v-model="enableBiometricOnSuccess"
+              class="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+            />
+          </div>
         </div>
 
         <!-- Submit Button -->
         <button
           type="submit"
-          :disabled="isLoading"
+          :disabled="isLoading || isAuthenticating"
           class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-theme-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
         >
           <template v-if="isLoading">
@@ -147,6 +185,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import versionData from '../../version.json';
 import { useAppConfigStore } from '../../stores/appConfig';
+import { useBiometricAuth } from '../../Composables/useBiometricAuth';
 import BaseInput from '../../Components/Form/BaseInput.vue';
 import BaseCheckbox from '../../Components/Form/BaseCheckbox.vue';
 import {
@@ -160,7 +199,8 @@ import {
     Key,
     Crown,
     Sun,
-    Moon
+    Moon,
+    Fingerprint,
 } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
@@ -169,6 +209,18 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+
+const {
+    isAvailable,
+    isBiometricEnabled,
+    biometricUser,
+    isAuthenticating,
+    checkAvailability,
+    registerBiometrics,
+    loginWithBiometrics,
+} = useBiometricAuth();
+
+const enableBiometricOnSuccess = ref(true);
 
 const toggleTheme = () => {
     const nextTheme = appConfigStore.theme === 'dark' ? 'light' : 'dark';
@@ -194,6 +246,12 @@ onMounted(async () => {
     if (!window.spaTranslations || Object.keys(window.spaTranslations).length === 0) {
         await appConfigStore.fetchTranslations('ar');
     }
+    await checkAvailability();
+
+    // If biometric is enabled and available, prompt once seamlessly
+    if (isBiometricEnabled.value && !authStore.isAuthenticated) {
+        handleBiometricLogin();
+    }
 });
 
 const fillAccount = (phone, password) => {
@@ -202,7 +260,17 @@ const fillAccount = (phone, password) => {
     errorMessage.value = '';
 };
 
-const handleLogin = async () => {
+const handleBiometricLogin = async () => {
+    errorMessage.value = '';
+    const credentials = await loginWithBiometrics();
+    if (credentials) {
+        form.login = credentials.login;
+        form.password = credentials.password;
+        await handleLogin(true);
+    }
+};
+
+const handleLogin = async (isBiometricFlow = false) => {
     isLoading.value = true;
     errorMessage.value = '';
 
@@ -212,6 +280,11 @@ const handleLogin = async () => {
             password: form.password,
             device_name: 'vue-spa',
         });
+
+        // Register biometrics if requested and supported
+        if (!isBiometricFlow && enableBiometricOnSuccess.value && isAvailable.value && !isBiometricEnabled.value) {
+            await registerBiometrics(form.login, form.password);
+        }
 
         // Initialize system context in background
         await appConfigStore.fetchBootstrapContext();
