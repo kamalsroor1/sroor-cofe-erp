@@ -44,7 +44,7 @@ final class SystemContextApiController extends Controller
      */
     public function translations(Request $request): JsonResponse
     {
-        $locale = $request->query('locale') ?: $request->header('X-Locale') ?: app()->getLocale();
+        $locale = (string)($request->query('locale') ?: $request->header('X-Locale') ?: app()->getLocale());
         $translations = $this->getTranslationsAction->execute($locale);
 
         return response()->json([

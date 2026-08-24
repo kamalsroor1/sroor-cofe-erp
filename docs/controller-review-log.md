@@ -52,7 +52,7 @@
 | 23 | `StoreController` | `app/Http/Controllers/Api/StoreController.php` | 2026-08-24 | ✅ 11/11 Pass | ✅ Single Actions + Policy + Reqs | ✅ Multi-Branch & User Scopes | ✅ مكتمل ومحصن |
 | 24 | `SuperAdminApiController` | `app/Http/Controllers/Api/SuperAdminApiController.php` | 2026-08-24 | ✅ 9/9 Pass | ✅ Single Actions + Policy + Reqs | ✅ Central Whitelabel & Analytics | ✅ مكتمل ومحصن |
 | 25 | `SupplierController` | `app/Http/Controllers/Api/SupplierController.php` | 2026-08-24 | ✅ 10/10 Pass | ✅ Single Actions + Policy + Reqs | ✅ Statement Ledger & bcmath | ✅ مكتمل ومحصن |
-| 26 | `SystemContextApiController` | `app/Http/Controllers/Api/SystemContextApiController.php` | — | — | — | — | ⚪ بالانتظار |
+| 26 | `SystemContextApiController` | `app/Http/Controllers/Api/SystemContextApiController.php` | 2026-08-24 | ✅ 5/5 Pass | ✅ Single Action + Bootstrap DTO | ✅ Single Network Roundtrip | ✅ مكتمل ومحصن |
 | 27 | `TrashController` | `app/Http/Controllers/Api/TrashController.php` | — | — | — | — | ⚪ بالانتظار |
 | 28 | `TreasuryController` | `app/Http/Controllers/Api/TreasuryController.php` | — | — | — | — | ⚪ بالانتظار |
 | 29 | `UserController` | `app/Http/Controllers/Api/UserController.php` | — | — | — | — | ⚪ بالانتظار |
@@ -134,13 +134,15 @@
 * **التحسينات:** Feature Test شامل (9 اختبارات 100% Pass)، سياسة صلاحيات `TenantPolicy` و Form Requests، وتأمين المنصة المركزية والمستأجرين.
 
 ### 25. `SupplierController` — 2026-08-24
+* **التحسينات:** Feature Test شامل (10 اختبارات 100% Pass)، سياسة صلاحيات `SupplierPolicy` و Form Requests، وتأمين كشوف حسابات الموردين.
+
+### 26. `SystemContextApiController` — 2026-08-24
 * **الحالة والتحسينات:**
-  1. **Feature Test شامل:** تحديث حزمة `tests/Feature/Api/SuppliersApiTest.php` بـ 10 اختبارات شاملة (100% Pass، 54 Assertions) تغطي إنشاء وتحديث الموردين، سداد دفعات الموردين وتحديث رصيد المديونية، استخراج كشف الحساب التفصيلي (Ledger) بدقة، وتفعيل/تعطيل الموردين مع مصفوفة الصلاحيات (401/403/422).
-  2. **منظومة الصلاحيات ثلاثية الأبعاد:** إنشاء كلاس `app/Policies/SupplierPolicy.php` وتفعيل Form Requests (`StoreSupplierRequest`, `UpdateSupplierRequest`, `PaySupplierRequest`).
-  3. **استئصال الكود الميت:** حذف الكنترولر القديم `app/Http/Controllers/SupplierController.php` وتوجيه مسارات `routes/tenant.php` للكنترولر الموحد.
-  4. **الأداء والهندسة:** استخدام Single Actions (`CreateSupplierAction`, `UpdateSupplierAction`, `DeleteSupplierAction`, `ToggleSupplierActiveAction`, `PaySupplierAction`, `GetSupplierStatementAction`) مع المعالجة المالية الآمنة في `DB::transaction()` بدقة `bcmath`.
+  1. **Feature Test شامل:** إنشاء حزمة `tests/Feature/Api/SystemContextApiTest.php` بـ 5 اختبارات شاملة (100% Pass، 27 Assertions) تغطي جلب حزمة التهيئة الموحدة (Bootstrap Payload) للتطبيق والـ SPA، استرجاع الفرع النشط، تنبيهات النواقص بالمخزن ومديونيات العملاء، وقاموس الترجمة الفوري.
+  2. **الهندسة والأداء الفائق:** استبدال طلبات الشبكة المتعددة بطلب واحد ذري وسريع (`GetSystemContextAction` + `GetTranslationsAction`) لتسريع فتح تطبيق الموبايل وواجهة الـ SPA.
+  3. **عزل الصلاحيات:** التحقق من هوية المستخدم النشط وإرجاع بيانات الفروع والورديات والتنبيهات المخصصة لصلاحياته فقط.
 
 ---
 
-## 📌 آخر Controller تمت مراجعته بالكامل: `SupplierController`
-## ⏭️ التالي بالترتيب الأبجدي: `SystemContextApiController`
+## 📌 آخر Controller تمت مراجعته بالكامل: `SystemContextApiController`
+## ⏭️ التالي بالترتيب الأبجدي: `TrashController`
