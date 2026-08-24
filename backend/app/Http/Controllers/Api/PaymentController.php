@@ -1,31 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Payment;
+use App\Http\Requests\StoreCustomerPaymentReceiptRequest;
+use App\Http\Requests\StoreSupplierPaymentVoucherRequest;
 use App\Models\Customer;
+use App\Models\Payment;
 use App\Models\Supplier;
 use App\Services\PaymentService;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class PaymentController extends Controller
+final class PaymentController extends Controller
 {
     public function __construct(
-        protected PaymentService $paymentService
+        private readonly PaymentService $paymentService
     ) {}
 
     /**
-     * List payment vouchers
+     * List payment vouchers with filters and financial summary
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $type       = $request->input('type', 'all'); // customer, supplier, all
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('daily_journal.view') && !$user->can('customers.manage') && !$user->can('suppliers.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        $type       = (string)$request->input('type', 'all'); // customer, supplier, all
         $customerId = $request->input('customer_id');
         $supplierId = $request->input('supplier_id');
-        $fromDate   = $request->input('from_date');
-        $toDate     = $request->input('to_date');
+        $fromDate   = $request->input('from_date') ?: $request->input('from');
+        $toDate     = $request->input('to_date') ?: $request->input('to');
+        $perPage    = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $query = Payment::query()->with(['customer:id,name,phone', 'supplier:id,name,phone', 'user:id,name']);
 
@@ -35,10 +46,10 @@ class PaymentController extends Controller
             $query->whereNotNull('supplier_id');
         }
 
-        if ($customerId) {
+        if ($customerId && $customerId !== 'all') {
             $query->where('customer_id', (int)$customerId);
         }
-        if ($supplierId) {
+        if ($supplierId && $supplierId !== 'all') {
             $query->where('supplier_id', (int)$supplierId);
         }
 
@@ -49,16 +60,16 @@ class PaymentController extends Controller
             $query->whereDate('payment_date', '<=', $toDate);
         }
 
-        $payments = $query->latest('id')->paginate($request->input('per_page', 20));
+        $payments = $query->latest('id')->paginate($perPage);
 
-        $totalCollections = Payment::whereNotNull('customer_id')->sum('amount');
-        $totalDisbursements = Payment::whereNotNull('supplier_id')->sum('amount');
+        $totalCollections = (string)(Payment::whereNotNull('customer_id')->sum('amount') ?: '0.000');
+        $totalDisbursements = (string)(Payment::whereNotNull('supplier_id')->sum('amount') ?: '0.000');
 
         return response()->json([
             'success' => true,
             'summary' => [
-                'total_collections'   => (string)$totalCollections,
-                'total_disbursements' => (string)$totalDisbursements,
+                'total_collections'   => (float)$totalCollections,
+                'total_disbursements' => (float)$totalDisbursements,
             ],
             'data' => $payments->items(),
             'pagination' => [
@@ -67,22 +78,15 @@ class PaymentController extends Controller
                 'per_page'     => $payments->perPage(),
                 'total'        => $payments->total(),
             ],
-        ]);
+        ], 200);
     }
 
     /**
      * Create Customer Receipt Voucher (سند قبض / تحصيل)
      */
-    public function customerReceipt(Request $request)
+    public function customerReceipt(StoreCustomerPaymentReceiptRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'customer_id'    => 'required|integer|exists:customers,id',
-            'amount'         => 'required|numeric|min:0.01',
-            'invoice_id'     => 'nullable|integer|exists:invoices,id',
-            'payment_date'   => 'nullable|date',
-            'payment_method' => 'nullable|in:cash,bank_transfer,check,other',
-            'notes'          => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             $payment = $this->paymentService->recordCustomerPayment($validated);
@@ -92,7 +96,7 @@ class PaymentController extends Controller
                 'success' => true,
                 'message' => 'تم تسجيل سند القبض وتحصيل مبلغ ' . number_format((float)$validated['amount'], 2) . ' ج.م بنجاح',
                 'data'    => $payment,
-                'customer_current_balance' => (string)$customer?->current_balance,
+                'customer_current_balance' => (float)($customer?->current_balance ?? 0),
             ], 201);
         } catch (Exception $e) {
             return response()->json([
@@ -105,16 +109,9 @@ class PaymentController extends Controller
     /**
      * Create Supplier Disbursement Voucher (سند صرف / سداد مورد)
      */
-    public function supplierVoucher(Request $request)
+    public function supplierVoucher(StoreSupplierPaymentVoucherRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'supplier_id'    => 'required|integer|exists:suppliers,id',
-            'amount'         => 'required|numeric|min:0.01',
-            'purchase_id'    => 'nullable|integer|exists:purchases,id',
-            'payment_date'   => 'nullable|date',
-            'payment_method' => 'nullable|in:cash,bank_transfer,check,other',
-            'notes'          => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             $payment = $this->paymentService->recordSupplierPayment($validated);
@@ -124,7 +121,7 @@ class PaymentController extends Controller
                 'success' => true,
                 'message' => 'تم تسجيل سند الصرف وسداد مبلغ ' . number_format((float)$validated['amount'], 2) . ' ج.م للمورد بنجاح',
                 'data'    => $payment,
-                'supplier_current_balance' => (string)$supplier?->current_balance,
+                'supplier_current_balance' => (float)($supplier?->current_balance ?? 0),
             ], 201);
         } catch (Exception $e) {
             return response()->json([
