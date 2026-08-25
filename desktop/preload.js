@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     toggleFullscreen: () => ipcRenderer.invoke('window:toggle-fullscreen'),
     toggleKiosk: () => ipcRenderer.invoke('window:toggle-kiosk'),
     reloadApp: () => ipcRenderer.invoke('window:reload'),
+    hardReload: () => ipcRenderer.invoke('window:hard-reload'),
+    clearCache: () => ipcRenderer.invoke('window:clear-cache'),
 
     // 🖨️ Hardware: Direct Thermal Printing & Cash Drawer
     getPrinters: () => ipcRenderer.invoke('hardware:get-printers'),

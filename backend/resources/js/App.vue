@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col" dir="rtl">
+  <div class="h-screen max-h-screen w-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col" dir="rtl">
     <!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->
     <DesktopTitlebar
       @open-hardware="isDesktopHardwareOpen = true"

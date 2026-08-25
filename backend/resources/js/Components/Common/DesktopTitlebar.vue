@@ -1,7 +1,7 @@
 <template>
   <header
     v-if="isDesktop"
-    class="h-9 w-full bg-slate-950 text-slate-300 border-b border-slate-800/80 flex items-center justify-between px-3 select-none text-xs font-tajawal z-[99999] relative drag-region"
+    class="h-9 w-full shrink-0 sticky top-0 bg-slate-950 text-slate-300 border-b border-slate-800/80 flex items-center justify-between px-3 select-none text-xs font-tajawal z-[99999] drag-region"
     dir="rtl"
   >
     <!-- ☕ Right Side: App Brand & Active Store Context -->
@@ -40,6 +40,17 @@
           {{ isOnline ? (serverPingMs ? `${serverPingMs}ms` : 'سحابي') : 'غير متصل' }}
         </span>
       </div>
+
+      <!-- 🔄 Force Reload / Clear Cache -->
+      <button
+        type="button"
+        @click="handleForceReload"
+        class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer active:scale-95"
+        title="تحديث فوري وتجاوز الكاش (Ctrl+Shift+R أو F5)"
+      >
+        <RefreshCw class="w-3 h-3 text-cyan-400" :class="{ 'animate-spin': isReloading }" />
+        <span class="font-sans text-[10px] hidden lg:inline">تحديث الكاش</span>
+      </button>
     </div>
 
     <!-- 🪟 Left Side (in RTL): Action Shortcuts & Native Window Controls -->
@@ -131,7 +142,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useAuthStore } from '../../stores/auth';
@@ -145,13 +156,15 @@ import {
   Minus,
   Square,
   Copy,
-  X
+  X,
+  RefreshCw
 } from 'lucide-vue-next';
 
 defineEmits(['open-hardware', 'open-shortcuts']);
 
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+const isReloading = ref(false);
 
 const {
   isDesktop,
@@ -165,6 +178,17 @@ const {
 } = useDesktopHardware();
 
 const { isSoundEnabled, toggleSound } = useAudioFeedback();
+
+const handleForceReload = async () => {
+  isReloading.value = true;
+  if (window.electronAPI?.clearCache) {
+    await window.electronAPI.clearCache();
+  } else if (window.electronAPI?.hardReload) {
+    await window.electronAPI.hardReload();
+  } else {
+    window.location.reload();
+  }
+};
 
 const activePrinterName = computed(() => {
   const saved = localStorage.getItem('desktop_thermal_printer');

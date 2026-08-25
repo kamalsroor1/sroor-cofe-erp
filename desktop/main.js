@@ -89,6 +89,11 @@ function createMainWindow() {
             },
             { type: 'separator' },
             {
+                label: 'إعادة تحميل وتحديث الكاش الفوري (Hard Reload)',
+                accelerator: 'CmdOrCtrl+Shift+R',
+                click: () => mainWindow.webContents.reloadIgnoringCache()
+            },
+            {
                 label: 'إعادة تحميل الصفحة (Reload)',
                 accelerator: 'CmdOrCtrl+R',
                 click: () => mainWindow.webContents.reload()
@@ -300,6 +305,26 @@ ipcMain.handle('window:toggle-kiosk', () => {
 
 ipcMain.handle('window:reload', () => {
     if (mainWindow) mainWindow.webContents.reload();
+});
+
+ipcMain.handle('window:hard-reload', () => {
+    if (mainWindow) mainWindow.webContents.reloadIgnoringCache();
+});
+
+ipcMain.handle('window:clear-cache', async () => {
+    if (mainWindow) {
+        try {
+            await mainWindow.webContents.session.clearCache();
+            await mainWindow.webContents.session.clearStorageData({
+                storages: ['cachestorage', 'serviceworkers']
+            });
+            mainWindow.webContents.reloadIgnoringCache();
+            return true;
+        } catch (e) {
+            console.error('[Cache] Error clearing cache:', e);
+        }
+    }
+    return false;
 });
 
 // 2. Hardware: Printers

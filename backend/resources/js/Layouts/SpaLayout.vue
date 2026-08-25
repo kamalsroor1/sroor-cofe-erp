@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen max-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200" dir="rtl">
+  <div class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200" dir="rtl">
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -243,183 +243,11 @@
     <!-- 🖥️ MAIN BODY: DYNAMIC SIDEBAR + STAGE                        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="flex-1 flex overflow-hidden relative min-h-0">
-      <!-- 💻 DESKTOP SIDEBAR -->
-      <aside
-        class="hidden md:flex h-full max-h-full bg-white dark:bg-slate-900/95 border-l border-slate-200 dark:border-slate-800/80 flex-col shrink-0 font-tajawal select-none transition-all duration-300 shadow-sm z-30 overflow-hidden"
-        :class="isSidebarCollapsed ? 'w-20' : 'w-72'"
-      >
-        <!-- 📌 1. PERMANENTLY FIXED TOP HEADER OF SIDEBAR -->
-        <div class="p-3 border-b border-slate-200 dark:border-slate-800/80 shrink-0 bg-white dark:bg-slate-900/95 z-20">
-          <!-- Expanded Mode -->
-          <div v-if="!isSidebarCollapsed" class="flex items-center justify-between">
-            <div class="flex items-center gap-3 overflow-hidden">
-              <div
-                class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-colors"
-                :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-              >
-                ☕
-              </div>
-              <div class="min-w-0">
-                <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
-                  {{ appConfigStore.companyName }}
-                </h2>
-                <p v-if="appConfigStore.companySubtitle" class="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
-                  {{ appConfigStore.companySubtitle }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Sleek Icon Toggle Button -->
-            <button
-              type="button"
-              @click="toggleSidebarCollapse"
-              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-slate-300 dark:border-slate-800 transition-all duration-200 flex items-center justify-center cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-              title="تصغير القائمة الجانبية"
-            >
-              <ChevronRight class="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </div>
-
-          <!-- Collapsed Mode (Mini Sidebar Header) -->
-          <div v-else class="flex flex-col items-center gap-2.5 py-1">
-            <div
-              class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-colors"
-              :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-            >
-              ☕
-            </div>
-            <!-- Expand Button -->
-            <button
-              type="button"
-              @click="toggleSidebarCollapse"
-              class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-slate-300 dark:border-slate-800 transition-all duration-200 flex items-center justify-center cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-              title="توسيع القائمة الجانبية"
-            >
-              <ChevronLeft class="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </div>
-        </div>
-
-        <!-- 📌 2. DYNAMIC SCROLLABLE NAVIGATION LIST -->
-        <div class="flex-1 overflow-y-auto min-h-0 p-2.5 space-y-1.5 custom-scrollbar">
-          <!-- 🌟 Big Action Button: New Sale Invoice (F2) -->
-          <div v-if="isModuleEnabled('pos_and_sales')"
-            class="relative"
-            @mouseenter="handleItemHover($event, '+ فاتورة بيع جديدة (F2)')"
-            @mouseleave="handleItemLeave"
-          >
-            <router-link
-              to="/pos"
-              class="flex items-center justify-center gap-2.5 w-full py-3 rounded-2xl font-black text-xs text-slate-950 transition-all active:scale-95 cursor-pointer mb-3 shadow-md hover:brightness-105"
-              :class="isSidebarCollapsed ? 'px-0' : 'px-4'"
-              :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-            >
-              <Plus class="w-4 h-4 stroke-[3] shrink-0" />
-              <span v-if="!isSidebarCollapsed" class="truncate">+ فاتورة بيع جديدة (F2)</span>
-            </router-link>
-          </div>
-
-          <!-- Dynamic Sections Loop -->
-          <template v-for="section in navigationSections" :key="section.key">
-            <!-- Section Header (Only when expanded) -->
-            <div
-              v-if="!isSidebarCollapsed && section.title"
-              class="pt-3 pb-1 px-3 text-[11px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider"
-            >
-              {{ section.title }}
-            </div>
-            <div v-else-if="section.title" class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
-
-            <!-- Section Items -->
-            <div
-              v-for="item in section.items"
-              :key="item.key"
-              class="relative"
-              @mouseenter="handleItemHover($event, item.title)"
-              @mouseleave="handleItemLeave"
-            >
-              <router-link
-                :to="item.path"
-                class="group flex items-center gap-3 p-2 rounded-2xl text-sm font-bold transition-all"
-                :class="isItemActive(item)
-                  ? 'font-black border shadow-xs'
-                  : 'text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-900/80'"
-                :style="isItemActive(item) ? {
-                  color: 'var(--color-primary, #f59e0b)',
-                  borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
-                  backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
-                } : {}"
-              >
-                <!-- Solid Tactile Icon Tile -->
-                <div
-                  class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-2xs"
-                  :class="isItemActive(item)
-                    ? 'text-slate-950 shadow-md font-bold'
-                    : 'bg-slate-100 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80 group-hover:border-slate-400 dark:group-hover:border-slate-700 group-hover:text-slate-900 dark:group-hover:text-white'"
-                  :style="isItemActive(item) ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
-                >
-                  <component :is="item.icon" class="w-4 h-4 stroke-[2.4]" />
-                </div>
-                <span v-if="!isSidebarCollapsed" class="truncate font-bold">{{ item.title }}</span>
-              </router-link>
-            </div>
-          </template>
-        </div>
-
-        <!-- 📌 3. PERMANENTLY FIXED BOTTOM FOOTER OF SIDEBAR -->
-        <div class="p-2.5 border-t border-slate-200 dark:border-slate-800/80 flex flex-col gap-2 shrink-0 bg-white/95 dark:bg-slate-900/95 z-20">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5 min-w-0 overflow-hidden">
-              <div
-                class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs"
-                :style="{ backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))', color: 'var(--color-primary, #f59e0b)' }"
-              >
-                {{ authStore.userName?.charAt(0) || 'U' }}
-              </div>
-              <div v-if="!isSidebarCollapsed" class="min-w-0">
-                <div class="text-xs font-black text-slate-900 dark:text-white truncate">{{ authStore.userName }}</div>
-                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">{{ authStore.roles?.[0] || 'المدير العام' }}</div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              @click="confirmLogout"
-              class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
-              title="تسجيل الخروج"
-            >
-              <LogOut class="w-4 h-4 stroke-[2.2]" />
-            </button>
-          </div>
-
-          <!-- App Version Indicator & Quick Check -->
-          <div v-if="!isSidebarCollapsed" class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800/60 font-mono">
-            <div class="flex items-center gap-1.5">
-              <span class="text-slate-500 dark:text-slate-400 font-tajawal font-medium">الإصدار</span>
-              <span class="px-1.5 py-0.5 rounded-md bg-theme-primary/10 text-theme-primary font-bold font-mono">v{{ currentVersionName }}</span>
-            </div>
-            <button
-              type="button"
-              @click="checkForUpdates(true)"
-              class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-tajawal font-bold transition active:scale-95 cursor-pointer flex items-center gap-1"
-              title="فحص التحديثات"
-            >
-              <span>🚀</span>
-              <span>تحديث</span>
-            </button>
-          </div>
-          <div v-else class="text-center pt-1 border-t border-slate-100 dark:border-slate-800/60">
-            <button
-              type="button"
-              @click="checkForUpdates(true)"
-              class="text-[9px] font-mono font-bold text-theme-primary opacity-90 hover:opacity-100 transition cursor-pointer"
-              :title="'الإصدار v' + currentVersionName + ' (انقر للفحص)'"
-            >
-              v{{ currentVersionName }}
-            </button>
-          </div>
-        </div>
-      </aside>
+      <!-- 💻 MODERN DESKTOP SIDEBAR -->
+      <DesktopSidebar
+        :is-collapsed="isSidebarCollapsed"
+        @toggle-collapse="toggleSidebarCollapse"
+      />
 
       <!-- Main Content Stage -->
       <main class="flex-1 h-full overflow-y-auto min-h-0 p-3 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 pb-24 md:pb-8 custom-scrollbar">
@@ -429,20 +257,6 @@
       <!-- Fixed Mobile Bottom Navigation Bar -->
       <MobileBottomNav @open-drawer="isSidebarOpen = true" />
     </div>
-
-    <!-- 🌟 Teleported Non-Clipped Animated Tooltip for Collapsed Sidebar -->
-    <Teleport to="body">
-      <Transition name="tooltip-fade">
-        <div
-          v-if="hoveredTooltip.show && isSidebarCollapsed"
-          class="fixed z-[99999] pointer-events-none -translate-y-1/2 px-3 py-2 bg-slate-950 text-white text-xs font-black rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 font-tajawal whitespace-nowrap"
-          :style="{ top: `${hoveredTooltip.top}px`, right: `${hoveredTooltip.right}px` }"
-        >
-          <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"></span>
-          <span>{{ hoveredTooltip.text }}</span>
-        </div>
-      </Transition>
-    </Teleport>
 
     <!-- 📱 DYNAMIC MOBILE DRAWER (Complete Mirror of Full ERP System) -->
     <Teleport to="body">
@@ -673,6 +487,7 @@ import { useDesktopHardware } from '../Composables/useDesktopHardware';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
+import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import Swal from 'sweetalert2';
 import {
     Store as StoreIcon,

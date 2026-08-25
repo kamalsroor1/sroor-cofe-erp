@@ -33,7 +33,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white font-tajawal" dir="rtl">
+    <div class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white font-tajawal" dir="rtl">
         <!-- Top Navbar -->
         <header class="h-16 border-b border-slate-200 dark:border-indigo-900/40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-xs">
             <div class="flex items-center gap-3">
