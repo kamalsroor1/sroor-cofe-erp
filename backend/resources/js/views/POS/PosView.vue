@@ -28,15 +28,13 @@
       @clear-cart="clearCart"
     />
 
-    <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart + Optional Product Grid + Category Sidebar) -->
+    <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart [DOMINANT HERO - flex-1] + Compact 3-Column Best Sellers) -->
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
       
-      <!-- 🛒 Invoice Cart & Payment Checkout Panel -->
+      <!-- 🛒 Invoice Cart & Payment Checkout Panel (DOMINANT HERO - Takes maximum width) -->
       <section
-        class="flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden order-2 lg:order-1 transition-all duration-200"
-        :class="showCatalog ? 'w-full lg:w-[400px] xl:w-[450px] 2xl:w-[480px]' : 'flex-1 w-full max-w-5xl mx-auto'"
+        class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200"
       >
-        
         <!-- Top Section: Cart Items Table -->
         <div class="flex-1 overflow-hidden flex flex-col min-h-[220px]">
           <POSCartTable
@@ -71,10 +69,10 @@
         </div>
       </section>
 
-      <!-- 🍕 Center: Visual Product Grid Catalog (3 Columns) -->
+      <!-- 🍕 Side: Visual Product Grid Catalog (Compact 3-Column Width) -->
       <main
         v-if="showCatalog"
-        class="flex-1 flex flex-col overflow-hidden min-w-0 bg-slate-100/50 dark:bg-slate-950 order-1 lg:order-2 animate-in fade-in duration-150"
+        class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150"
       >
         <POSProductGrid
           :items="items"
@@ -86,10 +84,10 @@
         />
       </main>
 
-      <!-- 📂 Right (in RTL): Vertical Category Sidebar -->
+      <!-- 📂 Right (in RTL): Compact Vertical Category Sidebar -->
       <POSCategorySidebar
         v-if="showCatalog"
-        class="order-3 animate-in fade-in duration-150"
+        class="order-3 animate-in fade-in duration-150 shrink-0"
         :categories="categories"
         :active-category-id="activeCategoryId"
         :favorite-count="favoriteItemsCount"

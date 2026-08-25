@@ -8,7 +8,32 @@ const cashDrawer = require('./src/hardware/cashDrawer');
 const { createApplicationMenu } = require('./src/menu/appMenu');
 
 let mainWindow = null;
+let splashWindow = null;
 let appTray = null;
+
+function createSplashWindow() {
+    splashWindow = new BrowserWindow({
+        width: 500,
+        height: 340,
+        transparent: true,
+        frame: false,
+        alwaysOnTop: true,
+        center: true,
+        resizable: false,
+        show: true,
+        backgroundColor: '#00000000',
+        icon: path.join(__dirname, 'build', 'icon.png'),
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    });
+
+    splashWindow.loadFile(path.join(__dirname, 'src', 'splash.html'));
+    splashWindow.on('closed', () => {
+        splashWindow = null;
+    });
+}
 
 function createMainWindow() {
     const savedBounds = settingsStore.get('windowBounds') || { width: 1400, height: 900 };
@@ -24,7 +49,7 @@ function createMainWindow() {
         title: 'ERP & POS System',
         frame: false, // 🚀 Frameless window for custom native titlebar
         titleBarStyle: 'hidden',
-        show: true,
+        show: false, // Hidden until ready and splash completes
         backgroundColor: '#020617', // Dark slate 950
         autoHideMenuBar: true,
         kiosk: kioskMode,
@@ -130,8 +155,18 @@ function createMainWindow() {
     mainWindow.loadURL(targetUrl);
 
     mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-        mainWindow.focus();
+        // Smooth transition from splash to main window
+        setTimeout(() => {
+            if (splashWindow && !splashWindow.isDestroyed()) {
+                splashWindow.close();
+                splashWindow = null;
+            }
+            if (savedBounds.isMaximized) {
+                mainWindow.maximize();
+            }
+            mainWindow.show();
+            mainWindow.focus();
+        }, 1200);
     });
 
     // Handle connection failures with clean retry page
@@ -408,10 +443,14 @@ ipcMain.handle('app:get-system-info', () => {
 // ══════════════════════════════════════════════════════════════════════════
 
 app.whenReady().then(() => {
+    createSplashWindow();
     createMainWindow();
 
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createSplashWindow();
+            createMainWindow();
+        }
     });
 });
 

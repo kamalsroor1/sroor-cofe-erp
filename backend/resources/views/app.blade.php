@@ -82,6 +82,31 @@
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-amber-500 selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
-    <div id="app"></div>
+    <div id="app">
+        <!-- Instant Branded Pre-Vue Splash Screen -->
+        <div style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;" dir="rtl">
+            <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35); margin-bottom: 20px;">
+                <svg style="width: 40px; height: 40px; stroke: #020617; fill: none; stroke-width: 2.2;" viewBox="0 0 24 24">
+                    <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
+                    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
+                    <line x1="6" y1="2" x2="6" y2="4"></line>
+                    <line x1="10" y1="2" x2="10" y2="4"></line>
+                    <line x1="14" y1="2" x2="14" y2="4"></line>
+                </svg>
+            </div>
+            <h1 style="font-size: 20px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -0.5px; color: #ffffff;">سرور كوفي ERP & POS</h1>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px 0; font-weight: 600;">نظام الفواتير والمخزون ونقاط البيع السريعة</p>
+            <div style="width: 180px; height: 4px; background: #1e293b; border-radius: 999px; overflow: hidden; position: relative;">
+                <div style="position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 999px; animation: app-splash-loader 1.5s infinite ease-in-out;"></div>
+            </div>
+            <style>
+                @keyframes app-splash-loader {
+                    0% { transform: translateX(-100%); }
+                    50% { transform: translateX(100%); }
+                    100% { transform: translateX(300%); }
+                }
+            </style>
+        </div>
+    </div>
 </body>
 </html>

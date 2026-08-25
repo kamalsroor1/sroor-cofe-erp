@@ -2,17 +2,17 @@
   <button
     @click="$emit('add-item', item)"
     type="button"
-    class="relative flex flex-col justify-between p-3.5 rounded-2xl border-s-[4px] border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/70 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer select-none group min-h-[110px] w-full text-start"
+    class="relative flex flex-col justify-between p-2.5 rounded-xl border-s-[3px] border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/70 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer select-none group min-h-[96px] w-full text-start"
     :style="{ borderInlineStartColor: categoryColor }"
   >
     <!-- Top Row: Code Badge & Live Stock Indicator -->
-    <div class="flex items-center justify-between gap-2 w-full">
-      <span class="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md truncate max-w-[120px]">
+    <div class="flex items-center justify-between gap-1.5 w-full">
+      <span class="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded truncate max-w-[80px]">
         #{{ item.code || `ITM-${item.id}` }}
       </span>
 
       <span
-        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0"
+        class="inline-flex items-center gap-1 px-1 py-0.2 rounded text-[9px] font-mono font-bold shrink-0"
         :class="stockBadgeClass"
       >
         <span class="w-1.5 h-1.5 rounded-full" :class="stockDotClass"></span>
@@ -20,9 +20,9 @@
       </span>
     </div>
     
-    <!-- Middle: Product Name (Bold, Clear, 2 lines max with good breathing room) -->
-    <div class="my-2 min-h-[38px] flex items-center">
-      <span class="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-theme-primary transition-colors">
+    <!-- Middle: Product Name (Bold, Clear, 2 lines max) -->
+    <div class="my-1 min-h-[34px] flex items-center">
+      <span class="text-xs font-black text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-theme-primary transition-colors">
         {{ item.name }}
       </span>
     </div>
@@ -30,13 +30,13 @@
     <!-- Bottom Row: Price & Quick Add Button -->
     <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 w-full mt-auto">
       <div class="flex items-baseline gap-1">
-        <span class="text-sm sm:text-base font-black font-mono tracking-tight" :style="{ color: categoryColor }">
+        <span class="text-xs sm:text-sm font-black font-mono tracking-tight" :style="{ color: categoryColor }">
           {{ formatPrice(item) }}
         </span>
-        <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-[9px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
       </div>
 
-      <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-theme-primary text-slate-500 group-hover:text-slate-950 flex items-center justify-center text-xs font-black transition-all shadow-2xs">
+      <span class="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-theme-primary text-slate-500 group-hover:text-slate-950 flex items-center justify-center text-xs font-black transition-all shadow-2xs">
         +
       </span>
     </div>
