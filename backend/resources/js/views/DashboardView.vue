@@ -7,6 +7,9 @@
       @refresh="fetchDashboard"
     />
 
+    <!-- 🚀 Metro App Menu Hub (Tiles & Operations Launcher) -->
+    <DashboardAppMenuHub />
+
     <!-- 🔄 Facebook-Style Skeleton Loading State -->
     <DashboardSkeleton v-if="isLoading && !dashboardData" />
 
@@ -45,6 +48,7 @@ import { useAppConfigStore } from '../stores/appConfig';
 import api from '../services/api';
 
 import DashboardWelcomeBanner  from '../Components/Dashboard/DashboardWelcomeBanner.vue';
+import DashboardAppMenuHub        from '../Components/Dashboard/DashboardAppMenuHub.vue';
 import DashboardKpiGrid        from '../Components/Dashboard/DashboardKpiGrid.vue';
 import DashboardAnalyticsRow   from '../Components/Dashboard/DashboardAnalyticsRow.vue';
 import DashboardPeakHours      from '../Components/Dashboard/DashboardPeakHours.vue';

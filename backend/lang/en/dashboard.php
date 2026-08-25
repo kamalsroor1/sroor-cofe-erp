@@ -116,4 +116,10 @@ return [
     'code' => 'Code',
     'min_limit' => 'Min Limit',
     'all_stock_safe' => 'All items are currently at safe inventory levels 👍',
+
+    // App Navigation Menu Hub Keys
+    'menu_hub_title'            => 'Quick Operations & Documents Hub (App Menu)',
+    'menu_hub_subtitle'         => 'Direct 1-touch visual access to all system screens and documents',
+    'search_screens_placeholder'=> '🔍 Search any screen or document (e.g. sale, purchase, stock)...',
+    'no_screens_found'          => 'No screens matching your search query',
 ];

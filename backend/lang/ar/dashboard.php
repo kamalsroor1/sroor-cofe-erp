@@ -116,4 +116,10 @@ return [
     'code' => 'كود',
     'min_limit' => 'الحد الأدنى',
     'all_stock_safe' => 'جميع الأصناف متوفرة بمستويات آمنة 👍',
+
+    // App Navigation Menu Hub Keys
+    'menu_hub_title'            => 'لوحة المستندات والعمليات السريعة (App Hub)',
+    'menu_hub_subtitle'         => 'الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة',
+    'search_screens_placeholder'=> '🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...',
+    'no_screens_found'          => 'لم يتم العثور على أي شاشة مطابقة لبحثك',
 ];

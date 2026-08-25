@@ -484,7 +484,11 @@
             "low_stock": "تنبيهات النواقص بالمخزن",
             "code": "كود",
             "min_limit": "الحد الأدنى",
-            "all_stock_safe": "جميع الأصناف متوفرة بمستويات آمنة 👍"
+            "all_stock_safe": "جميع الأصناف متوفرة بمستويات آمنة 👍",
+            "menu_hub_title": "لوحة المستندات والعمليات السريعة (App Hub)",
+            "menu_hub_subtitle": "الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة",
+            "search_screens_placeholder": "🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...",
+            "no_screens_found": "لم يتم العثور على أي شاشة مطابقة لبحثك"
         },
         "expenses": {
             "title": "المصاريف والخدمات الإضافية",
@@ -3282,7 +3286,11 @@
             "low_stock": "Low Stock Alerts",
             "code": "Code",
             "min_limit": "Min Limit",
-            "all_stock_safe": "All items are currently at safe inventory levels 👍"
+            "all_stock_safe": "All items are currently at safe inventory levels 👍",
+            "menu_hub_title": "Quick Operations & Documents Hub (App Menu)",
+            "menu_hub_subtitle": "Direct 1-touch visual access to all system screens and documents",
+            "search_screens_placeholder": "🔍 Search any screen or document (e.g. sale, purchase, stock)...",
+            "no_screens_found": "No screens matching your search query"
         },
         "expenses": {
             "title": "Operational Expenses & Cost Centers",
