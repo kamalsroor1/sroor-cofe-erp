@@ -513,3 +513,43 @@ input, textarea, [contenteditable="true"] {
         border: none !important;
     }
 }
+
+/* 🖥️ Native Desktop Shell Styles (Active ONLY when body.electron-app is present) */
+.electron-app {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.electron-app input,
+.electron-app textarea,
+.electron-app [contenteditable="true"] {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+.electron-app .drag-region {
+    -webkit-app-region: drag;
+}
+
+.electron-app .no-drag {
+    -webkit-app-region: no-drag;
+}
+
+/* Custom sleek native desktop scrollbar */
+.electron-app ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.electron-app ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.electron-app ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+    border-radius: 9999px;
+}
+
+.electron-app ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.45);
+}

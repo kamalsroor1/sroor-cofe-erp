@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-UjLF7pzX.js","assets/app-De38Rlc9.js","assets/api-CJq0ath8.js","assets/app-CZA_WAI4.css"])))=>i.map(i=>d[i]);
-import{B as e,U as t}from"./app-De38Rlc9.js";var n;(function(e){e.Heavy=`HEAVY`,e.Medium=`MEDIUM`,e.Light=`LIGHT`})(n||={});var r;(function(e){e.Success=`SUCCESS`,e.Warning=`WARNING`,e.Error=`ERROR`})(r||={});var i=t(`Haptics`,{web:()=>e(()=>import(`./web-UjLF7pzX.js`).then(e=>new e.HapticsWeb),__vite__mapDeps([0,1,2,3]))});export{n,r,i as t};

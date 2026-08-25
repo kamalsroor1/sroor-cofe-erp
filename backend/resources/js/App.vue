@@ -1,5 +1,11 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white" dir="rtl">
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col" dir="rtl">
+    <!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->
+    <DesktopTitlebar
+      @open-hardware="isDesktopHardwareOpen = true"
+      @open-shortcuts="isDesktopShortcutsOpen = true"
+    />
+
     <!-- 0. ☕ Global System Initial Boot Splash Screen (Facebook/Native-App Shimmer Loader) -->
     <SystemBootSplash :show="isBooting" />
 
@@ -34,24 +40,44 @@
     <div class="no-print">
       <AppUpdateModal />
     </div>
+
+    <!-- 5. 🖨️ Desktop Hardware & Shortcuts Modals (Desktop Only) -->
+    <template v-if="isDesktop">
+      <DesktopPrinterSettingsModal
+        :show="isDesktopHardwareOpen"
+        @close="isDesktopHardwareOpen = false"
+      />
+      <DesktopShortcutsModal
+        :show="isDesktopShortcutsOpen"
+        @close="isDesktopShortcutsOpen = false"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
 import { useAppUpdate } from './Composables/useAppUpdate';
+import { useDesktopHardware } from './Composables/useDesktopHardware';
 import SpaLayout from './Layouts/SpaLayout.vue';
 import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';
 import SystemBootSplash from './Components/Common/SystemBootSplash.vue';
+import DesktopTitlebar from './Components/Common/DesktopTitlebar.vue';
+import DesktopPrinterSettingsModal from './Components/Common/DesktopPrinterSettingsModal.vue';
+import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue';
 
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
 const { checkForUpdates } = useAppUpdate();
+const { isDesktop, openCashDrawer } = useDesktopHardware();
+
+const isDesktopHardwareOpen = ref(false);
+const isDesktopShortcutsOpen = ref(false);
 
 const isBooting = ref(true);
 
@@ -100,6 +126,27 @@ onMounted(async () => {
 
     // 3. Native App APK Update Check
     checkForUpdates();
+
+    // 4. Global Desktop Hotkeys Listener
+    if (isDesktop.value) {
+        window.addEventListener('keydown', handleDesktopGlobalKeydown);
+    }
+});
+
+const handleDesktopGlobalKeydown = (e) => {
+    if (e.key === 'F1') {
+        e.preventDefault();
+        isDesktopShortcutsOpen.value = true;
+    } else if (e.key === 'F12') {
+        e.preventDefault();
+        openCashDrawer();
+    }
+};
+
+onUnmounted(() => {
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', handleDesktopGlobalKeydown);
+    }
 });
 </script>
 

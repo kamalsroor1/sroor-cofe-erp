@@ -105,6 +105,18 @@
           <span class="hidden lg:inline">{{ appConfigStore.isDark ? 'الوضع النهاري' : 'الوضع الليلي' }}</span>
         </button>
 
+        <!-- 🖨️ Desktop Hardware & Thermal Printer Settings (Desktop Mode Only) -->
+        <button
+          v-if="isDesktop"
+          type="button"
+          @click="isDesktopSettingsOpen = true"
+          class="min-h-[38px] px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-theme-primary rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
+          :title="$t('settings.desktop_hardware_title')"
+        >
+          <span>🖨️</span>
+          <span class="hidden xl:inline font-tajawal">{{ $t('settings.desktop_badge') }}</span>
+        </button>
+
         <!-- 🔔 Notifications Bell Popover -->
         <div class="relative" ref="notificationsRef">
           <button
@@ -639,6 +651,13 @@
         </aside>
       </Transition>
     </Teleport>
+
+    <!-- 🖨️ Desktop Hardware Settings Modal -->
+    <DesktopPrinterSettingsModal
+      v-if="isDesktop"
+      :show="isDesktopSettingsOpen"
+      @close="isDesktopSettingsOpen = false"
+    />
   </div>
 </template>
 
@@ -650,6 +669,8 @@ import { useAppConfigStore } from '../stores/appConfig';
 import { useModules } from '../Composables/useModules';
 import { useNavigation } from '../Composables/useNavigation';
 import { useAppUpdate } from '../Composables/useAppUpdate';
+import { useDesktopHardware } from '../Composables/useDesktopHardware';
+import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import Swal from 'sweetalert2';
@@ -667,6 +688,8 @@ import {
 } from 'lucide-vue-next';
 
 const { currentVersionName, checkForUpdates } = useAppUpdate();
+const { isDesktop } = useDesktopHardware();
+const isDesktopSettingsOpen = ref(false);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const { isModuleEnabled } = useModules();

@@ -94,3 +94,10 @@ e2e/test-results/
 e2e/playwright-report/
 e2e/.auth/
 e2e/.run-meta.json
+
+# Desktop Specific Ignores
+/desktop/dist/
+/desktop/node_modules/
+/desktop/build/*.ico
+/desktop/build/*.png
+/desktop/*.log

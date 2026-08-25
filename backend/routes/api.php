@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\SystemContextApiController;
 
 Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
+    Route::get('/ping', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]))->name('api.ping');
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
     Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->name('api.app.check_update');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
