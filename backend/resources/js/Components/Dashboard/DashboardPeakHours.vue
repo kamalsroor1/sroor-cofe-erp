@@ -1,6 +1,6 @@
 <template>
   <DashboardSectionCard
-    :title="'⚡ ' + $t('dashboard.peak_hours')"
+    :title="$t('dashboard.peak_hours')"
     :subtitle="$t('dashboard.peak_hours_subtitle')"
     :icon="Zap"
     icon-bg="bg-purple-500/10"

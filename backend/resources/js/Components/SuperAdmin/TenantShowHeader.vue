@@ -6,11 +6,11 @@
         class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer shrink-0 active:scale-95 shadow-xs"
         :title="$t('common.back')"
       >
-        <span>→</span>
+        <ArrowRight class="w-4 h-4" />
       </router-link>
 
       <div class="w-12 sm:w-14 h-12 sm:h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
-        🏪
+        <Store class="w-6 h-6 stroke-[2.2]" />
       </div>
 
       <div>
@@ -46,7 +46,7 @@
         @click="$emit('impersonate')"
         class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-500/20"
       >
-        <span>🚀</span>
+        <Sparkles class="w-4 h-4" />
         <span>{{ isImpersonating ? $t('super.impersonating_status') : $t('super.impersonate_btn') }}</span>
       </BaseButton>
 
@@ -56,7 +56,7 @@
         size="md"
         @click="$emit('open-status')"
       >
-        <span>⚙️</span>
+        <Settings class="w-4 h-4" />
         <span>{{ $t('super.edit_status_and_sub_btn') }}</span>
       </BaseButton>
 
@@ -68,7 +68,7 @@
         @click="$emit('run-migrations')"
         class="text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
       >
-        <span>🗄️</span>
+        <Database class="w-4 h-4" />
         <span>{{ isMigrating ? $t('super.migrating_status') : $t('super.run_migrations_btn') }}</span>
       </BaseButton>
 
@@ -85,7 +85,7 @@
 </template>
 
 <script setup>
-import { ExternalLink, Trash2 } from 'lucide-vue-next';
+import { ExternalLink, Trash2, ArrowRight, Store, Sparkles, Settings, Database } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
 import { useTrans } from '../../Composables/useTrans';
 

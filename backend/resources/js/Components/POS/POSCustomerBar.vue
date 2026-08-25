@@ -1,5 +1,6 @@
 <script setup>
 import { useMoney } from '@/Composables/useMoney';
+import { User, ChevronDown, UserPlus } from 'lucide-vue-next';
 
 const props = defineProps({
     selectedCustomer: {
@@ -19,7 +20,7 @@ const { formatMoney } = useMoney();
             class="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 cursor-pointer transition shadow-xs"
             @click="$emit('open-customer-modal')"
         >
-            <span class="text-base">👤</span>
+            <User class="w-4 h-4 text-theme-primary shrink-0" />
             <div class="flex-1 truncate">
                 <div class="text-xs font-black text-slate-900 dark:text-white truncate">
                     {{ selectedCustomer?.name || $t('pos.cash_customer') }}
@@ -28,16 +29,16 @@ const { formatMoney } = useMoney();
                     {{ selectedCustomer?.phone || '-' }} • {{ $t('contacts.balance') }}: {{ formatMoney(selectedCustomer?.current_balance) }} {{ $t('common.currency') }}
                 </div>
             </div>
-            <span class="text-slate-400 text-xs">▼</span>
+            <ChevronDown class="w-4 h-4 text-slate-400 shrink-0" />
         </div>
 
         <button
             type="button"
-            class="h-10 px-3 rounded-xl bg-theme-light hover:bg-theme-hover/30 border border-theme-border text-theme-primary text-theme-primary font-black text-xs flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-xs shrink-0"
+            class="h-10 px-3 rounded-xl bg-theme-light hover:bg-theme-hover/30 border border-theme-border text-theme-primary font-black text-xs flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-xs shrink-0"
             :title="$t('pos.add_new_customer')"
             @click="$emit('open-new-customer-modal')"
         >
-            <span>➕</span>
+            <UserPlus class="w-4 h-4" />
         </button>
     </div>
 </template>

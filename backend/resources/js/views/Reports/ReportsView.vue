@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('reports.title')"
       :subtitle="$t('reports.subtitle')"
-      icon="📊"
+      :icon="BarChart3"
     >
       <template #actions>
         <button
@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { Printer } from 'lucide-vue-next';
+import { Printer, BarChart3 } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReportsFilterBar from '../../Components/Reports/ReportsFilterBar.vue';
 import ReportsNavigationTabs from '../../Components/Reports/ReportsNavigationTabs.vue';

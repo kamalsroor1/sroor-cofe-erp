@@ -27,7 +27,7 @@
         ></span>
 
         <!-- Tab Icon -->
-        <span class="text-sm shrink-0">{{ tab.icon }}</span>
+        <DynamicIcon :name="tab.icon" class="w-3.5 h-3.5 shrink-0 text-slate-500 group-hover:text-theme-primary transition-colors" />
 
         <!-- Tab Title -->
         <span class="truncate max-w-[130px] sm:max-w-[160px]">{{ tab.title }}</span>
@@ -128,6 +128,7 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { X, Plus, RotateCw, MinusCircle, XCircle } from 'lucide-vue-next';
 import { useTabsStore } from '../../stores/tabs';
+import DynamicIcon from '../Common/DynamicIcon.vue';
 
 const router = useRouter();
 const tabsStore = useTabsStore();

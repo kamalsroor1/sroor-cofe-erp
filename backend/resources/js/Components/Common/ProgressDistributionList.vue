@@ -8,7 +8,7 @@
             <!-- Row: Label + Amount + Percentage -->
             <div class="flex items-center justify-between text-xs font-bold">
                 <div class="flex items-center gap-2">
-                    <span v-if="iconFn" class="text-sm">{{ iconFn(item[keyField]) }}</span>
+                    <DynamicIcon v-if="iconFn" :name="iconFn(item[keyField])" class="w-4 h-4 shrink-0" />
                     <span class="text-slate-800 dark:text-slate-200">{{ item[labelField] }}</span>
                 </div>
                 <div class="flex items-center gap-2 font-mono">
@@ -38,6 +38,8 @@
 </template>
 
 <script setup>
+import DynamicIcon from './DynamicIcon.vue';
+
 defineProps({
     items: { type: Array, required: true },
 

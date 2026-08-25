@@ -5,7 +5,7 @@
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
       <div class="flex items-center gap-2.5">
         <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-theme-primary/20 to-emerald-500/20 text-theme-primary flex items-center justify-center text-lg font-black shadow-xs">
-          🚀
+          <Sparkles class="w-5 h-5" />
         </span>
         <div>
           <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
@@ -41,7 +41,7 @@
           ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm'
           : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'"
       >
-        <span>{{ tab.icon }}</span>
+        <component :is="tab.icon" class="w-3.5 h-3.5 shrink-0" />
         <span>{{ tab.label }}</span>
       </button>
     </div>
@@ -83,7 +83,7 @@
 
     <!-- Empty State for Search -->
     <div v-if="filteredTiles.length === 0" class="text-center py-8 text-slate-400">
-      <span class="text-3xl block mb-2">🔍</span>
+      <Search class="w-8 h-8 mx-auto mb-2 opacity-50" />
       <p class="text-xs font-bold">{{ $t('dashboard.no_screens_found') }}</p>
     </div>
 
@@ -111,7 +111,9 @@ import {
   Coffee,
   Radar,
   CreditCard,
-  FolderOpen
+  FolderOpen,
+  Sparkles,
+  Banknote,
 } from 'lucide-vue-next';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 
@@ -121,13 +123,13 @@ const searchQuery = ref('');
 const activeTab = ref('all');
 
 const categoryTabs = [
-  { id: 'all', label: 'الكل', icon: '🌟' },
-  { id: 'sales', label: 'المبيعات والـ POS', icon: '🛍️' },
-  { id: 'purchases', label: 'المشتريات والتوريد', icon: '🛒' },
-  { id: 'finance', label: 'الخزينة واليومية', icon: '💰' },
-  { id: 'inventory', label: 'المخازن والأصناف', icon: '📦' },
-  { id: 'reports', label: 'التقارير والمتابعة', icon: '📊' },
-  { id: 'setup', label: 'التعريفات والنظام', icon: '⚙️' },
+  { id: 'all', label: 'الكل', icon: Sparkles },
+  { id: 'sales', label: 'المبيعات والـ POS', icon: ShoppingBag },
+  { id: 'purchases', label: 'المشتريات والتوريد', icon: ShoppingCart },
+  { id: 'finance', label: 'الخزينة واليومية', icon: Banknote },
+  { id: 'inventory', label: 'المخازن والأصناف', icon: Package },
+  { id: 'reports', label: 'التقارير والمتابعة', icon: BarChart3 },
+  { id: 'setup', label: 'التعريفات والنظام', icon: Settings },
 ];
 
 const tiles = [

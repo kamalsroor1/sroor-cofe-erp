@@ -138,7 +138,7 @@
         class="w-full h-11 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
       >
         <span v-if="isSubmitting" class="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-        <span v-else class="text-base">✅</span>
+        <CheckCircle2 v-else class="w-4 h-4 text-slate-950 stroke-[2.5]" />
         <span>{{ $t('pos.confirm_and_approve_f9') }}</span>
       </button>
 
@@ -157,7 +157,7 @@
 </template>
 
 <script setup>
-import { Printer } from 'lucide-vue-next';
+import { Printer, CheckCircle2 } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();

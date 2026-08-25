@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('super.super_admin_title')"
       :subtitle="$t('super.super_admin_subtitle')"
-      icon="👑"
+      :icon="Crown"
     >
       <template #actions>
         <div class="flex items-center gap-3">
@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { Building2, Layers } from 'lucide-vue-next';
+import { Building2, Layers, Crown } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import SuperAdminMetricsGrid from '../../Components/SuperAdmin/SuperAdminMetricsGrid.vue';
 import SuperAdminPlansDistribution from '../../Components/SuperAdmin/SuperAdminPlansDistribution.vue';

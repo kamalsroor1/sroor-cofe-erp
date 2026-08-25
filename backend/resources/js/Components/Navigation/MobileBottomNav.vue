@@ -158,7 +158,7 @@
           />
           <Users class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isCustomersActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">العملاء</span>
+        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.customers') }}</span>
       </router-link>
 
       <!-- 6. More / Drawer Menu -->

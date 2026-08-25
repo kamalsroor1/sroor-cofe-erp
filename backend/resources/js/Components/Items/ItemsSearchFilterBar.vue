@@ -37,34 +37,37 @@
       <button
         type="button"
         @click="$emit('update:stockStatus', 'low'); $emit('search')"
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
+        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
         :class="stockStatus === 'low'
           ? 'bg-rose-500/20 text-rose-500 border border-rose-500/40 font-black shadow-xs'
           : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'"
       >
-        🚨 {{ $t('inventory.low_stock_only') }}
+        <AlertTriangle class="w-3.5 h-3.5" />
+        <span>{{ $t('inventory.low_stock_only') }}</span>
       </button>
 
       <button
         type="button"
         @click="$emit('update:stockStatus', 'out'); $emit('search')"
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
+        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
         :class="stockStatus === 'out'
           ? 'bg-theme-light text-theme-primary border border-theme-border font-black shadow-xs'
           : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'"
       >
-        ❌ {{ $t('inventory.out_of_stock_only') }}
+        <Ban class="w-3.5 h-3.5" />
+        <span>{{ $t('inventory.out_of_stock_only') }}</span>
       </button>
 
       <button
         type="button"
         @click="$emit('update:stockStatus', 'in_stock'); $emit('search')"
-        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer"
+        class="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold font-tajawal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
         :class="stockStatus === 'in_stock'
           ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 font-black shadow-xs'
           : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'"
       >
-        ✅ {{ $t('inventory.available_only') }}
+        <CheckCircle2 class="w-3.5 h-3.5" />
+        <span>{{ $t('inventory.available_only') }}</span>
       </button>
     </div>
   </div>
@@ -72,6 +75,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { AlertTriangle, Ban, CheckCircle2 } from 'lucide-vue-next';
 import BaseSearchInput from '../Form/BaseSearchInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { trans } from '../../helpers/trans';
@@ -89,7 +93,7 @@ const categoryOptions = computed(() => {
   const allOption = { value: 'all', label: trans('inventory.all_categories') };
   const dynamicOptions = props.categories.map((c) => ({
     value: typeof c === 'object' ? c.name : c,
-    label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,
+    label: typeof c === 'object' ? c.name : c,
   }));
   return [allOption, ...dynamicOptions];
 });

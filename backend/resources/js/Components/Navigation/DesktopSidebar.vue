@@ -12,7 +12,7 @@
             class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shrink-0 transition-transform hover:scale-105"
             :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
           >
-            ☕
+            <Coffee class="w-5 h-5 stroke-[2.5]" />
           </div>
           <div class="min-w-0">
             <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
@@ -41,7 +41,7 @@
           class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-transform hover:scale-105"
           :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
         >
-          ☕
+          <Coffee class="w-5 h-5 stroke-[2.5]" />
         </div>
         <button
           type="button"
@@ -251,7 +251,7 @@
           to="/super-admin/dashboard"
           class="w-12 h-12 mx-auto rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg shadow-2xs hover:bg-purple-500/30 transition"
         >
-          👑
+          <ShieldCheck class="w-6 h-6 stroke-[2.2]" />
         </router-link>
       </div>
     </div>
@@ -272,7 +272,7 @@
             <span class="w-2.5 h-2.5 rounded-full" :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"></span>
             <span class="font-bold truncate">{{ appConfigStore.hasOpenShift ? `الوردية (#${appConfigStore.currentShiftNumber})` : 'الوردية مغلقة' }}</span>
           </div>
-          <span class="font-mono text-[10px] font-black">{{ appConfigStore.hasOpenShift ? 'مفتوحة ⚡' : 'فتح ←' }}</span>
+          <span class="font-mono text-[10px] font-black">{{ appConfigStore.hasOpenShift ? 'مفتوحة' : 'فتح ←' }}</span>
         </router-link>
 
         <!-- Version & Update Button -->
@@ -286,7 +286,7 @@
             @click="checkForUpdates(true)"
             class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-sans font-bold text-[10px] border border-slate-200 dark:border-slate-700 transition cursor-pointer active:scale-95 shadow-2xs flex items-center gap-1"
           >
-            <span>🚀</span>
+            <Sparkles class="w-3 h-3 text-theme-primary" />
             <span>تحديث</span>
           </button>
         </div>
@@ -343,7 +343,10 @@ import {
   ChevronRight,
   ChevronLeft,
   ChevronDown,
-  Plus
+  Plus,
+  Coffee,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-vue-next';
 
 const props = defineProps({

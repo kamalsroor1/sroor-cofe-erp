@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useMoney } from '@/Composables/useMoney';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
-import { Trash2 } from 'lucide-vue-next';
+import { Trash2, Minus, Plus, Tag } from 'lucide-vue-next';
 
 const props = defineProps({
     line: { type: Object, required: true },
@@ -125,98 +125,99 @@ const increaseQty = () => {
                     </div>
                 </div>
 
-                <!-- Qty Steppers (Finger-friendly min 40px) -->
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <button
-                        @click="decreaseQty"
-                        type="button"
-                        class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
-                        aria-label="Decrease quantity"
-                    >
-                        -
-                    </button>
+                    <!-- Qty Steppers (Finger-friendly min 40px) -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button
+                            @click="decreaseQty"
+                            type="button"
+                            class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
+                            aria-label="Decrease quantity"
+                        >
+                            <Minus class="w-3.5 h-3.5" />
+                        </button>
 
-                    <input
-                        v-model.number="line.quantity"
-                        @input="emit('change')"
-                        type="number"
-                        inputmode="decimal"
-                        step="0.001"
-                        class="w-16 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xs font-mono font-black text-theme-primary text-theme-primary focus:outline-none focus:border-theme-primary shadow-inner"
-                    />
+                        <input
+                            v-model.number="line.quantity"
+                            @input="emit('change')"
+                            type="number"
+                            inputmode="decimal"
+                            step="0.001"
+                            class="w-16 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xs font-mono font-black text-theme-primary text-theme-primary focus:outline-none focus:border-theme-primary shadow-inner"
+                        />
 
-                    <button
-                        @click="increaseQty"
-                        type="button"
-                        class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
-                        aria-label="Increase quantity"
-                    >
-                        +
-                    </button>
-                </div>
-
-                <!-- Line Total & Delete -->
-                <div class="flex items-center gap-2 shrink-0 pl-1">
-                    <div class="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 text-left">
-                        {{ formatMoney(line.unit_price * line.quantity) }}
+                        <button
+                            @click="increaseQty"
+                            type="button"
+                            class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
+                            aria-label="Increase quantity"
+                        >
+                            <Plus class="w-3.5 h-3.5" />
+                        </button>
                     </div>
+
+                    <!-- Line Total & Delete -->
+                    <div class="flex items-center gap-2 shrink-0 pl-1">
+                        <div class="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 text-left">
+                            {{ formatMoney(line.unit_price * line.quantity) }}
+                        </div>
+                        <button
+                            @click="handleDelete"
+                            type="button"
+                            class="w-9 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
+                            :title="$t('common.delete')"
+                        >
+                            <Trash2 class="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Weight Chips for Bulk / Coffee -->
+                <div v-if="isWeightBased" class="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-900 text-xs">
+                    <span class="text-slate-500 text-[10px] px-1">{{ $t('common.quantity') }}:</span>
                     <button
-                        @click="handleDelete"
+                        @click="setExactWeight(0.125)"
                         type="button"
-                        class="w-9 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-center transition active:scale-90 cursor-pointer shadow-xs"
-                        :title="$t('common.delete')"
+                        class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
                     >
-                        ✕
+                        1/8
+                    </button>
+                    <button
+                        @click="setExactWeight(0.250)"
+                        type="button"
+                        class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
+                    >
+                        1/4
+                    </button>
+                    <button
+                        @click="setExactWeight(0.500)"
+                        type="button"
+                        class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
+                    >
+                        1/2
+                    </button>
+                    <button
+                        @click="setExactWeight(1.000)"
+                        type="button"
+                        class="h-7 px-2.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-500 hover:text-white text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs transition active:scale-90"
+                    >
+                        1ك
                     </button>
                 </div>
-            </div>
 
-            <!-- Quick Weight Chips for Bulk / Coffee -->
-            <div v-if="isWeightBased" class="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-900 text-xs">
-                <span class="text-slate-500 text-[10px] px-1">{{ $t('common.quantity') }}:</span>
-                <button
-                    @click="setExactWeight(0.125)"
-                    type="button"
-                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
-                >
-                    1/8
-                </button>
-                <button
-                    @click="setExactWeight(0.250)"
-                    type="button"
-                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
-                >
-                    1/4
-                </button>
-                <button
-                    @click="setExactWeight(0.500)"
-                    type="button"
-                    class="h-7 px-2.5 rounded-lg bg-slate-100 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-mono font-black text-xs transition active:scale-90"
-                >
-                    1/2
-                </button>
-                <button
-                    @click="setExactWeight(1.000)"
-                    type="button"
-                    class="h-7 px-2.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-500 hover:text-white text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs transition active:scale-90"
-                >
-                    1ك
-                </button>
-            </div>
-
-            <!-- Last Customer Price Tag (if available) -->
-            <div v-if="line.last_sold_price" class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-900 text-[11px]">
-                <span class="text-theme-primary text-theme-primary font-mono">
-                    🏷️ {{ $t('pos.last_customer_price') }}: {{ formatMoney(line.last_sold_price.unit_price) }} {{ $t('common.currency') }}
-                </span>
-                <button
-                    @click="emit('apply-last-price', line)"
-                    type="button"
-                    class="h-7 px-3 rounded-lg bg-theme-light hover:bg-theme-hover/30 text-theme-primary text-theme-primary font-black text-[10px] transition cursor-pointer"
-                >
-                    {{ $t('pos.apply_btn') }}
-                </button>
-            </div>
+                <!-- Last Customer Price Tag (if available) -->
+                <div v-if="line.last_sold_price" class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-900 text-[11px]">
+                    <span class="text-theme-primary text-theme-primary font-mono flex items-center gap-1">
+                        <Tag class="w-3.5 h-3.5 shrink-0" />
+                        <span>{{ $t('pos.last_customer_price') }}: {{ formatMoney(line.last_sold_price.unit_price) }} {{ $t('common.currency') }}</span>
+                    </span>
+                    <button
+                        @click="emit('apply-last-price', line)"
+                        type="button"
+                        class="h-7 px-3 rounded-lg bg-theme-light hover:bg-theme-hover/30 text-theme-primary text-theme-primary font-black text-[10px] transition cursor-pointer"
+                    >
+                        {{ $t('pos.apply_btn') }}
+                    </button>
+                </div>
         </div>
     </div>
 </template>

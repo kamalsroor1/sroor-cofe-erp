@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('super.units_page_title')"
       :subtitle="$t('super.units_page_subtitle')"
-      icon="⚖️"
+      :icon="Scale"
     >
       <template #actions>
         <div class="flex items-center gap-3">
@@ -22,9 +22,9 @@
             size="md"
             :loading="isSaving"
             @click="saveUnits"
-            class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-black shadow-lg shadow-purple-500/20"
+            class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-black shadow-lg shadow-purple-500/20 flex items-center gap-1.5"
           >
-            <span>💾</span>
+            <Save class="w-4 h-4" />
             <span>{{ isSaving ? $t('common.saving') : $t('common.save') }}</span>
           </BaseButton>
         </div>
@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { Crown } from 'lucide-vue-next';
+import { Crown, Scale, Save } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ActiveUnitsGrid from '../../Components/SuperAdmin/ActiveUnitsGrid.vue';

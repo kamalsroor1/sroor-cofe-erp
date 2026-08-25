@@ -14,8 +14,8 @@
 
           <!-- Header Icon & Title -->
           <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center text-2xl shrink-0">
-              🚀
+            <div class="w-12 h-12 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center shrink-0">
+              <Sparkles class="w-6 h-6 stroke-[2.2]" />
             </div>
             <div class="min-w-0 flex-1">
               <h3 class="text-lg font-black text-slate-900 dark:text-white">
@@ -53,7 +53,7 @@
 
           <!-- Mandatory Alert (If Force Update) -->
           <div v-if="isForceUpdate" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2">
-            <span>⚠️</span>
+            <AlertTriangle class="w-4 h-4 text-amber-500 shrink-0" />
             <span>هذا التحديث إلزامي لمواصلة استخدام المنظومة بأمان.</span>
           </div>
 
@@ -72,7 +72,8 @@
               @click="downloadAndInstall"
               class="flex-1 py-3 bg-theme-gradient text-white rounded-2xl font-black text-xs shadow-lg shadow-theme-primary/25 transition cursor-pointer active:scale-95 flex items-center justify-center gap-2"
             >
-              <span>تحديث وتثبيت الآن 🚀</span>
+              <span>تحديث وتثبيت الآن</span>
+              <Sparkles class="w-4 h-4 shrink-0" />
             </button>
           </div>
         </div>
@@ -82,6 +83,7 @@
 </template>
 
 <script setup>
+import { Sparkles, AlertTriangle } from 'lucide-vue-next';
 import { useAppUpdater } from '../../Composables/useAppUpdater';
 
 const {

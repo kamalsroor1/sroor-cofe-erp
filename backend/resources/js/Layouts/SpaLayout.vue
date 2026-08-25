@@ -48,7 +48,7 @@
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
-                <span>⚙️</span>
+                <User class="w-4 h-4 text-slate-400" />
                 <span>الملف الشخصي والأمان</span>
               </router-link>
 
@@ -57,7 +57,7 @@
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
-                <span>👥</span>
+                <Users class="w-4 h-4 text-slate-400" />
                 <span>إدارة المستخدمين والصلاحيات</span>
               </router-link>
 
@@ -66,7 +66,7 @@
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
-                <span>🛡️</span>
+                <ShieldCheck class="w-4 h-4 text-slate-400" />
                 <span>مصفوفة الصلاحيات والأدوار</span>
               </router-link>
 
@@ -75,7 +75,7 @@
                 @click="isUserDropdownOpen = false"
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
-                <span>📜</span>
+                <FileText class="w-4 h-4 text-slate-400" />
                 <span>سجل العمليات والرقابة</span>
               </router-link>
 
@@ -85,7 +85,7 @@
                   @click="confirmLogout"
                   class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer text-start"
                 >
-                  <span>🚪</span>
+                  <LogOut class="w-4 h-4 text-rose-500" />
                   <span>تسجيل الخروج</span>
                 </button>
               </div>
@@ -113,7 +113,7 @@
           class="min-h-[38px] px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-theme-primary rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
           :title="$t('settings.desktop_hardware_title')"
         >
-          <span>🖨️</span>
+          <Printer class="w-3.5 h-3.5 text-theme-primary" />
           <span class="hidden xl:inline font-tajawal">{{ $t('settings.desktop_badge') }}</span>
         </button>
 
@@ -139,7 +139,7 @@
             >
               <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <div class="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
-                  <span>🔔</span>
+                  <Bell class="w-4 h-4 text-theme-primary" />
                   <span>مركز التنبيهات والإشعارات</span>
                 </div>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-theme-light text-theme-primary">
@@ -154,7 +154,7 @@
                   :key="idx"
                   class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-theme-border transition flex items-start gap-2.5"
                 >
-                  <span class="text-base">{{ n.icon }}</span>
+                  <DynamicIcon :name="n.icon" class="w-4 h-4 text-theme-primary shrink-0 mt-0.5" />
                   <div class="flex-1 min-w-0">
                     <div class="font-bold text-slate-900 dark:text-white truncate">{{ n.title }}</div>
                     <div class="text-[10px] text-slate-400 mt-0.5">{{ n.desc }}</div>
@@ -185,7 +185,7 @@
               class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-theme-primary cursor-pointer font-tajawal shadow-2xs"
             >
               <option v-for="s in authStore.stores" :key="s.id" :value="s.id">
-                🏬 {{ s.name }}
+                {{ s.name }}
               </option>
             </select>
           </div>
@@ -223,7 +223,7 @@
           to="/super-admin/dashboard"
           class="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-black transition shadow-2xs"
         >
-          <span>👑</span>
+          <Crown class="w-3.5 h-3.5" />
           <span>السوبر أدمن</span>
         </router-link>
 
@@ -287,7 +287,7 @@
                 class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-base shadow-sm shrink-0"
                 :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
               >
-                ☕
+                <Coffee class="w-5 h-5 stroke-[2.5]" />
               </div>
               <div class="min-w-0">
                 <span class="font-black text-sm text-slate-900 dark:text-white truncate block">{{ appConfigStore.companyName }}</span>
@@ -296,9 +296,9 @@
             </div>
             <button
               @click="isSidebarOpen = false"
-              class="min-h-[38px] min-w-[38px] p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center font-bold"
+              class="min-h-[38px] min-w-[38px] p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center font-bold cursor-pointer"
             >
-              ✕
+              <X class="w-4 h-4" />
             </button>
           </div>
 
@@ -497,6 +497,7 @@ import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import Swal from 'sweetalert2';
+import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import {
     Store as StoreIcon,
     LogOut,
@@ -508,6 +509,14 @@ import {
     ChevronDown,
     ChevronRight,
     ChevronLeft,
+    User,
+    Users,
+    ShieldCheck,
+    FileText,
+    Printer,
+    Crown,
+    Coffee,
+    X,
 } from 'lucide-vue-next';
 
 const { currentVersionName, checkForUpdates } = useAppUpdate();

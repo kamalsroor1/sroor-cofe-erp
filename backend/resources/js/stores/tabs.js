@@ -10,7 +10,7 @@ export const useTabsStore = defineStore('tabs', () => {
         path: '/',
         fullPath: '/',
         name: 'dashboard',
-        icon: '🏠',
+        icon: 'LayoutDashboard',
         closable: false,
         isPinned: true,
     };
@@ -31,22 +31,22 @@ export const useTabsStore = defineStore('tabs', () => {
      */
     const getRouteIcon = (route) => {
         const path = route.path || '';
-        if (path === '/' || path.startsWith('/dashboard')) return '🏠';
-        if (path.startsWith('/pos')) return '⚡';
-        if (path.startsWith('/invoices')) return '🛍️';
-        if (path.startsWith('/purchases')) return '🛒';
-        if (path.startsWith('/returns')) return '↩️';
-        if (path.startsWith('/daily-journal')) return '💵';
-        if (path.startsWith('/expenses')) return '💸';
-        if (path.startsWith('/items') || path.startsWith('/categories')) return '📦';
-        if (path.startsWith('/customers')) return '👥';
-        if (path.startsWith('/suppliers')) return '🏭';
-        if (path.startsWith('/stores')) return '🏢';
-        if (path.startsWith('/stock-transfers')) return '🚚';
-        if (path.startsWith('/reports')) return '📊';
-        if (path.startsWith('/settings')) return '⚙️';
-        if (path.startsWith('/coffee-blender')) return '☕';
-        return '📄';
+        if (path === '/' || path.startsWith('/dashboard')) return 'LayoutDashboard';
+        if (path.startsWith('/pos')) return 'Zap';
+        if (path.startsWith('/invoices')) return 'FileText';
+        if (path.startsWith('/purchases')) return 'ShoppingCart';
+        if (path.startsWith('/returns')) return 'RotateCcw';
+        if (path.startsWith('/daily-journal')) return 'Wallet';
+        if (path.startsWith('/expenses')) return 'Receipt';
+        if (path.startsWith('/items') || path.startsWith('/categories')) return 'Package';
+        if (path.startsWith('/customers')) return 'Users';
+        if (path.startsWith('/suppliers')) return 'Building2';
+        if (path.startsWith('/stores')) return 'Store';
+        if (path.startsWith('/stock-transfers')) return 'ArrowLeftRight';
+        if (path.startsWith('/reports')) return 'BarChart3';
+        if (path.startsWith('/settings')) return 'Sliders';
+        if (path.startsWith('/coffee-blender')) return 'Coffee';
+        return 'FileText';
     };
 
     /**

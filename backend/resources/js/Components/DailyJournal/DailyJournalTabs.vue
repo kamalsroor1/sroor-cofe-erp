@@ -170,14 +170,14 @@
         v-else
         :title="$t('treasury.no_expenses_date')"
         :description="$t('treasury.no_expenses_date_desc')"
-        icon="💸"
+        :icon="Receipt"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ShoppingCart, Receipt } from 'lucide-vue-next';
+import { ShoppingCart, Receipt, Banknote } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -200,7 +200,7 @@ const formatPaymentMethod = (method) => {
     cash: t('contacts.cash'),
     instapay: t('contacts.instapay'),
     e_wallet: t('contacts.wallet'),
-    visa: '💳 Visa',
+    visa: 'Visa',
     credit: t('invoices.credit'),
     partial: t('invoices.partial'),
   };

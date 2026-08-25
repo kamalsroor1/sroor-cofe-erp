@@ -158,13 +158,13 @@
       v-else
       :title="$t('super.no_tenants_registered')"
       :description="$t('super.no_tenants_registered')"
-      icon="🏢"
+      :icon="Building2"
     >
       <template #action>
         <button
           type="button"
           @click="$emit('open-create')"
-          class="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black rounded-xl text-xs shadow-lg shadow-purple-500/20"
+          class="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black rounded-xl text-xs shadow-lg shadow-purple-500/20 cursor-pointer"
         >
           {{ $t('super.new_tenant_btn') }}
         </button>
@@ -174,7 +174,7 @@
 </template>
 
 <script setup>
-import { ExternalLink, Trash2 } from 'lucide-vue-next';
+import { ExternalLink, Trash2, Building2 } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useTrans } from '../../Composables/useTrans';

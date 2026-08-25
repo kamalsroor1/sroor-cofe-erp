@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import DynamicIcon from './DynamicIcon.vue';
 
 const props = defineProps({
     // --- Core Props (Original) ---
@@ -47,8 +48,7 @@ const valueColorClass = computed(() => {
                 class="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
                 :class="[iconBg, iconColor]"
             >
-                <component v-if="typeof icon === 'object' || typeof icon === 'function'" :is="icon" class="w-4 h-4" />
-                <span v-else>{{ icon }}</span>
+                <DynamicIcon :name="icon" class="w-4 h-4 shrink-0" />
             </div>
         </div>
 

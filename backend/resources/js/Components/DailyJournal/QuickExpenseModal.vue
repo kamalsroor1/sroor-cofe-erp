@@ -121,10 +121,10 @@ const costCenterOptions = [
 ];
 
 const paymentMethodOptions = [
-  { value: 'cash', label: '💵 ' + t('treasury.method_cash_drawer') },
-  { value: 'instapay', label: '⚡ ' + t('contacts.instapay') },
-  { value: 'e_wallet', label: '📱 ' + t('contacts.wallet') },
-  { value: 'visa', label: '💳 ' + t('treasury.method_visa') },
-  { value: 'bank_transfer', label: '🏦 ' + t('contacts.bank_transfer') },
+  { value: 'cash', label: t('treasury.method_cash_drawer') },
+  { value: 'instapay', label: t('contacts.instapay') },
+  { value: 'e_wallet', label: t('contacts.wallet') },
+  { value: 'visa', label: t('treasury.method_visa') },
+  { value: 'bank_transfer', label: t('contacts.bank_transfer') },
 ];
 </script>

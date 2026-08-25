@@ -2,7 +2,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
     <DashboardSectionCard
       class="lg:col-span-7"
-      :title="'📊 ' + $t('dashboard.weekly_sales_trend')"
+      :title="$t('dashboard.weekly_sales_trend')"
       :subtitle="$t('dashboard.weekly_trend_subtitle')"
       :icon="BarChart3"
       icon-bg="bg-emerald-500/10"
@@ -44,7 +44,7 @@
 
     <DashboardSectionCard
       class="lg:col-span-5 flex flex-col justify-between"
-      :title="'💳 ' + $t('dashboard.payment_distribution')"
+      :title="$t('dashboard.payment_distribution')"
       :subtitle="$t('dashboard.payment_dist_subtitle')"
       :icon="CreditCard"
       icon-bg="bg-theme-light"
@@ -68,7 +68,7 @@
   </div>
 </template>
 <script setup>
-import { BarChart3, CreditCard } from 'lucide-vue-next';
+import { BarChart3, CreditCard, Banknote, Zap, Smartphone, Building2, Wallet } from 'lucide-vue-next';
 import DashboardSectionCard from '../Common/DashboardSectionCard.vue';
 import SimpleBarChart from '../Common/SimpleBarChart.vue';
 import ProgressDistributionList from '../Common/ProgressDistributionList.vue';
@@ -81,6 +81,6 @@ defineProps({
   activeShift: { type: Object, default: null },
 });
 const isToday = (day) => day?.date === new Date().toISOString().split('T')[0];
-const getPaymentMethodIcon = (key) => ({ cash: '💵', instapay: '⚡', visa: '💳', e_wallet: '📱', bank_transfer: '🏦' }[key] || '💰');
+const getPaymentMethodIcon = (key) => ({ cash: Banknote, instapay: Zap, visa: CreditCard, e_wallet: Smartphone, bank_transfer: Building2 }[key] || Wallet);
 const getPaymentMethodColor = (key) => ({ cash: 'bg-emerald-500', instapay: 'bg-indigo-500', visa: 'bg-sky-500', e_wallet: 'bg-theme-primary', bank_transfer: 'bg-teal-500' }[key] || 'bg-emerald-500');
 </script>

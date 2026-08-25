@@ -5,7 +5,7 @@
       :value="formatMoney(metrics.today_sales || 0)"
       :currency="$t('common.currency')"
       variant="default"
-      icon="💵"
+      :icon="Banknote"
       icon-bg="bg-emerald-500/10"
       icon-color="text-emerald-500"
       :footer-left="`${metrics.today_invoices_count || 0} ${$t('dashboard.approved_invoices')}`"
@@ -51,7 +51,7 @@
   </div>
 </template>
 <script setup>
-import { TrendingUp, CreditCard, BarChart3 } from 'lucide-vue-next';
+import { TrendingUp, CreditCard, BarChart3, Banknote } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 const { formatMoney } = useFormatters();

@@ -1,7 +1,7 @@
 <template>
   <AppModal
     :show="show"
-    title="⌨️ دليل اختصارات الكيبورد (Desktop Hotkeys)"
+    title="دليل اختصارات الكيبورد (Desktop Hotkeys)"
     max-width="max-w-lg"
     @close="$emit('close')"
   >

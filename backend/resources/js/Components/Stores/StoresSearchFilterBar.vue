@@ -68,14 +68,14 @@ defineEmits(['update:search', 'update:type', 'update:status', 'reset']);
 
 const typeOptions = [
   { value: 'all', label: t('inventory.all_store_types') },
-  { value: 'retail_shop', label: '🏬 ' + t('inventory.retail_shop') },
-  { value: 'warehouse', label: '🏭 ' + t('inventory.warehouse') },
-  { value: 'van', label: '🚚 ' + t('inventory.distribution_van') },
+  { value: 'retail_shop', label: t('inventory.retail_shop') },
+  { value: 'warehouse', label: t('inventory.warehouse') },
+  { value: 'van', label: t('inventory.distribution_van') },
 ];
 
 const statusOptions = [
   { value: 'all', label: t('common.all') },
-  { value: 'active', label: '✅ ' + t('common.active') },
-  { value: 'inactive', label: '🚫 ' + t('common.inactive') },
+  { value: 'active', label: t('common.active') },
+  { value: 'inactive', label: t('common.inactive') },
 ];
 </script>

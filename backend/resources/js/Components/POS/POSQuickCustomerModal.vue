@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { customerService } from '@/Services/customerService';
 import BaseInput from '@/Components/Form/BaseInput.vue';
+import { X } from 'lucide-vue-next';
 
 const props = defineProps({
     show: { type: Boolean, default: false },
@@ -50,7 +51,7 @@ const handleSave = saveCustomer;
                             type="button"
                             class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center text-sm font-bold transition active:scale-90 cursor-pointer shadow-xs shrink-0"
                         >
-                            ✕
+                            <X class="w-4 h-4" />
                         </button>
                     </div>
 

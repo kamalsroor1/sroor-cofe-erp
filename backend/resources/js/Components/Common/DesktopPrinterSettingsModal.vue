@@ -9,8 +9,8 @@
       <!-- 🖥️ Desktop App Header Banner -->
       <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-theme-primary/10 text-theme-primary flex items-center justify-center text-xl">
-            🖨️
+          <div class="w-10 h-10 rounded-xl bg-theme-primary/10 text-theme-primary flex items-center justify-center">
+            <Printer class="w-5 h-5 stroke-[2.2]" />
           </div>
           <div>
             <div class="text-xs font-black text-slate-900 dark:text-white">
@@ -38,7 +38,7 @@
         >
           <option value="">{{ $t('settings.system_default_printer') }}</option>
           <option v-for="p in availablePrinters" :key="p.name" :value="p.name">
-            🖨️ {{ p.displayName || p.name }} {{ p.isDefault ? '(' + $t('settings.is_default_badge') + ')' : '' }}
+            {{ p.displayName || p.name }} {{ p.isDefault ? '(' + $t('settings.is_default_badge') + ')' : '' }}
           </option>
         </select>
         <p class="text-[10px] text-slate-400">
@@ -60,7 +60,7 @@
               ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
               : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'"
           >
-            <span>📄</span>
+            <FileText class="w-4 h-4" />
             <span>{{ $t('settings.paper_80mm') }}</span>
           </button>
           <button
@@ -71,7 +71,7 @@
               ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
               : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'"
           >
-            <span>🧾</span>
+            <Receipt class="w-4 h-4" />
             <span>{{ $t('settings.paper_58mm') }}</span>
           </button>
         </div>
@@ -90,7 +90,7 @@
             :disabled="isPrinting"
             class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
           >
-            <span>🖨️</span>
+            <Printer class="w-4 h-4" />
             <span>{{ isPrinting ? $t('settings.printing_in_progress') : $t('settings.test_thermal_print') }}</span>
           </button>
 
@@ -100,7 +100,7 @@
             @click="handleTestDrawer"
             class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
           >
-            <span>💵</span>
+            <Banknote class="w-4 h-4" />
             <span>{{ $t('settings.test_kick_drawer') }}</span>
           </button>
         </div>
@@ -136,7 +136,7 @@
           @click="loadPrinters"
           class="px-3 py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer flex items-center gap-1.5"
         >
-          <span>🔄</span>
+          <RefreshCw class="w-4 h-4" />
           <span>{{ $t('settings.refresh_printers_list') }}</span>
         </button>
         <BaseButton
@@ -152,6 +152,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { Printer, FileText, Receipt, Banknote, RefreshCw } from 'lucide-vue-next';
 import AppModal from './AppModal.vue';
 import BaseButton from './BaseButton.vue';
 import { useAppConfigStore } from '../../stores/appConfig';

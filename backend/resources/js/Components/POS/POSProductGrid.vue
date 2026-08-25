@@ -3,7 +3,7 @@
     <!-- Grid Header: category name + count -->
     <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 shrink-0">
       <div class="flex items-center gap-2">
-        <span class="text-lg">{{ activeCategoryIcon }}</span>
+        <DynamicIcon :name="activeCategoryIcon" class="w-4 h-4 text-theme-primary shrink-0" />
         <h2 class="text-sm font-black text-slate-700 dark:text-slate-200">{{ activeCategoryName }}</h2>
         <span class="text-xs font-mono bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-lg">{{ filteredItems.length }}</span>
       </div>
@@ -34,7 +34,7 @@
       </div>
       <!-- Empty State -->
       <div v-else class="flex flex-col items-center justify-center h-full text-center py-12">
-        <span class="text-4xl mb-3">📦</span>
+        <PackageSearch class="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3 stroke-[1.5]" />
         <p class="text-sm font-bold text-slate-500 dark:text-slate-400">{{ $t('pos.no_items_in_category') }}</p>
       </div>
     </div>
@@ -43,8 +43,9 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { ChevronRight, ChevronLeft } from 'lucide-vue-next';
+import { ChevronRight, ChevronLeft, Search, Star, Store, Folder, PackageSearch } from 'lucide-vue-next';
 import POSProductButton from './POSProductButton.vue';
+import DynamicIcon from '../Common/DynamicIcon.vue';
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -122,9 +123,9 @@ const activeCategoryName = computed(() => {
 });
 
 const activeCategoryIcon = computed(() => {
-  if (props.searchQuery) return '🔍';
-  if (props.activeCategoryId === 'favorites') return '⭐';
-  if (props.activeCategoryId === null) return '🏪';
-  return activeCategoryObject.value?.icon || '📁';
+  if (props.searchQuery) return Search;
+  if (props.activeCategoryId === 'favorites') return Star;
+  if (props.activeCategoryId === null) return Store;
+  return activeCategoryObject.value?.icon || Folder;
 });
 </script>

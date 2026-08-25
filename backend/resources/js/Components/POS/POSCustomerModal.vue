@@ -18,9 +18,7 @@
             :placeholder="$t('pos.search_customer_placeholder')"
             class="w-full h-11 ps-9 pe-9 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-theme-primary transition-all"
           />
-          <span class="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">
-            🔍
-          </span>
+          <Search class="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <span v-if="isSearching" class="absolute end-3 top-1/2 -translate-y-1/2">
             <span class="inline-block w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></span>
           </span>
@@ -39,7 +37,7 @@
       <div v-if="isAddingNewCustomer" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
         <div class="flex items-center justify-between">
           <div class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-            <span>✨</span>
+            <Sparkles class="w-4 h-4 text-amber-500" />
             <span>{{ $t('pos.quick_customer_add_title') }}</span>
           </div>
           <span class="text-[11px] text-slate-400 font-bold">{{ $t('pos.save_and_pick_customer') }}</span>
@@ -89,8 +87,8 @@
         v-else-if="searchQuery.trim().length > 0 && customers.length === 0 && !isSearching"
         class="py-8 px-4 text-center space-y-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 animate-in fade-in duration-150"
       >
-        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl mx-auto">
-          👤
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+          <User class="w-6 h-6" />
         </div>
         <div class="space-y-1">
           <div class="text-sm font-black text-slate-900 dark:text-white">
@@ -105,7 +103,7 @@
           @click="openQuickAddWithQuery"
           class="min-h-[44px] px-5 py-2.5 bg-theme-primary hover:brightness-110 text-slate-950 rounded-xl text-xs font-black transition cursor-pointer inline-flex items-center gap-1.5 shadow-xs active:scale-95"
         >
-          <span>+</span>
+          <Plus class="w-4 h-4" />
           <span v-if="isPhone(searchQuery)">
             {{ $t('pos.quick_add_customer_with_phone_btn', { phone: searchQuery.trim() }) }}
           </span>
@@ -125,8 +123,8 @@
           :class="!selectedCustomerId ? 'bg-theme-light dark:bg-slate-800 text-theme-primary font-black' : 'text-slate-700 dark:text-slate-300'"
         >
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0">
-              💵
+            <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+              <Banknote class="w-4 h-4 text-emerald-500" />
             </div>
             <div>
               <div class="font-black text-xs text-slate-900 dark:text-white">{{ $t('pos.general_cash_customer') }}</div>
@@ -166,6 +164,7 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
+import { Search, Sparkles, User, Plus, Banknote } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 

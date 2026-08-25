@@ -6,8 +6,8 @@
     @close="$emit('close')"
   >
     <div class="text-center p-4 space-y-4 font-tajawal select-none">
-      <div class="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center text-3xl mx-auto">
-        ✓
+      <div class="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto">
+        <CheckCircle2 class="w-8 h-8 stroke-[2.5]" />
       </div>
       <div>
         <h3 class="text-base font-black text-slate-900 dark:text-white">{{ $t('pos.invoice_number_badge', { number: invoice?.invoice_number }) }}</h3>
@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { Printer } from 'lucide-vue-next';
+import { Printer, CheckCircle2 } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 

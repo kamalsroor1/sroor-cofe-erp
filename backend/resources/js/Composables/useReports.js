@@ -1,4 +1,5 @@
 import { ref, reactive, computed, onMounted } from 'vue';
+import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2 } from 'lucide-vue-next';
 import api from '../services/api';
 import { useTrans } from './useTrans';
 
@@ -18,13 +19,13 @@ export function useReports() {
     });
 
     const tabs = computed(() => [
-        { key: 'sales', label: t('reports.tab_sales'), icon: '📈' },
-        { key: 'items', label: t('reports.tab_items'), icon: '☕' },
-        { key: 'stores', label: t('reports.tab_stores'), icon: '🏢' },
-        { key: 'customers', label: t('reports.tab_customers'), icon: '👥' },
-        { key: 'expenses', label: t('reports.tab_expenses'), icon: '💸' },
-        { key: 'inventory', label: t('reports.tab_inventory'), icon: '📦' },
-        { key: 'treasury', label: t('reports.tab_treasury'), icon: '🏦' },
+        { key: 'sales', label: t('reports.tab_sales'), icon: TrendingUp },
+        { key: 'items', label: t('reports.tab_items'), icon: Coffee },
+        { key: 'stores', label: t('reports.tab_stores'), icon: Store },
+        { key: 'customers', label: t('reports.tab_customers'), icon: Users },
+        { key: 'expenses', label: t('reports.tab_expenses'), icon: Receipt },
+        { key: 'inventory', label: t('reports.tab_inventory'), icon: Package },
+        { key: 'treasury', label: t('reports.tab_treasury'), icon: Building2 },
     ]);
 
     const presets = computed(() => [

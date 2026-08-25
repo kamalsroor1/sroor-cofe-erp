@@ -7,7 +7,7 @@
     <!-- ☕ Right Side: App Brand & Active Store Context -->
     <div class="flex items-center gap-2.5 shrink-0 no-drag">
       <div class="flex items-center gap-1.5 font-black text-white text-xs">
-        <span class="text-sm">☕</span>
+        <Coffee class="w-3.5 h-3.5 text-theme-primary" />
         <span>{{ appConfigStore.companyName || $t('dashboard.company_title') }}</span>
       </div>
 
@@ -15,7 +15,7 @@
 
       <!-- Active Branch Badge -->
       <div class="px-2 py-0.5 rounded-lg bg-theme-primary/10 border border-theme-primary/20 text-theme-primary text-[10px] font-bold flex items-center gap-1">
-        <span>🏬</span>
+        <Store class="w-3 h-3" />
         <span>{{ authStore.activeStoreName || 'الفرع الرئيسي' }}</span>
       </div>
     </div>
@@ -30,7 +30,8 @@
         :title="$t('settings.desktop_hardware_title')"
       >
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="font-sans font-bold text-slate-300">🖨️ {{ activePrinterName }}</span>
+        <Printer class="w-3 h-3 text-slate-400" />
+        <span class="font-sans font-bold text-slate-300">{{ activePrinterName }}</span>
       </button>
 
       <!-- Network Ping -->
@@ -70,10 +71,11 @@
       <!-- Quick POS Button (F2) -->
       <router-link
         to="/pos"
-        class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-[11px] transition border border-emerald-500/20 active:scale-95"
+        class="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-[11px] transition border border-emerald-500/20 active:scale-95"
         title="نقطة البيع السريعة (F2)"
       >
-        <span>⚡ POS</span>
+        <Zap class="w-3 h-3 text-emerald-400" />
+        <span>POS</span>
         <span class="font-mono text-[9px] bg-emerald-500/20 px-1 rounded">F2</span>
       </router-link>
 
@@ -171,7 +173,10 @@ import {
   Copy,
   X,
   RefreshCw,
-  Rocket
+  Rocket,
+  Coffee,
+  Store,
+  Zap,
 } from 'lucide-vue-next';
 
 defineEmits(['open-hardware', 'open-shortcuts']);

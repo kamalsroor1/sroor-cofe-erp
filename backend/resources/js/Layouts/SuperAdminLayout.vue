@@ -4,6 +4,22 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { trans } from '../helpers/trans';
 import versionData from '../version.json';
+import DynamicIcon from '../Components/Common/DynamicIcon.vue';
+import {
+    BarChart3,
+    Store,
+    Layers,
+    Scale,
+    Smartphone,
+    Activity,
+    ShieldCheck,
+    Coffee,
+    LogOut,
+    Menu,
+    X,
+    Zap,
+    ExternalLink,
+} from 'lucide-vue-next';
 
 const authStore = useAuthStore();
 const route = useRoute();
@@ -18,12 +34,12 @@ const telescopeUrl = computed(() => {
 });
 
 const navItems = computed(() => [
-    { name: trans('super.dashboard'), href: '/super-admin/dashboard', icon: '📊', active: route.path === '/super-admin' || route.path === '/super-admin/dashboard' },
-    { name: trans('super.tenants'), href: '/super-admin/tenants', icon: '🏪', active: route.path.startsWith('/super-admin/tenants') },
-    { name: trans('super.plans'), href: '/super-admin/plans', icon: '💼', active: route.path.startsWith('/super-admin/plans') },
-    { name: 'وحدات القياس', href: '/super-admin/units', icon: '⚖️', active: route.path.startsWith('/super-admin/units') },
-    { name: trans('super.app_versions'), href: '/super-admin/app-versions', icon: '📱', active: route.path.startsWith('/super-admin/app-versions') },
-    { name: 'مراقب النظام (Telescope)', href: telescopeUrl.value, icon: '🔭', external: true, active: false },
+    { name: trans('super.dashboard'), href: '/super-admin/dashboard', icon: BarChart3, active: route.path === '/super-admin' || route.path === '/super-admin/dashboard' },
+    { name: trans('super.tenants'), href: '/super-admin/tenants', icon: Store, active: route.path.startsWith('/super-admin/tenants') },
+    { name: trans('super.plans'), href: '/super-admin/plans', icon: Layers, active: route.path.startsWith('/super-admin/plans') },
+    { name: 'وحدات القياس', href: '/super-admin/units', icon: Scale, active: route.path.startsWith('/super-admin/units') },
+    { name: trans('super.app_versions'), href: '/super-admin/app-versions', icon: Smartphone, active: route.path.startsWith('/super-admin/app-versions') },
+    { name: 'مراقب النظام (Telescope)', href: telescopeUrl.value, icon: Activity, external: true, active: false },
 ]);
 
 const handleLogout = async () => {
@@ -43,12 +59,13 @@ const handleLogout = async () => {
                     type="button"
                     class="md:hidden w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center text-lg active:scale-90 transition cursor-pointer shadow-xs border border-slate-300 dark:border-slate-700"
                 >
-                    {{ mobileMenuOpen ? '✕' : '☰' }}
+                    <X v-if="mobileMenuOpen" class="w-5 h-5" />
+                    <Menu v-else class="w-5 h-5" />
                 </button>
 
                 <router-link to="/super-admin/dashboard" class="flex items-center gap-2.5">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                        🛡️
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                        <ShieldCheck class="w-5 h-5" />
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
@@ -72,7 +89,7 @@ const handleLogout = async () => {
                     to="/"
                     class="h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition active:scale-95 border border-slate-300 dark:border-slate-700 shadow-xs cursor-pointer"
                 >
-                    <span>☕</span>
+                    <Coffee class="w-4 h-4 text-theme-primary" />
                     <span class="hidden sm:inline">{{ $t('super.back_to_pos') }}</span>
                 </router-link>
 
@@ -87,7 +104,7 @@ const handleLogout = async () => {
                     class="h-10 px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1.5 transition cursor-pointer active:scale-95"
                     :title="$t('super.logout_title')"
                 >
-                    <span>🚪</span>
+                    <LogOut class="w-4 h-4" />
                     <span class="hidden sm:inline">{{ $t('nav.logout') }}</span>
                 </button>
             </div>
@@ -110,15 +127,15 @@ const handleLogout = async () => {
                 <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center">
-                            🛡️
+                            <ShieldCheck class="w-4 h-4" />
                         </div>
                         <span class="font-black text-xs text-slate-900 dark:text-white">{{ $t('super.platform_title') }}</span>
                     </div>
                     <button
                         @click="mobileMenuOpen = false"
-                        class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center font-bold"
+                        class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center font-bold cursor-pointer"
                     >
-                        ✕
+                        <X class="w-4 h-4" />
                     </button>
                 </div>
 
@@ -131,9 +148,9 @@ const handleLogout = async () => {
                             @click="mobileMenuOpen = false"
                             class="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                         >
-                            <span class="text-lg">{{ item.icon }}</span>
+                            <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
                             <span>{{ item.name }}</span>
-                            <span class="text-[10px] text-slate-400 ms-auto font-mono">↗</span>
+                            <ExternalLink class="w-3.5 h-3.5 text-slate-400 ms-auto shrink-0" />
                         </a>
                         <router-link
                             v-else
@@ -142,7 +159,7 @@ const handleLogout = async () => {
                             class="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition"
                             :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
                         >
-                            <span class="text-lg">{{ item.icon }}</span>
+                            <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
                             <span>{{ item.name }}</span>
                         </router-link>
                     </template>
@@ -150,7 +167,7 @@ const handleLogout = async () => {
 
                 <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
                     <div class="font-black text-slate-900 dark:text-white flex items-center gap-1.5 text-xs">
-                        <span>⚡</span>
+                        <Zap class="w-4 h-4 text-amber-500" />
                         <span>{{ $t('super.multi_db_engine_title') }}</span>
                     </div>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -176,9 +193,9 @@ const handleLogout = async () => {
                             target="_blank"
                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                         >
-                            <span class="text-base">{{ item.icon }}</span>
+                            <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
                             <span>{{ item.name }}</span>
-                            <span class="text-[10px] text-slate-400 ms-auto font-mono">↗</span>
+                            <ExternalLink class="w-3.5 h-3.5 text-slate-400 ms-auto shrink-0" />
                         </a>
                         <router-link
                             v-else
@@ -186,7 +203,7 @@ const handleLogout = async () => {
                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition group"
                             :class="item.active ? 'bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/25' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
                         >
-                            <span class="text-base">{{ item.icon }}</span>
+                            <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
                             <span>{{ item.name }}</span>
                         </router-link>
                     </template>
@@ -194,7 +211,7 @@ const handleLogout = async () => {
 
                 <div class="mt-auto p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-indigo-800/40 text-xs space-y-2 font-tajawal">
                     <div class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>⚡</span>
+                        <Zap class="w-4 h-4 text-amber-500" />
                         <span>{{ $t('super.multi_db_arch_title') }}</span>
                     </div>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">

@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { RefreshCw } from 'lucide-vue-next';
 import { useMoney } from '@/Composables/useMoney';
 
 const props = defineProps({
@@ -203,7 +204,7 @@ const onPaidAmountInput = (e) => {
             class="w-full h-13 rounded-2xl btn-primary-theme font-black text-sm sm:text-base flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-theme-md"
             @click="$emit('checkout')"
         >
-            <span v-if="isSubmitting" class="animate-spin text-lg">⏳</span>
+            <RefreshCw v-if="isSubmitting" class="w-5 h-5 animate-spin" />
             <span>{{ isSubmitting ? $t('pos.saving_in_progress') : $t('pos.checkout_instant_btn') }} (Enter / F2)</span>
         </button>
     </div>

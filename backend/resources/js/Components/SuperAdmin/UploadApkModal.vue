@@ -129,9 +129,9 @@ const props = defineProps({
 defineEmits(['close', 'submit', 'update:field', 'file-change']);
 
 const platformOptions = [
-  { value: 'android', label: '📱 تطبيق الموبايل (Android APK)' },
-  { value: 'windows', label: '💻 برنامج سطح المكتب (Windows Setup EXE)' },
-  { value: 'ios', label: '🍏 آبل (iOS IPA)' },
+  { value: 'android', label: 'تطبيق الموبايل (Android APK)' },
+  { value: 'windows', label: 'برنامج سطح المكتب (Windows Setup EXE)' },
+  { value: 'ios', label: 'آبل (iOS IPA)' },
 ];
 
 const fileAcceptTypes = computed(() => {

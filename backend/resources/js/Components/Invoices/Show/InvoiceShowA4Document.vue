@@ -9,8 +9,8 @@
       <div class="flex items-start justify-between border-b-2 border-slate-900 pb-5">
         <div class="space-y-1">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl font-black shadow-sm print:border print:border-slate-800">
-              ☕
+            <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-sm print:border print:border-slate-800">
+              <Coffee class="w-6 h-6 stroke-[2]" />
             </div>
             <div>
               <h1 class="text-2xl font-black text-slate-950 tracking-tight leading-tight">{{ companyInfo?.name }}</h1>
@@ -19,8 +19,8 @@
           </div>
 
           <div class="mt-3 space-y-1 text-xs text-slate-600 font-bold">
-            <div v-if="companyInfo?.address">📍 {{ companyInfo?.address }}</div>
-            <div v-if="companyInfo?.phone">📞 {{ companyInfo?.phone }}</div>
+            <div v-if="companyInfo?.address" class="flex items-center gap-1.5"><MapPin class="w-3.5 h-3.5 text-slate-700" /> <span>{{ companyInfo?.address }}</span></div>
+            <div v-if="companyInfo?.phone" class="flex items-center gap-1.5"><Phone class="w-3.5 h-3.5 text-slate-700" /> <span dir="ltr">{{ companyInfo?.phone }}</span></div>
             <div class="font-mono text-slate-800 text-[11px] pt-1">
               <span>{{ $t('invoices.commercial_register') }} <strong class="text-slate-950">{{ companyInfo?.commercialRegister }}</strong></span>
               <span class="mx-2 text-slate-400">|</span>
@@ -46,8 +46,8 @@
         <div>
           <div class="text-[10px] font-black text-slate-500 uppercase mb-1">{{ $t('invoices.customer_details') }}</div>
           <div class="font-black text-sm text-slate-950">{{ customerInfo?.name }}</div>
-          <div v-if="customerInfo?.phone" class="text-slate-700 font-mono text-[11px] mt-0.5" dir="ltr">📞 {{ customerInfo?.phone }}</div>
-          <div v-if="customerInfo?.raw?.address" class="text-slate-600 mt-0.5">📍 {{ customerInfo.raw.address }}</div>
+          <div v-if="customerInfo?.phone" class="text-slate-700 font-mono text-[11px] mt-0.5 flex items-center gap-1" dir="ltr"><Phone class="w-3 h-3 text-slate-700" /> <span>{{ customerInfo?.phone }}</span></div>
+          <div v-if="customerInfo?.raw?.address" class="text-slate-600 mt-0.5 flex items-center gap-1"><MapPin class="w-3 h-3 text-slate-700" /> <span>{{ customerInfo.raw.address }}</span></div>
         </div>
 
         <div class="text-end">
@@ -165,6 +165,7 @@
 </template>
 
 <script setup>
+import { Coffee, MapPin, Phone } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 const { formatMoney } = useFormatters();
 defineProps({
