@@ -19,9 +19,9 @@
       </div>
     </div>
     
-    <!-- Products Grid -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar p-3">
-      <div v-if="paginatedItems.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
+    <!-- Products Grid (3 Columns Max) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-3.5">
+      <div v-if="paginatedItems.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3.5">
         <POSProductButton
           v-for="item in paginatedItems"
           :key="item.id"
@@ -57,7 +57,7 @@ const props = defineProps({
 
 defineEmits(['add-item']);
 
-const ITEMS_PER_PAGE = 30;
+const ITEMS_PER_PAGE = 24;
 const currentPage = ref(1);
 
 const filteredItems = computed(() => {

@@ -14,7 +14,7 @@
 
         <div class="flex items-center gap-2">
           <div class="w-10 h-10 rounded-xl bg-theme-primary text-slate-950 flex items-center justify-center font-black text-lg shadow-xs">
-            ⚡
+            <Zap class="w-5 h-5" />
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -158,8 +158,8 @@
           v-else-if="isSearchFocused && searchQuery.trim().length > 0 && searchResults.length === 0 && !isSearching"
           class="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 text-center z-50 animate-in fade-in slide-in-from-top-2 duration-150"
         >
-          <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl mx-auto mb-2">
-            🔍
+          <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto mb-2">
+            <Search class="w-6 h-6" />
           </div>
           <h3 class="text-sm font-black text-slate-900 dark:text-white font-tajawal">
             {{ $t('pos.no_items_found_search', { query: searchQuery }) }}
@@ -170,8 +170,22 @@
         </div>
       </div>
 
-      <!-- Left: Customer, Tier & Action Buttons -->
+      <!-- Left: Customer, Catalog Toggle, Tier & Action Buttons -->
       <div class="flex items-center gap-2 shrink-0">
+        <!-- Catalog Grid / Fullscreen Toggle -->
+        <button
+          type="button"
+          @click="$emit('toggle-catalog')"
+          class="min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+          :class="showCatalog
+            ? 'bg-theme-light border-theme-primary text-theme-primary font-black shadow-xs'
+            : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300'"
+          :title="showCatalog ? $t('pos.hide_menu') : $t('pos.show_menu')"
+        >
+          <LayoutGrid class="w-4 h-4 shrink-0" />
+          <span class="hidden lg:inline">{{ showCatalog ? $t('pos.hide_menu') : $t('pos.show_menu') }}</span>
+        </button>
+
         <!-- Customer Selection Button -->
         <button
           type="button"
@@ -223,7 +237,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { ArrowRight, Search, Users, RotateCcw } from 'lucide-vue-next';
+import { ArrowRight, Search, Users, RotateCcw, Zap, LayoutGrid } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
@@ -233,6 +247,7 @@ const props = defineProps({
   appVersion: { type: String, default: '1.0.10' },
   activeStore: { type: Object, default: null },
   activeShift: { type: Object, default: null },
+  showCatalog: { type: Boolean, default: true },
   searchQuery: { type: String, default: '' },
   isSearchFocused: { type: Boolean, default: false },
   searchResults: { type: Array, default: () => [] },
@@ -248,6 +263,7 @@ const emit = defineEmits([
   'update:isSearchFocused',
   'update:highlightedIndex',
   'update:activePriceTier',
+  'toggle-catalog',
   'add-item',
   'navigate-dropdown',
   'select-highlighted',

@@ -10,6 +10,7 @@
       :app-version="appVersion"
       :active-store="activeStore"
       :active-shift="activeShift"
+      :show-catalog="showCatalog"
       v-model:search-query="searchQuery"
       v-model:is-search-focused="isSearchFocused"
       v-model:highlighted-index="highlightedIndex"
@@ -18,6 +19,7 @@
       :selected-customer="selectedCustomer"
       :cart-empty="cart.length === 0"
       :is-searching="isSearchingRemote"
+      @toggle-catalog="toggleCatalog"
       @add-item="addItemFromDropdown"
       @navigate-dropdown="navigateDropdown"
       @select-highlighted="selectHighlightedOrFirstItem"
@@ -26,11 +28,14 @@
       @clear-cart="clearCart"
     />
 
-    <!-- 🖥️ 2. Main Workspace: Hybrid 3-Area Layout (Cart + Product Grid + Category Sidebar) -->
+    <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart + Optional Product Grid + Category Sidebar) -->
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
       
-      <!-- 🛒 Right/Left (in RTL): Invoice Cart & Payment Checkout Panel -->
-      <section class="w-full lg:w-[400px] xl:w-[450px] 2xl:w-[490px] flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden order-2 lg:order-1">
+      <!-- 🛒 Invoice Cart & Payment Checkout Panel -->
+      <section
+        class="flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden order-2 lg:order-1 transition-all duration-200"
+        :class="showCatalog ? 'w-full lg:w-[400px] xl:w-[450px] 2xl:w-[480px]' : 'flex-1 w-full max-w-5xl mx-auto'"
+      >
         
         <!-- Top Section: Cart Items Table -->
         <div class="flex-1 overflow-hidden flex flex-col min-h-[220px]">
@@ -66,8 +71,11 @@
         </div>
       </section>
 
-      <!-- 🍕 Center: Visual Product Grid Catalog -->
-      <main class="flex-1 flex flex-col overflow-hidden min-w-0 bg-slate-100/50 dark:bg-slate-950 order-1 lg:order-2">
+      <!-- 🍕 Center: Visual Product Grid Catalog (3 Columns) -->
+      <main
+        v-if="showCatalog"
+        class="flex-1 flex flex-col overflow-hidden min-w-0 bg-slate-100/50 dark:bg-slate-950 order-1 lg:order-2 animate-in fade-in duration-150"
+      >
         <POSProductGrid
           :items="items"
           :categories="categories"
@@ -80,7 +88,8 @@
 
       <!-- 📂 Right (in RTL): Vertical Category Sidebar -->
       <POSCategorySidebar
-        class="order-3"
+        v-if="showCatalog"
+        class="order-3 animate-in fade-in duration-150"
         :categories="categories"
         :active-category-id="activeCategoryId"
         :favorite-count="favoriteItemsCount"
@@ -150,6 +159,12 @@ const activeCategoryId = ref('favorites');
 const favoriteItemsCount = computed(() => {
   return items.value.filter(i => (i.pos_sales_count || 0) > 0 || i.is_pos_pinned).length || Math.min(items.value.length, 20);
 });
+
+const showCatalog = ref(localStorage.getItem('pos_show_catalog') !== 'false');
+const toggleCatalog = () => {
+  showCatalog.value = !showCatalog.value;
+  localStorage.setItem('pos_show_catalog', showCatalog.value ? 'true' : 'false');
+};
 
 const isLoading = ref(true);
 const isSubmitting = ref(false);
@@ -596,6 +611,9 @@ const handleGlobalKeydown = (e) => {
   if (e.key === 'F2') {
     e.preventDefault();
     headerRef.value?.focusSearch();
+  } else if (e.key === 'F10') {
+    e.preventDefault();
+    toggleCatalog();
   } else if (e.key === 'F9' || (e.ctrlKey && e.key === 'Enter')) {
     e.preventDefault();
     if (!showSuccessModal.value && cart.value.length > 0) {
