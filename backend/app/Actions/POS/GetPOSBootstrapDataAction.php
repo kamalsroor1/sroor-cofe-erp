@@ -50,6 +50,7 @@ class GetPOSBootstrapDataAction
                     'items.id',
                     'items.code',
                     'items.name',
+                    'items.image',
                     'items.category',
                     'items.category_id',
                     'items.unit',
@@ -57,6 +58,9 @@ class GetPOSBootstrapDataAction
                     'items.selling_price',
                     'items.min_selling_price',
                     'items.min_stock_level',
+                    'items.pos_sort_order',
+                    'items.is_pos_pinned',
+                    'items.pos_sales_count',
                     \Illuminate\Support\Facades\DB::raw('COALESCE(store_stocks.quantity, items.current_stock) as calculated_stock')
                 ])
                 ->orderBy('items.name')
@@ -64,8 +68,9 @@ class GetPOSBootstrapDataAction
         } else {
             $rawItems = Item::where('is_active', true)
                 ->select([
-                    'id', 'code', 'name', 'category', 'category_id', 'unit',
+                    'id', 'code', 'name', 'image', 'category', 'category_id', 'unit',
                     'cost_price', 'selling_price', 'min_selling_price', 'min_stock_level',
+                    'pos_sort_order', 'is_pos_pinned', 'pos_sales_count',
                     'current_stock as calculated_stock'
                 ])
                 ->orderBy('name')
@@ -77,6 +82,7 @@ class GetPOSBootstrapDataAction
                 'id' => (int)$it->id,
                 'name' => (string)$it->name,
                 'code' => (string)($it->code ?? ''),
+                'image' => $it->image,
                 'category' => (string)($it->category ?: 'عام'),
                 'category_id' => $it->category_id ? (int)$it->category_id : null,
                 'price_retail' => (float)$it->selling_price,
@@ -86,6 +92,9 @@ class GetPOSBootstrapDataAction
                 'current_stock' => (float)($it->calculated_stock ?? 0),
                 'min_stock_level' => (float)($it->min_stock_level ?: 0),
                 'unit' => (string)($it->unit ?: 'قطعة'),
+                'pos_sort_order' => (int)($it->pos_sort_order ?? 0),
+                'is_pos_pinned' => (bool)($it->is_pos_pinned ?? false),
+                'pos_sales_count' => (int)($it->pos_sales_count ?? 0),
             ];
         })->values()->all();
 
@@ -93,12 +102,27 @@ class GetPOSBootstrapDataAction
         if (\App\Models\Category::count() === 0) {
             $distinctCats = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
             $icons = ['☕', '🧃', '🍰', '🥪', '🍪', '🫘', '🥤', '🧊', '🎁', '📦'];
+            $colors = [
+                ['#92400E', '#fef3c7'], // Brown
+                ['#0EA5E9', '#e0f2fe'], // Sky Blue
+                ['#EC4899', '#fce7f3'], // Pink
+                ['#10B981', '#d1fae5'], // Emerald
+                ['#78350F', '#fef3c7'], // Dark Brown
+                ['#8B5CF6', '#ede9fe'], // Violet
+                ['#0EA5E9', '#e0f2fe'], // Sky Blue
+                ['#6366F1', '#e0e7ff'], // Indigo
+                ['#F59E0B', '#fef3c7'], // Amber
+                ['#64748B', '#f1f5f9'], // Slate
+            ];
             $i = 0;
             foreach ($distinctCats as $cName) {
                 $icon = $icons[$i % count($icons)];
+                $color = $colors[$i % count($colors)];
                 $cat = \App\Models\Category::create([
                     'name'       => $cName,
                     'icon'       => $icon,
+                    'color'      => $color[0],
+                    'color_light' => $color[1],
                     'sort_order' => $i,
                     'is_active'  => true,
                 ]);
@@ -111,7 +135,7 @@ class GetPOSBootstrapDataAction
             ->withCount('items')
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->get(['id', 'name', 'icon']);
+            ->get(['id', 'name', 'icon', 'color', 'color_light']);
 
         // 5. Active Customers via POSCustomerResource
         $customers = Customer::where('is_active', true)

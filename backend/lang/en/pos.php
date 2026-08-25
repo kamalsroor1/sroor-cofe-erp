@@ -187,4 +187,17 @@ return [
     'net_amount_label'          => 'Net Amount: :amount EGP',
 
     'general_walkin_customer' => 'Walk-in Cash Customer',
+
+    // Product Grid & Category Menu Keys
+    'categories'                => 'Categories',
+    'favorites_tab'             => 'Best Sellers',
+    'all_items_tab'             => 'All Products',
+    'no_items_in_category'      => 'No items in this category',
+    'no_items_match_search'     => 'No items match your search',
+    'page_of'                   => 'Page :current of :total',
+    'items_count'               => ':count items',
+    'product_grid'              => 'Product Grid',
+    'show_menu'                 => 'Show Menu',
+    'hide_menu'                 => 'Hide Menu',
+    'toggle_menu'               => 'Toggle Menu',
 ];

@@ -1394,7 +1394,18 @@ export const defaultArabicTranslations = {
         "out_of_stock_badge": "⚠️ غير متوفر: :qty :unit",
         "invoice_number_badge": "فاتورة رقم #:number",
         "net_amount_label": "الصافي النهائي: :amount ج.م",
-        "general_walkin_customer": "عميل نقدي سريع"
+        "general_walkin_customer": "عميل نقدي سريع",
+        "categories": "الأقسام",
+        "favorites_tab": "الأكثر مبيعاً",
+        "all_items_tab": "جميع المنتجات",
+        "no_items_in_category": "لا توجد أصناف في هذا القسم",
+        "no_items_match_search": "لا توجد أصناف مطابقة للبحث",
+        "page_of": "صفحة :current من :total",
+        "items_count": ":count صنف",
+        "product_grid": "شبكة المنتجات",
+        "show_menu": "عرض المنيو",
+        "hide_menu": "إخفاء المنيو",
+        "toggle_menu": "إظهار\/إخفاء المنيو"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -4182,7 +4193,18 @@ export const defaultEnglishTranslations = {
         "out_of_stock_badge": "⚠️ Out of Stock: :qty :unit",
         "invoice_number_badge": "Invoice #:number",
         "net_amount_label": "Net Amount: :amount EGP",
-        "general_walkin_customer": "Walk-in Cash Customer"
+        "general_walkin_customer": "Walk-in Cash Customer",
+        "categories": "Categories",
+        "favorites_tab": "Best Sellers",
+        "all_items_tab": "All Products",
+        "no_items_in_category": "No items in this category",
+        "no_items_match_search": "No items match your search",
+        "page_of": "Page :current of :total",
+        "items_count": ":count items",
+        "product_grid": "Product Grid",
+        "show_menu": "Show Menu",
+        "hide_menu": "Hide Menu",
+        "toggle_menu": "Toggle Menu"
     },
     "profile": {
         "title": "User Profile & Account Settings",

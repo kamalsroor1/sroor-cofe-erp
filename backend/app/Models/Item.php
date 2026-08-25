@@ -14,6 +14,7 @@ class Item extends Model
     protected $fillable = [
         'code',
         'name',
+        'image',
         'category',
         'category_id',
         'unit',
@@ -25,6 +26,9 @@ class Item extends Model
         'min_stock_level',
         'is_active',
         'notes',
+        'pos_sort_order',
+        'is_pos_pinned',
+        'pos_sales_count',
     ];
 
     protected $appends = [
@@ -52,6 +56,9 @@ class Item extends Model
             'selling_price'     => 'decimal:3',
             'min_stock_level'   => 'decimal:3',
             'is_active'         => 'boolean',
+            'pos_sort_order'    => 'integer',
+            'is_pos_pinned'     => 'boolean',
+            'pos_sales_count'   => 'integer',
         ];
     }
 

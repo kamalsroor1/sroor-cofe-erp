@@ -26,45 +26,67 @@
       @clear-cart="clearCart"
     />
 
-    <!-- 🖥️ 2. Main Workspace: Cart Table + Checkout Panel -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+    <!-- 🖥️ 2. Main Workspace: Hybrid 3-Area Layout (Cart + Product Grid + Category Sidebar) -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
       
-      <!-- Right: Cart Items & Quick Pinned Items -->
-      <main class="lg:col-span-7 xl:col-span-8 flex flex-col justify-between p-4 bg-slate-50 dark:bg-slate-950 overflow-hidden border-e border-slate-200 dark:border-slate-800">
-        <POSCartTable
-          :cart="cart"
-          :total-qty="cartTotalQuantity"
-          @increase-qty="increaseCartItemQty"
-          @decrease-qty="decreaseCartItemQty"
-          @update-qty="onCartQtyUpdate"
-          @remove-item="removeFromCart"
-        />
-        <POSQuickPinnedItems
-          :items="quickPinnedItems"
+      <!-- 🛒 Right/Left (in RTL): Invoice Cart & Payment Checkout Panel -->
+      <section class="w-full lg:w-[400px] xl:w-[450px] 2xl:w-[490px] flex flex-col justify-between p-3 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 shrink-0 overflow-hidden order-2 lg:order-1">
+        
+        <!-- Top Section: Cart Items Table -->
+        <div class="flex-1 overflow-hidden flex flex-col min-h-[220px]">
+          <POSCartTable
+            :cart="cart"
+            :total-qty="cartTotalQuantity"
+            @increase-qty="increaseCartItemQty"
+            @decrease-qty="decreaseCartItemQty"
+            @update-qty="onCartQtyUpdate"
+            @remove-item="removeFromCart"
+          />
+        </div>
+
+        <!-- Bottom Section: Checkout & Financial Panel -->
+        <div class="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
+          <POSCheckoutPanel
+            :cart-count="cart.length"
+            :subtotal="cartSubtotal"
+            :discount-amount="discountAmount"
+            :discount-value="discountValue"
+            :discount-type="discountType"
+            :customer-expenses-total="customerExpensesTotal"
+            :net-total="cartNetTotal"
+            v-model:payment-type="paymentType"
+            v-model:payment-method="paymentMethod"
+            v-model:cash-received="cashReceived"
+            :change-due="changeDue"
+            :cart-empty="cart.length === 0"
+            :is-submitting="isSubmitting"
+            @apply-discount="applyDiscountPreset"
+            @submit="submitInvoice"
+          />
+        </div>
+      </section>
+
+      <!-- 🍕 Center: Visual Product Grid Catalog -->
+      <main class="flex-1 flex flex-col overflow-hidden min-w-0 bg-slate-100/50 dark:bg-slate-950 order-1 lg:order-2">
+        <POSProductGrid
+          :items="items"
+          :categories="categories"
+          :active-category-id="activeCategoryId"
           :active-price-tier="activePriceTier"
+          :search-query="searchQuery"
           @add-item="addToCart"
         />
       </main>
 
-      <!-- Left: Financial Breakdown & Checkout -->
-      <POSCheckoutPanel
-        class="lg:col-span-5 xl:col-span-4"
-        :cart-count="cart.length"
-        :subtotal="cartSubtotal"
-        :discount-amount="discountAmount"
-        :discount-value="discountValue"
-        :discount-type="discountType"
-        :customer-expenses-total="customerExpensesTotal"
-        :net-total="cartNetTotal"
-        v-model:payment-type="paymentType"
-        v-model:payment-method="paymentMethod"
-        v-model:cash-received="cashReceived"
-        :change-due="changeDue"
-        :cart-empty="cart.length === 0"
-        :is-submitting="isSubmitting"
-        @apply-discount="applyDiscountPreset"
-        @submit="submitInvoice"
+      <!-- 📂 Right (in RTL): Vertical Category Sidebar -->
+      <POSCategorySidebar
+        class="order-3"
+        :categories="categories"
+        :active-category-id="activeCategoryId"
+        :favorite-count="favoriteItemsCount"
+        @select-category="activeCategoryId = $event"
       />
+
     </div>
 
     <!-- 👥 Customer Picker Modal -->
@@ -105,6 +127,8 @@ import POSCheckoutPanel    from '../../Components/POS/POSCheckoutPanel.vue';
 import POSCustomerModal    from '../../Components/POS/POSCustomerModal.vue';
 import POSSuccessModal     from '../../Components/POS/POSSuccessModal.vue';
 import POSSkeleton         from '../../Components/POS/POSSkeleton.vue';
+import POSCategorySidebar  from '../../Components/POS/POSCategorySidebar.vue';
+import POSProductGrid      from '../../Components/POS/POSProductGrid.vue';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 
@@ -119,6 +143,11 @@ const categories = ref([]);
 const customers = ref([]);
 const activeStore = ref(null);
 const activeShift = ref(null);
+const activeCategoryId = ref('favorites');
+
+const favoriteItemsCount = computed(() => {
+  return items.value.filter(i => (i.pos_sales_count || 0) > 0 || i.is_pos_pinned).length || Math.min(items.value.length, 20);
+});
 
 const isLoading = ref(true);
 const isSubmitting = ref(false);

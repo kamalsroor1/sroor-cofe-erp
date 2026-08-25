@@ -186,4 +186,17 @@ return [
     'net_amount_label'          => 'الصافي النهائي: :amount ج.م',
 
     'general_walkin_customer' => 'عميل نقدي سريع',
+
+    // Product Grid & Category Menu Keys
+    'categories'                => 'الأقسام',
+    'favorites_tab'             => 'الأكثر مبيعاً',
+    'all_items_tab'             => 'جميع المنتجات',
+    'no_items_in_category'      => 'لا توجد أصناف في هذا القسم',
+    'no_items_match_search'     => 'لا توجد أصناف مطابقة للبحث',
+    'page_of'                   => 'صفحة :current من :total',
+    'items_count'               => ':count صنف',
+    'product_grid'              => 'شبكة المنتجات',
+    'show_menu'                 => 'عرض المنيو',
+    'hide_menu'                 => 'إخفاء المنيو',
+    'toggle_menu'               => 'إظهار/إخفاء المنيو',
 ];
