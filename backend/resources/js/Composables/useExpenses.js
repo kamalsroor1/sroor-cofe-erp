@@ -106,7 +106,7 @@ export function useExpenses() {
         editingExpense.value = null;
         Object.assign(form, {
             title: '',
-            category: t('expenses.preset_customs') || 'عام',
+            category: t('expenses.preset_customs'),
             cost_center: 'operational',
             amount: '',
             expense_date: new Date().toISOString().split('T')[0],

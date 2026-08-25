@@ -80,7 +80,7 @@ return [
     'hex_code_label'            => 'Color Code (HEX)',
     'quick_swatches'            => 'Quick Color Swatches:',
     'custom_color_badge'        => 'Custom Color Active',
-    'preview_active_branch_sample' => 'Active Branch: Sroor Roastery Main',
+    'preview_active_branch_sample' => 'Active Branch: Main Commercial Branch',
     'palette_amber_name'        => 'Amber / Royal Gold',
     'palette_amber_sub'         => 'Default official theme (Emerald & Amber)',
     'palette_emerald_name'      => 'Royal Emerald Green',
@@ -202,5 +202,6 @@ return [
     'test_print_success'        => 'Test receipt printed successfully',
     'drawer_signal_sent'        => 'Cash drawer kick signal sent',
     'desktop_badge'             => 'Desktop App',
-
+    'app_up_to_date'            => 'Latest Version',
+    'you_are_using_latest_version' => 'You are already using the latest version',
 ];

@@ -13,10 +13,10 @@ const props = defineProps({
 const emit = defineEmits(['close', 'confirm']);
 
 const presetWeights = computed(() => [
-    { label: trans('inventory.weight_eighth') || 'ثمن كيلو (125 جم)', qty: 0.125 },
-    { label: trans('inventory.weight_quarter') || 'ربع كيلو (250 جم)', qty: 0.250 },
-    { label: trans('inventory.weight_half') || 'نصف كيلو (500 جم)', qty: 0.500 },
-    { label: trans('inventory.weight_kilo') || 'كيلو كامل (1000 جم)', qty: 1.000 },
+    { label: trans('inventory.weight_eighth'), qty: 0.125 },
+    { label: trans('inventory.weight_quarter'), qty: 0.250 },
+    { label: trans('inventory.weight_half'), qty: 0.500 },
+    { label: trans('inventory.weight_kilo'), qty: 1.000 },
 ]);
 
 const { formatMoney } = useMoney();

@@ -56,6 +56,7 @@ return [
     'unit_price'                => 'سعر الوحدة',
     'subtotal'                  => 'المجموع الفرعي',
     'discount'                  => 'الخصم',
+    'discount_type'             => 'نوع الخصم',
     'shipping'                  => 'الشحن والتوصيل',
     'grand_total'               => 'الإجمالي النهائي',
     'notes'                     => 'ملاحظات الفاتورة',

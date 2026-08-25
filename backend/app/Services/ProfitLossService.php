@@ -14,10 +14,10 @@ class ProfitLossService
 {
     public static function clearCache(?int $storeId = null): void
     {
-        $prefix = 'sroor_pnl_' . ($storeId ?? 'all');
+        $prefix = 'erp_pnl_' . ($storeId ?? 'all');
         Cache::forget($prefix);
         if ($storeId) {
-            Cache::forget('sroor_pnl_all');
+            Cache::forget('erp_pnl_all');
         }
     }
 
@@ -26,7 +26,7 @@ class ProfitLossService
      */
     public function getProfitLossReport(string $fromDate, string $toDate, ?int $storeId = null): array
     {
-        $cacheKey = "sroor_pnl_" . ($storeId ?? 'all') . "_{$fromDate}_{$toDate}";
+        $cacheKey = "erp_pnl_" . ($storeId ?? 'all') . "_{$fromDate}_{$toDate}";
 
         return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($fromDate, $toDate, $storeId) {
             $stores = Store::active()->get();

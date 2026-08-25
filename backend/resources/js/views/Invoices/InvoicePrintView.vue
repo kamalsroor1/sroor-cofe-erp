@@ -168,7 +168,7 @@ const { t } = useTrans();
 const invoice = ref(null);
 const isLoading = ref(true);
 
-const companyName = computed(() => appConfigStore.companyName || 'سرور كوفي');
+const companyName = computed(() => appConfigStore.companyName || appConfigStore.platformName || '');
 const companySubtitle = computed(() => appConfigStore.companySubtitle || '');
 const activeStoreName = computed(() => appConfigStore.currentStore?.name || '');
 

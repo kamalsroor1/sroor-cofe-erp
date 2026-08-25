@@ -154,9 +154,12 @@
 import { ref, onMounted } from 'vue';
 import AppModal from './AppModal.vue';
 import BaseButton from './BaseButton.vue';
+import { useAppConfigStore } from '../../stores/appConfig';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
+
+const appConfigStore = useAppConfigStore();
 
 defineProps({
   show: { type: Boolean, default: false }
@@ -189,7 +192,7 @@ const setPaperWidth = (width) => {
 const handleTestPrint = async () => {
   const testSlipHtml = `
     <div style="text-align: center; font-family: sans-serif; font-size: 11px;">
-      <h2 style="font-size: 14px; margin-bottom: 4px;">☕ سرور كوفي ERP</h2>
+      <h2 style="font-size: 14px; margin-bottom: 4px;">${appConfigStore.companyName || appConfigStore.platformName}</h2>
       <p style="font-size: 10px; margin-bottom: 8px;">تجربة الطباعة الحرارية المباشرة</p>
       <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
       <table style="width: 100%; font-size: 10px; text-align: right;">

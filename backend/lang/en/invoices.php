@@ -56,6 +56,7 @@ return [
     'unit_price'                => 'Unit Price',
     'subtotal'                  => 'Subtotal',
     'discount'                  => 'Discount',
+    'discount_type'             => 'Discount Type',
     'shipping'                  => 'Shipping & Delivery',
     'grand_total'               => 'Grand Total',
     'notes'                     => 'Invoice Notes',

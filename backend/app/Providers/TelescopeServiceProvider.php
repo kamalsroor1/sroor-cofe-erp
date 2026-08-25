@@ -81,8 +81,6 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             return (method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || $user->hasRole('admin')))
                 || (isset($user->phone) && in_array($user->phone, ['01012316954', '01558088841']))
                 || (isset($user->email) && in_array($user->email, [
-                    '01012316954@sroor.com',
-                    '01558088841@sroor.com',
                     'superadmin@baraa-solutions.com',
                     'admin@baraa-solutions.com',
                 ]));

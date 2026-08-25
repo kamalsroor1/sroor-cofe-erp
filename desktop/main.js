@@ -21,7 +21,7 @@ function createMainWindow() {
         y: savedBounds.y,
         minWidth: 1024,
         minHeight: 680,
-        title: 'سرور كوفي ERP & POS',
+        title: 'ERP & POS System',
         frame: false, // 🚀 Frameless window for custom native titlebar
         titleBarStyle: 'hidden',
         show: true,
@@ -203,7 +203,7 @@ function createSystemTray() {
         const iconPath = path.join(__dirname, 'build', 'icon.png');
         const trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
         appTray = new Tray(trayIcon);
-        appTray.setToolTip('سرور كوفي ERP & POS');
+        appTray.setToolTip('ERP & POS System');
 
         const contextMenu = Menu.buildFromTemplate([
             {

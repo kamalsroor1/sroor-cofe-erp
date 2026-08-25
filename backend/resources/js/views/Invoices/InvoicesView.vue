@@ -89,26 +89,26 @@ const whatsAppData = ref(null);
 let debounceTimer = null;
 
 const paymentTypeOptions = computed(() => [
-  { value: 'all', label: trans('invoices.all_payment_types') || 'كافة أنواع السداد' },
-  { value: 'cash', label: trans('invoices.payment_cash_option') || 'نقدي (كاش)' },
-  { value: 'credit', label: trans('invoices.payment_credit_option') || 'آجل (مديونية)' },
-  { value: 'partial', label: trans('invoices.payment_partial_option') || 'سداد جزئي' }
+  { value: 'all', label: trans('invoices.all_payment_types') },
+  { value: 'cash', label: trans('invoices.payment_cash_option') },
+  { value: 'credit', label: trans('invoices.payment_credit_option') },
+  { value: 'partial', label: trans('invoices.payment_partial_option') }
 ]);
 const statusOptions = computed(() => [
-  { value: 'all', label: trans('invoices.status_all') || 'كافة الحالات' },
-  { value: 'confirmed', label: trans('invoices.status_confirmed_option') || 'معتمدة ومسجلة' },
-  { value: 'cancelled', label: trans('invoices.status_cancelled_option') || 'ملغاة ومعكوسة' }
+  { value: 'all', label: trans('invoices.status_all') },
+  { value: 'confirmed', label: trans('invoices.status_confirmed_option') },
+  { value: 'cancelled', label: trans('invoices.status_cancelled_option') }
 ]);
 const storeOptions = computed(() => [
-  { value: 'all', label: trans('invoices.all_stores') || 'كافة الفروع والمخازن' },
-  { value: '1', label: trans('invoices.main_branch') || 'الفرع الرئيسي' }
+  { value: 'all', label: trans('invoices.all_stores') },
+  { value: '1', label: trans('invoices.main_branch') }
 ]);
 const datePresets = [
-  { id: 'all', label: trans('invoices.date_preset_all') || 'الكل' },
-  { id: 'today', label: trans('invoices.date_preset_today') || 'اليوم' },
-  { id: 'yesterday', label: trans('invoices.date_preset_yesterday') || 'أمس' },
-  { id: 'week', label: trans('invoices.date_preset_week') || 'آخر 7 أيام' },
-  { id: 'month', label: trans('invoices.date_preset_month') || 'هذا الشهر' }
+  { id: 'all', label: trans('invoices.date_preset_all') },
+  { id: 'today', label: trans('invoices.date_preset_today') },
+  { id: 'yesterday', label: trans('invoices.date_preset_yesterday') },
+  { id: 'week', label: trans('invoices.date_preset_week') },
+  { id: 'month', label: trans('invoices.date_preset_month') }
 ];
 
 const activeFiltersCount = computed(() => {
@@ -196,20 +196,20 @@ const openPrintReceipt = (id) => {
 const cancelInvoice = async (inv) => {
   const result = await Swal.fire({
     title: trans('invoices.cancel_invoice_confirm_title', { number: inv.invoice_number }) || `هل أنت متأكد من إلغاء الفاتورة ${inv.invoice_number}؟`,
-    text: trans('invoices.cancel_invoice_confirm_text') || 'سيتم إرجاع كافة البضائع إلى رصيد المخزن وعكس أثرها المالي فوراً.',
+    text: trans('invoices.cancel_invoice_confirm_text'),
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: trans('invoices.cancel_confirmed_btn') || 'نعم، قم بالإلغاء',
-    cancelButtonText: trans('invoices.cancel_dismiss_btn') || 'تراجع',
+    confirmButtonText: trans('invoices.cancel_confirmed_btn'),
+    cancelButtonText: trans('invoices.cancel_dismiss_btn'),
     confirmButtonColor: '#f43f5e',
   });
   if (result.isConfirmed) {
     try {
-      await api.post(`/invoices/${inv.id}/cancel`, { reason: trans('invoices.cancel_reason_default') || 'إلغاء من لوحة المبيعات' });
-      Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('invoices.invoice_cancelled_success') || 'تم إلغاء الفاتورة بنجاح', timer: 1500, showConfirmButton: false });
+      await api.post(`/invoices/${inv.id}/cancel`, { reason: trans('invoices.cancel_reason_default') });
+      Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('invoices.invoice_cancelled_success'), timer: 1500, showConfirmButton: false });
       await fetchInvoices(pagination.value.current_page);
     } catch (e) {
-      Swal.fire({ icon: 'error', title: trans('common.error'), text: e.userMessage || trans('invoices.invoice_cancelled_failed') || 'فشل إلغاء الفاتورة' });
+      Swal.fire({ icon: 'error', title: trans('common.error'), text: e.userMessage || trans('invoices.invoice_cancelled_failed') });
     }
   }
 };
@@ -231,11 +231,11 @@ const bulkCancelSelected = async () => {
   const count = selectedInvoiceIds.value.length;
   const res = await Swal.fire({
     title: trans('invoices.bulk_cancel_confirm_title', { count }) || `إلغاء ${count} فواتير محددة؟`,
-    text: trans('invoices.bulk_cancel_confirm_text') || 'سيتم إلغاء كافة الفواتير المحددة وإرجاع بضائعها إلى رصيد المخزن وعكس القيود المالية.',
+    text: trans('invoices.bulk_cancel_confirm_text'),
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: trans('invoices.bulk_cancel_confirm_btn') || 'نعم، قم بالإلغاء المجمع',
-    cancelButtonText: trans('invoices.cancel_dismiss_btn') || 'تراجع',
+    confirmButtonText: trans('invoices.bulk_cancel_confirm_btn'),
+    cancelButtonText: trans('invoices.cancel_dismiss_btn'),
     confirmButtonColor: '#f43f5e',
   });
   if (res.isConfirmed) {

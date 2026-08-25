@@ -25,7 +25,8 @@ class CreateAppVersionAction
                     'ios' => 'ipa',
                     default => $dto->apkFile->getClientOriginalExtension() ?: 'bin',
                 };
-                $prefix = $dto->platform === 'windows' ? 'Sroor-ERP-POS-Setup-v' : 'sroor-coffee-erp-v';
+                $appNameSlug = Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
+                $prefix = $dto->platform === 'windows' ? $appNameSlug . '-Setup-v' : $appNameSlug . '-v';
                 $apkFilename = $prefix . Str::slug($dto->versionName) . '.' . $ext;
                 $apkPath = $dto->apkFile->storeAs('apks/' . $dto->platform, $apkFilename, 'public');
                 $apkSizeBytes = $dto->apkFile->getSize();

@@ -129,9 +129,11 @@ import POSSuccessModal     from '../../Components/POS/POSSuccessModal.vue';
 import POSSkeleton         from '../../Components/POS/POSSkeleton.vue';
 import POSCategorySidebar  from '../../Components/POS/POSCategorySidebar.vue';
 import POSProductGrid      from '../../Components/POS/POSProductGrid.vue';
+import { useAppConfigStore } from '../../stores/appConfig';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 
+const appConfigStore = useAppConfigStore();
 const { isDesktop, printThermalReceipt, openCashDrawer } = useDesktopHardware();
 const { playScanBeep, playSuccessChime, playDrawerSound, playErrorTone } = useAudioFeedback();
 
@@ -311,8 +313,8 @@ const searchDropdownResults = computed(() => {
 const quickPinnedItems = computed(() => items.value.slice(0, 10));
 
 const selectedCustomer = computed(() => {
-  if (!selectedCustomerId.value) return { id: null, name: trans('pos.general_cash_customer') || 'نقدي عام', phone: '' };
-  return customers.value.find(c => c.id === selectedCustomerId.value) || { id: null, name: trans('pos.general_cash_customer') || 'نقدي عام', phone: '' };
+  if (!selectedCustomerId.value) return { id: null, name: trans('pos.general_cash_customer'), phone: '' };
+  return customers.value.find(c => c.id === selectedCustomerId.value) || { id: null, name: trans('pos.general_cash_customer'), phone: '' };
 });
 
 const filteredCustomerList = computed(() => {
@@ -549,7 +551,7 @@ const printLastInvoice = async () => {
 
       const thermalHtml = `
         <div style="font-family: sans-serif; font-size: 11px; text-align: center;">
-          <h2 style="margin: 0 0 4px 0; font-size: 14px;">☕ سرور كوفي ERP</h2>
+          <h2 style="margin: 0 0 4px 0; font-size: 14px;">${appConfigStore.companyName || appConfigStore.platformName}</h2>
           <p style="margin: 0; font-size: 10px;">فاتورة مبيعات رقم: #${inv.invoice_number}</p>
           <p style="margin: 2px 0; font-size: 9px; color: #555;">${inv.invoice_date || new Date().toLocaleString('ar-EG')}</p>
           <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>

@@ -65,7 +65,7 @@
               @click="dismissUpdate"
               class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-bold text-xs transition cursor-pointer active:scale-95"
             >
-              {{ $t('common.remind_me_later') || 'تذكيري لاحقاً' }}
+              {{ $t('common.remind_me_later') }}
             </button>
             <button
               type="button"

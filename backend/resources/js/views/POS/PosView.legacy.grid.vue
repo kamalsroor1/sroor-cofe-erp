@@ -80,7 +80,7 @@
               : 'bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 hover:border-theme-primary/40 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
           >
             <span class="text-sm">📦</span>
-            <span>{{ $t('common.all_items') || 'كل الأصناف' }}</span>
+            <span>{{ $t('common.all_items') }}</span>
             <span
               class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
               :class="selectedCategory === 'all' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
@@ -333,7 +333,7 @@
             </div>
 
             <div v-if="customerExpensesTotal > 0" class="flex justify-between text-cyan-500 font-sans">
-              <span>{{ $t('pos.shipping_and_services') || 'مصاريف إضافية / شحن' }}:</span>
+              <span>{{ $t('pos.shipping_and_services') }}:</span>
               <span class="font-mono font-bold">+{{ formatMoney(customerExpensesTotal) }} {{ $t('common.currency') }}</span>
             </div>
 
@@ -351,7 +351,7 @@
             class="w-full h-13 bg-theme-gradient text-white shadow-theme-primary rounded-2xl font-black text-sm sm:text-base shadow-xl shadow-theme-primary transition active:scale-[0.99] disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
           >
             <Zap class="w-5 h-5 fill-white text-white" />
-            <span>{{ $t('pos.proceed_to_payment') || 'سداد وإنهاء الفاتورة' }}</span>
+            <span>{{ $t('pos.proceed_to_payment') }}</span>
             <span class="text-xs opacity-80 font-mono">(F9)</span>
           </button>
         </div>
@@ -363,7 +363,7 @@
     <!-- ══════════════════════════════════════════════════════════════ -->
     <AppModal
       :show="showPaymentModal"
-      :title="$t('pos.payment_screen_title') || '💳 تفاصيل وسداد الفاتورة'"
+      :title="$t('pos.payment_screen_title')"
       @close="showPaymentModal = false"
       max-width="2xl"
     >
@@ -379,7 +379,7 @@
           </div>
           <div class="flex items-center gap-2 font-mono">
             <span class="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
-              {{ cart.length }} {{ $t('inventory.items_unit') || 'أصناف' }}
+              {{ cart.length }} {{ $t('inventory.items_unit') }}
             </span>
             <span class="px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-black text-sm">
               {{ formatMoney(cartNetTotal) }} {{ $t('common.currency') }}
@@ -390,7 +390,7 @@
         <!-- 📌 1. قسم نوع الفاتورة والسداد (Photo 2 - Top) -->
         <div class="space-y-2">
           <label class="block text-xs font-black text-slate-700 dark:text-slate-300">
-            1. {{ $t('pos.payment_type_section') || 'نوع الفاتورة والسداد' }}
+            1. {{ $t('pos.payment_type_section') }}
           </label>
           <div class="grid grid-cols-3 gap-2">
             <!-- كاش فوري كامل -->
@@ -403,8 +403,8 @@
                 : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-500/50'"
             >
               <span class="text-lg">💵</span>
-              <span class="text-xs font-black">{{ $t('pos.full_cash') || 'كاش فوري كامل' }}</span>
-              <span class="text-[10px] opacity-80">{{ $t('pos.full_cash_desc') || 'سداد كامل المبلغ الآن' }}</span>
+              <span class="text-xs font-black">{{ $t('pos.full_cash') }}</span>
+              <span class="text-[10px] opacity-80">{{ $t('pos.full_cash_desc') }}</span>
             </button>
 
             <!-- آجل (ذمم) بالكامل -->
@@ -417,8 +417,8 @@
                 : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-500/50'"
             >
               <span class="text-lg">📝</span>
-              <span class="text-xs font-black">{{ $t('pos.full_credit') || 'آجل (ذمم بالكامل)' }}</span>
-              <span class="text-[10px] opacity-80">{{ $t('pos.full_credit_desc') || 'تسجيل على حساب العميل' }}</span>
+              <span class="text-xs font-black">{{ $t('pos.full_credit') }}</span>
+              <span class="text-[10px] opacity-80">{{ $t('pos.full_credit_desc') }}</span>
             </button>
 
             <!-- دفع جزئي -->
@@ -431,8 +431,8 @@
                 : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-cyan-500/50'"
             >
               <span class="text-lg">⚖️</span>
-              <span class="text-xs font-black">{{ $t('pos.partial_payment') || 'دفع جزئي' }}</span>
-              <span class="text-[10px] opacity-80">{{ $t('pos.partial_payment_desc') || 'مقدم + متبقي آجل' }}</span>
+              <span class="text-xs font-black">{{ $t('pos.partial_payment') }}</span>
+              <span class="text-[10px] opacity-80">{{ $t('pos.partial_payment_desc') }}</span>
             </button>
           </div>
 
@@ -441,7 +441,7 @@
             <div class="grid grid-cols-2 gap-3">
               <BaseNumberInput
                 v-model="paidAmount"
-                :label="$t('pos.paid_now_amount') || 'المبلغ المسدد الآن'"
+                :label="$t('pos.paid_now_amount')"
                 step="0.001"
                 :min="0"
                 :suffix="$t('common.currency')"
@@ -459,7 +459,7 @@
         <!-- 📌 2. قسم وسيلة التحصيل والدفع الفعلية -->
         <div v-if="paymentType !== 'credit'" class="space-y-2">
           <label class="block text-xs font-black text-slate-700 dark:text-slate-300">
-            2. {{ $t('pos.payment_method_section') || 'وسيلة التحصيل والدفع' }}
+            2. {{ $t('pos.payment_method_section') }}
           </label>
           <div class="grid grid-cols-3 gap-2">
             <!-- كاش نقدي -->
@@ -485,7 +485,7 @@
                 : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
             >
               <span>⚡</span>
-              <span class="text-xs font-bold">{{ $t('contacts.instapay') || 'إنستاباي' }}</span>
+              <span class="text-xs font-bold">{{ $t('contacts.instapay') }}</span>
             </button>
 
             <!-- محفظة ذكية / فودافون كاش -->
@@ -498,7 +498,7 @@
                 : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'"
             >
               <span>📱</span>
-              <span class="text-xs font-bold">{{ $t('pos.smart_wallet') || 'محفظة ذكية' }}</span>
+              <span class="text-xs font-bold">{{ $t('pos.smart_wallet') }}</span>
             </button>
           </div>
         </div>
@@ -507,10 +507,10 @@
         <div v-if="paymentType === 'cash' && paymentMethod === 'cash'" class="space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-black text-slate-700 dark:text-slate-300">
-              3. {{ $t('pos.quick_cash_section') || 'سداد نقدي سريع وحساب الباقي' }}
+              3. {{ $t('pos.quick_cash_section') }}
             </label>
             <span v-if="changeDue > 0" class="text-xs font-black text-emerald-500 font-mono">
-              {{ $t('pos.change_due') || 'الباقي للعميل' }}: {{ formatMoney(changeDue) }} {{ $t('common.currency') }}
+              {{ $t('pos.change_due') }}: {{ formatMoney(changeDue) }} {{ $t('common.currency') }}
             </span>
           </div>
 
@@ -521,7 +521,7 @@
               @click="setQuickCash(cartNetTotal)"
               class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-black transition active:scale-95 cursor-pointer"
             >
-              🎯 {{ $t('pos.exact_amount') || 'المبلغ بالظبط' }} ({{ formatMoney(cartNetTotal) }})
+              🎯 {{ $t('pos.exact_amount') }} ({{ formatMoney(cartNetTotal) }})
             </button>
             <button
               v-for="amt in [50, 100, 200, 500, 1000]"
@@ -538,13 +538,13 @@
           <div class="grid grid-cols-2 gap-3 pt-1">
             <BaseNumberInput
               v-model="cashReceived"
-              :label="$t('pos.received_from_customer') || 'المبلغ المستلم من العميل'"
+              :label="$t('pos.received_from_customer')"
               step="0.001"
               :min="0"
               :suffix="$t('common.currency')"
             />
             <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-center">
-              <span class="text-[10px] text-slate-500 font-bold">{{ $t('pos.change_due_label') || 'المتبقي إرجاعه للعميل' }}</span>
+              <span class="text-[10px] text-slate-500 font-bold">{{ $t('pos.change_due_label') }}</span>
               <span
                 class="text-base font-black font-mono"
                 :class="changeDue > 0 ? 'text-emerald-500' : (changeDue < 0 ? 'text-rose-500' : 'text-slate-400')"
@@ -558,7 +558,7 @@
         <!-- 📌 4. خصم سريع (Quick Discount Presets) -->
         <div class="space-y-2">
           <label class="block text-xs font-black text-slate-700 dark:text-slate-300">
-            4. {{ $t('pos.quick_discount_section') || 'خصم سريع على الفاتورة' }}
+            4. {{ $t('pos.quick_discount_section') }}
           </label>
           <div class="flex flex-wrap gap-1.5">
             <button
@@ -567,7 +567,7 @@
               class="px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer border"
               :class="parseFloat(discountValue) === 0 ? 'bg-theme-primary text-slate-950 font-black border-theme-primary shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'"
             >
-              {{ $t('pos.no_discount') || 'بدون خصم' }}
+              {{ $t('pos.no_discount') }}
             </button>
             <button
               v-for="rate in [5, 10, 15, 20]"
@@ -590,7 +590,7 @@
               :min="0"
             />
             <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('invoices.discount_type') || 'نوع الخصم' }}</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('invoices.discount_type') }}</label>
               <select
                 v-model="discountType"
                 class="w-full h-11 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary font-tajawal focus:outline-none"
@@ -606,10 +606,10 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-black text-slate-700 dark:text-slate-300">
-              5. {{ $t('pos.additional_expenses_section') || 'مصاريف الشحن والخدمات الإضافية' }}
+              5. {{ $t('pos.additional_expenses_section') }}
             </label>
             <span class="text-[10px] text-slate-500 font-bold">
-              {{ additionalExpenses.length }} {{ $t('pos.expenses_added') || 'بنود مضافة' }}
+              {{ additionalExpenses.length }} {{ $t('pos.expenses_added') }}
             </span>
           </div>
 
@@ -641,7 +641,7 @@
               @click="addCustomExpense"
               class="px-3 py-1.5 rounded-xl bg-theme-light text-theme-primary font-black text-xs border border-theme-primary/40 transition active:scale-95 cursor-pointer"
             >
-              + {{ $t('pos.add_custom_expense') || 'بند مخصص' }}
+              + {{ $t('pos.add_custom_expense') }}
             </button>
           </div>
 
@@ -657,7 +657,7 @@
                   v-model="exp.title"
                   type="text"
                   class="flex-1 h-9 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
-                  :placeholder="$t('pos.expense_title_placeholder') || 'اسم البند (مثال: شحن سريع)'"
+                  :placeholder="$t('pos.expense_title_placeholder')"
                 >
                 <div class="w-28">
                   <input
@@ -681,16 +681,16 @@
               <!-- Cost Allocation Dropdown (Photo 3) -->
               <div class="flex items-center gap-2 text-xs">
                 <span class="text-slate-500 dark:text-slate-400 text-[11px] font-bold shrink-0">
-                  {{ $t('pos.who_bears_cost') || 'من يتحمل التكلفة؟' }}:
+                  {{ $t('pos.who_bears_cost') }}:
                 </span>
                 <select
                   v-model="exp.paid_by"
                   class="flex-1 h-8 px-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-900 dark:text-white focus:outline-none font-tajawal"
                 >
-                  <option value="customer_account">👤 {{ $t('pos.add_to_customer_invoice') || 'مضاف على حساب العميل بالفاتورة (الزبون يدفعه)' }}</option>
-                  <option value="treasury_cash">🏛️ {{ $t('pos.voucher_treasury_cash') || 'سند صرف: مسدد كاش من الخزينة الآن (مصروف على المحل)' }}</option>
-                  <option value="treasury_instapay">⚡ {{ $t('pos.voucher_treasury_instapay') || 'سند صرف: مسدد عبر إنستاباي من الحساب (مصروف على المحل)' }}</option>
-                  <option value="treasury_smart_wallet">📱 {{ $t('pos.voucher_treasury_wallet') || 'سند صرف: مسدد من المحفظة الذكية (مصروف على المحل)' }}</option>
+                  <option value="customer_account">👤 {{ $t('pos.add_to_customer_invoice') }}</option>
+                  <option value="treasury_cash">🏛️ {{ $t('pos.voucher_treasury_cash') }}</option>
+                  <option value="treasury_instapay">⚡ {{ $t('pos.voucher_treasury_instapay') }}</option>
+                  <option value="treasury_smart_wallet">📱 {{ $t('pos.voucher_treasury_wallet') }}</option>
                 </select>
               </div>
             </div>
@@ -726,7 +726,7 @@
             class="h-12 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
           >
             <Printer class="w-4 h-4 text-theme-primary" />
-            <span>{{ $t('pos.save_and_print') || 'حفظ وطباعة الفاتورة' }}</span>
+            <span>{{ $t('pos.save_and_print') }}</span>
           </button>
 
           <!-- Save & Confirm Button (Enter) -->
@@ -738,7 +738,7 @@
           >
             <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             <Zap v-else class="w-4 h-4 fill-white text-white" />
-            <span>{{ $t('pos.save_and_confirm') || 'حفظ واعتماد' }}</span>
+            <span>{{ $t('pos.save_and_confirm') }}</span>
             <span class="text-[10px] opacity-80 font-mono">(Enter)</span>
           </button>
         </div>
@@ -1025,7 +1025,7 @@ const isAddingNewCustomer = ref(false);
 const isSubmittingQuickCustomer = ref(false);
 
 const selectedCustomer = computed(() => {
-    return customers.value.find(c => c.id === selectedCustomerId.value) || { id: null, name: trans('pos.walk_in_customer') || 'عميل نقدي' };
+    return customers.value.find(c => c.id === selectedCustomerId.value) || { id: null, name: trans('pos.walk_in_customer') };
 });
 
 const filteredCustomerList = computed(() => {

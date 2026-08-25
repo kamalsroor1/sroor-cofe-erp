@@ -194,7 +194,7 @@ return [
     'platform_settings_title' => 'Platform Whitelabel & Branding',
     'platform_settings_subtitle' => 'Change platform & project name, subtitle, and support contacts reflected system-wide across all views and apps',
     'platform_name_label' => 'Platform / Project Name *',
-    'platform_name_placeholder' => 'e.g. Sroor ERP or Cloud Store ERP',
+    'platform_name_placeholder' => 'e.g. Cloud ERP or Retail & Wholesale ERP',
     'platform_subtitle_label' => 'Description / Slogan (Subtitle)',
     'platform_subtitle_placeholder' => 'e.g. Integrated Cloud ERP for Sales, Inventory & Multi-Branch Management',
     'support_email_label' => 'Technical Support Email',

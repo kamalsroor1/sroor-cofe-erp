@@ -80,7 +80,7 @@ return [
     'hex_code_label'            => 'كود اللون (HEX)',
     'quick_swatches'            => 'درجات ألوان مميزة وسريعة:',
     'custom_color_badge'        => 'لون مخصص نشط',
-    'preview_active_branch_sample' => 'الفرع النشط: محمص سرور الرئيسي',
+    'preview_active_branch_sample' => 'الفرع النشط: الفرع التجاري الرئيسي',
     'palette_amber_name'        => 'الكهرمان / الذهبي الأصيل',
     'palette_amber_sub'         => 'الهوية الرسمية الافتراضية (Emerald & Amber)',
     'palette_emerald_name'      => 'الأخضر الزمردي الملكي',
@@ -202,5 +202,6 @@ return [
     'test_print_success'        => 'تمت طباعة الإيصال التجريبي بنجاح',
     'drawer_signal_sent'        => 'تم إرسال نبضة فتح درج النقدية',
     'desktop_badge'             => 'تطبيق ديسكتوب',
-
+    'app_up_to_date'            => 'أحدث إصدار',
+    'you_are_using_latest_version' => 'أنت تستخدم أحدث إصدار بالفعل',
 ];

@@ -199,4 +199,6 @@ return [
     'show_menu'                 => 'عرض المنيو',
     'hide_menu'                 => 'إخفاء المنيو',
     'toggle_menu'               => 'إظهار/إخفاء المنيو',
+    'walk_in_customer'          => 'عميل نقدي',
+    'start_new_invoice'         => 'بدء فاتورة جديدة',
 ];

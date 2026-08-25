@@ -32,7 +32,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'code' => 'BR-ZAG-02',
-                'name' => 'مطحنة وفرع تجزئة سرور - الزقازيق',
+                'name' => 'فرع التجزئة والمبيعات المباشرة - الزقازيق',
                 'type' => 'retail_shop',
                 'phone' => '01099887766',
                 'address' => 'شارع المحطة - بجوار ميدان المنتزه، الزقازيق',
@@ -156,7 +156,7 @@ class RichDemoDataSeeder extends Seeder
                 'weighted_avg_cost' => '390.000',
                 'selling_price' => '470.000',
                 'min_stock_level' => '60.000',
-                'notes' => 'تحميص هوائي طازج من مطاحن سرور',
+                'notes' => 'تحميص هوائي طازج وفاخر',
             ],
             [
                 'code' => 'RST-COL-02',
@@ -171,7 +171,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'code' => 'BLD-SR-01',
-                'name' => 'توليفة سرور الخاصة - اسبريسو جولد',
+                'name' => 'توليفة الملوك الخاصة - اسبريسو جولد',
                 'category' => 'توليفات وخلطات',
                 'unit' => 'كجم',
                 'cost_price' => '440.000',
@@ -215,7 +215,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'code' => 'PKG-BAG-1K',
-                'name' => 'أكياس صمام تفريغ هواء 1 كجم - مطبوعة سرور',
+                'name' => 'أكياس صمام تفريغ هواء 1 كجم - فاخرة',
                 'category' => 'مستلزمات وتعبئة',
                 'unit' => 'دستة',
                 'cost_price' => '85.000',
@@ -289,7 +289,7 @@ class RichDemoDataSeeder extends Seeder
                 'tax_number' => 'TR-11450',
                 'current_balance' => '8500.000',
                 'is_active' => true,
-                'notes' => 'توريد عبوات بن سرور المعبأة 250جم',
+                'notes' => 'توريد عبوات بن معبأة 250جم',
             ],
             [
                 'name' => 'مطعم وكافيه لافازا - الإسماعيلية',

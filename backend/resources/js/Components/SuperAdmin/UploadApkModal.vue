@@ -147,7 +147,7 @@ const fileLabel = computed(() => {
 });
 
 const fileSizeHint = computed(() => {
-  if (props.form?.platform === 'windows') return 'اختر ملف Sroor-ERP-POS-Setup.exe أو ملف التثبيت المحدث (حد أقصى 150 ميجابايت)';
+  if (props.form?.platform === 'windows') return 'اختر ملف تثبيت سطح المكتب EXE المحدث (حد أقصى 150 ميجابايت)';
   return 'اختر ملف .apk المحدث الخاص بنظام أندرويد (حد أقصى 150 ميجابايت)';
 });
 </script>

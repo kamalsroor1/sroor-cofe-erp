@@ -36,9 +36,9 @@ export function useAppUpdater() {
             } else if (manual) {
                 Swal.fire({
                     icon: 'success',
-                    title: trans('settings.app_up_to_date') || 'أحدث إصدار',
-                    text: `${trans('settings.you_are_using_latest_version') || 'أنت تستخدم أحدث إصدار بالفعل'} (v${CURRENT_VERSION_NAME})`,
-                    confirmButtonText: trans('common.ok') || 'حسناً',
+                    title: trans('settings.app_up_to_date'),
+                    text: `${trans('settings.you_are_using_latest_version')} (v${CURRENT_VERSION_NAME})`,
+                    confirmButtonText: trans('common.ok'),
                     confirmButtonColor: '#10b981',
                     background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff',
                     color: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',

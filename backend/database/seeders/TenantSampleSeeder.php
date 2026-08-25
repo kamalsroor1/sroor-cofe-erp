@@ -22,9 +22,9 @@ class TenantSampleSeeder extends Seeder
         $provisioner = app(TenantProvisionerService::class);
 
         $dto = new CreateTenantDTO(
-            name: 'محمص ومطاحن سرور كوفي',
-            slug: 'sroor',
-            email: 'kamalsroor1@gmail.com',
+            name: 'مؤسسة تجارة وتوزيع البضائع',
+            slug: 'demo',
+            email: 'admin@demo.com',
             phone: '01012316954',
             password: 'password',
             planId: $plan->id,

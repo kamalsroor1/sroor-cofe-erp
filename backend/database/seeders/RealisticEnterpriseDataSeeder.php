@@ -32,8 +32,8 @@ class RealisticEnterpriseDataSeeder extends Seeder
     {
         DB::transaction(function () {
             $user = User::first() ?? User::create([
-                'name' => 'كمال سرور',
-                'email' => 'admin@sroor.com',
+                'name' => 'المدير العام',
+                'email' => 'admin@demo.com',
                 'password' => bcrypt('password'),
             ]);
 
@@ -52,7 +52,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 ],
                 [
                     'code' => 'BR-ZAG-01',
-                    'name' => 'مطحنة وفرع تجزئة سرور - الزقازيق',
+                    'name' => 'فرع التجزئة والمبيعات المباشرة - الزقازيق',
                     'type' => 'retail_shop',
                     'phone' => '01099887766',
                     'address' => 'شارع المحطة - بجوار ميدان المنتزه، الزقازيق',
@@ -119,7 +119,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
             $categoriesData = [
                 ['name' => 'حبوب بن خام (أخضر)', 'icon' => '🌱', 'sort_order' => 1, 'is_active' => true],
                 ['name' => 'بن محمص حبوب وسادة', 'icon' => '☕', 'sort_order' => 2, 'is_active' => true],
-                ['name' => 'توليفات وخلطات سرور الخاصة', 'icon' => '✨', 'sort_order' => 3, 'is_active' => true],
+                ['name' => 'توليفات وخلطات القهوة الخاصة', 'icon' => '✨', 'sort_order' => 3, 'is_active' => true],
                 ['name' => 'قهوة اسبريسو ومختصة Single Origin', 'icon' => '⚡', 'sort_order' => 4, 'is_active' => true],
                 ['name' => 'قهوة تركي محوجة ومستكة', 'icon' => '👑', 'sort_order' => 5, 'is_active' => true],
                 ['name' => 'قهوة فرنسية ونكهات بندق وفانيليا', 'icon' => '🌰', 'sort_order' => 6, 'is_active' => true],
@@ -157,10 +157,10 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 ['code' => 'RST-IND-DRK', 'name' => 'بن هندي روبوستا محمص غامق كريما مكثفة', 'category_id' => $categories[1]->id, 'unit' => 'كجم', 'cost_price' => '310.000', 'selling_price' => '380.000', 'min_stock_level' => '120.000'],
                 ['code' => 'RST-ETH-LGT', 'name' => 'بن إثيوبي محمص فاتح لايت روست للفلتر', 'category_id' => $categories[1]->id, 'unit' => 'كجم', 'cost_price' => '580.000', 'selling_price' => '710.000', 'min_stock_level' => '40.000'],
 
-                // توليفات وخلطات سرور الخاصة
-                ['code' => 'BLD-SR-GLD', 'name' => 'توليفة سرور الخاصة - اسبريسو جولد 80/20', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '440.000', 'selling_price' => '560.000', 'min_stock_level' => '150.000'],
-                ['code' => 'BLD-SR-PLT', 'name' => 'توليفة سرور بلاتينيوم 100% أرابيكا سبيشالتي', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '520.000', 'selling_price' => '680.000', 'min_stock_level' => '80.000'],
-                ['code' => 'BLD-SR-CRB', 'name' => 'خلطة سرور الإيطالي كريما مكثفة كافيهات', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '360.000', 'selling_price' => '460.000', 'min_stock_level' => '250.000'],
+                // توليفات وخلطات القهوة الخاصة
+                ['code' => 'BLD-SR-GLD', 'name' => 'توليفة الملوك الخاصة - اسبريسو جولد 80/20', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '440.000', 'selling_price' => '560.000', 'min_stock_level' => '150.000'],
+                ['code' => 'BLD-SR-PLT', 'name' => 'توليفة بلاتينيوم 100% أرابيكا سبيشالتي', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '520.000', 'selling_price' => '680.000', 'min_stock_level' => '80.000'],
+                ['code' => 'BLD-SR-CRB', 'name' => 'خلطة الإيطالي كريما مكثفة كافيهات', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '360.000', 'selling_price' => '460.000', 'min_stock_level' => '250.000'],
                 ['code' => 'BLD-SR-MOR', 'name' => 'توليفة الصباح والروقان (توليفة معتدلة)', 'category_id' => $categories[2]->id, 'unit' => 'كجم', 'cost_price' => '410.000', 'selling_price' => '510.000', 'min_stock_level' => '100.000'],
 
                 // تركي ومحوج
@@ -184,9 +184,9 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 ['code' => 'SP-NUT-GRN', 'name' => 'جوزة الطيب سيلاني فاخرة حبات كاملة', 'category_id' => $categories[6]->id, 'unit' => 'كجم', 'cost_price' => '650.000', 'selling_price' => '850.000', 'min_stock_level' => '15.000'],
 
                 // تعبئة وتغليف
-                ['code' => 'PKG-BAG-250', 'name' => 'أكياس كرافت بصمام تفريغ 250جم مطبوعة سرور', 'category_id' => $categories[7]->id, 'unit' => 'دستة', 'cost_price' => '45.000', 'selling_price' => '65.000', 'min_stock_level' => '200.000'],
-                ['code' => 'PKG-BAG-500', 'name' => 'أكياس كرافت بصمام تفريغ 500جم مطبوعة سرور', 'category_id' => $categories[7]->id, 'unit' => 'دستة', 'cost_price' => '65.000', 'selling_price' => '90.000', 'min_stock_level' => '150.000'],
-                ['code' => 'PKG-BAG-1KG', 'name' => 'أكياس كرافت بصمام تفريغ 1كجم مطبوعة سرور', 'category_id' => $categories[7]->id, 'unit' => 'دستة', 'cost_price' => '85.000', 'selling_price' => '115.000', 'min_stock_level' => '150.000'],
+                ['code' => 'PKG-BAG-250', 'name' => 'أكياس كرافت بصمام تفريغ 250جم فاخرة', 'category_id' => $categories[7]->id, 'unit' => 'دستة', 'cost_price' => '45.000', 'selling_price' => '65.000', 'min_stock_level' => '200.000'],
+                ['code' => 'PKG-BAG-500', 'name' => 'أكياس كرافت بصمام تفريغ 500جم فاخرة', 'category_id' => $categories[7]->id, 'unit' => 'دستة', 'cost_price' => '65.000', 'selling_price' => '90.000', 'min_stock_level' => '150.000'],
+                ['code' => 'PKG-BAG-1KG', 'name' => 'أكياس كرافت بصمام تفريغ 1كجم فاخرة', 'category_id' => $categories[7]->id, 'unit' => 'دستة', 'cost_price' => '85.000', 'selling_price' => '115.000', 'min_stock_level' => '150.000'],
                 ['code' => 'PKG-CUP-4OZ', 'name' => 'أكواب اسبريسو ورقية دبل وول 4 أونص (كرتونة 1000كوب)', 'category_id' => $categories[7]->id, 'unit' => 'كرتونة', 'cost_price' => '420.000', 'selling_price' => '540.000', 'min_stock_level' => '50.000'],
                 ['code' => 'PKG-CUP-8OZ', 'name' => 'أكواب ورقية دبل وول 8 أونص مطبوعة (كرتونة 1000كوب)', 'category_id' => $categories[7]->id, 'unit' => 'كرتونة', 'cost_price' => '580.000', 'selling_price' => '720.000', 'min_stock_level' => '40.000'],
                 ['code' => 'PKG-CUP-12OZ', 'name' => 'أكواب ورقية دبل وول 12 أونص مطبوعة (كرتونة 1000كوب)', 'category_id' => $categories[7]->id, 'unit' => 'كرتونة', 'cost_price' => '690.000', 'selling_price' => '850.000', 'min_stock_level' => '30.000'],
@@ -329,7 +329,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                         'paid_amount' => $paidAmount,
                         'remaining_amount' => $remainingAmount,
                         'supplier_invoice_ref' => 'SUP-INV-' . rand(10000, 99999),
-                        'notes' => 'توريد شحنة بضائع وخامات بن لمخزن سرور كوفي',
+                        'notes' => 'توريد شحنة بضائع وخامات للمخزن الرئيسي',
                         'created_at' => $purchaseDate,
                         'updated_at' => $purchaseDate,
                     ]
@@ -664,9 +664,9 @@ class RealisticEnterpriseDataSeeder extends Seeder
                         4 => 'shifts',
                         default => 'expenses',
                     },
-                    'description' => 'تمت العملية بنجاح عبر لوحة تحكم سرور كوفي ERP',
+                    'description' => 'تمت العملية بنجاح عبر لوحة تحكم ERP',
                     'ip_address' => '197.35.' . rand(10, 250) . '.' . rand(1, 250),
-                    'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SroorERP/1.0.2',
+                    'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CloudERP/1.0.2',
                     'created_at' => $actDate,
                 ]);
             }

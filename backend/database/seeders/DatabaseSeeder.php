@@ -17,24 +17,24 @@ class DatabaseSeeder extends Seeder
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
 
-        // 2. Super Admin 1: كمال سرور (01012316954 / password)
+        // 2. Super Admin 1: المدير العام (01012316954 / password)
         $admin1 = User::firstOrCreate(
             ['phone' => '01012316954'],
             [
-                'name'      => 'كمال سرور - المدير العام',
-                'email'     => '01012316954@sroor.com',
+                'name'      => 'المدير العام للمنظومة',
+                'email'     => 'admin@baraa-solutions.com',
                 'password'  => bcrypt('password'),
                 'is_active' => true,
             ]
         );
         $admin1->syncRoles([$superAdminRole, $adminRole]);
 
-        // 3. Super Admin 2: المدير العام 2 (01558088841 / 123456789)
+        // 3. Super Admin 2: المدير التنفيذي (01558088841 / 123456789)
         $admin2 = User::firstOrCreate(
             ['phone' => '01558088841'],
             [
                 'name'      => 'المدير العام 2',
-                'email'     => '01558088841@sroor.com',
+                'email'     => 'superadmin@baraa-solutions.com',
                 'password'  => bcrypt('123456789'),
                 'is_active' => true,
             ]

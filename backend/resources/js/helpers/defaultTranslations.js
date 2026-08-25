@@ -91,6 +91,7 @@ export const defaultArabicTranslations = {
         "app_name": "منظومة ERP لإدارة الفواتير والمخزون",
         "subtitle": "سجل الدخول برقم الهاتف وكلمة المرور للمتابعة",
         "phone": "رقم الهاتف \/ الموبايل",
+        "phone_or_email": "البريد الإلكتروني أو رقم الهاتف",
         "phone_placeholder": "01012316954",
         "password_label": "كلمة المرور",
         "password_placeholder": "••••••••",
@@ -195,7 +196,7 @@ export const defaultArabicTranslations = {
         "search_in_list": "... بحث في القائمة",
         "unexpected_error": "حدث خطأ غير متوقع في الاتصال بالخادم",
         "permission_alert": "تنبيه الصلاحيات",
-        "app_title": "منظومة إدارة المؤسسات والمخزون ERP",
+        "app_title": "منظومة ERP المتكاملة",
         "app_subtitle": "منظومة إدارة المبيعات، المخزون، ونقاط البيع السريعة",
         "system_booting": "جاري تحميل وتهيئة المنظومة...",
         "pos_badge": "ERP & POS",
@@ -224,7 +225,10 @@ export const defaultArabicTranslations = {
         "close_all_tabs": "إغلاق كافة التبويبات",
         "refresh_tab": "تحديث محتوى التبويب",
         "new_tab": "تبويب جديد",
-        "dashboard_tab": "لوحة التحكم"
+        "dashboard_tab": "لوحة التحكم",
+        "remind_me_later": "تذكيري لاحقاً",
+        "yes_delete": "نعم، احذف",
+        "all_items": "كل الأصناف"
     },
     "contacts": {
         "customers_title": "دليل العملاء والزبائن",
@@ -991,6 +995,7 @@ export const defaultArabicTranslations = {
         "unit_price": "سعر الوحدة",
         "subtotal": "المجموع الفرعي",
         "discount": "الخصم",
+        "discount_type": "نوع الخصم",
         "shipping": "الشحن والتوصيل",
         "grand_total": "الإجمالي النهائي",
         "notes": "ملاحظات الفاتورة",
@@ -1415,7 +1420,9 @@ export const defaultArabicTranslations = {
         "product_grid": "شبكة المنتجات",
         "show_menu": "عرض المنيو",
         "hide_menu": "إخفاء المنيو",
-        "toggle_menu": "إظهار\/إخفاء المنيو"
+        "toggle_menu": "إظهار\/إخفاء المنيو",
+        "walk_in_customer": "عميل نقدي",
+        "start_new_invoice": "بدء فاتورة جديدة"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -1497,6 +1504,7 @@ export const defaultArabicTranslations = {
         "net_invoice_total": "صافي إجمالي الفاتورة",
         "supplied_item": "الصنف المستلم",
         "total_cost": "إجمالي الفاتورة",
+        "create_po_btn": "تسجيل فاتورة توريد جديدة",
         "create_po_title": "تسجيل فاتورة توريد وشراء جديدة",
         "create_po_subtitle": "استلام بضاعة ومواد خام من الموردين وتوزيع مصاريف التكلفة المحملة وتحديث المخازن",
         "item_already_added": "هذا الصنف مضاف بالفعل بالفاتورة",
@@ -1922,7 +1930,7 @@ export const defaultArabicTranslations = {
         "hex_code_label": "كود اللون (HEX)",
         "quick_swatches": "درجات ألوان مميزة وسريعة:",
         "custom_color_badge": "لون مخصص نشط",
-        "preview_active_branch_sample": "الفرع النشط: محمص سرور الرئيسي",
+        "preview_active_branch_sample": "الفرع النشط: الفرع التجاري الرئيسي",
         "palette_amber_name": "الكهرمان \/ الذهبي الأصيل",
         "palette_amber_sub": "الهوية الرسمية الافتراضية (Emerald & Amber)",
         "palette_emerald_name": "الأخضر الزمردي الملكي",
@@ -2039,7 +2047,9 @@ export const defaultArabicTranslations = {
         "refresh_printers_list": "تحديث قائمة الطابعات",
         "test_print_success": "تمت طباعة الإيصال التجريبي بنجاح",
         "drawer_signal_sent": "تم إرسال نبضة فتح درج النقدية",
-        "desktop_badge": "تطبيق ديسكتوب"
+        "desktop_badge": "تطبيق ديسكتوب",
+        "app_up_to_date": "أحدث إصدار",
+        "you_are_using_latest_version": "أنت تستخدم أحدث إصدار بالفعل"
     },
     "super": {
         "platform_title": "منصة مخزني SaaS Super Admin",
@@ -2232,7 +2242,7 @@ export const defaultArabicTranslations = {
         "platform_settings_title": "الهوية واسم المنصة العام (Platform Whitelabel & Branding)",
         "platform_settings_subtitle": "تغيير اسم المنصة والمشروع، الوصف، وبيانات الدعم الفني المنعكسة مركزياً في كافة واجهات وتطبيقات النظام",
         "platform_name_label": "اسم المنصة \/ المشروع *",
-        "platform_name_placeholder": "مثال: سرور ERP أو منظومة المتجر السحابية",
+        "platform_name_placeholder": "مثال: منصة السحاب ERP أو منظومة المتجر السحابية",
         "platform_subtitle_label": "الوصف \/ السلوجان (Subtitle)",
         "platform_subtitle_placeholder": "مثال: منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع",
         "support_email_label": "بريد الدعم الفني",
@@ -2899,6 +2909,7 @@ export const defaultEnglishTranslations = {
         "app_name": "Cloud ERP & Inventory Management",
         "subtitle": "Sign in with your phone number and password to continue",
         "phone": "Phone \/ Mobile Number",
+        "phone_or_email": "Email or Phone Number",
         "phone_placeholder": "01012316954",
         "password_label": "Password",
         "password_placeholder": "••••••••",
@@ -3003,7 +3014,7 @@ export const defaultEnglishTranslations = {
         "search_in_list": "Search in list...",
         "unexpected_error": "An unexpected server communication error occurred",
         "permission_alert": "Permission Alert",
-        "app_title": "Enterprise ERP & Inventory System",
+        "app_title": "Integrated ERP Platform",
         "app_subtitle": "Sales, Inventory, and POS Management Platform",
         "system_booting": "Loading and initializing system...",
         "pos_badge": "ERP & POS",
@@ -3032,7 +3043,10 @@ export const defaultEnglishTranslations = {
         "close_all_tabs": "Close All Tabs",
         "refresh_tab": "Refresh Tab",
         "new_tab": "New Tab",
-        "dashboard_tab": "Dashboard"
+        "dashboard_tab": "Dashboard",
+        "remind_me_later": "Remind Me Later",
+        "yes_delete": "Yes, Delete",
+        "all_items": "All Items"
     },
     "contacts": {
         "customers_title": "Customers Directory",
@@ -3799,6 +3813,7 @@ export const defaultEnglishTranslations = {
         "unit_price": "Unit Price",
         "subtotal": "Subtotal",
         "discount": "Discount",
+        "discount_type": "Discount Type",
         "shipping": "Shipping & Delivery",
         "grand_total": "Grand Total",
         "notes": "Invoice Notes",
@@ -4128,7 +4143,7 @@ export const defaultEnglishTranslations = {
         "invoice_success_title": "Invoice Confirmed Successfully 🎉",
         "send_whatsapp": "Send via WhatsApp 📱",
         "print_receipt": "Print Receipt 🖨️",
-        "start_new_invoice": "Start New Invoice ➕ (Enter)",
+        "start_new_invoice": "Start New Invoice",
         "checkout_failed": "Checkout Failed",
         "checkout_failed_desc": "Could not save and confirm sales invoice",
         "add_customer_failed": "Failed to add customer",
@@ -4224,7 +4239,8 @@ export const defaultEnglishTranslations = {
         "product_grid": "Product Grid",
         "show_menu": "Show Menu",
         "hide_menu": "Hide Menu",
-        "toggle_menu": "Toggle Menu"
+        "toggle_menu": "Toggle Menu",
+        "walk_in_customer": "Walk-in Customer"
     },
     "profile": {
         "title": "User Profile & Account Settings",
@@ -4732,7 +4748,7 @@ export const defaultEnglishTranslations = {
         "hex_code_label": "Color Code (HEX)",
         "quick_swatches": "Quick Color Swatches:",
         "custom_color_badge": "Custom Color Active",
-        "preview_active_branch_sample": "Active Branch: Sroor Roastery Main",
+        "preview_active_branch_sample": "Active Branch: Main Commercial Branch",
         "palette_amber_name": "Amber \/ Royal Gold",
         "palette_amber_sub": "Default official theme (Emerald & Amber)",
         "palette_emerald_name": "Royal Emerald Green",
@@ -4849,7 +4865,9 @@ export const defaultEnglishTranslations = {
         "refresh_printers_list": "Refresh Printers List",
         "test_print_success": "Test receipt printed successfully",
         "drawer_signal_sent": "Cash drawer kick signal sent",
-        "desktop_badge": "Desktop App"
+        "desktop_badge": "Desktop App",
+        "app_up_to_date": "Latest Version",
+        "you_are_using_latest_version": "You are already using the latest version"
     },
     "super": {
         "platform_title": "Makhzani SaaS Super Admin",
@@ -5043,7 +5061,7 @@ export const defaultEnglishTranslations = {
         "platform_settings_title": "Platform Whitelabel & Branding",
         "platform_settings_subtitle": "Change platform & project name, subtitle, and support contacts reflected system-wide across all views and apps",
         "platform_name_label": "Platform \/ Project Name *",
-        "platform_name_placeholder": "e.g. Sroor ERP or Cloud Store ERP",
+        "platform_name_placeholder": "e.g. Cloud ERP or Retail & Wholesale ERP",
         "platform_subtitle_label": "Description \/ Slogan (Subtitle)",
         "platform_subtitle_placeholder": "e.g. Integrated Cloud ERP for Sales, Inventory & Multi-Branch Management",
         "support_email_label": "Technical Support Email",

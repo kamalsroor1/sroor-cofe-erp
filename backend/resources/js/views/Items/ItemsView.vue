@@ -193,7 +193,7 @@ const saveItem = async () => {
       Swal.fire({
         icon: 'success',
         title: trans('common.success'),
-        text: trans('inventory.item_updated') || 'تم تعديل بيانات الصنف بنجاح',
+        text: trans('inventory.item_updated'),
         timer: 1500,
         showConfirmButton: false,
       });
@@ -202,7 +202,7 @@ const saveItem = async () => {
       Swal.fire({
         icon: 'success',
         title: trans('common.success'),
-        text: trans('inventory.item_added') || 'تم إضافة الصنف الجديد بنجاح',
+        text: trans('inventory.item_added'),
         timer: 1500,
         showConfirmButton: false,
       });
@@ -224,7 +224,7 @@ const openAdjustModal = (item) => {
   targetItem.value = item;
   adjustForm.movement_type = 'stock_adjustment_in';
   adjustForm.quantity = '';
-  adjustForm.notes = trans('inventory.movement_adjustment') || 'تسوية مخزنية جردية';
+  adjustForm.notes = trans('inventory.movement_adjustment');
   showAdjustModal.value = true;
 };
 
@@ -233,7 +233,7 @@ const saveAdjustment = async () => {
     Swal.fire({
       icon: 'warning',
       title: trans('common.warning'),
-      text: trans('inventory.enter_valid_adjustment_qty') || 'يرجى إدخال كمية صحيحة للتسوية',
+      text: trans('inventory.enter_valid_adjustment_qty'),
     });
     return;
   }
@@ -247,7 +247,7 @@ const saveAdjustment = async () => {
     Swal.fire({
       icon: 'success',
       title: trans('common.success'),
-      text: trans('inventory.stock_adjusted_success') || 'تم اعتماد التسوية المخزنية وتحديث الرصيد بنجاح',
+      text: trans('inventory.stock_adjusted_success'),
       timer: 1500,
       showConfirmButton: false,
     });
@@ -269,15 +269,15 @@ const deleteItem = async (item) => {
     const blockers = item.deletion_blockers?.join('\n- ') || '';
     Swal.fire({
       icon: 'warning',
-      title: trans('inventory.cannot_delete_item') || 'لا يمكن حذف هذا الصنف',
-      text: `${trans('contacts.deletion_blockers_found') || 'توجد عمليات وسجلات مرتبطة بهذا الصنف:'}\n- ${blockers}`,
+      title: trans('inventory.cannot_delete_item'),
+      text: `${trans('contacts.deletion_blockers_found')}\n- ${blockers}`,
     });
     return;
   }
 
   const result = await Swal.fire({
     title: trans('inventory.delete_item_confirm_title', { name: item.name }) || `حذف الصنف (${item.name})؟`,
-    text: trans('inventory.delete_item_confirm_text') || 'سيتم نقل الصنف لسلة المحذوفات.',
+    text: trans('inventory.delete_item_confirm_text'),
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: trans('common.delete'),
@@ -291,7 +291,7 @@ const deleteItem = async (item) => {
       Swal.fire({
         icon: 'success',
         title: trans('common.success'),
-        text: trans('inventory.item_deleted') || 'تم حذف الصنف بنجاح',
+        text: trans('inventory.item_deleted'),
         timer: 1500,
         showConfirmButton: false,
       });

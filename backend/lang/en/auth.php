@@ -22,6 +22,7 @@ return [
     'app_name' => 'Cloud ERP & Inventory Management',
     'subtitle' => 'Sign in with your phone number and password to continue',
     'phone' => 'Phone / Mobile Number',
+    'phone_or_email' => 'Email or Phone Number',
     'phone_placeholder' => '01012316954',
     'password_label' => 'Password',
     'password_placeholder' => '••••••••',

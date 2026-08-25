@@ -76,7 +76,7 @@
         <div class="relative flex items-center justify-center">
           <Menu class="w-5 h-5 mb-0.5 transition-transform duration-200 group-hover:scale-105" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.more_short') || 'المزيد' }}</span>
+        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.more_short') }}</span>
       </button>
     </template>
 
@@ -95,7 +95,7 @@
           />
           <LayoutDashboard class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isDashboardActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.dashboard_short') || 'الرئيسية' }}</span>
+        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.dashboard_short') }}</span>
       </router-link>
 
       <!-- 2. Invoices / Sales (Module 2) -->
@@ -112,7 +112,7 @@
           />
           <FileText class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isInvoicesActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.invoices_short') || 'الفواتير' }}</span>
+        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.invoices_short') }}</span>
       </router-link>
 
       <!-- 3. Primary Center Action: Raised Fast POS Button (Module 2) -->
@@ -141,7 +141,7 @@
           />
           <Package class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isItemsActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.items_short') || 'الأصناف' }}</span>
+        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.items_short') }}</span>
       </router-link>
 
       <!-- 5. Customers & CRM (Module 6) -->
@@ -171,7 +171,7 @@
         <div class="relative flex items-center justify-center">
           <Menu class="w-5 h-5 mb-0.5 transition-transform duration-200 group-hover:scale-105" />
         </div>
-        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.more_short') || 'المزيد' }}</span>
+        <span class="text-[10px] tracking-tight truncate">{{ $t('nav.more_short') }}</span>
       </button>
     </template>
   </nav>

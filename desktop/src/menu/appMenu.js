@@ -7,7 +7,7 @@ function createApplicationMenu(mainWindow) {
     const template = [
         // { role: 'appMenu' } on Mac
         ...(isMac ? [{
-            label: 'سرور كوفي ERP',
+            label: 'ERP & POS',
             submenu: [
                 { role: 'about', label: 'حول المنظومة' },
                 { type: 'separator' },

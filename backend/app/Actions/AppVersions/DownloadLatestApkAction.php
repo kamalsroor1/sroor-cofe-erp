@@ -37,7 +37,8 @@ class DownloadLatestApkAction
                 base_path('../mobile/sroor-coffee-erp-v1.0.apk'),
             ];
 
-            $defaultFilename = $platform === 'windows' ? 'Sroor-ERP-POS-Setup-latest.exe' : 'sroor-cofe-erp-latest.apk';
+            $appNameSlug = \Illuminate\Support\Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
+            $defaultFilename = $platform === 'windows' ? ($appNameSlug . '-Setup-latest.exe') : ($appNameSlug . '-latest.apk');
 
             foreach ($fallbacks as $fallbackPath) {
                 if (file_exists($fallbackPath)) {
@@ -55,8 +56,9 @@ class DownloadLatestApkAction
         $latest->increment('download_count');
 
         $fullPath = Storage::disk('public')->path($latest->apk_path);
+        $appNameSlug = \Illuminate\Support\Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
 
-        return response()->download($fullPath, $latest->apk_filename ?? ($platform === 'windows' ? 'Sroor-ERP-POS-Setup.exe' : 'sroor-coffee-erp.apk'), [
+        return response()->download($fullPath, $latest->apk_filename ?? ($platform === 'windows' ? ($appNameSlug . '-Setup.exe') : ($appNameSlug . '.apk')), [
             'Content-Type' => $contentType,
             'Cache-Control' => 'no-cache, private',
         ]);

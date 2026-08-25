@@ -2,8 +2,8 @@
   <div class="space-y-6 font-tajawal transition-colors duration-300">
     <!-- 1. 🔝 Page Header & Actions -->
     <PageHeader
-      :title="$t('inventory.categories_management') || 'إدارة فئات وتصنيفات الأصناف'"
-      :subtitle="$t('inventory.categories_subtitle') || 'تنظيم وتصنيف المنتجات لسهولة الوصول إليها وشريط الفئات في نقطة البيع (POS)'"
+      :title="$t('inventory.categories_management')"
+      :subtitle="$t('inventory.categories_subtitle')"
       :icon="'🗂️'"
     >
       <template #actions>
@@ -12,7 +12,7 @@
           variant="gradient"
           size="md"
           :icon="Plus"
-          :label="$t('inventory.add_category') || 'إضافة فئة جديدة'"
+          :label="$t('inventory.add_category')"
           @click="openCreateModal"
         />
       </template>
@@ -114,8 +114,8 @@ const saveCategory = async () => {
       position: 'top-end',
       icon: 'success',
       title: editingCategory.value
-        ? (trans('inventory.category_updated_success') || 'تم تعديل الفئة بنجاح ✓')
-        : (trans('inventory.category_created_success') || 'تم إنشاء الفئة بنجاح ✓'),
+        ? (trans('inventory.category_updated_success'))
+        : (trans('inventory.category_created_success')),
       showConfirmButton: false,
       timer: 2500,
     });
@@ -136,13 +136,13 @@ const saveCategory = async () => {
 
 const deleteCategory = async (cat) => {
   const result = await Swal.fire({
-    title: trans('common.confirm_delete') || 'هل أنت متأكد من الحذف؟',
+    title: trans('common.confirm_delete'),
     text: `سيتم حذف الفئة "${cat.name}" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#ef4444',
-    confirmButtonText: trans('common.yes_delete') || 'نعم، احذف',
-    cancelButtonText: trans('common.cancel') || 'إلغاء',
+    confirmButtonText: trans('common.yes_delete'),
+    cancelButtonText: trans('common.cancel'),
   });
 
   if (result.isConfirmed) {
@@ -153,7 +153,7 @@ const deleteCategory = async (cat) => {
         toast: true,
         position: 'top-end',
         icon: 'success',
-        title: trans('inventory.category_deleted_success') || 'تم حذف الفئة بنجاح ✓',
+        title: trans('inventory.category_deleted_success'),
         showConfirmButton: false,
         timer: 2500,
       });

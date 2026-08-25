@@ -112,4 +112,8 @@ return [
     'refresh_tab'        => 'تحديث محتوى التبويب',
     'new_tab'            => 'تبويب جديد',
     'dashboard_tab'      => 'لوحة التحكم',
+    'remind_me_later'    => 'تذكيري لاحقاً',
+    'yes_delete'         => 'نعم، احذف',
+    'all_items'          => 'كل الأصناف',
+    'app_title'          => 'منظومة ERP المتكاملة',
 ];

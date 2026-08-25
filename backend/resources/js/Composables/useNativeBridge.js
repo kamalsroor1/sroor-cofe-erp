@@ -6,7 +6,7 @@ import { Toast } from '@capacitor/toast';
 import { Network } from '@capacitor/network';
 
 /**
- * useNativeBridge - Unified Hardware & Native Bridge Composable for Sroor Coffee ERP
+ * useNativeBridge - Unified Hardware & Native Bridge Composable for Cloud ERP & POS
  * Enables Vue 3 components to seamlessly interact with Android/iOS native hardware
  * with automatic graceful fallbacks when running in standard Web browsers.
  */

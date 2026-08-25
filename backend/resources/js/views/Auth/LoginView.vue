@@ -70,7 +70,7 @@
         <BaseInput
           v-model="form.login"
           id="login"
-          :label="isCentralHub ? $t('auth.phone') : $t('auth.phone_or_email') || 'البريد الإلكتروني أو رقم الهاتف'"
+          :label="isCentralHub ? $t('auth.phone') : $t('auth.phone_or_email')"
           :placeholder="isCentralHub ? $t('auth.phone_placeholder') : '2m@test.com أو رقم الهاتف'"
           :required="true"
           :leading-icon="Phone"

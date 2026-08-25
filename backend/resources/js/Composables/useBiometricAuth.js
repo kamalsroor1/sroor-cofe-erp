@@ -8,7 +8,7 @@ const isBiometricEnabled = ref(false);
 const biometricUser = ref(null);
 const isAuthenticating = ref(false);
 
-const SERVER_KEY = 'sroor_erp_secure_vault';
+const SERVER_KEY = 'erp_secure_vault';
 
 export function useBiometricAuth() {
     const checkAvailability = async () => {
@@ -18,8 +18,8 @@ export function useBiometricAuth() {
                 isAvailable.value = !!result?.isAvailable;
                 biometryType.value = result?.biometryType;
                 
-                const saved = localStorage.getItem('sroor_biometric_enabled');
-                const savedUser = localStorage.getItem('sroor_biometric_user');
+                const saved = localStorage.getItem('erp_biometric_enabled') || localStorage.getItem('sroor_biometric_enabled');
+                const savedUser = localStorage.getItem('erp_biometric_user') || localStorage.getItem('sroor_biometric_user');
                 if (saved === '1' && savedUser) {
                     isBiometricEnabled.value = true;
                     biometricUser.value = savedUser;
@@ -50,8 +50,10 @@ export function useBiometricAuth() {
                 password: password,
             });
 
-            localStorage.setItem('sroor_biometric_enabled', '1');
-            localStorage.setItem('sroor_biometric_user', login);
+            localStorage.setItem('erp_biometric_enabled', '1');
+            localStorage.setItem('erp_biometric_user', login);
+            localStorage.removeItem('sroor_biometric_enabled');
+            localStorage.removeItem('sroor_biometric_user');
             isBiometricEnabled.value = true;
             biometricUser.value = login;
 
@@ -109,6 +111,8 @@ export function useBiometricAuth() {
             });
         } catch (ignored) {}
 
+        localStorage.removeItem('erp_biometric_enabled');
+        localStorage.removeItem('erp_biometric_user');
         localStorage.removeItem('sroor_biometric_enabled');
         localStorage.removeItem('sroor_biometric_user');
         isBiometricEnabled.value = false;

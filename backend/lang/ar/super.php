@@ -193,7 +193,7 @@ return [
     'platform_settings_title' => 'الهوية واسم المنصة العام (Platform Whitelabel & Branding)',
     'platform_settings_subtitle' => 'تغيير اسم المنصة والمشروع، الوصف، وبيانات الدعم الفني المنعكسة مركزياً في كافة واجهات وتطبيقات النظام',
     'platform_name_label' => 'اسم المنصة / المشروع *',
-    'platform_name_placeholder' => 'مثال: سرور ERP أو منظومة المتجر السحابية',
+    'platform_name_placeholder' => 'مثال: منصة السحاب ERP أو منظومة المتجر السحابية',
     'platform_subtitle_label' => 'الوصف / السلوجان (Subtitle)',
     'platform_subtitle_placeholder' => 'مثال: منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع',
     'support_email_label' => 'بريد الدعم الفني',

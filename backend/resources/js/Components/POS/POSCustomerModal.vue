@@ -120,7 +120,7 @@
         <!-- Default General Cash Customer Option -->
         <button
           type="button"
-          @click="$emit('select-customer', { id: null, name: $t('pos.general_cash_customer') || 'نقدي عام', phone: '' })"
+          @click="$emit('select-customer', { id: null, name: $t('pos.general_cash_customer'), phone: '' })"
           class="min-h-[52px] w-full p-3 flex items-center justify-between text-start hover:bg-slate-50 dark:hover:bg-slate-800/80 transition cursor-pointer border-b border-slate-200 dark:border-slate-800"
           :class="!selectedCustomerId ? 'bg-theme-light dark:bg-slate-800 text-theme-primary font-black' : 'text-slate-700 dark:text-slate-300'"
         >
@@ -129,7 +129,7 @@
               💵
             </div>
             <div>
-              <div class="font-black text-xs text-slate-900 dark:text-white">{{ $t('pos.general_cash_customer') || 'نقدي عام' }}</div>
+              <div class="font-black text-xs text-slate-900 dark:text-white">{{ $t('pos.general_cash_customer') }}</div>
               <div class="text-[10px] text-slate-500 font-mono">{{ $t('pos.cash_customer') }}</div>
             </div>
           </div>

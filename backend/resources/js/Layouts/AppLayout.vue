@@ -512,7 +512,7 @@ const getUserRoleLabel = computed(() => {
                         @click="showStoreModal = true"
                         type="button"
                         class="h-8.5 sm:h-9 px-2 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 sm:gap-2 transition cursor-pointer font-tajawal shadow-xs max-w-[120px] sm:max-w-[170px]"
-                        :title="$t('nav.switch_store') || 'تبديل الفرع'"
+                        :title="$t('nav.switch_store')"
                     >
                         <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shrink-0"></span>
                         <Store class="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />

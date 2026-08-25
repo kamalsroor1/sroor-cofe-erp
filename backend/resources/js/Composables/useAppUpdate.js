@@ -179,9 +179,9 @@ export function useAppUpdate() {
             }
 
             // Create download anchor and trigger
-            const filename = clientPlatform === 'windows'
-                ? `Sroor-ERP-POS-Setup-v${latestVersionData.value?.latest_version || 'latest'}.exe`
-                : `sroor-coffee-erp-v${latestVersionData.value?.latest_version || 'latest'}.apk`;
+            const filename = latestVersionData.value?.apk_filename || (clientPlatform === 'windows'
+                ? `ERP-POS-Setup-v${latestVersionData.value?.latest_version || 'latest'}.exe`
+                : `app-v${latestVersionData.value?.latest_version || 'latest'}.apk`);
 
             const link = document.createElement('a');
             link.href = downloadUrl;

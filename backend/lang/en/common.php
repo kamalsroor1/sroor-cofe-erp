@@ -112,4 +112,8 @@ return [
     'refresh_tab'        => 'Refresh Tab',
     'new_tab'            => 'New Tab',
     'dashboard_tab'      => 'Dashboard',
+    'remind_me_later'    => 'Remind Me Later',
+    'yes_delete'         => 'Yes, Delete',
+    'all_items'          => 'All Items',
+    'app_title'          => 'Integrated ERP Platform',
 ];

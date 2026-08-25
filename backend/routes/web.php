@@ -36,7 +36,7 @@ Route::get('/telescope-access', function (\Illuminate\Http\Request $request) {
     $isAllowed = $user && (
         (method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || $user->hasRole('admin'))) ||
         (isset($user->phone) && in_array($user->phone, ['01012316954', '01558088841'])) ||
-        (isset($user->email) && in_array($user->email, ['01012316954@sroor.com', '01558088841@sroor.com', 'admin@baraa-solutions.com']))
+        (isset($user->email) && ($user->email === 'admin@baraa-solutions.com' || str_ends_with($user->email, '@baraa-solutions.com')))
     );
 
     if ($isAllowed) {

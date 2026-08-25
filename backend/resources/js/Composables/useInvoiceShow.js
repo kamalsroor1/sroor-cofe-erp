@@ -25,7 +25,7 @@ export function useInvoiceShow() {
 
     // Company Information Group
     const companyInfo = computed(() => ({
-        name: appConfigStore.companyName || 'سرور كوفي ERP',
+        name: appConfigStore.companyName || appConfigStore.platformName || 'المؤسسة التجارية',
         subtitle: appConfigStore.companySubtitle || 'مؤسسة تجارية متخصصة',
         phone: appConfigStore.tenant?.phone || '01012345678',
         address: appConfigStore.tenant?.address || 'الفرع الرئيسي',

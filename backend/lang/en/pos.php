@@ -200,4 +200,6 @@ return [
     'show_menu'                 => 'Show Menu',
     'hide_menu'                 => 'Hide Menu',
     'toggle_menu'               => 'Toggle Menu',
+    'walk_in_customer'          => 'Walk-in Customer',
+    'start_new_invoice'         => 'Start New Invoice',
 ];

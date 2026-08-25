@@ -4,7 +4,7 @@
     <div class="flex-1 min-w-[240px]">
       <BaseSearchInput
         :model-value="searchQuery"
-        :placeholder="$t('inventory.search_item_placeholder') || 'ابحث باسم الصنف، الكود، أو الباركود...'"
+        :placeholder="$t('inventory.search_item_placeholder')"
         @update:model-value="$emit('update:searchQuery', $event); $emit('search')"
         @clear="$emit('update:searchQuery', ''); $emit('search')"
       />
@@ -15,7 +15,7 @@
       <BaseSelect
         :model-value="selectedCategory"
         :options="categoryOptions"
-        :placeholder="$t('inventory.all_categories') || 'كافة الأقسام والتصنيفات'"
+        :placeholder="$t('inventory.all_categories')"
         :searchable="false"
         @update:model-value="$emit('update:selectedCategory', $event); $emit('search')"
       />
@@ -86,7 +86,7 @@ const props = defineProps({
 defineEmits(['update:searchQuery', 'update:selectedCategory', 'update:stockStatus', 'search']);
 
 const categoryOptions = computed(() => {
-  const allOption = { value: 'all', label: trans('inventory.all_categories') || 'كافة الأقسام والتصنيفات' };
+  const allOption = { value: 'all', label: trans('inventory.all_categories') };
   const dynamicOptions = props.categories.map((c) => ({
     value: typeof c === 'object' ? c.name : c,
     label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,
