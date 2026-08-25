@@ -250,7 +250,10 @@
       />
 
       <!-- Main Content Stage -->
-      <main class="flex-1 h-full overflow-y-auto min-h-0 p-3 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 pb-24 md:pb-8 custom-scrollbar">
+      <main
+        class="flex-1 h-full min-h-0 bg-slate-50 dark:bg-slate-950"
+        :class="isPosView ? 'p-0 overflow-hidden pb-0' : 'overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 custom-scrollbar'"
+      >
         <slot />
       </main>
 
@@ -517,6 +520,8 @@ const isSidebarOpen = ref(false);
 const activeMobileSection = ref(null);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
 let wasCollapsedBeforePos = localStorage.getItem('sidebar_collapsed') === 'true';
+
+const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos'));
 
 // 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit
 watch(

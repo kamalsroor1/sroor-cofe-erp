@@ -2,7 +2,7 @@
   <!-- 🔄 POS Skeleton Loading State -->
   <POSSkeleton v-if="isLoading" />
 
-  <div v-else class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
+  <div v-else class="h-full max-h-full min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
     
     <!-- 🔝 1. Header & Search Command Bar -->
     <POSHeader
