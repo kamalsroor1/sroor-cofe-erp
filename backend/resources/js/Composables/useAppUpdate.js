@@ -1,12 +1,13 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import api from '../services/api';
 import Swal from 'sweetalert2';
+import versionData from '../version.json';
 
 // Global singleton state so any component can listen to or trigger updates
-const currentVersionName = ref('1.0.2');
-const currentVersionCode = ref(3);
+const currentVersionName = ref(versionData?.version || '1.0.108');
+const currentVersionCode = ref(versionData?.build_number || 108);
 const isChecking = ref(false);
 const hasCheckedThisSession = ref(false);
 const hasUpdate = ref(false);
@@ -22,8 +23,20 @@ const isNativePlatform = () => {
     return typeof window !== 'undefined' && Capacitor.isNativePlatform();
 };
 
-// Initialize native app version from Capacitor runtime if available
-const syncNativeVersionInfo = async () => {
+// Detect if running inside Electron Desktop App
+const isDesktopPlatform = () => {
+    return typeof window !== 'undefined' && (!!window.electronAPI?.isElectron || window.navigator.userAgent.includes('Electron'));
+};
+
+// Determine active client platform
+const getClientPlatform = () => {
+    if (isDesktopPlatform()) return 'windows';
+    if (isNativePlatform()) return 'android';
+    return 'web';
+};
+
+// Initialize native app version from Capacitor or Electron runtime if available
+const syncClientVersionInfo = async () => {
     if (isNativePlatform()) {
         try {
             const info = await CapacitorApp.getInfo();
@@ -34,24 +47,44 @@ const syncNativeVersionInfo = async () => {
         } catch (e) {
             // Error reading native build info
         }
+    } else if (isDesktopPlatform()) {
+        try {
+            if (window.electronAPI?.getAppVersion) {
+                const ver = await window.electronAPI.getAppVersion();
+                if (ver) currentVersionName.value = ver;
+            }
+            if (versionData?.build_number) {
+                currentVersionCode.value = versionData.build_number;
+            }
+            if (versionData?.version) {
+                currentVersionName.value = versionData.version;
+            }
+        } catch (e) {
+            // Fallback to versionData
+        }
     }
 };
 
 // Initial sync
-syncNativeVersionInfo();
+syncClientVersionInfo();
 
 export function useAppUpdate() {
+    const isEligible = computed(() => isNativePlatform() || isDesktopPlatform());
+    const platform = computed(() => getClientPlatform());
+
     /**
      * Check for newer app release from the server
      */
     const checkForUpdates = async (isManual = false) => {
+        const clientPlatform = getClientPlatform();
+
         // 🛑 Web Browser Check Gate: Web apps are updated automatically via cloud server deployments!
-        if (!isNativePlatform()) {
+        if (clientPlatform === 'web') {
             if (isManual) {
                 Swal.fire({
                     icon: 'info',
                     title: 'نسخة الويب السحابية 🌐',
-                    text: `أنت تستخدم نسخة الويب المحدثة تلقائياً عبر السيرفر السحابي (v${currentVersionName.value}). تنزيل وتثبيت حزم APK مخصص لتطبيق الهاتف المحمول فقط.`,
+                    text: `أنت تستخدم نسخة الويب المحدثة تلقائياً عبر السيرفر السحابي (v${currentVersionName.value}). تنزيل وتثبيت الحزم مخصص لتطبيق الموبايل (APK) وبرنامج سطح المكتب (EXE).`,
                     confirmButtonText: 'حسناً',
                     confirmButtonColor: '#f59e0b',
                 });
@@ -60,19 +93,21 @@ export function useAppUpdate() {
         }
 
         if (isChecking.value) return;
-        if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed') || localStorage.getItem('app_update_dismissed_code') === String(currentVersionCode.value))) return;
-        
+        if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed') || localStorage.getItem('app_update_dismissed_code') === String(currentVersionCode.value))) {
+            return;
+        }
+
         isChecking.value = true;
         if (!isManual) {
             hasCheckedThisSession.value = true;
         }
 
         try {
-            await syncNativeVersionInfo();
+            await syncClientVersionInfo();
 
             const res = await api.get('/app/check-update', {
                 params: {
-                    platform: 'android',
+                    platform: clientPlatform,
                     version_code: currentVersionCode.value,
                     version_name: currentVersionName.value,
                 }
@@ -91,16 +126,17 @@ export function useAppUpdate() {
                 downloadProgress.value = 0;
                 isModalOpen.value = true;
             } else if (isManual) {
+                const platformLabel = clientPlatform === 'windows' ? 'برنامج سطح المكتب' : 'تطبيق الموبايل';
                 Swal.fire({
                     icon: 'success',
-                    title: 'التطبيق محدث بالكامل 🚀',
+                    title: `${platformLabel} محدث بالكامل 🚀`,
                     text: `أنت تستخدم أحدث إصدار متوفر حالياً (v${currentVersionName.value})`,
                     confirmButtonText: 'ممتاز',
-                    confirmButtonColor: '#f59e0b',
+                    confirmButtonColor: '#10b981',
                 });
             }
         } catch (e) {
-            console.error('Failed to check for app updates:', e);
+            console.error('Failed to check for updates:', e);
             if (isManual) {
                 Swal.fire({
                     icon: 'error',
@@ -115,13 +151,15 @@ export function useAppUpdate() {
     };
 
     /**
-     * Start downloading and installing the APK
+     * Start downloading and installing the package (APK for Android / EXE for Desktop)
      */
     const startDownloadAndInstall = async () => {
         if (isDownloading.value) return;
         isDownloading.value = true;
         isDownloaded.value = false;
         downloadProgress.value = 0;
+
+        const clientPlatform = getClientPlatform();
 
         // Smooth simulated progress bar
         const interval = setInterval(() => {
@@ -131,7 +169,8 @@ export function useAppUpdate() {
         }, 150);
 
         try {
-            const downloadUrl = latestVersionData.value?.download_url || '/api/v1/app/download-latest-apk';
+            const defaultDownloadUrl = `/api/v1/app/download-apk?platform=${clientPlatform}`;
+            const downloadUrl = latestVersionData.value?.download_url || defaultDownloadUrl;
 
             // Mark update as processed in this session
             sessionStorage.setItem('app_update_dismissed', '1');
@@ -140,9 +179,13 @@ export function useAppUpdate() {
             }
 
             // Create download anchor and trigger
+            const filename = clientPlatform === 'windows'
+                ? `Sroor-ERP-POS-Setup-v${latestVersionData.value?.latest_version || 'latest'}.exe`
+                : `sroor-coffee-erp-v${latestVersionData.value?.latest_version || 'latest'}.apk`;
+
             const link = document.createElement('a');
             link.href = downloadUrl;
-            link.setAttribute('download', `sroor-coffee-erp-v${latestVersionData.value?.latest_version || 'latest'}.apk`);
+            link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -153,10 +196,22 @@ export function useAppUpdate() {
             setTimeout(() => {
                 isDownloading.value = false;
                 isDownloaded.value = true;
-                // Auto-close modal after 2 seconds to let Android native installer dialog take over
-                setTimeout(() => {
-                    isModalOpen.value = false;
-                }, 2000);
+
+                // For desktop, show quick notice that setup is downloading
+                if (clientPlatform === 'windows') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'جاري تنزيل ملف التثبيت 💻',
+                        text: 'تم بدء تحميل ملف التثبيت المحدث. بمجرد اكتمال التنزيل، قم بفتحه لتحديث البرنامج تلقائياً.',
+                        confirmButtonText: 'حسناً',
+                        confirmButtonColor: '#10b981',
+                    });
+                } else {
+                    // Auto-close modal after 2 seconds on mobile to let Android installer take over
+                    setTimeout(() => {
+                        isModalOpen.value = false;
+                    }, 2000);
+                }
             }, 500);
         } catch (e) {
             clearInterval(interval);
@@ -184,6 +239,9 @@ export function useAppUpdate() {
 
     return {
         isNative: isNativePlatform(),
+        isDesktop: isDesktopPlatform(),
+        isEligible,
+        platform,
         currentVersionName,
         currentVersionCode,
         isChecking,

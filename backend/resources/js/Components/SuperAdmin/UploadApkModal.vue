@@ -75,14 +75,14 @@
 
       <!-- File Upload -->
       <div class="space-y-1.5">
-        <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('super.apk_file_label') }}</label>
+        <label class="block font-bold text-slate-700 dark:text-slate-300">{{ fileLabel }}</label>
         <input
           type="file"
-          accept=".apk"
+          :accept="fileAcceptTypes"
           @change="$emit('file-change', $event)"
           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-xs file:me-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white cursor-pointer"
         />
-        <span class="text-[10px] text-slate-500 block">{{ $t('super.apk_max_size_hint') }}</span>
+        <span class="text-[10px] text-slate-500 block">{{ fileSizeHint }}</span>
       </div>
 
       <div class="pt-3 flex items-center justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
@@ -111,6 +111,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Rocket } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
@@ -119,7 +120,7 @@ import BaseCheckbox from '../Form/BaseCheckbox.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   form: { type: Object, default: () => ({}) },
   isSubmitting: { type: Boolean, default: false },
@@ -128,8 +129,25 @@ defineProps({
 defineEmits(['close', 'submit', 'update:field', 'file-change']);
 
 const platformOptions = [
-  { value: 'android', label: '📱 Android (APK)' },
-  { value: 'windows', label: '💻 Windows' },
-  { value: 'ios', label: '🍏 iOS' },
+  { value: 'android', label: '📱 تطبيق الموبايل (Android APK)' },
+  { value: 'windows', label: '💻 برنامج سطح المكتب (Windows Setup EXE)' },
+  { value: 'ios', label: '🍏 آبل (iOS IPA)' },
 ];
+
+const fileAcceptTypes = computed(() => {
+  if (props.form?.platform === 'windows') return '.exe,.msi,.zip';
+  if (props.form?.platform === 'ios') return '.ipa';
+  return '.apk';
+});
+
+const fileLabel = computed(() => {
+  if (props.form?.platform === 'windows') return 'ملف تثبيت سطح المكتب (Setup .EXE)';
+  if (props.form?.platform === 'ios') return 'ملف الحزمة (IPA)';
+  return 'ملف حزمة التطبيق (Android APK)';
+});
+
+const fileSizeHint = computed(() => {
+  if (props.form?.platform === 'windows') return 'اختر ملف Sroor-ERP-POS-Setup.exe أو ملف التثبيت المحدث (حد أقصى 150 ميجابايت)';
+  return 'اختر ملف .apk المحدث الخاص بنظام أندرويد (حد أقصى 150 ميجابايت)';
+});
 </script>

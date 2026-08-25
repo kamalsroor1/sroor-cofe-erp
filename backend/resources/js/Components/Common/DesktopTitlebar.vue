@@ -51,6 +51,18 @@
         <RefreshCw class="w-3 h-3 text-cyan-400" :class="{ 'animate-spin': isReloading }" />
         <span class="font-sans text-[10px] hidden lg:inline">تحديث الكاش</span>
       </button>
+
+      <!-- 🚀 Live Update Available Badge -->
+      <button
+        v-if="hasUpdate"
+        type="button"
+        @click="checkForUpdates(true)"
+        class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-[10px] animate-bounce shadow-md shadow-amber-500/20 cursor-pointer active:scale-95"
+        title="يتوفر إصدار جديد للبرنامج - انقر للتحديث"
+      >
+        <Rocket class="w-3 h-3" />
+        <span>تحديث v{{ latestVersionData?.latest_version }}</span>
+      </button>
     </div>
 
     <!-- 🪟 Left Side (in RTL): Action Shortcuts & Native Window Controls -->
@@ -145,6 +157,7 @@
 import { ref, computed } from 'vue';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
+import { useAppUpdate } from '../../Composables/useAppUpdate';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
 import {
@@ -157,7 +170,8 @@ import {
   Square,
   Copy,
   X,
-  RefreshCw
+  RefreshCw,
+  Rocket
 } from 'lucide-vue-next';
 
 defineEmits(['open-hardware', 'open-shortcuts']);
@@ -176,6 +190,8 @@ const {
   closeWindow,
   toggleFullscreen
 } = useDesktopHardware();
+
+const { hasUpdate, latestVersionData, checkForUpdates } = useAppUpdate();
 
 const { isSoundEnabled, toggleSound } = useAudioFeedback();
 

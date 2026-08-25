@@ -67,7 +67,24 @@
                 </div>
               </td>
               <td class="py-3.5 font-sans">
-                <span class="capitalize font-bold text-slate-700 dark:text-slate-300">{{ v.platform }}</span>
+                <span
+                  v-if="v.platform === 'windows'"
+                  class="px-2.5 py-1 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 text-xs font-bold flex items-center gap-1 w-fit"
+                >
+                  💻 Windows
+                </span>
+                <span
+                  v-else-if="v.platform === 'android'"
+                  class="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 w-fit"
+                >
+                  📱 Android
+                </span>
+                <span
+                  v-else
+                  class="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 text-xs font-bold flex items-center gap-1 w-fit"
+                >
+                  🍏 {{ v.platform }}
+                </span>
               </td>
               <td class="py-3.5 font-sans">
                 <span
