@@ -104,4 +104,12 @@ return [
     'error_occurred' => 'An unexpected error occurred',
     'no_notes_available' => 'No notes recorded for this operation.',
     'unit_piece' => 'Piece',
+
+    // Multi-Tabs Navigation
+    'close_tab'          => 'Close Tab',
+    'close_other_tabs'   => 'Close Other Tabs',
+    'close_all_tabs'     => 'Close All Tabs',
+    'refresh_tab'        => 'Refresh Tab',
+    'new_tab'            => 'New Tab',
+    'dashboard_tab'      => 'Dashboard',
 ];

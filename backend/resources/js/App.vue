@@ -31,7 +31,10 @@
     <SpaLayout v-else>
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
+          <KeepAlive v-if="isDesktop" :include="tabsStore.cachedViews" :max="12">
+            <component :is="Component" :key="route.fullPath" />
+          </KeepAlive>
+          <component v-else :is="Component" :key="route.fullPath" />
         </transition>
       </router-view>
     </SpaLayout>
@@ -60,6 +63,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
+import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
 import SpaLayout from './Layouts/SpaLayout.vue';
@@ -73,6 +77,7 @@ import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
+const tabsStore = useTabsStore();
 const { checkForUpdates } = useAppUpdate();
 const { isDesktop, openCashDrawer } = useDesktopHardware();
 

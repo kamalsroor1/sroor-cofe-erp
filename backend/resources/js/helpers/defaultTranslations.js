@@ -218,7 +218,13 @@ export const defaultArabicTranslations = {
         "done": "تم بنجاح ✓",
         "error_occurred": "حدث خطأ غير متوقع",
         "no_notes_available": "لا توجد ملاحظات مسجلة لهذه العملية.",
-        "unit_piece": "قطعة"
+        "unit_piece": "قطعة",
+        "close_tab": "إغلاق التبويب",
+        "close_other_tabs": "إغلاق التبويبات الأخرى",
+        "close_all_tabs": "إغلاق كافة التبويبات",
+        "refresh_tab": "تحديث محتوى التبويب",
+        "new_tab": "تبويب جديد",
+        "dashboard_tab": "لوحة التحكم"
     },
     "contacts": {
         "customers_title": "دليل العملاء والزبائن",
@@ -3020,7 +3026,13 @@ export const defaultEnglishTranslations = {
         "done": "Done Successfully ✓",
         "error_occurred": "An unexpected error occurred",
         "no_notes_available": "No notes recorded for this operation.",
-        "unit_piece": "Piece"
+        "unit_piece": "Piece",
+        "close_tab": "Close Tab",
+        "close_other_tabs": "Close Other Tabs",
+        "close_all_tabs": "Close All Tabs",
+        "refresh_tab": "Refresh Tab",
+        "new_tab": "New Tab",
+        "dashboard_tab": "Dashboard"
     },
     "contacts": {
         "customers_title": "Customers Directory",

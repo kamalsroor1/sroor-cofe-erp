@@ -104,4 +104,12 @@ return [
     'error_occurred' => 'حدث خطأ غير متوقع',
     'no_notes_available' => 'لا توجد ملاحظات مسجلة لهذه العملية.',
     'unit_piece' => 'قطعة',
+
+    // Multi-Tabs Navigation
+    'close_tab'          => 'إغلاق التبويب',
+    'close_other_tabs'   => 'إغلاق التبويبات الأخرى',
+    'close_all_tabs'     => 'إغلاق كافة التبويبات',
+    'refresh_tab'        => 'تحديث محتوى التبويب',
+    'new_tab'            => 'تبويب جديد',
+    'dashboard_tab'      => 'لوحة التحكم',
 ];

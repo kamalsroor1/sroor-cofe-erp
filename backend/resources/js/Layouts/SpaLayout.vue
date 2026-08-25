@@ -239,6 +239,9 @@
       </div>
     </header>
 
+    <!-- 🗂️ 1.5 DESKTOP MULTI-TABS BAR (Visible ONLY on Desktop) -->
+    <DesktopTabsBar v-if="isDesktop" />
+
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🖥️ MAIN BODY: DYNAMIC SIDEBAR + STAGE                        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -487,7 +490,9 @@ import { useModules } from '../Composables/useModules';
 import { useNavigation } from '../Composables/useNavigation';
 import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
+import { useTabsStore } from '../stores/tabs';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
+import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
 import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
@@ -507,6 +512,7 @@ import {
 
 const { currentVersionName, checkForUpdates } = useAppUpdate();
 const { isDesktop } = useDesktopHardware();
+const tabsStore = useTabsStore();
 const isDesktopSettingsOpen = ref(false);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
@@ -515,6 +521,17 @@ const { navigationSections, isItemActive } = useNavigation();
 
 const route = useRoute();
 const router = useRouter();
+
+// 🗂️ Sync route with desktop multi-tabs store
+watch(
+    () => route.fullPath,
+    () => {
+        if (isDesktop.value) {
+            tabsStore.addTab(route);
+        }
+    },
+    { immediate: true }
+);
 
 const isSidebarOpen = ref(false);
 const activeMobileSection = ref(null);
