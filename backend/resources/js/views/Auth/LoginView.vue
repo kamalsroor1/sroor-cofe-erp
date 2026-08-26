@@ -102,7 +102,7 @@
         </button>
       </div>
 
-      <!-- 1. Quick Login Form (Fast Employee Selection + Password / 1-Click Demo) -->
+      <!-- 1. Quick Login Form (Fast Employee Selection Without Password) -->
       <form v-if="loginMode === 'quick' && workspaceUsers.length > 0" @submit.prevent="handleQuickLogin" class="space-y-4">
         <!-- Account Selection Dropdown -->
         <div class="space-y-1.5 text-right">
@@ -129,24 +129,16 @@
           </div>
         </div>
 
-        <!-- Password Field -->
-        <BaseInput
-          v-model="quickPassword"
-          id="quickPassword"
-          type="password"
-          :label="$t('auth.password_label')"
-          :placeholder="$t('auth.password_placeholder')"
-          :required="true"
-          :leading-icon="Lock"
-          dir="ltr"
-          :error="errorMessage"
-          wrapper-class="text-right"
-        />
+        <!-- Hint badge -->
+        <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400 font-bold flex items-center gap-2">
+          <Zap class="w-4 h-4 text-amber-500 shrink-0" />
+          <span>{{ $t('auth.quick_login_no_password_hint') }}</span>
+        </div>
 
-        <!-- Submit Button -->
+        <!-- Submit Button (Direct Quick Login Without Password) -->
         <button
           type="submit"
-          :disabled="isLoading || !quickUserLogin || !quickPassword"
+          :disabled="isLoading || !quickUserLogin"
           class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-theme-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
         >
           <template v-if="isLoading">
@@ -154,20 +146,9 @@
             <span>{{ $t('auth.logging_in') }}</span>
           </template>
           <template v-else>
-            <LogIn class="w-5 h-5" />
-            <span>{{ $t('auth.fast_login_button') }}</span>
+            <Zap class="w-5 h-5 text-amber-300" />
+            <span>{{ $t('auth.fast_login_no_password') }}</span>
           </template>
-        </button>
-
-        <!-- Temporary Fast Demo Login Button -->
-        <button
-          type="button"
-          @click="handleQuickDemoLogin"
-          :disabled="isLoading || !quickUserLogin"
-          class="w-full py-2.5 px-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer font-tajawal disabled:opacity-50"
-        >
-          <Zap class="w-3.5 h-3.5 text-amber-500" />
-          <span>{{ $t('auth.fast_demo_login_button') }}</span>
         </button>
       </form>
 
@@ -302,7 +283,6 @@ const activeWorkspaceName = ref(localStorage.getItem('tenant_name') || '');
 const workspaceUsers = ref([]);
 const loginMode = ref('quick');
 const quickUserLogin = ref('');
-const quickPassword = ref('');
 
 const loadWorkspaceUsers = async () => {
     // 1. Try from localStorage first
@@ -343,16 +323,21 @@ const loadWorkspaceUsers = async () => {
 };
 
 const handleQuickLogin = async () => {
-    form.login = quickUserLogin.value;
-    form.password = quickPassword.value;
-    await handleLogin();
-};
+    if (!quickUserLogin.value) return;
+    isLoading.value = true;
+    errorMessage.value = '';
 
-const handleQuickDemoLogin = async () => {
-    form.login = quickUserLogin.value;
-    form.password = 'password';
-    quickPassword.value = 'password';
-    await handleLogin();
+    try {
+        await authStore.quickLogin(quickUserLogin.value);
+        await appConfigStore.fetchBootstrapContext();
+
+        const redirectPath = route.query.redirect || '/';
+        router.push(redirectPath);
+    } catch (error) {
+        errorMessage.value = error.userMessage || error.response?.data?.message || trans('auth.failed');
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 const {

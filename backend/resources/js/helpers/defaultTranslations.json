@@ -134,7 +134,9 @@
             "standard_login_tab": "دخول عادي (يدوي)",
             "select_employee": "اختر الموظف أو الحساب",
             "fast_login_button": "دخول فوري للحساب",
-            "fast_demo_login_button": "دخول سريع تجريبي (بكلمة المرور الافتراضية)"
+            "fast_demo_login_button": "دخول سريع تجريبي (بكلمة المرور الافتراضية)",
+            "fast_login_no_password": "دخول سريع فوري (بدون كلمة مرور)",
+            "quick_login_no_password_hint": "دخول مباشر للموظف بدون الحاجة لكتابة كلمة المرور"
         },
         "common": {
             "app_name": "نظام إدارة المبيعات والمخزون والحسابات",
@@ -2974,7 +2976,9 @@
             "standard_login_tab": "Standard Login",
             "select_employee": "Select Employee \/ Account",
             "fast_login_button": "Sign In Now",
-            "fast_demo_login_button": "Quick Demo Sign In (Default Password)"
+            "fast_demo_login_button": "Quick Demo Sign In (Default Password)",
+            "fast_login_no_password": "Instant Quick Login (No Password)",
+            "quick_login_no_password_hint": "Direct instant access for staff without entering password"
         },
         "common": {
             "app_name": "Sales, Inventory & Accounting ERP System",

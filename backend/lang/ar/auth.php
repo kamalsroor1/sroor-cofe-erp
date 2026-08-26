@@ -65,5 +65,7 @@ return [
     'select_employee' => 'اختر الموظف أو الحساب',
     'fast_login_button' => 'دخول فوري للحساب',
     'fast_demo_login_button' => 'دخول سريع تجريبي (بكلمة المرور الافتراضية)',
+    'fast_login_no_password' => 'دخول سريع فوري (بدون كلمة مرور)',
+    'quick_login_no_password_hint' => 'دخول مباشر للموظف بدون الحاجة لكتابة كلمة المرور',
 ];
 

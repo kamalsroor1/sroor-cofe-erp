@@ -70,4 +70,6 @@ return [
     'select_employee' => 'Select Employee / Account',
     'fast_login_button' => 'Sign In Now',
     'fast_demo_login_button' => 'Quick Demo Sign In (Default Password)',
+    'fast_login_no_password' => 'Instant Quick Login (No Password)',
+    'quick_login_no_password_hint' => 'Direct instant access for staff without entering password',
 ];

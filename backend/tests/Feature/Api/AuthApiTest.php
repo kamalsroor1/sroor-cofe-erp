@@ -283,4 +283,50 @@ class AuthApiTest extends TestCase
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
+
+    public function test_quick_login_succeeds_without_password(): void
+    {
+        $user = User::factory()->create([
+            'phone'            => '01055555555',
+            'name'             => 'كاشير سريع',
+            'is_active'        => true,
+            'default_store_id' => $this->mainStore->id,
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/quick-login', [
+            'login'       => '01055555555',
+            'device_name' => 'pos-terminal',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data'    => [
+                    'user' => [
+                        'id'   => $user->id,
+                        'name' => 'كاشير سريع',
+                    ],
+                ],
+            ]);
+
+        $this->assertNotNull($response->json('data.token'));
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'api_quick_login',
+        ]);
+    }
+
+    public function test_quick_login_fails_when_user_is_inactive(): void
+    {
+        User::factory()->create([
+            'phone'     => '01066666666',
+            'name'      => 'موظف موقف',
+            'is_active' => false,
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/quick-login', [
+            'login' => '01066666666',
+        ]);
+
+        $response->assertStatus(422);
+    }
 }
