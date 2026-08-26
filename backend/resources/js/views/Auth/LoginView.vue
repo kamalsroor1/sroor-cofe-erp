@@ -138,6 +138,18 @@
             <span>{{ $t('auth.login_button') }}</span>
           </template>
         </button>
+
+        <!-- Switch Workspace Bottom Button -->
+        <div v-if="hasActiveWorkspace" class="pt-2 text-center">
+          <button
+            type="button"
+            @click="switchWorkspace"
+            class="w-full py-2.5 px-4 rounded-2xl bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer font-tajawal"
+          >
+            <RefreshCw class="w-3.5 h-3.5 text-theme-primary" />
+            <span>{{ $t('auth.change_workspace') }} ({{ displayWorkspaceName }})</span>
+          </button>
+        </div>
       </form>
 
       <!-- Quick Account Switcher (Only on Central Hub Baraa Solutions) -->
@@ -210,6 +222,7 @@ import {
     Sun,
     Moon,
     Fingerprint,
+    RefreshCw,
 } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
@@ -266,7 +279,7 @@ const switchWorkspace = async () => {
     if (window.electronAPI?.isElectron) {
         await window.electronAPI.saveSettings({
             tenantId: '',
-            serverUrl: 'https://baraa-solutions.com',
+            serverUrl: 'https://baraa-solutions.com/connect',
         });
     }
 
@@ -274,7 +287,7 @@ const switchWorkspace = async () => {
     const isCentral = host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1';
 
     if (!isCentral) {
-        window.location.href = 'https://baraa-solutions.com/workspace';
+        window.location.href = 'https://baraa-solutions.com/connect';
     } else {
         router.push({ name: 'workspace.connect' });
     }
