@@ -57,7 +57,7 @@
             </div>
 
             <!-- Row 2: Quantity Controls + Price & Subtotal -->
-            <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60 gap-2">
               <!-- Qty buttons -->
               <div class="flex items-center gap-1">
                 <button
@@ -84,13 +84,21 @@
                 </button>
               </div>
 
-              <!-- Price Breakdown -->
-              <div class="text-end">
-                <div class="text-[10px] text-slate-400 font-mono">
-                  {{ formatMoney(item.unit_price) }} × {{ item.quantity }}
+              <!-- Price Breakdown (Editable Selling Price) -->
+              <div class="flex items-center justify-between sm:justify-end gap-2">
+                <div class="flex items-center gap-1">
+                  <label class="text-[10px] font-bold text-slate-500">{{ $t('pos.item_price') }}:</label>
+                  <input
+                    type="number"
+                    :value="item.unit_price"
+                    @input="$emit('update-price', { index: idx, value: $event.target.value })"
+                    step="any"
+                    min="0"
+                    class="w-18 h-8 px-1.5 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                  />
                 </div>
-                <div class="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">
-                  {{ formatMoney(item.quantity * item.unit_price) }} <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                <div class="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
+                  {{ formatMoney(item.quantity * item.unit_price) }} <span class="text-[9px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
                 </div>
               </div>
             </div>
@@ -104,7 +112,7 @@
               <th class="p-3 text-center w-12">#</th>
               <th class="p-3 text-start">{{ $t('pos.item_and_code') }}</th>
               <th class="p-3 text-center w-36">{{ $t('pos.item_qty') }}</th>
-              <th class="p-3 text-start w-28">{{ $t('pos.item_price') }}</th>
+              <th class="p-3 text-start w-32">{{ $t('pos.item_price') }}</th>
               <th class="p-3 text-start w-32">{{ $t('pos.item_total') }}</th>
               <th class="p-3 text-center w-14">{{ $t('pos.delete_item') }}</th>
             </tr>
@@ -163,9 +171,19 @@
                 </div>
               </td>
 
-              <!-- Unit Price -->
-              <td class="p-3 font-mono font-black text-sm text-slate-800 dark:text-slate-200">
-                {{ formatMoney(item.unit_price) }}
+              <!-- Unit Price (Editable input) -->
+              <td class="p-3 font-mono">
+                <div class="flex items-center gap-1">
+                  <input
+                    type="number"
+                    :value="item.unit_price"
+                    @input="$emit('update-price', { index: idx, value: $event.target.value })"
+                    step="any"
+                    min="0"
+                    class="w-24 h-9 px-2 text-start font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none"
+                  />
+                  <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
+                </div>
               </td>
 
               <!-- Line Subtotal -->
@@ -216,5 +234,5 @@ defineProps({
   totalQty: { type: Number, default: 0 },
 });
 
-defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'remove-item']);
+defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-price', 'remove-item']);
 </script>

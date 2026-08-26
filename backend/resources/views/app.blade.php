@@ -83,8 +83,8 @@
 </head>
 <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-amber-500 selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
     <div id="app">
-        <!-- Instant Branded Pre-Vue Splash Screen -->
-        <div style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;" dir="rtl">
+        <!-- Instant Branded Pre-Vue Splash Screen (Hidden in Electron to avoid double splash) -->
+        <div id="pre-vue-splash" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;" dir="rtl">
             <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35); margin-bottom: 20px;">
                 <svg style="width: 40px; height: 40px; stroke: #020617; fill: none; stroke-width: 2.2;" viewBox="0 0 24 24">
                     <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
@@ -106,6 +106,11 @@
                     100% { transform: translateX(300%); }
                 }
             </style>
+            <script>
+                if (window.electronAPI || navigator.userAgent.includes('Electron')) {
+                    document.getElementById('pre-vue-splash').style.display = 'none';
+                }
+            </script>
         </div>
     </div>
 </body>

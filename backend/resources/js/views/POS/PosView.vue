@@ -2,7 +2,7 @@
   <!-- 🔄 POS Skeleton Loading State -->
   <POSSkeleton v-if="isLoading" />
 
-  <div v-else class="h-full max-h-full min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
+  <div v-else class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
     
     <!-- 🔝 1. Header & Search Command Bar -->
     <POSHeader
@@ -29,20 +29,21 @@
     />
 
     <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart [DOMINANT HERO - flex-1] + Compact 3-Column Best Sellers) -->
-    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+    <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
       
       <!-- 🛒 Invoice Cart & Payment Checkout Panel (DOMINANT HERO - Takes maximum width) -->
       <section
-        class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200"
+        class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
       >
         <!-- Top Section: Cart Items Table -->
-        <div class="flex-1 overflow-hidden flex flex-col min-h-[220px]">
+        <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[220px]">
           <POSCartTable
             :cart="cart"
             :total-qty="cartTotalQuantity"
             @increase-qty="increaseCartItemQty"
             @decrease-qty="decreaseCartItemQty"
             @update-qty="onCartQtyUpdate"
+            @update-price="onCartPriceUpdate"
             @remove-item="removeFromCart"
           />
         </div>
@@ -72,7 +73,7 @@
       <!-- 🍕 Side: Visual Product Grid Catalog (Compact 3-Column Width) -->
       <main
         v-if="showCatalog"
-        class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150"
+        class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-visible lg:overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150 min-h-[300px] lg:min-h-0"
       >
         <POSProductGrid
           :items="items"
@@ -442,6 +443,10 @@ const decreaseCartItemQty = (idx) => {
 const onCartQtyUpdate = ({ index, value }) => {
   const parsed = parseFloat(value);
   if (!isNaN(parsed) && parsed > 0) cart.value[index].quantity = parsed;
+};
+const onCartPriceUpdate = ({ index, value }) => {
+  const parsed = parseFloat(value);
+  if (!isNaN(parsed) && parsed >= 0) cart.value[index].unit_price = parsed;
 };
 const removeFromCart = (idx) => { cart.value.splice(idx, 1); };
 
