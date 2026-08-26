@@ -155,11 +155,13 @@ import POSSkeleton         from '../../Components/POS/POSSkeleton.vue';
 import POSCategorySidebar  from '../../Components/POS/POSCategorySidebar.vue';
 import POSProductGrid      from '../../Components/POS/POSProductGrid.vue';
 import { useAppConfigStore } from '../../stores/appConfig';
+import { useAuthStore } from '../../stores/auth';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useFormatters } from '../../Composables/useFormatters';
 import { usePosOrders } from '../../Composables/usePosOrders';
 
+const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const { isDesktop, printThermalReceipt, openCashDrawer } = useDesktopHardware();
 const { playScanBeep, playSuccessChime, playDrawerSound, playErrorTone } = useAudioFeedback();

@@ -331,7 +331,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNavigation } from '../../Composables/useNavigation';
 import { useModules } from '../../Composables/useModules';
@@ -363,7 +363,12 @@ const { isModuleEnabled } = useModules();
 const { checkForUpdates } = useAppUpdate();
 
 const currentVersionName = ref(versionData?.version || '1.0.10');
-const canAccessSuperAdmin = computed(() => authStore.can('view_telescope') || authStore.roles?.includes('Super Admin'));
+const canAccessSuperAdmin = computed(() => {
+  return authStore.hasPermission('super_admin.access') || 
+         authStore.hasPermission('view_telescope') || 
+         authStore.roles?.includes('super_admin') || 
+         authStore.roles?.includes('Super Admin');
+});
 
 // 📂 Accordion state for categories
 const expandedSections = ref({
@@ -383,9 +388,13 @@ const autoExpandActiveCategory = () => {
   }
 };
 
+onMounted(() => {
+  autoExpandActiveCategory();
+});
+
 watch(() => route.path, () => {
   autoExpandActiveCategory();
-}, { immediate: true });
+});
 
 const isSectionExpanded = (key) => {
   return expandedSections.value[key] ?? false;

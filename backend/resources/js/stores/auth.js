@@ -153,11 +153,18 @@ export const useAuthStore = defineStore('auth', {
          */
         hasPermission(permissionName) {
             if (!this.user) return false;
-            if (permissionName === 'super_admin.access') {
-                return !!this.user?.is_super_admin || this.roles.includes('super_admin') || this.permissions.includes('super_admin.access');
+            if (permissionName === 'super_admin.access' || permissionName === 'view_telescope') {
+                return !!this.user?.is_super_admin || this.roles.includes('super_admin') || this.permissions.includes('super_admin.access') || this.permissions.includes('view_telescope');
             }
             if (this.roles.includes('admin') || this.roles.includes('super_admin')) return true;
             return this.permissions.includes(permissionName);
+        },
+
+        /**
+         * Alias for hasPermission
+         */
+        can(permissionName) {
+            return this.hasPermission(permissionName);
         },
 
         /**
