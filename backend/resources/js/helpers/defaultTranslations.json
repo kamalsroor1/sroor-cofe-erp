@@ -129,7 +129,12 @@
             "back_to_workspace": "العودة لاختيار المؤسسة",
             "select_account": "تحديد الحساب أو الموظف",
             "choose_user_placeholder": "-- اختر الموظف للدخول السريع --",
-            "manual_login_option": "كتابة الحساب يدوياً (حساب آخر)"
+            "manual_login_option": "كتابة الحساب يدوياً (حساب آخر)",
+            "fast_login_tab": "دخول سريع (موظفين)",
+            "standard_login_tab": "دخول عادي (يدوي)",
+            "select_employee": "اختر الموظف أو الحساب",
+            "fast_login_button": "دخول فوري للحساب",
+            "fast_demo_login_button": "دخول سريع تجريبي (بكلمة المرور الافتراضية)"
         },
         "common": {
             "app_name": "نظام إدارة المبيعات والمخزون والحسابات",
@@ -2964,7 +2969,12 @@
             "back_to_workspace": "Back to Workspace Selection",
             "select_account": "Select Account or Employee",
             "choose_user_placeholder": "-- Choose employee for fast login --",
-            "manual_login_option": "Enter account manually (Other account)"
+            "manual_login_option": "Enter account manually (Other account)",
+            "fast_login_tab": "Quick Login (Staff)",
+            "standard_login_tab": "Standard Login",
+            "select_employee": "Select Employee \/ Account",
+            "fast_login_button": "Sign In Now",
+            "fast_demo_login_button": "Quick Demo Sign In (Default Password)"
         },
         "common": {
             "app_name": "Sales, Inventory & Accounting ERP System",

@@ -60,5 +60,10 @@ return [
     'select_account' => 'تحديد الحساب أو الموظف',
     'choose_user_placeholder' => '-- اختر الموظف للدخول السريع --',
     'manual_login_option' => 'كتابة الحساب يدوياً (حساب آخر)',
+    'fast_login_tab' => 'دخول سريع (موظفين)',
+    'standard_login_tab' => 'دخول عادي (يدوي)',
+    'select_employee' => 'اختر الموظف أو الحساب',
+    'fast_login_button' => 'دخول فوري للحساب',
+    'fast_demo_login_button' => 'دخول سريع تجريبي (بكلمة المرور الافتراضية)',
 ];
 

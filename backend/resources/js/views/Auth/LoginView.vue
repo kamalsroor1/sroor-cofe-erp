@@ -72,28 +72,56 @@
         </div>
       </div>
 
-      <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="space-y-4">
-        <!-- Fast Account Selection Dropdown -->
-        <div v-if="workspaceUsers.length > 0" class="space-y-1.5 text-right">
-          <label for="accountSelect" class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">
-            {{ $t('auth.select_account') }}
+      <!-- Login Mode Tabs (Shown if workspace has users) -->
+      <div v-if="workspaceUsers.length > 0" class="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700/60 font-tajawal">
+        <button
+          type="button"
+          @click="loginMode = 'quick'"
+          :class="[
+            'flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+            loginMode === 'quick'
+              ? 'bg-white dark:bg-slate-700 text-theme-primary shadow-sm'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          ]"
+        >
+          <Zap class="w-3.5 h-3.5" />
+          <span>{{ $t('auth.fast_login_tab') }}</span>
+        </button>
+        <button
+          type="button"
+          @click="loginMode = 'standard'"
+          :class="[
+            'flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer',
+            loginMode === 'standard'
+              ? 'bg-white dark:bg-slate-700 text-theme-primary shadow-sm'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          ]"
+        >
+          <Lock class="w-3.5 h-3.5" />
+          <span>{{ $t('auth.standard_login_tab') }}</span>
+        </button>
+      </div>
+
+      <!-- 1. Quick Login Form (Fast Employee Selection + Password / 1-Click Demo) -->
+      <form v-if="loginMode === 'quick' && workspaceUsers.length > 0" @submit.prevent="handleQuickLogin" class="space-y-4">
+        <!-- Account Selection Dropdown -->
+        <div class="space-y-1.5 text-right">
+          <label for="quickAccountSelect" class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">
+            {{ $t('auth.select_employee') }}
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
               <UserCheck class="w-4 h-4 text-theme-primary" />
             </div>
             <select
-              id="accountSelect"
-              v-model="selectedAccountMode"
-              @change="onAccountSelectChange"
+              id="quickAccountSelect"
+              v-model="quickUserLogin"
               class="w-full h-12 pr-10 pl-9 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-slate-900 dark:text-white font-bold text-xs focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all cursor-pointer font-tajawal appearance-none"
             >
               <option value="">{{ $t('auth.choose_user_placeholder') }}</option>
               <option v-for="user in workspaceUsers" :key="user.id" :value="user.login">
-                {{ user.name }} ({{ user.login }})
+                👤 {{ user.name }} ({{ user.login }})
               </option>
-              <option value="manual">{{ $t('auth.manual_login_option') }}</option>
             </select>
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <ChevronDown class="w-4 h-4" />
@@ -101,9 +129,52 @@
           </div>
         </div>
 
-        <!-- Phone / Username Field (Shown if manual mode is chosen or if no users list) -->
+        <!-- Password Field -->
         <BaseInput
-          v-if="workspaceUsers.length === 0 || selectedAccountMode === 'manual'"
+          v-model="quickPassword"
+          id="quickPassword"
+          type="password"
+          :label="$t('auth.password_label')"
+          :placeholder="$t('auth.password_placeholder')"
+          :required="true"
+          :leading-icon="Lock"
+          dir="ltr"
+          :error="errorMessage"
+          wrapper-class="text-right"
+        />
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          :disabled="isLoading || !quickUserLogin || !quickPassword"
+          class="w-full h-12 bg-theme-gradient text-white font-black shadow-theme-primary text-sm rounded-2xl shadow-xl shadow-theme-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-tajawal"
+        >
+          <template v-if="isLoading">
+            <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>{{ $t('auth.logging_in') }}</span>
+          </template>
+          <template v-else>
+            <LogIn class="w-5 h-5" />
+            <span>{{ $t('auth.fast_login_button') }}</span>
+          </template>
+        </button>
+
+        <!-- Temporary Fast Demo Login Button -->
+        <button
+          type="button"
+          @click="handleQuickDemoLogin"
+          :disabled="isLoading || !quickUserLogin"
+          class="w-full py-2.5 px-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer font-tajawal disabled:opacity-50"
+        >
+          <Zap class="w-3.5 h-3.5 text-amber-500" />
+          <span>{{ $t('auth.fast_demo_login_button') }}</span>
+        </button>
+      </form>
+
+      <!-- 2. Standard Login Form (Original Form Kept Intact) -->
+      <form v-else @submit.prevent="handleLogin" class="space-y-4">
+        <!-- Phone / Username Field -->
+        <BaseInput
           v-model="form.login"
           id="login"
           :label="isCentralHub ? $t('auth.phone') : $t('auth.phone_or_email')"
@@ -166,19 +237,19 @@
             <span>{{ $t('auth.login_button') }}</span>
           </template>
         </button>
-
-        <!-- Switch Workspace Bottom Button -->
-        <div v-if="hasActiveWorkspace" class="pt-2 text-center">
-          <button
-            type="button"
-            @click="switchWorkspace"
-            class="w-full py-2.5 px-4 rounded-2xl bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer font-tajawal"
-          >
-            <RefreshCw class="w-3.5 h-3.5 text-theme-primary" />
-            <span>{{ $t('auth.change_workspace') }} ({{ displayWorkspaceName }})</span>
-          </button>
-        </div>
       </form>
+
+      <!-- Switch Workspace Bottom Button -->
+      <div v-if="hasActiveWorkspace" class="pt-3 text-center">
+        <button
+          type="button"
+          @click="switchWorkspace"
+          class="w-full py-2.5 px-4 rounded-2xl bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer font-tajawal"
+        >
+          <RefreshCw class="w-3.5 h-3.5 text-theme-primary" />
+          <span>{{ $t('auth.change_workspace') }} ({{ displayWorkspaceName }})</span>
+        </button>
+      </div>
 
       <!-- Version & Platform Badge -->
       <div class="text-center pt-2">
@@ -215,6 +286,7 @@ import {
     RefreshCw,
     UserCheck,
     ChevronDown,
+    Zap,
 } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
@@ -228,7 +300,9 @@ const activeWorkspaceCode = ref(localStorage.getItem('active_tenant') || localSt
 const activeWorkspaceName = ref(localStorage.getItem('tenant_name') || '');
 
 const workspaceUsers = ref([]);
-const selectedAccountMode = ref('');
+const loginMode = ref('quick');
+const quickUserLogin = ref('');
+const quickPassword = ref('');
 
 const loadWorkspaceUsers = async () => {
     // 1. Try from localStorage first
@@ -258,18 +332,27 @@ const loadWorkspaceUsers = async () => {
     }
 
     // 3. Auto-select first user if available
-    if (workspaceUsers.value.length > 0 && !form.login) {
-        selectedAccountMode.value = workspaceUsers.value[0].login;
-        form.login = workspaceUsers.value[0].login;
+    if (workspaceUsers.value.length > 0) {
+        if (!quickUserLogin.value) {
+            quickUserLogin.value = workspaceUsers.value[0].login;
+        }
+        if (!form.login) {
+            form.login = workspaceUsers.value[0].login;
+        }
     }
 };
 
-const onAccountSelectChange = () => {
-    if (selectedAccountMode.value === 'manual') {
-        form.login = '';
-    } else if (selectedAccountMode.value) {
-        form.login = selectedAccountMode.value;
-    }
+const handleQuickLogin = async () => {
+    form.login = quickUserLogin.value;
+    form.password = quickPassword.value;
+    await handleLogin();
+};
+
+const handleQuickDemoLogin = async () => {
+    form.login = quickUserLogin.value;
+    form.password = 'password';
+    quickPassword.value = 'password';
+    await handleLogin();
 };
 
 const {

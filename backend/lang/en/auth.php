@@ -65,4 +65,9 @@ return [
     'select_account' => 'Select Account or Employee',
     'choose_user_placeholder' => '-- Choose employee for fast login --',
     'manual_login_option' => 'Enter account manually (Other account)',
+    'fast_login_tab' => 'Quick Login (Staff)',
+    'standard_login_tab' => 'Standard Login',
+    'select_employee' => 'Select Employee / Account',
+    'fast_login_button' => 'Sign In Now',
+    'fast_demo_login_button' => 'Quick Demo Sign In (Default Password)',
 ];
