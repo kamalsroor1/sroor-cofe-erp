@@ -205,7 +205,7 @@ return [
     // Multi-Cart / Held Orders
     'order_tab_title'           => 'Order #:number',
     'new_order_btn'             => 'New Order',
-    'items_count_badge'         => ':count items',
+    'order_items_badge'         => ':count items',
     'confirm_close_order_title' => 'Cancel Held Order',
     'confirm_close_order_text'  => 'This order has :count items worth :total. Are you sure you want to cancel and clear it?',
     'confirm_close_order_btn'   => 'Yes, Cancel Order',

@@ -9,6 +9,7 @@
       ref="headerRef"
       :app-version="appVersion"
       :active-store="activeStore"
+      :stores="authStore.stores"
       :active-shift="activeShift"
       :show-catalog="showCatalog"
       v-model:search-query="searchQuery"
@@ -26,6 +27,7 @@
       @close-dropdown="isSearchFocused = false"
       @open-customer-picker="showCustomerPickerModal = true"
       @clear-cart="clearCart"
+      @switch-store="handleSwitchStore"
     />
 
     <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart [DOMINANT HERO - flex-1] + Compact 3-Column Best Sellers) -->
@@ -35,16 +37,7 @@
       <section
         class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
       >
-        <!-- 📑 MULTI-CART HELD ORDERS TABS -->
-        <POSOrderTabs
-          :orders="orders"
-          :active-order-id="activeOrderId"
-          @switch-order="switchOrder"
-          @create-order="handleCreateOrder"
-          @close-order="handleCloseOrder"
-        />
-
-        <!-- Top Section: Cart Items Table -->
+        <!-- Top Section: Cart Items Table with Integrated Order Tabs Header -->
         <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[220px]">
           <POSCartTable
             :cart="cart"
@@ -54,7 +47,17 @@
             @update-qty="onCartQtyUpdate"
             @update-price="onCartPriceUpdate"
             @remove-item="removeFromCart"
-          />
+          >
+            <template #header>
+              <POSOrderTabs
+                :orders="orders"
+                :active-order-id="activeOrderId"
+                @switch-order="switchOrder"
+                @create-order="handleCreateOrder"
+                @close-order="handleCloseOrder"
+              />
+            </template>
+          </POSCartTable>
         </div>
 
         <!-- Bottom Section: Checkout & Financial Panel -->
@@ -582,6 +585,7 @@ const handleQuickCustomerSubmit = async ({ name, phone }) => {
 };
 
 const fetchPOSInitialData = async () => {
+  activeStore.value = authStore.currentStore;
   isLoading.value = true;
   try {
     const [itemsRes, customersRes, shiftRes] = await Promise.all([
@@ -596,6 +600,20 @@ const fetchPOSInitialData = async () => {
     console.error('Failed to load POS data:', e);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleSwitchStore = async (storeId) => {
+  const store = authStore.stores?.find(s => String(s.id) === String(storeId));
+  if (store) {
+    authStore.switchStore(store);
+    activeStore.value = store;
+    try {
+      const itemsRes = await api.get('/items', { params: { per_page: 500 } });
+      items.value = itemsRes.data?.data || [];
+    } catch (e) {
+      console.error('Failed to refresh items for switched store:', e);
+    }
   }
 };
 
@@ -722,12 +740,6 @@ const handleGlobalKeydown = (e) => {
     headerRef.value?.focusSearch();
   }
 };
-
-watch(() => activeStore.value?.id, (newStoreId) => {
-  if (newStoreId) {
-    loadOrders();
-  }
-});
 
 onMounted(() => {
   loadOrders();

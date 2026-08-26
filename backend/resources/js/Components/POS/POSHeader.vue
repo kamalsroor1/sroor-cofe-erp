@@ -22,7 +22,20 @@
               <span class="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded bg-theme-light text-theme-primary">v{{ appVersion }}</span>
             </div>
             <div class="flex items-center gap-2 mt-1">
-              <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">{{ activeStore?.name || $t('common.main_branch') }}</span>
+              <!-- Store Switcher directly inside POS Header -->
+              <div v-if="stores?.length > 1" class="relative inline-flex items-center">
+                <select
+                  :value="activeStore?.id"
+                  @change="$emit('switch-store', $event.target.value)"
+                  class="h-6 pr-5 pl-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
+                >
+                  <option v-for="s in stores" :key="s.id" :value="s.id" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    🏬 {{ s.name }}
+                  </option>
+                </select>
+                <ChevronDown class="w-3 h-3 text-slate-400 absolute right-1 pointer-events-none" />
+              </div>
+              <span v-else class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">{{ activeStore?.name || $t('common.main_branch') }}</span>
               <span class="text-slate-300 dark:text-slate-700">•</span>
               <span v-if="activeShift" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -237,7 +250,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { ArrowRight, Search, Users, RotateCcw, Zap, LayoutGrid } from 'lucide-vue-next';
+import { ArrowRight, Search, Users, RotateCcw, Zap, LayoutGrid, ChevronDown } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
@@ -246,6 +259,7 @@ const searchInputRef = ref(null);
 const props = defineProps({
   appVersion: { type: String, default: '1.0.10' },
   activeStore: { type: Object, default: null },
+  stores: { type: Array, default: () => [] },
   activeShift: { type: Object, default: null },
   showCatalog: { type: Boolean, default: true },
   searchQuery: { type: String, default: '' },
@@ -270,6 +284,7 @@ const emit = defineEmits([
   'close-dropdown',
   'open-customer-picker',
   'clear-cart',
+  'switch-store',
 ]);
 
 const getItemPrice = (item) => {

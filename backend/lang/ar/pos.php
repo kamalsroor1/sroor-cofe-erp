@@ -204,7 +204,7 @@ return [
     // Multi-Cart / Held Orders
     'order_tab_title'           => 'طلب #:number',
     'new_order_btn'             => 'فاتورة جديدة',
-    'items_count_badge'         => ':count صنف',
+    'order_items_badge'         => ':count صنف',
     'confirm_close_order_title' => 'إلغاء الفاتورة المعلقة',
     'confirm_close_order_text'  => 'تحتوي هذه الفاتورة على :count أصناف بقيمة :total، هل أنت متأكد من إلغائها وتفريغها؟',
     'confirm_close_order_btn'   => 'نعم، إلغاء الفاتورة',

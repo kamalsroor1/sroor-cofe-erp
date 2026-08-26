@@ -3,7 +3,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <header class="min-h-[3.5rem] sm:min-h-[4rem] py-1.5 sm:py-0 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-2.5 sm:px-5 flex items-center justify-between shadow-xs select-none backdrop-blur-md mobile-safe-header transition-all duration-200">
+    <header v-if="!isPosView" class="min-h-[3.5rem] sm:min-h-[4rem] py-1.5 sm:py-0 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-2.5 sm:px-5 flex items-center justify-between shadow-xs select-none backdrop-blur-md mobile-safe-header transition-all duration-200">
       <!-- Right Side (in RTL): Menu Toggle, User Pill, Theme, Notifications, Branch -->
       <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
         <!-- Mobile Menu Toggle Button -->
@@ -641,7 +641,6 @@ const handleStoreSwitch = (storeId) => {
     const store = authStore.stores?.find(s => String(s.id) === String(storeId));
     if (store) {
         authStore.switchStore(store);
-        window.location.reload();
     }
 };
 

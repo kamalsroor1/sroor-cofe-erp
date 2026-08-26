@@ -1,19 +1,9 @@
 <template>
   <div class="flex flex-col h-full font-tajawal select-none">
     
-    <!-- Table Card Header -->
-    <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
-      <div class="flex items-center gap-2">
-        <span class="text-lg">🧾</span>
-        <h2 class="text-sm font-black text-slate-900 dark:text-white">{{ $t('pos.current_invoice_items') }}</h2>
-        <span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-          {{ $t('pos.items_count_badge', { items: cart.length, qty: totalQty }) }}
-        </span>
-      </div>
-
-      <div class="text-xs text-slate-500 dark:text-slate-400 font-bold hidden sm:block">
-        {{ $t('pos.search_kbd_hint') }}
-      </div>
+    <!-- Table Header Slot (Multi-Cart Order Tabs) -->
+    <div v-if="$slots.header" class="shrink-0 mb-1">
+      <slot name="header" />
     </div>
 
     <!-- 📋 ACTIVE INVOICE ITEMS CONTAINER -->

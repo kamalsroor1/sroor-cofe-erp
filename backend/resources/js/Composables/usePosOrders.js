@@ -6,8 +6,7 @@ export function usePosOrders() {
 
     const getStorageKey = () => {
         const tenant = localStorage.getItem('active_tenant') || localStorage.getItem('tenant_id') || 'central';
-        const store = localStorage.getItem('current_store_id') || localStorage.getItem('active_store_id') || 'main';
-        return `pos_multi_orders_${tenant}_${store}`;
+        return `pos_multi_orders_${tenant}`;
     };
 
     const makeNewOrderObject = (orderNumber) => ({
