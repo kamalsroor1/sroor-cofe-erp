@@ -84,4 +84,26 @@ final class AuthController extends Controller
             'message' => __('auth.logout_success'),
         ], 200);
     }
+
+    /**
+     * Get list of active workspace users for quick login selection (Guest allowed)
+     */
+    public function workspaceUsers(Request $request): JsonResponse
+    {
+        $users = \App\Models\User::query()
+            ->where('is_active', true)
+            ->select(['id', 'name', 'phone', 'email'])
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($u) => [
+                'id'    => $u->id,
+                'name'  => $u->name,
+                'login' => $u->phone ?: $u->email,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $users,
+        ], 200);
+    }
 }

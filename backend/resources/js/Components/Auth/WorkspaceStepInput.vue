@@ -77,17 +77,6 @@
       </button>
     </form>
 
-    <!-- Super Admin Gateway Link -->
-    <div class="pt-4 border-t border-slate-200 dark:border-slate-800/80 text-center">
-      <button
-        type="button"
-        @click="$emit('centralLogin')"
-        class="text-[11px] font-bold text-slate-500 hover:text-theme-primary transition-colors flex items-center justify-center gap-1.5 mx-auto font-tajawal cursor-pointer"
-      >
-        <Crown class="w-3.5 h-3.5 text-theme-primary" />
-        <span>{{ $t('auth.central_login_link') }}</span>
-      </button>
-    </div>
   </div>
 </template>
 
@@ -97,7 +86,6 @@ import {
     Building,
     AlertTriangle,
     ArrowLeft,
-    Crown,
 } from 'lucide-vue-next';
 
 defineProps({

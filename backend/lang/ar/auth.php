@@ -57,5 +57,8 @@ return [
     'open_in_desktop_app' => 'فتح في تطبيق الديسك توب (Desktop App)',
     'central_login_link' => 'دخول مسؤولي المنصة المركزية (Super Admin)',
     'back_to_workspace' => 'العودة لاختيار المؤسسة',
+    'select_account' => 'تحديد الحساب أو الموظف',
+    'choose_user_placeholder' => '-- اختر الموظف للدخول السريع --',
+    'manual_login_option' => 'كتابة الحساب يدوياً (حساب آخر)',
 ];
 

@@ -25,6 +25,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
     Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_latest_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
+    Route::get('/auth/workspace-users', [AuthController::class, 'workspaceUsers'])->name('api.auth.workspace_users');
     Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->name('api.system.translations');
 
     // 2. Protected Endpoints (Requires valid Bearer Token)

@@ -60,7 +60,9 @@ return [
     'active_workspace' => 'Current Workspace',
     'magic_link_connecting' => 'Workspace identified! Connecting automatically...',
     'open_in_desktop_app' => 'Open in Desktop App',
-    'central_login_link' => 'Sign in as Central Platform Admin',
+    'central_login_link' => 'Super Admin Platform Portal',
     'back_to_workspace' => 'Back to Workspace Selection',
+    'select_account' => 'Select Account or Employee',
+    'choose_user_placeholder' => '-- Choose employee for fast login --',
+    'manual_login_option' => 'Enter account manually (Other account)',
 ];
-

@@ -65,6 +65,10 @@ const resolveWorkspace = async (targetCode) => {
             localStorage.setItem('tenant_server_url', data.server_url);
             localStorage.setItem('tenant_domain', data.domain);
 
+            if (data.users && Array.isArray(data.users)) {
+                localStorage.setItem('tenant_users', JSON.stringify(data.users));
+            }
+
             // 2. Electron Desktop Sync
             if (window.electronAPI?.isElectron) {
                 await window.electronAPI.saveSettings({
@@ -74,12 +78,13 @@ const resolveWorkspace = async (targetCode) => {
                 return;
             }
 
-            // 3. Web Redirection: If on central production domain, redirect to tenant subdomain
+            // 3. Navigation: On mobile apps / Capacitor, NEVER use external window.location.href
             const host = window.location.hostname;
             const isCentralHost = host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com';
+            const isNativeMobile = window.Capacitor !== undefined || window.isNativeMobile === true || navigator.userAgent.includes('wv') || navigator.userAgent.includes('Mobile');
 
             setTimeout(() => {
-                if (isCentralHost && data.domain && !host.startsWith(data.domain)) {
+                if (!isNativeMobile && isCentralHost && data.domain && !host.startsWith(data.domain)) {
                     window.location.href = `${data.server_url}/login`;
                 } else {
                     router.push({ name: 'login' });

@@ -126,7 +126,10 @@
             "magic_link_connecting": "تم التعرف على كود المؤسسة! جاري الضبط والاتصال تلقائياً...",
             "open_in_desktop_app": "فتح في تطبيق الديسك توب (Desktop App)",
             "central_login_link": "دخول مسؤولي المنصة المركزية (Super Admin)",
-            "back_to_workspace": "العودة لاختيار المؤسسة"
+            "back_to_workspace": "العودة لاختيار المؤسسة",
+            "select_account": "تحديد الحساب أو الموظف",
+            "choose_user_placeholder": "-- اختر الموظف للدخول السريع --",
+            "manual_login_option": "كتابة الحساب يدوياً (حساب آخر)"
         },
         "common": {
             "app_name": "نظام إدارة المبيعات والمخزون والحسابات",
@@ -2957,8 +2960,11 @@
             "active_workspace": "Current Workspace",
             "magic_link_connecting": "Workspace identified! Connecting automatically...",
             "open_in_desktop_app": "Open in Desktop App",
-            "central_login_link": "Sign in as Central Platform Admin",
-            "back_to_workspace": "Back to Workspace Selection"
+            "central_login_link": "Super Admin Platform Portal",
+            "back_to_workspace": "Back to Workspace Selection",
+            "select_account": "Select Account or Employee",
+            "choose_user_placeholder": "-- Choose employee for fast login --",
+            "manual_login_option": "Enter account manually (Other account)"
         },
         "common": {
             "app_name": "Sales, Inventory & Accounting ERP System",

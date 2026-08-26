@@ -74,8 +74,36 @@
 
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-4">
-        <!-- Phone / Username Field -->
+        <!-- Fast Account Selection Dropdown -->
+        <div v-if="workspaceUsers.length > 0" class="space-y-1.5 text-right">
+          <label for="accountSelect" class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">
+            {{ $t('auth.select_account') }}
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+              <UserCheck class="w-4 h-4 text-theme-primary" />
+            </div>
+            <select
+              id="accountSelect"
+              v-model="selectedAccountMode"
+              @change="onAccountSelectChange"
+              class="w-full h-12 pr-10 pl-9 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-slate-900 dark:text-white font-bold text-xs focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all cursor-pointer font-tajawal appearance-none"
+            >
+              <option value="">{{ $t('auth.choose_user_placeholder') }}</option>
+              <option v-for="user in workspaceUsers" :key="user.id" :value="user.login">
+                {{ user.name }} ({{ user.login }})
+              </option>
+              <option value="manual">{{ $t('auth.manual_login_option') }}</option>
+            </select>
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <ChevronDown class="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone / Username Field (Shown if manual mode is chosen or if no users list) -->
         <BaseInput
+          v-if="workspaceUsers.length === 0 || selectedAccountMode === 'manual'"
           v-model="form.login"
           id="login"
           :label="isCentralHub ? $t('auth.phone') : $t('auth.phone_or_email')"
@@ -152,43 +180,6 @@
         </div>
       </form>
 
-      <!-- Quick Account Switcher (Only on Central Hub Baraa Solutions) -->
-      <div v-if="isCentralHub" class="pt-4 border-t border-slate-200 dark:border-slate-800/80 space-y-2.5">
-        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-bold font-tajawal">
-          <span class="flex items-center gap-1">
-            <Key class="w-3.5 h-3.5 text-theme-primary" />
-            {{ $t('auth.quick_accounts') }}
-          </span>
-          <span class="text-slate-400 text-[10px]">{{ $t('auth.click_to_fill') }}</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            @click="fillAccount('01012316954', 'password')"
-            class="p-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-xl text-start transition-all group cursor-pointer"
-          >
-            <div class="flex items-center gap-1.5">
-              <Crown class="w-3.5 h-3.5 text-theme-primary group-hover:scale-110 transition-transform shrink-0" />
-              <span class="text-[11px] font-bold text-slate-900 dark:text-slate-200 truncate font-tajawal">{{ $t('auth.super_admin_1') }}</span>
-            </div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5" dir="ltr">01012316954</div>
-          </button>
-
-          <button
-            type="button"
-            @click="fillAccount('01140003020', 'password')"
-            class="p-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-xl text-start transition-all group cursor-pointer"
-          >
-            <div class="flex items-center gap-1.5">
-              <Crown class="w-3.5 h-3.5 text-theme-primary group-hover:scale-110 transition-transform shrink-0" />
-              <span class="text-[11px] font-bold text-slate-900 dark:text-slate-200 truncate font-tajawal">{{ $t('auth.super_admin_2') }}</span>
-            </div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5" dir="ltr">01140003020</div>
-          </button>
-        </div>
-      </div>
-
       <!-- Version & Platform Badge -->
       <div class="text-center pt-2">
         <span class="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400">
@@ -206,6 +197,7 @@ import { useAuthStore } from '../../stores/auth';
 import versionData from '../../version.json';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useBiometricAuth } from '../../Composables/useBiometricAuth';
+import api from '../../services/api';
 import BaseInput from '../../Components/Form/BaseInput.vue';
 import BaseCheckbox from '../../Components/Form/BaseCheckbox.vue';
 import WorkspaceBadge from '../../Components/Auth/WorkspaceBadge.vue';
@@ -217,12 +209,12 @@ import {
     Eye,
     EyeOff,
     LogIn,
-    Key,
-    Crown,
     Sun,
     Moon,
     Fingerprint,
     RefreshCw,
+    UserCheck,
+    ChevronDown,
 } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
@@ -234,6 +226,51 @@ const appConfigStore = useAppConfigStore();
 
 const activeWorkspaceCode = ref(localStorage.getItem('active_tenant') || localStorage.getItem('tenant_id') || '');
 const activeWorkspaceName = ref(localStorage.getItem('tenant_name') || '');
+
+const workspaceUsers = ref([]);
+const selectedAccountMode = ref('');
+
+const loadWorkspaceUsers = async () => {
+    // 1. Try from localStorage first
+    try {
+        const cached = localStorage.getItem('tenant_users');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                workspaceUsers.value = parsed;
+            }
+        }
+    } catch (e) {
+        // ignore parse error
+    }
+
+    // 2. Fetch fresh list from API if connected to workspace
+    if (activeWorkspaceCode.value || !isCentralHub.value) {
+        try {
+            const response = await api.get('/auth/workspace-users');
+            if (response.data?.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
+                workspaceUsers.value = response.data.data;
+                localStorage.setItem('tenant_users', JSON.stringify(response.data.data));
+            }
+        } catch (e) {
+            // ignore fetch error
+        }
+    }
+
+    // 3. Auto-select first user if available
+    if (workspaceUsers.value.length > 0 && !form.login) {
+        selectedAccountMode.value = workspaceUsers.value[0].login;
+        form.login = workspaceUsers.value[0].login;
+    }
+};
+
+const onAccountSelectChange = () => {
+    if (selectedAccountMode.value === 'manual') {
+        form.login = '';
+    } else if (selectedAccountMode.value) {
+        form.login = selectedAccountMode.value;
+    }
+};
 
 const {
     isAvailable,
@@ -275,6 +312,7 @@ const switchWorkspace = async () => {
     localStorage.removeItem('tenant_name');
     localStorage.removeItem('tenant_server_url');
     localStorage.removeItem('tenant_domain');
+    localStorage.removeItem('tenant_users');
 
     if (window.electronAPI?.isElectron) {
         await window.electronAPI.saveSettings({
@@ -283,14 +321,8 @@ const switchWorkspace = async () => {
         });
     }
 
-    const host = window.location.hostname;
-    const isCentral = host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1';
-
-    if (!isCentral) {
-        window.location.href = 'https://baraa-solutions.com/connect';
-    } else {
-        router.push({ name: 'workspace.connect' });
-    }
+    // On mobile and web SPA: Stay 100% inside the app, NEVER open external browser window!
+    router.push({ name: 'workspace.connect' });
 };
 
 const form = reactive({
@@ -313,6 +345,8 @@ onMounted(async () => {
         }
     }
 
+    await loadWorkspaceUsers();
+
     if (!window.spaTranslations || Object.keys(window.spaTranslations).length === 0) {
         await appConfigStore.fetchTranslations('ar');
     }
@@ -323,13 +357,6 @@ onMounted(async () => {
         handleBiometricLogin();
     }
 });
-
-
-const fillAccount = (phone, password) => {
-    form.login = phone;
-    form.password = password;
-    errorMessage.value = '';
-};
 
 const handleBiometricLogin = async () => {
     errorMessage.value = '';
