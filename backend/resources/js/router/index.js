@@ -4,6 +4,16 @@ import { useAppConfigStore } from '../stores/appConfig';
 
 const routes = [
     {
+        path: '/connect',
+        alias: '/workspace',
+        name: 'workspace.connect',
+        component: () => import('../views/Auth/WorkspaceConnectView.vue'),
+        meta: {
+            title: 'الاتصال ببيئة العمل',
+            guestOnly: true,
+        },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),

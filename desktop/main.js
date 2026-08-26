@@ -11,6 +11,96 @@ let mainWindow = null;
 let splashWindow = null;
 let appTray = null;
 
+// ══════════════════════════════════════════════════════════════════════════
+// 🔗 DEEP LINKING PROTOCOL (sroor://connect?tenant=2m)
+// ══════════════════════════════════════════════════════════════════════════
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient('sroor', process.execPath, [path.resolve(process.argv[1])]);
+    }
+} else {
+    app.setAsDefaultProtocolClient('sroor');
+}
+
+function parseTenantFromDeepLink(urlStr) {
+    try {
+        if (!urlStr || typeof urlStr !== 'string') return null;
+        if (!urlStr.startsWith('sroor://')) return null;
+
+        const parsed = new URL(urlStr);
+        const tenant = parsed.searchParams.get('tenant') || parsed.searchParams.get('code');
+        return tenant ? tenant.trim().toLowerCase() : null;
+    } catch (e) {
+        console.error('[Electron] Error parsing deep link URL:', e);
+        return null;
+    }
+}
+
+function applyDeepLinkTenant(tenantCode) {
+    if (!tenantCode) return;
+    const serverUrl = `https://${tenantCode}.baraa-solutions.com`;
+    console.log(`[Electron] Applying deep link workspace: ${tenantCode} -> ${serverUrl}`);
+    settingsStore.set('tenantId', tenantCode);
+    settingsStore.set('serverUrl', serverUrl);
+    if (mainWindow) {
+        mainWindow.loadURL(serverUrl + '/login');
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+    }
+}
+
+function extractDeepLinkFromArgs(argv) {
+    if (!Array.isArray(argv)) return null;
+    for (const arg of argv) {
+        if (arg && typeof arg === 'string' && arg.startsWith('sroor://')) {
+            return parseTenantFromDeepLink(arg);
+        }
+    }
+    return null;
+}
+
+function getTargetAppUrl() {
+    const coldTenant = extractDeepLinkFromArgs(process.argv);
+    if (coldTenant) {
+        const serverUrl = `https://${coldTenant}.baraa-solutions.com`;
+        settingsStore.set('tenantId', coldTenant);
+        settingsStore.set('serverUrl', serverUrl);
+        return `${serverUrl}/login`;
+    }
+
+    const savedUrl = settingsStore.get('serverUrl');
+    const savedTenant = settingsStore.get('tenantId');
+
+    if (savedUrl && savedUrl.trim() && savedUrl !== 'https://baraa-solutions.com') {
+        return savedUrl;
+    }
+
+    if (savedTenant && savedTenant.trim()) {
+        return `https://${savedTenant.trim()}.baraa-solutions.com/login`;
+    }
+
+    return 'https://baraa-solutions.com/connect';
+}
+
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    console.log('[Electron] Another instance is already running. Quitting.');
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine) => {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+        }
+        const tenantCode = extractDeepLinkFromArgs(commandLine);
+        if (tenantCode) {
+            applyDeepLinkTenant(tenantCode);
+        }
+    });
+}
+
 function createSplashWindow() {
     splashWindow = new BrowserWindow({
         width: 500,
@@ -148,8 +238,8 @@ function createMainWindow() {
         // Allow internal navigation
     });
 
-    // Target URL (Remote cloud tenant or local)
-    const targetUrl = settingsStore.get('serverUrl') || 'https://2m.baraa-solutions.com';
+    // Target URL (Remote cloud tenant or universal workspace connect)
+    const targetUrl = getTargetAppUrl();
 
     console.log('[Electron] Loading application URL:', targetUrl);
     mainWindow.loadURL(targetUrl);
@@ -415,9 +505,15 @@ ipcMain.handle('config:get-settings', () => {
 });
 
 ipcMain.handle('config:save-settings', (event, newSettings) => {
+    const oldUrl = settingsStore.get('serverUrl');
     const res = settingsStore.saveSettings(newSettings);
-    if (newSettings.serverUrl && newSettings.serverUrl !== settingsStore.get('serverUrl')) {
-        if (mainWindow) mainWindow.loadURL(newSettings.serverUrl);
+    if (newSettings.serverUrl && newSettings.serverUrl !== oldUrl) {
+        if (mainWindow) {
+            const dest = (newSettings.serverUrl.endsWith('/login') || newSettings.serverUrl.includes('/connect') || newSettings.serverUrl.includes('/workspace'))
+                ? newSettings.serverUrl
+                : `${newSettings.serverUrl}/login`;
+            mainWindow.loadURL(dest);
+        }
     }
     return res;
 });

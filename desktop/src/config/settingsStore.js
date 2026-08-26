@@ -6,8 +6,9 @@ class SettingsStore {
     constructor() {
         this.configFilePath = null;
         this.defaults = {
-            serverUrl: 'https://2m.baraa-solutions.com',
-            tenantId: '2m',
+            serverUrl: '',
+            tenantId: '',
+            centralUrl: 'https://baraa-solutions.com',
             thermalPrinterName: '',
             paperWidth: '80mm',
             autoOpenDrawerOnCash: true,

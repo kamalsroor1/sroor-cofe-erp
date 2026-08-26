@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\SystemContextApiController;
 Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
     Route::get('/ping', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]))->name('api.ping');
+    Route::get('/central/tenants/resolve', [\App\Http\Controllers\Api\CentralTenantResolverController::class, 'resolve'])->name('api.central.tenants.resolve');
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
     Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->name('api.app.check_update');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
@@ -218,3 +219,6 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         });
     });
 });
+
+// Direct Central Workspace Resolver alias without v1 prefix
+Route::get('/central/tenants/resolve', [\App\Http\Controllers\Api\CentralTenantResolverController::class, 'resolve'])->name('api.central.tenants.resolve.alias');

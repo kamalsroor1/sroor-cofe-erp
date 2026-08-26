@@ -16,6 +16,11 @@ class ResolveApiTenancy
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // 0. Bypass tenancy initialization for central platform routes
+        if ($request->is('api/v1/central/*') || $request->is('api/central/*')) {
+            return $next($request);
+        }
+
         // 1. Check if tenancy is already initialized (e.g. by domain)
         if (function_exists('tenancy') && tenancy()->initialized) {
             return $next($request);

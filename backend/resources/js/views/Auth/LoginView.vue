@@ -19,6 +19,14 @@
     <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
     <div class="w-full max-w-md bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-300/40 dark:shadow-none space-y-6 relative z-10">
+      <!-- Active Workspace Badge (Tenant Switcher) -->
+      <WorkspaceBadge
+        v-if="hasActiveWorkspace"
+        :workspace-name="displayWorkspaceName"
+        :workspace-code="activeWorkspaceCode"
+        @change="switchWorkspace"
+      />
+
       <!-- Header / Brand Logo -->
       <div class="text-center space-y-3">
         <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-theme-border text-theme-primary shadow-2xl shadow-amber-500/10">
@@ -26,10 +34,10 @@
         </div>
         <div>
           <h1 class="text-2xl font-black text-slate-900 dark:text-white font-tajawal tracking-tight">
-            {{ isCentralHub ? 'منظومة ERP السحابية' : (appConfigStore.tenant?.name || appConfigStore.companyName || 'منظومة المحل') }}
+            {{ isExplicitCentralAdmin ? 'منظومة ERP السحابية' : (displayWorkspaceName || appConfigStore.tenant?.name || appConfigStore.companyName || 'منظومة المحل') }}
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">
-            {{ isCentralHub ? 'لوحة الإدارة المركزية والفوترة السحابية' : (appConfigStore.companySubtitle || 'لإدارة المبيعات والمخزون والفروع') }}
+            {{ isExplicitCentralAdmin ? 'لوحة الإدارة المركزية والفوترة السحابية' : (appConfigStore.companySubtitle || 'لإدارة المبيعات والمخزون والفروع') }}
           </p>
         </div>
       </div>
@@ -188,6 +196,7 @@ import { useAppConfigStore } from '../../stores/appConfig';
 import { useBiometricAuth } from '../../Composables/useBiometricAuth';
 import BaseInput from '../../Components/Form/BaseInput.vue';
 import BaseCheckbox from '../../Components/Form/BaseCheckbox.vue';
+import WorkspaceBadge from '../../Components/Auth/WorkspaceBadge.vue';
 import {
     AlertTriangle,
     Building2,
@@ -210,6 +219,9 @@ const route = useRoute();
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 
+const activeWorkspaceCode = ref(localStorage.getItem('active_tenant') || localStorage.getItem('tenant_id') || '');
+const activeWorkspaceName = ref(localStorage.getItem('tenant_name') || '');
+
 const {
     isAvailable,
     isBiometricEnabled,
@@ -229,8 +241,44 @@ const toggleTheme = () => {
 
 const isCentralHub = computed(() => {
     const host = window.location.hostname;
-    return host === 'baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1';
+    return host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1';
 });
+
+const isExplicitCentralAdmin = computed(() => {
+    return isCentralHub.value && route.query.central === '1';
+});
+
+const hasActiveWorkspace = computed(() => {
+    return !isExplicitCentralAdmin.value && (!!activeWorkspaceCode.value || !isCentralHub.value);
+});
+
+const displayWorkspaceName = computed(() => {
+    return activeWorkspaceName.value || appConfigStore.tenant?.name || activeWorkspaceCode.value;
+});
+
+const switchWorkspace = async () => {
+    localStorage.removeItem('active_tenant');
+    localStorage.removeItem('tenant_id');
+    localStorage.removeItem('tenant_name');
+    localStorage.removeItem('tenant_server_url');
+    localStorage.removeItem('tenant_domain');
+
+    if (window.electronAPI?.isElectron) {
+        await window.electronAPI.saveSettings({
+            tenantId: '',
+            serverUrl: 'https://baraa-solutions.com',
+        });
+    }
+
+    const host = window.location.hostname;
+    const isCentral = host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1';
+
+    if (!isCentral) {
+        window.location.href = 'https://baraa-solutions.com/workspace';
+    } else {
+        router.push({ name: 'workspace.connect' });
+    }
+};
 
 const form = reactive({
     login: '',
@@ -243,6 +291,15 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 
 onMounted(async () => {
+    // 0. If on central domain and not explicit central admin, verify active workspace or guide to step 1
+    if (isCentralHub.value && route.query.central !== '1') {
+        const storedTenant = localStorage.getItem('active_tenant') || localStorage.getItem('tenant_id');
+        if (!storedTenant) {
+            router.replace({ name: 'workspace.connect' });
+            return;
+        }
+    }
+
     if (!window.spaTranslations || Object.keys(window.spaTranslations).length === 0) {
         await appConfigStore.fetchTranslations('ar');
     }
@@ -253,6 +310,7 @@ onMounted(async () => {
         handleBiometricLogin();
     }
 });
+
 
 const fillAccount = (phone, password) => {
     form.login = phone;
