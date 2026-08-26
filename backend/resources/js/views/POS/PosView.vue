@@ -35,6 +35,15 @@
       <section
         class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
       >
+        <!-- 📑 MULTI-CART HELD ORDERS TABS -->
+        <POSOrderTabs
+          :orders="orders"
+          :active-order-id="activeOrderId"
+          @switch-order="switchOrder"
+          @create-order="handleCreateOrder"
+          @close-order="handleCloseOrder"
+        />
+
         <!-- Top Section: Cart Items Table -->
         <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[220px]">
           <POSCartTable
@@ -122,6 +131,10 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'pos.index',
+});
+
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
@@ -130,6 +143,7 @@ import versionData from '../../version.json';
 
 import POSHeader           from '../../Components/POS/POSHeader.vue';
 import POSCartTable        from '../../Components/POS/POSCartTable.vue';
+import POSOrderTabs        from '../../Components/POS/POSOrderTabs.vue';
 import POSQuickPinnedItems from '../../Components/POS/POSQuickPinnedItems.vue';
 import POSCheckoutPanel    from '../../Components/POS/POSCheckoutPanel.vue';
 import POSCustomerModal    from '../../Components/POS/POSCustomerModal.vue';
@@ -140,10 +154,25 @@ import POSProductGrid      from '../../Components/POS/POSProductGrid.vue';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
+import { useFormatters } from '../../Composables/useFormatters';
+import { usePosOrders } from '../../Composables/usePosOrders';
 
 const appConfigStore = useAppConfigStore();
 const { isDesktop, printThermalReceipt, openCashDrawer } = useDesktopHardware();
 const { playScanBeep, playSuccessChime, playDrawerSound, playErrorTone } = useAudioFeedback();
+const { formatMoney } = useFormatters();
+
+const {
+  orders,
+  activeOrderId,
+  activeOrder,
+  loadOrders,
+  saveOrders,
+  createNewOrder,
+  switchOrder,
+  closeOrder,
+  clearActiveOrder,
+} = usePosOrders();
 
 const appVersion = ref(versionData?.version || '1.0.10');
 const headerRef = ref(null);
@@ -168,22 +197,59 @@ const toggleCatalog = () => {
 const isLoading = ref(true);
 const isSubmitting = ref(false);
 
-const cart = ref([]);
+const cart = computed({
+  get: () => activeOrder.value?.cart || [],
+  set: (val) => { if (activeOrder.value) activeOrder.value.cart = val; },
+});
+
+const selectedCustomerId = computed({
+  get: () => activeOrder.value?.selectedCustomerId ?? null,
+  set: (val) => { if (activeOrder.value) activeOrder.value.selectedCustomerId = val; },
+});
+
+const activePriceTier = computed({
+  get: () => activeOrder.value?.activePriceTier || 'retail',
+  set: (val) => { if (activeOrder.value) activeOrder.value.activePriceTier = val; },
+});
+
+const discountType = computed({
+  get: () => activeOrder.value?.discountType || 'percentage',
+  set: (val) => { if (activeOrder.value) activeOrder.value.discountType = val; },
+});
+
+const discountValue = computed({
+  get: () => activeOrder.value?.discountValue ?? '0',
+  set: (val) => { if (activeOrder.value) activeOrder.value.discountValue = val; },
+});
+
+const paymentType = computed({
+  get: () => activeOrder.value?.paymentType || 'cash',
+  set: (val) => { if (activeOrder.value) activeOrder.value.paymentType = val; },
+});
+
+const paymentMethod = computed({
+  get: () => activeOrder.value?.paymentMethod || 'cash',
+  set: (val) => { if (activeOrder.value) activeOrder.value.paymentMethod = val; },
+});
+
+const paidAmount = computed({
+  get: () => activeOrder.value?.paidAmount ?? '0.000',
+  set: (val) => { if (activeOrder.value) activeOrder.value.paidAmount = val; },
+});
+
+const cashReceived = computed({
+  get: () => activeOrder.value?.cashReceived ?? '0.000',
+  set: (val) => { if (activeOrder.value) activeOrder.value.cashReceived = val; },
+});
+
+const additionalExpenses = computed({
+  get: () => activeOrder.value?.additionalExpenses || [],
+  set: (val) => { if (activeOrder.value) activeOrder.value.additionalExpenses = val; },
+});
+
 const searchQuery = ref('');
 const isSearchFocused = ref(false);
 const highlightedIndex = ref(0);
-
-const selectedCustomerId = ref(null);
-const activePriceTier = ref('retail');
-
-const discountType = ref('percentage');
-const discountValue = ref('0');
-
-const paymentType = ref('cash');
-const paymentMethod = ref('cash');
-const paidAmount = ref('0.000');
-const cashReceived = ref('0.000');
-const additionalExpenses = ref([]);
 
 const showCustomerPickerModal = ref(false);
 const customerSearchQuery = ref('');
@@ -456,6 +522,35 @@ const clearCart = () => {
   discountValue.value = '0';
   additionalExpenses.value = [];
   cashReceived.value = '0.000';
+  saveOrders();
+  headerRef.value?.focusSearch();
+};
+
+const handleCreateOrder = () => {
+  createNewOrder();
+  nextTick(() => {
+    headerRef.value?.focusSearch();
+  });
+};
+
+const handleCloseOrder = async (order) => {
+  if (order.cart && order.cart.length > 0) {
+    const subtotal = order.cart.reduce((s, i) => s + ((parseFloat(i.quantity) || 0) * (parseFloat(i.unit_price) || 0)), 0);
+    const result = await Swal.fire({
+      title: trans('pos.confirm_close_order_title'),
+      text: trans('pos.confirm_close_order_text', {
+        count: order.cart.length,
+        total: `${formatMoney(subtotal)} ج.م`,
+      }),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: trans('pos.confirm_close_order_btn'),
+      cancelButtonText: trans('common.cancel'),
+      confirmButtonColor: '#e11d48',
+    });
+    if (!result.isConfirmed) return;
+  }
+  closeOrder(order.id);
   headerRef.value?.focusSearch();
 };
 
@@ -537,11 +632,8 @@ const submitInvoice = async (printImmediately = false) => {
       showSuccessModal.value = true;
     }
     
-    // Reset Cart
-    cart.value = [];
-    discountValue.value = '0';
-    additionalExpenses.value = [];
-    cashReceived.value = '0.000';
+    // Clear completed order & switch to remaining or fresh order
+    clearActiveOrder();
     headerRef.value?.focusSearch();
   } catch (e) {
     playErrorTone();
@@ -614,6 +706,9 @@ const handleGlobalKeydown = (e) => {
   if (e.key === 'F2') {
     e.preventDefault();
     headerRef.value?.focusSearch();
+  } else if (e.key === 'F4') {
+    e.preventDefault();
+    handleCreateOrder();
   } else if (e.key === 'F10') {
     e.preventDefault();
     toggleCatalog();
@@ -628,7 +723,14 @@ const handleGlobalKeydown = (e) => {
   }
 };
 
+watch(() => activeStore.value?.id, (newStoreId) => {
+  if (newStoreId) {
+    loadOrders();
+  }
+});
+
 onMounted(() => {
+  loadOrders();
   fetchPOSInitialData();
   window.addEventListener('keydown', handleGlobalKeydown);
   nextTick(() => headerRef.value?.focusSearch());

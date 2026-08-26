@@ -23,6 +23,12 @@
           <kbd class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono font-black text-emerald-500 text-xs shadow-xs">F2</kbd>
         </div>
 
+        <!-- F4 -->
+        <div class="py-2.5 flex items-center justify-between">
+          <span class="text-slate-700 dark:text-slate-300">فتح فاتورة / طلب معلق جديد (New POS Order)</span>
+          <kbd class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono font-black text-theme-primary text-xs shadow-xs">F4</kbd>
+        </div>
+
         <!-- F9 / Ctrl+Enter -->
         <div class="py-2.5 flex items-center justify-between">
           <span class="text-slate-700 dark:text-slate-300">حفظ الفاتورة والطباعة الحرارية الصامتة الفورية</span>

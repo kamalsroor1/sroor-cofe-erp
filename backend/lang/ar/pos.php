@@ -198,7 +198,15 @@ return [
     'product_grid'              => 'شبكة المنتجات',
     'show_menu'                 => 'عرض المنيو',
     'hide_menu'                 => 'إخفاء المنيو',
-    'toggle_menu'               => 'إظهار/إخفاء المنيو',
     'walk_in_customer'          => 'عميل نقدي',
     'start_new_invoice'         => 'بدء فاتورة جديدة',
+
+    // Multi-Cart / Held Orders
+    'order_tab_title'           => 'طلب #:number',
+    'new_order_btn'             => 'فاتورة جديدة',
+    'items_count_badge'         => ':count صنف',
+    'confirm_close_order_title' => 'إلغاء الفاتورة المعلقة',
+    'confirm_close_order_text'  => 'تحتوي هذه الفاتورة على :count أصناف بقيمة :total، هل أنت متأكد من إلغائها وتفريغها؟',
+    'confirm_close_order_btn'   => 'نعم، إلغاء الفاتورة',
+    'held_orders_tooltip'       => 'الفواتير المعلقة والحالية',
 ];

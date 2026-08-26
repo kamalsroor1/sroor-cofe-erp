@@ -1398,7 +1398,7 @@
             "wholesale_short": "جملة",
             "clear_cart_full": "إفراغ السلة بالكامل",
             "current_invoice_items": "بنود الفاتورة الحالية",
-            "items_count_badge": ":items صنف (:qty قطعة)",
+            "items_count_badge": ":count صنف",
             "search_kbd_hint": "اضغط F2 للبحث أو امسح الباركود",
             "item_and_code": "الصنف والكود",
             "delete_item": "حذف",
@@ -1440,9 +1440,14 @@
             "product_grid": "شبكة المنتجات",
             "show_menu": "عرض المنيو",
             "hide_menu": "إخفاء المنيو",
-            "toggle_menu": "إظهار\/إخفاء المنيو",
             "walk_in_customer": "عميل نقدي",
-            "start_new_invoice": "بدء فاتورة جديدة"
+            "start_new_invoice": "بدء فاتورة جديدة",
+            "order_tab_title": "طلب #:number",
+            "new_order_btn": "فاتورة جديدة",
+            "confirm_close_order_title": "إلغاء الفاتورة المعلقة",
+            "confirm_close_order_text": "تحتوي هذه الفاتورة على :count أصناف بقيمة :total، هل أنت متأكد من إلغائها وتفريغها؟",
+            "confirm_close_order_btn": "نعم، إلغاء الفاتورة",
+            "held_orders_tooltip": "الفواتير المعلقة والحالية"
         },
         "profile": {
             "title": "الملف الشخصي وإعدادات الحساب",
@@ -4241,7 +4246,7 @@
             "wholesale_short": "Wholesale",
             "clear_cart_full": "Clear Entire Cart",
             "current_invoice_items": "Current Invoice Items",
-            "items_count_badge": ":items items (:qty pcs)",
+            "items_count_badge": ":count items",
             "search_kbd_hint": "Press F2 to search or scan barcode",
             "item_and_code": "Item & Code",
             "delete_item": "Delete",
@@ -4283,8 +4288,13 @@
             "product_grid": "Product Grid",
             "show_menu": "Show Menu",
             "hide_menu": "Hide Menu",
-            "toggle_menu": "Toggle Menu",
-            "walk_in_customer": "Walk-in Customer"
+            "walk_in_customer": "Walk-in Customer",
+            "order_tab_title": "Order #:number",
+            "new_order_btn": "New Order",
+            "confirm_close_order_title": "Cancel Held Order",
+            "confirm_close_order_text": "This order has :count items worth :total. Are you sure you want to cancel and clear it?",
+            "confirm_close_order_btn": "Yes, Cancel Order",
+            "held_orders_tooltip": "Current & Held Orders"
         },
         "profile": {
             "title": "User Profile & Account Settings",
