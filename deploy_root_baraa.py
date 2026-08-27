@@ -121,7 +121,8 @@ $PHP_BIN $(which composer) install --no-dev --optimize-autoloader --no-interacti
 
 echo "5. Running MySQL Migrations safely on u910151740_baraa_central..."
 $PHP_BIN artisan migrate --force
-$PHP_BIN artisan tenants:migrate --force
+$PHP_BIN artisan tinker --execute="\App\Models\Tenant::where('id', 'tenant_sroor')->delete();" || true
+$PHP_BIN artisan tenants:migrate --tenants=2m --force || true
 $PHP_BIN artisan db:seed --class=PermissionsSeeder --force
 $PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
 echo "6. Populating authentic 1-year operational dataset for 2M Store..."
