@@ -76,8 +76,11 @@
             :change-due="changeDue"
             :cart-empty="cart.length === 0"
             :is-submitting="isSubmitting"
+            :expenses-count="additionalExpenses.length"
             @apply-discount="applyDiscountPreset"
             @submit="submitInvoice"
+            @open-expenses="showExpensesModal = true"
+            @open-multi-payment="showMultiPaymentModal = true"
           />
         </div>
       </section>
@@ -131,6 +134,23 @@
       @print="printLastInvoice"
     />
 
+    <!-- 🚛 Expenses Modal (Shipping & Additional Services) -->
+    <POSExpensesModal
+      :show="showExpensesModal"
+      :expenses="additionalExpenses"
+      @close="showExpensesModal = false"
+      @update:expenses="(val) => { additionalExpenses = val; showExpensesModal = false; }"
+    />
+
+    <!-- 💳 Multi-Payment Split Modal -->
+    <POSMultiPaymentModal
+      :show="showMultiPaymentModal"
+      :net-total="cartNetTotal"
+      :payments="multiPayments"
+      @close="showMultiPaymentModal = false"
+      @confirm="handleMultiPaymentConfirm"
+    />
+
   </div>
 </template>
 
@@ -155,6 +175,8 @@ import POSSuccessModal     from '../../Components/POS/POSSuccessModal.vue';
 import POSSkeleton         from '../../Components/POS/POSSkeleton.vue';
 import POSCategorySidebar  from '../../Components/POS/POSCategorySidebar.vue';
 import POSProductGrid      from '../../Components/POS/POSProductGrid.vue';
+import POSExpensesModal    from '../../Components/POS/POSExpensesModal.vue';
+import POSMultiPaymentModal from '../../Components/POS/POSMultiPaymentModal.vue';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useAuthStore } from '../../stores/auth';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
@@ -265,6 +287,9 @@ const isSubmittingQuickCustomer = ref(false);
 
 const showSuccessModal = ref(false);
 const lastCreatedInvoice = ref(null);
+const showExpensesModal = ref(false);
+const showMultiPaymentModal = ref(false);
+const multiPayments = ref([]);
 
 const getItemPrice = (item) => {
   if (!item) return 0;
@@ -529,6 +554,7 @@ const clearCart = () => {
   cart.value = [];
   discountValue.value = '0';
   additionalExpenses.value = [];
+  multiPayments.value = [];
   cashReceived.value = '0.000';
   saveOrders();
   headerRef.value?.focusSearch();
@@ -565,6 +591,21 @@ const handleCloseOrder = async (order) => {
 const applyDiscountPreset = ({ value, type }) => {
   discountValue.value = value.toString();
   discountType.value = type;
+};
+
+const handleMultiPaymentConfirm = (payments) => {
+  multiPayments.value = payments;
+  showMultiPaymentModal.value = false;
+  // Set total paid amount from multi-payment
+  const totalPaid = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  paidAmount.value = totalPaid.toString();
+  cashReceived.value = totalPaid.toString();
+  // Set payment type to cash (since multi-payment covers full amount)
+  if (totalPaid >= cartNetTotal.value) {
+    paymentType.value = 'cash';
+  } else {
+    paymentType.value = 'partial';
+  }
 };
 
 const selectCustomer = (cust) => {
@@ -675,6 +716,7 @@ const submitInvoice = async (printImmediately = false) => {
         unit_price: i.unit_price,
       })),
       expenses: additionalExpenses.value,
+      payments: multiPayments.value.length > 0 ? multiPayments.value : undefined,
     };
 
     const res = await api.post('/invoices', payload);

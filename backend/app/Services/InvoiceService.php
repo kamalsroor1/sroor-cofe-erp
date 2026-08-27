@@ -221,8 +221,24 @@ class InvoiceService
                 'total_cost'       => $totalCost,
             ]);
 
-            // S5: Record Payment Voucher if money was paid
-            if (bccomp($paidAmount, '0.000', 3) > 0) {
+            // S5: Record Payment Voucher(s) if money was paid
+            if (!empty($data['payments']) && is_array($data['payments'])) {
+                foreach ($data['payments'] as $p) {
+                    $pAmount = (string)($p['amount'] ?? '0.000');
+                    if (bccomp($pAmount, '0.000', 3) > 0) {
+                        Payment::create([
+                            'payment_number' => 'PAY-INV-' . strtoupper(uniqid()),
+                            'customer_id'    => $customer->id,
+                            'invoice_id'     => $invoice->id,
+                            'user_id'        => Auth::id() ?? 1,
+                            'amount'         => $pAmount,
+                            'payment_date'   => $invoice->invoice_date,
+                            'payment_method' => $p['method'] ?? 'cash',
+                            'notes'          => "سداد مجزأ عند إصدار الفاتورة رقم {$invoice->invoice_number}",
+                        ]);
+                    }
+                }
+            } elseif (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
                     'payment_number' => 'PAY-INV-' . strtoupper(uniqid()),
                     'customer_id'    => $customer->id,
@@ -522,10 +538,26 @@ class InvoiceService
                 'notes'            => $data['notes'] ?? $lockedInvoice->notes,
             ]);
 
-            // 6. Delete previous payments and re-create payment voucher if paid
+            // 6. Delete previous payments and re-create payment voucher(s) if paid
             Payment::where('invoice_id', $lockedInvoice->id)->delete();
 
-            if (bccomp($paidAmount, '0.000', 3) > 0) {
+            if (!empty($data['payments']) && is_array($data['payments'])) {
+                foreach ($data['payments'] as $p) {
+                    $pAmount = (string)($p['amount'] ?? '0.000');
+                    if (bccomp($pAmount, '0.000', 3) > 0) {
+                        Payment::create([
+                            'payment_number' => 'PAY-INV-' . strtoupper(uniqid()),
+                            'customer_id'    => $newCustomerId,
+                            'invoice_id'     => $lockedInvoice->id,
+                            'user_id'        => Auth::id() ?? 1,
+                            'amount'         => $pAmount,
+                            'payment_date'   => $lockedInvoice->invoice_date,
+                            'payment_method' => $p['method'] ?? 'cash',
+                            'notes'          => "سداد مجزأ عند تعديل الفاتورة رقم {$lockedInvoice->invoice_number}",
+                        ]);
+                    }
+                }
+            } elseif (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
                     'payment_number' => 'PAY-INV-' . strtoupper(uniqid()),
                     'customer_id'    => $newCustomerId,

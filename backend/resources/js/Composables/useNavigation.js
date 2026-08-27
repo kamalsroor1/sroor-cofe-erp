@@ -103,6 +103,7 @@ export function useNavigation() {
             icon: Package,
             iconBg: 'bg-sky-500/10 text-sky-500',
             module: 'inventory_and_stores',
+            comingSoon: true,
             items: [
                 {
                     key: 'items',
@@ -170,6 +171,7 @@ export function useNavigation() {
             icon: Truck,
             iconBg: 'bg-indigo-500/10 text-indigo-500',
             module: 'purchases_and_suppliers',
+            comingSoon: true,
             items: [
                 {
                     key: 'purchases',
@@ -196,6 +198,7 @@ export function useNavigation() {
             titleKey: 'nav.group_financials',
             icon: BarChart3,
             iconBg: 'bg-purple-500/10 text-purple-500',
+            comingSoon: true,
             items: [
                 {
                     key: 'expenses',
@@ -230,6 +233,7 @@ export function useNavigation() {
             titleKey: 'nav.group_management',
             icon: ShieldCheck,
             iconBg: 'bg-slate-500/10 text-slate-500',
+            comingSoon: true,
             items: [
                 {
                     key: 'users',

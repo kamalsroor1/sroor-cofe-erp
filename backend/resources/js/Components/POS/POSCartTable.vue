@@ -33,6 +33,39 @@
                     <span>•</span>
                     <span class="text-slate-500 font-tajawal">{{ item.unit || 'قطعة' }}</span>
                   </div>
+                  
+                  <!-- Dual Price Badges -->
+                  <div class="flex flex-wrap items-center gap-1.5 mt-2 font-tajawal">
+                    <!-- Retail Badge -->
+                    <button
+                      v-if="(item.price_retail || item.unit_price) > 0"
+                      type="button"
+                      @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
+                      class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
+                      :class="parseFloat(item.unit_price) === parseFloat(item.price_retail || item.unit_price)
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black'
+                        : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-400'"
+                      :title="$t('pos.price_retail')"
+                    >
+                      <span>🏷️ {{ $t('pos.price_retail') }}:</span>
+                      <span class="font-mono">{{ formatMoney(item.price_retail || item.unit_price) }}</span>
+                    </button>
+                    
+                    <!-- Wholesale Badge -->
+                    <button
+                      v-if="(item.price_wholesale || item.min_selling_price) > 0 && parseFloat(item.price_wholesale || item.min_selling_price) !== parseFloat(item.price_retail || item.unit_price)"
+                      type="button"
+                      @click="$emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })"
+                      class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
+                      :class="parseFloat(item.unit_price) === parseFloat(item.price_wholesale || item.min_selling_price)
+                        ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-black'
+                        : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-purple-400'"
+                      :title="$t('pos.price_wholesale')"
+                    >
+                      <span>🏪 {{ $t('pos.price_wholesale') }}:</span>
+                      <span class="font-mono">{{ formatMoney(item.price_wholesale || item.min_selling_price) }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -127,9 +160,39 @@
                   <span class="font-bold text-slate-400">{{ item.code || '—' }}</span>
                   <span>•</span>
                   <span class="text-slate-500 font-tajawal">{{ item.unit || 'قطعة' }}</span>
-                  <span v-if="item.price_wholesale" class="text-purple-600 dark:text-purple-400 font-bold" :title="$t('pos.min_selling_price')">
-                    ({{ $t('pos.min_selling_price') }}: {{ formatMoney(item.min_selling_price || item.price_wholesale) }})
-                  </span>
+                </div>
+
+                <!-- Dual Price Badges -->
+                <div class="flex flex-wrap items-center gap-1.5 mt-2 font-tajawal">
+                  <!-- Retail Badge -->
+                  <button
+                    v-if="(item.price_retail || item.unit_price) > 0"
+                    type="button"
+                    @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
+                    :class="parseFloat(item.unit_price) === parseFloat(item.price_retail || item.unit_price)
+                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black'
+                      : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-400'"
+                    :title="$t('pos.price_retail')"
+                  >
+                    <span>🏷️ {{ $t('pos.price_retail') }}:</span>
+                    <span class="font-mono">{{ formatMoney(item.price_retail || item.unit_price) }}</span>
+                  </button>
+                  
+                  <!-- Wholesale Badge -->
+                  <button
+                    v-if="(item.price_wholesale || item.min_selling_price) > 0 && parseFloat(item.price_wholesale || item.min_selling_price) !== parseFloat(item.price_retail || item.unit_price)"
+                    type="button"
+                    @click="$emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
+                    :class="parseFloat(item.unit_price) === parseFloat(item.price_wholesale || item.min_selling_price)
+                      ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-black'
+                      : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-purple-400'"
+                    :title="$t('pos.price_wholesale')"
+                  >
+                    <span>🏪 {{ $t('pos.price_wholesale') }}:</span>
+                    <span class="font-mono">{{ formatMoney(item.price_wholesale || item.min_selling_price) }}</span>
+                  </button>
                 </div>
               </td>
 

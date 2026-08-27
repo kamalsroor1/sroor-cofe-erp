@@ -59,9 +59,12 @@ defineEmits(['add-item']);
 const { formatMoney } = useFormatters();
 
 const formatPrice = (item) => {
+  if (!item) return '0.00';
+  const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
+  const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
   const price = props.activePriceTier === 'wholesale'
-    ? (item.price_wholesale || item.price_retail)
-    : (item.price_retail || item.price_wholesale);
+    ? (wholesale > 0 ? wholesale : retail)
+    : (retail > 0 ? retail : wholesale);
   return formatMoney(price);
 };
 

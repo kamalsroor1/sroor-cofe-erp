@@ -213,4 +213,37 @@ return [
     'confirm_close_order_text'  => 'This order has :count items worth :total. Are you sure you want to cancel and clear it?',
     'confirm_close_order_btn'   => 'Yes, Cancel Order',
     'held_orders_tooltip'       => 'Current & Held Orders',
+
+    // Dual Pricing
+    'price_retail'              => 'Retail',
+    'price_wholesale'           => 'Wholesale',
+
+    // Expenses Modal
+    'expenses_modal_title'      => 'Shipping & Additional Services',
+    'expense_shipping'          => 'Shipping Fee',
+    'expense_packaging'         => 'Packaging',
+    'expense_tip'               => 'Tip / Gratuity',
+    'expense_porter'            => 'Porter / Handling',
+    'expense_title'             => 'Description',
+    'expense_amount'            => 'Amount',
+    'expense_paid_by'           => 'Paid By',
+    'expense_customer_account'  => 'Customer Account',
+    'expense_treasury'          => 'Treasury Cash',
+    'expense_add_custom'        => 'Add Custom Item',
+    'expense_total_customer'    => 'Total Charged to Customer',
+    'expense_total_treasury'    => 'Total from Treasury',
+    'expense_save'              => 'Save & Apply Expenses',
+
+    // Multi-Payment Modal
+    'multi_payment_title'       => 'Split Payment Across Multiple Methods',
+    'net_total_required'        => 'Required Net Total',
+    'payment_method_label'      => 'Payment Method',
+    'payment_amount'            => 'Amount',
+    'fill_remaining'            => 'Exact Remaining',
+    'add_payment_method'        => 'Add Another Payment Method',
+    'total_paid'                => 'Total Paid',
+    'remaining_amount'          => 'Remaining',
+    'confirm_multi_payment'     => 'Confirm & Approve Split Payment',
+    'visa_card'                 => 'Visa / Bank Card',
+    'bank_transfer'             => 'Bank Transfer',
 ];

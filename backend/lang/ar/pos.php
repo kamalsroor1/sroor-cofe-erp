@@ -212,4 +212,37 @@ return [
     'confirm_close_order_text'  => 'تحتوي هذه الفاتورة على :count أصناف بقيمة :total، هل أنت متأكد من إلغائها وتفريغها؟',
     'confirm_close_order_btn'   => 'نعم، إلغاء الفاتورة',
     'held_orders_tooltip'       => 'الفواتير المعلقة والحالية',
+
+    // Dual Pricing
+    'price_retail'              => 'قطاعي',
+    'price_wholesale'           => 'جملة',
+
+    // Expenses Modal
+    'expenses_modal_title'      => 'مصاريف الشحن والخدمات الإضافية',
+    'expense_shipping'          => 'مصاريف شحن',
+    'expense_packaging'         => 'تغليف',
+    'expense_tip'               => 'إكرامية',
+    'expense_porter'            => 'عتالة',
+    'expense_title'             => 'الوصف',
+    'expense_amount'            => 'المبلغ',
+    'expense_paid_by'           => 'يُسدد من',
+    'expense_customer_account'  => 'حساب العميل',
+    'expense_treasury'          => 'الخزينة',
+    'expense_add_custom'        => 'إضافة بند مخصص',
+    'expense_total_customer'    => 'إجمالي المحمل على العميل',
+    'expense_total_treasury'    => 'إجمالي على حساب الخزينة',
+    'expense_save'              => 'حفظ وتطبيق المصاريف',
+
+    // Multi-Payment Modal
+    'multi_payment_title'       => 'تقسيم السداد على أكثر من وسيلة',
+    'net_total_required'        => 'صافي الفاتورة المطلوب',
+    'payment_method_label'      => 'وسيلة الدفع',
+    'payment_amount'            => 'المبلغ',
+    'fill_remaining'            => 'المبلغ بالضبط',
+    'add_payment_method'        => 'إضافة وسيلة دفع أخرى',
+    'total_paid'                => 'إجمالي المدفوع',
+    'remaining_amount'          => 'المتبقي',
+    'confirm_multi_payment'     => 'اعتماد وتأكيد السداد المقسّم',
+    'visa_card'                 => 'فيزا / بطاقة بنكية',
+    'bank_transfer'             => 'تحويل بنكي',
 ];

@@ -39,9 +39,19 @@
       </div>
 
       <!-- Customer Extra Expenses (Shipping / Services) -->
-      <div v-if="customerExpensesTotal > 0" class="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
-        <span>{{ $t('pos.extra_expenses_shipping') }}</span>
-        <span class="font-mono font-black text-emerald-500">+ {{ formatMoney(customerExpensesTotal) }}</span>
+      <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+        <button
+          type="button"
+          @click="$emit('open-expenses')"
+          class="flex items-center gap-1 text-[11px] font-bold text-theme-primary hover:underline cursor-pointer transition"
+        >
+          <Truck class="w-3 h-3" />
+          <span>{{ $t('pos.extra_expenses_shipping') }}</span>
+          <span v-if="expensesCount > 0" class="px-1.5 py-0.5 rounded-full bg-theme-primary/15 text-[9px] font-black text-theme-primary">
+            {{ expensesCount }}
+          </span>
+        </button>
+        <span v-if="customerExpensesTotal > 0" class="font-mono font-black text-emerald-500">+ {{ formatMoney(customerExpensesTotal) }}</span>
       </div>
 
       <!-- GIANT NET TOTAL DUE -->
@@ -101,6 +111,15 @@
         >
           {{ m.label }}
         </button>
+        <!-- Multi-Payment Split Button -->
+        <button
+          type="button"
+          @click="$emit('open-multi-payment')"
+          class="py-1 px-2 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 shrink-0"
+          :title="$t('pos.multi_payment_title')"
+        >
+          💳
+        </button>
       </div>
 
       <!-- Quick Cash Calculator Row -->
@@ -157,7 +176,7 @@
 </template>
 
 <script setup>
-import { Printer, CheckCircle2 } from 'lucide-vue-next';
+import { Printer, CheckCircle2, Truck } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
@@ -176,6 +195,7 @@ defineProps({
   changeDue: { type: Number, default: 0 },
   cartEmpty: { type: Boolean, default: true },
   isSubmitting: { type: Boolean, default: false },
+  expensesCount: { type: Number, default: 0 },
 });
 
 defineEmits([
@@ -184,5 +204,7 @@ defineEmits([
   'update:paymentMethod',
   'update:cashReceived',
   'submit',
+  'open-expenses',
+  'open-multi-payment',
 ]);
 </script>

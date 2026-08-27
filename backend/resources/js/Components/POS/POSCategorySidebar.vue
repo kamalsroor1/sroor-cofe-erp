@@ -1,5 +1,5 @@
 <template>
-  <aside class="h-full flex flex-col bg-white dark:bg-slate-900/95 border-s border-slate-200 dark:border-slate-800 overflow-hidden w-14 sm:w-36 md:w-40 shrink-0">
+  <aside class="h-full flex flex-col bg-white dark:bg-slate-900/95 border-s border-slate-200 dark:border-slate-800 overflow-hidden w-14 sm:w-44 md:w-48 shrink-0">
     <!-- Header -->
     <div class="p-2.5 border-b border-slate-200 dark:border-slate-800">
       <h3 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:block">{{ $t('pos.categories') }}</h3>

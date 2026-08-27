@@ -131,44 +131,61 @@
         <div v-else class="space-y-1.5">
           <!-- Expanded Mode: Accordion Hub Card -->
           <div v-if="!isCollapsed" class="rounded-2xl border transition-all overflow-hidden"
-            :class="isSectionExpanded(section.key)
-              ? 'border-theme-primary/30 bg-slate-50/50 dark:bg-slate-900/50 shadow-xs'
-              : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 hover:border-slate-300 dark:hover:border-slate-700'"
+            :class="[
+              section.comingSoon
+                ? 'border-slate-200/50 dark:border-slate-800/40 bg-slate-100/50 dark:bg-slate-900/30 opacity-50 cursor-not-allowed'
+                : isSectionExpanded(section.key)
+                  ? 'border-theme-primary/30 bg-slate-50/50 dark:bg-slate-900/50 shadow-xs'
+                  : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 hover:border-slate-300 dark:hover:border-slate-700'
+            ]"
           >
             <!-- Category Header Button -->
             <button
               type="button"
-              @click="toggleSection(section.key)"
-              class="w-full p-3 flex items-center justify-between transition-all cursor-pointer select-none text-start group"
+              @click="!section.comingSoon && toggleSection(section.key)"
+              class="w-full p-3 flex items-center justify-between transition-all select-none text-start group"
+              :class="section.comingSoon ? 'cursor-not-allowed' : 'cursor-pointer'"
+              :title="section.comingSoon ? $t('nav.coming_soon') : ''"
             >
               <div class="flex items-center gap-3 min-w-0">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs" :class="section.iconBg">
                   <component :is="section.icon" class="w-4 h-4 stroke-[2.4]" />
                 </div>
                 <div class="min-w-0">
-                  <div class="text-xs font-black text-slate-900 dark:text-white group-hover:text-theme-primary transition truncate">
+                  <div class="text-xs font-black text-slate-900 dark:text-white transition truncate"
+                    :class="section.comingSoon ? '' : 'group-hover:text-theme-primary'"
+                  >
                     {{ section.title }}
                   </div>
-                  <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
-                    {{ section.subtitle || `${section.items?.length || 0} روابط` }}
+                  <div class="text-[10px] font-bold truncate mt-0.5"
+                    :class="section.comingSoon ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400'"
+                  >
+                    {{ section.comingSoon ? $t('nav.coming_soon') : (section.subtitle || `${section.items?.length || 0} روابط`) }}
                   </div>
                 </div>
               </div>
 
               <div class="flex items-center gap-2 shrink-0">
-                <span class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
-                  {{ section.items?.length || 0 }} روابط
+                <span v-if="section.comingSoon"
+                  class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                >
+                  🚀 {{ $t('nav.coming_soon') }}
                 </span>
-                <ChevronDown
-                  class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition-transform duration-200"
-                  :class="{ 'rotate-180 text-theme-primary': isSectionExpanded(section.key) }"
-                />
+                <template v-else>
+                  <span class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
+                    {{ section.items?.length || 0 }} روابط
+                  </span>
+                  <ChevronDown
+                    class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition-transform duration-200"
+                    :class="{ 'rotate-180 text-theme-primary': isSectionExpanded(section.key) }"
+                  />
+                </template>
               </div>
             </button>
 
-            <!-- Sub-items List (Expandable Accordion with Slide Transition) -->
+            <!-- Sub-items List (Expandable Accordion with Slide Transition) — Hidden for comingSoon -->
             <Transition name="accordion">
-              <div v-if="isSectionExpanded(section.key)" class="px-2.5 pb-2.5 pt-1 space-y-1 border-t border-slate-100 dark:border-slate-800/60">
+              <div v-if="isSectionExpanded(section.key) && !section.comingSoon" class="px-2.5 pb-2.5 pt-1 space-y-1 border-t border-slate-100 dark:border-slate-800/60">
                 <router-link
                   v-for="item in section.items"
                   :key="'desktop-sub-' + item.key"
@@ -205,16 +222,20 @@
           <div
             v-else
             class="relative"
-            @mouseenter="handleItemHover($event, section.title)"
+            @mouseenter="handleItemHover($event, section.comingSoon ? `${section.title} — ${$t('nav.coming_soon')}` : section.title)"
             @mouseleave="handleItemLeave"
           >
             <button
               type="button"
-              @click="toggleSection(section.key)"
-              class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center transition-all shadow-2xs cursor-pointer"
-              :class="isSectionHasActiveChild(section)
-                ? 'bg-theme-primary text-slate-950 shadow-md font-bold'
-                : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-white hover:bg-slate-800'"
+              @click="!section.comingSoon && toggleSection(section.key)"
+              class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center transition-all shadow-2xs"
+              :class="[
+                section.comingSoon
+                  ? 'bg-slate-100/50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed'
+                  : isSectionHasActiveChild(section)
+                    ? 'bg-theme-primary text-slate-950 shadow-md font-bold cursor-pointer'
+                    : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer'
+              ]"
             >
               <component :is="section.icon" class="w-5 h-5 stroke-[2.2]" />
             </button>

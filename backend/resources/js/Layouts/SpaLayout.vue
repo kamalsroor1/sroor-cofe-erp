@@ -352,28 +352,44 @@
                   <button
                     v-else
                     type="button"
-                    @click="activeMobileSection = section"
-                    class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 hover:border-theme-primary flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group text-start"
+                    @click="!section.comingSoon && (activeMobileSection = section)"
+                    class="w-full p-3.5 rounded-2xl border flex items-center justify-between transition-all select-none shadow-2xs group text-start"
+                    :class="[
+                      section.comingSoon
+                        ? 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/40 opacity-50 cursor-not-allowed'
+                        : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800/80 hover:border-theme-primary cursor-pointer active:scale-[0.98]'
+                    ]"
                   >
                     <div class="flex items-center gap-3 min-w-0">
                       <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="section.iconBg">
                         <component :is="section.icon" class="w-5 h-5" />
                       </div>
                       <div class="min-w-0">
-                        <div class="text-xs font-black text-slate-900 dark:text-white group-hover:text-theme-primary transition truncate">
+                        <div class="text-xs font-black text-slate-900 dark:text-white transition truncate"
+                          :class="section.comingSoon ? '' : 'group-hover:text-theme-primary'"
+                        >
                           {{ section.title }}
                         </div>
-                        <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
-                          {{ section.subtitle || `${section.items?.length || 0} روابط` }}
+                        <div class="text-[10px] font-bold truncate mt-0.5"
+                          :class="section.comingSoon ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400'"
+                        >
+                          {{ section.comingSoon ? $t('nav.coming_soon') : (section.subtitle || `${section.items?.length || 0} روابط`) }}
                         </div>
                       </div>
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                      <span class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
-                        {{ section.items?.length || 0 }} روابط
+                      <span v-if="section.comingSoon"
+                        class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                      >
+                        🚀 {{ $t('nav.coming_soon') }}
                       </span>
-                      <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition" />
+                      <template v-else>
+                        <span class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
+                          {{ section.items?.length || 0 }} روابط
+                        </span>
+                        <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition" />
+                      </template>
                     </div>
                   </button>
                 </template>
