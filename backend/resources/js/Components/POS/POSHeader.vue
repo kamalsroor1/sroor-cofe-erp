@@ -185,18 +185,18 @@
 
       <!-- Left: Customer, Catalog Toggle, Tier & Action Buttons -->
       <div class="flex items-center gap-2 shrink-0">
-        <!-- Catalog Grid / Fullscreen Toggle -->
+        <!-- Catalog Grid / Fullscreen Toggle (Disabled / Coming Soon) -->
         <button
           type="button"
-          @click="$emit('toggle-catalog')"
-          class="min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
-          :class="showCatalog
-            ? 'bg-theme-light border-theme-primary text-theme-primary font-black shadow-xs'
-            : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300'"
-          :title="showCatalog ? $t('pos.hide_menu') : $t('pos.show_menu')"
+          disabled
+          class="min-h-[44px] px-3 py-2 border rounded-xl text-xs font-bold transition flex items-center gap-1.5 opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-400 dark:text-slate-500 shadow-2xs select-none"
+          :title="`${$t('pos.show_menu')} - ${$t('nav.coming_soon')} 🚀`"
         >
-          <LayoutGrid class="w-4 h-4 shrink-0" />
-          <span class="hidden lg:inline">{{ showCatalog ? $t('pos.hide_menu') : $t('pos.show_menu') }}</span>
+          <LayoutGrid class="w-4 h-4 shrink-0 opacity-70" />
+          <span class="hidden lg:inline">{{ $t('pos.show_menu') }}</span>
+          <span class="px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/20">
+            🚀 {{ $t('nav.coming_soon') }}
+          </span>
         </button>
 
         <!-- Customer Selection Button -->

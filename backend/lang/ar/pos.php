@@ -219,11 +219,14 @@ return [
 
     // Expenses Modal
     'expenses_modal_title'      => 'مصاريف الشحن والخدمات الإضافية',
+    'expense_subtitle'          => 'إضافة مصاريف شحن أو خدمات وتحميلها على العميل أو الخزينة',
     'expense_shipping'          => 'مصاريف شحن',
     'expense_packaging'         => 'تغليف',
     'expense_tip'               => 'إكرامية',
     'expense_porter'            => 'عتالة',
+    'quick_presets'             => 'إضافات سريعة جاهزة',
     'expense_title'             => 'الوصف',
+    'expense_title_placeholder' => 'مثال: شحن سريع للمحافظات',
     'expense_amount'            => 'المبلغ',
     'expense_paid_by'           => 'يُسدد من',
     'expense_customer_account'  => 'حساب العميل',
@@ -232,6 +235,7 @@ return [
     'expense_total_customer'    => 'إجمالي المحمل على العميل',
     'expense_total_treasury'    => 'إجمالي على حساب الخزينة',
     'expense_save'              => 'حفظ وتطبيق المصاريف',
+    'no_expenses_added'         => 'لم يتم إضافة أي مصاريف أو خدمات إضافية بعد',
 
     // Multi-Payment Modal
     'multi_payment_title'       => 'تقسيم السداد على أكثر من وسيلة',

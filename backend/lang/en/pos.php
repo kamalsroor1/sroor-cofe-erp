@@ -220,11 +220,14 @@ return [
 
     // Expenses Modal
     'expenses_modal_title'      => 'Shipping & Additional Services',
+    'expense_subtitle'          => 'Add shipping or extra service charges to customer or treasury',
     'expense_shipping'          => 'Shipping Fee',
     'expense_packaging'         => 'Packaging',
     'expense_tip'               => 'Tip / Gratuity',
     'expense_porter'            => 'Porter / Handling',
+    'quick_presets'             => 'Quick Presets',
     'expense_title'             => 'Description',
+    'expense_title_placeholder' => 'e.g. Express Shipping',
     'expense_amount'            => 'Amount',
     'expense_paid_by'           => 'Paid By',
     'expense_customer_account'  => 'Customer Account',
@@ -233,6 +236,7 @@ return [
     'expense_total_customer'    => 'Total Charged to Customer',
     'expense_total_treasury'    => 'Total from Treasury',
     'expense_save'              => 'Save & Apply Expenses',
+    'no_expenses_added'         => 'No additional expenses or services added yet',
 
     // Multi-Payment Modal
     'multi_payment_title'       => 'Split Payment Across Multiple Methods',
