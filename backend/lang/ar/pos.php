@@ -190,6 +190,9 @@ return [
     // Product Grid & Category Menu Keys
     'categories'                => 'الأقسام',
     'favorites_tab'             => 'الأكثر مبيعاً',
+    'newest_tab'                => 'المضاف حديثاً',
+    'in_stock_tab'              => 'المتوفر بالمخزن',
+    'low_stock_tab'             => 'نواقص وشك النفاد',
     'all_items_tab'             => 'جميع المنتجات',
     'no_items_in_category'      => 'لا توجد أصناف في هذا القسم',
     'no_items_match_search'     => 'لا توجد أصناف مطابقة للبحث',

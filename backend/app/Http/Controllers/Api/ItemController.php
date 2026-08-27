@@ -45,9 +45,10 @@ final class ItemController extends Controller
 
         $search = trim((string)$request->input('search', ''));
         $category = (string)$request->input('category', 'all');
+        $categoryId = $request->input('category_id');
         $stockStatus = (string)$request->input('stock_status', 'all');
         $status = (string)$request->input('status', 'all');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
+        $perPage = max(1, min(500, (int)$request->input('per_page', 20)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
@@ -66,6 +67,20 @@ final class ItemController extends Controller
 
         if ($category !== 'all' && $category !== '') {
             $query->where('category', $category);
+        }
+
+        if (!empty($categoryId) && $categoryId !== 'null') {
+            if ($categoryId === 'low_stock') {
+                $query->whereColumn('current_stock', '<=', 'min_stock_level')->where('current_stock', '>', 0);
+            } elseif ($categoryId === 'in_stock') {
+                $query->where('current_stock', '>', 0);
+            } elseif ($categoryId === 'favorites') {
+                $query->orderByDesc('pos_sales_count');
+            } elseif ($categoryId === 'newest') {
+                $query->latest('id');
+            } elseif (is_numeric($categoryId)) {
+                $query->where('category_id', (int)$categoryId);
+            }
         }
 
         if ($stockStatus === 'low') {

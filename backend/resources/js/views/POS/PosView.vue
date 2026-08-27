@@ -104,7 +104,8 @@
         :categories="categories"
         :active-category-id="activeCategoryId"
         :favorite-count="favoriteItemsCount"
-        @select-category="activeCategoryId = $event"
+        :total-items-count="totalItemsCount"
+        @select-category="handleCategorySelect"
       />
 
     </div>
@@ -185,6 +186,8 @@ const headerRef = ref(null);
 const items = ref([]);
 const categories = ref([]);
 const customers = ref([]);
+const totalItemsCount = ref(0);
+const isLoadingCategoryItems = ref(false);
 const activeStore = ref(null);
 const activeShift = ref(null);
 const activeCategoryId = ref('favorites');
@@ -590,18 +593,45 @@ const fetchPOSInitialData = async () => {
   activeStore.value = authStore.currentStore;
   isLoading.value = true;
   try {
-    const [itemsRes, customersRes, shiftRes] = await Promise.all([
-      api.get('/items', { params: { per_page: 500 } }),
+    const [itemsRes, customersRes, shiftRes, categoriesRes] = await Promise.all([
+      api.get('/items', { params: { per_page: 300 } }),
       api.get('/customers', { params: { per_page: 200 } }),
       api.get('/shifts/current').catch(() => ({ data: { data: null } })),
+      api.get('/categories', { params: { active_only: true } }).catch(() => ({ data: { data: [] } })),
     ]);
     items.value = itemsRes.data?.data || [];
     customers.value = customersRes.data?.data || [];
     activeShift.value = shiftRes.data?.data || null;
+    categories.value = categoriesRes.data?.data || [];
+    totalItemsCount.value = categoriesRes.data?.total_items_count || itemsRes.data?.meta?.total || itemsRes.data?.summary?.total_items || items.value.length;
   } catch (e) {
     console.error('Failed to load POS data:', e);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleCategorySelect = async (catId) => {
+  activeCategoryId.value = catId;
+  if (!catId) return;
+
+  isLoadingCategoryItems.value = true;
+  try {
+    const params = { per_page: 200 };
+    params.category_id = catId;
+    const res = await api.get('/items', { params });
+    if (res.data?.data) {
+      const newItems = res.data.data;
+      const existingIds = new Set(items.value.map(i => i.id));
+      const toAdd = newItems.filter(i => !existingIds.has(i.id));
+      if (toAdd.length > 0) {
+        items.value = [...items.value, ...toAdd];
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load category items:', err);
+  } finally {
+    isLoadingCategoryItems.value = false;
   }
 };
 
@@ -611,8 +641,13 @@ const handleSwitchStore = async (storeId) => {
     authStore.switchStore(store);
     activeStore.value = store;
     try {
-      const itemsRes = await api.get('/items', { params: { per_page: 500 } });
+      const [itemsRes, categoriesRes] = await Promise.all([
+        api.get('/items', { params: { per_page: 300 } }),
+        api.get('/categories', { params: { active_only: true } }).catch(() => ({ data: { data: [] } })),
+      ]);
       items.value = itemsRes.data?.data || [];
+      categories.value = categoriesRes.data?.data || [];
+      totalItemsCount.value = categoriesRes.data?.total_items_count || itemsRes.data?.meta?.total || itemsRes.data?.summary?.total_items || items.value.length;
     } catch (e) {
       console.error('Failed to refresh items for switched store:', e);
     }

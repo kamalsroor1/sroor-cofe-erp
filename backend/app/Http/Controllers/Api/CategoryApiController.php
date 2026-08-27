@@ -33,20 +33,29 @@ final class CategoryApiController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        // Auto-seed missing categories from existing items if table is empty
-        if (Category::count() === 0) {
-            $distinctCats = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
-            $icons = ['☕', '🧃', '🍰', '🥪', '🍪', '🫘', '🥤', '🧊', '🎁', '📦'];
-            $i = 0;
-            foreach ($distinctCats as $cName) {
-                $icon = $icons[$i % count($icons)];
-                $cat = Category::create([
-                    'name'       => $cName,
-                    'icon'       => $icon,
-                    'sort_order' => $i,
-                    'is_active'  => true,
-                ]);
-                Item::where('category', $cName)->update(['category_id' => $cat->id]);
+        // Auto-seed missing categories or auto-link items where category_id is null
+        $unlinkedCats = Item::whereNotNull('category')
+            ->where('category', '!=', '')
+            ->whereNull('category_id')
+            ->distinct()
+            ->pluck('category');
+
+        if ($unlinkedCats->isNotEmpty()) {
+            $icons = ['📱', '🎧', '🔌', '🧶', '🔋', '⌚', '🛡️', '📲', '🚗', '💾', '🔧', '🎮', '☕', '🧃', '🍰', '🥪'];
+            $colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#6366f1', '#14b8a6'];
+            $i = Category::count();
+            foreach ($unlinkedCats as $cName) {
+                $cat = Category::firstOrCreate(
+                    ['name' => $cName],
+                    [
+                        'icon'        => $icons[$i % count($icons)],
+                        'color'       => $colors[$i % count($colors)],
+                        'color_light' => $colors[$i % count($colors)] . '20',
+                        'sort_order'  => $i + 1,
+                        'is_active'   => true,
+                    ]
+                );
+                Item::where('category', $cName)->whereNull('category_id')->update(['category_id' => $cat->id]);
                 $i++;
             }
         }
@@ -61,9 +70,12 @@ final class CategoryApiController extends Controller
             ->orderBy('name')
             ->get();
 
+        $totalItemsCount = Item::count();
+
         return response()->json([
-            'success' => true,
-            'data'    => $categories,
+            'success'           => true,
+            'data'              => $categories,
+            'total_items_count' => $totalItemsCount,
         ], 200);
     }
 

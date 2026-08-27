@@ -43,9 +43,23 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { ChevronRight, ChevronLeft, Search, Star, Store, Folder, PackageSearch } from 'lucide-vue-next';
+import { 
+  ChevronRight, 
+  ChevronLeft, 
+  Search, 
+  Star, 
+  Store, 
+  Folder, 
+  PackageSearch,
+  Sparkles,
+  PackageCheck,
+  AlertTriangle
+} from 'lucide-vue-next';
 import POSProductButton from './POSProductButton.vue';
 import DynamicIcon from '../Common/DynamicIcon.vue';
+import { useTrans } from '../../Composables/useTrans';
+
+const { t } = useTrans();
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -72,9 +86,22 @@ const filteredItems = computed(() => {
   } else if (props.activeCategoryId === 'favorites') {
     result = [...result]
       .sort((a, b) => (b.pos_sales_count || 0) - (a.pos_sales_count || 0))
-      .slice(0, 20);
+      .slice(0, 50);
+  } else if (props.activeCategoryId === 'newest') {
+    result = [...result].sort((a, b) => b.id - a.id);
+  } else if (props.activeCategoryId === 'in_stock') {
+    result = result.filter(item => (parseFloat(item.current_stock) || 0) > 0);
+  } else if (props.activeCategoryId === 'low_stock') {
+    result = result.filter(item => {
+      const stock = parseFloat(item.current_stock) || 0;
+      const min = parseFloat(item.min_stock_level) || 5;
+      return stock <= min && stock > 0;
+    });
   } else if (props.activeCategoryId !== null) {
-    result = result.filter(item => item.category_id === props.activeCategoryId);
+    result = result.filter(item => 
+      item.category_id === props.activeCategoryId || 
+      (activeCategoryObject.value && item.category === activeCategoryObject.value.name)
+    );
   }
   
   return result;
@@ -101,30 +128,36 @@ watch([() => props.activeCategoryId, () => props.searchQuery], () => {
 });
 
 const getCategoryColor = (item) => {
-  const cat = props.categories.find(c => c.id === item.category_id);
+  const cat = props.categories.find(c => c.id === item.category_id || c.name === item.category);
   return cat?.color || '#64748B';
 };
 
 const getCategoryColorLight = (item) => {
-  const cat = props.categories.find(c => c.id === item.category_id);
+  const cat = props.categories.find(c => c.id === item.category_id || c.name === item.category);
   return cat?.color_light || '#f1f5f9';
 };
 
 const activeCategoryObject = computed(() => {
-  if (!props.activeCategoryId || props.activeCategoryId === 'favorites') return null;
+  if (!props.activeCategoryId || typeof props.activeCategoryId === 'string') return null;
   return props.categories.find(c => c.id === props.activeCategoryId);
 });
 
 const activeCategoryName = computed(() => {
-  if (props.searchQuery) return 'نتائج البحث';
-  if (props.activeCategoryId === 'favorites') return 'الأكثر مبيعاً';
-  if (props.activeCategoryId === null) return 'جميع المنتجات';
-  return activeCategoryObject.value?.name || 'غير معروف';
+  if (props.searchQuery) return t('pos.no_items_match_search') ? 'نتائج البحث' : 'نتائج البحث';
+  if (props.activeCategoryId === 'favorites') return t('pos.favorites_tab');
+  if (props.activeCategoryId === 'newest') return t('pos.newest_tab');
+  if (props.activeCategoryId === 'in_stock') return t('pos.in_stock_tab');
+  if (props.activeCategoryId === 'low_stock') return t('pos.low_stock_tab');
+  if (props.activeCategoryId === null) return t('pos.all_items_tab');
+  return activeCategoryObject.value?.name || t('pos.all_items_tab');
 });
 
 const activeCategoryIcon = computed(() => {
   if (props.searchQuery) return Search;
   if (props.activeCategoryId === 'favorites') return Star;
+  if (props.activeCategoryId === 'newest') return Sparkles;
+  if (props.activeCategoryId === 'in_stock') return PackageCheck;
+  if (props.activeCategoryId === 'low_stock') return AlertTriangle;
   if (props.activeCategoryId === null) return Store;
   return activeCategoryObject.value?.icon || Folder;
 });

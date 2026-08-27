@@ -191,6 +191,9 @@ return [
     // Product Grid & Category Menu Keys
     'categories'                => 'Categories',
     'favorites_tab'             => 'Best Sellers',
+    'newest_tab'                => 'New Arrivals',
+    'in_stock_tab'              => 'In Stock',
+    'low_stock_tab'             => 'Low Stock Alert',
     'all_items_tab'             => 'All Products',
     'no_items_in_category'      => 'No items in this category',
     'no_items_match_search'     => 'No items match your search',
