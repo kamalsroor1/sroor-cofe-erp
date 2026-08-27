@@ -141,33 +141,33 @@ final class PopulateRealisticTenantDataCommand extends Command
         $this->info("Database cleaned.");
 
         // 3. Ensure Staff Users
-        $adminUser = User::firstOrCreate(
-            ['email' => 'admin@2m.com'],
+        $adminUser = User::updateOrCreate(
+            ['phone' => '01012316954'],
             [
                 'name'     => 'كمال سرور (المدير العام)',
-                'phone'    => '01012316954',
+                'email'    => 'admin@2m.com',
                 'password' => Hash::make('password'),
                 'is_active'=> true,
             ]
         );
         $adminUser->assignRole('admin');
 
-        $cashierMorning = User::firstOrCreate(
-            ['email' => 'cashier1@2m.com'],
+        $cashierMorning = User::updateOrCreate(
+            ['phone' => '01122334455'],
             [
                 'name'     => 'أحمد محمود (مسؤول المبيعات الصباحي)',
-                'phone'    => '01122334455',
+                'email'    => 'cashier1@2m.com',
                 'password' => Hash::make('password'),
                 'is_active'=> true,
             ]
         );
         $cashierMorning->assignRole('cashier');
 
-        $cashierEvening = User::firstOrCreate(
-            ['email' => 'cashier2@2m.com'],
+        $cashierEvening = User::updateOrCreate(
+            ['phone' => '01233445566'],
             [
                 'name'     => 'كريم فتحي (مسؤول المبيعات المسائي)',
-                'phone'    => '01233445566',
+                'email'    => 'cashier2@2m.com',
                 'password' => Hash::make('password'),
                 'is_active'=> true,
             ]

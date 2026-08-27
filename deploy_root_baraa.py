@@ -124,9 +124,8 @@ $PHP_BIN artisan migrate --force
 $PHP_BIN artisan tenants:migrate --force
 $PHP_BIN artisan db:seed --class=PermissionsSeeder --force
 $PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
-echo "6. Populating authentic 1-year operational dataset for 2M Roastery..."
-$PHP_BIN artisan tenant:populate-realistic-data 2m || true
-$PHP_BIN artisan tenant:populate-realistic-data tenant_sroor || true
+echo "6. Populating authentic 1-year operational dataset for 2M Store..."
+$PHP_BIN artisan tenant:populate-realistic-data 2m
 
 echo "7. Clearing and refreshing all Laravel caches..."
 $PHP_BIN artisan optimize:clear
