@@ -450,7 +450,7 @@ final class PopulateRealisticTenantDataCommand extends Command
             $shift = CashShift::create([
                 'user_id'               => ($dayIndex % 2 === 0) ? $cashierMorning->id : $cashierEvening->id,
                 'store_id'              => $mainStore->id,
-                'shift_number'          => 'SHF-' . $curDay->format('ymd') . '-01',
+                'shift_number'          => 'SHF-' . $curDay->format('Ymd') . '-' . str_pad((string)$dayIndex, 4, '0', STR_PAD_LEFT),
                 'status'                => 'closed',
                 'opened_at'             => $curDay->copy()->setTime(8, 30, 0),
                 'closed_at'             => $curDay->copy()->setTime(23, 30, 0),
