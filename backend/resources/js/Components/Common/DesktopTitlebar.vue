@@ -39,8 +39,9 @@
 
     <!-- 🟢 Center: Hardware & Server Ping Diagnostics Pill -->
     <div class="hidden md:flex items-center gap-3 text-[11px] font-mono text-slate-400 no-drag">
-      <!-- Thermal Printer Status -->
+      <!-- Thermal Printer Status (Only when explicitly configured) -->
       <button
+        v-if="activePrinterName"
         type="button"
         @click="$emit('open-hardware')"
         class="flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-slate-900 transition cursor-pointer"
@@ -238,7 +239,7 @@ const handleForceReload = async () => {
 
 const activePrinterName = computed(() => {
   const saved = localStorage.getItem('desktop_thermal_printer');
-  return saved && saved.trim() !== '' ? saved : 'طابعة افتراضية';
+  return saved && saved.trim() !== '' ? saved : null;
 });
 </script>
 
