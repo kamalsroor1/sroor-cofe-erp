@@ -140,12 +140,15 @@
                 </div>
 
                 <!-- Download Progress Bar (When Downloading) -->
-                <div v-if="isDownloading" class="space-y-2 pt-2">
+                <div v-if="isDownloading" class="space-y-2.5 pt-2">
                   <div class="flex items-center justify-between text-[11px] font-bold">
-                    <span class="text-theme-primary animate-pulse">{{ $t('app_update.downloading_package') }}</span>
-                    <span class="text-white font-mono">{{ downloadProgress }}%</span>
+                    <span class="text-theme-primary animate-pulse flex items-center gap-1.5">
+                      <Loader2 class="w-3.5 h-3.5 animate-spin shrink-0" />
+                      <span>{{ downloadStageText }}</span>
+                    </span>
+                    <span class="text-slate-900 dark:text-white font-mono font-black">{{ downloadProgress }}%</span>
                   </div>
-                  <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                  <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-slate-700">
                     <div
                       class="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 rounded-full transition-all duration-150 shadow-md shadow-amber-500/50"
                       :style="{ width: `${downloadProgress}%` }"
@@ -163,8 +166,8 @@
                   class="flex-1 py-3 px-4 rounded-2xl bg-theme-gradient text-white font-black shadow-theme-primary text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-theme-primary transition active:scale-95 cursor-pointer disabled:opacity-50"
                 >
                   <Download v-if="!isDownloading" class="w-4.5 h-4.5" />
-                  <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>{{ isDownloading ? $t('app_update.downloading', { progress: downloadProgress }) : $t('app_update.update_and_install_now') }}</span>
+                  <Loader2 v-else class="w-4 h-4 animate-spin" />
+                  <span>{{ isDownloading ? $t('app_update.downloading_package') : $t('app_update.update_and_install_now') }}</span>
                 </button>
 
                 <button
@@ -195,7 +198,8 @@ import {
     Sparkles,
     Download,
     CheckCircle,
-    Check
+    Check,
+    Loader2
 } from 'lucide-vue-next';
 
 const {
@@ -209,6 +213,7 @@ const {
     isDownloading,
     isDownloaded,
     downloadProgress,
+    downloadStageText,
     startDownloadAndInstall,
     closeModal
 } = useAppUpdate();

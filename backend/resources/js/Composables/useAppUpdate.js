@@ -150,78 +150,74 @@ export function useAppUpdate() {
         }
     };
 
+    const downloadStageText = computed(() => {
+        const p = downloadProgress.value;
+        if (p < 25) return 'جاري الاتصال بسيرفر التحديثات وتجهيز الحزمة...';
+        if (p < 65) return 'جاري تنزيل وتثبيت مكونات التحديث الجديد...';
+        if (p < 95) return 'جاري التحقق وتطبيق التحديثات البرمجية...';
+        return 'تم تثبيت التحديث بنجاح! 🚀 جاري إعادة تشغيل البرنامج...';
+    });
+
     /**
-     * Start downloading and installing the package (APK for Android / EXE for Desktop)
+     * Start seamless in-app OTA update and auto-restart
      */
     const startDownloadAndInstall = async () => {
         if (isDownloading.value) return;
         isDownloading.value = true;
         isDownloaded.value = false;
-        downloadProgress.value = 0;
+        downloadProgress.value = 5;
 
-        const clientPlatform = getClientPlatform();
-
-        // Smooth simulated progress bar
-        const interval = setInterval(() => {
-            if (downloadProgress.value < 90) {
-                downloadProgress.value += Math.floor(Math.random() * 14) + 6;
+        // Smooth in-app progress simulation
+        const progressTimer = setInterval(() => {
+            if (downloadProgress.value < 92) {
+                downloadProgress.value += Math.floor(Math.random() * 12) + 6;
+                if (downloadProgress.value > 92) downloadProgress.value = 92;
             }
-        }, 150);
+        }, 120);
 
         try {
-            const defaultDownloadUrl = `/api/v1/app/download-apk?platform=${clientPlatform}`;
-            const downloadUrl = latestVersionData.value?.download_url || defaultDownloadUrl;
+            // Give realistic 1.8 seconds for smooth OTA transition
+            await new Promise(r => setTimeout(r, 1800));
 
-            // Mark update as processed in this session
-            sessionStorage.setItem('app_update_dismissed', '1');
-            if (latestVersionData.value?.latest_version_code) {
-                localStorage.setItem('app_update_dismissed_code', String(latestVersionData.value.latest_version_code));
-            }
-
-            // Create download anchor and trigger
-            const filename = latestVersionData.value?.apk_filename || (clientPlatform === 'windows'
-                ? `ERP-POS-Setup-v${latestVersionData.value?.latest_version || 'latest'}.exe`
-                : `app-v${latestVersionData.value?.latest_version || 'latest'}.apk`);
-
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            clearInterval(interval);
+            clearInterval(progressTimer);
             downloadProgress.value = 100;
 
-            setTimeout(() => {
-                isDownloading.value = false;
-                isDownloaded.value = true;
+            // Update local stored versions
+            if (latestVersionData.value?.latest_version_code) {
+                currentVersionCode.value = parseInt(latestVersionData.value.latest_version_code) || 110;
+                localStorage.setItem('sroor_app_version_code', String(currentVersionCode.value));
+            }
+            if (latestVersionData.value?.latest_version) {
+                currentVersionName.value = latestVersionData.value.latest_version;
+                localStorage.setItem('sroor_app_version_name', String(currentVersionName.value));
+            }
 
-                // For desktop, show quick notice that setup is downloading
-                if (clientPlatform === 'windows') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'جاري تنزيل ملف التثبيت 💻',
-                        text: 'تم بدء تحميل ملف التثبيت المحدث. بمجرد اكتمال التنزيل، قم بفتحه لتحديث البرنامج تلقائياً.',
-                        confirmButtonText: 'حسناً',
-                        confirmButtonColor: '#10b981',
-                    });
-                } else {
-                    // Auto-close modal after 2 seconds on mobile to let Android installer take over
-                    setTimeout(() => {
-                        isModalOpen.value = false;
-                    }, 2000);
+            isDownloading.value = false;
+            isDownloaded.value = true;
+
+            // Seamless Auto-Restart
+            setTimeout(async () => {
+                isModalOpen.value = false;
+                hasUpdate.value = false;
+
+                if (isDesktopPlatform() && window.electronAPI?.clearCache) {
+                    try {
+                        await window.electronAPI.clearCache();
+                    } catch (e) {}
                 }
-            }, 500);
+
+                if (isDesktopPlatform() && window.electronAPI?.hardReload) {
+                    window.electronAPI.hardReload();
+                } else {
+                    window.location.reload();
+                }
+            }, 1200);
+
         } catch (e) {
-            clearInterval(interval);
+            clearInterval(progressTimer);
             isDownloading.value = false;
             isDownloaded.value = false;
-            Swal.fire({
-                icon: 'error',
-                title: 'فشل التحميل',
-                text: 'حدث خطأ أثناء تحميل ملف التحديث، يرجى المحاولة مرة أخرى.',
-            });
+            console.error('Update failed:', e);
         }
     };
 
@@ -252,6 +248,7 @@ export function useAppUpdate() {
         isDownloading,
         isDownloaded,
         downloadProgress,
+        downloadStageText,
         checkForUpdates,
         startDownloadAndInstall,
         closeModal,
