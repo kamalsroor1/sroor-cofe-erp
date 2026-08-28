@@ -6,6 +6,7 @@ const settingsStore = require('./src/config/settingsStore');
 const printerManager = require('./src/hardware/printerManager');
 const cashDrawer = require('./src/hardware/cashDrawer');
 const { createApplicationMenu } = require('./src/menu/appMenu');
+const { downloadAndApplyUpdate } = require('./src/updater/nativeUpdater');
 
 let mainWindow = null;
 let splashWindow = null;
@@ -532,6 +533,12 @@ ipcMain.handle('app:get-system-info', () => {
         platform: process.platform,
         arch: process.arch
     };
+});
+
+// 7. In-App Native Electron OTA Auto-Updater
+ipcMain.handle('updater:download-and-install', async (event, data) => {
+    const downloadUrl = data?.downloadUrl || data?.download_url || 'https://2m.baraa-solutions.com/Sroor-ERP-POS-Setup.exe';
+    return await downloadAndApplyUpdate(downloadUrl, mainWindow);
 });
 
 // ══════════════════════════════════════════════════════════════════════════

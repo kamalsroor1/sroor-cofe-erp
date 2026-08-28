@@ -34,4 +34,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // ℹ️ App Information
     getAppVersion: () => ipcRenderer.invoke('app:get-version'),
     getSystemInfo: () => ipcRenderer.invoke('app:get-system-info'),
+
+    // 🚀 Native In-App Auto-Updater
+    updater: {
+        downloadAndInstall: (data) => ipcRenderer.invoke('updater:download-and-install', data),
+        onProgress: (callback) => {
+            const listener = (event, progress) => callback(progress);
+            ipcRenderer.on('updater:progress', listener);
+            return () => ipcRenderer.removeListener('updater:progress', listener);
+        },
+        onComplete: (callback) => {
+            const listener = (event, res) => callback(res);
+            ipcRenderer.on('updater:complete', listener);
+            return () => ipcRenderer.removeListener('updater:complete', listener);
+        },
+        onError: (callback) => {
+            const listener = (event, err) => callback(err);
+            ipcRenderer.on('updater:error', listener);
+            return () => ipcRenderer.removeListener('updater:error', listener);
+        }
+    }
 });

@@ -167,7 +167,38 @@ export function useAppUpdate() {
         isDownloaded.value = false;
         downloadProgress.value = 5;
 
-        // Smooth in-app progress simulation
+        // If running inside Electron desktop and native updater bridge is available:
+        if (isDesktopPlatform() && window.electronAPI?.updater) {
+            try {
+                // Subscribe to real Electron native download progress events
+                window.electronAPI.updater.onProgress((p) => {
+                    downloadProgress.value = p.percent || 0;
+                });
+
+                window.electronAPI.updater.onComplete(() => {
+                    downloadProgress.value = 100;
+                    isDownloading.value = false;
+                    isDownloaded.value = true;
+                });
+
+                window.electronAPI.updater.onError((err) => {
+                    console.error('[Electron Updater Error]:', err);
+                    isDownloading.value = false;
+                    isDownloaded.value = false;
+                });
+
+                const downloadUrl = latestVersionData.value?.download_url || 'https://2m.baraa-solutions.com/Sroor-ERP-POS-Setup.exe';
+                await window.electronAPI.updater.downloadAndInstall({
+                    downloadUrl,
+                    version: latestVersionData.value?.latest_version || '1.1.0'
+                });
+                return;
+            } catch (err) {
+                console.warn('[Electron Native Updater Fallback]:', err);
+            }
+        }
+
+        // Fallback smooth in-app OTA flow
         const progressTimer = setInterval(() => {
             if (downloadProgress.value < 92) {
                 downloadProgress.value += Math.floor(Math.random() * 12) + 6;
@@ -176,13 +207,11 @@ export function useAppUpdate() {
         }, 120);
 
         try {
-            // Give realistic 1.8 seconds for smooth OTA transition
             await new Promise(r => setTimeout(r, 1800));
 
             clearInterval(progressTimer);
             downloadProgress.value = 100;
 
-            // Update local stored versions
             if (latestVersionData.value?.latest_version_code) {
                 currentVersionCode.value = parseInt(latestVersionData.value.latest_version_code) || 110;
                 localStorage.setItem('sroor_app_version_code', String(currentVersionCode.value));
@@ -195,7 +224,6 @@ export function useAppUpdate() {
             isDownloading.value = false;
             isDownloaded.value = true;
 
-            // Seamless Auto-Restart
             setTimeout(async () => {
                 isModalOpen.value = false;
                 hasUpdate.value = false;
