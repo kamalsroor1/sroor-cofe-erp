@@ -241,7 +241,7 @@
                     <span class="text-xs font-normal">ج.م</span>
                 </div>
                 <div class="text-[11px] text-slate-400 font-bold">
-                    ذمم على العملاء في هذه الفترة
+                    متبقي فواتير الفترة (المديونية الكلية: {{ number_format($periodic['total_customer_debt'], 2) }} ج.م)
                 </div>
             </div>
 

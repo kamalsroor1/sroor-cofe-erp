@@ -114,15 +114,18 @@ class ReportsIndex extends Component
             $avgInvoiceValue = bcdiv($totalSales, (string)$invoiceCount, 2);
         }
 
+        $totalCustomerDebt = (string)(Customer::where('current_balance', '>', 0)->sum('current_balance') ?: '0.000');
+
         $periodic = [
-            'invoice_count'     => $invoiceCount,
-            'total_sales'       => $totalSales,
-            'total_paid'        => $totalPaid,
-            'total_remaining'   => $totalRemaining,
-            'total_cost'        => $totalCost,
-            'gross_profit'      => $grossProfit,
-            'margin_percentage' => $marginPct,
-            'avg_invoice'       => $avgInvoiceValue,
+            'invoice_count'       => $invoiceCount,
+            'total_sales'         => $totalSales,
+            'total_paid'          => $totalPaid,
+            'total_remaining'     => $totalRemaining,
+            'total_customer_debt' => $totalCustomerDebt,
+            'total_cost'          => $totalCost,
+            'gross_profit'        => $grossProfit,
+            'margin_percentage'   => $marginPct,
+            'avg_invoice'         => $avgInvoiceValue,
         ];
 
         // 2. Operational Expenses in Period

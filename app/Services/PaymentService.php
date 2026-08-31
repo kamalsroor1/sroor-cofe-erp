@@ -31,8 +31,8 @@ class PaymentService
             $invoiceId = $data['invoice_id'] ?? null;
             if ($invoiceId) {
                 $invoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
-                $newPaid = bcadd($invoice->paid_amount, $amount, 3);
-                $newRemaining = bcsub($invoice->net_total, $newPaid, 3);
+                $newPaid = bcadd((string)$invoice->paid_amount, (string)$amount, 3);
+                $newRemaining = bcsub((string)$invoice->net_total, $newPaid, 3);
 
                 if (bccomp($newRemaining, '0.000', 3) <= 0) {
                     $newRemaining = '0.000';
@@ -46,6 +46,41 @@ class PaymentService
                     'remaining_amount' => $newRemaining,
                     'payment_status'   => $newStatus,
                 ]);
+            } else {
+                // 🔄 FIFO Auto-Settlement across customer's unpaid confirmed invoices
+                $unpaidInvoices = Invoice::where('customer_id', $customer->id)
+                    ->where('status', 'confirmed')
+                    ->where('remaining_amount', '>', 0)
+                    ->orderBy('invoice_date', 'asc')
+                    ->orderBy('id', 'asc')
+                    ->lockForUpdate()
+                    ->get();
+
+                $remainingToAllocate = (string)$amount;
+                foreach ($unpaidInvoices as $inv) {
+                    if (bccomp($remainingToAllocate, '0.000', 3) <= 0) {
+                        break;
+                    }
+
+                    $due = (string)$inv->remaining_amount;
+                    if (bccomp($remainingToAllocate, $due, 3) >= 0) {
+                        $inv->update([
+                            'paid_amount'      => $inv->net_total,
+                            'remaining_amount' => '0.000',
+                            'payment_status'   => 'paid',
+                        ]);
+                        $remainingToAllocate = bcsub($remainingToAllocate, $due, 3);
+                    } else {
+                        $newPaid = bcadd((string)$inv->paid_amount, $remainingToAllocate, 3);
+                        $newRem  = bcsub((string)$inv->net_total, $newPaid, 3);
+                        $inv->update([
+                            'paid_amount'      => $newPaid,
+                            'remaining_amount' => $newRem,
+                            'payment_status'   => 'partially_paid',
+                        ]);
+                        $remainingToAllocate = '0.000';
+                    }
+                }
             }
 
             $payment = Payment::create([
@@ -86,8 +121,8 @@ class PaymentService
             $purchaseId = $data['purchase_id'] ?? null;
             if ($purchaseId) {
                 $purchase = Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail();
-                $newPaid = bcadd($purchase->paid_amount, $amount, 3);
-                $newRemaining = bcsub($purchase->net_total, $newPaid, 3);
+                $newPaid = bcadd((string)$purchase->paid_amount, (string)$amount, 3);
+                $newRemaining = bcsub((string)$purchase->net_total, $newPaid, 3);
 
                 if (bccomp($newRemaining, '0.000', 3) <= 0) {
                     $newRemaining = '0.000';
@@ -101,6 +136,41 @@ class PaymentService
                     'remaining_amount' => $newRemaining,
                     'payment_status'   => $newStatus,
                 ]);
+            } else {
+                // 🔄 FIFO Auto-Settlement across supplier's unpaid confirmed purchases
+                $unpaidPurchases = Purchase::where('supplier_id', $supplier->id)
+                    ->where('status', 'confirmed')
+                    ->where('remaining_amount', '>', 0)
+                    ->orderBy('purchase_date', 'asc')
+                    ->orderBy('id', 'asc')
+                    ->lockForUpdate()
+                    ->get();
+
+                $remainingToAllocate = (string)$amount;
+                foreach ($unpaidPurchases as $pur) {
+                    if (bccomp($remainingToAllocate, '0.000', 3) <= 0) {
+                        break;
+                    }
+
+                    $due = (string)$pur->remaining_amount;
+                    if (bccomp($remainingToAllocate, $due, 3) >= 0) {
+                        $pur->update([
+                            'paid_amount'      => $pur->net_total,
+                            'remaining_amount' => '0.000',
+                            'payment_status'   => 'paid',
+                        ]);
+                        $remainingToAllocate = bcsub($remainingToAllocate, $due, 3);
+                    } else {
+                        $newPaid = bcadd((string)$pur->paid_amount, $remainingToAllocate, 3);
+                        $newRem  = bcsub((string)$pur->net_total, $newPaid, 3);
+                        $pur->update([
+                            'paid_amount'      => $newPaid,
+                            'remaining_amount' => $newRem,
+                            'payment_status'   => 'partially_paid',
+                        ]);
+                        $remainingToAllocate = '0.000';
+                    }
+                }
             }
 
             $payment = Payment::create([
