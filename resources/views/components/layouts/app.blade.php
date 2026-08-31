@@ -529,9 +529,12 @@
                         <img src="{{ asset('logo.png') }}" alt="سرور POS" class="w-full h-full object-contain">
                     </a>
                     <div class="sidebar-text-full truncate min-w-0">
-                        <h1 class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-tajawal truncate">
-                            {{ $siteCompanyName }}
-                        </h1>
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-tajawal truncate">
+                                {{ $siteCompanyName }}
+                            </h1>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-mono font-black border border-amber-500/30">v1.2.5</span>
+                        </div>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $siteSubtitle }}</p>
                     </div>
                 </div>
@@ -1016,6 +1019,12 @@
 
                     <!-- 🔔 Live Notification Center -->
                     <livewire:notification-center />
+
+                    <!-- 🏷️ System Version Badge (Always Visible in Header) -->
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-xs font-black shadow-sm shrink-0">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span>v1.2.5 • لايف</span>
+                    </div>
 
                     <!-- ☀️ / 🌙 Theme Toggle Button -->
                     <button
