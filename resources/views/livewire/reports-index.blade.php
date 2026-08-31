@@ -466,17 +466,42 @@
         <div class="bg-gradient-to-r from-amber-600 to-amber-500 rounded-3xl p-5 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
                 <h3 class="text-base sm:text-lg font-black">إجمالي مديونيات وحسابات كافة العملاء المسجلة بالنظام</h3>
-                <p class="text-xs text-amber-100 mt-0.5">مجموع أرصدة الذمم المستحقة على العملاء حتى هذه اللحظة</p>
+                <p class="text-xs text-amber-100 mt-0.5">مجموع أرصدة الذمم المستحقة على العملاء حتى هذه اللحظة ({{ count($debtCustomersList) }} عميل عليهم مديونية)</p>
             </div>
             <div class="text-2xl sm:text-3xl font-black font-mono bg-white/20 px-4 py-2 rounded-2xl backdrop-blur-sm">
                 {{ number_format($totalAllCustomersDebt, 2) }} <span class="text-xs font-normal">ج.م</span>
             </div>
         </div>
 
+        <!-- ⚠️ Quick Debtors Cards -->
+        @if(count($debtCustomersList) > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            @foreach($debtCustomersList as $dc)
+            <div class="bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/30 p-4 rounded-2xl flex items-center justify-between">
+                <div class="space-y-0.5">
+                    <div class="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                        <span>👤</span>
+                        <span>{{ $dc->name }}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono" dir="ltr">
+                        {{ $dc->phone ?: 'بدون هاتف' }}
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs font-bold text-slate-500">الرصيد المتبقي:</div>
+                    <div class="text-base font-black text-amber-600 dark:text-amber-400 font-mono">
+                        {{ number_format($dc->current_balance, 2) }} ج.م
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
             <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                    👥 كبار العملاء الأكثر شراءً وتعاملات خلال الفترة
+                    👥 مبيعات وتعاملات كافة العملاء خلال الفترة ({{ count($customerSales) }} عميل)
                 </h3>
             </div>
 
@@ -495,9 +520,15 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                         @forelse($customerSales as $cs)
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td class="p-3.5 font-black text-slate-900 dark:text-white text-xs sm:text-sm">
-                                {{ $cs->customer?->name ?? 'عميل غير مسجل' }}
+                        @php
+                            $hasDebt = ($cs->customer?->current_balance ?? 0) > 0;
+                        @endphp
+                        <tr class="{{ $hasDebt ? 'bg-amber-500/10 dark:bg-amber-500/5' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30' }} transition-colors">
+                            <td class="p-3.5 font-black text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                @if($hasDebt)
+                                <span class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                                @endif
+                                <span>{{ $cs->customer?->name ?? 'عميل غير مسجل' }}</span>
                             </td>
                             <td class="p-3.5 font-mono text-slate-500" dir="ltr">
                                 {{ $cs->customer?->phone ?? '-' }}
@@ -512,8 +543,11 @@
                             <td class="p-3.5 font-bold font-mono text-amber-600 dark:text-amber-400">
                                 {{ number_format($cs->total_debt_in_period, 2) }} ج.م
                             </td>
-                            <td class="p-3.5 font-black font-mono text-slate-900 dark:text-white">
+                            <td class="p-3.5 font-black font-mono {{ $hasDebt ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-900 dark:text-white' }}">
                                 {{ number_format($cs->customer?->current_balance ?? 0, 2) }} ج.م
+                                @if($hasDebt)
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 mr-1 font-sans">مستحق</span>
+                                @endif
                             </td>
                         </tr>
                         @empty

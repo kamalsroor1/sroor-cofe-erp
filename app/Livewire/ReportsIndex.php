@@ -233,10 +233,10 @@ class ReportsIndex extends Component
             ->groupBy('customer_id')
             ->with('customer')
             ->orderByDesc('total_bought')
-            ->take(20)
             ->get();
 
-        $totalAllCustomersDebt = Customer::active()->sum('current_balance') ?: '0.000';
+        $totalAllCustomersDebt = Customer::where('current_balance', '>', 0)->sum('current_balance') ?: '0.000';
+        $debtCustomersList = Customer::where('current_balance', '>', 0)->orderByDesc('current_balance')->get();
 
         // 6. Stock Inventory Valuation (Fully linked to selected store or all stores)
         $stockCostValuation    = '0.000';
@@ -383,6 +383,7 @@ class ReportsIndex extends Component
             'storeBreakdown'         => $storeBreakdown,
             'customerSales'          => $customerSales,
             'totalAllCustomersDebt'  => $totalAllCustomersDebt,
+            'debtCustomersList'      => $debtCustomersList,
             'stockCostValuation'     => $stockCostValuation,
             'stockSellingValuation'  => $stockSellingValuation,
             'expectedStockProfit'    => $expectedStockProfit,
