@@ -19,8 +19,13 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Skip caching for Livewire internal updates and POST requests
-    if (event.request.url.includes('/livewire/') || event.request.url.includes('/theme-toggle')) {
+    // Skip caching for dynamic pages, reports, and Livewire internal updates
+    if (
+        event.request.mode === 'navigate' ||
+        event.request.url.includes('/reports') ||
+        event.request.url.includes('/livewire/') ||
+        event.request.url.includes('/theme-toggle')
+    ) {
         return;
     }
 
