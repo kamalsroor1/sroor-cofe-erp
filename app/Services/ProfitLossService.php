@@ -122,6 +122,25 @@ class ProfitLossService
             foreach ($expenses as $exp) {
                 $amt = (string)$exp->amount;
                 $cc = $exp->cost_center ?: 'operational';
+                if ($cc === 'operational' || empty($cc)) {
+                    if ($exp->category === 'shipping' || str_contains($exp->title, 'شحن') || str_contains($exp->notes, 'شحن')) {
+                        $cc = 'shipping';
+                    } elseif ($exp->category === 'rent' || str_contains($exp->title, 'إيجار')) {
+                        $cc = 'rent';
+                    } elseif ($exp->category === 'salaries' || str_contains($exp->title, 'مرتب') || str_contains($exp->title, 'راتب')) {
+                        $cc = 'salaries';
+                    } elseif ($exp->category === 'utilities' || str_contains($exp->title, 'كهرباء') || str_contains($exp->title, 'مياه')) {
+                        $cc = 'utilities';
+                    } elseif ($exp->category === 'maintenance' || str_contains($exp->title, 'صيانة')) {
+                        $cc = 'maintenance';
+                    } elseif ($exp->category === 'packaging' || str_contains($exp->title, 'كراتين') || str_contains($exp->title, 'تغليف')) {
+                        $cc = 'packaging';
+                    } elseif ($exp->category === 'hospitality' || str_contains($exp->title, 'ضيافة') || str_contains($exp->title, 'بوفيه')) {
+                        $cc = 'hospitality';
+                    } elseif ($exp->category === 'marketing' || str_contains($exp->title, 'تسويق') || str_contains($exp->title, 'إعلان')) {
+                        $cc = 'marketing';
+                    }
+                }
                 if (!isset($storeCostCenters[$cc])) {
                     $cc = 'operational';
                 }
