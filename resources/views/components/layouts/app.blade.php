@@ -1401,7 +1401,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('{{ asset("sw.js") }}').then(reg => {
+                navigator.serviceWorker.register('{{ asset("sw.js") }}?v={{ time() }}').then(reg => {
                     console.log('SW Registered successfully:', reg.scope);
                 }).catch(err => {
                     console.log('SW Registration error:', err);
