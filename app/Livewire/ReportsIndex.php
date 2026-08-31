@@ -373,6 +373,11 @@ class ReportsIndex extends Component
         );
 
         return view('livewire.reports-index', [
+            'activeTab'              => $this->activeTab,
+            'dateFilter'             => $this->dateFilter,
+            'fromDate'               => $this->fromDate,
+            'toDate'                 => $this->toDate,
+            'selectedStoreId'        => $this->selectedStoreId,
             'stores'                 => $stores,
             'selectedStore'          => $selectedStore,
             'periodic'               => $periodic,
