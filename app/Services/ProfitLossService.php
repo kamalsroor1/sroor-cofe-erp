@@ -62,14 +62,7 @@ class ProfitLossService
 
             foreach ($invoices as $inv) {
                 $storeRevenue = bcadd($storeRevenue, (string)$inv->net_total, 3);
-
-                foreach ($inv->items as $item) {
-                    $itemCost = bccomp((string)$item->cost_price, '0.000', 3) > 0
-                        ? (string)$item->cost_price
-                        : (string)($item->item?->weighted_avg_cost ?: ($item->item?->cost_price ?: '0.000'));
-                    $itemCogs = bcmul((string)$item->quantity, $itemCost, 3);
-                    $storeCogs = bcadd($storeCogs, $itemCogs, 3);
-                }
+                $storeCogs    = bcadd($storeCogs, (string)$inv->total_cost, 3);
             }
 
             // 2. Returns in period
