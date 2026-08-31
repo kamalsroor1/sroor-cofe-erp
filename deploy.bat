@@ -6,6 +6,6 @@ echo   🚀 جاري النشر والتحديث السريع إلى سيرفر 
 echo ======================================================================
 echo.
 
-python deploy_local_to_server.py
+python deploy_all_safe.py
 
 pause
