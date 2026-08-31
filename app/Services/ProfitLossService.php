@@ -71,7 +71,9 @@ class ProfitLossService
                 $storeRevenue = bcadd($storeRevenue, (string)$inv->net_total, 3);
 
                 foreach ($inv->items as $item) {
-                    $itemCost = (string)($item->item?->weighted_avg_cost ?: ($item->item?->cost_price ?: '0.000'));
+                    $itemCost = bccomp((string)$item->cost_price, '0.000', 3) > 0
+                        ? (string)$item->cost_price
+                        : (string)($item->item?->weighted_avg_cost ?: ($item->item?->cost_price ?: '0.000'));
                     $itemCogs = bcmul((string)$item->quantity, $itemCost, 3);
                     $storeCogs = bcadd($storeCogs, $itemCogs, 3);
                 }
@@ -90,7 +92,9 @@ class ProfitLossService
             foreach ($returns as $ret) {
                 $returnAmount = bcadd($returnAmount, (string)$ret->total_amount, 3);
                 foreach ($ret->items as $ritem) {
-                    $itemCost = (string)($ritem->item?->weighted_avg_cost ?: ($ritem->item?->cost_price ?: '0.000'));
+                    $itemCost = bccomp((string)$ritem->cost_price, '0.000', 3) > 0
+                        ? (string)$ritem->cost_price
+                        : (string)($ritem->item?->weighted_avg_cost ?: ($ritem->item?->cost_price ?: '0.000'));
                     $rcogs = bcmul((string)$ritem->quantity, $itemCost, 3);
                     $returnCogs = bcadd($returnCogs, $rcogs, 3);
                 }
@@ -104,8 +108,13 @@ class ProfitLossService
                 ? bcmul(bcdiv($grossProfit, $netRevenue, 4), '100', 2)
                 : '0.00';
 
-            // 3. Expenses per cost center
-            $expenses = Expense::where('store_id', $store->id)
+            // 3. Expenses per cost center (include unassigned general expenses if default main store)
+            $expenses = Expense::where(function ($q) use ($store) {
+                    $q->where('store_id', $store->id);
+                    if ($store->is_default) {
+                        $q->orWhereNull('store_id');
+                    }
+                })
                 ->whereDate('expense_date', '>=', $fromDate)
                 ->whereDate('expense_date', '<=', $toDate)
                 ->get();
