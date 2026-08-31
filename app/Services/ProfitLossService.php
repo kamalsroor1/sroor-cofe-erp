@@ -94,10 +94,10 @@ class ProfitLossService
                 ? bcmul(bcdiv($grossProfit, $netRevenue, 4), '100', 2)
                 : '0.00';
 
-            // 3. Expenses per cost center (include unassigned general expenses if default main store)
+            // 3. Expenses per cost center (include unassigned general expenses if main store)
             $expenses = Expense::where(function ($q) use ($store) {
                     $q->where('store_id', $store->id);
-                    if ($store->is_default) {
+                    if ($store->is_main) {
                         $q->orWhereNull('store_id');
                     }
                 })
@@ -141,7 +141,7 @@ class ProfitLossService
                 'store_id'             => $store->id,
                 'store_name'           => $store->name,
                 'store_code'           => $store->code,
-                'is_default'           => $store->is_default,
+                'is_main'              => $store->is_main,
                 'invoices_count'       => $invoicesCount,
                 'gross_sales'          => $storeRevenue,
                 'returns_amount'       => $returnAmount,
