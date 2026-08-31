@@ -1108,8 +1108,24 @@
             @endif
 
             <!-- Dynamic Body Page Content -->
-            <main class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 p-4 lg:p-6 text-slate-800 dark:text-slate-100">
-                {{ $slot }}
+            <main class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 p-4 lg:p-6 text-slate-800 dark:text-slate-100 flex flex-col justify-between">
+                <div class="flex-1">
+                    {{ $slot }}
+                </div>
+
+                <!-- 🌟 System Footer with Version -->
+                <footer class="mt-8 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono font-black border border-emerald-500/30">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            الإصدار: v1.2.5 • لايف
+                        </span>
+                        <span class="font-bold">نظام سرور كوفي ERP</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-mono">
+                        Server Active • {{ date('Y-m-d') }}
+                    </div>
+                </footer>
             </main>
         </div>
     @else
