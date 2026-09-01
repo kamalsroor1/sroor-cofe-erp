@@ -59,9 +59,9 @@ final class ApiMeAction
                 'opening_cash_balance' => (float)$activeShift->opening_cash_balance,
             ] : null,
             'system' => [
-                'company_name'     => Setting::get('company_name', 'سرور كوفي'),
-                'company_subtitle' => Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن'),
-                'system_theme'     => Setting::get('system_theme_color', 'amber'),
+                'company_name'     => Setting::get('company_name') ?: (function_exists('tenant') && tenant('name') ? tenant('name') : 'مؤسسة تجارية'),
+                'company_subtitle' => Setting::get('company_subtitle') ?: '',
+                'system_theme'     => Setting::get('system_theme_color', 'emerald'),
                 'server_time'      => now()->toDateTimeString(),
             ],
         ];

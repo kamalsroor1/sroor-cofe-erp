@@ -1,0 +1,294 @@
+{
+  "summary": {
+    "totalSuccess": 33,
+    "totalFailed": 0,
+    "totalScreenshots": 42,
+    "totalDiscovered": 3,
+    "totalConsoleErrors": 0,
+    "totalSkippedSensitiveButtons": 1,
+    "durationSeconds": 309.5,
+    "runDate": "2026-08-21",
+    "runId": "run-01",
+    "runDirectory": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01"
+  },
+  "successfulPages": [
+    {
+      "route": "/login",
+      "name": "login",
+      "module": "auth",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\auth\\desktop\\01-login.png",
+      "timestamp": "2026-08-21T17:21:18.330Z"
+    },
+    {
+      "route": "/",
+      "name": "dashboard",
+      "module": "dashboard",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\dashboard\\desktop\\02-dashboard.png",
+      "timestamp": "2026-08-21T17:21:26.605Z"
+    },
+    {
+      "route": "/pos",
+      "name": "pos",
+      "module": "pos",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\pos\\desktop\\03-pos.png",
+      "timestamp": "2026-08-21T17:21:34.731Z"
+    },
+    {
+      "route": "/invoices",
+      "name": "invoices",
+      "module": "invoices",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\invoices\\desktop\\04-invoices.png",
+      "timestamp": "2026-08-21T17:21:41.480Z"
+    },
+    {
+      "route": "/items",
+      "name": "items",
+      "module": "items",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\items\\desktop\\05-items.png",
+      "timestamp": "2026-08-21T17:21:57.962Z"
+    },
+    {
+      "route": "/items/1/movements",
+      "name": "item-movements",
+      "module": "items",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\items\\desktop\\06-item-movements.png",
+      "timestamp": "2026-08-21T17:22:05.249Z"
+    },
+    {
+      "route": "/stores",
+      "name": "stores",
+      "module": "stores",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\stores\\desktop\\07-stores.png",
+      "timestamp": "2026-08-21T17:22:12.496Z"
+    },
+    {
+      "route": "/stores/stocks",
+      "name": "store-stocks",
+      "module": "stores",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\stores\\desktop\\08-store-stocks.png",
+      "timestamp": "2026-08-21T17:22:21.308Z"
+    },
+    {
+      "route": "/customers",
+      "name": "customers",
+      "module": "customers",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\customers\\desktop\\09-customers.png",
+      "timestamp": "2026-08-21T17:22:29.701Z"
+    },
+    {
+      "route": "/customers/1/statement",
+      "name": "customer-statement",
+      "module": "customers",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\customers\\desktop\\10-customer-statement.png",
+      "timestamp": "2026-08-21T17:22:37.634Z"
+    },
+    {
+      "route": "/suppliers",
+      "name": "suppliers",
+      "module": "suppliers",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\suppliers\\desktop\\11-suppliers.png",
+      "timestamp": "2026-08-21T17:22:47.043Z"
+    },
+    {
+      "route": "/suppliers/1/statement",
+      "name": "supplier-statement",
+      "module": "suppliers",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\suppliers\\desktop\\12-supplier-statement.png",
+      "timestamp": "2026-08-21T17:22:55.774Z"
+    },
+    {
+      "route": "/purchases",
+      "name": "purchases",
+      "module": "purchases",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\purchases\\desktop\\13-purchases.png",
+      "timestamp": "2026-08-21T17:23:02.341Z"
+    },
+    {
+      "route": "/purchases/create",
+      "name": "purchases-create",
+      "module": "purchases",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\purchases\\desktop\\14-purchases-create.png",
+      "timestamp": "2026-08-21T17:23:10.923Z"
+    },
+    {
+      "route": "/purchases/smart-reorder",
+      "name": "smart-reorder",
+      "module": "purchases",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\purchases\\desktop\\15-smart-reorder.png",
+      "timestamp": "2026-08-21T17:23:17.422Z"
+    },
+    {
+      "route": "/expenses",
+      "name": "expenses",
+      "module": "expenses",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\expenses\\desktop\\16-expenses.png",
+      "timestamp": "2026-08-21T17:23:26.809Z"
+    },
+    {
+      "route": "/returns",
+      "name": "returns",
+      "module": "returns",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\returns\\desktop\\17-returns.png",
+      "timestamp": "2026-08-21T17:23:45.363Z"
+    },
+    {
+      "route": "/returns/create",
+      "name": "returns-create",
+      "module": "returns",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\returns\\desktop\\18-returns-create.png",
+      "timestamp": "2026-08-21T17:23:55.428Z"
+    },
+    {
+      "route": "/stock-transfers",
+      "name": "stock-transfers",
+      "module": "transfers",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\transfers\\desktop\\19-stock-transfers.png",
+      "timestamp": "2026-08-21T17:24:04.833Z"
+    },
+    {
+      "route": "/stock-transfers/create",
+      "name": "stock-transfers-create",
+      "module": "transfers",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\transfers\\desktop\\20-stock-transfers-create.png",
+      "timestamp": "2026-08-21T17:24:12.419Z"
+    },
+    {
+      "route": "/coffee-blender",
+      "name": "coffee-blender",
+      "module": "blender",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\blender\\desktop\\21-coffee-blender.png",
+      "timestamp": "2026-08-21T17:24:21.845Z"
+    },
+    {
+      "route": "/daily-journal",
+      "name": "daily-journal",
+      "module": "shifts",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\shifts\\desktop\\22-daily-journal.png",
+      "timestamp": "2026-08-21T17:24:30.156Z"
+    },
+    {
+      "route": "/reports",
+      "name": "reports",
+      "module": "reports",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\reports\\desktop\\23-reports.png",
+      "timestamp": "2026-08-21T17:24:39.233Z"
+    },
+    {
+      "route": "/users",
+      "name": "users",
+      "module": "users",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\users\\desktop\\24-users.png",
+      "timestamp": "2026-08-21T17:24:44.829Z"
+    },
+    {
+      "route": "/roles",
+      "name": "roles",
+      "module": "users",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\users\\desktop\\25-roles.png",
+      "timestamp": "2026-08-21T17:24:52.222Z"
+    },
+    {
+      "route": "/activity-logs",
+      "name": "activity-logs",
+      "module": "users",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\users\\desktop\\26-activity-logs.png",
+      "timestamp": "2026-08-21T17:25:02.186Z"
+    },
+    {
+      "route": "/settings",
+      "name": "settings",
+      "module": "settings",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\settings\\desktop\\27-settings.png",
+      "timestamp": "2026-08-21T17:25:15.941Z"
+    },
+    {
+      "route": "/profile",
+      "name": "profile",
+      "module": "settings",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\settings\\desktop\\28-profile.png",
+      "timestamp": "2026-08-21T17:25:21.554Z"
+    },
+    {
+      "route": "/trash",
+      "name": "trash",
+      "module": "settings",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\settings\\desktop\\29-trash.png",
+      "timestamp": "2026-08-21T17:25:34.430Z"
+    },
+    {
+      "route": "/super-admin/dashboard",
+      "name": "super-admin-dashboard",
+      "module": "super-admin",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\super-admin\\desktop\\30-super-admin-dashboard.png",
+      "timestamp": "2026-08-21T17:25:39.807Z"
+    },
+    {
+      "route": "/super-admin/tenants",
+      "name": "super-admin-tenants",
+      "module": "super-admin",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\super-admin\\desktop\\31-super-admin-tenants.png",
+      "timestamp": "2026-08-21T17:25:45.151Z"
+    },
+    {
+      "route": "/super-admin/plans",
+      "name": "super-admin-plans",
+      "module": "super-admin",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\super-admin\\desktop\\32-super-admin-plans.png",
+      "timestamp": "2026-08-21T17:25:53.772Z"
+    },
+    {
+      "route": "/brochure",
+      "name": "marketing-brochure",
+      "module": "marketing",
+      "viewport": "desktop",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-01\\marketing\\desktop\\33-marketing-brochure.png",
+      "timestamp": "2026-08-21T17:26:18.905Z"
+    }
+  ],
+  "failedPages": [],
+  "discoveredNewRoutes": [
+    "/stores/stocks?store_id=1",
+    "/stores/stocks?store_id=2",
+    "/stores/stocks?store_id=5"
+  ],
+  "consoleErrors": [],
+  "skippedSensitiveButtons": [
+    {
+      "page": "/pos",
+      "text": "تفريغ السلة",
+      "reason": "Critical or destructive action skipped for safety"
+    }
+  ]
+}

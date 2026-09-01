@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useMoney } from '@/Composables/useMoney';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
+import { X, Plus } from 'lucide-vue-next';
 
 const props = defineProps({
     show: { type: Boolean, default: false },
@@ -110,7 +111,7 @@ const onTouchEnd = () => {
                             type="button"
                             class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center text-sm font-bold transition active:scale-90 cursor-pointer shadow-xs shrink-0"
                         >
-                            ✕
+                            <X class="w-4 h-4" />
                         </button>
                     </div>
 
@@ -120,7 +121,7 @@ const onTouchEnd = () => {
                             v-model="customerSearch"
                             type="text"
                             :placeholder="$t('pos.search_customer_placeholder')"
-                            class="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 shadow-inner"
+                            class="w-full h-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary shadow-inner"
                         />
                     </div>
 
@@ -156,9 +157,9 @@ const onTouchEnd = () => {
                         <button
                             @click="onOpenCreate"
                             type="button"
-                            class="w-full h-11 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
+                            class="w-full h-11 rounded-2xl bg-theme-light hover:bg-theme-hover/20 border border-theme-border text-theme-primary font-black text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-xs"
                         >
-                            <span>➕</span>
+                            <Plus class="w-4 h-4" />
                             <span>{{ $t('contacts.add_new_customer') }}</span>
                         </button>
                     </div>

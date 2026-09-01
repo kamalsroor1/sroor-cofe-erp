@@ -14,9 +14,9 @@ const { formatMoney, formatQty } = useMoney();
 const { triggerHaptic } = useNativeBridge();
 
 const effectivePrice = computed(() => {
-    return props.customerPriceTier === 'wholesale'
-        ? props.item.price_wholesale
-        : props.item.price_retail;
+    const retail = parseFloat(props.item?.selling_price ?? props.item?.price_retail ?? props.item?.price ?? 0);
+    const wholesale = parseFloat(props.item?.min_selling_price ?? props.item?.price_wholesale ?? retail);
+    return props.customerPriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
 });
 
 const isWeightBased = computed(() => {
@@ -28,7 +28,7 @@ const stockBadgeClass = computed(() => {
         return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
     }
     if (props.item.current_stock > 0) {
-        return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+        return 'bg-theme-primary/15 text-theme-primary text-theme-primary border border-theme-border';
     }
     return 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
 });
@@ -46,7 +46,7 @@ const onAddQty = (qty) => {
 
 <template>
     <div
-        class="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 rounded-2xl flex flex-col justify-between transition-all duration-150 shadow-xs group overflow-hidden card-native-tap select-none min-h-[120px]"
+        class="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 hover:border-theme-primary rounded-2xl flex flex-col justify-between transition-all duration-150 shadow-xs group overflow-hidden card-native-tap select-none min-h-[120px]"
     >
         <!-- Main Card Body (Touch Target >= 48px) -->
         <div
@@ -62,7 +62,7 @@ const onAddQty = (qty) => {
                         {{ formatQty(item.current_stock, 1) }} {{ item.unit }}
                     </span>
                 </div>
-                <h3 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-amber-600 dark:group-hover:text-amber-300 transition">
+                <h3 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-theme-primary dark:group-hover:text-theme-primary transition">
                     {{ item.name }}
                 </h3>
             </div>
@@ -81,11 +81,11 @@ const onAddQty = (qty) => {
         </div>
 
         <!-- Direct Quick Weight Steppers Bar (For Coffee & Weight Items) -->
-        <div v-if="isWeightBased" class="p-1.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-4 gap-1.5">
+        <div v-if="isWeightBased" class="p-1.5 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-4 gap-1.5">
             <button
                 @click.stop="onAddQty(0.125)"
                 type="button"
-                class="h-9 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-slate-200/90 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-theme-hover text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_eighth')"
             >
                 1/8
@@ -93,7 +93,7 @@ const onAddQty = (qty) => {
             <button
                 @click.stop="onAddQty(0.250)"
                 type="button"
-                class="h-9 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-slate-200/90 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-theme-hover text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_quarter')"
             >
                 1/4
@@ -101,7 +101,7 @@ const onAddQty = (qty) => {
             <button
                 @click.stop="onAddQty(0.500)"
                 type="button"
-                class="h-9 rounded-xl bg-slate-200/90 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
+                class="h-9 rounded-xl bg-slate-200/90 hover:bg-theme-hover hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-theme-hover text-slate-800 dark:text-slate-200 font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
                 :title="$t('inventory.weight_half')"
             >
                 1/2

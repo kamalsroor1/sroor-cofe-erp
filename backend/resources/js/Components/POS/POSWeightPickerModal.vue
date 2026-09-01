@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useMoney } from '@/Composables/useMoney';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 import { trans } from '@/helpers/trans';
+import { X, Scale } from 'lucide-vue-next';
 
 const props = defineProps({
     show: { type: Boolean, default: false },
@@ -13,10 +14,10 @@ const props = defineProps({
 const emit = defineEmits(['close', 'confirm']);
 
 const presetWeights = computed(() => [
-    { label: trans('inventory.weight_eighth') || 'ثمن كيلو (125 جم)', qty: 0.125 },
-    { label: trans('inventory.weight_quarter') || 'ربع كيلو (250 جم)', qty: 0.250 },
-    { label: trans('inventory.weight_half') || 'نصف كيلو (500 جم)', qty: 0.500 },
-    { label: trans('inventory.weight_kilo') || 'كيلو كامل (1000 جم)', qty: 1.000 },
+    { label: trans('inventory.weight_eighth'), qty: 0.125 },
+    { label: trans('inventory.weight_quarter'), qty: 0.250 },
+    { label: trans('inventory.weight_half'), qty: 0.500 },
+    { label: trans('inventory.weight_kilo'), qty: 1.000 },
 ]);
 
 const { formatMoney } = useMoney();
@@ -32,7 +33,9 @@ const isDragging = ref(false);
 
 const effectiveKiloPrice = (item) => {
     if (!item) return 0;
-    return props.customerPriceTier === 'wholesale' ? item.price_wholesale : item.price_retail;
+    const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
+    const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
+    return props.customerPriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
 };
 
 const selectPreset = (qty) => {
@@ -126,7 +129,7 @@ const onTouchEnd = () => {
                             type="button"
                             class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center text-sm font-bold transition active:scale-90 cursor-pointer shadow-xs shrink-0"
                         >
-                            ✕
+                            <X class="w-4 h-4" />
                         </button>
                     </div>
 
@@ -160,7 +163,7 @@ const onTouchEnd = () => {
                                 inputmode="decimal"
                                 :placeholder="$t('pos.enter_custom_weight')"
                                 @keyup.enter="applyCustomWeight"
-                                class="flex-1 h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-mono font-bold focus:ring-2 focus:ring-amber-500 outline-hidden transition shadow-xs"
+                                class="flex-1 h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-mono font-bold focus:ring-2 focus:ring-theme-primary outline-hidden transition shadow-xs"
                             />
                             <button
                                 @click="applyCustomWeight"

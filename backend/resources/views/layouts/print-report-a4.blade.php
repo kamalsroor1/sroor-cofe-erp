@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $companyName = \App\Models\Setting::get('company_name', 'مؤسسة سرور التجارية');
-        $companySubtitle = \App\Models\Setting::get('company_subtitle', 'للتجارة والتوزيع وإدارة المبيعات والمخزون');
+        $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
+        $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
     @endphp
     <title>{{ $reportTitle }} - A4 ({{ $companyName }})</title>
     

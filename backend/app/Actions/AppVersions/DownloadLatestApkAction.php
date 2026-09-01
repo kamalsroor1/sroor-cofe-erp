@@ -17,13 +17,36 @@ class DownloadLatestApkAction
             ->orderByDesc('version_code')
             ->first();
 
+        $contentType = match ($platform) {
+            'windows' => 'application/vnd.microsoft.portable-executable',
+            'android' => 'application/vnd.android.package-archive',
+            default => 'application/octet-stream',
+        };
+
         if (!$latest || !Storage::disk('public')->exists($latest->apk_path)) {
-            // Check fallback in root/dist if exists
-            $fallbackPath = base_path('../mobile/sroor-coffee-erp-v1.0.apk');
-            if (file_exists($fallbackPath)) {
-                return response()->download($fallbackPath, 'sroor-coffee-erp-latest.apk', [
-                    'Content-Type' => 'application/vnd.android.package-archive',
-                ]);
+            // Check fallback in public folder or root if exists
+            $fallbacks = $platform === 'windows' ? [
+                public_path('Sroor-ERP-POS-Setup.exe'),
+                public_path('desktop-setup.exe'),
+                base_path('../desktop/dist/Sroor-ERP-POS-Setup-1.0.0.exe'),
+                base_path('Sroor-ERP-POS-Setup.exe'),
+            ] : [
+                public_path('sroor-cofe-erp-2m.apk'),
+                public_path('app.apk'),
+                base_path('../sroor-cofe-erp-2m.apk'),
+                base_path('../mobile/sroor-coffee-erp-v1.0.apk'),
+            ];
+
+            $appNameSlug = \Illuminate\Support\Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
+            $defaultFilename = $platform === 'windows' ? ($appNameSlug . '-Setup-latest.exe') : ($appNameSlug . '-latest.apk');
+
+            foreach ($fallbacks as $fallbackPath) {
+                if (file_exists($fallbackPath)) {
+                    return response()->download($fallbackPath, $defaultFilename, [
+                        'Content-Type' => $contentType,
+                        'Cache-Control' => 'no-cache, private',
+                    ]);
+                }
             }
 
             throw new NotFoundHttpException('ملف التحديث غير متوفر حالياً على السيرفر.');
@@ -33,9 +56,10 @@ class DownloadLatestApkAction
         $latest->increment('download_count');
 
         $fullPath = Storage::disk('public')->path($latest->apk_path);
+        $appNameSlug = \Illuminate\Support\Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
 
-        return response()->download($fullPath, $latest->apk_filename ?? 'sroor-coffee-erp.apk', [
-            'Content-Type' => 'application/vnd.android.package-archive',
+        return response()->download($fullPath, $latest->apk_filename ?? ($platform === 'windows' ? ($appNameSlug . '-Setup.exe') : ($appNameSlug . '.apk')), [
+            'Content-Type' => $contentType,
             'Cache-Control' => 'no-cache, private',
         ]);
     }

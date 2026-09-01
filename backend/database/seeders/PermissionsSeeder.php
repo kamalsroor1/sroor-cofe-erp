@@ -59,6 +59,7 @@ class PermissionsSeeder extends Seeder
             'trash.access'        => 'الوصول لسلة المحذوفات المركزية واسترجاع البيانات',
             'roles.manage'        => 'إدارة المستخدمين والأدوار والصلاحيات',
             'logs.view'           => 'عرض وفحص سجل العمليات والرقابة الذاتية',
+            'super_admin.access'  => 'الوصول للمنصة المركزية وإدارة المشتركين والباقات',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -66,13 +67,18 @@ class PermissionsSeeder extends Seeder
         }
 
         // 2. Roles Setup & Permission Assignment
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
         $storeRole = Role::firstOrCreate(['name' => 'storekeeper']);
         $accountantRole = Role::firstOrCreate(['name' => 'accountant']);
 
-        // Admin gets ALL permissions
-        $adminRole->syncPermissions(Permission::all());
+        // Super Admin gets ALL permissions including central platform
+        $superAdminRole->syncPermissions(Permission::all());
+
+        // Store Admin gets all local ERP permissions EXCEPT central super_admin.access
+        $storeAdminPermissions = Permission::where('name', '!=', 'super_admin.access')->get();
+        $adminRole->syncPermissions($storeAdminPermissions);
 
         // Cashier permissions
         $cashierRole->syncPermissions([

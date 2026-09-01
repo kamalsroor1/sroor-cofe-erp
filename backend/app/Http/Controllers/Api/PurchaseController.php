@@ -30,21 +30,26 @@ final class PurchaseController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('purchases.view') && !$user->can('purchases.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $status = (string)$request->input('status', 'all');
         $supplierId = $request->input('supplier_id');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = (int)$request->input('per_page', 15);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $query = Purchase::with(['supplier', 'user', 'store', 'items.item']);
 
-        if ($storeId) {
+        if ($storeId && $storeId !== 'all') {
             $query->where('store_id', (int)$storeId);
         }
 
@@ -99,8 +104,13 @@ final class PurchaseController extends Controller
     /**
      * Show single purchase with items
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('purchases.view') && !$user->can('purchases.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $purchase = Purchase::with(['supplier', 'user', 'store', 'items.item', 'additionalExpenses'])->findOrFail($id);
 
         return response()->json([
@@ -134,6 +144,11 @@ final class PurchaseController extends Controller
      */
     public function cancel(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('purchases.delete') && !$user->can('purchases.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $dto = CancelPurchaseDTO::fromArray($id, [
             'reason' => $request->input('reason', 'إلغاء من النظام'),
         ]);
@@ -152,6 +167,11 @@ final class PurchaseController extends Controller
      */
     public function smartReorder(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('purchases.view') && !$user->can('purchases.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id');
         $storeFilter = ($storeId && $storeId !== 'all') ? (int)$storeId : null;

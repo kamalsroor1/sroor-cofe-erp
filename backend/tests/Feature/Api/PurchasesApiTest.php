@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\Item;
@@ -8,9 +10,9 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -20,6 +22,8 @@ class PurchasesApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
+    protected User $unauthorizedUser;
+    protected string $unauthorizedToken;
     protected Store $store;
     protected Supplier $supplier;
     protected Item $itemA;
@@ -29,10 +33,8 @@ class PurchasesApiTest extends TestCase
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'purchases.view']);
-        Permission::create(['name' => 'purchases.create']);
-        Permission::create(['name' => 'purchases.manage']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
             'name'      => 'المخزن الرئيسي',
@@ -42,6 +44,8 @@ class PurchasesApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
@@ -49,8 +53,17 @@ class PurchasesApiTest extends TestCase
             'is_active'        => true,
             'default_store_id' => $this->store->id,
         ]);
-        $this->adminUser->assignRole($role);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        $this->adminUser->assignRole($adminRole);
+        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+
+        $this->unauthorizedUser = User::factory()->create([
+            'name'             => 'مستخدم بدون صلاحيات',
+            'phone'            => '01000000000',
+            'password'         => Hash::make('password'),
+            'is_active'        => true,
+            'default_store_id' => $this->store->id,
+        ]);
+        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
 
         $this->supplier = Supplier::create([
             'name'         => 'شركة البن البرازيلي',
@@ -95,6 +108,20 @@ class PurchasesApiTest extends TestCase
             'item_id'  => $this->itemB->id,
             'quantity' => '10.000',
         ]);
+    }
+
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/purchases');
+        $response->assertStatus(401);
+    }
+
+    public function test_unauthorized_user_cannot_access_purchases_or_create(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+            ->getJson('/api/v1/purchases');
+
+        $response->assertStatus(403);
     }
 
     public function test_can_list_purchases_with_pagination_and_metrics(): void
@@ -152,15 +179,8 @@ class PurchasesApiTest extends TestCase
             ]);
 
         // Verify stock was incremented
-        $this->assertDatabaseHas('items', [
-            'id'            => $this->itemA->id,
-            'current_stock' => '70.000', // 20 + 50
-        ]);
-
-        $this->assertDatabaseHas('items', [
-            'id'            => $this->itemB->id,
-            'current_stock' => '40.000', // 10 + 30
-        ]);
+        $this->assertEquals(70.000, (float)Item::find($this->itemA->id)->current_stock);
+        $this->assertEquals(40.000, (float)Item::find($this->itemB->id)->current_stock);
 
         // Verify store stock incremented
         $this->assertDatabaseHas('store_stocks', [
@@ -168,6 +188,17 @@ class PurchasesApiTest extends TestCase
             'item_id'  => $this->itemA->id,
             'quantity' => '70.000',
         ]);
+    }
+
+    public function test_create_purchase_fails_validation_on_missing_fields(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->postJson('/api/v1/purchases', [
+                'supplier_id' => $this->supplier->id,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['purchase_date', 'items']);
     }
 
     public function test_can_view_single_purchase_with_items(): void

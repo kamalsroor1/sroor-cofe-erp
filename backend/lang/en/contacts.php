@@ -126,7 +126,9 @@ return [
     'payable_balance_label'     => 'Payable Balance',
     'due_to_supplier'           => 'Due to Supplier',
     'fully_settled'             => 'Fully Settled',
-    'no_suppliers_description'  => 'No suppliers match the search criteria',
+    'no_suppliers_description'  => 'No suppliers matched your search or filter criteria',
+    'supplier_creditors_only'   => 'Due Balance (Creditor) 🚨',
+    'supplier_settled_only'     => 'Fully Settled ✅',
     'supplier_name_placeholder' => 'Enter supplier name...',
     'company_name_placeholder'  => 'Company name if applicable...',
     'confirm_payment'           => 'Confirm Payment',
@@ -146,4 +148,6 @@ return [
     'total_purchases_label'     => 'Total Purchases',
     'total_payments_label'      => 'Total Payments',
     'total_results_suppliers'   => 'Total results: :count suppliers',
+
+    'name' => 'Name',
 ];

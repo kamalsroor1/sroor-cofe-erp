@@ -25,10 +25,17 @@ final class ProfileController extends Controller
     {
         $user = $request->user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthorized'),
+            ], 401);
+        }
+
         return response()->json([
             'success' => true,
             'data'    => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
-        ]);
+        ], 200);
     }
 
     /**
@@ -38,6 +45,13 @@ final class ProfileController extends Controller
     {
         $user = $request->user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.unauthorized'),
+            ], 401);
+        }
+
         try {
             $updated = $this->updateProfileAction->execute($user, $request->validated());
 
@@ -45,7 +59,7 @@ final class ProfileController extends Controller
                 'success' => true,
                 'message' => __('auth.profile_updated') ?: 'تم تحديث الملف الشخصي بنجاح',
                 'data'    => (new UserResource($updated->load(['roles', 'defaultStore'])))->resolve(),
-            ]);
+            ], 200);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,

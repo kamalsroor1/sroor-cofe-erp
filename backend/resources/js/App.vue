@@ -1,7 +1,16 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-100 antialiased font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
-    <!-- 1. Standalone Guest Views (Login, Marketing Brochure) -->
-    <template v-if="isGuestRoute">
+  <div class="h-screen max-h-screen w-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col" dir="rtl">
+    <!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->
+    <DesktopTitlebar
+      @open-hardware="isDesktopHardwareOpen = true"
+      @open-shortcuts="isDesktopShortcutsOpen = true"
+    />
+
+    <!-- 0. ☕ Global System Initial Boot Splash Screen (Facebook/Native-App Shimmer Loader) -->
+    <SystemBootSplash :show="isBooting" />
+
+    <!-- 1. Standalone / Print / Guest Views (Completely Isolated with ZERO Sidebar or Navbars) -->
+    <template v-if="isStandaloneRoute">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.fullPath" />
@@ -9,59 +18,155 @@
       </router-view>
     </template>
 
-    <!-- 2. Persistent Authenticated App Shell (Header, Sidebar & Mobile Bottom Nav STAY PERMANENTLY MOUNTED) -->
-    <SpaLayout v-else>
+    <!-- 2. Super Admin Dedicated Layout (Isolated Shell for Central Platform Admins) -->
+    <SuperAdminLayout v-else-if="isSuperAdminRoute">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.fullPath" />
         </transition>
       </router-view>
+    </SuperAdminLayout>
+
+    <!-- 3. Persistent Tenant ERP / POS App Shell -->
+    <SpaLayout v-else>
+      <router-view v-slot="{ Component, route }">
+        <transition name="page" mode="out-in">
+          <KeepAlive v-if="isDesktop" :include="tabsStore.cachedViews" :max="12">
+            <component :is="Component" :key="route.fullPath" />
+          </KeepAlive>
+          <component v-else :is="Component" :key="route.fullPath" />
+        </transition>
+      </router-view>
     </SpaLayout>
 
-    <!-- 3. Global In-App APK Auto-Updater Modal (Renders seamlessly across all views) -->
-    <AppUpdateModal />
+    <!-- 4. Global In-App APK Auto-Updater Modal (Hidden on Print) -->
+    <div class="no-print">
+      <AppUpdateModal />
+    </div>
+
+    <!-- 5. 🖨️ Desktop Hardware & Shortcuts Modals (Desktop Only) -->
+    <template v-if="isDesktop">
+      <DesktopPrinterSettingsModal
+        :show="isDesktopHardwareOpen"
+        @close="isDesktopHardwareOpen = false"
+      />
+      <DesktopShortcutsModal
+        :show="isDesktopShortcutsOpen"
+        @close="isDesktopShortcutsOpen = false"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
+import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
+import { useDesktopHardware } from './Composables/useDesktopHardware';
 import SpaLayout from './Layouts/SpaLayout.vue';
+import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';
+import SystemBootSplash from './Components/Common/SystemBootSplash.vue';
+import DesktopTitlebar from './Components/Common/DesktopTitlebar.vue';
+import DesktopPrinterSettingsModal from './Components/Common/DesktopPrinterSettingsModal.vue';
+import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue';
 
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
+const tabsStore = useTabsStore();
 const { checkForUpdates } = useAppUpdate();
+const { isDesktop, openCashDrawer } = useDesktopHardware();
 
-const isGuestRoute = computed(() => {
-    return route.meta?.guestOnly || route.name === 'login' || route.name === 'marketing.brochure';
+const isDesktopHardwareOpen = ref(false);
+const isDesktopShortcutsOpen = ref(false);
+
+const isBooting = ref(true);
+
+const isStandaloneRoute = computed(() => {
+    const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
+    const meta = route.meta || {};
+    return meta.guestOnly || 
+           meta.layout === 'blank' ||
+           meta.isPrintView ||
+           route.name === 'login' || 
+           route.name === 'marketing.brochure' ||
+           route.name === 'invoices.print' ||
+           path.includes('/print') ||
+           path === '/login' ||
+           (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname.includes('/print')));
+});
+
+const isSuperAdminRoute = computed(() => {
+    const currentPath = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
+    const currentMeta = route.meta || {};
+    return currentPath.startsWith('/super-admin') || 
+           (typeof window !== 'undefined' && window.location.pathname.startsWith('/super-admin')) ||
+           currentMeta.isSuperAdmin;
 });
 
 onMounted(async () => {
-    // 1. Initialize Theme from storage or preference
-    const savedTheme = localStorage.getItem('theme_preference') || 'dark';
-    appConfigStore.setTheme(savedTheme);
+    try {
+        // 1. Initialize Theme from storage or preference
+        const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+        appConfigStore.setTheme(savedTheme);
 
-    // 2. Fetch translations if guest or bootstrap context if authenticated
-    if (authStore.isAuthenticated) {
-        try {
+        // 2. Fetch translations if guest or bootstrap context if authenticated
+        if (authStore.isAuthenticated) {
             await appConfigStore.fetchBootstrapContext();
-            window.spaTranslations = appConfigStore.translations;
-        } catch (e) {
-            console.error('Error bootstrapping SPA app:', e);
+        } else {
+            await appConfigStore.fetchTranslations();
         }
-    } else {
-        await appConfigStore.fetchTranslations(appConfigStore.locale);
-        window.spaTranslations = appConfigStore.translations;
+    } catch (error) {
+        console.error('Failed to initialize bootstrap context:', error);
+    } finally {
+        // Smooth transition out of boot splash
+        setTimeout(() => {
+            isBooting.value = false;
+        }, 350);
     }
 
-    // 3. Check for app updates in the background (Non-blocking for authenticated users)
-    if (authStore.isAuthenticated) {
-        checkForUpdates(false);
+    // 3. Native App APK Update Check
+    checkForUpdates();
+
+    // 4. Global Desktop Hotkeys Listener
+    if (isDesktop.value) {
+        window.addEventListener('keydown', handleDesktopGlobalKeydown);
+    }
+});
+
+const handleDesktopGlobalKeydown = (e) => {
+    if (e.key === 'F1') {
+        e.preventDefault();
+        isDesktopShortcutsOpen.value = true;
+    } else if (e.key === 'F12') {
+        e.preventDefault();
+        openCashDrawer();
+    }
+};
+
+onUnmounted(() => {
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', handleDesktopGlobalKeydown);
     }
 });
 </script>
+
+<style>
+/* Page Transition Animations */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

@@ -4,6 +4,100 @@
 
 ---
 
+## توحيد Input Components بتاريخ 2026-08-22
+
+### الجرد الأولي (Initial Discovery)
+- **Text / Email / Tel (76 استخدام عبر 31 ملف):** غير متسقة، كتابة كلاسات Tailwind يدوياً، تفاوت في عرض الـ Label ورسائل الخطأ.
+- **Number Inputs (53 استخدام عبر 20 ملف):** غير متسقة، غياب `inputmode="decimal"` على الموبايل، تفاوت في دقة الخطوة `step` وغياب حدود `min/max`.
+- **Password Input (6 استخدامات عبر 3 ملفات):** متباينة، تفتقر لزر موحد لإظهار/إخفاء كلمة المرور.
+- **Textarea (9 استخدامات عبر 9 ملفات):** متباينة في الارتفاعات وغياب عداد الأحرف.
+- **Select / Dropdown (53 استخدام عبر 27 ملف):** خليط بين select المتصفح وSearchableSelect، غياب البحث الديناميكي من الـ API مع debounce و AbortController.
+- **Checkbox & Radio (19 استخدام عبر 10 ملفات):** صعبة اللمس على الموبايل (< 44px).
+- **Date / Time Picker (27 استخدام عبر 16 ملف):** تفاوت بين inputs عادية و Flatpickr.
+- **File Upload (3 استخدامات عبر 2 ملف):** تفتقر للمعاينة الحية الفورية والسحب والإفلات.
+- **Search Input (18 استخدام عبر 17 ملف):** مكررة inline في عدة شاشات.
+- **Switch / Toggle (8 استخدامات عبر 5 ملفات):** مبنية بـ checkboxes عادية.
+
+### Components الجديدة المبنية (داخل `resources/js/Components/Form/`)
+1. **`BaseInput.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `type` (text, email, tel, password, url), `placeholder`, `error`, `hint`, `disabled`, `readonly`, `required`, `autocomplete`, `inputmode`, `maxlength`, `minlength`, `clearable`, `leadingIcon`, `trailingIcon`, `wrapperClass`, `inputClass`.
+   - **الميزات:** زر إظهار/إخفاء كلمة المرور تلقائياً، زر تفريغ سريع، مساحة لمس >= 44px، حجم خط >= 16px للموبايل لتجنب iOS Zoom، رسائل خطأ موحدة مع `aria-invalid` و `aria-describedby`.
+   - **الأساس:** Pure Vue 3 Component + Tailwind CSS Theme Engine.
+2. **`BaseNumberInput.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `min`, `max`, `step` (default 0.001), `prefix`, `suffix` (مثل ج.م), `showStepper` (أزرار +/-), `error`, `hint`, `disabled`, `readonly`, `required`.
+   - **الميزات:** `inputmode="decimal"` إلزامي لكيبورد الأرقام على الموبايل، خط مونو للأرقام المالية.
+3. **`BaseTextarea.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `rows`, `placeholder`, `maxlength`, `error`, `hint`, `disabled`, `readonly`, `required`.
+   - **الميزات:** عداد أحرف حي، توحيد الحدود ورسائل الخطأ.
+4. **`BaseSelect.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `options`, `valueKey`, `labelKey`, `searchable`, `searchPlaceholder`, `searchFn` (دالة بحث عن بعد async), `emptyText`, `error`, `hint`, `disabled`, `required`.
+   - **الميزات:** يدعم الحالتين: (1) Static Options تصفية فورية، (2) Dynamic API Remote Search مع Debounce 350ms، إلغاء الطلبات السابقة بـ `AbortController` لمنع الـ Race Conditions، حالة تحميل `Loader2`، وحالة فراغ.
+5. **`BaseCheckbox.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `description`, `value`, `error`, `disabled`, `required`.
+   - **الميزات:** Touch Target مريح >= 44px، لون الثيم المختار، أيقونة صح مخصصة.
+6. **`BaseRadioGroup.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `options`, `valueKey`, `labelKey`, `columns`, `error`, `disabled`, `required`.
+   - **الميزات:** بطاقات راديو تفاعلية بتأثيرات الثيم.
+7. **`BaseSwitch.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `description`, `error`, `disabled`, `required`.
+   - **الميزات:** Toggle Switch تفاعلي وسلس للشاشات اللمسية.
+8. **`BaseSearchInput.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `placeholder`, `loading`, `disabled`, `debounce`, `wrapperClass`, `inputClass`.
+   - **الميزات:** أيقونة بحث، زر مسح سريع X مع دعم زر ESC، ودعم Debounce.
+9. **`BaseFileUpload.vue`**:
+   - **الـ Props المدعومة:** `v-model`, `label`, `accept`, `multiple`, `placeholder`, `hint`, `error`, `disabled`, `required`.
+   - **الميزات:** معاينة فورية للصور (Live Image Preview)، دعم السحب والإفلات (Drag & Drop)، وزر حذف الملف.
+10. **`BaseDatePicker.vue`**:
+    - **الـ Props المدعومة:** `v-model`, `label`, `placeholder`, `range`, `enableTimePicker`, `format`, `locale` (default 'ar'), `autoApply`, `error`, `hint`, `disabled`, `readonly`.
+    - **الميزات:** مبني كـ Wrapper خفيف فوق `@vuepic/vue-datepicker` مع دعم كامل للـ RTL والوضع الليلي وتمرير ألوان الثيم الديناميكية.
+11. **`BaseDropdown.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `label`, `icon`, `iconClass`, `triggerClass`, `menuClass`, `align` ('start' | 'end' | 'center'), `items` (`[{ label, icon, iconColor, onClick, danger, badge }]`).
+    - **الميزات:** إغلاق تلقائي عند النقر بالخارج (Click-outside) وزر ESC، دعم Slots مخصصة للزر والقائمة، أهداف لمس >= 44px.
+12. **`BaseButton.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `to`, `type`, `label`, `variant` ('primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost' | 'gradient' | 'default'), `size` ('sm' | 'md' | 'lg' | 'icon'), `icon`, `trailingIcon`, `active`, `badge`, `loading`, `disabled`, `fullWidth`.
+    - **الميزات:** دعم التحول لـ `<router-link>` تلقائياً، مؤشر التحميل Spinner، شارات العداد، وضبط ارتفاع اللمس >= 44px.
+13. **`FilterToggleButton.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `isOpen`, `count` (عدد الفلاتر النشطة), `label`, `icon`.
+    - **الميزات:** زر موحد لفتح وإغلاق أدراج وسايدبار الفلاتر، يعرض شارة عدد الفلاتر النشطة بديناميكية، ويغير لونه للحالة النشطة.
+14. **`FilterDrawer.vue`** (داخل `resources/js/Components/Common/`):
+    - **الـ Props المدعومة:** `isOpen`, `title`, `subtitle`, `activeCount`.
+    - **الميزات:** درج وقائمة فلاتر تفاعلية للشاشات الصغيرة والمتوسطة والديسكتوب، مع خلفية معتمة (Backdrop Blur)، إغلاق بـ ESC أو النقر بالخارج، وهيدر وفوتر ثابت (Sticky Footer) به أزرار التطبيق وإعادة التعيين والإلغاء.
+
+### الملفات التي تمت مراجعتها واستبدالها في هذه الجلسة
+- `views/ActivityLogs/ActivityLogsView.vue`: استبدال حقل البحث بـ `BaseSearchInput` وقوائم الأقسام والمستخدمين والمخازن بـ `BaseSelect`.
+- `views/Auth/LoginView.vue`: استبدال حقل الهاتف/البريد وكلمة المرور وتذكرني بـ `BaseInput` و `BaseCheckbox`.
+- `Components/Items/ItemFormModal.vue`: استبدال حقول الاسم والباركود والفئة بـ `BaseInput`، والوحدة بـ `BaseSelect`، والأسعار والحد الأدنى بـ `BaseNumberInput`.
+- `views/Invoices/InvoicesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`، وفلاتر الدفع والحالة بـ `BaseSelect`، ونطاق التاريخ بـ `BaseInput type="date"`.
+- `views/Expenses/ExpensesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`، ومركز التكلفة بـ `BaseSelect`، وتواريخ الفلترة ومدخلات المودال بـ `BaseInput` و `BaseSelect`.
+- `views/Customers/CustomersView.vue`: استبدال شريط البحث بـ `BaseSearchInput` ومدخلات المودال (الاسم، الهاتف، العنوان) بـ `BaseInput`.
+- `views/Suppliers/SuppliersView.vue`: استبدال شريط البحث بـ `BaseSearchInput` ومدخلات المودال (الاسم، الشركة، الهاتف) بـ `BaseInput`.
+- `views/DailyJournal/DailyJournalView.vue`: استبدال مدخلات فتح وإغلاق الوردية ومصروفات اليوم وتحويلات الخزينة بـ `BaseNumberInput` و `BaseInput` و `BaseSelect`.
+- `views/Stores/StoresView.vue`: استبدال حقل البحث ومودال إضافة الفرع بـ `BaseSearchInput` و `BaseInput`.
+- `views/Stores/StoreStocksView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Users/UsersView.vue`: استبدال حقل البحث ومودال إضافة وتعديل المستخدمين بـ `BaseSearchInput` و `BaseInput`.
+- `views/Purchases/PurchasesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Returns/ReturnsView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/StockTransfers/StockTransfersView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Roles/RolesView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Trash/TrashView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `views/Items/ItemMovementsView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+- `Components/POS/POSQuickCustomerModal.vue`: استبدال حقول إضافة العميل السريع بـ `BaseInput`.
+- `views/SuperAdmin/SuperAdminTenantsView.vue`: استبدال حقل البحث وفلاتر الحالة والباقة بـ `BaseSearchInput` و `BaseSelect`.
+- `views/SuperAdmin/SuperAdminUnitsView.vue`: استبدال حقل البحث بـ `BaseSearchInput`.
+
+### حقول خاصة اتسابت زي ما هي وليه
+- **شبكة إدخال أسطر الفواتير الحية (`InvoiceLineItemsTable.vue`):** تعتمد على حقول مضغوطة جداً ومحاذية داخل خلايا الجدول مع حسابات فورية لكل حركة كيبورد.
+
+### ملاحظات لسه محتاجة متابعة
+- تم فحص البناء النهائي بـ `npm run build` بنجاح كامل بـ 0 أخطاء (1877 modules).
+- تم النشر بنجاح على خادم الإنتاج `baraa-solutions.com`.
+
+آخر ملف Vue تمت مراجعته: `views/SuperAdmin/SuperAdminUnitsView.vue`
+الحالة: **مكتمل بنجاح 100%**
+
+---
+
+
 ## مراجعة Skeleton Loading (Inertia Deferred Props) بتاريخ 2026-08-21
 
 ### جرد الصفحات والبيانات
@@ -303,3 +397,39 @@
 - `backend/resources/js/Pages/Users/Index.vue`
 - `backend/resources/js/Components/ActionMenu.vue`
 - `backend/resources/js/Composables/useNativeBridge.js`
+---
+
+## إضافة Categories + تحسين شاشة الدفع — بتاريخ 2026-08-22
+
+### 1. شريط وإدارة الفئات (Categories):
+- **Backend**:
+  - `Category` Model & Migrations: `categories` table with `name`, `icon` (emoji), `sort_order`, `is_active`, `timestamps`, `softDeletes`.
+  - Added `category_id` foreign key to `items` table.
+  - Actions: `CreateCategoryAction`, `UpdateCategoryAction`, `DeleteCategoryAction`.
+  - Controller: `CategoryApiController` with endpoints `GET/POST/PUT/DELETE /api/v1/categories`.
+  - Rich Categories auto-population and integration in `GetPOSBootstrapDataAction`.
+  - Feature test: `CategoryApiTest.php` (100% passing).
+- **Frontend**:
+  - `CategoriesView.vue`: New Category Management dashboard view with Emoji presets selector, `BaseInput`, `BaseNumberInput`, and `BaseSwitch`.
+  - Added `/categories` route in `router/index.js` and linked under Inventory in `SpaLayout.vue` sidebar & mobile drawer.
+  - `ItemFormModal.vue`: Integrated dynamic Category selection with `BaseSelect`.
+  - `PosView.vue`: Horizontal scrolling touch-friendly Category Bar with 'All Items' fixed tab, category icons/emojis, active states, and instant reactive item filtering.
+
+### 2. شاشة الدفع الجديدة (POS Payment Screen Redesign - المرجع الصور 2، 3، 4):
+- **الأقسام المنفذة**:
+  1. **نوع الفاتورة والسداد (Photo 2 - Top)**: 3 خيارات تفاعلية لمسية كبيرة (كاش فوري كامل / آجل ذمم بالكامل / دفع جزئي) مع حقل المبلغ المسدد وحساب المتبقي الحي.
+  2. **وسيلة التحصيل والدفع الفعلية**: أزرار منفصلة (كاش نقدي 💵 / إنستاباي ⚡ / محفظة ذكية 📱).
+  3. **سداد نقدي سريع وحساب الباقي**: أزرار مبالغ شائعة (المبلغ بالظبط / 50 / 100 / 200 / 500 / 1000) وحاسبة فكة وباقي العميل الحية (Change Due Calculator).
+  4. **خصم سريع على الفاتورة**: أزرار نسب الخصم (بدون خصم / 5% / 10% / 15% / 20%) مع حقل الخصم المخصص.
+  5. **مصاريف الشحن والخدمات الإضافية (Photos 2, 3)**:
+     - أزرار سريعة (🚚 شحن / 🎁 تغليف / ☕ إكرامية / + بند مخصص).
+     - توجيه التكلفة المحاسبي الدقيق:
+       - 👤 `customer_account`: مضاف على حساب العميل بالفاتورة (يضاف لصافي المطلوب).
+       - 🏛️ `treasury_cash`: سند صرف مسدد كاش من الخزينة (مصروف على المحل).
+       - ⚡ `treasury_instapay`: سند صرف مسدد عبر إنستاباي (مصروف على المحل).
+       - 📱 `treasury_smart_wallet`: سند صرف مسدد من المحفظة الذكية (مصروف على المحل).
+  6. **شريط الإجمالي النهائي والأزرار الثابتة (Photo 4 - Bottom)**:
+     - ملخص مالي فوري (إجمالي الأصناف - الخصم + الشحن المضاف على العميل = الصافي المطلوب).
+     - زر ثانوي "حفظ وطباعة الفاتورة 🖨️" + زر أساسي مميز "حفظ واعتماد (Enter / F9) ⚡".
+- **القرارات المحاسبية**:
+  - تم ربط منطق مصاريف الشحن والسندات بالكامل مع `InvoiceService` بحيث يتم إنشاء سجل `Expense` مستقل في الخزينة عند اختيار سند صرف ولا يُحمّل على العميل، بينما يُضاف للإجمالي المطلوب فقط في حالة `customer_account`.

@@ -10,14 +10,14 @@ defineEmits(['press', 'set-target', 'quick-exact']);
 </script>
 
 <template>
-    <div class="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2 font-tajawal">
+    <div class="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2 font-tajawal">
         <div class="flex items-center justify-between text-xs">
             <span class="text-slate-600 dark:text-slate-400 font-bold">{{ $t('pos.numpad_title') }}</span>
             <div class="flex items-center gap-2">
                 <button
                     type="button"
                     class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer"
-                    :class="target === 'paid_amount' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-600 dark:text-slate-400'"
+                    :class="target === 'paid_amount' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400'"
                     @click="$emit('set-target', 'paid_amount')"
                 >
                     {{ $t('invoices.paid') }}
@@ -25,7 +25,7 @@ defineEmits(['press', 'set-target', 'quick-exact']);
                 <button
                     type="button"
                     class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer"
-                    :class="target === 'discount_value' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-600 dark:text-slate-400'"
+                    :class="target === 'discount_value' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'text-slate-600 dark:text-slate-400'"
                     @click="$emit('set-target', 'discount_value')"
                 >
                     {{ $t('invoices.discount') }}

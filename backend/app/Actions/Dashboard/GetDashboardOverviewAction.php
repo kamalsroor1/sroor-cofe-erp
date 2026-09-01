@@ -117,25 +117,25 @@ final class GetDashboardOverviewAction
         // 8. Low Stock Items Radar
         $lowStockItems = Item::where('is_active', true)
             ->where(function ($q) {
-                $q->whereColumn('current_stock', '<=', 'min_stock')
+                $q->whereColumn('current_stock', '<=', 'min_stock_level')
                   ->orWhere('current_stock', '<=', 5);
             })
             ->orderBy('current_stock', 'asc')
             ->take(8)
-            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock', 'unit'])
+            ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock_level', 'unit'])
             ->map(fn($it) => [
                 'id'            => $it->id,
                 'name'          => $it->name,
                 'code'          => $it->code,
                 'category'      => $it->category,
                 'current_stock' => (float)$it->current_stock,
-                'min_stock'     => (float)$it->min_stock,
+                'min_stock'     => (float)($it->min_stock_level ?? 5),
                 'unit'          => $it->unit ?? 'كجم',
             ]);
 
         $lowStockCount = Item::where('is_active', true)
             ->where(function ($q) {
-                $q->whereColumn('current_stock', '<=', 'min_stock')
+                $q->whereColumn('current_stock', '<=', 'min_stock_level')
                   ->orWhere('current_stock', '<=', 5);
             })
             ->count();
@@ -193,16 +193,23 @@ final class GetDashboardOverviewAction
         }
 
         // 12. Recent Invoices
-        $recentInvoices = $todayInvoices->take(6)->map(fn($inv) => [
-            'id'             => $inv->id,
-            'invoice_number' => $inv->invoice_number,
-            'customer_name'  => $inv->customer?->name ?? 'عميل نقدي',
-            'net_total'      => (float)$inv->net_total,
-            'paid_amount'    => (float)$inv->paid_amount,
-            'payment_type'   => $inv->payment_type,
-            'status'         => $inv->status,
-            'created_at'     => $inv->created_at?->toTimeString(),
-        ]);
+        $recentInvoices = Invoice::with(['customer', 'store'])
+            ->where('status', '!=', 'cancelled')
+            ->when($storeFilter, fn($q) => $q->where('store_id', $storeFilter))
+            ->latest('id')
+            ->take(8)
+            ->get()
+            ->map(fn($inv) => [
+                'id'               => $inv->id,
+                'invoice_number'   => $inv->invoice_number,
+                'customer_name'    => $inv->customer?->name ?? 'عميل نقدي',
+                'invoice_date'     => $inv->invoice_date?->toDateString() ?? $inv->created_at?->toDateString(),
+                'net_total'        => (float)$inv->net_total,
+                'paid_amount'      => (float)$inv->paid_amount,
+                'remaining_amount' => (float)$inv->remaining_amount,
+                'payment_type'     => $inv->payment_type,
+                'status'           => $inv->status,
+            ]);
 
         return [
             'active_store' => $activeStore ? [

@@ -1,5 +1,6 @@
 <script setup>
 import { useNativeBridge } from '@/Composables/useNativeBridge';
+import { LayoutGrid, Tag } from 'lucide-vue-next';
 
 defineProps({
     categories: {
@@ -39,10 +40,10 @@ const onSelect = (category) => {
             class="h-10 px-4 rounded-2xl font-black transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs"
             :class="selectedCategory === 'all'
                 ? 'btn-primary-theme shadow-theme-primary ring-2 ring-white/20 scale-102'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white border border-slate-200/80 dark:border-slate-800'"
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white border border-slate-200/80 dark:border-slate-800'"
             @click="onSelect('all')"
         >
-            <span>☕</span>
+            <LayoutGrid class="w-4 h-4 shrink-0" />
             <span>{{ $t('common.all') }}</span>
             <span
                 class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
@@ -62,10 +63,10 @@ const onSelect = (category) => {
             class="h-10 px-4 rounded-2xl font-black transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs"
             :class="selectedCategory === cat
                 ? 'btn-primary-theme shadow-theme-primary ring-2 ring-white/20 scale-102'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white border border-slate-200/80 dark:border-slate-800'"
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white border border-slate-200/80 dark:border-slate-800'"
             @click="onSelect(cat)"
         >
-            <span>🏷️</span>
+            <Tag class="w-4 h-4 shrink-0" />
             <span>{{ cat }}</span>
         </button>
     </div>

@@ -54,7 +54,8 @@ const tenant = computed(() => page.props.tenant);
 const activeStore = computed(() => page.props.activeStore);
 const stores = computed(() => page.props.stores || []);
 const activeShift = computed(() => page.props.activeShift);
-const isAdmin = computed(() => user.value.roles?.includes('admin'));
+const isAdmin = computed(() => user.value.roles?.includes('admin') || user.value.roles?.includes('super_admin'));
+const isSuperAdmin = computed(() => user.value.is_super_admin || user.value.roles?.includes('super_admin') || user.value.permissions?.includes('super_admin.access'));
 
 // Branding Dual Mode Logos
 const branding = computed(() => page.props.branding || {});
@@ -241,7 +242,7 @@ const getUserRoleLabel = computed(() => {
 </script>
 
 <template>
-    <div class="h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-amber-500 selection:text-white transition-colors duration-200" dir="rtl">
+    <div class="h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden font-sans selection:bg-theme-primary selection:text-white transition-colors duration-200" dir="rtl">
         <!-- Desktop Sidebar Navigation (Static in Flow on lg) -->
         <aside
             id="main-sidebar"
@@ -255,7 +256,7 @@ const getUserRoleLabel = computed(() => {
                         href="/"
                         class="rounded-2xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shadow-xs border border-slate-200 dark:border-slate-700/80 shrink-0 transition-transform duration-200 hover:scale-105 group"
                         :class="isSidebarCollapsed ? 'w-12 h-12' : 'w-14 h-14'"
-                        :title="tenant?.name || 'سرور كوفي'"
+                        :title="tenant?.name || ''"
                     >
                         <!-- Light Mode Logo -->
                         <img :src="logoLightSrc" alt="Logo" class="w-full h-full object-contain filter drop-shadow-xs group-hover:brightness-105 dark:hidden">
@@ -267,7 +268,7 @@ const getUserRoleLabel = computed(() => {
                         :class="{ 'lg:hidden': isSidebarCollapsed }"
                     >
                         <h1 class="font-black text-sm sm:text-base tracking-tight text-slate-900 dark:text-white font-tajawal line-clamp-1 leading-snug">
-                            {{ tenant?.name || 'سرور كوفي' }}
+                            {{ tenant?.name }}
                         </h1>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate">{{ $t('nav.cloud_erp_subtitle') }}</p>
                     </div>
@@ -326,7 +327,7 @@ const getUserRoleLabel = computed(() => {
             </nav>
 
             <!-- Sidebar Footer (Super Admin Button) -->
-            <div v-if="isAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0">
+            <div v-if="isSuperAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0">
                 <a
                     href="/admin/super"
                     class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/60 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800/80 text-purple-700 dark:text-purple-300 text-xs font-bold transition font-tajawal shadow-xs"
@@ -361,14 +362,14 @@ const getUserRoleLabel = computed(() => {
                             href="/"
                             @click="isSidebarOpen = false"
                             class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shadow-xs border border-slate-200 dark:border-slate-700/80 shrink-0"
-                            :title="tenant?.name || 'سرور كوفي'"
+                            :title="tenant?.name || ''"
                         >
                             <img :src="logoLightSrc" alt="Logo" class="w-full h-full object-contain filter drop-shadow-xs dark:hidden">
                             <img :src="logoDarkSrc" alt="Logo" class="w-full h-full object-contain filter drop-shadow-xs hidden dark:block">
                         </Link>
                         <div class="truncate min-w-0">
                             <h1 class="font-black text-sm tracking-tight text-slate-900 dark:text-white font-tajawal line-clamp-1 leading-snug">
-                                {{ tenant?.name || 'سرور كوفي' }}
+                                {{ tenant?.name }}
                             </h1>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate">{{ $t('nav.cloud_erp_subtitle') }}</p>
                         </div>
@@ -432,7 +433,7 @@ const getUserRoleLabel = computed(() => {
                 </nav>
 
                 <!-- Sidebar Footer (Super Admin Button) -->
-                <div v-if="isAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0 pb-safe">
+                <div v-if="isSuperAdmin" class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 shrink-0 pb-safe">
                     <a
                         href="/admin/super"
                         class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/60 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800/80 text-purple-700 dark:text-purple-300 text-xs font-bold transition font-tajawal shadow-xs"
@@ -446,17 +447,17 @@ const getUserRoleLabel = computed(() => {
         </Transition>
 
         <!-- Main Wrapper: Impersonation Banner + Header + Page Content -->
-        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
             <!-- Super Admin Impersonation Alert Banner -->
             <div v-if="$page.props.auth?.is_impersonating" class="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-900 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs font-bold font-tajawal z-40 border-b border-purple-500/30 shadow-md shrink-0">
                 <div class="flex items-center gap-2">
-                    <Crown class="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
-                    <span>أنت تتصفح متجر <strong class="text-amber-400 font-black">({{ tenant?.name }})</strong> حالياً كمسؤول من لوحة السوبر أدمن المركزية</span>
+                    <Crown class="w-4 h-4 text-theme-primary animate-pulse shrink-0" />
+                    <span>أنت تتصفح متجر <strong class="text-theme-primary font-black">({{ tenant?.name }})</strong> حالياً كمسؤول من لوحة السوبر أدمن المركزية</span>
                 </div>
                 <button
                     @click="router.post('/impersonate/leave')"
                     type="button"
-                    class="h-7 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition transform active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5"
+                    class="h-7 px-3 rounded-lg bg-theme-gradient text-white shadow-theme-primary font-black font-black text-xs transition transform active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
                     <X class="w-3.5 h-3.5" />
                     <span>العودة للوحة السوبر أدمن المركزية</span>
@@ -511,7 +512,7 @@ const getUserRoleLabel = computed(() => {
                         @click="showStoreModal = true"
                         type="button"
                         class="h-8.5 sm:h-9 px-2 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/90 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 sm:gap-2 transition cursor-pointer font-tajawal shadow-xs max-w-[120px] sm:max-w-[170px]"
-                        :title="$t('nav.switch_store') || 'تبديل الفرع'"
+                        :title="$t('nav.switch_store')"
                     >
                         <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shrink-0"></span>
                         <Store class="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />
@@ -582,7 +583,7 @@ const getUserRoleLabel = computed(() => {
                                     <div
                                         v-for="(n, nIdx) in notifications"
                                         :key="nIdx"
-                                        class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                                        class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition"
                                     >
                                         <div class="flex items-center gap-2">
                                             <Bell class="w-3.5 h-3.5 text-theme-primary shrink-0" />
@@ -615,7 +616,7 @@ const getUserRoleLabel = computed(() => {
                         class="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/90 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer shrink-0 shadow-xs hover:text-theme-primary"
                         :title="currentTheme === 'dark' ? 'التحويل للوضع النهاري (Light)' : 'التحويل للوضع الليلي (Dark)'"
                     >
-                        <Sun v-if="currentTheme === 'dark'" class="w-4 h-4 text-amber-400" />
+                        <Sun v-if="currentTheme === 'dark'" class="w-4 h-4 text-theme-primary" />
                         <Moon v-else class="w-4 h-4 text-slate-700" />
                     </button>
 
@@ -726,10 +727,10 @@ const getUserRoleLabel = computed(() => {
                         <div
                             v-for="(n, nIdx) in notifications"
                             :key="nIdx"
-                            class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                            class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition"
                         >
                             <div class="flex items-center gap-2.5">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="n.type === 'danger' ? 'bg-rose-500 animate-pulse' : (n.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500')"></span>
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="n.type === 'danger' ? 'bg-rose-500 animate-pulse' : (n.type === 'warning' ? 'bg-theme-primary' : 'bg-blue-500')"></span>
                                 <span class="text-xs font-black text-slate-900 dark:text-white">{{ n.title }}</span>
                             </div>
                             <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{{ n.description }}</p>
@@ -759,7 +760,7 @@ const getUserRoleLabel = computed(() => {
             <div
                 v-if="showStoreModal"
                 @click="showStoreModal = false"
-                class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+                class="fixed inset-0 z-50 bg-white dark:bg-slate-800/60 backdrop-blur-xs flex items-center justify-center p-4"
             >
                 <div @click.stop class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl space-y-3 font-tajawal text-slate-900 dark:text-white">
                     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">

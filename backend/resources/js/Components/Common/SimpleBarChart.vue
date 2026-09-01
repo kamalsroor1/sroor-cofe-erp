@@ -1,0 +1,109 @@
+<template>
+    <div class="pt-2 pb-1 overflow-x-auto scrollbar-none">
+        <!-- Bars Container -->
+        <div
+            class="flex items-end justify-between border-b border-slate-200 dark:border-slate-800 pb-2 min-w-[280px] sm:min-w-0"
+            :style="{ height: `${height}px`, gap: barGap }"
+        >
+            <div
+                v-for="(item, idx) in items"
+                :key="item[keyField]"
+                @click="toggleBar(idx)"
+                class="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative select-none"
+            >
+                <!-- Tooltip on Hover or Mobile Tap -->
+                <div
+                    class="transition-all duration-200 absolute z-20 bg-slate-900 text-white text-[10px] font-mono py-1 px-2.5 rounded-xl shadow-xl pointer-events-none whitespace-nowrap border border-slate-700"
+                    :class="activeIndex === idx ? 'opacity-100 scale-100' : 'opacity-0 group-hover:opacity-100 group-hover:scale-100 scale-95'"
+                    :style="{ top: `-${tooltipOffset}px` }"
+                >
+                    <div class="font-bold">{{ item[tooltipPrimaryField] }}</div>
+                    <div v-if="tooltipSecondaryField" class="text-slate-400 font-sans">
+                        {{ item[tooltipSecondaryField] }}
+                    </div>
+                </div>
+
+                <!-- Bar -->
+                <div
+                    class="rounded-xl relative overflow-hidden flex flex-col justify-end transition-all duration-300 h-full w-full max-w-[28px] sm:max-w-[36px] md:max-w-[44px]"
+                    style="background: var(--bar-track, rgba(241,245,249,1))"
+                    :style="{ '--bar-track': trackColor }"
+                >
+                    <div
+                        class="w-full rounded-xl transition-all duration-500 relative group-hover:brightness-110"
+                        :style="{
+                            height: `${computeHeight(item[valueField])}%`,
+                            backgroundColor: highlightFn(item)
+                                ? highlightColor
+                                : defaultColor
+                        }"
+                    >
+                        <!-- Pulse effect for highlighted bar -->
+                        <div
+                            v-if="highlightFn(item)"
+                            class="absolute inset-0 bg-white/20 animate-pulse rounded-xl"
+                        />
+                    </div>
+                </div>
+
+                <!-- Label below bar -->
+                <div
+                    class="text-[9.5px] sm:text-[10px] font-bold text-center truncate w-full text-slate-500 dark:text-slate-400 group-hover:text-theme-primary transition-colors font-tajawal mt-1"
+                    :class="{ 'text-theme-primary font-black': activeIndex === idx }"
+                >
+                    {{ item[labelField] }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional Footer Slot -->
+        <slot name="footer" />
+    </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+const activeIndex = ref(null);
+const toggleBar = (idx) => {
+    activeIndex.value = activeIndex.value === idx ? null : idx;
+};
+
+const props = defineProps({
+    // Array of data items
+    items: { type: Array, required: true },
+
+    // Field mappings
+    keyField: { type: String, default: 'date' },
+    valueField: { type: String, default: 'sales' },
+    labelField: { type: String, default: 'label' },
+    tooltipPrimaryField: { type: String, default: 'sales_formatted' },
+    tooltipSecondaryField: { type: String, default: '' },
+
+    // Highlight logic: function(item) => boolean
+    highlightFn: { type: Function, default: () => false },
+
+    // Colors
+    defaultColor: { type: String, default: '#0ea5e9' },
+    highlightColor: { type: String, default: 'var(--color-primary, #10b981)' },
+    trackColor: { type: String, default: 'rgba(241,245,249,0.8)' },
+
+    // Dimensions
+    height: { type: Number, default: 192 },   // h-48 = 192px
+    barGap: { type: String, default: '0.75rem' },
+    barMaxWidthClass: { type: String, default: 'w-full max-w-[42px]' },
+
+    // Tooltip offset from top (px)
+    tooltipOffset: { type: Number, default: 48 },
+});
+
+const maxValue = computed(() => {
+    const vals = props.items.map(i => parseFloat(i[props.valueField]) || 0);
+    return Math.max(...vals, 1);
+});
+
+const computeHeight = (val) => {
+    const v = parseFloat(val) || 0;
+    return Math.min(100, Math.max(8, Math.round((v / maxValue.value) * 100)));
+};
+</script>

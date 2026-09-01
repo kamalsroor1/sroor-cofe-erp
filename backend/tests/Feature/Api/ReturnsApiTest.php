@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\Customer;
@@ -9,9 +11,9 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -21,6 +23,8 @@ class ReturnsApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
+    protected User $unauthorizedUser;
+    protected string $unauthorizedToken;
     protected Store $store;
     protected Customer $customer;
     protected Supplier $supplier;
@@ -30,10 +34,8 @@ class ReturnsApiTest extends TestCase
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'returns.view']);
-        Permission::create(['name' => 'returns.create']);
-        Permission::create(['name' => 'returns.manage']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
             'name'      => 'الفرع الرئيسي',
@@ -43,6 +45,8 @@ class ReturnsApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
@@ -50,8 +54,17 @@ class ReturnsApiTest extends TestCase
             'is_active'        => true,
             'default_store_id' => $this->store->id,
         ]);
-        $this->adminUser->assignRole($role);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        $this->adminUser->assignRole($adminRole);
+        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+
+        $this->unauthorizedUser = User::factory()->create([
+            'name'             => 'مستخدم بدون صلاحيات',
+            'phone'            => '01000000000',
+            'password'         => Hash::make('password'),
+            'is_active'        => true,
+            'default_store_id' => $this->store->id,
+        ]);
+        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
 
         $this->customer = Customer::create([
             'name'            => 'كافيه البن العربي',
@@ -79,7 +92,7 @@ class ReturnsApiTest extends TestCase
             'price_retail'    => '480.000',
             'price_wholesale' => '440.000',
             'current_stock'   => '100.000',
-            'min_stock'       => '15.000',
+            'min_stock_level' => '15.000',
             'is_active'       => true,
         ]);
 
@@ -88,6 +101,20 @@ class ReturnsApiTest extends TestCase
             'item_id'  => $this->item->id,
             'quantity' => '100.000',
         ]);
+    }
+
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/returns');
+        $response->assertStatus(401);
+    }
+
+    public function test_unauthorized_user_cannot_access_returns_or_create(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+            ->getJson('/api/v1/returns');
+
+        $response->assertStatus(403);
     }
 
     public function test_can_list_returns_with_summary_metrics(): void
@@ -172,6 +199,17 @@ class ReturnsApiTest extends TestCase
 
         // Stock decreased from 100 to 90
         $this->assertEquals(90.000, (float)Item::find($this->item->id)->current_stock);
+    }
+
+    public function test_create_return_fails_validation_on_missing_fields(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->postJson('/api/v1/returns', [
+                'return_type' => 'sales_return',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['return_date', 'items']);
     }
 
     public function test_can_show_single_return_document(): void

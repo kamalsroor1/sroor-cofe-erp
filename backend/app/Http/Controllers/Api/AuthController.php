@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Auth\ApiLoginAction;
 use App\Actions\Auth\ApiLogoutAction;
 use App\Actions\Auth\ApiMeAction;
+use App\Actions\Auth\ApiQuickLoginAction;
 use App\DTOs\Auth\ApiLoginDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ApiLoginRequest;
@@ -20,6 +21,7 @@ final class AuthController extends Controller
         private readonly ApiLoginAction $loginAction,
         private readonly ApiLogoutAction $logoutAction,
         private readonly ApiMeAction $meAction,
+        private readonly ApiQuickLoginAction $quickLoginAction,
     ) {}
 
     /**
@@ -82,6 +84,51 @@ final class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.logout_success'),
+        ], 200);
+    }
+
+    /**
+     * Get list of active workspace users for quick login selection (Guest allowed)
+     */
+    public function workspaceUsers(Request $request): JsonResponse
+    {
+        $users = \App\Models\User::query()
+            ->where('is_active', true)
+            ->select(['id', 'name', 'phone', 'email'])
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($u) => [
+                'id'    => $u->id,
+                'name'  => $u->name,
+                'login' => $u->phone ?: $u->email,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $users,
+        ], 200);
+    }
+
+    /**
+     * Authenticate workspace user quickly without password
+     */
+    public function quickLogin(Request $request): JsonResponse
+    {
+        $request->validate([
+            'login'       => ['required', 'string'],
+            'device_name' => ['nullable', 'string'],
+        ]);
+
+        $result = $this->quickLoginAction->execute(
+            login: (string)$request->input('login'),
+            deviceName: (string)$request->input('device_name', 'quick-login'),
+            deviceIp: $request->ip()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => __('auth.login_success'),
+            'data'    => $result,
         ], 200);
     }
 }

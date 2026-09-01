@@ -28,7 +28,7 @@ const { formatMoney } = useMoney();
             <div
                 v-for="(exp, eIdx) in expensesBreakdown"
                 :key="eIdx"
-                class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2"
+                class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2"
             >
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-slate-900 dark:text-white">{{ exp.category || $t('expenses.cc_operational') }}</span>

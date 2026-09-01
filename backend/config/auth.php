@@ -42,6 +42,18 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'super_admin' => [
+            'driver' => 'session',
+            'provider' => 'central_users',
+        ],
+        'central' => [
+            'driver' => 'session',
+            'provider' => 'central_users',
+        ],
+        'tenant' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*
@@ -66,11 +78,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'central_users' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\CentralUser::class,
+        ],
     ],
 
     /*

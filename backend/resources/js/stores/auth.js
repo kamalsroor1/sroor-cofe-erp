@@ -26,7 +26,8 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         isAuthenticated: (state) => !!state.token && !!state.user,
-        isAdmin: (state) => state.roles.includes('admin'),
+        isSuperAdmin: (state) => !!state.user?.is_super_admin || state.roles.includes('super_admin') || state.permissions.includes('super_admin.access'),
+        isAdmin: (state) => state.roles.includes('admin') || state.roles.includes('super_admin'),
         userName: (state) => state.user?.name || 'مستخدم',
         activeStoreName: (state) => state.currentStore?.name || 'الفرع الرئيسي',
         themePreference: (state) => state.user?.theme_preference || 'dark',
@@ -61,6 +62,42 @@ export const useAuthStore = defineStore('auth', {
                     return response.data;
                 }
                 throw new Error(response.data?.message || 'فشل تسجيل الدخول');
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        /**
+         * Quick login for workspace employees without password
+         */
+        async quickLogin(login) {
+            this.isLoading = true;
+            try {
+                const response = await api.post('/auth/quick-login', {
+                    login: login,
+                    device_name: 'vue-spa-quick',
+                });
+                const payload = response.data?.data;
+
+                if (payload && payload.token) {
+                    this.token = payload.token;
+                    this.user = payload.user;
+                    this.roles = payload.user?.roles || [];
+                    this.permissions = payload.user?.permissions || [];
+                    this.currentStore = payload.store;
+                    this.stores = payload.stores || [];
+
+                    // Persist to storage
+                    localStorage.setItem('auth_token', payload.token);
+                    localStorage.setItem('auth_user', JSON.stringify(payload.user));
+                    if (payload.store) {
+                        localStorage.setItem('auth_store', JSON.stringify(payload.store));
+                        localStorage.setItem('current_store_id', payload.store.id);
+                    }
+
+                    return response.data;
+                }
+                throw new Error(response.data?.message || 'فشل الدخول السريع');
             } finally {
                 this.isLoading = false;
             }
@@ -116,8 +153,18 @@ export const useAuthStore = defineStore('auth', {
          */
         hasPermission(permissionName) {
             if (!this.user) return false;
-            if (this.roles.includes('admin')) return true;
+            if (permissionName === 'super_admin.access' || permissionName === 'view_telescope') {
+                return !!this.user?.is_super_admin || this.roles.includes('super_admin') || this.permissions.includes('super_admin.access') || this.permissions.includes('view_telescope');
+            }
+            if (this.roles.includes('admin') || this.roles.includes('super_admin')) return true;
             return this.permissions.includes(permissionName);
+        },
+
+        /**
+         * Alias for hasPermission
+         */
+        can(permissionName) {
+            return this.hasPermission(permissionName);
         },
 
         /**

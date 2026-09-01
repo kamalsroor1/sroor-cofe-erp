@@ -11,33 +11,35 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Setup Roles & Permissions Matrix
+        // 1. Setup Roles & Permissions Matrix & SaaS Plans
         $this->call(PermissionsSeeder::class);
+        $this->call(PlansAndFeaturesSeeder::class);
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
 
-        // 2. Super Admin 1: كمال سرور (01012316954 / password)
+        // 2. Super Admin 1: المدير العام (01012316954 / password)
         $admin1 = User::firstOrCreate(
             ['phone' => '01012316954'],
             [
-                'name'      => 'كمال سرور - المدير العام',
-                'email'     => '01012316954@sroor.com',
+                'name'      => 'المدير العام للمنظومة',
+                'email'     => 'admin@baraa-solutions.com',
                 'password'  => bcrypt('password'),
                 'is_active' => true,
             ]
         );
-        $admin1->syncRoles([$adminRole]);
+        $admin1->syncRoles([$superAdminRole, $adminRole]);
 
-        // 3. Super Admin 2: المدير العام 2 (01558088841 / 123456789)
+        // 3. Super Admin 2: المدير التنفيذي (01558088841 / 123456789)
         $admin2 = User::firstOrCreate(
             ['phone' => '01558088841'],
             [
                 'name'      => 'المدير العام 2',
-                'email'     => '01558088841@sroor.com',
+                'email'     => 'superadmin@baraa-solutions.com',
                 'password'  => bcrypt('123456789'),
                 'is_active' => true,
             ]
         );
-        $admin2->syncRoles([$adminRole]);
+        $admin2->syncRoles([$superAdminRole, $adminRole]);
 
         // 4. Base Main Warehouse (المخزن الرئيسي الأساسي)
         Store::firstOrCreate(
@@ -50,7 +52,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 5. Rich Multi-Store Demo Data (Branches, Coffee Items, Shifts, Customers, Suppliers, Ledgers)
-        $this->call(RichDemoDataSeeder::class);
+        // 5. Rich Multi-Store Demo Data disabled for clean production
+        // $this->call(RichDemoDataSeeder::class);
     }
 }

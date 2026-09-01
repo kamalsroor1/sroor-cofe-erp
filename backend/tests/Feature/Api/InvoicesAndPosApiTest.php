@@ -32,6 +32,8 @@ class InvoicesAndPosApiTest extends TestCase
     {
         parent::setUp();
 
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+
         $role = Role::create(['name' => 'admin']);
         Permission::create(['name' => 'invoices.view']);
         Permission::create(['name' => 'invoices.create']);

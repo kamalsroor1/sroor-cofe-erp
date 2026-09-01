@@ -73,7 +73,7 @@ const formatTotal = (qty, price) => {
                             step="0.001"
                             min="0.001"
                             required
-                            class="w-24 h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-theme-primary focus:outline-none shadow-inner"
+                            class="w-24 h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-theme-primary focus:outline-none shadow-inner"
                             @input="updateItemField(itIdx, 'quantity', $event.target.value)"
                         >
                     </td>
@@ -85,7 +85,7 @@ const formatTotal = (qty, price) => {
                             step="0.01"
                             min="0"
                             required
-                            class="w-24 h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none shadow-inner"
+                            class="w-24 h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none shadow-inner"
                             @input="updateItemField(itIdx, priceField, $event.target.value)"
                         >
                     </td>
@@ -113,7 +113,7 @@ const formatTotal = (qty, price) => {
         <div
             v-for="(it, itIdx) in items"
             :key="it.item_id"
-            class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs"
+            class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs"
         >
             <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                 <div>

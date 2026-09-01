@@ -19,7 +19,15 @@ class CreateAppVersionAction
             $apkChecksum = null;
 
             if ($dto->apkFile) {
-                $apkFilename = 'sroor-coffee-erp-v' . Str::slug($dto->versionName) . '.apk';
+                $ext = match ($dto->platform) {
+                    'windows' => 'exe',
+                    'android' => 'apk',
+                    'ios' => 'ipa',
+                    default => $dto->apkFile->getClientOriginalExtension() ?: 'bin',
+                };
+                $appNameSlug = Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
+                $prefix = $dto->platform === 'windows' ? $appNameSlug . '-Setup-v' : $appNameSlug . '-v';
+                $apkFilename = $prefix . Str::slug($dto->versionName) . '.' . $ext;
                 $apkPath = $dto->apkFile->storeAs('apks/' . $dto->platform, $apkFilename, 'public');
                 $apkSizeBytes = $dto->apkFile->getSize();
                 $apkChecksum = hash_file('sha256', $dto->apkFile->getRealPath());

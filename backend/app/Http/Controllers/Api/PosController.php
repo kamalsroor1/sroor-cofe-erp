@@ -33,7 +33,12 @@ final class PosController extends Controller
      */
     public function bootstrap(Request $request): JsonResponse
     {
-        $data = $this->getPOSBootstrapDataAction->execute($request->user());
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        $data = $this->getPOSBootstrapDataAction->execute($user);
 
         return response()->json([
             'success' => true,
@@ -68,7 +73,7 @@ final class PosController extends Controller
 
         return response()->json([
             'success'  => true,
-            'message'  => 'تم تسجيل العميل بنجاح',
+            'message'  => __('pos.customer_registered_success') ?: 'تم تسجيل العميل بنجاح',
             'customer' => [
                 'id'              => $customer->id,
                 'name'            => $customer->name,
@@ -84,11 +89,16 @@ final class PosController extends Controller
      */
     public function lastPrice(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $customerId = (int)$request->query('customer_id');
         $itemId = (int)$request->query('item_id');
         $storeId = $request->header('X-Store-Id')
             ?: $request->query('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $lastPrice = $this->getCustomerLastSoldPriceAction->execute(

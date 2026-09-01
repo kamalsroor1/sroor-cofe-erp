@@ -177,6 +177,11 @@ final class ReportController extends Controller
      */
     public function topItems(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('reports.view') && !$user->can('reports.advanced')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $dto = $this->buildDTO($request);
         $items = $this->getItemsProfitabilityReportAction->execute($dto);
 
@@ -191,13 +196,19 @@ final class ReportController extends Controller
      */
     public function itemCard(Request $request, int|string $itemId): JsonResponse
     {
-        $item = Item::findOrFail($itemId);
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('reports.view') && !$user->can('reports.advanced')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        $item = Item::findOrFail((int)$itemId);
         $storeId = $request->input('store_id') 
-            ?? auth()->user()?->getCurrentStore()?->id 
-            ?? Store::getMainStore()?->id;
+            ?: $request->header('X-Store-Id')
+            ?: $user?->getCurrentStore()?->id 
+            ?: Store::getMainStore()?->id;
 
         $movements = StockMovement::where('item_id', $itemId)
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->when($storeId && $storeId !== 'all', fn($q) => $q->where('store_id', (int)$storeId))
             ->latest('id')
             ->limit(50)
             ->get();

@@ -15,16 +15,20 @@ class Setting extends Model
         'value',
     ];
 
-    public const CACHE_PREFIX = 'app_settings_all';
+    public static function getCacheKey(): string
+    {
+        $tenantId = function_exists('tenant') && tenant('id') ? (string)tenant('id') : 'central';
+        return "app_settings_{$tenantId}";
+    }
 
     public static function allCached(): array
     {
         try {
-            return Cache::rememberForever(self::CACHE_PREFIX, function () {
+            return Cache::rememberForever(self::getCacheKey(), function () {
                 return static::pluck('value', 'key')->toArray();
             });
         } catch (\Throwable) {
-            return [];
+            return static::pluck('value', 'key')->toArray();
         }
     }
 
@@ -32,7 +36,7 @@ class Setting extends Model
     {
         try {
             $all = static::allCached();
-            return $all[$key] ?? $default;
+            return array_key_exists($key, $all) ? (string)$all[$key] : $default;
         } catch (\Throwable) {
             return $default;
         }
@@ -45,7 +49,7 @@ class Setting extends Model
             ['value' => $value]
         );
 
-        Cache::forget(self::CACHE_PREFIX);
+        Cache::forget(self::getCacheKey());
         Cache::forget("app_setting_{$key}");
 
         return $setting;
@@ -59,6 +63,6 @@ class Setting extends Model
 
     public static function clearCache(): void
     {
-        Cache::forget(self::CACHE_PREFIX);
+        Cache::forget(self::getCacheKey());
     }
 }

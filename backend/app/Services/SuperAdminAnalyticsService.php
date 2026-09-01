@@ -61,7 +61,7 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
      */
     public function getRecentTenants(int $limit = 5): array
     {
-        $centralDomain = config('tenancy.central_domains.0', 'sroor-erp.com');
+        $centralDomain = config('tenancy.central_domains.0', request()->getHost() ?: 'baraa-solutions.com');
 
         return Tenant::with(['plan', 'domains'])
             ->latest()

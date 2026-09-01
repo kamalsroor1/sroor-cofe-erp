@@ -13,6 +13,40 @@ use App\Models\Invoice;
 |
 */
 
+// 🔭 Telescope Web Authentication Bridge for Super Admins
+Route::get('/telescope-access', function (\Illuminate\Http\Request $request) {
+    $token = $request->query('token');
+    $user = null;
+
+    if ($token) {
+        $pat = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+        if ($pat && $pat->tokenable instanceof \App\Models\User) {
+            $user = $pat->tokenable;
+        }
+
+        if (!$user) {
+            $user = \App\Models\User::where('api_token', $token)->first();
+        }
+    }
+
+    if (!$user && auth()->check()) {
+        $user = auth()->user();
+    }
+
+    $isAllowed = $user && (
+        (method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || $user->hasRole('admin'))) ||
+        (isset($user->phone) && in_array($user->phone, ['01012316954', '01558088841'])) ||
+        (isset($user->email) && ($user->email === 'admin@baraa-solutions.com' || str_ends_with($user->email, '@baraa-solutions.com')))
+    );
+
+    if ($isAllowed) {
+        auth('web')->login($user, true);
+        return redirect('/telescope');
+    }
+
+    abort(403, 'غير مصرح لك بالوصول إلى لوحة المراقبة (Telescope). مخصص للسوبر أدمن فقط.');
+})->name('telescope.access');
+
 // 📄 Public Marketing Brochure & Pricing PDF Presentation
 Route::get('/brochure', function () {
     return view('marketing-brochure');
@@ -245,10 +279,11 @@ Route::get('/items/{id}/export-movements-csv', [App\Http\Controllers\ExportContr
 Route::get('/customers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportCustomerStatement'])->name('customers.export.csv');
 Route::get('/suppliers/{id}/export-csv', [App\Http\Controllers\ExportController::class, 'exportSupplierStatement'])->name('suppliers.export.csv');
 Route::get('/items/export-csv', [App\Http\Controllers\ExportController::class, 'exportInventory'])->name('items.export.csv');
-Route::get('/activity-logs/export-csv', [\App\Http\Controllers\ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
+Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
 
 // 📱 PWA Manifest & Service Worker
 Route::get('/manifest.json', function () {
+    $baseUrl = url('/');
     $platformName = \App\Models\Setting::get('platform_name') ?: \App\Models\Setting::get('app_name') ?: config('app.name', 'منظومة ERP');
     $manifest = [
         'id' => 'cloud-erp-pos-app',

@@ -6,9 +6,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Shifts\GetDailyJournalAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GetDailyJournalRequest;
 use App\Models\Store;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class DailyJournalController extends Controller
 {
@@ -19,7 +19,7 @@ final class DailyJournalController extends Controller
     /**
      * Get Daily Journal ledger and cash metrics
      */
-    public function index(Request $request): JsonResponse
+    public function index(GetDailyJournalRequest $request): JsonResponse
     {
         $date = (string)$request->input('date', now()->toDateString());
         $storeId = $request->header('X-Store-Id')

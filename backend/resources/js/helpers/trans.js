@@ -1,3 +1,5 @@
+import { defaultArabicTranslations, defaultEnglishTranslations } from './defaultTranslations';
+
 /**
  * Universal translation helper for Vue 3 Pure SPA (Pinia Store & window.spaTranslations)
  * Usage in template: $t('pos.title') or trans('auth.login_button')
@@ -20,7 +22,28 @@ export function trans(key, replace = {}) {
         if (value && typeof value === 'object' && value[part] !== undefined) {
             value = value[part];
         } else {
-            return key; // Fallback to key if not found
+            value = undefined;
+            break;
+        }
+    }
+
+    // 2. Fallback to bundled static auto-generated default translations (Arabic or English)
+    if (value === undefined) {
+        const isEnglish = (typeof localStorage !== 'undefined' && (localStorage.getItem('app_locale') === 'en' || localStorage.getItem('locale') === 'en')) ||
+                          (typeof document !== 'undefined' && document.documentElement.lang === 'en');
+        
+        let fallbackVal = isEnglish ? defaultEnglishTranslations : defaultArabicTranslations;
+
+        for (const part of parts) {
+            if (fallbackVal && typeof fallbackVal === 'object' && fallbackVal[part] !== undefined) {
+                fallbackVal = fallbackVal[part];
+            } else {
+                fallbackVal = undefined;
+                break;
+            }
+        }
+        if (fallbackVal !== undefined) {
+            value = fallbackVal;
         }
     }
 

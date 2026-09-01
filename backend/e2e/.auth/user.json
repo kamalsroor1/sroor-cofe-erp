@@ -1,0 +1,92 @@
+{
+  "cookies": [
+    {
+      "name": "XSRF-TOKEN",
+      "value": "eyJpdiI6InNzQzZ0aVlUanVSTHhSbmN1NkVma2c9PSIsInZhbHVlIjoiQWNTNnFyM0lTM3AzdkRMMmEyZ0dtMHpsczd5QWcxUFRGOWhvNGlZMEpuaGpNT1FOVnRSYWFPaDlkdHlZUWN0M3hCOWJ4aWdobDBMS3hramFRdCtPQWpvRzk0bUdiYkxTS0hpY2J6S3ZKbFA5RlhBMFhreDRxajh2aUR3RUVUZHgiLCJtYWMiOiJlMzVhMzNjNzUwOTYzNjkzMTc0ZmE2ZDIyNjRiNDBmMmE5NDVkNjliYzQ5YjM0NDUxMjM1Nzk0MWY0MDBmMWE5IiwidGFnIjoiIn0%3D",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1787526991.171057,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "laravel-session",
+      "value": "eyJpdiI6Ilhwck5sbEJ4MktqSXpPNTlLTDFYL3c9PSIsInZhbHVlIjoiUkJXVjdPKzE3VkVwMFptNEtIWmRpdDR3cFRXQWtJL1hrU0dIOEZPQVFmMVJKNGZBUEk4RXZBcGdZUWpPT3Ixd0RTTHh0Q3Q4VW1SM1B4RUxIK2JNald0RTVYeUd2QTZYdWI3T3FDclIrTWw0bXlaaDNKN0FsME91M0pob2t3Y0wiLCJtYWMiOiI4MzIyNGNmZTM4MGJjNjNkZDVkYzUwMjA5N2U5YjhhY2E5NzEzMmY3ZmVhZWQ2N2FlODFhNjYyMDkyMDhjMjViIiwidGFnIjoiIn0%3D",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1787526991.171816,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:8000",
+      "localStorage": [
+        {
+          "name": "auth_token",
+          "value": "69|BdW8Ze6D9jFi2n9DwhWMbKv6T81K2L9Y8sGoQbZ1e7afca30"
+        },
+        {
+          "name": "current_store_id",
+          "value": "5"
+        },
+        {
+          "name": "auth_store",
+          "value": "{\"id\":5,\"name\":\"فرع المعادي والمعرض\",\"code\":\"SHOP-MAADI\",\"type\":\"retail_shop\",\"is_main\":false}"
+        },
+        {
+          "name": "system_theme_color",
+          "value": "emerald"
+        },
+        {
+          "name": "theme_preference",
+          "value": "dark"
+        },
+        {
+          "name": "app_locale",
+          "value": "ar"
+        },
+        {
+          "name": "auth_user",
+          "value": "{\"id\":2,\"name\":\"كمال سرور - المدير العام\",\"email\":\"01012316954@sroor.com\",\"phone\":\"01012316954\",\"roles\":[\"admin\"],\"permissions\":[\"pos.access\",\"invoices.view\",\"invoices.create\",\"invoices.edit\",\"invoices.cancel\",\"invoices.delete\",\"invoices.discount\",\"items.view\",\"items.create\",\"items.edit\",\"items.delete\",\"items.view_cost\",\"purchases.view\",\"purchases.create\",\"purchases.delete\",\"stores.manage\",\"transfers.view\",\"transfers.create\",\"customers.manage\",\"customers.statement\",\"suppliers.manage\",\"daily_journal.view\",\"expenses.manage\",\"returns.manage\",\"reports.view\",\"trash.access\",\"roles.manage\",\"logs.view\",\"suppliers.statement\",\"daily_journal.close_shift\"],\"is_super_admin\":true,\"theme_preference\":\"dark\",\"show_print_subtitle\":true,\"default_store_id\":null,\"is_active\":true,\"last_login_at\":\"2026-08-23T21:16:36.416703Z\",\"stores\":[{\"id\":5,\"name\":\"فرع المعادي والمعرض\",\"code\":\"SHOP-MAADI\",\"is_main\":false}]}"
+        }
+      ]
+    },
+    {
+      "origin": "http://localhost:8000",
+      "localStorage": [
+        {
+          "name": "auth_token",
+          "value": "69|BdW8Ze6D9jFi2n9DwhWMbKv6T81K2L9Y8sGoQbZ1e7afca30"
+        },
+        {
+          "name": "current_store_id",
+          "value": "5"
+        },
+        {
+          "name": "auth_store",
+          "value": "{\"id\":5,\"name\":\"فرع المعادي والمعرض\",\"code\":\"SHOP-MAADI\",\"type\":\"retail_shop\",\"is_main\":false}"
+        },
+        {
+          "name": "system_theme_color",
+          "value": "emerald"
+        },
+        {
+          "name": "theme_preference",
+          "value": "dark"
+        },
+        {
+          "name": "app_locale",
+          "value": "ar"
+        },
+        {
+          "name": "auth_user",
+          "value": "{\"id\":2,\"name\":\"كمال سرور - المدير العام\",\"email\":\"01012316954@sroor.com\",\"phone\":\"01012316954\",\"roles\":[\"admin\"],\"permissions\":[\"pos.access\",\"invoices.view\",\"invoices.create\",\"invoices.edit\",\"invoices.cancel\",\"invoices.delete\",\"invoices.discount\",\"items.view\",\"items.create\",\"items.edit\",\"items.delete\",\"items.view_cost\",\"purchases.view\",\"purchases.create\",\"purchases.delete\",\"stores.manage\",\"transfers.view\",\"transfers.create\",\"customers.manage\",\"customers.statement\",\"suppliers.manage\",\"daily_journal.view\",\"expenses.manage\",\"returns.manage\",\"reports.view\",\"trash.access\",\"roles.manage\",\"logs.view\",\"suppliers.statement\",\"daily_journal.close_shift\"],\"is_super_admin\":true,\"theme_preference\":\"dark\",\"show_print_subtitle\":true,\"default_store_id\":null,\"is_active\":true,\"last_login_at\":\"2026-08-23T21:16:36.416703Z\",\"stores\":[{\"id\":5,\"name\":\"فرع المعادي والمعرض\",\"code\":\"SHOP-MAADI\",\"is_main\":false}]}"
+        }
+      ]
+    }
+  ]
+}

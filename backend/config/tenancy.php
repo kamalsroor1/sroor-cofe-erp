@@ -19,12 +19,10 @@ return [
     'central_domains' => [
         '127.0.0.1',
         'localhost',
-        'makhzani.localhost',
-        'super.localhost',
-        'makhzani.test',
-        'super.makhzani.test',
-        'admin.makhzani.test',
-        env('CENTRAL_DOMAIN', 'makhzani.test'),
+        'baraa-solutions.com',
+        'www.baraa-solutions.com',
+        'sroor.test',
+        env('CENTRAL_DOMAIN', 'baraa-solutions.com'),
     ],
 
     /**
@@ -56,16 +54,16 @@ return [
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => '',
-        'suffix' => '.sqlite',
+        'prefix' => env('TENANT_DB_PREFIX', 'tenant_'),
+        'suffix' => env('TENANT_DB_SUFFIX', (env('DB_CONNECTION') === 'sqlite' || config('database.default') === 'sqlite') ? '.sqlite' : ''),
 
         /**
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
          */
         'managers' => [
             'sqlite' => Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager::class,
-            'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'mariadb' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
+            'mysql' => \App\Services\Tenancy\SafeMySQLDatabaseManager::class,
+            'mariadb' => \App\Services\Tenancy\SafeMySQLDatabaseManager::class,
             'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
 
         /**

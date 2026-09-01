@@ -1,0 +1,148 @@
+<template>
+  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4 font-tajawal no-print">
+    <!-- Breadcrumb & Status Row -->
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <div class="flex items-center gap-2 text-xs">
+        <router-link to="/invoices" class="text-slate-500 hover:text-theme-primary font-bold transition flex items-center gap-1">
+          <span>{{ $t('invoices.title') }}</span>
+          <span>/</span>
+        </router-link>
+        <span class="font-mono font-black text-theme-primary">#{{ invoice?.invoice_number }}</span>
+      </div>
+
+      <!-- Badges -->
+      <div class="flex items-center gap-2">
+        <span
+          class="px-3 py-1 rounded-full text-xs font-black border flex items-center gap-1.5"
+          :class="isCancelled ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'"
+        >
+          <Ban v-if="isCancelled" class="w-3.5 h-3.5" />
+          <CheckCircle2 v-else class="w-3.5 h-3.5" />
+          <span>{{ isCancelled ? $t('invoices.cancelled_badge') : $t('invoices.confirmed_badge') }}</span>
+        </span>
+
+        <span
+          class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5"
+          :class="paymentBadgeClass"
+        >
+          <Banknote v-if="isPaidInFull" class="w-3.5 h-3.5" />
+          <Scale v-else-if="isPartialPaid" class="w-3.5 h-3.5" />
+          <FileText v-else class="w-3.5 h-3.5" />
+          <span>{{ paymentBadgeLabel }}</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Title & Mode Switcher Row -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center shrink-0">
+            <Receipt class="w-5 h-5" />
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <span>{{ $t('invoices.sales_invoice_title', { number: invoice?.invoice_number }) }}</span>
+            </h1>
+            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+              <span class="flex items-center gap-1"><Calendar class="w-3.5 h-3.5 text-slate-400" /> {{ invoice?.invoice_date }}</span>
+              <span class="flex items-center gap-1"><Clock class="w-3.5 h-3.5 text-slate-400" /> {{ invoiceTime }}</span>
+              <span class="flex items-center gap-1"><Store class="w-3.5 h-3.5 text-slate-400" /> {{ invoice?.store_name }}</span>
+              <span class="flex items-center gap-1"><User class="w-3.5 h-3.5 text-slate-400" /> {{ invoice?.cashier_name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Mode Tabs Switcher -->
+      <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 self-stretch md:self-auto overflow-x-auto">
+        <BaseButton
+          type="button"
+          data-tab="interactive"
+          :variant="activeMode === 'interactive' ? 'primary' : 'ghost'"
+          size="sm"
+          :label="$t('invoices.view_mode_interactive')"
+          @click="$emit('set-mode', 'interactive')"
+          class="flex-1 md:flex-initial"
+        />
+
+        <BaseButton
+          type="button"
+          data-tab="thermal"
+          :variant="activeMode === 'thermal' ? 'primary' : 'ghost'"
+          size="sm"
+          :label="$t('invoices.view_mode_thermal')"
+          @click="$emit('set-mode', 'thermal')"
+          class="flex-1 md:flex-initial"
+        />
+
+        <BaseButton
+          type="button"
+          data-tab="a4"
+          :variant="activeMode === 'a4' ? 'primary' : 'ghost'"
+          size="sm"
+          :label="$t('invoices.view_mode_a4')"
+          @click="$emit('set-mode', 'a4')"
+          class="flex-1 md:flex-initial"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import {
+  Ban,
+  CheckCircle2,
+  Banknote,
+  Scale,
+  FileText,
+  Receipt,
+  Calendar,
+  Clock,
+  Store,
+  User,
+} from 'lucide-vue-next';
+import { useTrans } from '../../../Composables/useTrans';
+import BaseButton from '../../Common/BaseButton.vue';
+
+const { t } = useTrans();
+
+const props = defineProps({
+  invoice: { type: Object, default: null },
+  activeMode: { type: String, default: 'interactive' },
+  invoiceTime: { type: String, default: '' },
+  isCancelled: { type: Boolean, default: false },
+});
+
+defineEmits(['set-mode']);
+
+const isPaidInFull = computed(() => {
+  const rem = parseFloat(props.invoice?.remaining_amount || 0);
+  return rem <= 0;
+});
+
+const isPartialPaid = computed(() => {
+  const rem = parseFloat(props.invoice?.remaining_amount || 0);
+  const paid = parseFloat(props.invoice?.paid_amount || 0);
+  return rem > 0 && paid > 0;
+});
+
+const paymentBadgeClass = computed(() => {
+  if (props.isCancelled) return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
+  const rem = parseFloat(props.invoice?.remaining_amount || 0);
+  const paid = parseFloat(props.invoice?.paid_amount || 0);
+  if (rem <= 0) return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
+  if (paid > 0) return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
+  return 'bg-theme-light text-theme-primary border-theme-border';
+});
+
+const paymentBadgeLabel = computed(() => {
+  const rem = parseFloat(props.invoice?.remaining_amount || 0);
+  const paid = parseFloat(props.invoice?.paid_amount || 0);
+  if (rem <= 0) return t('invoices.payment_cash');
+  if (paid > 0) return t('invoices.payment_partial');
+  return t('invoices.payment_credit');
+});
+</script>

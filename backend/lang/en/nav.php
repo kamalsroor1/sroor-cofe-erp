@@ -73,4 +73,5 @@ return [
     'telegram_backup_sent' => 'Database backup sent to Telegram successfully',
     'cache_cleared_success' => 'Cache successfully cleared, optimized, and rebuilt',
     'cache_clear_error' => 'An error occurred while clearing cache: :message',
+    'coming_soon' => 'Coming Soon',
 ];

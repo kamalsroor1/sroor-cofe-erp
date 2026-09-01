@@ -127,9 +127,9 @@ onUnmounted(() => {
         <!-- Trigger Button -->
         <div
             @click="toggleDropdown"
-            class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-amber-500/50 shadow-inner"
+            class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white flex items-center justify-between gap-2 cursor-pointer transition focus:ring-2 focus:ring-theme-primary/50 shadow-inner"
             :class="[
-                isOpen ? 'border-amber-500 ring-2 ring-amber-500/20' : '',
+                isOpen ? 'border-theme-primary ring-2 ring-theme-primary/20' : '',
                 selectedOption ? 'font-bold' : 'text-slate-500 dark:text-slate-400'
             ]"
         >
@@ -154,7 +154,7 @@ onUnmounted(() => {
                 </button>
 
                 <!-- Arrow Indicator -->
-                <span class="text-xs text-slate-400 dark:text-slate-500 transition-transform duration-200" :class="isOpen ? 'rotate-180 text-amber-500' : ''">
+                <span class="text-xs text-slate-400 dark:text-slate-500 transition-transform duration-200" :class="isOpen ? 'rotate-180 text-theme-primary' : ''">
                     ▼
                 </span>
             </div>
@@ -166,14 +166,14 @@ onUnmounted(() => {
             class="absolute z-50 right-0 left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         >
             <!-- Search Bar in Dropdown -->
-            <div v-if="searchable" class="p-2 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/50">
+            <div v-if="searchable" class="p-2 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/50">
                 <div class="relative">
                     <input
                         ref="searchInputRef"
                         v-model="searchQuery"
                         type="text"
                         :placeholder="searchPlaceholder || $t('common.search_in_list')"
-                        class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition shadow-inner font-tajawal"
+                        class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary transition shadow-inner font-tajawal"
                         @keydown.stop
                     >
                     <span class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 text-xs pointer-events-none">
@@ -191,7 +191,7 @@ onUnmounted(() => {
                     class="px-3 py-2.5 rounded-xl flex items-center justify-between gap-2 cursor-pointer transition text-xs sm:text-sm active:scale-98 min-h-[40px]"
                     :class="[
                         getOptionValue(opt) == modelValue
-                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-black border border-amber-500/30'
+                            ? 'bg-theme-primary/15 text-theme-primary text-theme-primary font-black border border-theme-border'
                             : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                     ]"
                 >
@@ -203,7 +203,7 @@ onUnmounted(() => {
                         </div>
                     </slot>
 
-                    <span v-if="getOptionValue(opt) == modelValue" class="text-amber-500 font-bold text-xs">
+                    <span v-if="getOptionValue(opt) == modelValue" class="text-theme-primary font-bold text-xs">
                         ✓
                     </span>
                 </div>

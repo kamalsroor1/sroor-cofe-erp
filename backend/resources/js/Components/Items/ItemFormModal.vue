@@ -1,138 +1,152 @@
-<script setup>
-import AppModal from '@/Components/Common/AppModal.vue';
-import { Package } from 'lucide-vue-next';
+<template>
+  <AppModal
+    :show="show"
+    :title="editingItem ? $t('inventory.edit_item') : $t('inventory.add_new_item')"
+    :icon="Package"
+    max-width="3xl"
+    @close="$emit('close')"
+  >
+    <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
+      <!-- Row 1: Name & Code/Barcode -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BaseInput
+          v-model="form.name"
+          :label="$t('inventory.item_name')"
+          :required="true"
+          :placeholder="$t('inventory.item_name_placeholder')"
+          :error="errors?.name"
+        />
 
-defineProps({
-    show: { type: Boolean, required: true },
-    editingItem: { type: Object, default: null },
-    form: { type: Object, required: true },
+        <BaseInput
+          v-model="form.code"
+          :label="`${$t('inventory.code')} (${$t('inventory.barcode')})`"
+          :placeholder="$t('inventory.auto_code_placeholder')"
+          :error="errors?.code"
+          dir="ltr"
+          input-class="font-mono text-xs"
+        />
+      </div>
+
+      <!-- Row 2: Category & Unit -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BaseSelect
+          v-model="form.category"
+          :label="$t('inventory.category')"
+          :placeholder="$t('inventory.category_placeholder')"
+          :options="categoryOptions"
+          :error="errors?.category"
+        />
+
+        <BaseSelect
+          v-model="form.unit"
+          :label="$t('inventory.unit')"
+          :required="true"
+          :options="unitOptions"
+          :searchable="false"
+          :error="errors?.unit"
+        />
+      </div>
+
+      <!-- Row 3: Pricing Grid (Cost, Retail, Min Selling/Wholesale, Min Stock Level) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <BaseNumberInput
+          v-model="form.cost_price"
+          :label="$t('inventory.cost_price')"
+          :required="true"
+          :min="0"
+          :step="0.001"
+          :error="errors?.cost_price"
+        />
+
+        <BaseNumberInput
+          v-model="form.selling_price"
+          :label="$t('inventory.selling_price')"
+          :required="true"
+          :min="0"
+          :step="0.001"
+          :error="errors?.selling_price"
+        />
+
+        <BaseNumberInput
+          v-model="form.min_selling_price"
+          :label="$t('inventory.min_selling_price')"
+          :min="0"
+          :step="0.001"
+          :error="errors?.min_selling_price"
+        />
+
+        <BaseNumberInput
+          v-model="form.min_stock_level"
+          :label="$t('inventory.min_stock_level')"
+          :min="0"
+          :step="0.001"
+          :error="errors?.min_stock_level"
+        />
+      </div>
+
+      <!-- Row 4: Notes -->
+      <BaseTextarea
+        v-model="form.notes"
+        :label="$t('common.notes')"
+        :placeholder="$t('inventory.item_notes_placeholder')"
+        :rows="2"
+      />
+
+      <!-- Modal Footer Actions -->
+      <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <BaseButton
+          type="button"
+          variant="ghost"
+          size="md"
+          :label="$t('common.cancel')"
+          @click="$emit('close')"
+        />
+
+        <BaseButton
+          type="submit"
+          variant="gradient"
+          size="md"
+          :loading="isSubmitting"
+          :label="$t('common.save')"
+        />
+      </div>
+    </form>
+  </AppModal>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import { Package } from 'lucide-vue-next';
+import AppModal from '../Common/AppModal.vue';
+import BaseInput from '../Form/BaseInput.vue';
+import BaseNumberInput from '../Form/BaseNumberInput.vue';
+import BaseSelect from '../Form/BaseSelect.vue';
+import BaseTextarea from '../Form/BaseTextarea.vue';
+import BaseButton from '../Common/BaseButton.vue';
+
+const props = defineProps({
+  show: { type: Boolean, default: false },
+  editingItem: { type: Object, default: null },
+  form: { type: Object, required: true },
+  categories: { type: Array, default: () => [] },
+  units: { type: Array, default: () => ['كجم', 'جرام', 'قطعة', 'علبة', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'لتر'] },
+  errors: { type: Object, default: () => ({}) },
+  isSubmitting: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['close', 'submit']);
+defineEmits(['close', 'submit']);
+
+const categoryOptions = computed(() => {
+  return props.categories.map((c) => ({
+    value: typeof c === 'object' ? c.name : c,
+    label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,
+  }));
+});
+
+const unitOptions = computed(() => {
+  return props.units.map((u) => ({
+    value: u,
+    label: u,
+  }));
+});
 </script>
-
-<template>
-    <AppModal
-        :show="show"
-        :title="editingItem ? $t('inventory.edit_item') : $t('inventory.add_new_item')"
-        :icon="Package"
-        max-width="lg"
-        @close="$emit('close')"
-    >
-        <form id="item-form" @submit.prevent="$emit('submit')" class="space-y-4">
-            <!-- Name -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.item_name') }} *</label>
-                <input
-                    v-model="form.name"
-                    type="text"
-                    required
-                    :placeholder="$t('inventory.item_name')"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none shadow-inner"
-                >
-                <p v-if="form.errors?.name" class="text-rose-400 text-[10px]">{{ form.errors.name }}</p>
-            </div>
-
-            <!-- Code & Category -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.item_code') }} / {{ $t('inventory.barcode') }}</label>
-                    <input
-                        v-model="form.code"
-                        type="text"
-                        :placeholder="$t('inventory.barcode_placeholder')"
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-amber-500 focus:outline-none shadow-inner"
-                    >
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.category') }}</label>
-                    <input
-                        v-model="form.category"
-                        type="text"
-                        :placeholder="$t('inventory.category_placeholder')"
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none shadow-inner"
-                    >
-                </div>
-            </div>
-
-            <!-- Unit, Cost Price, Selling Price -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.unit') }} *</label>
-                    <select
-                        v-model="form.unit"
-                        class="w-full h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none shadow-inner font-bold"
-                    >
-                        <option value="كجم">{{ $t('inventory.unit_weight_short') }} (كجم)</option>
-                        <option value="جرام">{{ $t('inventory.unit_gram') }}</option>
-                        <option value="قطعة">{{ $t('inventory.unit_piece_short') }}</option>
-                        <option value="شيكارة">{{ $t('inventory.unit_bag_box') }}</option>
-                    </select>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.purchase_price') }} *</label>
-                    <input
-                        v-model="form.cost_price"
-                        type="number"
-                        step="0.001"
-                        required
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-amber-500 focus:outline-none shadow-inner"
-                    >
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.retail_price') }} *</label>
-                    <input
-                        v-model="form.selling_price"
-                        type="number"
-                        step="0.001"
-                        required
-                        class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-amber-500 focus:outline-none shadow-inner"
-                    >
-                </div>
-            </div>
-
-            <!-- Min Stock Level -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('inventory.min_stock_level') }}</label>
-                <input
-                    v-model="form.min_stock_level"
-                    type="number"
-                    step="0.001"
-                    class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:border-amber-500 focus:outline-none shadow-inner"
-                >
-            </div>
-
-            <!-- Notes -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('common.notes') }}</label>
-                <textarea
-                    v-model="form.notes"
-                    rows="2"
-                    class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none shadow-inner"
-                ></textarea>
-            </div>
-        </form>
-
-        <!-- Footer Slot -->
-        <template #footer>
-            <button
-                type="button"
-                class="h-11 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer shadow-xs"
-                @click="$emit('close')"
-            >
-                {{ $t('common.cancel') }}
-            </button>
-            <button
-                type="submit"
-                form="item-form"
-                :disabled="form.processing"
-                class="h-11 px-6 rounded-2xl btn-primary-theme text-xs font-black transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
-            >
-                {{ form.processing ? '...' : (editingItem ? $t('common.save') : $t('inventory.add_new_item')) }}
-            </button>
-        </template>
-    </AppModal>
-</template>

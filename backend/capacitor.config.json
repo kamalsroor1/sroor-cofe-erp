@@ -1,11 +1,12 @@
 {
   "appId": "com.sroor.cofe.erp",
-  "appName": "سرور كوفي ERP",
+  "appName": "منظومة سرور كوفي ERP",
   "webDir": "public",
   "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https",
-    "cleartext": true
+    "url": "https://2m.baraa-solutions.com",
+    "cleartext": true,
+    "androidScheme": "https"
   },
   "plugins": {
     "SplashScreen": {

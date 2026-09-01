@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
+import { applyThemeColor } from '../helpers/themeHelper';
 
 export const useAppConfigStore = defineStore('appConfig', {
     state: () => ({
@@ -51,11 +52,23 @@ export const useAppConfigStore = defineStore('appConfig', {
                     if (data.notifications) this.notifications = data.notifications;
                     if (data.locale) this.locale = data.locale;
                     if (data.translations) this.translations = data.translations;
+                    if (data.stores) {
+                        const { useAuthStore } = await import('./auth');
+                        const authStore = useAuthStore();
+                        authStore.stores = data.stores;
+                    }
+                    if (data.active_store) {
+                        const { useAuthStore } = await import('./auth');
+                        const authStore = useAuthStore();
+                        if (!authStore.currentStore) {
+                            authStore.currentStore = data.active_store;
+                        }
+                    }
                     this.isLoaded = true;
 
                     // Apply theme color
                     if (data.system?.system_theme_color) {
-                        document.documentElement.setAttribute('data-theme-color', data.system.system_theme_color);
+                        applyThemeColor(data.system.system_theme_color);
                     }
                 }
                 return data;
@@ -94,6 +107,15 @@ export const useAppConfigStore = defineStore('appConfig', {
                 document.documentElement.classList.add('light');
                 document.documentElement.classList.remove('dark');
             }
+        },
+
+        /**
+         * Change primary accent color
+         */
+        setThemeColor(color) {
+            if (!color) return;
+            this.system.system_theme_color = color;
+            applyThemeColor(color);
         },
 
         /**

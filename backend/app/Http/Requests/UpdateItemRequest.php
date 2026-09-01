@@ -22,11 +22,12 @@ class UpdateItemRequest extends FormRequest
             'code'            => ['nullable', 'string', 'max:100', 'unique:items,code,' . $itemId],
             'category'        => ['nullable', 'string', 'max:100'],
             'unit'            => ['required', 'string', 'max:50'],
-            'cost_price'      => ['required', 'numeric', 'min:0'],
-            'selling_price'   => ['required', 'numeric', 'min:0'],
-            'min_stock_level' => ['nullable', 'numeric', 'min:0'],
-            'is_active'       => ['sometimes', 'boolean'],
-            'notes'           => ['nullable', 'string', 'max:1000'],
+            'cost_price'        => ['required', 'numeric', 'min:0'],
+            'min_selling_price' => ['nullable', 'numeric', 'min:0'],
+            'selling_price'     => ['required', 'numeric', 'min:0'],
+            'min_stock_level'   => ['nullable', 'numeric', 'min:0'],
+            'is_active'         => ['sometimes', 'boolean'],
+            'notes'             => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

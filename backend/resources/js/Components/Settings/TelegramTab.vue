@@ -1,5 +1,7 @@
 <script setup>
 import { Send, BarChart3, AlertTriangle, RotateCcw, HardDrive, Save } from 'lucide-vue-next';
+import BaseInput from '@/Components/Form/BaseInput.vue';
+import BaseCheckbox from '@/Components/Form/BaseCheckbox.vue';
 
 defineProps({
     form: {
@@ -38,25 +40,19 @@ defineEmits([
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.bot_token') }}</label>
-                        <input
-                            v-model="form.telegram_bot_token"
-                            type="text"
-                            placeholder="123456789:ABCdef..."
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.telegram_bot_token"
+                        :label="$t('settings.bot_token')"
+                        placeholder="123456789:ABCdef..."
+                        dir="ltr"
+                    />
 
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.chat_id') }}</label>
-                        <input
-                            v-model="form.telegram_chat_id"
-                            type="text"
-                            :placeholder="$t('settings.chat_id_placeholder')"
-                            class="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-theme-primary focus:outline-none shadow-inner"
-                        >
-                    </div>
+                    <BaseInput
+                        v-model="form.telegram_chat_id"
+                        :label="$t('settings.chat_id')"
+                        :placeholder="$t('settings.chat_id_placeholder')"
+                        dir="ltr"
+                    />
                 </div>
 
                 <!-- Live Action Testing Triggers -->
@@ -66,7 +62,7 @@ defineEmits([
                         <button
                             @click="$emit('send-test')"
                             type="button"
-                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
                             <Send class="w-4 h-4 text-theme-primary" />
                             <span>{{ $t('settings.send_test_msg') }}</span>
@@ -75,7 +71,7 @@ defineEmits([
                         <button
                             @click="$emit('send-daily-summary')"
                             type="button"
-                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
                             <BarChart3 class="w-4 h-4 text-emerald-500" />
                             <span>{{ $t('settings.send_daily_summary') }}</span>
@@ -84,7 +80,7 @@ defineEmits([
                         <button
                             @click="$emit('send-low-stock')"
                             type="button"
-                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
                             <AlertTriangle class="w-4 h-4 text-rose-500" />
                             <span>{{ $t('settings.send_low_stock') }}</span>
@@ -93,16 +89,16 @@ defineEmits([
                         <button
                             @click="$emit('send-overdue-shifts')"
                             type="button"
-                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
-                            <RotateCcw class="w-4 h-4 text-amber-500" />
+                            <RotateCcw class="w-4 h-4 text-theme-primary" />
                             <span>{{ $t('settings.send_overdue_shifts') }}</span>
                         </button>
 
                         <button
                             @click="$emit('send-backup-telegram')"
                             type="button"
-                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                            class="min-h-[48px] p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary text-slate-700 dark:text-slate-200 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
                             <HardDrive class="w-4 h-4 text-indigo-500" />
                             <span>{{ $t('settings.send_backup_telegram') }}</span>

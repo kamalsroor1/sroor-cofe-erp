@@ -37,10 +37,15 @@ final class SupplierController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage') && !$user->can('suppliers.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $debtStatus = (string)$request->input('debt_status', 'all');
         $status = (string)$request->input('status', 'all');
-        $perPage = (int)$request->input('per_page', 20);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $query = Supplier::withCount(['purchases', 'payments']);
 
@@ -106,8 +111,13 @@ final class SupplierController extends Controller
     /**
      * Display the specified supplier
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage') && !$user->can('suppliers.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $supplier = Supplier::withCount(['purchases', 'payments'])->findOrFail($id);
 
         return response()->json([
@@ -155,6 +165,11 @@ final class SupplierController extends Controller
      */
     public function statement(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage') && !$user->can('suppliers.view') && !$user->can('suppliers.statement')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $supplier = Supplier::findOrFail($id);
         $fromDate = $request->query('from_date') ?: $request->query('from');
         $toDate = $request->query('to_date') ?: $request->query('to');
@@ -170,8 +185,13 @@ final class SupplierController extends Controller
     /**
      * Toggle Supplier Active Status
      */
-    public function toggleActive(int $id): JsonResponse
+    public function toggleActive(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $supplier = Supplier::findOrFail($id);
         $toggled = $this->toggleSupplierActiveAction->execute($supplier);
 
@@ -185,8 +205,13 @@ final class SupplierController extends Controller
     /**
      * Delete the specified supplier
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $supplier = Supplier::findOrFail($id);
         $this->deleteSupplierAction->execute($supplier);
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sroor-pos-v5';
+const CACHE_NAME = 'sroor-pos-v8-hard-fresh-20260822-2313';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
@@ -9,9 +9,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((keys) => {
             return Promise.all(
                 keys.map((key) => {
-                    if (key !== CACHE_NAME) {
-                        return caches.delete(key);
-                    }
+                    return caches.delete(key);
                 })
             );
         }).then(() => self.clients.claim())

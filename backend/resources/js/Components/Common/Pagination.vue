@@ -52,7 +52,7 @@ const handlePageClick = (link) => {
         class="pt-4 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 font-sans select-none"
     >
         <span class="text-xs text-slate-500 dark:text-slate-400 font-tajawal font-bold">
-            {{ $t('common.showing_results', { from: from || 0, to: to || 0, total: total || 0 }) || `عرض ${from || 0} إلى ${to || 0} من إجمالي ${total || 0}` }}
+            {{ $t('common.showing_results', { from: from || 0, to: to || 0, total: total || 0 }) }}
         </span>
 
         <div class="flex items-center gap-1 flex-wrap justify-center font-tajawal">
@@ -64,7 +64,7 @@ const handlePageClick = (link) => {
                     class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-xs"
                     :class="[
                         link.active
-                            ? 'bg-theme-primary text-slate-950 font-black shadow-theme-sm'
+                            ? 'bg-theme-primary text-white font-black font-black shadow-theme-sm'
                             : 'bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                     ]"
                     v-html="link.label"

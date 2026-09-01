@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { RefreshCw } from 'lucide-vue-next';
 import { useMoney } from '@/Composables/useMoney';
 
 const props = defineProps({
@@ -74,7 +75,7 @@ const onPaidAmountInput = (e) => {
 </script>
 
 <template>
-    <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0 font-tajawal">
+    <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2.5 shrink-0 font-tajawal">
         <!-- Subtotal & Discount -->
         <div class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
             <div class="flex items-center justify-between">
@@ -87,7 +88,7 @@ const onPaidAmountInput = (e) => {
                 <div class="flex items-center gap-1.5">
                     <button
                         type="button"
-                        class="h-7 px-2 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-black text-amber-600 dark:text-amber-400 cursor-pointer"
+                        class="h-7 px-2 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-black text-theme-primary text-theme-primary cursor-pointer"
                         @click="toggleDiscountType"
                     >
                         {{ discountType === 'fixed' ? $t('common.currency') : '%' }}
@@ -116,7 +117,7 @@ const onPaidAmountInput = (e) => {
             <button
                 type="button"
                 class="h-10 sm:h-9 rounded-xl font-black transition text-center cursor-pointer flex items-center justify-center active:scale-95 shadow-xs"
-                :class="paymentType === 'cash' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
+                :class="paymentType === 'cash' ? 'bg-emerald-600 text-white font-bold shadow-md' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
                 @click="$emit('update:paymentType', 'cash')"
             >
                 {{ $t('pos.payment_cash') }} (F4)
@@ -124,7 +125,7 @@ const onPaidAmountInput = (e) => {
             <button
                 type="button"
                 class="h-10 sm:h-9 rounded-xl font-black transition text-center cursor-pointer flex items-center justify-center active:scale-95 shadow-xs"
-                :class="paymentType === 'partial' ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
+                :class="paymentType === 'partial' ? 'bg-theme-primary text-white shadow-theme-primary font-black' : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'"
                 @click="$emit('update:paymentType', 'partial')"
             >
                 {{ $t('pos.payment_partial') }} (F8)
@@ -203,7 +204,7 @@ const onPaidAmountInput = (e) => {
             class="w-full h-13 rounded-2xl btn-primary-theme font-black text-sm sm:text-base flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-theme-md"
             @click="$emit('checkout')"
         >
-            <span v-if="isSubmitting" class="animate-spin text-lg">⏳</span>
+            <RefreshCw v-if="isSubmitting" class="w-5 h-5 animate-spin" />
             <span>{{ isSubmitting ? $t('pos.saving_in_progress') : $t('pos.checkout_instant_btn') }} (Enter / F2)</span>
         </button>
     </div>

@@ -33,17 +33,24 @@ final class ShiftController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('daily_journal.view') && !$user->can('pos.access') && !$user->can('pos.sell')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id;
+            ?: $user?->getCurrentStore()?->id;
+
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $query = CashShift::with(['user', 'store']);
 
-        if ($storeId) {
+        if ($storeId && $storeId !== 'all') {
             $query->where('store_id', (int)$storeId);
         }
 
-        $shifts = $query->latest('id')->paginate((int)$request->input('per_page', 20));
+        $shifts = $query->latest('id')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -62,9 +69,14 @@ final class ShiftController extends Controller
      */
     public function current(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('daily_journal.view') && !$user->can('pos.access') && !$user->can('pos.sell')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $result = $this->getActiveShiftAction->execute($storeId ? (int)$storeId : null);
@@ -138,8 +150,13 @@ final class ShiftController extends Controller
     /**
      * Get Z-Report data for thermal print
      */
-    public function zReport(int $id): JsonResponse
+    public function zReport(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('daily_journal.view') && !$user->can('pos.access') && !$user->can('pos.sell')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $report = $this->getShiftZReportAction->execute($id);
 
         return response()->json([

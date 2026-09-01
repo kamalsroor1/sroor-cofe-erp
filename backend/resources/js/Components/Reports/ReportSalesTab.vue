@@ -67,7 +67,7 @@ const { formatMoney } = useMoney();
                             <td class="py-3 font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.cogs_deducted') }}</td>
                             <td class="py-3 font-mono font-bold text-rose-600 dark:text-rose-400 text-left">- {{ formatMoney(summary.total_cogs) }} {{ $t('common.currency') }}</td>
                         </tr>
-                        <tr class="py-2.5 bg-slate-50 dark:bg-slate-950/50">
+                        <tr class="py-2.5 bg-slate-50 dark:bg-slate-800/50">
                             <td class="py-3 font-black text-theme-primary">{{ $t('reports.gross_profit_trade') }}</td>
                             <td class="py-3 font-mono font-black text-theme-primary text-left">{{ formatMoney(summary.gross_profit) }} {{ $t('common.currency') }}</td>
                         </tr>

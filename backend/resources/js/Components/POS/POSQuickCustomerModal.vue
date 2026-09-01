@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import { customerService } from '@/Services/customerService';
+import BaseInput from '@/Components/Form/BaseInput.vue';
+import { X } from 'lucide-vue-next';
 
 const props = defineProps({
     show: { type: Boolean, default: false },
@@ -49,31 +51,26 @@ const handleSave = saveCustomer;
                             type="button"
                             class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center text-sm font-bold transition active:scale-90 cursor-pointer shadow-xs shrink-0"
                         >
-                            ✕
+                            <X class="w-4 h-4" />
                         </button>
                     </div>
 
                     <div class="space-y-3 text-xs">
-                        <div class="space-y-1">
-                            <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('pos.customer_name') }}:</label>
-                            <input
-                                v-model="form.name"
-                                type="text"
-                                :placeholder="$t('contacts.name')"
-                                class="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 shadow-inner"
-                            />
-                        </div>
+                        <BaseInput
+                            v-model="form.name"
+                            :label="$t('pos.customer_name')"
+                            :required="true"
+                            :placeholder="$t('contacts.name')"
+                            :error="errorMessage"
+                        />
 
-                        <div class="space-y-1">
-                            <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('pos.phone') }}:</label>
-                            <input
-                                v-model="form.phone"
-                                type="tel"
-                                inputmode="tel"
-                                :placeholder="$t('contacts.phone')"
-                                class="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 shadow-inner font-mono"
-                            />
-                        </div>
+                        <BaseInput
+                            v-model="form.phone"
+                            type="tel"
+                            dir="ltr"
+                            :label="$t('pos.phone')"
+                            :placeholder="$t('contacts.phone')"
+                        />
 
                         <div class="space-y-1">
                             <label class="block font-bold text-slate-700 dark:text-slate-300">{{ $t('pos.pricing_tier') }}:</label>
@@ -81,15 +78,15 @@ const handleSave = saveCustomer;
                                 <button
                                     type="button"
                                     @click="form.price_tier = 'retail'"
-                                    class="p-2.5 rounded-xl border text-center transition active:scale-95 cursor-pointer font-bold"
-                                    :class="form.price_tier === 'retail' ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-400' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
+                                    class="p-2.5 rounded-xl border text-center transition active:scale-95 cursor-pointer font-bold text-xs"
+                                    :class="form.price_tier === 'retail' ? 'bg-theme-primary/15 border-theme-primary text-theme-primary' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
                                 >
                                     {{ $t('customers.retail') }}
                                 </button>
                                 <button
                                     type="button"
                                     @click="form.price_tier = 'wholesale'"
-                                    class="p-2.5 rounded-xl border text-center transition active:scale-95 cursor-pointer font-bold"
+                                    class="p-2.5 rounded-xl border text-center transition active:scale-95 cursor-pointer font-bold text-xs"
                                     :class="form.price_tier === 'wholesale' ? 'bg-indigo-500/15 border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'"
                                 >
                                     {{ $t('customers.wholesale') }}

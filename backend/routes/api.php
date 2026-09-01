@@ -18,11 +18,15 @@ use App\Http\Controllers\Api\SystemContextApiController;
 
 Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
+    Route::get('/ping', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]))->name('api.ping');
+    Route::get('/central/tenants/resolve', [\App\Http\Controllers\Api\CentralTenantResolverController::class, 'resolve'])->name('api.central.tenants.resolve');
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
     Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->name('api.app.check_update');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
     Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_latest_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
+    Route::post('/auth/quick-login', [AuthController::class, 'quickLogin'])->name('api.auth.quick_login');
+    Route::get('/auth/workspace-users', [AuthController::class, 'workspaceUsers'])->name('api.auth.workspace_users');
     Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->name('api.system.translations');
 
     // 2. Protected Endpoints (Requires valid Bearer Token)
@@ -38,6 +42,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/permissions', [PermissionApiController::class, 'index'])->name('api.permissions.index');
 
         // High-Performance Consolidated Dashboard Summary
+        Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.index');
         Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.summary');
 
         // Stores & Branches (CRUD, Stocks & Switching)
@@ -88,8 +93,11 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/items/{id}/adjust-stock', [ItemController::class, 'adjustStock'])->name('api.items.adjust_stock');
         Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements');
 
-        // Audit Trail & Activity Logs
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
+        // Categories Management
+        Route::get('/categories', [\App\Http\Controllers\Api\CategoryApiController::class, 'index'])->name('api.categories.index');
+        Route::post('/categories', [\App\Http\Controllers\Api\CategoryApiController::class, 'store'])->name('api.categories.store');
+        Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'update'])->name('api.categories.update');
+        Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
 
         // POS & Sales Invoices & WhatsApp
         Route::get('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'index'])->name('api.invoices.index');
@@ -167,7 +175,8 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::put('/roles/{id}/permissions', [\App\Http\Controllers\Api\RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
 
         // Activity & Audit Logs
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index');
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index')->middleware('can:logs.view');
+        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('api.activity_logs.export_csv')->middleware('can:logs.view');
 
         // User Profile & Preferences
         Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('api.profile.show');
@@ -184,19 +193,25 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::delete('/trash/{type}/{id}/force', [\App\Http\Controllers\Api\TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
 
         // Super Admin & Multi-Tenant Management
-        Route::prefix('super-admin')->group(function () {
+        Route::prefix('super-admin')->middleware('can:super_admin.access')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'dashboard'])->name('api.super_admin.dashboard');
             Route::get('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'tenants'])->name('api.super_admin.tenants');
             Route::post('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'storeTenant'])->name('api.super_admin.tenants.store');
             Route::get('/tenants/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'showTenant'])->name('api.super_admin.tenants.show');
+            Route::delete('/tenants/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'destroyTenant'])->name('api.super_admin.tenants.destroy');
+            Route::post('/tenants/{id}/update-db-config', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateDatabaseConfig'])->name('api.super_admin.tenants.update_db_config');
             Route::post('/tenants/{id}/toggle-status', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'toggleStatus'])->name('api.super_admin.tenants.toggle_status');
             Route::post('/tenants/{id}/override-feature', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
+            Route::post('/tenants/{id}/update-units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateTenantUnits'])->name('api.super_admin.tenants.update_units');
+            Route::post('/tenants/{id}/run-migrations', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'runTenantMigrations'])->name('api.super_admin.tenants.run_migrations');
             Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
             Route::put('/plans/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
 
-            // Central Platform Settings & Whitelabel
+            // Central Platform Settings & Whitelabel & Units
             Route::get('/settings', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'getPlatformSettings'])->name('api.super_admin.settings.get');
             Route::post('/settings', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlatformSettings'])->name('api.super_admin.settings.update');
+            Route::get('/units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'getUnits'])->name('api.super_admin.units.get');
+            Route::post('/units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateUnits'])->name('api.super_admin.units.update');
 
             // App Versions & APK Releases Management
             Route::get('/app-versions', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'index'])->name('api.super_admin.app_versions.index');
@@ -206,3 +221,6 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         });
     });
 });
+
+// Direct Central Workspace Resolver alias without v1 prefix
+Route::get('/central/tenants/resolve', [\App\Http\Controllers\Api\CentralTenantResolverController::class, 'resolve'])->name('api.central.tenants.resolve.alias');

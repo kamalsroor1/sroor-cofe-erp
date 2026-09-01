@@ -280,7 +280,7 @@
         <!-- 🌟 Slide 1 Bottom Footer Strip -->
         <div class="pt-2 border-t-2 border-slate-100 flex justify-between items-center text-[10.5px] text-slate-500 font-bold">
             <span>📄 العرض التقديمي • الصفحة 1 من 2 (هيكل الباقات والأسعار الرسمية في الصفحة التالية)</span>
-            <span class="text-amber-600 font-mono font-black">https://sroor.baraa-solutions.com</span>
+            <span class="text-amber-600 font-mono font-black">{{ config('app.url', 'https://baraa-solutions.com') }}</span>
         </div>
 
     </div>
@@ -509,7 +509,7 @@
                 </div>
                 <div class="space-y-0.5 text-[9px] font-bold text-slate-200 pt-1 border-t border-slate-700">
                     <div>📞 <strong>واتساب:</strong> 01000000000</div>
-                    <div>🌐 https://sroor.baraa-solutions.com</div>
+                    <div>🌐 {{ config('app.url', 'https://baraa-solutions.com') }}</div>
                 </div>
             </div>
 

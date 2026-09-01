@@ -1,6 +1,6 @@
 <script setup>
 /**
- * DataTable.vue — جدول بيانات تفاعلي وديناميكي موحد لمنظومة سرور كوفي ERP
+ * DataTable.vue — جدول بيانات تفاعلي وديناميكي موحد لمنظومة ERP
  *
  * @prop {Array}   columns      قائمة الأعمدة: [{ key, label, sortable?, align?, width?, hideOnMobile?, mono?, class? }]
  * @prop {Array}   rows         البيانات المراد عرضها في الجدول
@@ -190,7 +190,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                             :class="[
                                 alignClass(col),
                                 col.width ? col.width : '',
-                                col.sortable ? 'cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition' : '',
+                                col.sortable ? 'cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200 transition' : '',
                             ]"
                             @click="handleSort(col)"
                         >
@@ -233,7 +233,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                             class="transition"
                             :class="[
                                 rowClickable ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40' : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/20',
-                                selectable && isRowSelected(row) ? 'bg-amber-500/5 dark:bg-amber-500/10' : '',
+                                selectable && isRowSelected(row) ? 'bg-theme-light dark:bg-theme-light' : '',
                             ]"
                             @click="handleRowClick(row, $event)"
                         >
@@ -290,7 +290,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 v-if="loading"
                 v-for="n in skeletonRows"
                 :key="`msk-${n}`"
-                class="animate-pulse p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3"
+                class="animate-pulse p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3"
             >
                 <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
                     <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/3"></div>
@@ -309,10 +309,10 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
                 <div
                     v-for="(row, index) in rows"
                     :key="row[selectKey] ?? index"
-                    class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs transition"
+                    class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3 shadow-xs transition"
                     :class="[
                         rowClickable ? 'cursor-pointer active:scale-99' : '',
-                        selectable && isRowSelected(row) ? 'ring-2 ring-amber-500 bg-amber-500/5 dark:bg-amber-500/10' : '',
+                        selectable && isRowSelected(row) ? 'ring-2 ring-theme-primary bg-theme-light dark:bg-theme-light' : '',
                         cardClass,
                     ]"
                     @click="handleRowClick(row, $event)"

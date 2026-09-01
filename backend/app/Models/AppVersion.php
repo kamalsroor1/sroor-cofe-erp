@@ -13,6 +13,11 @@ class AppVersion extends Model
 
     protected $table = 'app_versions';
 
+    public function getConnectionName()
+    {
+        return config('tenancy.database.central_connection', config('database.default'));
+    }
+
     protected $fillable = [
         'platform',
         'version_name',

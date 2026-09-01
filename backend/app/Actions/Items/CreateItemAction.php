@@ -30,6 +30,7 @@ final class CreateItemAction
                 'category'          => $dto->category,
                 'unit'              => $dto->unit,
                 'cost_price'        => $dto->cost_price,
+                'min_selling_price' => $dto->min_selling_price,
                 'weighted_avg_cost' => $dto->cost_price,
                 'selling_price'     => $dto->selling_price,
                 'min_stock_level'   => $dto->min_stock_level,

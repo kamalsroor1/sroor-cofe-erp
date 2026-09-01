@@ -32,10 +32,15 @@ final class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('invoices.view') && !$user->can('pos.access')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        $rawStoreId = $request->input('store_id') ?: $request->header('X-Store-Id');
+        $storeId = ($rawStoreId && $rawStoreId !== 'all' && is_numeric($rawStoreId) && (int)$rawStoreId > 0)
+            ? (int)$rawStoreId
+            : null;
 
         $search = trim((string)$request->input('search', ''));
         $status = (string)$request->input('status', 'all');
@@ -44,12 +49,12 @@ final class InvoiceController extends Controller
         $paymentMethod = $request->input('payment_method');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = (int)$request->input('per_page', 15);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
 
-        $query = Invoice::query()->with(['customer:id,name,phone,code,balance', 'user:id,name', 'store:id,name']);
+        $query = Invoice::query()->with(['customer:id,name,phone,current_balance', 'user:id,name', 'store:id,name']);
 
         if ($storeId) {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', $storeId);
         }
 
         if ($customerId && $customerId !== 'all') {
@@ -114,8 +119,13 @@ final class InvoiceController extends Controller
     /**
      * Show single invoice details with items, payments, and WhatsApp share URL
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('invoices.view') && !$user->can('pos.access')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $result = $this->getInvoiceDetailsAction->execute($id);
 
         return response()->json([
@@ -142,7 +152,7 @@ final class InvoiceController extends Controller
 
         return response()->json([
             'success'  => true,
-            'message'  => "تم حفظ واعتماد الفاتورة رقم: {$invoice->invoice_number} بنجاح ✓",
+            'message'  => __('invoices.invoice_created') ?: "تم حفظ واعتماد الفاتورة رقم: {$invoice->invoice_number} بنجاح ✓",
             'data'     => (new InvoiceResource($details['invoice']))->resolve(),
             'whatsapp' => $details['whatsapp'],
         ], 201);
@@ -158,7 +168,7 @@ final class InvoiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "تم إلغاء الفاتورة رقم {$cancelled->invoice_number} بنجاح وعكس رصيد المخزن والحساب ✓",
+            'message' => __('invoices.invoice_cancelled') ?: "تم إلغاء الفاتورة رقم {$cancelled->invoice_number} بنجاح وعكس رصيد المخزن والحساب ✓",
             'data'    => (new InvoiceResource($cancelled))->resolve(),
         ], 200);
     }

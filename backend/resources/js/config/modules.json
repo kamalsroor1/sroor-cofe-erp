@@ -1,0 +1,146 @@
+{
+  "modules": [
+    {
+      "id": 1,
+      "key": "users_and_auth",
+      "name_ar": "المستخدمون والكاشير والأمان",
+      "name_en": "Users & Auth",
+      "enabled": true,
+      "routes": [
+        "/users",
+        "/roles",
+        "/activity-logs",
+        "/profile"
+      ]
+    },
+    {
+      "id": 2,
+      "key": "pos_and_sales",
+      "name_ar": "المبيعات ونقاط البيع والفواتير",
+      "name_en": "POS & Sales",
+      "enabled": true,
+      "routes": [
+        "/pos",
+        "/invoices"
+      ]
+    },
+    {
+      "id": 3,
+      "key": "inventory_and_stores",
+      "name_ar": "المخزون والفروع وتصنيفات الأصناف",
+      "name_en": "Inventory & Stores",
+      "enabled": true,
+      "routes": [
+        "/items",
+        "/categories",
+        "/stores",
+        "/stock-transfers",
+        "/item-movements"
+      ]
+    },
+    {
+      "id": 4,
+      "key": "purchases_and_suppliers",
+      "name_ar": "المشتريات والموردين",
+      "name_en": "Purchases & Suppliers",
+      "enabled": true,
+      "routes": [
+        "/purchases",
+        "/suppliers"
+      ]
+    },
+    {
+      "id": 5,
+      "key": "returns",
+      "name_ar": "سجل المرتجعات",
+      "name_en": "Returns Engine",
+      "enabled": true,
+      "routes": [
+        "/returns"
+      ]
+    },
+    {
+      "id": 6,
+      "key": "customers",
+      "name_ar": "العملاء والشركات",
+      "name_en": "Customers & CRM",
+      "enabled": true,
+      "routes": [
+        "/customers"
+      ]
+    },
+    {
+      "id": 7,
+      "key": "treasury_and_shifts",
+      "name_ar": "الخزينة واليومية وحركة الدرج",
+      "name_en": "Treasury & Shifts",
+      "enabled": true,
+      "routes": [
+        "/daily-journal",
+        "/treasury"
+      ]
+    },
+    {
+      "id": 8,
+      "key": "expenses",
+      "name_ar": "المصروفات والنثريات",
+      "name_en": "Expenses",
+      "enabled": true,
+      "routes": [
+        "/expenses"
+      ]
+    },
+    {
+      "id": 9,
+      "key": "coffee_blends",
+      "name_ar": "صانع الخلطات وتوليفات البن",
+      "name_en": "Coffee Blends",
+      "enabled": true,
+      "routes": [
+        "/coffee-blender"
+      ]
+    },
+    {
+      "id": 10,
+      "key": "reports",
+      "name_ar": "التقارير المالية والأرباح",
+      "name_en": "Reports & Analytics",
+      "enabled": true,
+      "routes": [
+        "/reports"
+      ]
+    },
+    {
+      "id": 11,
+      "key": "super_admin",
+      "name_ar": "إدارة المنصة المركزية",
+      "name_en": "Super Admin Platform",
+      "enabled": true,
+      "routes": [
+        "/super-admin/dashboard",
+        "/super-admin/tenants",
+        "/super-admin/plans"
+      ]
+    },
+    {
+      "id": 12,
+      "key": "mobile_app",
+      "name_ar": "تطبيق الموبايل والتحديثات التلقائية",
+      "name_en": "Mobile App & Updates",
+      "enabled": true,
+      "routes": [
+        "/super-admin/app-versions"
+      ]
+    },
+    {
+      "id": 13,
+      "key": "settings",
+      "name_ar": "إعدادات المؤسسة",
+      "name_en": "Settings",
+      "enabled": true,
+      "routes": [
+        "/settings"
+      ]
+    }
+  ]
+}

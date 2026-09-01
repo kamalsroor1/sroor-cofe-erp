@@ -35,13 +35,14 @@ final class UserController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        if ($request->user() && !$request->user()->can('users.manage')) {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('users.manage') && !$user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $search = trim((string)$request->input('search', ''));
         $role = (string)$request->input('role', 'all');
-        $perPage = (int)$request->input('per_page', 15);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
 
         $query = User::with(['roles', 'defaultStore']);
 
@@ -57,9 +58,13 @@ final class UserController extends Controller
             $query->role($role);
         }
 
-        $users = $query->latest('id')->paginate($perPage);
-        $roles = Role::select('id', 'name')->get();
+        $isTenant = function_exists('tenant') && tenant();
+        $roles = Role::when($isTenant, fn($q) => $q->where('name', '!=', 'super_admin'))
+            ->select('id', 'name')
+            ->get();
         $stores = Store::where('is_active', true)->select('id', 'name', 'code')->get();
+
+        $users = $query->latest('id')->paginate($perPage);
 
         $formattedUsers = collect($users->items())->map(function ($u) {
             return [
@@ -96,20 +101,25 @@ final class UserController extends Controller
                 'per_page'     => $users->perPage(),
                 'total'        => $users->total(),
             ],
-        ]);
+        ], 200);
     }
 
     /**
      * Get specific user details
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $authUser = $request->user();
+        if ($authUser && !$authUser->hasRole('admin') && !$authUser->can('users.manage') && !$authUser->can('roles.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $user = User::with(['roles', 'defaultStore'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
             'data'    => (new UserResource($user))->resolve(),
-        ]);
+        ], 200);
     }
 
     /**
@@ -139,7 +149,7 @@ final class UserController extends Controller
             'success' => true,
             'message' => __('auth.user_updated_success') ?: 'تم تحديث بيانات المستخدم بنجاح',
             'data'    => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
-        ]);
+        ], 200);
     }
 
     /**
@@ -147,13 +157,18 @@ final class UserController extends Controller
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('users.manage') && !$user->can('roles.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         try {
             $this->deleteUserAction->execute($id, $request->user()?->id);
 
             return response()->json([
                 'success' => true,
                 'message' => __('auth.user_deleted_success') ?: 'تم حذف حساب المستخدم بنجاح',
-            ]);
+            ], 200);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -167,14 +182,19 @@ final class UserController extends Controller
      */
     public function toggleActive(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('users.manage') && !$user->can('roles.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         try {
-            $user = $this->toggleUserActiveAction->execute($id, $request->user()?->id);
+            $toggledUser = $this->toggleUserActiveAction->execute($id, $request->user()?->id);
 
             return response()->json([
                 'success'   => true,
-                'is_active' => (bool)$user->is_active,
+                'is_active' => (bool)$toggledUser->is_active,
                 'message'   => __('auth.user_status_updated') ?: 'تم تحديث حالة نشاط الحساب بنجاح',
-            ]);
+            ], 200);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,

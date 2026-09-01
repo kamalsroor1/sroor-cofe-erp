@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\Item;
@@ -8,9 +10,9 @@ use App\Models\StockTransfer;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -20,6 +22,8 @@ class StockTransfersApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
+    protected User $unauthorizedUser;
+    protected string $unauthorizedToken;
     protected Store $sourceStore;
     protected Store $destStore;
     protected Item $itemA;
@@ -29,9 +33,8 @@ class StockTransfersApiTest extends TestCase
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'stores.view']);
-        Permission::create(['name' => 'stores.manage']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
         $this->sourceStore = Store::create([
             'name'      => 'المستودع الرئيسي',
@@ -49,6 +52,8 @@ class StockTransfersApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
@@ -56,8 +61,17 @@ class StockTransfersApiTest extends TestCase
             'is_active'        => true,
             'default_store_id' => $this->sourceStore->id,
         ]);
-        $this->adminUser->assignRole($role);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        $this->adminUser->assignRole($adminRole);
+        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+
+        $this->unauthorizedUser = User::factory()->create([
+            'name'             => 'مستخدم بدون صلاحيات',
+            'phone'            => '01000000000',
+            'password'         => Hash::make('password'),
+            'is_active'        => true,
+            'default_store_id' => $this->sourceStore->id,
+        ]);
+        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
 
         $this->itemA = Item::create([
             'name'            => 'بن كولومبي سوبريمو',
@@ -69,7 +83,7 @@ class StockTransfersApiTest extends TestCase
             'price_retail'    => '580.000',
             'price_wholesale' => '540.000',
             'current_stock'   => '100.000',
-            'min_stock'       => '20.000',
+            'min_stock_level' => '20.000',
             'is_active'       => true,
         ]);
 
@@ -89,7 +103,7 @@ class StockTransfersApiTest extends TestCase
             'price_retail'    => '1100.000',
             'price_wholesale' => '1000.000',
             'current_stock'   => '50.000',
-            'min_stock'       => '10.000',
+            'min_stock_level' => '10.000',
             'is_active'       => true,
         ]);
 
@@ -98,6 +112,20 @@ class StockTransfersApiTest extends TestCase
             'item_id'  => $this->itemB->id,
             'quantity' => '50.000',
         ]);
+    }
+
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/transfers');
+        $response->assertStatus(401);
+    }
+
+    public function test_unauthorized_user_cannot_access_or_create_transfers(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+            ->getJson('/api/v1/transfers');
+
+        $response->assertStatus(403);
     }
 
     public function test_can_list_transfers_with_summary_counts(): void
@@ -160,6 +188,27 @@ class StockTransfersApiTest extends TestCase
 
         $destStockB = StoreStock::where('store_id', $this->destStore->id)->where('item_id', $this->itemB->id)->value('quantity');
         $this->assertEquals(10.000, (float)$destStockB);
+    }
+
+    public function test_create_transfer_fails_validation_on_same_source_and_dest(): void
+    {
+        $payload = [
+            'from_store_id' => $this->sourceStore->id,
+            'to_store_id'   => $this->sourceStore->id,
+            'transfer_date' => now()->toDateString(),
+            'items'         => [
+                [
+                    'item_id'  => $this->itemA->id,
+                    'quantity' => 5.000,
+                ],
+            ],
+        ];
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->postJson('/api/v1/transfers', $payload);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['from_store_id', 'to_store_id']);
     }
 
     public function test_can_show_single_stock_transfer(): void

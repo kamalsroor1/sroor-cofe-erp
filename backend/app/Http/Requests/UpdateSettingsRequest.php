@@ -10,7 +10,11 @@ class UpdateSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool)($this->user() && ($this->user()->hasRole('admin') || $this->user()->can('roles.manage') || $this->user()->can('users.manage')));
+        return (bool)($this->user() && (
+            $this->user()->hasRole('admin')
+            || $this->user()->can('roles.manage')
+            || $this->user()->can('settings.manage')
+        ));
     }
 
     public function rules(): array
@@ -28,6 +32,7 @@ class UpdateSettingsRequest extends FormRequest
             'print_show_qr'                  => ['sometimes', 'boolean'],
             'invoice_primary_color'          => ['nullable', 'string', 'in:amber,emerald,blue,slate'],
             'system_theme_color'             => ['nullable', 'string', 'max:50'],
+            'inventory_units'                => ['nullable', 'string', 'max:1000'],
             'telegram_bot_token'             => ['nullable', 'string', 'max:255'],
             'telegram_chat_id'               => ['nullable', 'string', 'max:255'],
             'telegram_notifications_enabled' => ['sometimes', 'boolean'],

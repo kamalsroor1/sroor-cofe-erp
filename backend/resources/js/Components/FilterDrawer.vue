@@ -32,7 +32,7 @@ onUnmounted(() => {
                 <!-- Backdrop -->
                 <div
                     @click="emit('close')"
-                    class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs transition-opacity"
+                    class="fixed inset-0 bg-white dark:bg-slate-900/90 backdrop-blur-xs transition-opacity"
                 />
 
                 <!-- Slide-Over Drawer Container -->
@@ -43,13 +43,13 @@ onUnmounted(() => {
                         <!-- Drawer Header -->
                         <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/90 flex items-center justify-between shrink-0">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-base shadow-xs">
+                                <div class="w-10 h-10 rounded-2xl bg-theme-primary/15 border border-theme-border text-theme-primary text-theme-primary flex items-center justify-center font-bold text-base shadow-xs">
                                     🔍
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white">{{ title || $t('common.filter_drawer_title') }}</h3>
-                                        <span v-if="activeCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+                                        <span v-if="activeCount > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-theme-primary text-white font-bold">
                                             {{ activeCount }} {{ $t('common.active_count') }}
                                         </span>
                                     </div>
@@ -72,7 +72,7 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Drawer Footer (Sticky Actions) -->
-                        <div class="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between gap-3 shrink-0">
+                        <div class="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 shrink-0">
                             <button
                                 @click="emit('reset')"
                                 type="button"

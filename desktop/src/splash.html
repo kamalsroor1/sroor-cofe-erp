@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سرور كوفي ERP & POS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-app-region: drag;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, 'Cairo', 'Tajawal', sans-serif;
+            background: transparent;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .splash-card {
+            width: 480px;
+            height: 320px;
+            background: linear-gradient(135deg, #090d16 0%, #030712 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85),
+                        0 0 35px rgba(245, 158, 11, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 26px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient Glow Backgrounds */
+        .glow-1 {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .glow-2 {
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Logo & Brand */
+        .brand-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .logo-box {
+            width: 68px;
+            height: 68px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.4);
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+
+        .logo-box svg {
+            width: 36px;
+            height: 36px;
+            stroke: #030712;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 15px 35px rgba(245, 158, 11, 0.6);
+            }
+        }
+
+        .app-title {
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            text-align: center;
+        }
+
+        .app-subtitle {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: -2px;
+        }
+
+        /* Loading Bar Section */
+        .loading-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .loading-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 700;
+            padding: 0 4px;
+        }
+
+        .status-text {
+            color: #f59e0b;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, #f59e0b 0%, #10b981 100%);
+            border-radius: 999px;
+            animation: indeterminate 1.8s infinite cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        @keyframes indeterminate {
+            0% {
+                left: -40%;
+                width: 40%;
+            }
+            50% {
+                left: 30%;
+                width: 50%;
+            }
+            100% {
+                left: 100%;
+                width: 40%;
+            }
+        }
+
+        /* Footer Version */
+        .splash-footer {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            font-size: 10px;
+            color: #475569;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .badge-enterprise {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-card">
+        <div class="glow-1"></div>
+        <div class="glow-2"></div>
+
+        <div class="brand-container">
+            <div class="logo-box">
+                <svg viewBox="0 0 24 24">
+                    <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
+                    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
+                    <line x1="6" y1="2" x2="6" y2="4"></line>
+                    <line x1="10" y1="2" x2="10" y2="4"></line>
+                    <line x1="14" y1="2" x2="14" y2="4"></line>
+                </svg>
+            </div>
+            <div>
+                <h1 class="app-title">سرور كوفي ERP & POS</h1>
+                <p class="app-subtitle">نظام الفواتير ونقاط البيع السحابية متعدد الفروع</p>
+            </div>
+        </div>
+
+        <div class="loading-section">
+            <div class="loading-status">
+                <span class="status-text" id="statusLabel">جاري تهيئة النظام والمحرك...</span>
+                <span>Desktop POS</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="splash-footer">
+            <span>© Baraa Solutions 2026</span>
+            <span class="badge-enterprise">Enterprise Edition v1.0</span>
+        </div>
+    </div>
+
+    <script>
+        const statuses = [
+            'جاري تهيئة محرك الديسك توب...',
+            'التحقق من الاتصال بالخادم المركزي...',
+            'مزامنة الأجهزة وطابعات الكاشير...',
+            'بدء تشغيل نقطة البيع السريعة...'
+        ];
+        let idx = 0;
+        setInterval(() => {
+            idx = (idx + 1) % statuses.length;
+            const el = document.getElementById('statusLabel');
+            if (el) el.textContent = statuses[idx];
+        }, 750);
+    </script>
+</body>
+</html>

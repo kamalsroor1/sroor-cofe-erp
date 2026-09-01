@@ -14,27 +14,57 @@ class Item extends Model
     protected $fillable = [
         'code',
         'name',
+        'image',
         'category',
+        'category_id',
         'unit',
         'current_stock',
         'cost_price',
+        'min_selling_price',
         'weighted_avg_cost',
         'selling_price',
         'min_stock_level',
         'is_active',
         'notes',
+        'pos_sort_order',
+        'is_pos_pinned',
+        'pos_sales_count',
     ];
+
+    protected $appends = [
+        'price_retail',
+        'price_wholesale',
+    ];
+
+    public function getPriceRetailAttribute(): string
+    {
+        return (string)($this->selling_price ?? '0.000');
+    }
+
+    public function getPriceWholesaleAttribute(): string
+    {
+        return (string)($this->min_selling_price ?? $this->selling_price ?? '0.000');
+    }
 
     protected function casts(): array
     {
         return [
             'current_stock'     => 'decimal:3',
             'cost_price'        => 'decimal:3',
+            'min_selling_price' => 'decimal:3',
             'weighted_avg_cost' => 'decimal:3',
             'selling_price'     => 'decimal:3',
             'min_stock_level'   => 'decimal:3',
             'is_active'         => 'boolean',
+            'pos_sort_order'    => 'integer',
+            'is_pos_pinned'     => 'boolean',
+            'pos_sales_count'   => 'integer',
         ];
+    }
+
+    public function categoryRel()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function invoiceItems()

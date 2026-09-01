@@ -19,6 +19,7 @@ class POSInvoiceDTO
         public readonly ?string $notes,
         public readonly array $items,
         public readonly array $additionalExpenses = [],
+        public readonly ?array $payments = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -39,7 +40,8 @@ class POSInvoiceDTO
             paidAmount: (float)($data['paid_amount'] ?? 0),
             notes: $data['notes'] ?? null,
             items: $items,
-            additionalExpenses: $data['additional_expenses'] ?? [],
+            additionalExpenses: $data['additional_expenses'] ?? $data['expenses'] ?? [],
+            payments: $data['payments'] ?? null,
         );
     }
 
@@ -57,6 +59,7 @@ class POSInvoiceDTO
             'notes' => $this->notes,
             'items' => array_map(fn($item) => $item->toArray(), $this->items),
             'additional_expenses' => $this->additionalExpenses,
+            'payments' => $this->payments,
         ];
     }
 }

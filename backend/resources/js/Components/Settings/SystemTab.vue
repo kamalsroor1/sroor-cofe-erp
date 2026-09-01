@@ -24,22 +24,22 @@ defineEmits(['clear-cache']);
 
             <!-- 2x2 Bento Matrix for System Specs on Mobile -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-mono">
-                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
                     <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('settings.php_version') }}</span>
                     <div class="text-xs sm:text-sm font-black text-theme-primary truncate">{{ systemInfo.php_version }}</div>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
                     <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('settings.laravel_version') }}</span>
                     <div class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">{{ systemInfo.laravel_version }}</div>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
                     <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('settings.db_engine') }}</span>
                     <div class="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 truncate">{{ systemInfo.db_driver }}</div>
                 </div>
 
-                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
+                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-1 shadow-xs">
                     <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('settings.environment') }}</span>
                     <div class="text-xs sm:text-sm font-black text-indigo-600 dark:text-indigo-400 truncate">{{ systemInfo.environment }}</div>
                 </div>

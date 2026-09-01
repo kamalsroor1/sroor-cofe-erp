@@ -27,7 +27,7 @@ const variantClasses = computed(() => {
         case 'danger':
             return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20';
         case 'warning':
-            return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+            return 'bg-theme-light text-theme-primary text-theme-primary border-theme-border';
         case 'info':
             return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
         case 'primary':
@@ -44,7 +44,7 @@ const dotColor = computed(() => {
     switch (props.variant) {
         case 'success': return 'bg-emerald-500';
         case 'danger': return 'bg-rose-500';
-        case 'warning': return 'bg-amber-500';
+        case 'warning': return 'bg-theme-primary';
         case 'info': return 'bg-blue-500';
         case 'primary': return 'bg-theme-primary';
         case 'purple': return 'bg-purple-500';

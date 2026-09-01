@@ -21,11 +21,9 @@ class TenantProvisionerService implements TenantProvisionerInterface
     public function provision(CreateTenantDTO $dto): Tenant
     {
         $plan = Plan::findOrFail($dto->planId);
-        $tenantId = 'tenant_' . $dto->slug;
+        $tenantId = $dto->slug;
 
-        // 1. Create Tenant record in Central Database
-        // Stancl automatically triggers TenantCreated event which creates the isolated DB & runs migrations!
-        $tenant = Tenant::create([
+        $tenantData = [
             'id' => $tenantId,
             'name' => $dto->name,
             'slug' => $dto->slug,
@@ -40,10 +38,24 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 'currency' => config('app.currency', 'EGP'),
             ],
             'enabled_features' => [],
-        ]);
+        ];
+
+        if (!empty($dto->tenancyDbName)) {
+            $tenantData['tenancy_db_name'] = $dto->tenancyDbName;
+        }
+
+        if (!empty($dto->tenancyDbUsername)) {
+            $tenantData['tenancy_db_username'] = $dto->tenancyDbUsername;
+        }
+
+        if (!empty($dto->tenancyDbPassword)) {
+            $tenantData['tenancy_db_password'] = $dto->tenancyDbPassword;
+        }
+
+        $tenant = Tenant::create($tenantData);
 
         // 2. Provision Primary Subdomain
-        $centralDomain = config('tenancy.central_domains.0', 'localhost');
+        $centralDomain = env('CENTRAL_DOMAIN', 'baraa-solutions.com');
         $primarySubdomain = $dto->slug . '.' . $centralDomain;
         $tenant->domains()->create([
             'domain' => $primarySubdomain,
@@ -84,23 +96,39 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 ]
             );
 
-            $user = User::firstOrCreate(
-                ['phone' => $dto->phone ?? '01000000000'],
-                [
+            $user = User::where('email', $dto->email)
+                ->orWhere('phone', $dto->phone ?: '01000000000')
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $dto->name,
+                    'email' => $dto->email,
+                    'phone' => $dto->phone ?: ($dto->slug . '_admin'),
+                    'password' => Hash::make($dto->password),
+                    'is_active' => true,
+                    'default_store_id' => $mainStore->id,
+                    'theme_preference' => 'dark',
+                ]);
+            } else {
+                $user->update([
                     'name' => $dto->name,
                     'email' => $dto->email,
                     'password' => Hash::make($dto->password),
                     'is_active' => true,
                     'default_store_id' => $mainStore->id,
-                    'theme_preference' => 'dark',
-                ]
-            );
+                ]);
+            }
 
             $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
             $user->syncRoles([$adminRole]);
 
-            // Seed default coffee inventory items
-            (new \Database\Seeders\CoffeeItemsSeeder)->run();
+            // Automatically set tenant company branding from creation DTO
+            \App\Models\Setting::set('company_name', $dto->name);
+            \App\Models\Setting::set('company_subtitle', 'لإدارة المبيعات والمخزون والفروع');
+            if ($dto->phone) {
+                \App\Models\Setting::set('company_phone', $dto->phone);
+            }
         });
 
         return $tenant;

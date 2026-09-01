@@ -13,11 +13,11 @@ class InventoryAnalyticsService
 {
     public static function clearCache(?int $storeId = null): void
     {
-        $prefix = 'sroor_abc_' . ($storeId ?? 'all');
+        $prefix = 'erp_abc_' . ($storeId ?? 'all');
         Cache::forget($prefix);
         // Also clear the 'all' key when specific store is cleared
         if ($storeId) {
-            Cache::forget('sroor_abc_all');
+            Cache::forget('erp_abc_all');
         }
     }
 
@@ -26,7 +26,7 @@ class InventoryAnalyticsService
      */
     public function getAbcAnalysis(string $fromDate, string $toDate, ?int $storeId = null, string $sortBy = 'profit'): array
     {
-        $cacheKey = "sroor_abc_" . ($storeId ?? 'all') . "_{$fromDate}_{$toDate}_{$sortBy}";
+        $cacheKey = "erp_abc_" . ($storeId ?? 'all') . "_{$fromDate}_{$toDate}_{$sortBy}";
 
         return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($fromDate, $toDate, $storeId, $sortBy) {
             $daysInPeriod = max(1, Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate)) + 1);

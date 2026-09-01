@@ -32,17 +32,22 @@ final class ExpenseController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('expenses.manage') && !$user->can('expenses.view') && !$user->can('daily_journal.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $search = trim((string)$request->input('search', ''));
         $category = (string)$request->input('category', 'all');
         $costCenter = (string)$request->input('cost_center', 'all');
         $paymentMethod = (string)$request->input('payment_method', 'all');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = (int)$request->input('per_page', 20);
+        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
-            ?: auth()->user()?->getCurrentStore()?->id
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $query = Expense::with(['user', 'store']);
@@ -151,8 +156,13 @@ final class ExpenseController extends Controller
     /**
      * Display specified expense
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('expenses.manage') && !$user->can('expenses.view') && !$user->can('daily_journal.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $expense = Expense::with(['user', 'store'])->findOrFail($id);
 
         return response()->json([
@@ -181,8 +191,13 @@ final class ExpenseController extends Controller
     /**
      * Delete an expense
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('expenses.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $expense = Expense::findOrFail($id);
         $this->deleteExpenseAction->execute($expense);
 

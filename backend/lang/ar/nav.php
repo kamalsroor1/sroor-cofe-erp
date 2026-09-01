@@ -73,4 +73,5 @@ return [
     'telegram_backup_sent' => 'تم إرسال النسخة الاحتياطية لقاعدة البيانات إلى تيليجرام بنجاح',
     'cache_cleared_success' => 'تم تنظيف وتسريع وإعادة بناء الكاش بنجاح',
     'cache_clear_error' => 'حدث خطأ أثناء تنظيف الكاش: :message',
+    'coming_soon' => 'قريباً',
 ];

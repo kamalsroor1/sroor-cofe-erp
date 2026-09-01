@@ -19,6 +19,8 @@ class CheckAppUpdateAction
                 'has_update' => false,
                 'is_force_update' => false,
                 'current_version_code' => $dto->versionCode,
+                'current_version_name' => $dto->versionName,
+                'latest_version' => null,
                 'message' => 'التطبيق محدث إلى آخر إصدار متاح.',
             ];
         }
@@ -31,7 +33,7 @@ class CheckAppUpdateAction
             'is_force_update' => $isForceUpdate,
             'current_version_code' => $dto->versionCode,
             'current_version_name' => $dto->versionName,
-            'latest_version' => $hasUpdate ? [
+            'latest_version' => [
                 'id' => $latest->id,
                 'version_name' => $latest->version_name,
                 'version_code' => $latest->version_code,
@@ -41,8 +43,9 @@ class CheckAppUpdateAction
                 'file_size_bytes' => $latest->apk_size_bytes,
                 'checksum' => $latest->apk_checksum,
                 'download_url' => $latest->download_url,
-                'published_at' => $latest->published_at ? $latest->published_at->toDateTimeString() : $latest->created_at->toDateTimeString(),
-            ] : null,
+                'published_at' => $latest->published_at ? $latest->published_at->toDateTimeString() : ($latest->created_at ? $latest->created_at->toDateTimeString() : null),
+            ],
+            'message' => $hasUpdate ? 'يتوفر إصدار جديد للتطبيق.' : 'التطبيق محدث إلى آخر إصدار متاح.',
         ];
     }
 }

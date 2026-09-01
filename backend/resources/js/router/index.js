@@ -4,6 +4,16 @@ import { useAppConfigStore } from '../stores/appConfig';
 
 const routes = [
     {
+        path: '/connect',
+        alias: '/workspace',
+        name: 'workspace.connect',
+        component: () => import('../views/Auth/WorkspaceConnectView.vue'),
+        meta: {
+            title: 'الاتصال ببيئة العمل',
+            guestOnly: true,
+        },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),
@@ -14,6 +24,7 @@ const routes = [
     },
     {
         path: '/',
+        alias: '/dashboard',
         name: 'dashboard',
         component: () => import('../views/DashboardView.vue'),
         meta: {
@@ -101,6 +112,16 @@ const routes = [
         },
     },
     {
+        path: '/categories',
+        name: 'categories.index',
+        component: () => import('../views/Items/CategoriesView.vue'),
+        meta: {
+            title: 'فئات الأصناف',
+            requiresAuth: true,
+            permission: 'items.manage',
+        },
+    },
+    {
         path: '/items/:id/movements',
         name: 'items.movements',
         component: () => import('../views/Items/ItemMovementsView.vue'),
@@ -142,6 +163,7 @@ const routes = [
     },
     {
         path: '/purchases/smart-reorder',
+        alias: '/smart-reorder',
         name: 'purchases.smart_reorder',
         component: () => import('../views/Purchases/SmartReorderView.vue'),
         meta: {
@@ -157,6 +179,28 @@ const routes = [
         meta: {
             title: 'فواتير المبيعات',
             requiresAuth: true,
+            permission: 'invoices.view',
+        },
+    },
+    {
+        path: '/invoices/:id',
+        name: 'invoices.show',
+        component: () => import('../views/Invoices/InvoiceShowView.vue'),
+        meta: {
+            title: 'معاينة الفاتورة والطباعة',
+            requiresAuth: true,
+            permission: 'invoices.view',
+        },
+    },
+    {
+        path: '/invoices/:id/print',
+        name: 'invoices.print',
+        component: () => import('../views/Invoices/InvoicePrintView.vue'),
+        meta: {
+            title: 'طباعة الفاتورة',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
             permission: 'invoices.view',
         },
     },
@@ -296,7 +340,7 @@ const routes = [
         meta: {
             title: 'لوحة تحكم السوبر أدمن',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
         },
     },
     {
@@ -306,7 +350,17 @@ const routes = [
         meta: {
             title: 'إدارة المستأجرين',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
+        },
+    },
+    {
+        path: '/super-admin/tenants/:id',
+        name: 'super_admin.tenants.show',
+        component: () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue'),
+        meta: {
+            title: 'تفاصيل المستأجر والتحكم',
+            requiresAuth: true,
+            superAdminOnly: true,
         },
     },
     {
@@ -316,7 +370,7 @@ const routes = [
         meta: {
             title: 'إدارة الباقات والأسعار',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
         },
     },
     {
@@ -326,7 +380,17 @@ const routes = [
         meta: {
             title: 'إدارة إصدارات التطبيق وحزم APK',
             requiresAuth: true,
-            permission: 'roles.manage',
+            superAdminOnly: true,
+        },
+    },
+    {
+        path: '/super-admin/units',
+        name: 'super_admin.units',
+        component: () => import('../views/SuperAdmin/SuperAdminUnitsView.vue'),
+        meta: {
+            title: 'إدارة وحدات القياس للنظام',
+            requiresAuth: true,
+            superAdminOnly: true,
         },
     },
     {
@@ -353,13 +417,16 @@ router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
     const appConfigStore = useAppConfigStore();
 
-    // 1. If user is authenticated, ensure profile and system context are loaded
+    // 1. If user is marked authenticated, ensure profile and system context load cleanly
     if (authStore.isAuthenticated && !appConfigStore.isLoaded) {
         try {
             await appConfigStore.fetchBootstrapContext();
             window.spaTranslations = appConfigStore.translations;
         } catch (e) {
-            console.error('Bootstrap context load error:', e);
+            console.warn('Session expired or bootstrap context failed, clearing auth:', e);
+            authStore.clearSession();
+            appConfigStore.isLoaded = false;
+            return next({ name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined });
         }
     }
 
@@ -369,6 +436,9 @@ router.beforeEach(async (to, from, next) => {
 
     // 3. Guest-only check (e.g. Login page)
     if (to.meta.guestOnly && authStore.isAuthenticated) {
+        if (authStore.isSuperAdmin) {
+            return next({ name: 'super_admin.dashboard' });
+        }
         return next({ name: 'dashboard' });
     }
 
@@ -377,7 +447,17 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Permission / Role Check
+    // 5. Smart Root Landing: Super Admin vs Tenant Store
+    if (to.path === '/' && authStore.isSuperAdmin) {
+        return next({ name: 'super_admin.dashboard' });
+    }
+
+    // 6. Super Admin Only check
+    if (to.meta.superAdminOnly && !authStore.isSuperAdmin) {
+        return next({ name: 'dashboard' });
+    }
+
+    // 6. Permission / Role Check
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         return next({ name: 'dashboard' });
     }

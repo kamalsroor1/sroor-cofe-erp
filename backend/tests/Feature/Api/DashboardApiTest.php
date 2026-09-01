@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
+use App\Models\CashShift;
 use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -20,7 +26,8 @@ class DashboardApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
-    protected Store $store;
+    protected Store $mainStore;
+    protected Store $branchStore;
     protected Customer $customer;
     protected Item $item;
 
@@ -28,9 +35,10 @@ class DashboardApiTest extends TestCase
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
-        $this->store = Store::create([
+        $this->mainStore = Store::create([
             'name'      => 'المحمصة المركزية',
             'code'      => 'ROAST-MAIN',
             'type'      => 'retail',
@@ -38,22 +46,30 @@ class DashboardApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $this->branchStore = Store::create([
+            'name'      => 'فرع المعادي',
+            'code'      => 'ROAST-MAADI',
+            'type'      => 'branch',
+            'is_main'   => false,
+            'is_active' => true,
+        ]);
+
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
             'password'         => Hash::make('password'),
             'is_active'        => true,
-            'default_store_id' => $this->store->id,
+            'default_store_id' => $this->mainStore->id,
         ]);
-        $this->adminUser->assignRole($role);
+        $this->adminUser->assignRole($adminRole);
         $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
 
         $this->customer = Customer::create([
             'name'            => 'عميل مميز للداشبورد',
             'phone'           => '01099998888',
             'current_balance' => '750.000',
-            'balance'         => '750.000',
-            'price_tier'      => 'retail',
             'is_active'       => true,
         ]);
 
@@ -66,34 +82,43 @@ class DashboardApiTest extends TestCase
             'selling_price'   => '650.000',
             'price_retail'    => '650.000',
             'price_wholesale' => '600.000',
-            'current_stock'   => '4.000', // Low stock!
+            'current_stock'   => '4.000', // Low stock alert trigger
             'min_stock'       => '15.000',
             'is_active'       => true,
         ]);
 
         StoreStock::create([
-            'store_id' => $this->store->id,
+            'store_id' => $this->mainStore->id,
             'item_id'  => $this->item->id,
             'quantity' => '4.000',
         ]);
+    }
 
-        // Create a confirmed invoice today
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/dashboard');
+        $response->assertStatus(401);
+    }
+
+    public function test_authenticated_admin_can_fetch_complete_dashboard_payload(): void
+    {
+        $today = now()->toDateString();
+
+        // 1. Invoice
         $invoice = Invoice::create([
             'invoice_number'   => 'INV-DASH-001',
-            'store_id'         => $this->store->id,
+            'store_id'         => $this->mainStore->id,
             'customer_id'      => $this->customer->id,
             'user_id'          => $this->adminUser->id,
-            'invoice_date'     => now()->toDateString(),
-            'total_amount'     => '1300.000',
+            'invoice_date'     => $today,
+            'subtotal'         => '1300.000',
             'discount_amount'  => '0.000',
             'tax_amount'       => '0.000',
             'net_total'        => '1300.000',
             'paid_amount'      => '1300.000',
             'remaining_amount' => '0.000',
-            'total_cost'       => '800.000',
             'status'           => 'confirmed',
             'payment_type'     => 'cash',
-            'payment_method'   => 'cash',
         ]);
 
         InvoiceItem::create([
@@ -102,52 +127,108 @@ class DashboardApiTest extends TestCase
             'quantity'        => '2.000',
             'unit_price'      => '650.000',
             'cost_price'      => '400.000',
-            'discount_amount' => '0.000',
+            'unit_cost'       => '400.000',
             'total_price'     => '1300.000',
+            'discount_amount' => '0.000',
+            'tax_amount'      => '0.000',
+            'net_price'       => '1300.000',
         ]);
-    }
 
-    public function test_can_fetch_dashboard_summary_and_analytics(): void
-    {
+        // 2. Active Shift
+        CashShift::create([
+            'user_id'              => $this->adminUser->id,
+            'store_id'             => $this->mainStore->id,
+            'shift_number'         => 'SHF-DASH-01',
+            'status'               => 'open',
+            'opened_at'            => now(),
+            'opening_cash_balance' => '1000.000',
+        ]);
+
+        // 3. Expense
+        Expense::create([
+            'store_id'       => $this->mainStore->id,
+            'user_id'        => $this->adminUser->id,
+            'expense_number' => 'EXP-DASH-01',
+            'title'          => 'فواتير تشغيل',
+            'amount'         => '200.000',
+            'category'       => 'تشغيلي',
+            'cost_center'    => 'فرع رئيسي',
+            'expense_date'   => $today,
+            'payment_method' => 'cash',
+        ]);
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->getJson('/api/v1/dashboard/summary');
+            ->getJson('/api/v1/dashboard');
 
         $response->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'data'    => [
-                    'metrics' => [
-                        'today_sales'          => 1300.0,
-                        'today_invoices_count' => 1,
-                        'cash_sales'           => 1300.0,
-                        'customers_debt'       => 750.0,
-                        'low_stock_count'      => 1,
-                    ],
-                ],
-            ])
+            ->assertJsonPath('success', true)
             ->assertJsonStructure([
                 'success',
                 'data' => [
-                    'active_store',
                     'metrics' => [
                         'today_sales',
-                        'today_invoices_count',
-                        'cash_sales',
-                        'credit_sales',
-                        'total_cash_collected',
-                        'today_expenses',
-                        'net_cash_today',
-                        'customers_debt',
                         'monthly_sales',
                         'monthly_gross_profit',
-                        'monthly_margin',
-                        'low_stock_count',
+                        'customers_debt',
+                        'today_invoices_count',
                     ],
-                    'analytics',
-                    'low_stock_items',
-                    'top_selling_items',
+                    'analytics' => [
+                        'daily_trend',
+                        'hourly_sales',
+                        'peak_hour',
+                        'payment_distribution',
+                        'period',
+                    ],
                     'recent_invoices',
+                    'low_stock_items',
+                    'active_shift',
                 ],
+                'metrics',
             ]);
+
+        $this->assertEquals(1300.0, (float)$response->json('data.metrics.today_sales'));
+    }
+
+    public function test_dashboard_respects_x_store_id_header(): void
+    {
+        $today = now()->toDateString();
+
+        // Create invoice on branch store
+        Invoice::create([
+            'invoice_number'   => 'INV-MAADI-001',
+            'store_id'         => $this->branchStore->id,
+            'customer_id'      => $this->customer->id,
+            'user_id'          => $this->adminUser->id,
+            'invoice_date'     => $today,
+            'subtotal'         => '2500.000',
+            'discount_amount'  => '0.000',
+            'tax_amount'       => '0.000',
+            'net_total'        => '2500.000',
+            'paid_amount'      => '2500.000',
+            'remaining_amount' => '0.000',
+            'status'           => 'confirmed',
+            'payment_type'     => 'cash',
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->adminToken,
+            'X-Store-Id'    => (string) $this->branchStore->id,
+        ])->getJson('/api/v1/dashboard');
+
+        $response->assertStatus(200);
+        $this->assertEquals(2500.0, (float)$response->json('data.metrics.today_sales'));
+    }
+
+    public function test_dashboard_low_stock_alerts_detected_correctly(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+            ->getJson('/api/v1/dashboard');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $lowStockItems = $response->json('data.low_stock_items');
+        $this->assertNotEmpty($lowStockItems);
+        $this->assertEquals('بن إثيوبي هرري', $lowStockItems[0]['name']);
     }
 }

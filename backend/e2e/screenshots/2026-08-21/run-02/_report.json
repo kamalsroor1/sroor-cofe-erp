@@ -1,0 +1,335 @@
+{
+  "summary": {
+    "totalSuccess": 33,
+    "totalFailed": 0,
+    "totalScreenshots": 42,
+    "totalDiscovered": 3,
+    "totalConsoleErrors": 8,
+    "totalSkippedSensitiveButtons": 1,
+    "durationSeconds": 357.7,
+    "runDate": "2026-08-21",
+    "runId": "run-02",
+    "runDirectory": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02"
+  },
+  "successfulPages": [
+    {
+      "route": "/login",
+      "name": "login",
+      "module": "auth",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\auth\\mobile\\01-login.png",
+      "timestamp": "2026-08-21T17:37:47.331Z"
+    },
+    {
+      "route": "/",
+      "name": "dashboard",
+      "module": "dashboard",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\dashboard\\mobile\\02-dashboard.png",
+      "timestamp": "2026-08-21T17:37:54.003Z"
+    },
+    {
+      "route": "/pos",
+      "name": "pos",
+      "module": "pos",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\pos\\mobile\\03-pos.png",
+      "timestamp": "2026-08-21T17:38:00.601Z"
+    },
+    {
+      "route": "/invoices",
+      "name": "invoices",
+      "module": "invoices",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\invoices\\mobile\\04-invoices.png",
+      "timestamp": "2026-08-21T17:38:08.344Z"
+    },
+    {
+      "route": "/items",
+      "name": "items",
+      "module": "items",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\items\\mobile\\05-items.png",
+      "timestamp": "2026-08-21T17:38:19.902Z"
+    },
+    {
+      "route": "/items/1/movements",
+      "name": "item-movements",
+      "module": "items",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\items\\mobile\\06-item-movements.png",
+      "timestamp": "2026-08-21T17:38:27.385Z"
+    },
+    {
+      "route": "/stores",
+      "name": "stores",
+      "module": "stores",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\stores\\mobile\\07-stores.png",
+      "timestamp": "2026-08-21T17:38:34.598Z"
+    },
+    {
+      "route": "/stores/stocks",
+      "name": "store-stocks",
+      "module": "stores",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\stores\\mobile\\08-store-stocks.png",
+      "timestamp": "2026-08-21T17:38:44.561Z"
+    },
+    {
+      "route": "/customers",
+      "name": "customers",
+      "module": "customers",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\customers\\mobile\\09-customers.png",
+      "timestamp": "2026-08-21T17:38:52.639Z"
+    },
+    {
+      "route": "/customers/1/statement",
+      "name": "customer-statement",
+      "module": "customers",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\customers\\mobile\\10-customer-statement.png",
+      "timestamp": "2026-08-21T17:39:01.794Z"
+    },
+    {
+      "route": "/suppliers",
+      "name": "suppliers",
+      "module": "suppliers",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\suppliers\\mobile\\11-suppliers.png",
+      "timestamp": "2026-08-21T17:39:15.906Z"
+    },
+    {
+      "route": "/suppliers/1/statement",
+      "name": "supplier-statement",
+      "module": "suppliers",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\suppliers\\mobile\\12-supplier-statement.png",
+      "timestamp": "2026-08-21T17:39:23.649Z"
+    },
+    {
+      "route": "/purchases",
+      "name": "purchases",
+      "module": "purchases",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\purchases\\mobile\\13-purchases.png",
+      "timestamp": "2026-08-21T17:39:31.738Z"
+    },
+    {
+      "route": "/purchases/create",
+      "name": "purchases-create",
+      "module": "purchases",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\purchases\\mobile\\14-purchases-create.png",
+      "timestamp": "2026-08-21T17:39:40.675Z"
+    },
+    {
+      "route": "/purchases/smart-reorder",
+      "name": "smart-reorder",
+      "module": "purchases",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\purchases\\mobile\\15-smart-reorder.png",
+      "timestamp": "2026-08-21T17:39:49.822Z"
+    },
+    {
+      "route": "/expenses",
+      "name": "expenses",
+      "module": "expenses",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\expenses\\mobile\\16-expenses.png",
+      "timestamp": "2026-08-21T17:40:01.066Z"
+    },
+    {
+      "route": "/returns",
+      "name": "returns",
+      "module": "returns",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\returns\\mobile\\17-returns.png",
+      "timestamp": "2026-08-21T17:40:10.040Z"
+    },
+    {
+      "route": "/returns/create",
+      "name": "returns-create",
+      "module": "returns",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\returns\\mobile\\18-returns-create.png",
+      "timestamp": "2026-08-21T17:40:24.147Z"
+    },
+    {
+      "route": "/stock-transfers",
+      "name": "stock-transfers",
+      "module": "transfers",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\transfers\\mobile\\19-stock-transfers.png",
+      "timestamp": "2026-08-21T17:40:30.482Z"
+    },
+    {
+      "route": "/stock-transfers/create",
+      "name": "stock-transfers-create",
+      "module": "transfers",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\transfers\\mobile\\20-stock-transfers-create.png",
+      "timestamp": "2026-08-21T17:40:37.437Z"
+    },
+    {
+      "route": "/coffee-blender",
+      "name": "coffee-blender",
+      "module": "blender",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\blender\\mobile\\21-coffee-blender.png",
+      "timestamp": "2026-08-21T17:40:48.709Z"
+    },
+    {
+      "route": "/daily-journal",
+      "name": "daily-journal",
+      "module": "shifts",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\shifts\\mobile\\22-daily-journal.png",
+      "timestamp": "2026-08-21T17:41:05.569Z"
+    },
+    {
+      "route": "/reports",
+      "name": "reports",
+      "module": "reports",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\reports\\mobile\\23-reports.png",
+      "timestamp": "2026-08-21T17:41:18.998Z"
+    },
+    {
+      "route": "/users",
+      "name": "users",
+      "module": "users",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\users\\mobile\\24-users.png",
+      "timestamp": "2026-08-21T17:41:33.734Z"
+    },
+    {
+      "route": "/roles",
+      "name": "roles",
+      "module": "users",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\users\\mobile\\25-roles.png",
+      "timestamp": "2026-08-21T17:41:48.668Z"
+    },
+    {
+      "route": "/activity-logs",
+      "name": "activity-logs",
+      "module": "users",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\users\\mobile\\26-activity-logs.png",
+      "timestamp": "2026-08-21T17:42:00.866Z"
+    },
+    {
+      "route": "/settings",
+      "name": "settings",
+      "module": "settings",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\settings\\mobile\\27-settings.png",
+      "timestamp": "2026-08-21T17:42:11.101Z"
+    },
+    {
+      "route": "/profile",
+      "name": "profile",
+      "module": "settings",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\settings\\mobile\\28-profile.png",
+      "timestamp": "2026-08-21T17:42:20.921Z"
+    },
+    {
+      "route": "/trash",
+      "name": "trash",
+      "module": "settings",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\settings\\mobile\\29-trash.png",
+      "timestamp": "2026-08-21T17:42:30.304Z"
+    },
+    {
+      "route": "/super-admin/dashboard",
+      "name": "super-admin-dashboard",
+      "module": "super-admin",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\super-admin\\mobile\\30-super-admin-dashboard.png",
+      "timestamp": "2026-08-21T17:42:38.192Z"
+    },
+    {
+      "route": "/super-admin/tenants",
+      "name": "super-admin-tenants",
+      "module": "super-admin",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\super-admin\\mobile\\31-super-admin-tenants.png",
+      "timestamp": "2026-08-21T17:42:44.659Z"
+    },
+    {
+      "route": "/super-admin/plans",
+      "name": "super-admin-plans",
+      "module": "super-admin",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\super-admin\\mobile\\32-super-admin-plans.png",
+      "timestamp": "2026-08-21T17:42:58.974Z"
+    },
+    {
+      "route": "/brochure",
+      "name": "marketing-brochure",
+      "module": "marketing",
+      "viewport": "mobile",
+      "screenshot": "D:\\projects\\sroor\\e2e\\screenshots\\2026-08-21\\run-02\\marketing\\mobile\\33-marketing-brochure.png",
+      "timestamp": "2026-08-21T17:43:30.086Z"
+    }
+  ],
+  "failedPages": [],
+  "discoveredNewRoutes": [
+    "/stores/stocks?store_id=1",
+    "/stores/stocks?store_id=2",
+    "/stores/stocks?store_id=5"
+  ],
+  "consoleErrors": [
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:18.841Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:8000/build/assets/CreateReturnView-BUZNwpOM.js",
+      "timestamp": "2026-08-21T17:40:18.845Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:19.507Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:20.106Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:20.921Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:21.534Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:22.115Z"
+    },
+    {
+      "page": "/returns/create",
+      "message": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.",
+      "timestamp": "2026-08-21T17:40:22.838Z"
+    }
+  ],
+  "skippedSensitiveButtons": [
+    {
+      "page": "/pos",
+      "text": "تفريغ السلة",
+      "reason": "Critical or destructive action skipped for safety"
+    }
+  ]
+}

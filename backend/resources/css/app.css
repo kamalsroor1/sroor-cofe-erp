@@ -21,7 +21,27 @@ body {
     font-family: 'Cairo', 'Tajawal', sans-serif;
 }
 
+html.dark, html.dark body {
+    background-color: #020617;
+    color: #f8fafc;
+}
+
 /* 📱 Native Mobile App UX Foundations */
+:root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+.mobile-safe-header {
+    padding-top: max(var(--safe-area-top), 0px);
+}
+
+@media (max-width: 768px) {
+    .mobile-safe-header {
+        padding-top: max(var(--safe-area-top), 14px);
+        min-height: calc(3.5rem + max(var(--safe-area-top), 14px));
+    }
+}
+
 html, body {
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
@@ -201,50 +221,7 @@ input, textarea, [contenteditable="true"] {
     transform: scale(0.92) translateY(8px) !important;
 }
 
-/* 6. Native App-Like SweetAlert2 Spring Animations & Dark Styling */
-.swal2-container {
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 99999 !important;
-}
 
-.swal2-container.swal2-backdrop-show {
-    background: rgba(2, 6, 23, 0.75) !important;
-}
-
-.swal2-popup.swal2-modal {
-    animation: swal-native-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-    border-radius: 1.5rem !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
-}
-
-.swal2-popup.swal2-toast {
-    animation: swal-toast-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-    border-radius: 1rem !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
-}
-
-@keyframes swal-native-pop {
-    0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(12px);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-@keyframes swal-toast-slide {
-    0% {
-        opacity: 0;
-        transform: translateY(-16px) scale(0.95);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
 
 /* 📐 Modern Mobile Safe Areas */
 .pb-safe {
@@ -390,7 +367,7 @@ input, textarea, [contenteditable="true"] {
     background-color: var(--color-primary) !important;
 }
 
-.bg-theme-hover:hover {
+.hover\:bg-theme-hover:hover, .bg-theme-hover:hover, .hover\:bg-theme-primary:hover {
     background-color: var(--color-primary-hover) !important;
 }
 
@@ -398,11 +375,11 @@ input, textarea, [contenteditable="true"] {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%) !important;
 }
 
-.bg-theme-gradient:hover {
-    filter: brightness(1.08);
+.bg-theme-light {
+    background-color: var(--color-primary-light) !important;
 }
 
-.bg-theme-light {
+.hover\:bg-theme-light:hover {
     background-color: var(--color-primary-light) !important;
 }
 
@@ -410,47 +387,169 @@ input, textarea, [contenteditable="true"] {
     color: var(--color-primary) !important;
 }
 
+.hover\:text-theme-primary:hover {
+    color: var(--color-primary) !important;
+}
+
+.group:hover .group-hover\:text-theme-primary {
+    color: var(--color-primary) !important;
+}
+
 .border-theme-primary {
     border-color: var(--color-primary) !important;
 }
 
-.border-theme-light {
+.hover\:border-theme-primary:hover {
+    border-color: var(--color-primary) !important;
+}
+
+.border-theme-border {
     border-color: var(--color-primary-border) !important;
 }
 
+.hover\:border-theme-border:hover {
+    border-color: var(--color-primary-border) !important;
+}
+
+.ring-theme-primary, .focus\:ring-theme-primary:focus {
+    --tw-ring-color: var(--color-primary) !important;
+}
+
+.focus\:border-theme-primary:focus {
+    border-color: var(--color-primary) !important;
+}
+
 .shadow-theme-primary {
-    box-shadow: 0 10px 25px -5px rgba(var(--color-primary-rgb), 0.35) !important;
+    box-shadow: 0 10px 20px -3px rgba(var(--color-primary-rgb), 0.35) !important;
 }
 
-.shadow-theme-sm {
-    box-shadow: 0 4px 14px 0 rgba(var(--color-primary-rgb), 0.25) !important;
-}
-
-.tab-theme-active {
-    background-color: var(--color-primary) !important;
-    color: var(--color-primary-text, #020617) !important;
-    font-weight: 900 !important;
-    box-shadow: 0 4px 14px 0 rgba(var(--color-primary-rgb), 0.3) !important;
-}
-
-.btn-primary-theme {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%) !important;
-    color: var(--color-primary-text, #ffffff) !important;
-    box-shadow: 0 10px 25px -5px rgba(var(--color-primary-rgb), 0.35) !important;
-    transition: all 0.2s ease !important;
-}
-
-.btn-primary-theme:hover {
-    filter: brightness(1.08);
-}
-
-.badge-theme {
-    background-color: var(--color-primary-light) !important;
-    color: var(--color-primary) !important;
-    border: 1px solid var(--color-primary-border) !important;
-}
-
-::selection {
+::selection, .selection\:bg-theme-primary::selection {
     background-color: var(--color-primary) !important;
     color: #ffffff !important;
+}
+
+/* 🖨️ Comprehensive Global Print Engine Rules (Dual Mode: Thermal & A4) */
+@media print {
+    :root, html, body, #app, main {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        color-scheme: light !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    nav,
+    aside,
+    header,
+    footer,
+    .no-print,
+    [role="navigation"],
+    [role="complementary"],
+    .spa-sidebar,
+    .spa-navbar,
+    .spa-bottom-nav,
+    .app-update-modal,
+    .swal2-container,
+    button.no-print {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    * {
+        text-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 🧾 80mm Thermal Receipt Mode */
+    body.print-thermal-mode {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+    body.print-thermal-mode html,
+    body.print-thermal-mode body,
+    body.print-thermal-mode #app {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+    #receipt-print-area {
+        width: 78mm !important;
+        max-width: 78mm !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 2mm !important;
+    }
+
+    /* 📄 A4 Official Tax Document Mode */
+    body.print-a4-mode,
+    body:not(.print-thermal-mode) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #a4-print-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
+
+/* 🖥️ Native Desktop Shell Styles (Active ONLY when body.electron-app is present) */
+.electron-app {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.electron-app input,
+.electron-app textarea,
+.electron-app [contenteditable="true"] {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+.electron-app .drag-region {
+    -webkit-app-region: drag;
+}
+
+.electron-app .no-drag {
+    -webkit-app-region: no-drag;
+}
+
+/* Custom sleek native desktop scrollbar */
+.electron-app ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.electron-app ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.electron-app ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+    border-radius: 9999px;
+}
+
+.electron-app ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.45);
 }

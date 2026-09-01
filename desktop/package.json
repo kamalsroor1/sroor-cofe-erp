@@ -1,0 +1,61 @@
+{
+  "name": "sroor-cofe-erp-desktop",
+  "version": "1.0.0",
+  "description": "نظام سرور كوفي ERP & POS - تطبيق سطح المكتب لنقاط البيع وإدارة المؤسسات",
+  "main": "main.js",
+  "author": "Baraa Solutions <info@baraa-solutions.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.baraasolutions.sroorerp",
+    "productName": "سرور كوفي ERP & POS",
+    "copyright": "Copyright © 2026 Baraa Solutions",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Sroor-ERP-POS-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "سرور كوفي ERP",
+      "uninstallDisplayName": "سرور كوفي ERP & POS"
+    }
+  }
+}

@@ -1,4 +1,7 @@
 <script setup>
+import { ArrowRight } from 'lucide-vue-next';
+import DynamicIcon from './DynamicIcon.vue';
+
 defineProps({
     title: {
         type: String,
@@ -33,15 +36,14 @@ defineProps({
                     :to="backHref"
                     class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition active:scale-90 shadow-xs border border-slate-200 dark:border-transparent shrink-0"
                 >
-                    →
+                    <ArrowRight class="w-4 h-4" />
                 </router-link>
 
                 <div
                     v-else-if="icon"
                     class="w-10 h-10 rounded-2xl bg-theme-light border border-theme-primary/20 flex items-center justify-center text-theme-primary shadow-xs shrink-0"
                 >
-                    <component v-if="typeof icon === 'object' || typeof icon === 'function'" :is="icon" class="w-5 h-5" />
-                    <span v-else class="text-xl leading-none">{{ icon }}</span>
+                    <DynamicIcon :name="icon" class="w-5 h-5 text-theme-primary" />
                 </div>
 
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">

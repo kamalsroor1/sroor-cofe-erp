@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\Customer;
@@ -10,9 +12,9 @@ use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -22,6 +24,8 @@ class ReportsApiTest extends TestCase
 
     protected User $adminUser;
     protected string $adminToken;
+    protected User $unauthorizedUser;
+    protected string $unauthorizedToken;
     protected Store $storeMain;
     protected Store $storeBranch;
     protected Customer $customer;
@@ -31,9 +35,8 @@ class ReportsApiTest extends TestCase
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'reports.view']);
-        Permission::create(['name' => 'reports.advanced']);
+        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
+        $this->seed(PermissionsSeeder::class);
 
         $this->storeMain = Store::create([
             'name'      => 'المقر الرئيسي',
@@ -51,6 +54,8 @@ class ReportsApiTest extends TestCase
             'is_active' => true,
         ]);
 
+        $adminRole = Role::findByName('admin');
+
         $this->adminUser = User::factory()->create([
             'name'             => 'كمال سرور',
             'phone'            => '01012316954',
@@ -58,8 +63,17 @@ class ReportsApiTest extends TestCase
             'is_active'        => true,
             'default_store_id' => $this->storeMain->id,
         ]);
-        $this->adminUser->assignRole($role);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        $this->adminUser->assignRole($adminRole);
+        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+
+        $this->unauthorizedUser = User::factory()->create([
+            'name'             => 'مستخدم بدون صلاحيات',
+            'phone'            => '01000000000',
+            'password'         => Hash::make('password'),
+            'is_active'        => true,
+            'default_store_id' => $this->storeMain->id,
+        ]);
+        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
 
         $this->customer = Customer::create([
             'name'            => 'كافيه العروبة',
@@ -80,7 +94,7 @@ class ReportsApiTest extends TestCase
             'price_retail'    => '500.000',
             'price_wholesale' => '450.000',
             'current_stock'   => '80.000',
-            'min_stock'       => '10.000',
+            'min_stock_level' => '10.000',
             'is_active'       => true,
         ]);
 
@@ -129,6 +143,20 @@ class ReportsApiTest extends TestCase
             'expense_date'   => now()->toDateString(),
             'notes'          => 'مشتريات أكواب وسكر',
         ]);
+    }
+
+    public function test_unauthenticated_request_is_rejected(): void
+    {
+        $response = $this->getJson('/api/v1/reports/summary');
+        $response->assertStatus(401);
+    }
+
+    public function test_unauthorized_user_cannot_access_reports(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+            ->getJson('/api/v1/reports/summary');
+
+        $response->assertStatus(403);
     }
 
     public function test_can_get_profit_and_loss_summary(): void

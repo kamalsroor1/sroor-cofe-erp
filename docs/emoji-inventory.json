@@ -1,0 +1,7413 @@
+[
+  {
+    "file": "app.js",
+    "line": 20,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "// 📱 Handle Android Native Hardware Back Button / Swipe Gestures"
+  },
+  {
+    "file": "App.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->"
+  },
+  {
+    "file": "App.vue",
+    "line": 9,
+    "is_comment": true,
+    "emojis": [
+      "☕"
+    ],
+    "text": "<!-- 0. ☕ Global System Initial Boot Splash Screen (Facebook/Native-App Shimmer Loader) -->"
+  },
+  {
+    "file": "App.vue",
+    "line": 47,
+    "is_comment": true,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "<!-- 5. 🖨️ Desktop Hardware & Shortcuts Modals (Desktop Only) -->"
+  },
+  {
+    "file": "Components/ActionMenu.vue",
+    "line": 169,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 Desktop Teleported Floating Dropdown (Immune to Table Overflow Clipping) -->"
+  },
+  {
+    "file": "Components/ActionMenu.vue",
+    "line": 236,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 📱 Mobile Native Bottom Action Sheet (Auto on mobile or when mode === 'sheet') -->"
+  },
+  {
+    "file": "Components/AppUpdateModal.vue",
+    "line": 15,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 State 1: Download Complete / Success State -->"
+  },
+  {
+    "file": "Components/AppUpdateModal.vue",
+    "line": 58,
+    "is_comment": true,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<!-- 🚀 State 2: Update Available & Downloading Details -->"
+  },
+  {
+    "file": "Components/AppUpdateModal.vue",
+    "line": 85,
+    "is_comment": false,
+    "emojis": [
+      "➔"
+    ],
+    "text": "<span class=\"text-theme-primary font-mono\">➔</span>"
+  },
+  {
+    "file": "Components/DatePicker.vue",
+    "line": 14,
+    "is_comment": false,
+    "emojis": [
+      "📅"
+    ],
+    "text": "icon: { type: String, default: '📅' },"
+  },
+  {
+    "file": "Components/DatePicker.vue",
+    "line": 87,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/FeatureGate.vue",
+    "line": 58,
+    "is_comment": false,
+    "emojis": [
+      "🔒"
+    ],
+    "text": "<span class=\"text-sm\">🔒</span>"
+  },
+  {
+    "file": "Components/FilterDrawer.vue",
+    "line": 47,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "🔍"
+  },
+  {
+    "file": "Components/FilterDrawer.vue",
+    "line": 65,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/FilterDrawer.vue",
+    "line": 81,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<span>🔄</span>"
+  },
+  {
+    "file": "Components/FilterDrawer.vue",
+    "line": 99,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<span>🚀</span>"
+  },
+  {
+    "file": "Components/SearchableSelect.vue",
+    "line": 153,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/SearchableSelect.vue",
+    "line": 180,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "🔍"
+  },
+  {
+    "file": "Components/SearchableSelect.vue",
+    "line": 200,
+    "is_comment": false,
+    "emojis": [
+      "🚐"
+    ],
+    "text": "<span v-if=\"opt.type === 'van'\" class=\"text-sm\">🚐</span>"
+  },
+  {
+    "file": "Components/SearchableSelect.vue",
+    "line": 201,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<span v-else-if=\"opt.type === 'main'\" class=\"text-sm\">🏬</span>"
+  },
+  {
+    "file": "Components/SearchableSelect.vue",
+    "line": 207,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "✓"
+  },
+  {
+    "file": "Components/ActivityLogs/ActivityLogsTimeline.vue",
+    "line": 15,
+    "is_comment": false,
+    "emojis": [
+      "📋"
+    ],
+    "text": "<span class=\"text-xl shrink-0 mt-0.5\">{{ log.module_icon || '📋' }}</span>"
+  },
+  {
+    "file": "Components/ActivityLogs/ActivityLogsTimeline.vue",
+    "line": 78,
+    "is_comment": false,
+    "emojis": [
+      "📋"
+    ],
+    "text": "icon=\"📋\""
+  },
+  {
+    "file": "Components/Categories/CategoriesGrid.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer Grid) -->"
+  },
+  {
+    "file": "Components/Categories/CategoriesGrid.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "<!-- 🚫 Empty State -->"
+  },
+  {
+    "file": "Components/Categories/CategoriesGrid.vue",
+    "line": 13,
+    "is_comment": false,
+    "emojis": [
+      "🗂"
+    ],
+    "text": ":icon=\"'🗂️'\""
+  },
+  {
+    "file": "Components/Categories/CategoriesGrid.vue",
+    "line": 27,
+    "is_comment": true,
+    "emojis": [
+      "🗂"
+    ],
+    "text": "<!-- 🗂️ Categories Responsive Grid -->"
+  },
+  {
+    "file": "Components/Categories/CategoryCard.vue",
+    "line": 11,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "{{ category.icon || '☕' }}"
+  },
+  {
+    "file": "Components/Categories/CategoryFormModal.vue",
+    "line": 26,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "{{ form.icon || '☕' }}"
+  },
+  {
+    "file": "Components/Categories/CategoryFormModal.vue",
+    "line": 30,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "placeholder=\"☕\""
+  },
+  {
+    "file": "Components/Categories/CategoryFormModal.vue",
+    "line": 107,
+    "is_comment": false,
+    "emojis": [
+      "☕",
+      "🍵",
+      "🧃",
+      "🥪",
+      "🍰",
+      "🍫",
+      "🥤",
+      "🍟",
+      "🥐",
+      "🍪",
+      "🍨",
+      "🍳"
+    ],
+    "text": "const emojiPresets = ['☕', '🍵', '🧃', '🥪', '🍰', '🍫', '🥤', '🍟', '🥐', '🍪', '🍨', '🍳'];"
+  },
+  {
+    "file": "Components/CoffeeBlender/CoffeeBlenderCostSummary.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<span>📊</span>"
+  },
+  {
+    "file": "Components/CoffeeBlender/CoffeeBlenderFormulationCard.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "🫘"
+    ],
+    "text": "<span>🫘</span>"
+  },
+  {
+    "file": "Components/CoffeeBlender/CoffeeBlenderSpecsCard.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "<span>⚙️</span>"
+  },
+  {
+    "file": "Components/Common/AppModal.vue",
+    "line": 168,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/Common/DashboardSectionCard.vue",
+    "line": 55,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "// Option B: Emoji icon (e.g. '📊')"
+  },
+  {
+    "file": "Components/Common/DataTable.vue",
+    "line": 404,
+    "is_comment": false,
+    "emojis": [
+      "📭"
+    ],
+    "text": ":icon=\"emptyIcon || '📭'\""
+  },
+  {
+    "file": "Components/Common/DesktopPrinterSettingsModal.vue",
+    "line": 9,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 🖥️ Desktop App Header Banner -->"
+  },
+  {
+    "file": "Components/Common/DesktopPrinterSettingsModal.vue",
+    "line": 200,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "<tr><td>حالة الاتصال:</td><td style=\"text-align: left; font-weight: bold;\">متصل ومطابق ✅</td></tr>"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 7,
+    "is_comment": true,
+    "emojis": [
+      "☕"
+    ],
+    "text": "<!-- ☕ Right Side: App Brand & Active Store Context -->"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 10,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "<span class=\"text-sm\">☕</span>"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 18,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<span>🏬</span>"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 23,
+    "is_comment": true,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "<!-- 🟢 Center: Hardware & Server Ping Diagnostics Pill -->"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 33,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "<span class=\"font-sans font-bold text-slate-300\">🖨️ {{ activePrinterName }}</span>"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 44,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Force Reload / Clear Cache -->"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 55,
+    "is_comment": true,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<!-- 🚀 Live Update Available Badge -->"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 68,
+    "is_comment": true,
+    "emojis": [
+      "🪟"
+    ],
+    "text": "<!-- 🪟 Left Side (in RTL): Action Shortcuts & Native Window Controls -->"
+  },
+  {
+    "file": "Components/Common/DesktopTitlebar.vue",
+    "line": 76,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "<span>⚡ POS</span>"
+  },
+  {
+    "file": "Components/Common/InvoiceFinancialSummary.vue",
+    "line": 13,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "submitIcon: { type: String, default: '✅' },"
+  },
+  {
+    "file": "Components/Common/InvoiceLineItemsTable.vue",
+    "line": 59,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "<th class=\"pb-2.5 text-center w-10\">✕</th>"
+  },
+  {
+    "file": "Components/Common/InvoiceLineItemsTable.vue",
+    "line": 103,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/Common/InvoiceLineItemsTable.vue",
+    "line": 128,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/Common/SearchBar.vue",
+    "line": 19,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "default: '🔍'"
+  },
+  {
+    "file": "Components/Common/SearchBar.vue",
+    "line": 76,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/Common/SystemBootSplash.vue",
+    "line": 19,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "<span v-else>☕</span>"
+  },
+  {
+    "file": "Components/Customers/CustomerPaymentModal.vue",
+    "line": 105,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "{ value: 'cash', label: '💵 ' + t('contacts.cash') },"
+  },
+  {
+    "file": "Components/Customers/CustomerPaymentModal.vue",
+    "line": 106,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "{ value: 'instapay', label: '⚡ ' + t('contacts.instapay') },"
+  },
+  {
+    "file": "Components/Customers/CustomerPaymentModal.vue",
+    "line": 107,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "{ value: 'wallet', label: '📱 ' + t('contacts.wallet') },"
+  },
+  {
+    "file": "Components/Customers/CustomerPaymentModal.vue",
+    "line": 108,
+    "is_comment": false,
+    "emojis": [
+      "🏦"
+    ],
+    "text": "{ value: 'bank', label: '🏦 ' + t('contacts.bank_transfer') },"
+  },
+  {
+    "file": "Components/Customers/CustomersTable.vue",
+    "line": 132,
+    "is_comment": false,
+    "emojis": [
+      "📞"
+    ],
+    "text": "<p v-if=\"customer.phone\" class=\"text-[11px] text-slate-400 font-mono mt-0.5\" dir=\"ltr\">📞 {{ customer.phone }}</p>"
+  },
+  {
+    "file": "Components/Customers/CustomersTable.vue",
+    "line": 190,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "icon=\"👥\""
+  },
+  {
+    "file": "Components/Customers/CustomerStatementTable.vue",
+    "line": 100,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "icon=\"📄\""
+  },
+  {
+    "file": "Components/DailyJournal/CloseShiftModal.vue",
+    "line": 108,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "if (diff.value === 0) return `✓ ${t('treasury.drawer_balanced')}`;"
+  },
+  {
+    "file": "Components/DailyJournal/DailyJournalTabs.vue",
+    "line": 108,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "icon=\"🛒\""
+  },
+  {
+    "file": "Components/DailyJournal/QuickExpenseModal.vue",
+    "line": 124,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "{ value: 'cash', label: '💵 ' + t('treasury.method_cash_drawer') },"
+  },
+  {
+    "file": "Components/DailyJournal/QuickExpenseModal.vue",
+    "line": 125,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "{ value: 'instapay', label: '⚡ ' + t('contacts.instapay') },"
+  },
+  {
+    "file": "Components/DailyJournal/QuickExpenseModal.vue",
+    "line": 126,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "{ value: 'e_wallet', label: '📱 ' + t('contacts.wallet') },"
+  },
+  {
+    "file": "Components/DailyJournal/QuickExpenseModal.vue",
+    "line": 127,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "{ value: 'visa', label: '💳 ' + t('treasury.method_visa') },"
+  },
+  {
+    "file": "Components/DailyJournal/QuickExpenseModal.vue",
+    "line": 128,
+    "is_comment": false,
+    "emojis": [
+      "🏦"
+    ],
+    "text": "{ value: 'bank_transfer', label: '🏦 ' + t('contacts.bank_transfer') },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 4,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 🔝 Header: Title + Category Tabs + Search Filter -->"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 8,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "🚀"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 32,
+    "is_comment": true,
+    "emojis": [
+      "📂"
+    ],
+    "text": "<!-- 📂 Category Tabs -->"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 49,
+    "is_comment": true,
+    "emojis": [
+      "🗂"
+    ],
+    "text": "<!-- 🗂️ The Tiles Grid (Metro App Menu) -->"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 86,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<span class=\"text-3xl block mb-2\">🔍</span>"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 124,
+    "is_comment": false,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "{ id: 'all', label: 'الكل', icon: '🌟' },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 125,
+    "is_comment": false,
+    "emojis": [
+      "🛍"
+    ],
+    "text": "{ id: 'sales', label: 'المبيعات والـ POS', icon: '🛍️' },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 126,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "{ id: 'purchases', label: 'المشتريات والتوريد', icon: '🛒' },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 127,
+    "is_comment": false,
+    "emojis": [
+      "💰"
+    ],
+    "text": "{ id: 'finance', label: 'الخزينة واليومية', icon: '💰' },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 128,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "{ id: 'inventory', label: 'المخازن والأصناف', icon: '📦' },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 129,
+    "is_comment": false,
+    "emojis": [
+      "📊"
+    ],
+    "text": "{ id: 'reports', label: 'التقارير والمتابعة', icon: '📊' },"
+  },
+  {
+    "file": "Components/Dashboard/DashboardAppMenuHub.vue",
+    "line": 130,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "{ id: 'setup', label: 'التعريفات والنظام', icon: '⚙️' },"
+  },
+  {
+    "file": "Components/Expenses/ExpenseFormModal.vue",
+    "line": 144,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "{ value: 'cash', label: '💵 ' + t('treasury.method_cash_drawer') },"
+  },
+  {
+    "file": "Components/Expenses/ExpenseFormModal.vue",
+    "line": 145,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "{ value: 'instapay', label: '⚡ ' + t('contacts.instapay') },"
+  },
+  {
+    "file": "Components/Expenses/ExpenseFormModal.vue",
+    "line": 146,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "{ value: 'e_wallet', label: '📱 ' + t('contacts.wallet') },"
+  },
+  {
+    "file": "Components/Expenses/ExpenseFormModal.vue",
+    "line": 147,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "{ value: 'visa', label: '💳 ' + t('treasury.method_visa') },"
+  },
+  {
+    "file": "Components/Expenses/ExpenseFormModal.vue",
+    "line": 148,
+    "is_comment": false,
+    "emojis": [
+      "🏦"
+    ],
+    "text": "{ value: 'bank_transfer', label: '🏦 ' + t('contacts.bank_transfer') },"
+  },
+  {
+    "file": "Components/Expenses/ExpenseFormModal.vue",
+    "line": 149,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "{ value: 'check', label: '📄 ' + t('invoices.check') },"
+  },
+  {
+    "file": "Components/Expenses/ExpensesTable.vue",
+    "line": 146,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "icon=\"💸\""
+  },
+  {
+    "file": "Components/Expenses/ExpensesTable.vue",
+    "line": 212,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "visa: '💳 Visa',"
+  },
+  {
+    "file": "Components/Form/BaseDatePicker.vue",
+    "line": 148,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "/* 🌟 Universal Flatpickr Calendar Styling - Flawless Light & Dark Mode */"
+  },
+  {
+    "file": "Components/Form/BaseSwitch.vue",
+    "line": 39,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "<span v-if=\"model\" class=\"text-theme-primary\">✓</span>"
+  },
+  {
+    "file": "Components/Invoices/InvoiceDetailsModal.vue",
+    "line": 120,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "cash: `💵 ${trans('invoices.cash')}`,"
+  },
+  {
+    "file": "Components/Invoices/InvoiceDetailsModal.vue",
+    "line": 121,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "credit: `📝 ${trans('invoices.credit')}`,"
+  },
+  {
+    "file": "Components/Invoices/InvoiceDetailsModal.vue",
+    "line": 122,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "partial: `⚖️ ${trans('invoices.partial')}`,"
+  },
+  {
+    "file": "Components/Invoices/InvoiceDetailsModal.vue",
+    "line": 123,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "bank_transfer: `⚡ ${trans('invoices.electronic_transfer')}`,"
+  },
+  {
+    "file": "Components/Invoices/InvoicesMetricsCards.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State -->"
+  },
+  {
+    "file": "Components/Invoices/InvoicesMetricsCards.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 📊 Metrics Cards Grid -->"
+  },
+  {
+    "file": "Components/Invoices/InvoicesTable.vue",
+    "line": 236,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": ":icon=\"'🧾'\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowA4Document.vue",
+    "line": 13,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "☕"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowA4Document.vue",
+    "line": 22,
+    "is_comment": false,
+    "emojis": [
+      "📍"
+    ],
+    "text": "<div v-if=\"companyInfo?.address\">📍 {{ companyInfo?.address }}</div>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowA4Document.vue",
+    "line": 23,
+    "is_comment": false,
+    "emojis": [
+      "📞"
+    ],
+    "text": "<div v-if=\"companyInfo?.phone\">📞 {{ companyInfo?.phone }}</div>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowA4Document.vue",
+    "line": 49,
+    "is_comment": false,
+    "emojis": [
+      "📞"
+    ],
+    "text": "<div v-if=\"customerInfo?.phone\" class=\"text-slate-700 font-mono text-[11px] mt-0.5\" dir=\"ltr\">📞 {{ customerInfo?.phone }}</div>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowA4Document.vue",
+    "line": 50,
+    "is_comment": false,
+    "emojis": [
+      "📍"
+    ],
+    "text": "<div v-if=\"customerInfo?.raw?.address\" class=\"text-slate-600 mt-0.5\">📍 {{ customerInfo.raw.address }}</div>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowCustomerCard.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<span class=\"text-base\">👤</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 19,
+    "is_comment": false,
+    "emojis": [
+      "🚫",
+      "✅"
+    ],
+    "text": "<span>{{ isCancelled ? '🚫 ' + $t('invoices.cancelled_badge') : '✅ ' + $t('invoices.confirmed_badge') }}</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 36,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "🧾"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 43,
+    "is_comment": false,
+    "emojis": [
+      "📅"
+    ],
+    "text": "<span>📅 {{ invoice?.invoice_date }}</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 44,
+    "is_comment": false,
+    "emojis": [
+      "⏰"
+    ],
+    "text": "<span>⏰ {{ invoiceTime }}</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 45,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<span>🏬 {{ invoice?.store_name }}</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 46,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<span>👤 {{ invoice?.cashier_name }}</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 116,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "if (rem <= 0) return '💵 ' + t('invoices.payment_cash');"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 117,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "if (paid > 0) return '⚖️ ' + t('invoices.payment_partial');"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowHeader.vue",
+    "line": 118,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "return '📝 ' + t('invoices.payment_credit');"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowItemsTable.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<span class=\"text-base\">📦</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowKpiGrid.vue",
+    "line": 9,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "icon=\"💵\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowKpiGrid.vue",
+    "line": 20,
+    "is_comment": false,
+    "emojis": [
+      "🏷"
+    ],
+    "text": "icon=\"🏷️\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowKpiGrid.vue",
+    "line": 31,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "icon=\"🚚\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowKpiGrid.vue",
+    "line": 42,
+    "is_comment": false,
+    "emojis": [
+      "💰"
+    ],
+    "text": "icon=\"💰\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowKpiGrid.vue",
+    "line": 54,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "icon=\"✅\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowKpiGrid.vue",
+    "line": 65,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "icon=\"📝\""
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowPaymentsTimeline.vue",
+    "line": 6,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "<span class=\"text-base\">💳</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowPaymentsTimeline.vue",
+    "line": 18,
+    "is_comment": false,
+    "emojis": [
+      "📅",
+      "👤"
+    ],
+    "text": "<div class=\"text-[10px] text-slate-400 font-mono mt-0.5\">📅 {{ p.payment_date }} • 👤 {{ p.user_name }}</div>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowPaymentsTimeline.vue",
+    "line": 33,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "<span class=\"text-base\">📝</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<span class=\"text-base\">🏬</span>"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 40,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "cash: '💵 ' + t('invoices.payment_cash'),"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 41,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "instapay: '⚡ ' + t('invoices.payment_instapay'),"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 42,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "wallet: '📱 ' + t('invoices.payment_wallet'),"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 43,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "card: '💳 ' + t('invoices.payment_card'),"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 44,
+    "is_comment": false,
+    "emojis": [
+      "🏦"
+    ],
+    "text": "bank: '🏦 ' + t('invoices.payment_bank'),"
+  },
+  {
+    "file": "Components/Invoices/Show/InvoiceShowStoreCard.vue",
+    "line": 46,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "return map[method] || (method ? method : '💵 ' + t('invoices.payment_cash'));"
+  },
+  {
+    "file": "Components/ItemMovements/ItemMovementsTable.vue",
+    "line": 90,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<span>🏬 {{ row.store?.name || $t('common.main_branch') }}</span>"
+  },
+  {
+    "file": "Components/ItemMovements/ItemMovementsTable.vue",
+    "line": 91,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<span>👤 {{ row.user?.name || $t('common.system') }}</span>"
+  },
+  {
+    "file": "Components/ItemMovements/ItemMovementsTable.vue",
+    "line": 103,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "icon=\"📦\""
+  },
+  {
+    "file": "Components/Items/ItemFormModal.vue",
+    "line": 142,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,"
+  },
+  {
+    "file": "Components/Items/ItemsMetricsGrid.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State -->"
+  },
+  {
+    "file": "Components/Items/ItemsMetricsGrid.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 📊 Metrics Cards -->"
+  },
+  {
+    "file": "Components/Items/ItemsSearchFilterBar.vue",
+    "line": 45,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "🚨 {{ $t('inventory.low_stock_only') }}"
+  },
+  {
+    "file": "Components/Items/ItemsSearchFilterBar.vue",
+    "line": 56,
+    "is_comment": false,
+    "emojis": [
+      "❌"
+    ],
+    "text": "❌ {{ $t('inventory.out_of_stock_only') }}"
+  },
+  {
+    "file": "Components/Items/ItemsSearchFilterBar.vue",
+    "line": 67,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "✅ {{ $t('inventory.available_only') }}"
+  },
+  {
+    "file": "Components/Items/ItemsSearchFilterBar.vue",
+    "line": 92,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer) -->"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 6,
+    "is_comment": true,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<!-- 📦 Items List Content -->"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 1. 🖥️ Desktop / Tablet High-Density Table (hidden on mobile < md) -->"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 97,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 2. 📱 Mobile Tactile Cards Stack (hidden on desktop >= md) -->"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 137,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "🚨 {{ $t('inventory.min_stock_level') }}: {{ formatQty(item.min_stock_level) }}"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 172,
+    "is_comment": true,
+    "emojis": [
+      "📄"
+    ],
+    "text": "<!-- 📄 Pagination Bar -->"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 201,
+    "is_comment": true,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "<!-- 🚫 Empty State -->"
+  },
+  {
+    "file": "Components/Items/ItemsTable.vue",
+    "line": 206,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": ":icon=\"'☕'\""
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 6,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 1. HEADER: BRAND LOGO + COLLAPSE/EXPAND TOGGLE -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 57,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 2. QUICK POS ACTION BUTTON (F2) -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 77,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 3. CATEGORY CARDS HUB & ACCORDION (Like Mobile ERP App) -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 85,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 Direct Dashboard Card -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 130,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 Expandable Category Accordion Card (Like Mobile ERP) -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 225,
+    "is_comment": true,
+    "emojis": [
+      "👑"
+    ],
+    "text": "<!-- 👑 Super Admin Card Entry -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 229,
+    "is_comment": false,
+    "emojis": [
+      "👑"
+    ],
+    "text": "@mouseenter=\"handleItemHover($event, 'لوحة السوبر أدمن 👑')\""
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 239,
+    "is_comment": false,
+    "emojis": [
+      "👑"
+    ],
+    "text": "👑"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 259,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 4. BOTTOM FOOTER: SHIFT STATUS & APP VERSION -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 318,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 Teleported Tooltip for Mini Mode -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 368,
+    "is_comment": true,
+    "emojis": [
+      "📂"
+    ],
+    "text": "// 📂 Accordion state for categories"
+  },
+  {
+    "file": "Components/Navigation/DesktopSidebar.vue",
+    "line": 416,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "// 🌟 Mini Tooltip Tracking"
+  },
+  {
+    "file": "Components/Navigation/DesktopTabsBar.vue",
+    "line": 6,
+    "is_comment": true,
+    "emojis": [
+      "🗂"
+    ],
+    "text": "<!-- 🗂️ Scrollable Tabs List Container -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopTabsBar.vue",
+    "line": 58,
+    "is_comment": true,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "<!-- ⚡ Quick Tab Count & Global Actions -->"
+  },
+  {
+    "file": "Components/Navigation/DesktopTabsBar.vue",
+    "line": 74,
+    "is_comment": true,
+    "emojis": [
+      "📋"
+    ],
+    "text": "<!-- 📋 Right-Click Context Menu -->"
+  },
+  {
+    "file": "Components/Navigation/MobileBottomNav.vue",
+    "line": 7,
+    "is_comment": true,
+    "emojis": [
+      "👑"
+    ],
+    "text": "<!-- 👑 MODE 1: SUPER ADMIN CENTRAL PLATFORM BOTTOM NAV -->"
+  },
+  {
+    "file": "Components/Navigation/MobileBottomNav.vue",
+    "line": 83,
+    "is_comment": true,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "<!-- 🛒 MODE 2: TENANT CASHIER & STORE ERP BOTTOM NAV -->"
+  },
+  {
+    "file": "Components/POS/POSCartTable.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "<span class=\"text-lg\">🧾</span>"
+  },
+  {
+    "file": "Components/POS/POSCartTable.vue",
+    "line": 19,
+    "is_comment": true,
+    "emojis": [
+      "📋"
+    ],
+    "text": "<!-- 📋 ACTIVE INVOICE ITEMS CONTAINER -->"
+  },
+  {
+    "file": "Components/POS/POSCartTable.vue",
+    "line": 24,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 📱 Mobile Cart Items Card List (block md:hidden) -->"
+  },
+  {
+    "file": "Components/POS/POSCartTable.vue",
+    "line": 100,
+    "is_comment": true,
+    "emojis": [
+      "💻"
+    ],
+    "text": "<!-- 💻 Desktop Cart Items Table (hidden md:table) -->"
+  },
+  {
+    "file": "Components/POS/POSCartTable.vue",
+    "line": 195,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "🛒"
+  },
+  {
+    "file": "Components/POS/POSCheckoutSummary.vue",
+    "line": 206,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "<span v-if=\"isSubmitting\" class=\"animate-spin text-lg\">⏳</span>"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 10,
+    "is_comment": true,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<!-- 🔍 Search & Toggle Form Bar -->"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 22,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "🔍"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 38,
+    "is_comment": true,
+    "emojis": [
+      "➕"
+    ],
+    "text": "<!-- ➕ Quick Add Customer Form -->"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 42,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "<span>✨</span>"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 79,
+    "is_comment": true,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "<!-- ⏳ Searching Shimmer / Indicator -->"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 87,
+    "is_comment": true,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "<!-- 🚫 EMPTY STATE: CUSTOMER NOT FOUND WITH SMART PHONE/NAME QUICK ADD BUTTON -->"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 93,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "👤"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 118,
+    "is_comment": true,
+    "emojis": [
+      "📋"
+    ],
+    "text": "<!-- 📋 Customers List -->"
+  },
+  {
+    "file": "Components/POS/POSCustomerModal.vue",
+    "line": 129,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "💵"
+  },
+  {
+    "file": "Components/POS/POSCustomerPickerModal.vue",
+    "line": 162,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "<span>➕</span>"
+  },
+  {
+    "file": "Components/POS/POSHeader.vue",
+    "line": 17,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "⚡"
+  },
+  {
+    "file": "Components/POS/POSHeader.vue",
+    "line": 64,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/POS/POSHeader.vue",
+    "line": 70,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 FLOATING LIVE SEARCH RESULTS DROPDOWN -->"
+  },
+  {
+    "file": "Components/POS/POSHeader.vue",
+    "line": 145,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 SEARCHING REMOTE DATABASE SPINNER STATE -->"
+  },
+  {
+    "file": "Components/POS/POSHeader.vue",
+    "line": 156,
+    "is_comment": true,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "<!-- 🚫 NOT FOUND EMPTY STATE -->"
+  },
+  {
+    "file": "Components/POS/POSHeader.vue",
+    "line": 162,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "🔍"
+  },
+  {
+    "file": "Components/POS/POSNumpad.vue",
+    "line": 53,
+    "is_comment": false,
+    "emojis": [
+      "⌫"
+    ],
+    "text": "{{ num === 'backspace' ? '⌫' : num }}"
+  },
+  {
+    "file": "Components/POS/POSQuickCustomerModal.vue",
+    "line": 103,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "<span>💾</span>"
+  },
+  {
+    "file": "Components/POS/POSSkeleton.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 🔝 1. POS Header Skeleton -->"
+  },
+  {
+    "file": "Components/POS/POSSkeleton.vue",
+    "line": 22,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 🖥️ 2. Main Workspace Skeleton (Cart + Product Grid + Category Sidebar) -->"
+  },
+  {
+    "file": "Components/POS/POSSkeleton.vue",
+    "line": 24,
+    "is_comment": true,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "<!-- 🛒 Cart & Checkout Skeleton -->"
+  },
+  {
+    "file": "Components/POS/POSSkeleton.vue",
+    "line": 53,
+    "is_comment": true,
+    "emojis": [
+      "🍕"
+    ],
+    "text": "<!-- 🍕 Product Grid Skeleton -->"
+  },
+  {
+    "file": "Components/POS/POSSkeleton.vue",
+    "line": 64,
+    "is_comment": true,
+    "emojis": [
+      "📂"
+    ],
+    "text": "<!-- 📂 Category Sidebar Skeleton -->"
+  },
+  {
+    "file": "Components/Profile/ProfileBasicInfoCard.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<span>👤</span>"
+  },
+  {
+    "file": "Components/Profile/ProfileSecurityCard.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "🔐"
+    ],
+    "text": "<span>🔐</span>"
+  },
+  {
+    "file": "Components/Profile/ProfileThemeCard.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "🎨"
+    ],
+    "text": "<span>🎨</span>"
+  },
+  {
+    "file": "Components/Profile/ProfileThemeCard.vue",
+    "line": 15,
+    "is_comment": false,
+    "emojis": [
+      "🌙"
+    ],
+    "text": "<div class=\"text-lg mb-1\">🌙</div>"
+  },
+  {
+    "file": "Components/Profile/ProfileThemeCard.vue",
+    "line": 25,
+    "is_comment": false,
+    "emojis": [
+      "☀"
+    ],
+    "text": "<div class=\"text-lg mb-1\">☀️</div>"
+  },
+  {
+    "file": "Components/Purchases/PurchasesTable.vue",
+    "line": 159,
+    "is_comment": false,
+    "emojis": [
+      "🚛"
+    ],
+    "text": "icon=\"🚛\""
+  },
+  {
+    "file": "Components/Reports/ReportCustomersTab.vue",
+    "line": 44,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "empty-icon=\"👥\""
+  },
+  {
+    "file": "Components/Reports/ReportFilterBar.vue",
+    "line": 66,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<span>🔄</span>"
+  },
+  {
+    "file": "Components/Reports/ReportInventoryTab.vue",
+    "line": 59,
+    "is_comment": false,
+    "emojis": [
+      "📥"
+    ],
+    "text": "<span>📥</span>"
+  },
+  {
+    "file": "Components/Reports/ReportItemsTab.vue",
+    "line": 38,
+    "is_comment": false,
+    "emojis": [
+      "📊"
+    ],
+    "text": "empty-icon=\"📊\""
+  },
+  {
+    "file": "Components/Reports/ReportSalesTab.vue",
+    "line": 55,
+    "is_comment": false,
+    "emojis": [
+      "📑"
+    ],
+    "text": "<span>📑</span>"
+  },
+  {
+    "file": "Components/Reports/ReportsCustomersTab.vue",
+    "line": 72,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "icon=\"👥\""
+  },
+  {
+    "file": "Components/Reports/ReportsExpensesTab.vue",
+    "line": 31,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "icon=\"💸\""
+  },
+  {
+    "file": "Components/Reports/ReportsInventoryTab.vue",
+    "line": 102,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "icon=\"📦\""
+  },
+  {
+    "file": "Components/Reports/ReportsItemsTab.vue",
+    "line": 72,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "icon=\"☕\""
+  },
+  {
+    "file": "Components/Reports/ReportsStoresTab.vue",
+    "line": 65,
+    "is_comment": false,
+    "emojis": [
+      "🏢"
+    ],
+    "text": "icon=\"🏢\""
+  },
+  {
+    "file": "Components/Reports/ReportStoresTab.vue",
+    "line": 36,
+    "is_comment": false,
+    "emojis": [
+      "🏪"
+    ],
+    "text": "empty-icon=\"🏪\""
+  },
+  {
+    "file": "Components/Returns/ReturnFinancialSummary.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<span>📊</span>"
+  },
+  {
+    "file": "Components/Returns/ReturnItemsTable.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<span>📦</span>"
+  },
+  {
+    "file": "Components/Returns/ReturnPartySection.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<span>🔄</span>"
+  },
+  {
+    "file": "Components/Returns/ReturnsTable.vue",
+    "line": 168,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": ":icon=\"'🔄'\""
+  },
+  {
+    "file": "Components/Settings/BrandingTab.vue",
+    "line": 52,
+    "is_comment": true,
+    "emojis": [
+      "☀"
+    ],
+    "text": "<!-- ☀️ Light Mode Logo Card -->"
+  },
+  {
+    "file": "Components/Settings/BrandingTab.vue",
+    "line": 75,
+    "is_comment": true,
+    "emojis": [
+      "🌙"
+    ],
+    "text": "<!-- 🌙 Dark Mode Logo Card -->"
+  },
+  {
+    "file": "Components/Settings/SettingsAppearanceSection.vue",
+    "line": 31,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "<span v-if=\"themeColor === color.id\" class=\"text-white text-xs font-black\">✓</span>"
+  },
+  {
+    "file": "Components/Settings/SettingsAppearanceSection.vue",
+    "line": 117,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 📱 App Version & Biometrics Hub -->"
+  },
+  {
+    "file": "Components/Settings/SettingsAppearanceSection.vue",
+    "line": 145,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<span class=\"text-lg\">📦</span>"
+  },
+  {
+    "file": "Components/Settings/SettingsUnitsSection.vue",
+    "line": 33,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 19,
+    "is_comment": false,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "{ id: 'amber', name: trans('settings.palette_amber_name'), sub: trans('settings.palette_amber_sub'), hex: '#f59e0b', ring: 'ring-theme-primary', bg: 'bg-theme-primary', icon: '🌟' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 20,
+    "is_comment": false,
+    "emojis": [
+      "🌿"
+    ],
+    "text": "{ id: 'emerald', name: trans('settings.palette_emerald_name'), sub: trans('settings.palette_emerald_sub'), hex: '#10b981', ring: 'ring-emerald-500', bg: 'bg-emerald-500', icon: '🌿' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 21,
+    "is_comment": false,
+    "emojis": [
+      "🔵"
+    ],
+    "text": "{ id: 'blue', name: trans('settings.palette_blue_name'), sub: trans('settings.palette_blue_sub'), hex: '#3b82f6', ring: 'ring-blue-500', bg: 'bg-blue-500', icon: '🔵' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 22,
+    "is_comment": false,
+    "emojis": [
+      "🟣"
+    ],
+    "text": "{ id: 'purple', name: trans('settings.palette_purple_name'), sub: trans('settings.palette_purple_sub'), hex: '#a855f7', ring: 'ring-purple-500', bg: 'bg-purple-500', icon: '🟣' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 23,
+    "is_comment": false,
+    "emojis": [
+      "🌹"
+    ],
+    "text": "{ id: 'rose', name: trans('settings.palette_rose_name'), sub: trans('settings.palette_rose_sub'), hex: '#f43f5e', ring: 'ring-rose-500', bg: 'bg-rose-500', icon: '🌹' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 24,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "{ id: 'orange', name: trans('settings.palette_orange_name'), sub: trans('settings.palette_orange_sub'), hex: '#f97316', ring: 'ring-orange-500', bg: 'bg-orange-500', icon: '☕' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 25,
+    "is_comment": false,
+    "emojis": [
+      "🌊"
+    ],
+    "text": "{ id: 'teal', name: trans('settings.palette_teal_name'), sub: trans('settings.palette_teal_sub'), hex: '#14b8a6', ring: 'ring-teal-500', bg: 'bg-teal-500', icon: '🌊' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 26,
+    "is_comment": false,
+    "emojis": [
+      "🌌"
+    ],
+    "text": "{ id: 'indigo', name: trans('settings.palette_indigo_name'), sub: trans('settings.palette_indigo_sub'), hex: '#6366f1', ring: 'ring-indigo-500', bg: 'bg-indigo-500', icon: '🌌' },"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 87,
+    "is_comment": false,
+    "emojis": [
+      "🎨"
+    ],
+    "text": "<span>🎨</span>"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 113,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "✓"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 125,
+    "is_comment": true,
+    "emojis": [
+      "🎨"
+    ],
+    "text": "<!-- 🎨 Custom Color Picker & Color Swatches -->"
+  },
+  {
+    "file": "Components/Settings/ThemeTab.vue",
+    "line": 187,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "<span v-if=\"activeHexColor.toLowerCase() === swatch.hex.toLowerCase()\" class=\"text-white text-[10px] font-black\">✓</span>"
+  },
+  {
+    "file": "Components/SmartReorder/SmartReorderTable.vue",
+    "line": 143,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "icon=\"✨\""
+  },
+  {
+    "file": "Components/StockTransfers/CreateStockTransferHeaderCard.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "🏢"
+    ],
+    "text": "<span>🏢</span>"
+  },
+  {
+    "file": "Components/StockTransfers/CreateStockTransferItemsCard.vue",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<span>📦</span>"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersMetricsGrid.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersMetricsGrid.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 📊 Summary Metrics Grid -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer) -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 6,
+    "is_comment": true,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "<!-- 🚚 Content State -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 1. 🖥️ Desktop / Tablet High-Density Table (>= 768px) -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 101,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 2. 📱 Mobile Tactile Cards Stack (< 768px) -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 113,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "🚚"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 165,
+    "is_comment": true,
+    "emojis": [
+      "📄"
+    ],
+    "text": "<!-- 📄 Pagination Bar -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 194,
+    "is_comment": true,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "<!-- 🚫 Empty State -->"
+  },
+  {
+    "file": "Components/StockTransfers/StockTransfersTable.vue",
+    "line": 199,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": ":icon=\"'🚚'\""
+  },
+  {
+    "file": "Components/Stores/StoreFormModal.vue",
+    "line": 112,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "{ value: 'retail_shop', label: '🏬 ' + t('inventory.retail_shop') },"
+  },
+  {
+    "file": "Components/Stores/StoreFormModal.vue",
+    "line": 113,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "{ value: 'warehouse', label: '🏭 ' + t('inventory.warehouse') },"
+  },
+  {
+    "file": "Components/Stores/StoreFormModal.vue",
+    "line": 114,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "{ value: 'van', label: '🚚 ' + t('inventory.distribution_van') },"
+  },
+  {
+    "file": "Components/Stores/StoresGrid.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State -->"
+  },
+  {
+    "file": "Components/Stores/StoresGrid.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<!-- 🏬 Stores Cards Grid -->"
+  },
+  {
+    "file": "Components/Stores/StoresGrid.vue",
+    "line": 29,
+    "is_comment": false,
+    "emojis": [
+      "🚚",
+      "🏭",
+      "🏬"
+    ],
+    "text": "{{ store.type === 'van' ? '🚚' : (store.type === 'warehouse' ? '🏭' : '🏬') }}"
+  },
+  {
+    "file": "Components/Stores/StoresGrid.vue",
+    "line": 106,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "👤 {{ user.name }}"
+  },
+  {
+    "file": "Components/Stores/StoresGrid.vue",
+    "line": 132,
+    "is_comment": true,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "<!-- 🚫 Empty State -->"
+  },
+  {
+    "file": "Components/Stores/StoresGrid.vue",
+    "line": 137,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": ":icon=\"'🏬'\""
+  },
+  {
+    "file": "Components/Stores/StoresMetricsGrid.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Skeleton Loading State -->"
+  },
+  {
+    "file": "Components/Stores/StoresMetricsGrid.vue",
+    "line": 8,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 📊 Summary Metrics Grid -->"
+  },
+  {
+    "file": "Components/Stores/StoresSearchFilterBar.vue",
+    "line": 71,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "{ value: 'retail_shop', label: '🏬 ' + t('inventory.retail_shop') },"
+  },
+  {
+    "file": "Components/Stores/StoresSearchFilterBar.vue",
+    "line": 72,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "{ value: 'warehouse', label: '🏭 ' + t('inventory.warehouse') },"
+  },
+  {
+    "file": "Components/Stores/StoresSearchFilterBar.vue",
+    "line": 73,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "{ value: 'van', label: '🚚 ' + t('inventory.distribution_van') },"
+  },
+  {
+    "file": "Components/Stores/StoresSearchFilterBar.vue",
+    "line": 78,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "{ value: 'active', label: '✅ ' + t('common.active') },"
+  },
+  {
+    "file": "Components/Stores/StoresSearchFilterBar.vue",
+    "line": 79,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "{ value: 'inactive', label: '🚫 ' + t('common.inactive') },"
+  },
+  {
+    "file": "Components/StoreStocks/StoreStocksFilterBar.vue",
+    "line": 42,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "⚠️ {{ $t('inventory.low_stock') }}"
+  },
+  {
+    "file": "Components/StoreStocks/StoreStocksFilterBar.vue",
+    "line": 51,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "🚨 {{ $t('inventory.out_of_stock') }}"
+  },
+  {
+    "file": "Components/StoreStocks/StoreStocksTable.vue",
+    "line": 130,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "icon=\"📦\""
+  },
+  {
+    "file": "Components/SuperAdmin/ActiveUnitsGrid.vue",
+    "line": 22,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/SuperAdmin/AppVersionsTable.vue",
+    "line": 28,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "icon=\"🚀\""
+  },
+  {
+    "file": "Components/SuperAdmin/AppVersionsTable.vue",
+    "line": 74,
+    "is_comment": false,
+    "emojis": [
+      "💻"
+    ],
+    "text": "💻 Windows"
+  },
+  {
+    "file": "Components/SuperAdmin/AppVersionsTable.vue",
+    "line": 80,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "📱 Android"
+  },
+  {
+    "file": "Components/SuperAdmin/AppVersionsTable.vue",
+    "line": 86,
+    "is_comment": false,
+    "emojis": [
+      "🍏"
+    ],
+    "text": "🍏 {{ v.platform }}"
+  },
+  {
+    "file": "Components/SuperAdmin/SuperAdminPlatformSettingsCard.vue",
+    "line": 66,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "<span>✓</span> {{ saveSuccessMessage }}"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantFeaturesMatrixCard.vue",
+    "line": 6,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "⚡"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantFeaturesMatrixCard.vue",
+    "line": 24,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "<span class=\"text-lg\">{{ feat.icon || '✨' }}</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantShowHeader.vue",
+    "line": 13,
+    "is_comment": false,
+    "emojis": [
+      "🏪"
+    ],
+    "text": "🏪"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantShowHeader.vue",
+    "line": 49,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<span>🚀</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantShowHeader.vue",
+    "line": 59,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "<span>⚙️</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantShowHeader.vue",
+    "line": 71,
+    "is_comment": false,
+    "emojis": [
+      "🗄"
+    ],
+    "text": "<span>🗄️</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantsTable.vue",
+    "line": 66,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<span>🔍</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantsTable.vue",
+    "line": 76,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "⚙️"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantsTable.vue",
+    "line": 131,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<span>🔍</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantsTable.vue",
+    "line": 140,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "<span>⚙️</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantsTable.vue",
+    "line": 161,
+    "is_comment": false,
+    "emojis": [
+      "🏢"
+    ],
+    "text": "icon=\"🏢\""
+  },
+  {
+    "file": "Components/SuperAdmin/TenantStatsGrid.vue",
+    "line": 6,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "<span class=\"text-base\">👥</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantStatsGrid.vue",
+    "line": 17,
+    "is_comment": false,
+    "emojis": [
+      "🏪"
+    ],
+    "text": "<span class=\"text-base\">🏪</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantStatsGrid.vue",
+    "line": 28,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<span class=\"text-base\">📦</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantStatsGrid.vue",
+    "line": 39,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "<span class=\"text-base\">🧾</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantStatsGrid.vue",
+    "line": 50,
+    "is_comment": false,
+    "emojis": [
+      "💰"
+    ],
+    "text": "<span class=\"text-base\">💰</span>"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantUnitsCard.vue",
+    "line": 6,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "⚖️"
+  },
+  {
+    "file": "Components/SuperAdmin/TenantUnitsCard.vue",
+    "line": 44,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Components/Suppliers/SupplierPaymentModal.vue",
+    "line": 105,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "{ value: 'cash', label: '💵 ' + t('contacts.cash') },"
+  },
+  {
+    "file": "Components/Suppliers/SupplierPaymentModal.vue",
+    "line": 106,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "{ value: 'instapay', label: '⚡ ' + t('contacts.instapay') },"
+  },
+  {
+    "file": "Components/Suppliers/SupplierPaymentModal.vue",
+    "line": 107,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "{ value: 'wallet', label: '📱 ' + t('contacts.wallet') },"
+  },
+  {
+    "file": "Components/Suppliers/SupplierPaymentModal.vue",
+    "line": 108,
+    "is_comment": false,
+    "emojis": [
+      "🏦"
+    ],
+    "text": "{ value: 'bank', label: '🏦 ' + t('contacts.bank_transfer') },"
+  },
+  {
+    "file": "Components/Suppliers/SuppliersTable.vue",
+    "line": 133,
+    "is_comment": false,
+    "emojis": [
+      "📞"
+    ],
+    "text": "<p v-if=\"supplier.phone\" class=\"text-[11px] text-slate-400 font-mono mt-0.5\" dir=\"ltr\">📞 {{ supplier.phone }}</p>"
+  },
+  {
+    "file": "Components/Suppliers/SuppliersTable.vue",
+    "line": 190,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "icon=\"🏭\""
+  },
+  {
+    "file": "Components/Suppliers/SupplierStatementTable.vue",
+    "line": 100,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "icon=\"📄\""
+  },
+  {
+    "file": "Components/Trash/TrashTable.vue",
+    "line": 115,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "icon=\"🗑️\""
+  },
+  {
+    "file": "Components/Users/UsersTable.vue",
+    "line": 166,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "icon=\"👥\""
+  },
+  {
+    "file": "Composables/useAppUpdate.js",
+    "line": 81,
+    "is_comment": true,
+    "emojis": [
+      "🛑"
+    ],
+    "text": "// 🛑 Web Browser Check Gate: Web apps are updated automatically via cloud server deployments!"
+  },
+  {
+    "file": "Composables/useAppUpdate.js",
+    "line": 86,
+    "is_comment": false,
+    "emojis": [
+      "🌐"
+    ],
+    "text": "title: 'نسخة الويب السحابية 🌐',"
+  },
+  {
+    "file": "Composables/useAppUpdate.js",
+    "line": 132,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "title: `${platformLabel} محدث بالكامل 🚀`,"
+  },
+  {
+    "file": "Composables/useAppUpdate.js",
+    "line": 204,
+    "is_comment": false,
+    "emojis": [
+      "💻"
+    ],
+    "text": "title: 'جاري تنزيل ملف التثبيت 💻',"
+  },
+  {
+    "file": "Composables/useAudioFeedback.js",
+    "line": 21,
+    "is_comment": true,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "* 🛒 Crisp POS Barcode Scan Beep (880Hz, Sine Wave)"
+  },
+  {
+    "file": "Composables/useAudioFeedback.js",
+    "line": 48,
+    "is_comment": true,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "* 🎉 Major Success Chime on Invoice Checkout (Two-chord Chime)"
+  },
+  {
+    "file": "Composables/useAudioFeedback.js",
+    "line": 83,
+    "is_comment": true,
+    "emojis": [
+      "💵"
+    ],
+    "text": "* 💵 Cash Drawer Mechanical Click Sound"
+  },
+  {
+    "file": "Composables/useAudioFeedback.js",
+    "line": 107,
+    "is_comment": true,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "* ⚠️ Warning / Error Tone (Low Double Beep)"
+  },
+  {
+    "file": "Composables/useBiometricAuth.js",
+    "line": 62,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "title: 'تم تفعيل البصمة بنجاح ⚡',"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 112,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "const text = `🧾 فاتورة رقم: #${invoice.value.invoice_number}"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 113,
+    "is_comment": false,
+    "emojis": [
+      "🏢"
+    ],
+    "text": "🏢 المؤسسة: ${companyInfo.value.name}"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 114,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "👤 العميل: ${customerInfo.value.name}"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 115,
+    "is_comment": false,
+    "emojis": [
+      "📅"
+    ],
+    "text": "📅 التاريخ: ${invoice.value.invoice_date}"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 116,
+    "is_comment": false,
+    "emojis": [
+      "💰"
+    ],
+    "text": "💰 الصافي المطلوب: ${formatMoney(invoice.value.net_total)} ${t('common.currency')}"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 117,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "💵 المدفوع: ${formatMoney(invoice.value.paid_amount)} ${t('common.currency')}"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 118,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "📝 المتبقي: ${formatMoney(invoice.value.remaining_amount)} ${t('common.currency')}`;"
+  },
+  {
+    "file": "Composables/useInvoiceShow.js",
+    "line": 143,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "شكراً لتعاملكم معنا! ☕`);"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 27,
+    "is_comment": false,
+    "emojis": [
+      "🚛"
+    ],
+    "text": "purchase_in: `🚛 ${t('inventory.movement_purchase')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 28,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "sales_out: `🛒 ${t('inventory.movement_sale')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 29,
+    "is_comment": false,
+    "emojis": [
+      "📥"
+    ],
+    "text": "transfer_in: `📥 ${t('inventory.movement_transfer_in')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 30,
+    "is_comment": false,
+    "emojis": [
+      "📤"
+    ],
+    "text": "transfer_out: `📤 ${t('inventory.movement_transfer_out')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 33,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "stock_adjustment_in: `➕ ${t('inventory.movement_adjustment')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 34,
+    "is_comment": false,
+    "emojis": [
+      "➖"
+    ],
+    "text": "stock_adjustment_out: `➖ ${t('inventory.movement_adjustment')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 35,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "cancellation_in: `🚫 ${t('invoices.cancelled_badge')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 36,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "waste_out: `🗑️ ${t('inventory.movement_waste')}`,"
+  },
+  {
+    "file": "Composables/useItemMovements.js",
+    "line": 37,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "stock_deposit_in: `📦 ${t('inventory.movement_initial')}`,"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 5,
+    "is_comment": false,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "amber: { hex: '#f59e0b', hover: '#d97706', rgb: '245, 158, 11', text: '#020617', name: 'الكهرمان / الذهبي الأصيل', icon: '🌟' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 6,
+    "is_comment": false,
+    "emojis": [
+      "🌿"
+    ],
+    "text": "emerald: { hex: '#10b981', hover: '#059669', rgb: '16, 185, 129', text: '#ffffff', name: 'الأخضر الزمردي الملكي', icon: '🌿' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🔵"
+    ],
+    "text": "blue: { hex: '#3b82f6', hover: '#2563eb', rgb: '59, 130, 246', text: '#ffffff', name: 'الأزرق الملكي (Sapphire)', icon: '🔵' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 8,
+    "is_comment": false,
+    "emojis": [
+      "🟣"
+    ],
+    "text": "purple: { hex: '#a855f7', hover: '#9333ea', rgb: '168, 85, 247', text: '#ffffff', name: 'البنفسجي الإمبراطوري', icon: '🟣' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 9,
+    "is_comment": false,
+    "emojis": [
+      "🌹"
+    ],
+    "text": "rose: { hex: '#f43f5e', hover: '#e11d48', rgb: '244, 63, 94', text: '#ffffff', name: 'الياقوتي القرمزي (Ruby Rose)', icon: '🌹' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 10,
+    "is_comment": false,
+    "emojis": [
+      "🟧"
+    ],
+    "text": "orange: { hex: '#f97316', hover: '#ea580c', rgb: '249, 115, 22', text: '#ffffff', name: 'البرتقالي الكلاسيكي (Warm Orange)', icon: '🟧' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 11,
+    "is_comment": false,
+    "emojis": [
+      "🌊"
+    ],
+    "text": "teal: { hex: '#14b8a6', hover: '#0d9488', rgb: '20, 184, 166', text: '#ffffff', name: 'السماوي التركوازي (Ocean Teal)', icon: '🌊' },"
+  },
+  {
+    "file": "Composables/useTheme.js",
+    "line": 12,
+    "is_comment": false,
+    "emojis": [
+      "🌌"
+    ],
+    "text": "indigo: { hex: '#6366f1', hover: '#4f46e5', rgb: '99, 102, 241', text: '#ffffff', name: 'النيلي الداكن (Deep Indigo)', icon: '🌌' },"
+  },
+  {
+    "file": "Composables/useTrash.js",
+    "line": 16,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "{ id: 'items', label: t('trash.tab_items_label'), icon: '📦' },"
+  },
+  {
+    "file": "Composables/useTrash.js",
+    "line": 17,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "{ id: 'customers', label: t('trash.tab_customers_label'), icon: '👥' },"
+  },
+  {
+    "file": "Composables/useTrash.js",
+    "line": 18,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "{ id: 'suppliers', label: t('trash.tab_suppliers_label'), icon: '🏭' },"
+  },
+  {
+    "file": "Composables/useTrash.js",
+    "line": 19,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "{ id: 'stores', label: t('trash.tab_stores_label'), icon: '🏬' },"
+  },
+  {
+    "file": "Composables/useTrash.js",
+    "line": 20,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "{ id: 'expenses', label: t('trash.tab_expenses_label'), icon: '💸' },"
+  },
+  {
+    "file": "Composables/useTrash.js",
+    "line": 21,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "{ id: 'returns', label: t('trash.tab_returns_label'), icon: '🔄' },"
+  },
+  {
+    "file": "helpers/alert.js",
+    "line": 17,
+    "is_comment": true,
+    "emojis": [
+      "🎨"
+    ],
+    "text": "// 🎨 Base ERP SweetAlert2 Dark Configuration"
+  },
+  {
+    "file": "helpers/alert.js",
+    "line": 34,
+    "is_comment": true,
+    "emojis": [
+      "🍞"
+    ],
+    "text": "// 🍞 Toast Notification Engine"
+  },
+  {
+    "file": "helpers/alert.js",
+    "line": 126,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "confirmButtonText: '🗑️ نعم، احذف الآن',"
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 19,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"action_created\": \"إضافة جديدة ➕\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 20,
+    "is_comment": false,
+    "emojis": [
+      "✏"
+    ],
+    "text": "\"action_updated\": \"تعديل بيانات ✏️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 21,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "\"action_deleted\": \"حذف 🗑️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 22,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"action_cancelled\": \"إلغاء فاتورة 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 23,
+    "is_comment": false,
+    "emojis": [
+      "🔐"
+    ],
+    "text": "\"action_login\": \"تسجيل دخول 🔐\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 24,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"action_login_failed\": \"محاولة فاشلة ⚠️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 28,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"inspect_btn\": \"فحص 🔍\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 58,
+    "is_comment": false,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "\"download_success_title\": \"تم تنزيل حزمة التحديث بنجاح! 🎉\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 66,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"update_available_title\": \"يتوفر تحديث جديد للتطبيق 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 76,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"update_and_install_now\": \"تحديث وتثبيت الآن ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 81,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"check_updates_now\": \"فحص التحديثات الآن ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 83,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"up_to_date_title\": \"التطبيق محدث بالكامل 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 219,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"done\": \"تم بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 280,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"debtors_only\": \"عليهم مديونية 🚨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 281,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"settled_only\": \"الحسابات المسواة (رصيد 0) ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 360,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"supplier_creditors_only\": \"مستحق له (دائن) 🚨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 361,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"supplier_settled_only\": \"مسدد بالكامل ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 423,
+    "is_comment": false,
+    "emojis": [
+      "👍"
+    ],
+    "text": "\"all_items_safe_radar\": \"جميع الأصناف متوفرة فوق الحد الأدنى 👍\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 434,
+    "is_comment": false,
+    "emojis": [
+      "👋"
+    ],
+    "text": "\"welcome_user\": \"مرحباً بك، :name 👋\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 441,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"shift_open_badge\": \"مفتوحة ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 442,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"shift_closed_badge\": \"مغلقة 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 501,
+    "is_comment": false,
+    "emojis": [
+      "👍"
+    ],
+    "text": "\"all_stock_safe\": \"جميع الأصناف متوفرة بمستويات آمنة 👍\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 504,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"search_screens_placeholder\": \"🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 547,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "\"new_expense\": \"تسجيل وقيد مصروف تشغيلي جديد 💸\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 567,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "\"clear_filter\": \"✕ إلغاء الفلتر\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 612,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"low_stock_only\": \"تحت حد الطلب (نواقص) 🚨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 613,
+    "is_comment": false,
+    "emojis": [
+      "⛔"
+    ],
+    "text": "\"out_of_stock_only\": \"منتهي تماماً (رصيد 0) ⛔\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 626,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"low_stock_warning\": \"⚠️ بضاعة قربت تخلص (تحت حد الطلب)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 669,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"confirm_transfer\": \"اعتماد وتنفيذ التحويل المخزني 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 686,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "\"produce_blend_now\": \"تنفيذ تشغيلة الإنتاج وخصم الخامات ⚙️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 690,
+    "is_comment": false,
+    "emojis": [
+      "🟡"
+    ],
+    "text": "\"roast_light\": \"تحضير خفيف 🟡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 691,
+    "is_comment": false,
+    "emojis": [
+      "🟤"
+    ],
+    "text": "\"roast_medium\": \"تحضير وسط 🟤\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 692,
+    "is_comment": false,
+    "emojis": [
+      "⚫"
+    ],
+    "text": "\"roast_dark\": \"تحضير مكثف ⚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 693,
+    "is_comment": false,
+    "emojis": [
+      "🔥"
+    ],
+    "text": "\"roast_double\": \"تحضير مضاعف 🔥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 694,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"grind_turkish\": \"ناعم جداً ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 695,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"grind_espresso\": \"متوسط النعومة ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 696,
+    "is_comment": false,
+    "emojis": [
+      "🫖"
+    ],
+    "text": "\"grind_french_press\": \"خشن \\/ حبيبي 🫖\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 697,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"grind_beans\": \"بدون معالجة \\/ خامة كاملة 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 719,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"blend_invoice_btn\": \"إصدار وتأكيد فاتورة التركيبة ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 723,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"blend_invoice_success\": \"تم اعتماد فاتورة التركيبة وخصم الخامات بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 754,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"movement_adj_in\": \"➕ تسوية جردية بالزيادة (إيداع مخزني)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 755,
+    "is_comment": false,
+    "emojis": [
+      "➖"
+    ],
+    "text": "\"movement_adj_out\": \"➖ تسوية جردية بالعجز (خصم مخزني)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 756,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "\"movement_waste\": \"🗑️ تسجيل هالك \\/ تالف\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 757,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"movement_deposit\": \"📦 توريد \\/ رصيد افتتاحي إضافي\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 786,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"transfer_status_done\": \"منفذ ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 787,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"transfer_status_cancelled\": \"ملغي 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 817,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "\"execute_transfer_now_btn\": \"تنفيذ التحويل المخزني ونقل البضاعة فوراً 🚚\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 822,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"transfer_executed_msg\": \"تم نقل البضاعة وتحديث أرصدة المخازن بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 921,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"category_created_success\": \"تم إنشاء الفئة بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 922,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"category_updated_success\": \"تم تعديل الفئة بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 923,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"category_deleted_success\": \"تم حذف الفئة بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1020,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"payment_cash_option\": \"💵 كاش نقدي\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1021,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "\"payment_credit_option\": \"📝 آجل\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1022,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "\"payment_partial_option\": \"⚖️ جزئي\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1024,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_confirmed_option\": \"معتمدة ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1025,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_cancelled_option\": \"ملغاة 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1042,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "\"share_whatsapp_btn\": \"مشاركة الفاتورة عبر واتساب 📱\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1043,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_receipt_btn\": \"طباعة الإيصال 🖨️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1055,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "\"preparing\": \"جاري التجهيز... ⏳\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1056,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"downloaded_success\": \"تم التحميل ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1102,
+    "is_comment": false,
+    "emojis": [
+      "💻"
+    ],
+    "text": "\"view_mode_interactive\": \"💻 عرض تفاعلي\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1103,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "\"view_mode_thermal\": \"🧾 إيصال حراري 80mm\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1104,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "\"view_mode_a4\": \"📄 فاتورة ضريبية A4\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1107,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"copied_success\": \"تم نسخ تفاصيل الفاتورة للحافظة ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1149,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "\"thank_you_note\": \"شكراً لتعاملكم معنا ونسعد بزيارتكم دائماً ☕\""
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1208,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "\"no_urgent_notifications\": \"✨ لا توجد تنبيهات عاجلة، كل شيء يسير بانتظام!\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1236,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"search_placeholder\": \"🔍 ابحث باسم الصنف أو الباركود أو الكود... (F2)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1243,
+    "is_comment": false,
+    "emojis": [
+      "👈"
+    ],
+    "text": "\"empty_cart\": \"لم يتم اختيار أي أصناف بعد. اضغط على الصنف لإضافته للفاتورة 👈\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1258,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"payment_cash\": \"💵 نقداً (كاش)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1259,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "\"payment_credit\": \"⏳ آجل (على الحساب)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1260,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "\"payment_partial\": \"⚖️ دفع جزء والباقي على الحساب\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1265,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"confirm_invoice\": \"تأكيد وإصدار الفاتورة 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1266,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"quick_amount_full\": \"كامل المبلغ 💵\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1267,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_thermal\": \"🖨️ طباعة إيصال كاشير (80mm)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1268,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "\"print_a4\": \"📄 طباعة فاتورة A4 رسمية\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1310,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"checkout_instant_btn\": \"تأكيد وحفظ الفاتورة فوري ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1322,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"checkout_btn_f9\": \"حفظ واعتماد الفاتورة (F9) ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1325,
+    "is_comment": false,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "\"invoice_success_title\": \"تم اعتماد الفاتورة بنجاح 🎉\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1326,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "\"send_whatsapp\": \"إرسال بالواتساب 📱\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1327,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_receipt\": \"طباعة الإيصال 🖨️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1376,
+    "is_comment": false,
+    "emojis": [
+      "⏎"
+    ],
+    "text": "\"add_item_btn\": \"إضافة ⏎\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1408,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"available_stock_badge\": \"📦 متاح: :qty :unit\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1409,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"out_of_stock_badge\": \"⚠️ غير متوفر: :qty :unit\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1448,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"profile_updated_success\": \"تم تحديث بيانات الملف الشخصي بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1461,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"search_placeholder\": \"🔍 ابحث بالاسم أو الكود لإضافة صنف للتوريد...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1462,
+    "is_comment": false,
+    "emojis": [
+      "👈"
+    ],
+    "text": "\"empty_items\": \"لم يتم إضافة أي أصناف للتوريد بعد. اختر الأصناف من القائمة يساراً 👈\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1470,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "\"preset_shipping\": \"🚚 + شحن ونقل\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1471,
+    "is_comment": false,
+    "emojis": [
+      "👷"
+    ],
+    "text": "\"preset_handling\": \"👷 + عتالة وتنزيل\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1472,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"preset_packaging\": \"📦 + كراتين وتغليف\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1473,
+    "is_comment": false,
+    "emojis": [
+      "📑"
+    ],
+    "text": "\"preset_customs\": \"📑 + جمارك ونولون\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1474,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"preset_custom\": \"➕ بند مخصص\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1488,
+    "is_comment": false,
+    "emojis": [
+      "📥"
+    ],
+    "text": "\"confirm_purchase\": \"تأكيد واستلام فاتورة الشراء 📥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1533,
+    "is_comment": false,
+    "emojis": [
+      "📥"
+    ],
+    "text": "\"auto_create_draft_po\": \"تحويل كافة التوصيات إلى فاتورة شراء مباشرة 📥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1534,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "\"no_reorder_needed\": \"المخزون في حالة ممتازة ولا توجد أصناف بحاجة لإعادة الشراء حالياً ✨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1547,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_confirmed_badge\": \"معتمدة وموردة ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1548,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_cancelled_badge\": \"ملغاة ومسترجعة 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1604,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"urgency_critical_only\": \"🚨 حرجة فقط\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1605,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"urgency_warning_only\": \"⚠️ تنبيه فقط\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1606,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"urgency_safe_only\": \"✅ آمن فقط\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1612,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"urgency_critical_badge\": \"🚨 حرج فوري\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1613,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"urgency_warning_badge\": \"⚠️ تنبيه وشيك\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1614,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"urgency_safe_badge\": \"✅ رصيد آمن\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1632,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"refresh_report\": \"تحديث التقرير 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1633,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_report\": \"🖨️ طباعة التقرير A4\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1829,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"confirm_return_save_btn\": \"حفظ واعتماد المرتجع 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1832,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"return_confirmed_msg\": \"تم تسجيل المرتجع وتعديل الأرصدة بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1843,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_permissions_btn\": \"حفظ الصلاحيات 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1845,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"full_permissions_badge\": \"كامل الصلاحيات ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1857,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"clear_cache_now\": \"⚡ تنظيف وتسريع الكاش الآن\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1868,
+    "is_comment": false,
+    "emojis": [
+      "📁"
+    ],
+    "text": "\"choose_logo\": \"📁 اختيار شعار جديد...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1869,
+    "is_comment": false,
+    "emojis": [
+      "📁"
+    ],
+    "text": "\"choose_logo_light\": \"📁 اختيار شعار الوضع الفاتح...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1870,
+    "is_comment": false,
+    "emojis": [
+      "📁"
+    ],
+    "text": "\"choose_logo_dark\": \"📁 اختيار شعار الوضع الداكن...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1881,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_branding_btn\": \"حفظ إعدادات الهوية والطباعة 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1894,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_telegram_btn\": \"حفظ إعدادات تيليجرام 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1923,
+    "is_comment": false,
+    "emojis": [
+      "🎨"
+    ],
+    "text": "\"save_theme_btn\": \"حفظ وتطبيق ألوان المظهر 🎨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 1999,
+    "is_comment": false,
+    "emojis": [
+      "✈"
+    ],
+    "text": "\"send_test_btn\": \"إرسال تجريبي ✈️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2004,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"settings_saved_success\": \"تم حفظ وتحديث إعدادات النظام بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2137,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_active_badge\": \"نشط ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2138,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "\"status_trial_badge\": \"تجريبي ⏳\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2139,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_suspended_badge\": \"موقوف 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2140,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"status_expired_badge\": \"منتهي ⚠️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2174,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"tenant_created_msg\": \"تم إنشاء وتهيئة المستأجر وقاعدة البيانات الخاصة به بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2176,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"status_updated_msg\": \"تم تحديث حالة المستأجر بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2188,
+    "is_comment": false,
+    "emojis": [
+      "✏"
+    ],
+    "text": "\"edit_prices_and_limits_btn\": \"تعديل الأسعار والحدود ✏️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2201,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"publish_new_apk_btn\": \"نشر إصدار APK جديد 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2221,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"upload_apk_modal_title\": \"نشر إصدار APK جديد للتطبيق 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2232,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"publish_now_btn\": \"نشر التحديث الآن 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2233,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"release_published_success\": \"تم نشر إصدار التطبيق الجديد بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2250,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_platform_settings_btn\": \"حفظ وتحديث اسم المنصة 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2252,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"platform_settings_saved_success\": \"تم حفظ وتحديث اسم وإعدادات المنصة بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2281,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"feature_enabled_badge\": \"مفعل ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2282,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "\"feature_disabled_badge\": \"معطل ✕\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2284,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"units_saved_success\": \"تم حفظ وتخصيص وحدات القياس للمستأجر بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2286,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"migrations_completed_success\": \"تم تحديث جداول وقواعد بيانات المستأجر بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2302,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"units_updated_success\": \"تم تحديث وحدات القياس للنظام بنجاح ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2309,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"tab_items\": \"الأصناف والمخزون 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2310,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "\"tab_customers\": \"العملاء 👥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2311,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "\"tab_suppliers\": \"الموردين 🏭\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2312,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "\"tab_stores\": \"الفروع والمخازن 🏬\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2313,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "\"tab_expenses\": \"المصروفات 💸\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2314,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"tab_returns\": \"المرتجعات 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2319,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"restore_btn\": \"استعادة 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2320,
+    "is_comment": false,
+    "emojis": [
+      "❌"
+    ],
+    "text": "\"force_delete_btn\": \"حذف نهائي ❌\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2387,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"expected_in_drawer_now\": \"💵 الرصيد المتوقع بالدرج الآن\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2398,
+    "is_comment": false,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "\"open_shift_modal_title\": \"🟢 فتح وردية خزينة جديدة\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2401,
+    "is_comment": false,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "\"start_shift_btn\": \"بدء وفتح الوردية 🟢\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2402,
+    "is_comment": false,
+    "emojis": [
+      "🔒"
+    ],
+    "text": "\"close_shift_modal_title\": \"🔒 إغلاق الوردية واعتماد تقرير Z-Report\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2406,
+    "is_comment": false,
+    "emojis": [
+      "🔒"
+    ],
+    "text": "\"confirm_close_shift_btn\": \"إغلاق الوردية واعتماد Z-Report 🔒\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2407,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "\"record_expense_modal\": \"💸 تسجيل مصروف تشغيلي\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2432,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"expected_drawer_balance\": \"الرصيد المتوقع بالدرج 💵\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2453,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"exact_match_no_diff\": \"مطابقة تماماً بدون عجز أو زيادة ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2467,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"method_cash_drawer\": \"💵 نقداً من درج الكاشير\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2468,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"method_instapay\": \"⚡ إنستاباي\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2469,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "\"method_wallet\": \"📱 محفظة إلكترونية\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2470,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "\"method_visa\": \"💳 فيزا وبطاقة بنكية\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2517,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "\"create_title\": \"إضافة حساب مستخدم \\/ كاشير جديد 👤\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2521,
+    "is_comment": false,
+    "emojis": [
+      "👑"
+    ],
+    "text": "\"role_admin\": \"مدير النظام 👑\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2522,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "\"role_cashier\": \"كاشير مبيعات 🛒\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2523,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"role_storekeeper\": \"أمين مخزن 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2524,
+    "is_comment": false,
+    "emojis": [
+      "💼"
+    ],
+    "text": "\"role_accountant\": \"محاسب 💼\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2537,
+    "is_comment": false,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "\"status_active\": \"مفعل 🟢\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2538,
+    "is_comment": false,
+    "emojis": [
+      "🔴"
+    ],
+    "text": "\"status_inactive\": \"معطل 🔴\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2554,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_active_badge\": \"نشط ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2555,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_inactive_badge\": \"معطل 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2837,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"action_created\": \"Created ➕\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2838,
+    "is_comment": false,
+    "emojis": [
+      "✏"
+    ],
+    "text": "\"action_updated\": \"Updated ✏️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2839,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "\"action_deleted\": \"Deleted 🗑️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2840,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"action_cancelled\": \"Cancelled 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2841,
+    "is_comment": false,
+    "emojis": [
+      "🔐"
+    ],
+    "text": "\"action_login\": \"Login 🔐\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2842,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"action_login_failed\": \"Failed Attempt ⚠️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2846,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"inspect_btn\": \"Inspect 🔍\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2876,
+    "is_comment": false,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "\"download_success_title\": \"Update package downloaded successfully! 🎉\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2884,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"update_available_title\": \"New App Update Available 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2894,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"update_and_install_now\": \"Update & Install Now ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2899,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"check_updates_now\": \"Check for Updates Now ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 2901,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"up_to_date_title\": \"App is fully up to date 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3037,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"done\": \"Done Successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3098,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"debtors_only\": \"With Outstanding Debt 🚨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3099,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"settled_only\": \"Settled Accounts (0.00) ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3178,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"supplier_creditors_only\": \"Due Balance (Creditor) 🚨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3179,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"supplier_settled_only\": \"Fully Settled ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3241,
+    "is_comment": false,
+    "emojis": [
+      "👍"
+    ],
+    "text": "\"all_items_safe_radar\": \"All items are above safety minimum 👍\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3252,
+    "is_comment": false,
+    "emojis": [
+      "👋"
+    ],
+    "text": "\"welcome_user\": \"Welcome, :name 👋\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3259,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"shift_open_badge\": \"Open ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3260,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"shift_closed_badge\": \"Closed 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3319,
+    "is_comment": false,
+    "emojis": [
+      "👍"
+    ],
+    "text": "\"all_stock_safe\": \"All items are currently at safe inventory levels 👍\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3322,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"search_screens_placeholder\": \"🔍 Search any screen or document (e.g. sale, purchase, stock)...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3365,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "\"new_expense\": \"Record New Operating Expense 💸\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3385,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "\"clear_filter\": \"✕ Clear Filter\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3430,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"low_stock_only\": \"Below Reorder Point (Shortage) 🚨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3431,
+    "is_comment": false,
+    "emojis": [
+      "⛔"
+    ],
+    "text": "\"out_of_stock_only\": \"Out of Stock (Zero Balance) ⛔\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3444,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"low_stock_warning\": \"⚠️ Low stock warning (Under reorder level)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3493,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"confirm_transfer\": \"Confirm & Execute Stock Transfer 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3510,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "\"produce_blend_now\": \"Execute Production Batch & Deduct Raw Stock ⚙️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3514,
+    "is_comment": false,
+    "emojis": [
+      "🟡"
+    ],
+    "text": "\"roast_light\": \"Light Prep 🟡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3515,
+    "is_comment": false,
+    "emojis": [
+      "🟤"
+    ],
+    "text": "\"roast_medium\": \"Standard Prep 🟤\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3516,
+    "is_comment": false,
+    "emojis": [
+      "⚫"
+    ],
+    "text": "\"roast_dark\": \"Intense Prep ⚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3517,
+    "is_comment": false,
+    "emojis": [
+      "🔥"
+    ],
+    "text": "\"roast_double\": \"Double Prep 🔥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3518,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"grind_turkish\": \"Very Fine ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3519,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"grind_espresso\": \"Medium-Fine ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3520,
+    "is_comment": false,
+    "emojis": [
+      "🫖"
+    ],
+    "text": "\"grind_french_press\": \"Coarse \\/ Granular 🫖\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3521,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"grind_beans\": \"Whole \\/ Unprocessed 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3545,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"blend_invoice_btn\": \"Issue & Confirm Assembly Invoice ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3549,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"blend_invoice_success\": \"Assembly invoice confirmed and raw stock deducted successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3580,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"movement_adj_in\": \"➕ Inventory Adjustment In (Deposit)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3581,
+    "is_comment": false,
+    "emojis": [
+      "➖"
+    ],
+    "text": "\"movement_adj_out\": \"➖ Inventory Adjustment Out (Deduct)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3582,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "\"movement_waste\": \"🗑️ Record Waste \\/ Damaged\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3583,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"movement_deposit\": \"📦 Inflow \\/ Extra Opening Stock\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3612,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"transfer_status_done\": \"Executed ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3613,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"transfer_status_cancelled\": \"Cancelled 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3643,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "\"execute_transfer_now_btn\": \"Execute Stock Transfer & Move Goods Now 🚚\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3648,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"transfer_executed_msg\": \"Goods transferred and stock balances updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3739,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"category_created_success\": \"Category created successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3740,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"category_updated_success\": \"Category updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3741,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"category_deleted_success\": \"Category deleted successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3838,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"payment_cash_option\": \"💵 Cash\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3839,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "\"payment_credit_option\": \"📝 Credit\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3840,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "\"payment_partial_option\": \"⚖️ Partial\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3842,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_confirmed_option\": \"Confirmed ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3843,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_cancelled_option\": \"Cancelled 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3860,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "\"share_whatsapp_btn\": \"Share Invoice via WhatsApp 📱\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3861,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_receipt_btn\": \"Print Receipt 🖨️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3873,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "\"preparing\": \"Preparing... ⏳\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3874,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"downloaded_success\": \"Downloaded ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3920,
+    "is_comment": false,
+    "emojis": [
+      "💻"
+    ],
+    "text": "\"view_mode_interactive\": \"💻 Interactive View\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3921,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "\"view_mode_thermal\": \"🧾 80mm Thermal Receipt\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3922,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "\"view_mode_a4\": \"📄 Official A4 Tax Invoice\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3925,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"copied_success\": \"Invoice details copied to clipboard ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 3967,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "\"thank_you_note\": \"Thank you for your business! ☕\""
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4026,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "\"no_urgent_notifications\": \"✨ No urgent alerts, everything is running smoothly!\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4054,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"search_placeholder\": \"🔍 Search item by name, barcode, or code... (F2)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4076,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"payment_cash\": \"💵 Cash\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4077,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "\"payment_credit\": \"⏳ Credit\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4078,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "\"payment_partial\": \"⚖️ Partial\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4083,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"confirm_invoice\": \"Confirm & Save Invoice 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4084,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"quick_amount_full\": \"Full Amount 💵\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4085,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_thermal\": \"🖨️ Thermal Print (80mm)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4086,
+    "is_comment": false,
+    "emojis": [
+      "📄"
+    ],
+    "text": "\"print_a4\": \"📄 A4 Invoice Print\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4128,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"checkout_instant_btn\": \"Confirm & Issue Invoice Instantly ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4140,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"checkout_btn_f9\": \"Save & Confirm Invoice (F9) ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4143,
+    "is_comment": false,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "\"invoice_success_title\": \"Invoice Confirmed Successfully 🎉\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4144,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "\"send_whatsapp\": \"Send via WhatsApp 📱\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4145,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_receipt\": \"Print Receipt 🖨️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4195,
+    "is_comment": false,
+    "emojis": [
+      "⏎"
+    ],
+    "text": "\"add_item_btn\": \"Add ⏎\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4227,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"available_stock_badge\": \"📦 Available: :qty :unit\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4228,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"out_of_stock_badge\": \"⚠️ Out of Stock: :qty :unit\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4266,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"profile_updated_success\": \"Profile updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4279,
+    "is_comment": false,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "\"search_placeholder\": \"🔍 Search by name or code to add items...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4280,
+    "is_comment": false,
+    "emojis": [
+      "👈"
+    ],
+    "text": "\"empty_items\": \"No items added yet. Select items from the list on the left 👈\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4288,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "\"preset_shipping\": \"🚚 + Shipping\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4289,
+    "is_comment": false,
+    "emojis": [
+      "👷"
+    ],
+    "text": "\"preset_handling\": \"👷 + Handling\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4290,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"preset_packaging\": \"📦 + Packaging\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4291,
+    "is_comment": false,
+    "emojis": [
+      "📑"
+    ],
+    "text": "\"preset_customs\": \"📑 + Customs\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4292,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"preset_custom\": \"➕ Custom\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4306,
+    "is_comment": false,
+    "emojis": [
+      "📥"
+    ],
+    "text": "\"confirm_purchase\": \"Confirm & Receive Purchase 📥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4315,
+    "is_comment": false,
+    "emojis": [
+      "➕"
+    ],
+    "text": "\"create_po_btn\": \"➕ Create Purchase Invoice from Suggestions\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4351,
+    "is_comment": false,
+    "emojis": [
+      "📥"
+    ],
+    "text": "\"auto_create_draft_po\": \"Convert All Suggestions to Purchase Invoice 📥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4352,
+    "is_comment": false,
+    "emojis": [
+      "✨"
+    ],
+    "text": "\"no_reorder_needed\": \"Stock is healthy, no items need reordering right now ✨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4365,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_confirmed_badge\": \"Confirmed & Supplied ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4366,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_cancelled_badge\": \"Cancelled & Reversed 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4422,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"urgency_critical_only\": \"🚨 Critical Only\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4423,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"urgency_warning_only\": \"⚠️ Warning Only\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4424,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"urgency_safe_only\": \"✅ Safe Only\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4430,
+    "is_comment": false,
+    "emojis": [
+      "🚨"
+    ],
+    "text": "\"urgency_critical_badge\": \"🚨 Critical Immediate\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4431,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"urgency_warning_badge\": \"⚠️ Imminent Alert\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4432,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"urgency_safe_badge\": \"✅ Safe Stock\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4450,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"refresh_report\": \"Update Report 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4451,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "\"print_report\": \"🖨️ Print Report (A4)\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4647,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"confirm_return_save_btn\": \"Confirm & Save Return 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4650,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"return_confirmed_msg\": \"Return recorded and stock reconciled successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4661,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_permissions_btn\": \"Save Permissions 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4663,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"full_permissions_badge\": \"Full Permissions ⚡\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4675,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"clear_cache_now\": \"⚡ Clear & Warm Cache Now\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4686,
+    "is_comment": false,
+    "emojis": [
+      "📁"
+    ],
+    "text": "\"choose_logo\": \"📁 Choose New Logo...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4687,
+    "is_comment": false,
+    "emojis": [
+      "📁"
+    ],
+    "text": "\"choose_logo_light\": \"📁 Choose Light Logo...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4688,
+    "is_comment": false,
+    "emojis": [
+      "📁"
+    ],
+    "text": "\"choose_logo_dark\": \"📁 Choose Dark Logo...\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4699,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_branding_btn\": \"Save Branding & Printing Settings 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4712,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_telegram_btn\": \"Save Telegram Settings 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4741,
+    "is_comment": false,
+    "emojis": [
+      "🎨"
+    ],
+    "text": "\"save_theme_btn\": \"Save & Apply Theme Colors 🎨\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4817,
+    "is_comment": false,
+    "emojis": [
+      "✈"
+    ],
+    "text": "\"send_test_btn\": \"Send Test ✈️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4822,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"settings_saved_success\": \"System settings saved and updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4955,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_active_badge\": \"Active ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4956,
+    "is_comment": false,
+    "emojis": [
+      "⏳"
+    ],
+    "text": "\"status_trial_badge\": \"Trial ⏳\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4957,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_suspended_badge\": \"Suspended 🚫\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4958,
+    "is_comment": false,
+    "emojis": [
+      "⚠"
+    ],
+    "text": "\"status_expired_badge\": \"Expired ⚠️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4992,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"tenant_created_msg\": \"Tenant and database provisioned successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 4994,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"status_updated_msg\": \"Tenant status updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5006,
+    "is_comment": false,
+    "emojis": [
+      "✏"
+    ],
+    "text": "\"edit_prices_and_limits_btn\": \"Edit Pricing & Limits ✏️\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5019,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"publish_new_apk_btn\": \"Publish New APK Release 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5039,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"upload_apk_modal_title\": \"Publish New App APK Release 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5050,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "\"publish_now_btn\": \"Publish Update Now 🚀\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5051,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"release_published_success\": \"New app release published successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5069,
+    "is_comment": false,
+    "emojis": [
+      "💾"
+    ],
+    "text": "\"save_platform_settings_btn\": \"Save Platform Settings 💾\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5071,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"platform_settings_saved_success\": \"Platform name and branding settings saved successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5099,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"feature_enabled_badge\": \"Enabled ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5100,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "\"feature_disabled_badge\": \"Disabled ✕\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5102,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"units_saved_success\": \"Tenant measurement units updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5104,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"migrations_completed_success\": \"Tenant database and migrations updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5120,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"units_updated_success\": \"System measurement units updated successfully ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5127,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"tab_items\": \"Items & Inventory 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5128,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "\"tab_customers\": \"Customers 👥\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5129,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "\"tab_suppliers\": \"Suppliers 🏭\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5130,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "\"tab_stores\": \"Branches & Stores 🏬\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5131,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "\"tab_expenses\": \"Expenses 💸\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5132,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"tab_returns\": \"Returns 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5137,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "\"restore_btn\": \"Restore 🔄\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5138,
+    "is_comment": false,
+    "emojis": [
+      "❌"
+    ],
+    "text": "\"force_delete_btn\": \"Force Delete ❌\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5205,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"expected_in_drawer_now\": \"💵 Expected Cash in Drawer Now\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5216,
+    "is_comment": false,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "\"open_shift_modal_title\": \"🟢 Open New Treasury Shift\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5219,
+    "is_comment": false,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "\"start_shift_btn\": \"Start & Open Shift 🟢\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5220,
+    "is_comment": false,
+    "emojis": [
+      "🔒"
+    ],
+    "text": "\"close_shift_modal_title\": \"🔒 Close Shift & Approve Z-Report\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5224,
+    "is_comment": false,
+    "emojis": [
+      "🔒"
+    ],
+    "text": "\"confirm_close_shift_btn\": \"Close Shift & Approve Z-Report 🔒\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5225,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "\"record_expense_modal\": \"💸 Record Operating Expense\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5250,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"expected_drawer_balance\": \"Expected Drawer Balance 💵\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5271,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "\"exact_match_no_diff\": \"Exact match with zero variance ✓\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5285,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "\"method_cash_drawer\": \"💵 Cash from Drawer\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5286,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "\"method_instapay\": \"⚡ InstaPay\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5287,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "\"method_wallet\": \"📱 E-Wallet\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5288,
+    "is_comment": false,
+    "emojis": [
+      "💳"
+    ],
+    "text": "\"method_visa\": \"💳 POS Card \\/ Visa\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5335,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "\"create_title\": \"Add New User \\/ Cashier 👤\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5339,
+    "is_comment": false,
+    "emojis": [
+      "👑"
+    ],
+    "text": "\"role_admin\": \"System Admin 👑\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5340,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "\"role_cashier\": \"Sales Cashier 🛒\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5341,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "\"role_storekeeper\": \"Storekeeper 📦\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5342,
+    "is_comment": false,
+    "emojis": [
+      "💼"
+    ],
+    "text": "\"role_accountant\": \"Accountant 💼\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5355,
+    "is_comment": false,
+    "emojis": [
+      "🟢"
+    ],
+    "text": "\"status_active\": \"Active 🟢\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5356,
+    "is_comment": false,
+    "emojis": [
+      "🔴"
+    ],
+    "text": "\"status_inactive\": \"Inactive 🔴\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5372,
+    "is_comment": false,
+    "emojis": [
+      "✅"
+    ],
+    "text": "\"status_active_badge\": \"Active ✅\","
+  },
+  {
+    "file": "helpers/defaultTranslations.js",
+    "line": 5373,
+    "is_comment": false,
+    "emojis": [
+      "🚫"
+    ],
+    "text": "\"status_inactive_badge\": \"Disabled 🚫\","
+  },
+  {
+    "file": "Layouts/AppLayout.vue",
+    "line": 383,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 4,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 19,
+    "is_comment": true,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<!-- 👤 User Profile Dropdown Pill -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 51,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "<span>⚙️</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 60,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "<span>👥</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 69,
+    "is_comment": false,
+    "emojis": [
+      "🛡"
+    ],
+    "text": "<span>🛡️</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 78,
+    "is_comment": false,
+    "emojis": [
+      "📜"
+    ],
+    "text": "<span>📜</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 88,
+    "is_comment": false,
+    "emojis": [
+      "🚪"
+    ],
+    "text": "<span>🚪</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 96,
+    "is_comment": true,
+    "emojis": [
+      "☀",
+      "🌙"
+    ],
+    "text": "<!-- ☀️/🌙 Theme Switcher Button -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 108,
+    "is_comment": true,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "<!-- 🖨️ Desktop Hardware & Thermal Printer Settings (Desktop Mode Only) -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 116,
+    "is_comment": false,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "<span>🖨️</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 120,
+    "is_comment": true,
+    "emojis": [
+      "🔔"
+    ],
+    "text": "<!-- 🔔 Notifications Bell Popover -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 142,
+    "is_comment": false,
+    "emojis": [
+      "🔔"
+    ],
+    "text": "<span>🔔</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 178,
+    "is_comment": true,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<!-- 🏬 Store Switcher (Branch context dropdown / badge - Desktop/Tablet) -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 188,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "🏬 {{ s.name }}"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 198,
+    "is_comment": true,
+    "emojis": [
+      "🔴",
+      "🟢"
+    ],
+    "text": "<!-- 🔴/🟢 Shift Status Badge -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 226,
+    "is_comment": false,
+    "emojis": [
+      "👑"
+    ],
+    "text": "<span>👑</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 242,
+    "is_comment": true,
+    "emojis": [
+      "🗂"
+    ],
+    "text": "<!-- 🗂️ 1.5 DESKTOP MULTI-TABS BAR (Visible ONLY on Desktop) -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 246,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 🖥️ MAIN BODY: DYNAMIC SIDEBAR + STAGE                        -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 249,
+    "is_comment": true,
+    "emojis": [
+      "💻"
+    ],
+    "text": "<!-- 💻 MODERN DESKTOP SIDEBAR -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 267,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 📱 DYNAMIC MOBILE DRAWER (Complete Mirror of Full ERP System) -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 290,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "☕"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 301,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 307,
+    "is_comment": true,
+    "emojis": [
+      "🌟"
+    ],
+    "text": "<!-- 🌟 Quick Action Button: POS -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 319,
+    "is_comment": true,
+    "emojis": [
+      "📁"
+    ],
+    "text": "<!-- 📁 LEVEL 1: MODULES CATEGORIES HUB (When No Category Selected) -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 390,
+    "is_comment": false,
+    "emojis": [
+      "👑"
+    ],
+    "text": "👑"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 402,
+    "is_comment": true,
+    "emojis": [
+      "📂"
+    ],
+    "text": "<!-- 📂 LEVEL 2: DRILL-DOWN SUB-MENU (When Category is Active) -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 467,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<span>🚀</span>"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 475,
+    "is_comment": true,
+    "emojis": [
+      "🖨"
+    ],
+    "text": "<!-- 🖨️ Desktop Hardware Settings Modal -->"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 525,
+    "is_comment": true,
+    "emojis": [
+      "🗂"
+    ],
+    "text": "// 🗂️ Sync route with desktop multi-tabs store"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 543,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "// 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 595,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "{ icon: '📦', title: 'تنبيه نواقص المخزون', desc: 'صنف جيهان أخضر وصل للحد الأدنى (5 كجم)' },"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 596,
+    "is_comment": false,
+    "emojis": [
+      "🧾"
+    ],
+    "text": "{ icon: '🧾', title: 'فاتورة مبيعات جديدة', desc: 'تم اعتماد فاتورة للعميل بن الأصيل بقيمة 4,495 ج.م' },"
+  },
+  {
+    "file": "Layouts/SpaLayout.vue",
+    "line": 597,
+    "is_comment": false,
+    "emojis": [
+      "🛡"
+    ],
+    "text": "{ icon: '🛡️', title: 'جلسة تسجيل دخول', desc: 'تم تسجيل الدخول بنجاح من لوحة الإدارة' },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 21,
+    "is_comment": false,
+    "emojis": [
+      "📊"
+    ],
+    "text": "{ name: trans('super.dashboard'), href: '/super-admin/dashboard', icon: '📊', active: route.path === '/super-admin' || route.path === '/super-admin/dashboard' },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 22,
+    "is_comment": false,
+    "emojis": [
+      "🏪"
+    ],
+    "text": "{ name: trans('super.tenants'), href: '/super-admin/tenants', icon: '🏪', active: route.path.startsWith('/super-admin/tenants') },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 23,
+    "is_comment": false,
+    "emojis": [
+      "💼"
+    ],
+    "text": "{ name: trans('super.plans'), href: '/super-admin/plans', icon: '💼', active: route.path.startsWith('/super-admin/plans') },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 24,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "{ name: 'وحدات القياس', href: '/super-admin/units', icon: '⚖️', active: route.path.startsWith('/super-admin/units') },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 25,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "{ name: trans('super.app_versions'), href: '/super-admin/app-versions', icon: '📱', active: route.path.startsWith('/super-admin/app-versions') },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 26,
+    "is_comment": false,
+    "emojis": [
+      "🔭"
+    ],
+    "text": "{ name: 'مراقب النظام (Telescope)', href: telescopeUrl.value, icon: '🔭', external: true, active: false },"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 46,
+    "is_comment": false,
+    "emojis": [
+      "✕",
+      "☰"
+    ],
+    "text": "{{ mobileMenuOpen ? '✕' : '☰' }}"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 51,
+    "is_comment": false,
+    "emojis": [
+      "🛡"
+    ],
+    "text": "🛡️"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 75,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "<span>☕</span>"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 90,
+    "is_comment": false,
+    "emojis": [
+      "🚪"
+    ],
+    "text": "<span>🚪</span>"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 113,
+    "is_comment": false,
+    "emojis": [
+      "🛡"
+    ],
+    "text": "🛡️"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 121,
+    "is_comment": false,
+    "emojis": [
+      "✕"
+    ],
+    "text": "✕"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 153,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "<span>⚡</span>"
+  },
+  {
+    "file": "Layouts/SuperAdminLayout.vue",
+    "line": 197,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "<span>⚡</span>"
+  },
+  {
+    "file": "stores/tabs.js",
+    "line": 6,
+    "is_comment": true,
+    "emojis": [
+      "🏠"
+    ],
+    "text": "// 🏠 Default initial pinned tab (Dashboard)"
+  },
+  {
+    "file": "views/DashboardView.vue",
+    "line": 10,
+    "is_comment": true,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<!-- 🚀 Metro App Menu Hub (Tiles & Operations Launcher) -->"
+  },
+  {
+    "file": "views/DashboardView.vue",
+    "line": 13,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 Facebook-Style Skeleton Loading State -->"
+  },
+  {
+    "file": "views/ActivityLogs/ActivityLogsView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "📜"
+    ],
+    "text": "icon=\"📜\""
+  },
+  {
+    "file": "views/CoffeeBlender/CoffeeBlenderView.vue",
+    "line": 6,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "icon=\"📦\""
+  },
+  {
+    "file": "views/Customers/CustomersView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "icon=\"👥\""
+  },
+  {
+    "file": "views/DailyJournal/DailyJournalView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "📖"
+    ],
+    "text": "icon=\"📖\""
+  },
+  {
+    "file": "views/Expenses/ExpensesView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "💸"
+    ],
+    "text": "icon=\"💸\""
+  },
+  {
+    "file": "views/Invoices/InvoicesView.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "<PageHeader :title=\"$t('invoices.title')\" :subtitle=\"$t('invoices.subtitle')\" :icon=\"'🛒'\">"
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 1. 🔝 Page Header & Actions -->"
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🗂"
+    ],
+    "text": ":icon=\"'🗂️'\""
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 21,
+    "is_comment": true,
+    "emojis": [
+      "🗂"
+    ],
+    "text": "<!-- 2. 🗂️ Categories Grid (With Loading & Empty State) -->"
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 30,
+    "is_comment": true,
+    "emojis": [
+      "📝"
+    ],
+    "text": "<!-- 3. 📝 Create / Edit Category Modal -->"
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 63,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "icon: '☕',"
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 83,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "form.icon = '☕';"
+  },
+  {
+    "file": "views/Items/CategoriesView.vue",
+    "line": 93,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "form.icon = cat.icon || '☕';"
+  },
+  {
+    "file": "views/Items/ItemMovementsView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "📜"
+    ],
+    "text": "icon=\"📜\""
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 1. 🔝 Page Header & Actions -->"
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": ":icon=\"'☕'\""
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 21,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 2. 📊 Summary KPIs Grid -->"
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 24,
+    "is_comment": true,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<!-- 3. 🔍 Search & Status Filters Bar -->"
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 33,
+    "is_comment": true,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<!-- 4. 📦 Items Table (Dual Responsive: Desktop Table + Mobile Cards Stack) -->"
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 45,
+    "is_comment": true,
+    "emojis": [
+      "📝"
+    ],
+    "text": "<!-- 5. 📝 Add / Edit Item Modal -->"
+  },
+  {
+    "file": "views/Items/ItemsView.vue",
+    "line": 57,
+    "is_comment": true,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "<!-- 6. ⚖️ Quick Stock Adjustment Modal -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 17,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "⚡"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 71,
+    "is_comment": true,
+    "emojis": [
+      "📂"
+    ],
+    "text": "<!-- 📂 Category Bar (Horizontal Touch-Scrollable Filter Bar) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 82,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<span class=\"text-sm\">📦</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 103,
+    "is_comment": false,
+    "emojis": [
+      "☕",
+      "☕"
+    ],
+    "text": "<span class=\"text-base\">{{ typeof cat === 'object' ? (cat.icon || '☕') : '☕' }}</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 142,
+    "is_comment": false,
+    "emojis": [
+      "📦",
+      "⚠"
+    ],
+    "text": "<span>{{ item.current_stock > 0 ? '📦' : '⚠️' }}</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 251,
+    "is_comment": false,
+    "emojis": [
+      "📦",
+      "🛍"
+    ],
+    "text": "{{ activePriceTier === 'wholesale' ? `📦 ${$t('pos.wholesale')}` : `🛍️ ${$t('pos.retail')}` }}"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 362,
+    "is_comment": true,
+    "emojis": [
+      "💳"
+    ],
+    "text": "<!-- 💳 REDESIGNED COMPREHENSIVE POS PAYMENT MODAL (Photos 2,3,4) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 374,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<span class=\"w-7 h-7 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center font-bold\">👤</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 390,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 1. قسم نوع الفاتورة والسداد (Photo 2 - Top) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 405,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "<span class=\"text-lg\">💵</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 419,
+    "is_comment": false,
+    "emojis": [
+      "📝"
+    ],
+    "text": "<span class=\"text-lg\">📝</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 433,
+    "is_comment": false,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "<span class=\"text-lg\">⚖️</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 459,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 2. قسم وسيلة التحصيل والدفع الفعلية -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 474,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "<span>💵</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 487,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "<span>⚡</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 500,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<span>📱</span>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 506,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 3. سداد نقدي سريع وحساب الباقي (Quick Cash & Change Due) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 524,
+    "is_comment": false,
+    "emojis": [
+      "🎯"
+    ],
+    "text": "🎯 {{ $t('pos.exact_amount') }} ({{ formatMoney(cartNetTotal) }})"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 558,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 4. خصم سريع (Quick Discount Presets) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 605,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 5. مصاريف الشحن والخدمات الإضافية (Photos 2,3) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 620,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "@click=\"addQuickExpense('🚚 مصاريف شحن وتوصيل', 20, 'customer_account')\""
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 623,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "🚚 شحن"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 627,
+    "is_comment": false,
+    "emojis": [
+      "🎁"
+    ],
+    "text": "@click=\"addQuickExpense('🎁 مصاريف تغليف وهدايا', 15, 'customer_account')\""
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 630,
+    "is_comment": false,
+    "emojis": [
+      "🎁"
+    ],
+    "text": "🎁 تغليف"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 634,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "@click=\"addQuickExpense('☕ خدمة / إكرامية', 10, 'customer_account')\""
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 637,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "☕ إكرامية"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 690,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "<option value=\"customer_account\">👤 {{ $t('pos.add_to_customer_invoice') }}</option>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 691,
+    "is_comment": false,
+    "emojis": [
+      "🏛"
+    ],
+    "text": "<option value=\"treasury_cash\">🏛️ {{ $t('pos.voucher_treasury_cash') }}</option>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 692,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "<option value=\"treasury_instapay\">⚡ {{ $t('pos.voucher_treasury_instapay') }}</option>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 693,
+    "is_comment": false,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<option value=\"treasury_smart_wallet\">📱 {{ $t('pos.voucher_treasury_wallet') }}</option>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 701,
+    "is_comment": true,
+    "emojis": [
+      "📌"
+    ],
+    "text": "<!-- 📌 6. شريط الإجمالي النهائي والأزرار الثابتة (Photo 4 - Sticky Bottom) -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 748,
+    "is_comment": true,
+    "emojis": [
+      "👥"
+    ],
+    "text": "<!-- 👥 Customer Picker & Quick Add Modal -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 751,
+    "is_comment": false,
+    "emojis": [
+      "➕",
+      "🔍"
+    ],
+    "text": ":title=\"isAddingNewCustomer ? '➕ تسجيل عميل جديد فوري' : '🔍 اختيار وتحديد العميل'\""
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 796,
+    "is_comment": false,
+    "emojis": [
+      "💵"
+    ],
+    "text": "💵"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 881,
+    "is_comment": false,
+    "emojis": [
+      "🛍"
+    ],
+    "text": "<option value=\"retail\">🛍️ سعر البيع (قطاعي / تجزئة)</option>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 882,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "<option value=\"wholesale\">📦 سعر الجملة (شركات وتجار)</option>"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 907,
+    "is_comment": true,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "<!-- 🎉 Success Invoice Modal -->"
+  },
+  {
+    "file": "views/POS/PosView.legacy.grid.vue",
+    "line": 916,
+    "is_comment": false,
+    "emojis": [
+      "✓"
+    ],
+    "text": "✓"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 2,
+    "is_comment": true,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "<!-- 🔄 POS Skeleton Loading State -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 7,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 🔝 1. Header & Search Command Bar -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 29,
+    "is_comment": true,
+    "emojis": [
+      "🖥"
+    ],
+    "text": "<!-- 🖥️ 2. Main Workspace: Hybrid 3-Area Layout (Cart + Product Grid + Category Sidebar) -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 32,
+    "is_comment": true,
+    "emojis": [
+      "🛒"
+    ],
+    "text": "<!-- 🛒 Right/Left (in RTL): Invoice Cart & Payment Checkout Panel -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 69,
+    "is_comment": true,
+    "emojis": [
+      "🍕"
+    ],
+    "text": "<!-- 🍕 Center: Visual Product Grid Catalog -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 81,
+    "is_comment": true,
+    "emojis": [
+      "📂"
+    ],
+    "text": "<!-- 📂 Right (in RTL): Vertical Category Sidebar -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 92,
+    "is_comment": true,
+    "emojis": [
+      "👥"
+    ],
+    "text": "<!-- 👥 Customer Picker Modal -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 105,
+    "is_comment": true,
+    "emojis": [
+      "🎉"
+    ],
+    "text": "<!-- 🎉 Success Modal -->"
+  },
+  {
+    "file": "views/POS/PosView.vue",
+    "line": 576,
+    "is_comment": false,
+    "emojis": [
+      "☕"
+    ],
+    "text": "<p style=\"margin: 4px 0; font-size: 9px;\">شكراً لزيارتكم! ☕</p>"
+  },
+  {
+    "file": "views/Profile/ProfileView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "👤"
+    ],
+    "text": "icon=\"👤\""
+  },
+  {
+    "file": "views/Purchases/CreatePurchaseView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🚛"
+    ],
+    "text": "icon=\"🚛\""
+  },
+  {
+    "file": "views/Purchases/PurchasesView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🚛"
+    ],
+    "text": "icon=\"🚛\""
+  },
+  {
+    "file": "views/Purchases/SmartReorderView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "⚡"
+    ],
+    "text": "icon=\"⚡\""
+  },
+  {
+    "file": "views/Returns/CreateReturnView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "icon=\"🔄\""
+  },
+  {
+    "file": "views/Returns/ReturnsView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🔄"
+    ],
+    "text": "icon=\"🔄\""
+  },
+  {
+    "file": "views/Roles/RolesView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🛡"
+    ],
+    "text": "icon=\"🛡️\""
+  },
+  {
+    "file": "views/Settings/SettingsView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "⚙"
+    ],
+    "text": "icon=\"⚙️\""
+  },
+  {
+    "file": "views/Settings/SettingsView.vue",
+    "line": 38,
+    "is_comment": true,
+    "emojis": [
+      "📱"
+    ],
+    "text": "<!-- 📱 Mobile Hub View -->"
+  },
+  {
+    "file": "views/Settings/SettingsView.vue",
+    "line": 45,
+    "is_comment": true,
+    "emojis": [
+      "💻"
+    ],
+    "text": "<!-- 💻 Desktop Split View & Mobile Drill-Down Active Page -->"
+  },
+  {
+    "file": "views/StockTransfers/CreateStockTransferView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "icon=\"🚚\""
+  },
+  {
+    "file": "views/StockTransfers/StockTransfersView.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🚚"
+    ],
+    "text": "<!-- 🚚 Page Header -->"
+  },
+  {
+    "file": "views/StockTransfers/StockTransfersView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🚚"
+    ],
+    "text": ":icon=\"'🚚'\""
+  },
+  {
+    "file": "views/StockTransfers/StockTransfersView.vue",
+    "line": 20,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 📊 Summary Metrics Grid -->"
+  },
+  {
+    "file": "views/StockTransfers/StockTransfersView.vue",
+    "line": 23,
+    "is_comment": true,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<!-- 🔍 Search & Filters Bar -->"
+  },
+  {
+    "file": "views/StockTransfers/StockTransfersView.vue",
+    "line": 33,
+    "is_comment": true,
+    "emojis": [
+      "📋"
+    ],
+    "text": "<!-- 📋 Transfers Ledger Table -->"
+  },
+  {
+    "file": "views/StockTransfers/StockTransfersView.vue",
+    "line": 43,
+    "is_comment": true,
+    "emojis": [
+      "👁"
+    ],
+    "text": "<!-- 👁️ Transfer Details Modal -->"
+  },
+  {
+    "file": "views/Stores/StoreStocksView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "📦"
+    ],
+    "text": "icon=\"📦\""
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 3,
+    "is_comment": true,
+    "emojis": [
+      "🔝"
+    ],
+    "text": "<!-- 1. 🔝 Page Header & Action Buttons -->"
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 4,
+    "is_comment": false,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<PageHeader :title=\"$t('inventory.stores_branches')\" :subtitle=\"$t('inventory.stores_branches_subtitle')\" :icon=\"'🏬'\">"
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 13,
+    "is_comment": true,
+    "emojis": [
+      "📊"
+    ],
+    "text": "<!-- 2. 📊 Summary Metrics Grid -->"
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 16,
+    "is_comment": true,
+    "emojis": [
+      "🔍"
+    ],
+    "text": "<!-- 3. 🔍 Search & Filters Bar -->"
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 19,
+    "is_comment": true,
+    "emojis": [
+      "🏬"
+    ],
+    "text": "<!-- 4. 🏬 Stores Cards Grid with Shimmer Skeletons -->"
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 22,
+    "is_comment": true,
+    "emojis": [
+      "📝"
+    ],
+    "text": "<!-- 5. 📝 Create / Edit Store Modal -->"
+  },
+  {
+    "file": "views/Stores/StoresView.vue",
+    "line": 25,
+    "is_comment": true,
+    "emojis": [
+      "👥"
+    ],
+    "text": "<!-- 6. 👥 Staff Assignment Modal -->"
+  },
+  {
+    "file": "views/SuperAdmin/SuperAdminAppVersionsView.vue",
+    "line": 8,
+    "is_comment": false,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "icon=\"🚀\""
+  },
+  {
+    "file": "views/SuperAdmin/SuperAdminPlansView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "💼"
+    ],
+    "text": "icon=\"💼\""
+  },
+  {
+    "file": "views/SuperAdmin/SuperAdminTenantShowView.vue",
+    "line": 26,
+    "is_comment": true,
+    "emojis": [
+      "⚖"
+    ],
+    "text": "<!-- ⚖️ Left Column: Allowed Units for This Tenant (6 Cols) -->"
+  },
+  {
+    "file": "views/SuperAdmin/SuperAdminTenantShowView.vue",
+    "line": 41,
+    "is_comment": true,
+    "emojis": [
+      "🚀"
+    ],
+    "text": "<!-- 🚀 Right Column: Feature Overrides & Configuration (6 Cols) -->"
+  },
+  {
+    "file": "views/SuperAdmin/SuperAdminTenantsView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🏢"
+    ],
+    "text": "icon=\"🏢\""
+  },
+  {
+    "file": "views/Suppliers/SuppliersView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🏭"
+    ],
+    "text": "icon=\"🏭\""
+  },
+  {
+    "file": "views/Trash/TrashView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "🗑"
+    ],
+    "text": "icon=\"🗑️\""
+  },
+  {
+    "file": "views/Users/UsersView.vue",
+    "line": 7,
+    "is_comment": false,
+    "emojis": [
+      "👥"
+    ],
+    "text": "icon=\"👥\""
+  }
+]

@@ -24,21 +24,30 @@ final class SettingController extends Controller
     /**
      * Get system settings dictionary
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('roles.manage') && !$user->can('settings.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        $tenant = function_exists('tenant') ? tenant() : null;
+        $defaultName = $tenant?->name ?? 'مؤسسة تجارية';
+
         $settings = [
-            'company_name'                   => Setting::get('company_name', 'سرور كوفي'),
-            'company_subtitle'               => Setting::get('company_subtitle', 'لتوريدات خامات مطاحن البن'),
-            'company_phone'                  => Setting::get('company_phone', '01012316954'),
-            'company_address'                => Setting::get('company_address', 'القاهرة - مصر'),
-            'invoice_footer_note'            => Setting::get('invoice_footer_note', 'شكراً لتعاملكم معنا - البضاعة المباعة ترد وتستبدل خلال 14 يوماً'),
+            'company_name'                   => Setting::get('company_name', $defaultName),
+            'company_subtitle'               => Setting::get('company_subtitle', ''),
+            'company_phone'                  => Setting::get('company_phone', ''),
+            'company_address'                => Setting::get('company_address', ''),
+            'invoice_footer_note'            => Setting::get('invoice_footer_note', ''),
             'show_print_company_name'        => Setting::getBool('show_print_company_name', true),
             'show_print_subtitle'            => Setting::getBool('show_print_subtitle', true),
             'show_print_logo'                => Setting::getBool('show_print_logo', true),
             'thermal_show_customer_balance'  => Setting::getBool('thermal_show_customer_balance', true),
             'print_show_qr'                  => Setting::getBool('print_show_qr', true),
-            'invoice_primary_color'          => Setting::get('invoice_primary_color', 'amber'),
-            'system_theme_color'             => Setting::get('system_theme_color', 'amber'),
+            'invoice_primary_color'          => Setting::get('invoice_primary_color', 'emerald'),
+            'system_theme_color'             => Setting::get('system_theme_color', 'emerald'),
+            'inventory_units'                => Setting::get('inventory_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر'),
             'telegram_bot_token'             => Setting::get('telegram_bot_token', ''),
             'telegram_chat_id'               => Setting::get('telegram_chat_id', ''),
             'telegram_notifications_enabled' => Setting::getBool('telegram_notifications_enabled', true),
@@ -61,7 +70,7 @@ final class SettingController extends Controller
             'stores'      => $stores,
             'users_count' => $usersCount,
             'system_info' => $systemInfo,
-        ]);
+        ], 200);
     }
 
     /**
@@ -76,7 +85,7 @@ final class SettingController extends Controller
                 'success'  => true,
                 'message'  => __('nav.settings_saved_success') ?: 'تم حفظ وتحديث إعدادات النظام بنجاح ✓',
                 'settings' => $updated,
-            ]);
+            ], 200);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -90,6 +99,11 @@ final class SettingController extends Controller
      */
     public function sendTestTelegram(Request $request, TelegramService $telegramService): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->hasRole('admin') && !$user->can('roles.manage') && !$user->can('settings.manage')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         $token = $request->input('bot_token');
         $chatId = $request->input('chat_id');
 
@@ -105,6 +119,6 @@ final class SettingController extends Controller
         return response()->json([
             'success' => (bool)$res['success'],
             'message' => $res['message'],
-        ]);
+        ], 200);
     }
 }
