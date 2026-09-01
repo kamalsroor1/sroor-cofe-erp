@@ -35,14 +35,16 @@ class ActivityLogService
         
         $resolvedStoreId = $storeId 
             ?: session('current_store_id') 
-            ?: Auth::user()?->getCurrentStore()?->id 
-            ?: ($subject instanceof Invoice ? $subject->store_id : null)
-            ?: ($subject instanceof CashShift ? $subject->store_id : null)
-            ?: ($subject instanceof Purchase ? $subject->store_id : null)
-            ?: ($subject instanceof Expense ? $subject->store_id : null)
-            ?: Store::getMainStore()?->id;
+            ?: ((function_exists('tenant') && tenant()) ? (
+                Auth::user()?->getCurrentStore()?->id 
+                ?: ($subject instanceof Invoice ? $subject->store_id : null)
+                ?: ($subject instanceof CashShift ? $subject->store_id : null)
+                ?: ($subject instanceof Purchase ? $subject->store_id : null)
+                ?: ($subject instanceof Expense ? $subject->store_id : null)
+                ?: (class_exists(Store::class) ? Store::getMainStore()?->id : null)
+            ) : null);
 
-        if ($resolvedStoreId && !Store::where('id', $resolvedStoreId)->exists()) {
+        if ($resolvedStoreId && (!function_exists('tenant') || !tenant() || !Store::where('id', $resolvedStoreId)->exists())) {
             $resolvedStoreId = null;
         }
 

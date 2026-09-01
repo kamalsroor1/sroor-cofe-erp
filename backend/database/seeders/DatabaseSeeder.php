@@ -41,18 +41,7 @@ class DatabaseSeeder extends Seeder
         );
         $admin2->syncRoles([$superAdminRole, $adminRole]);
 
-        // 4. Base Main Warehouse (المخزن الرئيسي الأساسي)
-        Store::firstOrCreate(
-            ['code' => 'MAIN-01'],
-            [
-                'name'      => 'المخزن والفرع الرئيسي',
-                'type'      => 'main_warehouse',
-                'is_main'   => true,
-                'is_active' => true,
-            ]
-        );
-
-        // 5. Rich Multi-Store Demo Data disabled for clean production
-        // $this->call(RichDemoDataSeeder::class);
+        // 4. Provision Base Demo/Sample Tenant (with isolated store & database)
+        $this->call(TenantSampleSeeder::class);
     }
 }

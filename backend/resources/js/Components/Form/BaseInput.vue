@@ -135,8 +135,8 @@ const props = defineProps({
   maxlength: { type: [Number, String], default: null },
   minlength: { type: [Number, String], default: null },
   clearable: { type: Boolean, default: false },
-  leadingIcon: { type: Object, default: null },
-  trailingIcon: { type: Object, default: null },
+  leadingIcon: { type: [Object, Function, String], default: null },
+  trailingIcon: { type: [Object, Function, String], default: null },
   wrapperClass: { type: String, default: '' },
   inputClass: { type: String, default: '' }
 });

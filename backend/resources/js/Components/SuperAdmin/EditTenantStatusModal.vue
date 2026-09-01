@@ -7,7 +7,7 @@
     <form @submit.prevent="$emit('submit')" class="space-y-4 text-xs font-tajawal">
       <div>
         <BaseSelect
-          :model-value="statusForm.status"
+          :model-value="(form || statusForm).status"
           @update:model-value="$emit('update:field', 'status', $event)"
           :options="statusOptions"
           :label="$t('super.account_status_label')"
@@ -18,7 +18,7 @@
 
       <div>
         <BaseInput
-          :model-value="statusForm.extend_days"
+          :model-value="(form || statusForm).extend_days"
           @update:model-value="$emit('update:field', 'extend_days', Number($event))"
           :label="$t('super.extend_subscription_label')"
           :placeholder="$t('super.extend_days_placeholder')"
@@ -62,7 +62,9 @@ const { t } = useTrans();
 
 defineProps({
   show: { type: Boolean, default: false },
-  statusForm: { type: Object, default: () => ({}) },
+  selectedTenant: { type: Object, default: null },
+  form: { type: Object, default: null },
+  statusForm: { type: Object, default: null },
   isSubmitting: { type: Boolean, default: false },
 });
 

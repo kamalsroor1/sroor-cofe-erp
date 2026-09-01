@@ -569,6 +569,9 @@ const isPosView = computed(() => route.path === '/pos' || route.path.startsWith(
 watch(
     () => route.path,
     (newPath, oldPath) => {
+        isSidebarOpen.value = false;
+        activeMobileSection.value = null;
+
         const isGoingToPos = newPath === '/pos' || newPath.startsWith('/pos');
         const isComingFromPos = oldPath && (oldPath === '/pos' || oldPath.startsWith('/pos'));
 

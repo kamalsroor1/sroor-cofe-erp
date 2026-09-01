@@ -90,13 +90,17 @@ final class ApiLoginAction
             'last_login_at' => now(),
         ]);
 
-        $user->loadMissing('stores');
+        // 7. Store Context (Only applicable in tenant context)
+        $currentStore = null;
+        $userStores = [];
 
-        // 7. Store Context
-        $currentStore = $user->getCurrentStore();
-        $userStores = $user->hasRole('admin')
-            ? Store::where('is_active', true)->orderBy('is_main', 'desc')->get(['id', 'name', 'code', 'type', 'is_main'])
-            : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
+        if (function_exists('tenant') && tenant()) {
+            $user->loadMissing('stores');
+            $currentStore = $user->getCurrentStore();
+            $userStores = $user->hasRole('admin')
+                ? Store::where('is_active', true)->orderBy('is_main', 'desc')->get(['id', 'name', 'code', 'type', 'is_main'])
+                : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
+        }
 
         // 8. Log success
         $this->activityLogService->log(

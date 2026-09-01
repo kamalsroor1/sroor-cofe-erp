@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('store_id')->nullable()->constrained('stores')->nullOnDelete();
+            $table->unsignedBigInteger('store_id')->nullable()->index();
             $table->string('module', 50)->index(); // sales, inventory, purchases, shifts, expenses, contacts, auth, system
             $table->string('action', 50)->index(); // created, updated, cancelled, deleted, restored, login, shift_opened, shift_closed, payment
             $table->nullableMorphs('subject');     // subject_type, subject_id
