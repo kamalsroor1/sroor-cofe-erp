@@ -1,116 +1,118 @@
 <template>
-  <!-- 🔄 POS Skeleton Loading State -->
-  <POSSkeleton v-if="isLoading" />
+  <div class="h-full w-full max-h-full min-h-0 overflow-hidden flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
+    <!-- 🔄 POS Skeleton Loading State -->
+    <POSSkeleton v-if="isLoading" />
 
-  <div v-else class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
-    
-    <!-- 🔝 1. Header & Search Command Bar -->
-    <POSHeader
-      ref="headerRef"
-      :app-version="appVersion"
-      :active-store="activeStore"
-      :stores="authStore.stores"
-      :active-shift="activeShift"
-      :show-catalog="showCatalog"
-      v-model:search-query="searchQuery"
-      v-model:is-search-focused="isSearchFocused"
-      v-model:highlighted-index="highlightedIndex"
-      v-model:active-price-tier="activePriceTier"
-      :search-results="searchDropdownResults"
-      :selected-customer="selectedCustomer"
-      :cart-empty="cart.length === 0"
-      :is-searching="isSearchingRemote"
-      @toggle-catalog="toggleCatalog"
-      @add-item="addItemFromDropdown"
-      @navigate-dropdown="navigateDropdown"
-      @select-highlighted="selectHighlightedOrFirstItem"
-      @close-dropdown="isSearchFocused = false"
-      @open-customer-picker="showCustomerPickerModal = true"
-      @clear-cart="clearCart"
-      @switch-store="handleSwitchStore"
-    />
-
-    <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart [DOMINANT HERO - flex-1] + Compact 3-Column Best Sellers) -->
-    <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
+    <div v-else class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
       
-      <!-- 🛒 Invoice Cart & Payment Checkout Panel (DOMINANT HERO - Takes maximum width) -->
-      <section
-        class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
-      >
-        <!-- Top Section: Cart Items Table with Integrated Order Tabs Header -->
-        <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[220px]">
-          <POSCartTable
-            :cart="cart"
-            :total-qty="cartTotalQuantity"
-            @increase-qty="increaseCartItemQty"
-            @decrease-qty="decreaseCartItemQty"
-            @update-qty="onCartQtyUpdate"
-            @update-price="onCartPriceUpdate"
-            @remove-item="removeFromCart"
-          >
-            <template #header>
-              <POSOrderTabs
-                :orders="orders"
-                :active-order-id="activeOrderId"
-                @switch-order="switchOrder"
-                @create-order="handleCreateOrder"
-                @close-order="handleCloseOrder"
-              />
-            </template>
-          </POSCartTable>
-        </div>
-
-        <!-- Bottom Section: Checkout & Financial Panel -->
-        <div class="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
-          <POSCheckoutPanel
-            :cart-count="cart.length"
-            :subtotal="cartSubtotal"
-            :discount-amount="discountAmount"
-            :discount-value="discountValue"
-            :discount-type="discountType"
-            :customer-expenses-total="customerExpensesTotal"
-            :net-total="cartNetTotal"
-            v-model:payment-type="paymentType"
-            v-model:payment-method="paymentMethod"
-            v-model:cash-received="cashReceived"
-            :change-due="changeDue"
-            :cart-empty="cart.length === 0"
-            :is-submitting="isSubmitting"
-            :expenses-count="additionalExpenses.length"
-            @apply-discount="applyDiscountPreset"
-            @submit="submitInvoice"
-            @open-expenses="showExpensesModal = true"
-            @open-multi-payment="showMultiPaymentModal = true"
-          />
-        </div>
-      </section>
-
-      <!-- 🍕 Side: Visual Product Grid Catalog (Compact 3-Column Width) -->
-      <main
-        v-if="showCatalog"
-        class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-visible lg:overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150 min-h-[300px] lg:min-h-0"
-      >
-        <POSProductGrid
-          :items="items"
-          :categories="categories"
-          :active-category-id="activeCategoryId"
-          :active-price-tier="activePriceTier"
-          :search-query="searchQuery"
-          @add-item="addToCart"
-        />
-      </main>
-
-      <!-- 📂 Right (in RTL): Compact Vertical Category Sidebar -->
-      <POSCategorySidebar
-        v-if="showCatalog"
-        class="order-3 animate-in fade-in duration-150 shrink-0"
-        :categories="categories"
-        :active-category-id="activeCategoryId"
-        :favorite-count="favoriteItemsCount"
-        :total-items-count="totalItemsCount"
-        @select-category="handleCategorySelect"
+      <!-- 🔝 1. Header & Search Command Bar -->
+      <POSHeader
+        ref="headerRef"
+        :app-version="appVersion"
+        :active-store="activeStore"
+        :stores="authStore.stores"
+        :active-shift="activeShift"
+        :show-catalog="showCatalog"
+        v-model:search-query="searchQuery"
+        v-model:is-search-focused="isSearchFocused"
+        v-model:highlighted-index="highlightedIndex"
+        v-model:active-price-tier="activePriceTier"
+        :search-results="searchDropdownResults"
+        :selected-customer="selectedCustomer"
+        :cart-empty="cart.length === 0"
+        :is-searching="isSearchingRemote"
+        @toggle-catalog="toggleCatalog"
+        @add-item="addItemFromDropdown"
+        @navigate-dropdown="navigateDropdown"
+        @select-highlighted="selectHighlightedOrFirstItem"
+        @close-dropdown="isSearchFocused = false"
+        @open-customer-picker="showCustomerPickerModal = true"
+        @clear-cart="clearCart"
+        @switch-store="handleSwitchStore"
       />
 
+      <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart [DOMINANT HERO - flex-1] + Compact 3-Column Best Sellers) -->
+      <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
+        
+        <!-- 🛒 Invoice Cart & Payment Checkout Panel (DOMINANT HERO - Takes maximum width) -->
+        <section
+          class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
+        >
+          <!-- Top Section: Cart Items Table with Integrated Order Tabs Header -->
+          <div class="flex-1 overflow-visible lg:overflow-hidden flex flex-col min-h-[160px] lg:min-h-[220px]">
+            <POSCartTable
+              :cart="cart"
+              :total-qty="cartTotalQuantity"
+              @increase-qty="increaseCartItemQty"
+              @decrease-qty="decreaseCartItemQty"
+              @update-qty="onCartQtyUpdate"
+              @update-price="onCartPriceUpdate"
+              @remove-item="removeFromCart"
+            >
+              <template #header>
+                <POSOrderTabs
+                  :orders="orders"
+                  :active-order-id="activeOrderId"
+                  @switch-order="switchOrder"
+                  @create-order="handleCreateOrder"
+                  @close-order="handleCloseOrder"
+                />
+              </template>
+            </POSCartTable>
+          </div>
+
+          <!-- Bottom Section: Checkout & Financial Panel -->
+          <div class="shrink-0 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <POSCheckoutPanel
+              :cart-count="cart.length"
+              :subtotal="cartSubtotal"
+              :discount-amount="discountAmount"
+              :discount-value="discountValue"
+              :discount-type="discountType"
+              :customer-expenses-total="customerExpensesTotal"
+              :net-total="cartNetTotal"
+              v-model:payment-type="paymentType"
+              v-model:payment-method="paymentMethod"
+              v-model:cash-received="cashReceived"
+              :change-due="changeDue"
+              :cart-empty="cart.length === 0"
+              :is-submitting="isSubmitting"
+              :expenses-count="additionalExpenses.length"
+              @apply-discount="applyDiscountPreset"
+              @submit="submitInvoice"
+              @open-expenses="showExpensesModal = true"
+              @open-multi-payment="showMultiPaymentModal = true"
+            />
+          </div>
+        </section>
+
+        <!-- 🍕 Side: Visual Product Grid Catalog (Compact 3-Column Width) -->
+        <main
+          v-if="showCatalog"
+          class="w-full lg:w-[350px] xl:w-[400px] 2xl:w-[440px] flex flex-col overflow-visible lg:overflow-hidden shrink-0 bg-slate-100/60 dark:bg-slate-900/60 border-b lg:border-b-0 lg:border-e border-slate-200 dark:border-slate-800 order-1 lg:order-2 animate-in fade-in duration-150 min-h-[300px] lg:min-h-0"
+        >
+          <POSProductGrid
+            :items="items"
+            :categories="categories"
+            :active-category-id="activeCategoryId"
+            :active-price-tier="activePriceTier"
+            :search-query="searchQuery"
+            @add-item="addToCart"
+          />
+        </main>
+
+        <!-- 📂 Right (in RTL): Compact Vertical Category Sidebar -->
+        <POSCategorySidebar
+          v-if="showCatalog"
+          class="order-3 animate-in fade-in duration-150 shrink-0"
+          :categories="categories"
+          :active-category-id="activeCategoryId"
+          :favorite-count="favoriteItemsCount"
+          :total-items-count="totalItemsCount"
+          @select-category="handleCategorySelect"
+        />
+
+      </div>
     </div>
 
     <!-- 👥 Customer Picker Modal -->

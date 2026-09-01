@@ -31,10 +31,7 @@
     <SpaLayout v-else>
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
-          <KeepAlive v-if="isDesktop" :include="tabsStore.cachedViews" :max="12">
-            <component :is="Component" :key="route.fullPath" />
-          </KeepAlive>
-          <component v-else :is="Component" :key="route.fullPath" />
+          <component :is="Component" :key="route.fullPath" />
         </transition>
       </router-view>
     </SpaLayout>
