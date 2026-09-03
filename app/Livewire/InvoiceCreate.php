@@ -51,11 +51,11 @@ class InvoiceCreate extends Component
     public $errorMessage = '';
 
     protected $rules = [
-        'customer_id'    => 'required|exists:customers,id',
-        'store_id'       => 'required|exists:stores,id',
-        'invoice_date'   => 'required|date',
-        'payment_type'   => 'required|in:cash,credit,partial',
-        'items'          => 'required|array|min:1',
+        'customer_id'       => 'required|exists:customers,id',
+        'store_id'          => 'required|exists:stores,id',
+        'invoice_date'      => 'required|date',
+        'payment_type'      => 'required|in:cash,credit,partial',
+        'items'             => 'required|array|min:1',
         'items.*.item_id'   => 'required|exists:items,id',
         'items.*.quantity'  => 'required|numeric|min:0.001',
         'items.*.unit_price'=> 'required|numeric|min:0',
@@ -225,6 +225,9 @@ class InvoiceCreate extends Component
         }
 
         $effectivePrice = $item->getEffectivePriceForStore($this->store_id);
+        $retailPrice = (string)($item->selling_price ?: $effectivePrice);
+        $wholesalePrice = (string)($item->wholesale_price ?: $item->selling_price);
+
         $lastCustomerPrice = $this->customer_id 
             ? app(CustomerPricingHelper::class)->getLastSoldPrice($this->customer_id, $item->id, $this->store_id)
             : null;
@@ -238,6 +241,8 @@ class InvoiceCreate extends Component
             'current_stock'       => $currentStock,
             'quantity'            => $qtyToAdd,
             'unit_price'          => $effectivePrice,
+            'price_retail'        => $retailPrice,
+            'price_wholesale'     => $wholesalePrice,
             'discount_amount'     => '0.000',
             'total_price'         => bcmul($qtyToAdd, $effectivePrice, 3),
             'last_customer_price' => $lastCustomerPrice,
@@ -250,8 +255,39 @@ class InvoiceCreate extends Component
     public function applyCustomerLastPrice($index)
     {
         if (isset($this->items[$index]) && !empty($this->items[$index]['last_customer_price'])) {
-            $this->items[$index]['unit_price'] = $this->items[$index]['last_customer_price']['unit_price'];
-            $this->calculateTotals();
+            $this->updateLinePrice($index, $this->items[$index]['last_customer_price']['unit_price']);
+        }
+    }
+
+    public function setLinePriceRetail($index)
+    {
+        if (isset($this->items[$index])) {
+            $price = $this->items[$index]['price_retail'] ?? $this->items[$index]['unit_price'];
+            $this->updateLinePrice($index, $price);
+        }
+    }
+
+    public function setLinePriceWholesale($index)
+    {
+        if (isset($this->items[$index])) {
+            $price = $this->items[$index]['price_wholesale'] ?? $this->items[$index]['unit_price'];
+            $this->updateLinePrice($index, $price);
+        }
+    }
+
+    public function updateLinePrice($index, $price)
+    {
+        if (isset($this->items[$index])) {
+            $this->items[$index]['unit_price'] = (string)$price;
+            $this->updatedItems($price, "{$index}.unit_price");
+        }
+    }
+
+    public function updateLineQty($index, $qty)
+    {
+        if (isset($this->items[$index])) {
+            $this->items[$index]['quantity'] = (string)$qty;
+            $this->updatedItems($qty, "{$index}.quantity");
         }
     }
 
@@ -271,9 +307,7 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            $this->items[$index]['quantity'] = $reqWeight;
-            $this->items[$index]['total_price'] = bcmul($reqWeight, $this->items[$index]['unit_price'], 3);
-            $this->calculateTotals();
+            $this->updateLineQty($index, $reqWeight);
         }
     }
 
@@ -293,9 +327,7 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            $this->items[$index]['quantity'] = $kg;
-            $this->items[$index]['total_price'] = bcmul($kg, $this->items[$index]['unit_price'], 3);
-            $this->calculateTotals();
+            $this->updateLineQty($index, $kg);
         }
     }
 
@@ -315,9 +347,7 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            $this->items[$index]['quantity'] = $newQty;
-            $this->items[$index]['total_price'] = bcmul($newQty, $this->items[$index]['unit_price'], 3);
-            $this->calculateTotals();
+            $this->updateLineQty($index, $newQty);
         }
     }
 
@@ -343,9 +373,7 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            $this->items[$index]['quantity'] = $newQty;
-            $this->items[$index]['total_price'] = bcmul($newQty, $this->items[$index]['unit_price'], 3);
-            $this->calculateTotals();
+            $this->updateLineQty($index, $newQty);
         }
     }
 
@@ -361,9 +389,7 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            $this->items[$index]['quantity'] = $newQty;
-            $this->items[$index]['total_price'] = bcmul($newQty, $this->items[$index]['unit_price'], 3);
-            $this->calculateTotals();
+            $this->updateLineQty($index, $newQty);
         }
     }
 
@@ -410,24 +436,35 @@ class InvoiceCreate extends Component
 
     public function updatedItems($value, $key)
     {
-        if (str_contains($key, 'quantity')) {
-            $parts = explode('.', $key);
-            $idx = $parts[0] ?? null;
-            if ($idx !== null && isset($this->items[$idx])) {
-                $line = $this->items[$idx];
-                $item = Item::find($line['item_id']);
+        $parts = explode('.', $key);
+        $idx = $parts[0] ?? null;
+        $field = $parts[1] ?? null;
+
+        if ($idx !== null && isset($this->items[$idx])) {
+            if ($field === 'quantity') {
+                $item = Item::find($this->items[$idx]['item_id']);
                 $currentStock = $item ? (string)$item->getStockInStore($this->store_id) : '0.000';
-                $requestedQty = (string)($line['quantity'] ?: '0');
+                $requestedQty = (string)($this->items[$idx]['quantity'] ?: '0');
 
                 if (bccomp($requestedQty, $currentStock, 3) > 0) {
-                    $msg = "عفواً، الكمية المطلوبة ({$requestedQty}) تتجاوز الرصيد المتاح بالمخزن ({$currentStock}) للصنف: {$line['name']}";
+                    $msg = "عفواً، الكمية المطلوبة ({$requestedQty}) تتجاوز الرصيد المتاح بالمخزن ({$currentStock}) للصنف: {$this->items[$idx]['name']}";
                     $this->errorMessage = $msg;
                     $this->dispatch('swal:toast', ['icon' => 'error', 'title' => $msg]);
                     $this->dispatch('swal:alert', ['icon' => 'error', 'title' => 'تجاوز رصيد المخزن!', 'message' => $msg]);
                     $this->items[$idx]['quantity'] = $currentStock;
                 }
             }
+
+            // Recalculate line total
+            $qty = (string)($this->items[$idx]['quantity'] ?: '0');
+            $price = (string)($this->items[$idx]['unit_price'] ?: '0');
+            $disc = (string)($this->items[$idx]['discount_amount'] ?? '0.000');
+            
+            $gross = bcmul($qty, $price, 3);
+            $net = bcsub($gross, $disc, 3);
+            $this->items[$idx]['total_price'] = bccomp($net, '0.000', 3) > 0 ? $net : '0.000';
         }
+
         $this->calculateTotals();
     }
 
