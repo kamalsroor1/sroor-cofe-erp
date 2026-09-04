@@ -106,8 +106,140 @@
         </div>
     </div>
 
-    <!-- Quotations Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <!-- 📱 Mobile View: Responsive Quotation Cards (Visible only on Mobile) -->
+    <div class="block md:hidden space-y-3">
+        @forelse($quotations as $quote)
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <!-- Card Header: Number + Status -->
+            <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+                <div>
+                    <span class="text-xs font-mono font-black text-amber-600 dark:text-amber-400 block">
+                        {{ $quote->quotation_number }}
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-mono">
+                        📅 {{ $quote->quotation_date->format('Y-m-d') }}
+                    </span>
+                </div>
+
+                <div>
+                    @if($quote->isConverted())
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-black text-[10px] border border-indigo-500/20">
+                            ⚡ تحول لفاتورة
+                        </span>
+                    @elseif($quote->isExpired())
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 font-bold text-[10px] border border-rose-500/20">
+                            ⚠️ منتهي
+                        </span>
+                    @elseif($quote->status === 'sent')
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-500/20">
+                            📲 تم الإرسال
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px]">
+                            مسودة
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Customer & Tier Row -->
+            <div class="flex items-center justify-between gap-2">
+                <div>
+                    <div class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
+                        <span>👤</span>
+                        <span>{{ $quote->target_customer_name }}</span>
+                    </div>
+                    @if($quote->target_customer_phone)
+                    <div class="text-[11px] text-slate-400 font-mono mt-0.5" dir="ltr">
+                        📱 {{ $quote->target_customer_phone }}
+                    </div>
+                    @endif
+                </div>
+
+                <div>
+                    @if($quote->pricing_tier === 'wholesale')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 font-bold text-[10px]">
+                            🏪 جملة
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold text-[10px]">
+                            🏷️ قطاعي
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Total Price Row -->
+            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500">إجمالي العرض ({{ count($quote->items) }} أصناف):</span>
+                <span class="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
+                    {{ number_format($quote->net_total, 2) }} <span class="text-[10px] font-normal">ج.م</span>
+                </span>
+            </div>
+
+            <!-- Mobile Actions Grid -->
+            <div class="grid grid-cols-4 gap-1.5 pt-1">
+                <!-- PDF Download -->
+                <a 
+                    href="{{ route('quotations.print', $quote->id) }}?download=1" 
+                    target="_blank"
+                    class="py-2 rounded-xl bg-rose-500/10 hover:bg-rose-600 hover:text-white text-rose-600 font-bold text-[11px] text-center transition-colors flex items-center justify-center gap-1"
+                    title="تحميل PDF"
+                >
+                    <span>📥 PDF</span>
+                </a>
+
+                <!-- WhatsApp -->
+                <button 
+                    type="button" 
+                    wire:click="sendWhatsApp({{ $quote->id }})"
+                    class="py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-300 font-bold text-[11px] text-center transition-colors flex items-center justify-center gap-1"
+                    title="واتساب"
+                >
+                    <span>📲 واتساب</span>
+                </button>
+
+                <!-- Print A4 -->
+                <a 
+                    href="{{ route('quotations.print', $quote->id) }}" 
+                    target="_blank"
+                    class="py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-[11px] text-center transition-colors flex items-center justify-center gap-1"
+                    title="معاينة وطباعة"
+                >
+                    <span>🖨️ طباعة</span>
+                </a>
+
+                <!-- Convert or View Invoice -->
+                @if(!$quote->isConverted())
+                <button 
+                    type="button" 
+                    wire:click="convertQuotationToInvoice({{ $quote->id }})"
+                    wire:confirm="هل أنت متأكد من تحويل عرض السعر إلى فاتورة مبيعات؟"
+                    class="py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-[11px] text-center transition-all flex items-center justify-center gap-1"
+                    title="تحويل لفاتورة"
+                >
+                    <span>⚡ فاتورة</span>
+                </button>
+                @else
+                <a 
+                    href="{{ route('invoices.show', $quote->converted_invoice_id) }}" 
+                    class="py-2 rounded-xl bg-indigo-500/10 text-indigo-600 font-bold text-[11px] text-center flex items-center justify-center"
+                    title="الفاتورة"
+                >
+                    <span>الفاتورة ✓</span>
+                </a>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="p-8 text-center text-slate-400 text-xs bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+            لا توجد عروض أسعار مطابقة للبحث
+        </div>
+        @endforelse
+    </div>
+
+    <!-- Quotations Table (Desktop & Tablet) -->
+    <div class="hidden md:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-xs text-slate-700 dark:text-slate-300">
                 <thead class="bg-slate-50/80 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 text-[11px]">

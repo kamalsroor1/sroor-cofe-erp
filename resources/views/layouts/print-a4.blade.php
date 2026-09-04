@@ -328,28 +328,47 @@
             const originalText = btn ? btn.innerHTML : '';
             if (btn) {
                 btn.innerHTML = '<span>جاري تجهيز PDF... ⏳</span>';
-                btn.style.opacity = '0.7';
+                btn.disabled = true;
             }
 
             const element = document.querySelector('.container');
+            const safeFilename = 'Invoice-{{ $invoice->invoice_number }}.pdf';
+
             const opt = {
-                margin:       [6, 6, 6, 6],
-                filename:     'فاتورة-مبيعات-{{ $invoice->invoice_number }}.pdf',
+                margin:       [8, 8, 8, 8],
+                filename:     safeFilename,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    allowTaint: true,
+                    letterRendering: true,
+                    logging: false 
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                if (btn) {
-                    btn.innerHTML = originalText;
-                    btn.style.opacity = '1';
-                }
-            }).catch(err => {
+            html2pdf().set(opt).from(element).toPdf().output('blob').then(function(blob) {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.style.display = 'none';
+                downloadLink.href = blobUrl;
+                downloadLink.download = safeFilename;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                setTimeout(function() {
+                    document.body.removeChild(downloadLink);
+                    window.URL.revokeObjectURL(blobUrl);
+                    if (btn) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                }, 1000);
+            }).catch(function(err) {
                 console.error('Error generating PDF:', err);
                 if (btn) {
                     btn.innerHTML = originalText;
-                    btn.style.opacity = '1';
+                    btn.disabled = false;
                 }
                 window.print();
             });

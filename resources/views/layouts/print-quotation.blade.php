@@ -211,21 +211,25 @@
         .btn-pdf { background: #e11d48; color: #fff; }
         .btn-back { background: #e2e8f0; color: #1e293b; }
         .btn-wa { background: #16a34a; color: #fff; }
+        @media (max-width: 640px) {
+            .actions-bar { flex-direction: column; align-items: stretch !important; gap: 8px; }
+            .actions-bar .btn { justify-content: center; width: 100%; }
+        }
     </style>
 </head>
 <body>
 
     <!-- Top Action Bar (No Print) -->
     <div class="actions-bar no-print">
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; flex: 1;">
             <a href="{{ route('quotations.index') }}" class="btn btn-back">
-                <span>← رجوع لعروض الأسعار</span>
+                <span>← عروض الأسعار</span>
             </a>
             <button onclick="downloadAsPDF()" class="btn btn-pdf" id="btn-download-pdf">
-                <span>📥 تحميل كملف PDF</span>
+                <span>📥 تحميل ملف PDF مباشر</span>
             </button>
             <button onclick="window.print()" class="btn btn-print">
-                <span>🖨️ طباعة العرض (Ctrl + P)</span>
+                <span>🖨️ حفظ PDF / طباعة (طريقة الهاتف)</span>
             </button>
         </div>
 
@@ -394,29 +398,49 @@
             const btn = document.getElementById('btn-download-pdf');
             const originalText = btn ? btn.innerHTML : '';
             if (btn) {
-                btn.innerHTML = '<span>⏳ جاري تجهيز وتحميل PDF...</span>';
-                btn.style.opacity = '0.7';
+                btn.innerHTML = '<span>⏳ جاري توليد وتحميل PDF...</span>';
+                btn.disabled = true;
             }
 
             const element = document.getElementById('quotation-container');
+            const safeFilename = 'Quotation-{{ $quotation->quotation_number }}.pdf';
+
             const opt = {
-                margin:       [6, 6, 6, 6],
-                filename:     'عرض-سعر-{{ $quotation->quotation_number }}.pdf',
+                margin:       [8, 8, 8, 8],
+                filename:     safeFilename,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    allowTaint: true,
+                    letterRendering: true,
+                    logging: false 
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
+            // Generate as clean blob to prevent browser download blocker and strange extension
+            html2pdf().set(opt).from(element).toPdf().output('blob').then(function(blob) {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.style.display = 'none';
+                downloadLink.href = blobUrl;
+                downloadLink.download = safeFilename;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                setTimeout(function() {
+                    document.body.removeChild(downloadLink);
+                    window.URL.revokeObjectURL(blobUrl);
+                    if (btn) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                }, 1000);
+            }).catch(function(err) {
+                console.error('PDF generation error, falling back to print:', err);
                 if (btn) {
                     btn.innerHTML = originalText;
-                    btn.style.opacity = '1';
-                }
-            }).catch(err => {
-                console.error(err);
-                if (btn) {
-                    btn.innerHTML = originalText;
-                    btn.style.opacity = '1';
+                    btn.disabled = false;
                 }
                 window.print();
             });

@@ -1,36 +1,34 @@
-<div class="space-y-4 pb-12 select-none" dir="rtl">
+<div class="space-y-4 pb-20 select-none" dir="rtl" x-data="{ mobileTab: 'catalog' }">
 
     <!-- Top Command & Pricing Tier Bar -->
-    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
         <!-- Title & Store Info -->
         <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl font-bold border border-amber-500/20 shrink-0 shadow-inner">
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl sm:text-2xl font-bold border border-amber-500/20 shrink-0 shadow-inner">
                 📋
             </div>
             <div>
-                <h1 class="text-lg md:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <span>إنشاء عرض أسعار (Price Quotation)</span>
                 </h1>
                 <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400">الفرع:</span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold font-mono">
+                    <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">الفرع:</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs font-bold font-mono">
                         🏬 {{ $currentStore?->name ?? 'الفرع الرئيسي' }}
                     </span>
                     <span class="text-slate-300 dark:text-slate-700">•</span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">تاريخ العرض: <b class="font-mono text-slate-700 dark:text-slate-300">{{ $quotation_date }}</b></span>
+                    <span class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">تاريخ العرض: <b class="font-mono text-slate-700 dark:text-slate-300">{{ $quotation_date }}</b></span>
                 </div>
             </div>
         </div>
 
         <!-- 🎛️ Master Pricing Tier Selector (Wholesale vs Retail) -->
-        <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 hidden sm:inline">نوع التسعير الأساسي:</span>
-            
-            <div class="p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-1">
+        <div class="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
+            <div class="w-full sm:w-auto p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-1">
                 <button 
                     type="button" 
                     wire:click="setPricingTier('wholesale')" 
-                    class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer {{ $pricing_tier === 'wholesale' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}"
+                    class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer {{ $pricing_tier === 'wholesale' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}"
                 >
                     <span>🏪 أسعار جملة (تجارية)</span>
                 </button>
@@ -38,7 +36,7 @@
                 <button 
                     type="button" 
                     wire:click="setPricingTier('retail')" 
-                    class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer {{ $pricing_tier === 'retail' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}"
+                    class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer {{ $pricing_tier === 'retail' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}"
                 >
                     <span>🏷️ أسعار قطاعي</span>
                 </button>
@@ -46,11 +44,39 @@
 
             <a 
                 href="{{ route('quotations.index') }}" 
-                class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1"
+                class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 shrink-0"
             >
                 <span>← عروض الأسعار</span>
             </a>
         </div>
+    </div>
+
+    <!-- 📱 Mobile Tab Switcher (Visible on Mobile / Tablet < XL) -->
+    <div class="xl:hidden sticky top-2 z-30 flex items-center p-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg text-xs font-black">
+        <button 
+            type="button" 
+            @click="mobileTab = 'catalog'" 
+            :class="mobileTab === 'catalog' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'"
+            class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+            <span class="text-base">📦</span>
+            <span>اختيار الأصناف</span>
+        </button>
+
+        <button 
+            type="button" 
+            @click="mobileTab = 'cart'" 
+            :class="mobileTab === 'cart' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'"
+            class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer relative"
+        >
+            <span class="text-base">📋</span>
+            <span>تفاصيل العرض ({{ count($items) }})</span>
+            @if(count($items) > 0)
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-mono text-[10px] font-black">
+                    {{ number_format($net_total, 0) }}ج
+                </span>
+            @endif
+        </button>
     </div>
 
     <!-- Error Alerts -->
@@ -81,7 +107,10 @@
         <!-- ========================================== -->
         <!-- 📦 Left Catalog Column (7 Cols on XL)     -->
         <!-- ========================================== -->
-        <div class="xl:col-span-7 space-y-4">
+        <div 
+            :class="mobileTab === 'catalog' ? 'block' : 'hidden xl:block'"
+            class="xl:col-span-7 space-y-4"
+        >
             
             <!-- Category Touch Filter Bar -->
             <div class="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
@@ -222,7 +251,10 @@
         <!-- ========================================== -->
         <!-- 📋 Right Quotation Column (5 Cols on XL)   -->
         <!-- ========================================== -->
-        <div class="xl:col-span-5 space-y-4">
+        <div 
+            :class="mobileTab === 'cart' ? 'block' : 'hidden xl:block'"
+            class="xl:col-span-5 space-y-4"
+        >
             
             <!-- Customer & Validity Card -->
             <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
@@ -736,6 +768,39 @@
             </div>
         </div>
     </div>
-    @endif
+    <!-- 📱 Sticky Mobile Bottom Floating Bar (When browsing catalog) -->
+    <div 
+        x-show="mobileTab === 'catalog' && {{ count($items) }} > 0" 
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="translate-y-full opacity-0"
+        x-transition:enter-end="translate-y-0 opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="translate-y-0 opacity-100"
+        x-transition:leave-end="translate-y-full opacity-0"
+        class="xl:hidden fixed bottom-3 left-3 right-3 z-40 p-3 bg-slate-900/95 dark:bg-slate-950/95 text-white backdrop-blur-md rounded-2xl border border-slate-700 shadow-2xl flex items-center justify-between gap-3"
+        style="display: none;"
+    >
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg font-bold shrink-0">
+                📋
+            </div>
+            <div>
+                <div class="text-[11px] text-slate-300 font-bold">
+                    {{ count($items) }} أصناف بالعرض
+                </div>
+                <div class="text-base font-black font-mono text-emerald-400 leading-tight">
+                    {{ number_format($net_total, 2) }} <span class="text-[10px] font-normal text-white">ج.م</span>
+                </div>
+            </div>
+        </div>
+
+        <button 
+            type="button" 
+            @click="mobileTab = 'cart'; window.scrollTo({top: 0, behavior: 'smooth'})"
+            class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-xs font-black shadow-lg shadow-amber-600/40 flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+        >
+            <span>متابعة وحفظ العرض ←</span>
+        </button>
+    </div>
 
 </div>
