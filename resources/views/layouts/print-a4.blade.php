@@ -142,12 +142,16 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
     <div class="no-print" style="max-width: 210mm; margin: 0 auto 15px auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        <button onclick="downloadAsPDF()" id="btn-download-pdf" style="padding: 10px 22px; background: #e11d48; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-family: 'Cairo'; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
+            <span>📥 تحميل كملف PDF</span>
+        </button>
         <button onclick="window.print()" style="padding: 10px 22px; background: #059669; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-family: 'Cairo'; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
-            <span>🖨️ طباعة / حفظ PDF</span>
+            <span>🖨️ طباعة الفاتورة (Ctrl + P)</span>
         </button>
         <button onclick="downloadAsImage()" id="btn-download-img" style="padding: 10px 22px; background: #d97706; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 900; font-family: 'Cairo'; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
             <span>📸 تحميل كصورة (PNG)</span>
@@ -319,6 +323,38 @@
     </div>
 
     <script>
+        function downloadAsPDF() {
+            const btn = document.getElementById('btn-download-pdf');
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<span>جاري تجهيز PDF... ⏳</span>';
+                btn.style.opacity = '0.7';
+            }
+
+            const element = document.querySelector('.container');
+            const opt = {
+                margin:       [6, 6, 6, 6],
+                filename:     'فاتورة-مبيعات-{{ $invoice->invoice_number }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                }
+            }).catch(err => {
+                console.error('Error generating PDF:', err);
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                }
+                window.print();
+            });
+        }
+
         function downloadAsImage() {
             const btn = document.getElementById('btn-download-img');
             const originalText = btn.innerHTML;

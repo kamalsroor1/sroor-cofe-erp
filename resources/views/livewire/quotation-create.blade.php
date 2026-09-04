@@ -601,8 +601,8 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons: Save, Print A4, WhatsApp -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+                <!-- Action Buttons: Save, Print A4, PDF, WhatsApp -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
                     <button 
                         type="button" 
                         wire:click="saveQuotation('save')" 
@@ -614,11 +614,20 @@
 
                     <button 
                         type="button" 
+                        wire:click="saveQuotation('pdf')" 
+                        wire:loading.attr="disabled"
+                        class="h-12 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                        <span>📥 تحميل PDF</span>
+                    </button>
+
+                    <button 
+                        type="button" 
                         wire:click="saveQuotation('print')" 
                         wire:loading.attr="disabled"
                         class="h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                        <span>🖨️ حفظ وطباعة A4</span>
+                        <span>🖨️ طباعة A4</span>
                     </button>
 
                     <button 
@@ -627,7 +636,7 @@
                         wire:loading.attr="disabled"
                         class="h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                        <span>📲 إرسال واتساب</span>
+                        <span>📲 واتساب</span>
                     </button>
                 </div>
 

@@ -209,6 +209,16 @@
                                     🖨️
                                 </a>
 
+                                <!-- Direct PDF Download -->
+                                <a 
+                                    href="{{ route('quotations.print', $quote->id) }}?download=1" 
+                                    target="_blank"
+                                    class="px-2 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 hover:text-white text-rose-600 dark:text-rose-400 font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1"
+                                    title="تحميل كملف PDF مباشر"
+                                >
+                                    <span>📥 PDF</span>
+                                </a>
+
                                 <!-- WhatsApp Share -->
                                 <button 
                                     type="button" 

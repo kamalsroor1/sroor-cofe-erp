@@ -432,6 +432,10 @@ class QuotationCreate extends Component
                 return redirect()->route('quotations.print', $quotation->id);
             }
 
+            if ($action === 'pdf') {
+                return redirect()->route('quotations.print', ['id' => $quotation->id, 'download' => 1]);
+            }
+
             if ($action === 'whatsapp') {
                 $rawMsg = $quotationService->formatWhatsAppMessage($quotation);
                 $encoded = urlencode($rawMsg);

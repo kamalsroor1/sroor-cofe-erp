@@ -208,6 +208,7 @@
         }
         .btn:hover { opacity: 0.9; }
         .btn-print { background: #0f172a; color: #fff; }
+        .btn-pdf { background: #e11d48; color: #fff; }
         .btn-back { background: #e2e8f0; color: #1e293b; }
         .btn-wa { background: #16a34a; color: #fff; }
     </style>
@@ -216,10 +217,13 @@
 
     <!-- Top Action Bar (No Print) -->
     <div class="actions-bar no-print">
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <a href="{{ route('quotations.index') }}" class="btn btn-back">
                 <span>← رجوع لعروض الأسعار</span>
             </a>
+            <button onclick="downloadAsPDF()" class="btn btn-pdf" id="btn-download-pdf">
+                <span>📥 تحميل كملف PDF</span>
+            </button>
             <button onclick="window.print()" class="btn btn-print">
                 <span>🖨️ طباعة العرض (Ctrl + P)</span>
             </button>
@@ -241,7 +245,7 @@
     </div>
 
     <!-- Printable Container -->
-    <div class="container">
+    <div class="container" id="quotation-container">
         
         <!-- Header -->
         <div class="header">
@@ -383,5 +387,47 @@
 
     </div>
 
+    <!-- html2pdf for direct PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadAsPDF() {
+            const btn = document.getElementById('btn-download-pdf');
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<span>⏳ جاري تجهيز وتحميل PDF...</span>';
+                btn.style.opacity = '0.7';
+            }
+
+            const element = document.getElementById('quotation-container');
+            const opt = {
+                margin:       [6, 6, 6, 6],
+                filename:     'عرض-سعر-{{ $quotation->quotation_number }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                }
+            }).catch(err => {
+                console.error(err);
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                }
+                window.print();
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('download') || urlParams.has('pdf')) {
+                setTimeout(downloadAsPDF, 700);
+            }
+        });
+    </script>
 </body>
 </html>
