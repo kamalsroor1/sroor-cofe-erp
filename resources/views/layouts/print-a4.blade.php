@@ -16,14 +16,24 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; }
             .table th { background: #000 !important; color: #fff !important; }
         }
+        * {
+            box-sizing: border-box;
+            letter-spacing: normal !important;
+        }
         body {
             font-family: 'Cairo', 'Tajawal', sans-serif;
+            direction: rtl;
+            text-align: right;
+            unicode-bidi: embed;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: "kern" 1, "liga" 1;
             color: #000000;
             background: #f1f5f9;
             padding: 20px;
             font-size: 14px;
             font-weight: 700;
-            line-height: 1.4;
+            line-height: 1.5;
         }
         .container {
             max-width: 210mm;
@@ -33,6 +43,8 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             border: 1px solid #cbd5e1;
+            direction: rtl;
+            text-align: right;
         }
         .header {
             display: flex;
@@ -47,7 +59,7 @@
             color: #000;
             font-size: 26px;
             font-weight: 900;
-            letter-spacing: -0.5px;
+            letter-spacing: normal;
         }
         .brand-subtitle {
             margin: 4px 0 0 0;
@@ -142,7 +154,7 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -323,7 +335,7 @@
     </div>
 
     <script>
-        function downloadAsPDF() {
+        async function downloadAsPDF() {
             const btn = document.getElementById('btn-download-pdf');
             const originalText = btn ? btn.innerHTML : '';
             if (btn) {
@@ -331,24 +343,69 @@
                 btn.disabled = true;
             }
 
-            const element = document.querySelector('.container');
-            const safeFilename = 'Invoice-{{ $invoice->invoice_number }}.pdf';
+            try {
+                // 1. الانتظار حتى اكتمال تحميل خطوط المتصفح العربية
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
+                }
 
-            const opt = {
-                margin:       [8, 8, 8, 8],
-                filename:     safeFilename,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true, 
-                    allowTaint: true,
-                    letterRendering: true,
-                    logging: false 
-                },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+                // 2. إعادة التمرير للأعلى لمنع أي قص
+                window.scrollTo(0, 0);
 
-            html2pdf().set(opt).from(element).toPdf().output('blob').then(function(blob) {
+                const element = document.querySelector('.container');
+                const safeFilename = 'Invoice-{{ $invoice->invoice_number }}.pdf';
+
+                // 3. التقاط المحتوى بدقة عالية مع إلغاء تقطيع الحروف العربية
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: false,
+                    letterRendering: false, // ⚠️ يمنع تقطيع الحروف العربية نهائياً
+                    backgroundColor: '#ffffff',
+                    scrollX: 0,
+                    scrollY: 0,
+                    logging: false,
+                    onclone: (clonedDoc) => {
+                        const target = clonedDoc.querySelector('.container');
+                        if (target) {
+                            target.style.direction = 'rtl';
+                            target.style.textAlign = 'right';
+                            target.style.letterSpacing = 'normal';
+                        }
+                    }
+                });
+
+                // 4. بناء الـ PDF بحجم A4 وإدراج الصورة بجودة فائقة
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+                const pdf = new jsPDFConstructor({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                    compress: true
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 8; // هوامش 8 مم
+                const contentWidth = pageWidth - (margin * 2);
+                const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+                let heightLeft = contentHeight;
+                let position = margin;
+
+                pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight, undefined, 'FAST');
+                heightLeft -= (pageHeight - (margin * 2));
+
+                while (heightLeft > 0) {
+                    position = heightLeft - contentHeight + margin;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight, undefined, 'FAST');
+                    heightLeft -= (pageHeight - (margin * 2));
+                }
+
+                // 5. حفظ وتنزيل الـ Blob الآمن
+                const blob = pdf.output('blob');
                 const blobUrl = window.URL.createObjectURL(blob);
                 const downloadLink = document.createElement('a');
                 downloadLink.style.display = 'none';
@@ -356,7 +413,8 @@
                 downloadLink.download = safeFilename;
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
-                setTimeout(function() {
+
+                setTimeout(() => {
                     document.body.removeChild(downloadLink);
                     window.URL.revokeObjectURL(blobUrl);
                     if (btn) {
@@ -364,14 +422,15 @@
                         btn.disabled = false;
                     }
                 }, 1000);
-            }).catch(function(err) {
+
+            } catch (err) {
                 console.error('Error generating PDF:', err);
                 if (btn) {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
                 window.print();
-            });
+            }
         }
 
         function downloadAsImage() {
