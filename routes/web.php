@@ -48,6 +48,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{id}', InvoiceShow::class)->name('invoices.show')->middleware('can:invoices.view');
     Route::get('/invoices/{id}/edit', App\Livewire\InvoiceEdit::class)->name('invoices.edit')->middleware('can:invoices.edit');
 
+    // Price Quotations (عروض الأسعار)
+    Route::get('/quotations', App\Livewire\QuotationIndex::class)->name('quotations.index')->middleware('can:invoices.view');
+    Route::get('/quotations/create', App\Livewire\QuotationCreate::class)->name('quotations.create')->middleware('can:pos.access');
+    Route::get('/quotations/{id}/print', function ($id) {
+        $quotation = \App\Models\Quotation::with(['customer', 'store', 'user', 'items.item'])->findOrFail($id);
+        return view('layouts.print-quotation', compact('quotation'));
+    })->name('quotations.print')->middleware('can:invoices.view');
+
     // Printing Routes
     Route::get('/invoices/{id}/print/thermal', function ($id) {
         $invoice = Invoice::with(['customer', 'items.item', 'additionalExpenses'])->findOrFail($id);
