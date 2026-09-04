@@ -768,6 +768,8 @@
             </div>
         </div>
     </div>
+    @endif
+
     <!-- 📱 Sticky Mobile Bottom Floating Bar (When browsing catalog) -->
     <div 
         x-show="mobileTab === 'catalog' && {{ count($items) }} > 0" 
