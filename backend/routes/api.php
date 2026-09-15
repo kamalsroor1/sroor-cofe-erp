@@ -35,7 +35,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
 
-        // System Context (Bootstrap payload replacing Inertia::share)
+        // System Context (Bootstrap payload for the SPA)
         Route::get('/system/context', [SystemContextApiController::class, 'context'])->name('api.system.context');
 
         // Permissions & Roles Tree

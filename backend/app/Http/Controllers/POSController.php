@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-use App\Actions\POS\GetPOSBootstrapDataAction;
+use Illuminate\View\View;
 use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\Actions\Customers\QuickCreateCustomerAction;
 use App\Actions\Customers\GetCustomerLastSoldPriceAction;
@@ -17,20 +15,18 @@ use Exception;
 class POSController extends Controller
 {
     public function __construct(
-        protected GetPOSBootstrapDataAction $getPOSBootstrapDataAction,
         protected ProcessPOSInvoiceAction $processInvoiceAction,
         protected QuickCreateCustomerAction $quickCreateCustomerAction,
         protected GetCustomerLastSoldPriceAction $getCustomerLastPriceAction
     ) {}
 
     /**
-     * Display the ultra-fast Vue 3 POS Cashier Screen
+     * Serve the Vue 3 SPA shell; the cashier screen pulls its bootstrap
+     * payload from Api\PosController.
      */
-    public function index(Request $request): Response
+    public function index(): View
     {
-        $data = $this->getPOSBootstrapDataAction->execute($request->user());
-
-        return Inertia::render('POS/Index', $data);
+        return view('app');
     }
 
     /**

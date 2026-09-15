@@ -112,7 +112,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     /**
      * الحصول على كافة الفيتشرز المتاحة للمستأجر (من الباقة + الفيتشرز اليدوية).
-     * تُستخدم لمشاركتها مع الواجهة عبر Inertia أو Blade.
+     * تُستخدم لمشاركتها مع الواجهة عبر الـ API.
      */
     public function getAllFeatures(): array
     {

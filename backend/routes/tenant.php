@@ -23,7 +23,7 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
 
-    // 1. Guest Authentication Routes (Inertia.js + Vue 3)
+    // 1. Guest Authentication Routes (Vue 3 SPA)
     Route::middleware('guest')->group(function () {
         Route::get('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])->name('login');
         Route::post('/login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store']);
@@ -45,7 +45,7 @@ Route::middleware([
         $port = request()->getPort() ? (':' . request()->getPort()) : '';
         $scheme = request()->getScheme();
 
-        return \Inertia\Inertia::location("{$scheme}://{$centralDomain}{$port}/admin/super/tenants");
+        return redirect()->away("{$scheme}://{$centralDomain}{$port}/admin/super/tenants");
     })->name('impersonate.leave')->middleware('auth');
 
     // 2. Logout Route
@@ -75,7 +75,7 @@ Route::middleware([
 
     // 3. Protected POS, ERP & Inventory Routes
     Route::middleware('auth')->group(function () {
-        // Dashboard (Inertia.js + Vue 3 SPA)
+        // Dashboard (Vue 3 SPA)
         Route::get('/', fn() => view('app'))->name('dashboard');
 
         // Invoices & POS (Vue 3 Fast Cashier Engine)
@@ -259,7 +259,7 @@ Route::middleware([
             if (in_array($theme, ['dark', 'light']) && Auth::check()) {
                 Auth::user()->update(['theme_preference' => $theme]);
             }
-            if ($request->wantsJson() && !$request->header('X-Inertia')) {
+            if ($request->wantsJson()) {
                 return response()->json(['status' => 'success', 'theme' => $theme]);
             }
             return back();
@@ -274,14 +274,14 @@ Route::middleware([
                 $user = Auth::user();
                 if ($user->hasRole('admin') || $user->stores()->where('stores.id', $storeId)->exists() || (int)$user->default_store_id === $storeId) {
                     session(['current_store_id' => $storeId]);
-                    if ($request->wantsJson() && !$request->header('X-Inertia')) {
+                    if ($request->wantsJson()) {
                         return response()->json(['status' => 'success', 'store' => $store]);
                     }
                     return back()->with('success', "تم التبديل إلى ({$store->name}) بنجاح");
                 }
             }
 
-            if ($request->wantsJson() && !$request->header('X-Inertia')) {
+            if ($request->wantsJson()) {
                 return response()->json(['status' => 'error', 'message' => 'غير مصرح'], 403);
             }
             return back()->with('error', 'غير مصرح بالوصول إلى هذا الفرع');

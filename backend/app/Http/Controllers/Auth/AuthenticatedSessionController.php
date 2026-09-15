@@ -11,8 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 final class AuthenticatedSessionController extends Controller
 {
@@ -21,11 +20,11 @@ final class AuthenticatedSessionController extends Controller
     ) {}
 
     /**
-     * Display the Vue 3 Inertia Login view.
+     * Serve the Vue 3 SPA shell; vue-router renders the login view.
      */
-    public function create(): Response
+    public function create(): View
     {
-        return Inertia::render('Auth/Login');
+        return view('app');
     }
 
     /**
