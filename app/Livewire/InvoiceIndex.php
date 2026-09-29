@@ -89,13 +89,13 @@ class InvoiceIndex extends Component
         abort_if(!auth()->user()?->can('trash.access'), 403, 'غير مصرح لك باسترجاع الفواتير المحذوفة');
 
         try {
+            // Deleting an invoice reversed its stock, payments and lines; a bare restore() would bring back
+            // its totals and COGS without them. Refused (same rule as TrashIndex::restoreInvoice).
             $invoice = Invoice::onlyTrashed()->findOrFail($invoiceId);
-            $invoice->restore();
 
-            session()->flash('success', "تم استعادة الفاتورة رقم {$invoice->invoice_number} بنجاح.");
             $this->dispatch('swal:toast', [
-                'icon'  => 'success',
-                'title' => "تم استعادة الفاتورة {$invoice->invoice_number} بنجاح!"
+                'icon'  => 'warning',
+                'title' => "لا يمكن استعادة الفاتورة [{$invoice->invoice_number}]: تم عكس أثرها المخزني والمالي عند الحذف. برجاء إنشاء فاتورة جديدة بنفس البيانات.",
             ]);
         } catch (Exception $e) {
             $this->dispatch('swal:toast', ['icon' => 'error', 'title' => $e->getMessage()]);

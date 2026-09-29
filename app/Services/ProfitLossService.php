@@ -80,7 +80,7 @@ class ProfitLossService
                 foreach ($ret->items as $ritem) {
                     $itemCost = bccomp((string)$ritem->cost_price, '0.000', 3) > 0
                         ? (string)$ritem->cost_price
-                        : (string)($ritem->item?->weighted_avg_cost ?: ($ritem->item?->cost_price ?: '0.000'));
+                        : ($ritem->item?->effectiveCost() ?? '0.000');
                     $rcogs = bcmul((string)$ritem->quantity, $itemCost, 3);
                     $returnCogs = bcadd($returnCogs, $rcogs, 3);
                 }

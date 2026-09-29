@@ -55,7 +55,7 @@ class ReorderAssistantService
             $dailyConsumption = bcdiv($qtySold, (string)$analysisDays, 3);
 
             $currentStock = (string)($item->current_stock ?: '0.000');
-            $unitCost = (string)($item->weighted_avg_cost ?: ($item->cost_price ?: '0.000'));
+            $unitCost = $item->effectiveCost();
 
             // Days of stock remaining
             if (bccomp($dailyConsumption, '0.000', 3) > 0) {

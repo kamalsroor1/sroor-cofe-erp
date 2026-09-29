@@ -195,7 +195,8 @@ class ExportService
         $rows = [];
 
         foreach ($items as $itm) {
-            $costVal = bcmul($itm->current_stock, $itm->cost_price, 3);
+            $unitCost = $itm->effectiveCost();
+            $costVal = bcmul((string)$itm->current_stock, $unitCost, 3);
             $sellVal = bcmul($itm->current_stock, $itm->selling_price, 3);
             $profitExp = bcsub($sellVal, $costVal, 3);
 
@@ -205,7 +206,7 @@ class ExportService
                 $itm->category ?? 'عام',
                 $itm->unit,
                 number_format((float)$itm->current_stock, 3),
-                number_format((float)$itm->cost_price, 2),
+                number_format((float)$unitCost, 2),
                 number_format((float)$itm->selling_price, 2),
                 number_format((float)$costVal, 2),
                 number_format((float)$sellVal, 2),

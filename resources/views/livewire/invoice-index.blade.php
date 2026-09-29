@@ -249,15 +249,9 @@
                         </td>
                         <td class="p-3.5 text-center flex items-center justify-center gap-1.5">
                             @if($inv->trashed())
-                                @can('trash.access')
-                                <button
-                                    wire:click="restoreInvoice({{ $inv->id }})"
-                                    class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-bold text-[11px] border border-emerald-500/30 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                                    title="استعادة الفاتورة"
-                                >
-                                    <span>♻️ استعادة</span>
-                                </button>
-                                @endcan
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-[11px] border border-slate-300 dark:border-slate-700" title="تم عكس أثر الفاتورة المخزني والمالي عند الحذف؛ أنشئ فاتورة جديدة بدلاً من الاستعادة">
+                                    🗑️ محذوفة
+                                </span>
                             @else
                                 <a href="{{ route('invoices.show', $inv->id) }}" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold text-[11px] transition-colors border border-slate-300 dark:border-slate-700">
                                     تفاصيل / طباعة

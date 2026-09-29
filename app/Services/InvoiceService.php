@@ -7,6 +7,7 @@ use App\Models\Item;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Expense;
+use App\Support\WeightedAverageCost;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -71,9 +72,7 @@ class InvoiceService
                     $netLineTotal = '0.000';
                 }
 
-                $effectiveCost = bccomp($item->weighted_avg_cost, '0.000', 3) > 0
-                    ? $item->weighted_avg_cost
-                    : $item->cost_price;
+                $effectiveCost = $item->effectiveCost();
 
                 $lineCost = bcmul($qty, $effectiveCost, 3);
                 $totalCost = bcadd($totalCost, $lineCost, 3);
@@ -269,6 +268,7 @@ class InvoiceService
             // Reverse stock for each line
             foreach ($lockedInvoice->items as $itemLine) {
                 $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
+                $this->blendRestockIntoWac($item, (string)$itemLine->quantity, (string)$itemLine->cost_price);
 
                 $this->stockService->addStock(
                     item: $item,
@@ -325,6 +325,7 @@ class InvoiceService
                 foreach ($lockedInvoice->items as $oldLine) {
                     $item = Item::where('id', $oldLine->item_id)->lockForUpdate()->first();
                     if ($item) {
+                        $this->blendRestockIntoWac($item, (string)$oldLine->quantity, (string)$oldLine->cost_price);
                         $this->stockService->addStock(
                             item: $item,
                             quantity: $oldLine->quantity,
@@ -339,11 +340,9 @@ class InvoiceService
                 }
             }
 
-            // Delete old items and previous stock movements for this invoice
+            // Soft-delete old lines. Stock movements are kept (sales_out + cancellation_in pair)
+            // so the item ledger stays continuous.
             $lockedInvoice->items()->delete();
-            \App\Models\StockMovement::where('source_type', Invoice::class)
-                ->where('source_id', $lockedInvoice->id)
-                ->delete();
 
             // 2. Add new items, deduct new stock, calculate new subtotal and total cost
             $subtotal = '0.000';
@@ -361,9 +360,7 @@ class InvoiceService
                     $netLineTotal = '0.000';
                 }
 
-                $effectiveCost = bccomp($item->weighted_avg_cost, '0.000', 3) > 0
-                    ? $item->weighted_avg_cost
-                    : $item->cost_price;
+                $effectiveCost = $item->effectiveCost();
 
                 $lineCost = bcmul($qty, $effectiveCost, 3);
                 $totalCost = bcadd($totalCost, $lineCost, 3);
@@ -576,6 +573,7 @@ class InvoiceService
                 foreach ($lockedInvoice->items as $itemLine) {
                     $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->first();
                     if ($item) {
+                        $this->blendRestockIntoWac($item, (string)$itemLine->quantity, (string)$itemLine->cost_price);
                         $this->stockService->addStock(
                             item: $item,
                             quantity: $itemLine->quantity,
@@ -593,10 +591,7 @@ class InvoiceService
             // 2. Delete any payment vouchers linked directly to this invoice
             Payment::where('invoice_id', $lockedInvoice->id)->delete();
 
-            // 3. Delete Stock movements linked to this invoice
-            \App\Models\StockMovement::where('source_type', Invoice::class)
-                ->where('source_id', $lockedInvoice->id)
-                ->delete();
+            // 3. Stock movements are kept (sales_out + cancellation_in) as the audit trail.
 
             // 4. Delete invoice items
             $lockedInvoice->items()->delete();
@@ -627,6 +622,25 @@ class InvoiceService
 
             return true;
         });
+    }
+
+    /**
+     * Goods coming back from a cancelled / edited / deleted sale re-enter the weighted average
+     * at the cost they were sold at. Caller must hold the item row lock inside a transaction.
+     */
+    private function blendRestockIntoWac(Item $item, string $quantity, string $unitCost): void
+    {
+        if (bccomp($unitCost, '0.000', 3) <= 0) {
+            $unitCost = $item->effectiveCost();
+        }
+
+        $item->weighted_avg_cost = WeightedAverageCost::add(
+            (string)$item->current_stock,
+            $item->effectiveCost(),
+            $quantity,
+            $unitCost
+        );
+        $item->save();
     }
 
     public function generateUniqueNumber(?int $storeId = null): string

@@ -60,18 +60,29 @@ class TrashIndex extends Component
         $this->dispatch('swal:toast', ['icon' => 'success', 'title' => "تم استعادة الفرع [{$store->name}] بنجاح!"]);
     }
 
+    /**
+     * Deleting an invoice reverses its stock, payments and lines. A bare restore() would bring back
+     * its totals and COGS without its lines or stock deduction, so it is refused.
+     */
     public function restoreInvoice(int $id)
     {
         $invoice = Invoice::onlyTrashed()->findOrFail($id);
-        $invoice->restore();
-        $this->dispatch('swal:toast', ['icon' => 'success', 'title' => "تم استعادة الفاتورة [{$invoice->invoice_number}] بنجاح!"]);
+        $this->dispatch('swal:toast', [
+            'icon'  => 'warning',
+            'title' => "لا يمكن استعادة الفاتورة [{$invoice->invoice_number}]: تم عكس أثرها المخزني والمالي عند الحذف. برجاء إنشاء فاتورة جديدة بنفس البيانات.",
+        ]);
     }
 
+    /**
+     * Same reason as restoreInvoice(): the purchase was cancelled (stock reversed) before deletion.
+     */
     public function restorePurchase(int $id)
     {
         $purchase = Purchase::onlyTrashed()->findOrFail($id);
-        $purchase->restore();
-        $this->dispatch('swal:toast', ['icon' => 'success', 'title' => "تم استعادة فاتورة الشراء [{$purchase->purchase_number}] بنجاح!"]);
+        $this->dispatch('swal:toast', [
+            'icon'  => 'warning',
+            'title' => "لا يمكن استعادة فاتورة الشراء [{$purchase->purchase_number}]: تم عكس أثرها المخزني عند الحذف. برجاء تسجيل فاتورة شراء جديدة.",
+        ]);
     }
 
     public function restoreExpense(int $id)

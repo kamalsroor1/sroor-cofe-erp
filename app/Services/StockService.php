@@ -7,8 +7,10 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\StockMovement;
 use App\Models\StockDeposit;
+use App\Support\WeightedAverageCost;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class StockService
@@ -39,7 +41,8 @@ class StockService
         string $documentNumber,
         string $movementType = 'sales_out',
         ?string $notes = null,
-        ?int $storeId = null
+        ?int $storeId = null,
+        ?string $unitCost = null
     ): StockMovement {
         // 1. Lock master item row
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
@@ -86,7 +89,7 @@ class StockService
             'quantity'        => $quantity,
             'stock_before'    => $stockBefore,
             'stock_after'     => $stockAfter,
-            'unit_cost'       => $lockedItem->cost_price,
+            'unit_cost'       => $unitCost ?? $lockedItem->effectiveCost(),
             'source_type'     => get_class($source),
             'source_id'       => $source->getKey(),
             'document_number' => $documentNumber,
@@ -159,7 +162,10 @@ class StockService
     }
 
     /**
-     * Manual deposit / opening balance / adjustment
+     * Manual deposit / opening balance.
+     * The deposited quantity is blended into the weighted average cost. A deposit with cost 0
+     * is valued at the item's current effective cost; if no cost is known at all it is rejected,
+     * so an opening balance can never seed a zero cost again.
      */
     public function depositStock(
         Item $item,
@@ -170,65 +176,81 @@ class StockService
         ?string $depositDate = null,
         ?int $storeId = null
     ): StockDeposit {
-        $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
+        return DB::transaction(function () use ($item, $quantity, $costPrice, $depositType, $reason, $depositDate, $storeId) {
+            $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
-        if (!$storeId) {
-            $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
-        }
+            $explicitCost = bccomp($costPrice, '0.000', 3) > 0;
+            if (!$explicitCost) {
+                $costPrice = $lockedItem->effectiveCost();
+            }
+            if (bccomp($costPrice, '0.000', 3) <= 0) {
+                throw new Exception("لا يمكن إيداع رصيد للصنف [{$lockedItem->name}] بتكلفة صفر. برجاء إدخال سعر التكلفة أولاً.");
+            }
 
-        if ($storeId) {
-            $storeStock = StoreStock::firstOrCreate(
-                [
-                    'store_id' => $storeId,
-                    'item_id'  => $lockedItem->id,
-                ],
-                [
-                    'quantity'             => '0.000',
-                    'min_stock'            => $lockedItem->min_stock_level,
-                    'custom_selling_price' => null,
-                ]
+            if (!$storeId) {
+                $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
+            }
+
+            if ($storeId) {
+                $storeStock = StoreStock::firstOrCreate(
+                    [
+                        'store_id' => $storeId,
+                        'item_id'  => $lockedItem->id,
+                    ],
+                    [
+                        'quantity'             => '0.000',
+                        'min_stock'            => $lockedItem->min_stock_level,
+                        'custom_selling_price' => null,
+                    ]
+                );
+
+                $storeStock = StoreStock::where('id', $storeStock->id)->lockForUpdate()->first();
+                $storeStock->quantity = bcadd((string)$storeStock->quantity, $quantity, 3);
+                $storeStock->save();
+            }
+
+            $stockBefore = (string)$lockedItem->current_stock;
+            $stockAfter = bcadd($stockBefore, $quantity, 3);
+
+            $lockedItem->weighted_avg_cost = WeightedAverageCost::add(
+                $stockBefore,
+                $lockedItem->effectiveCost(),
+                $quantity,
+                $costPrice
             );
+            $lockedItem->current_stock = $stockAfter;
+            if ($explicitCost) {
+                $lockedItem->cost_price = $costPrice;
+            }
+            $lockedItem->save();
 
-            $storeStock = StoreStock::where('id', $storeStock->id)->lockForUpdate()->first();
-            $storeStock->quantity = bcadd((string)$storeStock->quantity, $quantity, 3);
-            $storeStock->save();
-        }
+            $deposit = StockDeposit::create([
+                'item_id'      => $lockedItem->id,
+                'user_id'      => Auth::id() ?? 1,
+                'deposit_type' => $depositType,
+                'quantity'     => $quantity,
+                'cost_price'   => $costPrice,
+                'reason'       => $reason,
+                'deposit_date' => $depositDate ?? now()->toDateString(),
+            ]);
 
-        $stockBefore = (string)$lockedItem->current_stock;
-        $stockAfter = bcadd($stockBefore, $quantity, 3);
+            StockMovement::create([
+                'item_id'         => $lockedItem->id,
+                'store_id'        => $storeId,
+                'movement_type'   => 'stock_deposit_in',
+                'quantity'        => $quantity,
+                'stock_before'    => $stockBefore,
+                'stock_after'     => $stockAfter,
+                'unit_cost'       => $costPrice,
+                'source_type'     => StockDeposit::class,
+                'source_id'       => $deposit->id,
+                'document_number' => "DEP-{$deposit->id}",
+                'user_id'         => Auth::id() ?? 1,
+                'notes'           => $reason ?? "إيداع مخزني يدوي",
+            ]);
 
-        $lockedItem->current_stock = $stockAfter;
-        if (bccomp($costPrice, '0.000', 3) > 0) {
-            $lockedItem->cost_price = $costPrice;
-        }
-        $lockedItem->save();
-
-        $deposit = StockDeposit::create([
-            'item_id'      => $lockedItem->id,
-            'user_id'      => Auth::id() ?? 1,
-            'deposit_type' => $depositType,
-            'quantity'     => $quantity,
-            'cost_price'   => $costPrice,
-            'reason'       => $reason,
-            'deposit_date' => $depositDate ?? now()->toDateString(),
-        ]);
-
-        StockMovement::create([
-            'item_id'         => $lockedItem->id,
-            'store_id'        => $storeId,
-            'movement_type'   => 'stock_deposit_in',
-            'quantity'        => $quantity,
-            'stock_before'    => $stockBefore,
-            'stock_after'     => $stockAfter,
-            'unit_cost'       => $costPrice,
-            'source_type'     => StockDeposit::class,
-            'source_id'       => $deposit->id,
-            'document_number' => "DEP-{$deposit->id}",
-            'user_id'         => Auth::id() ?? 1,
-            'notes'           => $reason ?? "إيداع مخزني يدوي",
-        ]);
-
-        return $deposit;
+            return $deposit;
+        });
     }
 
     /**
@@ -303,7 +325,7 @@ class StockService
                 'quantity'        => $adjQty,
                 'stock_before'    => $stockBefore,
                 'stock_after'     => $stockAfter,
-                'unit_cost'       => $lockedItem->cost_price,
+                'unit_cost'       => $lockedItem->effectiveCost(),
                 'source_type'     => Item::class,
                 'source_id'       => $lockedItem->id,
                 'document_number' => $docNumber,

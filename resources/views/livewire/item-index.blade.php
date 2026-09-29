@@ -300,7 +300,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">سعر التكلفة: *</label>
-                        <input type="number" step="0.001" wire:model="cost_price" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white">
+                        <input type="number" step="0.001" wire:model="cost_price" @disabled($costLocked) class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed">
+                        @if($costLocked)
+                            <span class="block text-slate-500 dark:text-slate-400 text-[10px] mt-1">التكلفة تُحسب تلقائياً من فواتير الشراء (متوسط مرجح) لأن للصنف حركات مخزنية.</span>
+                        @endif
                         @error('cost_price') <span class="text-rose-500 text-[10px]">{{ $message }}</span> @enderror
                     </div>
                     <div>
