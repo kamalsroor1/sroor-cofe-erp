@@ -153,7 +153,7 @@
                             </td>
                             <td class="p-3.5 font-mono text-slate-500 text-[11px]">{{ $rec->deleted_at?->diffForHumans() }}</td>
                             <td class="p-3.5 text-center">
-                                <button wire:click="restoreInvoice({{ $rec->id }})" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 text-emerald-700 dark:text-emerald-400 hover:text-white font-bold text-xs border border-emerald-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                                <button wire:click="restoreInvoice({{ $rec->id }})" disabled title="لا يمكن الاستعادة: تم عكس الأثر المخزني والمالي عند الحذف" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1.5 cursor-not-allowed opacity-60">
                                     <span>♻️ استعادة الفاتورة</span>
                                 </button>
                             </td>
@@ -166,7 +166,7 @@
                             </td>
                             <td class="p-3.5 font-mono text-slate-500 text-[11px]">{{ $rec->deleted_at?->diffForHumans() }}</td>
                             <td class="p-3.5 text-center">
-                                <button wire:click="restorePurchase({{ $rec->id }})" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 text-emerald-700 dark:text-emerald-400 hover:text-white font-bold text-xs border border-emerald-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                                <button wire:click="restorePurchase({{ $rec->id }})" disabled title="لا يمكن الاستعادة: تم عكس الأثر المخزني عند الحذف" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs border border-slate-300 dark:border-slate-700 inline-flex items-center gap-1.5 cursor-not-allowed opacity-60">
                                     <span>♻️ استعادة التوريد</span>
                                 </button>
                             </td>

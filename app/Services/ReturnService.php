@@ -9,6 +9,9 @@ use App\Models\Purchase;
 use App\Models\Item;
 use App\Models\Customer;
 use App\Models\Supplier;
+use App\Models\InvoiceItem;
+use App\Models\PurchaseItem;
+use App\Support\WeightedAverageCost;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -55,18 +58,30 @@ class ReturnService
                 $unitPrice = (string)$line['unit_price'];
                 $lineTotal = bcmul($qty, $unitPrice, 3);
 
+                // Goods come back at the cost they were sold at (original invoice line), else current cost
+                $unitCost = $this->originalSaleCost($invoice, $item);
+
                 $returnDoc->items()->create([
                     'item_id'     => $item->id,
                     'quantity'    => $qty,
                     'unit_price'  => $unitPrice,
+                    'cost_price'  => $unitCost,
                     'total_price' => $lineTotal,
                 ]);
+
+                $item->weighted_avg_cost = WeightedAverageCost::add(
+                    (string)$item->current_stock,
+                    $item->effectiveCost(),
+                    $qty,
+                    $unitCost
+                );
+                $item->save();
 
                 // Return stock to warehouse/store
                 $this->stockService->addStock(
                     item: $item,
                     quantity: $qty,
-                    unitCost: $item->cost_price,
+                    unitCost: $unitCost,
                     source: $returnDoc,
                     documentNumber: $returnDoc->return_number,
                     movementType: 'sales_return_in',
@@ -101,6 +116,7 @@ class ReturnService
         return DB::transaction(function () use ($data) {
             $supplier = Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
             $purchaseId = $data['purchase_id'] ?? null;
+            $purchase = $purchaseId ? Purchase::where('id', $purchaseId)->first() : null;
 
             $totalAmount = '0.000';
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
@@ -126,12 +142,24 @@ class ReturnService
                 $unitPrice = (string)($line['unit_price'] ?? $item->cost_price);
                 $lineTotal = bcmul($qty, $unitPrice, 3);
 
+                // Goods leave at the landed cost they came in with (original purchase line), else current cost
+                $unitCost = $this->originalPurchaseCost($purchase, $item);
+
                 $returnDoc->items()->create([
                     'item_id'     => $item->id,
                     'quantity'    => $qty,
                     'unit_price'  => $unitPrice,
+                    'cost_price'  => $unitCost,
                     'total_price' => $lineTotal,
                 ]);
+
+                $item->weighted_avg_cost = WeightedAverageCost::remove(
+                    stock: (string)$item->current_stock,
+                    wac: $item->effectiveCost(),
+                    qty: $qty,
+                    unitCost: $unitCost
+                );
+                $item->save();
 
                 // Deduct stock sent back to supplier
                 $this->stockService->deductStock(
@@ -141,7 +169,8 @@ class ReturnService
                     documentNumber: $returnDoc->return_number,
                     movementType: 'purchase_return_out',
                     notes: "مرتجع مشتريات للمورد {$supplier->name} بمستند رقم {$returnDoc->return_number}",
-                    storeId: $storeId
+                    storeId: $storeId,
+                    unitCost: $unitCost
                 );
 
                 $totalAmount = bcadd($totalAmount, $lineTotal, 3);
@@ -167,6 +196,36 @@ class ReturnService
 
             return $returnDoc;
         });
+    }
+
+    private function originalSaleCost(?Invoice $invoice, Item $item): string
+    {
+        if ($invoice) {
+            $cost = (string)(InvoiceItem::where('invoice_id', $invoice->id)
+                ->where('item_id', $item->id)
+                ->orderBy('id')
+                ->value('cost_price') ?? '0.000');
+            if (bccomp($cost, '0.000', 3) > 0) {
+                return $cost;
+            }
+        }
+
+        return $item->effectiveCost();
+    }
+
+    private function originalPurchaseCost(?Purchase $purchase, Item $item): string
+    {
+        if ($purchase) {
+            $cost = (string)(PurchaseItem::where('purchase_id', $purchase->id)
+                ->where('item_id', $item->id)
+                ->orderBy('id')
+                ->value('cost_price') ?? '0.000');
+            if (bccomp($cost, '0.000', 3) > 0) {
+                return $cost;
+            }
+        }
+
+        return $item->effectiveCost();
     }
 
     public function generateUniqueNumber(string $prefix): string

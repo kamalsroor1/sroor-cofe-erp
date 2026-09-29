@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Purchase;
 use App\Models\Item;
 use App\Models\Payment;
+use App\Support\WeightedAverageCost;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -59,8 +60,27 @@ class PurchaseService
             foreach ($data['items'] as $line) {
                 $qty = (string)($line['quantity'] ?? '0.000');
                 $baseCost = (string)($line['cost_price'] ?? '0.000');
+
+                // A zero-cost purchase line seeds a zero cost into the weighted average: reject it.
+                if (bccomp($baseCost, '0.000', 3) <= 0) {
+                    $lineItemName = Item::whereKey($line['item_id'] ?? null)->value('name') ?? '';
+                    throw new Exception("لا يمكن حفظ فاتورة الشراء: سعر تكلفة الصنف [{$lineItemName}] يجب أن يكون أكبر من صفر.");
+                }
+
                 $totalQuantity = bcadd($totalQuantity, $qty, 3);
                 $totalBaseValuation = bcadd($totalBaseValuation, bcmul($qty, $baseCost, 3), 3);
+            }
+
+            // Invoice-level discount is allocated to lines by value so it lowers the landed unit cost.
+            $purchaseDiscount = (string)($data['discount_amount'] ?? '0.000');
+            if ($purchaseDiscount === '' || !is_numeric($purchaseDiscount)) {
+                $purchaseDiscount = '0.000';
+            }
+            if (bccomp($purchaseDiscount, '0.000', 3) < 0) {
+                throw new Exception('لا يمكن أن يكون خصم فاتورة الشراء بقيمة سالبة.');
+            }
+            if (bccomp($purchaseDiscount, '0.000', 3) > 0 && bccomp($purchaseDiscount, $totalBaseValuation, 3) >= 0) {
+                throw new Exception('خصم فاتورة الشراء يجب أن يكون أقل من إجمالي قيمة الأصناف، وإلا ستصبح تكلفة البضاعة صفراً.');
             }
 
             // 2. Process each item line and allocate landed expenses
@@ -98,11 +118,23 @@ class PurchaseService
                     $lineAllocatedExpense = bcadd($lineAllocatedExpense, $allocated, 3);
                 }
 
-                // Landed Unit Cost = Base Cost + (Allocated Expense / Quantity)
+                // Allocate the invoice-level discount by line value
+                $lineAllocatedDiscount = '0.000';
+                if (bccomp($purchaseDiscount, '0.000', 3) > 0 && bccomp($totalBaseValuation, '0.000', 3) > 0) {
+                    $lineAllocatedDiscount = bcdiv(bcmul($purchaseDiscount, $lineBaseTotal, 6), $totalBaseValuation, 3);
+                }
+
+                // Landed Unit Cost = Base Cost + (Allocated Expense - Allocated Discount) / Quantity
                 $unitAllocatedExpense = bccomp($quantity, '0.000', 3) > 0
                     ? bcdiv($lineAllocatedExpense, $quantity, 3)
                     : '0.000';
-                $landedUnitCost = bcadd($baseCostPrice, $unitAllocatedExpense, 3);
+                $unitAllocatedDiscount = bccomp($quantity, '0.000', 3) > 0
+                    ? bcdiv($lineAllocatedDiscount, $quantity, 3)
+                    : '0.000';
+                $landedUnitCost = bcsub(bcadd($baseCostPrice, $unitAllocatedExpense, 3), $unitAllocatedDiscount, 3);
+                if (bccomp($landedUnitCost, '0.000', 3) <= 0) {
+                    throw new Exception("لا يمكن حفظ فاتورة الشراء: التكلفة الصافية للصنف [{$item->name}] بعد الخصم أصبحت صفراً أو أقل.");
+                }
 
                 // Create PurchaseItem
                 $purchase->items()->create([
@@ -117,7 +149,7 @@ class PurchaseService
                 // Calculate weighted average cost with Landed Unit Cost
                 $newWac = $this->calculateWeightedAverageCost(
                     currentStock: (string)$item->current_stock,
-                    currentWac: (string)($item->weighted_avg_cost ?: $item->cost_price),
+                    currentWac: $item->effectiveCost(),
                     newQuantity: $quantity,
                     newCost: $landedUnitCost
                 );
@@ -134,7 +166,9 @@ class PurchaseService
                     source: $purchase,
                     documentNumber: $purchase->purchase_number,
                     movementType: 'purchase_in',
-                    notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}" . (bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} ج.م/وحدة)" : ''),
+                    notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}"
+                        . (bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} ج.م/وحدة)" : '')
+                        . (bccomp($unitAllocatedDiscount, '0.000', 3) > 0 ? " (بعد خصم موزع -{$unitAllocatedDiscount} ج.م/وحدة)" : ''),
                     storeId: $storeId
                 );
             }
@@ -182,7 +216,7 @@ class PurchaseService
             }
 
             // 4. Calculate Net Total
-            $discountAmount = (string)($data['discount_amount'] ?? '0.000');
+            $discountAmount = $purchaseDiscount;
             $netTotal = bcsub($baseSubtotal, $discountAmount, 3);
             if (bccomp($supplierExpensesTotal, '0.000', 3) > 0) {
                 $netTotal = bcadd($netTotal, $supplierExpensesTotal, 3);
@@ -278,10 +312,19 @@ class PurchaseService
                 }
             }
 
-            // 2. Reverse stock deductions safely
+            // 2. Reverse stock and take the cancelled quantity back out of the weighted average cost
             foreach ($lockedPurchase->items as $itemLine) {
                 $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
                 $qty = (string)$itemLine->quantity;
+                $lineCost = (string)$itemLine->cost_price;
+
+                $item->weighted_avg_cost = WeightedAverageCost::remove(
+                    stock: (string)$item->current_stock,
+                    wac: $item->effectiveCost(),
+                    qty: $qty,
+                    unitCost: $lineCost
+                );
+                $item->save();
 
                 $this->stockService->deductStock(
                     item: $item,
@@ -290,7 +333,8 @@ class PurchaseService
                     documentNumber: $lockedPurchase->purchase_number,
                     movementType: 'purchase_cancel_out',
                     notes: "إلغاء فاتورة مشتريات وتوريد رقم {$lockedPurchase->purchase_number}" . ($reason ? " - سبب: {$reason}" : ''),
-                    storeId: $storeId
+                    storeId: $storeId,
+                    unitCost: $lineCost
                 );
             }
 
@@ -350,7 +394,7 @@ class PurchaseService
 
                 $newWac = $this->calculateWeightedAverageCost(
                     currentStock: (string)$item->current_stock,
-                    currentWac: (string)($item->weighted_avg_cost ?: $item->cost_price),
+                    currentWac: $item->effectiveCost(),
                     newQuantity: $qty,
                     newCost: $cost
                 );
@@ -433,10 +477,7 @@ class PurchaseService
                 $this->cancelPurchase($lockedPurchase, 'حذف الفاتورة من النظام');
             }
 
-            // Delete stock movements linked to this purchase
-            \App\Models\StockMovement::where('source_type', Purchase::class)
-                ->where('source_id', $lockedPurchase->id)
-                ->delete();
+            // Stock movements are kept: the purchase_in / purchase_cancel_out pair is the audit trail.
 
             // Soft delete purchase items and purchase
             $lockedPurchase->items()->delete();
@@ -457,17 +498,12 @@ class PurchaseService
         string $newQuantity,
         string $newCost
     ): string {
-        $existingStock = bccomp($currentStock, '0.000', 3) > 0 ? $currentStock : '0.000';
-        $existingValuation = bcmul($existingStock, $currentWac ?: '0.000', 3);
-        $newValuation = bcmul($newQuantity, $newCost, 3);
-        $totalValuation = bcadd($existingValuation, $newValuation, 3);
-        $totalQuantity = bcadd($existingStock, $newQuantity, 3);
-
-        if (bccomp($totalQuantity, '0.000', 3) <= 0) {
-            return $newCost;
-        }
-
-        return bcdiv($totalValuation, $totalQuantity, 3);
+        return WeightedAverageCost::add(
+            $currentStock,
+            $currentWac !== '' ? $currentWac : '0.000',
+            $newQuantity,
+            $newCost
+        );
     }
 
     public function generateUniqueNumber(): string

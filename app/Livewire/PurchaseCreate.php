@@ -37,7 +37,7 @@ class PurchaseCreate extends Component
         'items'         => 'required|array|min:1',
         'items.*.item_id'   => 'required|exists:items,id',
         'items.*.quantity'  => 'required|numeric|min:0.001',
-        'items.*.cost_price'=> 'required|numeric|min:0',
+        'items.*.cost_price'=> 'required|numeric|gt:0',
         'additional_expenses.*.title'  => 'nullable|string|max:150',
         'additional_expenses.*.amount' => 'nullable|numeric|min:0',
     ];
@@ -230,6 +230,14 @@ class PurchaseCreate extends Component
             $totalBase = bcadd($totalBase, bcmul($q, $c, 3), 3);
         }
 
+        $discount = (string)($this->discount_amount ?: '0.000');
+        if (!is_numeric($discount) || bccomp($discount, '0.000', 3) < 0) {
+            $discount = '0.000';
+        }
+        if (bccomp($discount, $totalBase, 3) > 0) {
+            $discount = $totalBase;
+        }
+
         foreach ($items as $idx => $line) {
             $q = (string)($line['quantity'] ?? '0.000');
             $baseCost = (string)($line['cost_price'] ?? '0.000');
@@ -253,7 +261,14 @@ class PurchaseCreate extends Component
             }
 
             $unitAlloc = bccomp($q, '0.000', 3) > 0 ? bcdiv($lineAllocated, $q, 3) : '0.000';
-            $landedUnit = bcadd($baseCost, $unitAlloc, 3);
+
+            // Mirror PurchaseService: invoice discount is allocated by line value
+            $lineDiscount = (bccomp($discount, '0.000', 3) > 0 && bccomp($totalBase, '0.000', 3) > 0)
+                ? bcdiv(bcmul($discount, $lineBaseTotal, 6), $totalBase, 3)
+                : '0.000';
+            $unitDiscount = bccomp($q, '0.000', 3) > 0 ? bcdiv($lineDiscount, $q, 3) : '0.000';
+
+            $landedUnit = bcsub(bcadd($baseCost, $unitAlloc, 3), $unitDiscount, 3);
 
             $previews[$idx] = [
                 'base_cost'      => $baseCost,

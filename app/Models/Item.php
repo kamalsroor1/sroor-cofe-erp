@@ -97,6 +97,18 @@ class Item extends Model
         return (string)$this->selling_price;
     }
 
+    /**
+     * Unit cost used for COGS and valuation: the weighted average cost when it is set,
+     * otherwise the last known cost price. Never use `weighted_avg_cost ?: cost_price`:
+     * the decimal cast returns the string "0.000", which is truthy in PHP.
+     */
+    public function effectiveCost(): string
+    {
+        return bccomp((string) $this->weighted_avg_cost, '0.000', 3) > 0
+            ? (string) $this->weighted_avg_cost
+            : (string) ($this->cost_price ?? '0.000');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

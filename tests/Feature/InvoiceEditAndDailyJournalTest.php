@@ -80,6 +80,22 @@ class InvoiceEditAndDailyJournalTest extends TestCase
     {
         $this->actingAs($this->admin);
 
+        // InvoiceEdit requires a branch; mirror production where every item lives in the main store.
+        $mainStore = \App\Models\Store::create([
+            'name'      => 'المخزن الرئيسي',
+            'code'      => 'MAIN-01',
+            'type'      => 'main',
+            'is_active' => true,
+            'is_main'   => true,
+        ]);
+        foreach ([$this->coffeeItem, $this->teaItem] as $stockedItem) {
+            \App\Models\StoreStock::create([
+                'store_id' => $mainStore->id,
+                'item_id'  => $stockedItem->id,
+                'quantity' => $stockedItem->current_stock,
+            ]);
+        }
+
         $invoiceService = app(InvoiceService::class);
 
         // 1. Create initial invoice: 10 kg coffee on credit (Total = 2500)
@@ -106,7 +122,7 @@ class InvoiceEditAndDailyJournalTest extends TestCase
         Livewire::test(InvoiceEdit::class, ['id' => $invoice->id])
             ->set('items.0.quantity', '5.000') // 5 kg coffee * 250 = 1250
             ->call('addItem', $this->teaItem->id, '2.000') // 2 kg tea * 180 = 360 -> Total = 1610
-            ->call('updateInvoice')
+            ->call('saveInvoice')
             ->assertHasNoErrors();
 
         // 3. Verify stock:

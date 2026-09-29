@@ -65,7 +65,7 @@ class InventoryAnalyticsService
 
             $qtySold = $salesData ? (string)$salesData->total_quantity : '0.000';
             $revenue = $salesData ? (string)$salesData->total_revenue : '0.000';
-            $unitCost = (string)($item->weighted_avg_cost ?: ($item->cost_price ?: '0.000'));
+            $unitCost = $item->effectiveCost();
             $cogs = bcmul($qtySold, $unitCost, 3);
             $grossProfit = bcsub($revenue, $cogs, 3);
 

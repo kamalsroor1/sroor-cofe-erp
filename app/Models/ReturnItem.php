@@ -15,6 +15,7 @@ class ReturnItem extends Model
         'item_id',
         'quantity',
         'unit_price',
+        'cost_price',
         'total_price',
     ];
 
@@ -23,6 +24,7 @@ class ReturnItem extends Model
         return [
             'quantity'    => 'decimal:3',
             'unit_price'  => 'decimal:3',
+            'cost_price'  => 'decimal:3',
             'total_price' => 'decimal:3',
         ];
     }
