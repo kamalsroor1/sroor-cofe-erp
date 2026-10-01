@@ -539,8 +539,12 @@
                 @if(bccomp((string)$receipt_settled, '0.000', 3) > 0)
                 <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-xs text-sky-800 dark:text-sky-300 space-y-1">
                     <div class="font-black">✅ تم تحصيل {{ number_format((float)$receipt_settled, 2) }} ج.م من هذه الفاتورة بسند قبض من حساب العميل.</div>
-                    <div>المبلغ ده محسوب مدفوع ومش هيتحصل تاني. لو اخترت "كاش فوري" هيتسجل إيصال بالباقي بس
-                        ({{ number_format((float)max(0, bcsub((string)$net_total, (string)$receipt_settled, 3)), 2) }} ج.م).</div>
+                    @php $receiptRest = bcsub((string)$net_total, (string)$receipt_settled, 3); @endphp
+                    @if(bccomp($receiptRest, '0.000', 3) > 0)
+                        <div>المبلغ ده محسوب مدفوع ومش هيتحصل تاني. لو اخترت "كاش فوري" هيتسجل إيصال بالباقي بس: {{ number_format((float)$receiptRest, 2) }} ج.م</div>
+                    @else
+                        <div>الفاتورة مدفوعة بالكامل، ومش هيتعمل أي إيصال جديد مهما كان نوع الفاتورة.</div>
+                    @endif
                 </div>
                 @endif
 
