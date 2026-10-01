@@ -111,4 +111,20 @@ class Invoice extends Model
         }
         return bcmul(bcdiv($this->profit, $this->net_total, 4), '100', 1);
     }
+
+    /**
+     * Amount of this invoice settled by separate customer receipts (on-account FIFO
+     * allocation or receipts against the invoice), i.e. paid_amount not covered by the
+     * invoice's own PAY-INV voucher. Editing the invoice must never collect it again.
+     */
+    public function receiptSettledAmount(): string
+    {
+        $ownVouchers = (string) (Payment::where('invoice_id', $this->id)
+            ->where('payment_number', 'like', 'PAY-INV-%')
+            ->sum('amount') ?: '0.000');
+
+        $settled = bcsub((string) ($this->paid_amount ?: '0.000'), $ownVouchers, 3);
+
+        return bccomp($settled, '0.000', 3) > 0 ? $settled : '0.000';
+    }
 }

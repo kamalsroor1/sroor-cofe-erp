@@ -212,7 +212,7 @@
                             <div class="flex flex-col gap-1">
                                 <span class="font-bold text-xs">
                                     @if($inv->payment_type === 'cash') كاش فوري
-                                    @elseif($inv->payment_type === 'credit') آجل (ذمم)
+                                    @elseif($inv->payment_type === 'credit') آجل (ذمم)@if($inv->payment_status === 'paid') — سُددت بسند قبض @elseif($inv->payment_status === 'partially_paid') — سُدد جزء @endif
                                     @else دفع جزئي
                                     @endif
                                 </span>
