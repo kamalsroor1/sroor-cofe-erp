@@ -536,6 +536,14 @@
                     </div>
                 </div>
 
+                @if(bccomp((string)$receipt_settled, '0.000', 3) > 0)
+                <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 text-xs text-sky-800 dark:text-sky-300 space-y-1">
+                    <div class="font-black">✅ تم تحصيل {{ number_format((float)$receipt_settled, 2) }} ج.م من هذه الفاتورة بسند قبض من حساب العميل.</div>
+                    <div>المبلغ ده محسوب مدفوع ومش هيتحصل تاني. لو اخترت "كاش فوري" هيتسجل إيصال بالباقي بس
+                        ({{ number_format((float)max(0, bcsub((string)$net_total, (string)$receipt_settled, 3)), 2) }} ج.م).</div>
+                </div>
+                @endif
+
                 <!-- Payment Method Quick Selection (Visible when paying cash or partial) -->
                 @if($payment_type !== 'credit')
                 <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800/80 space-y-2">
@@ -773,7 +781,11 @@
                         </span>
                     </div>
 
-                    @if($payment_type === 'partial')
+                    @if($payment_type === 'partial' || ($payment_type === 'credit' && bccomp((string)$receipt_settled, '0.000', 3) > 0))
+                    <div class="flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400 font-bold">
+                        <span>المدفوع:</span>
+                        <span class="font-mono font-black text-sm">{{ number_format((float)$paid_amount, 2) }} ج.م</span>
+                    </div>
                     <div class="flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-bold">
                         <span>المتبقي ذمم:</span>
                         <span class="font-mono font-black text-sm">{{ number_format($remaining_amount, 2) }} ج.م</span>

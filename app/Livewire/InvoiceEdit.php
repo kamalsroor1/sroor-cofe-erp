@@ -27,6 +27,7 @@ class InvoiceEdit extends Component
     public $discount_type = 'fixed'; // fixed, percentage
     public $discount_value = '0.000';
     public $paid_amount = '0.000';
+    public $receipt_settled = '0.000'; // already collected by separate customer receipts (سند قبض)
     public $notes;
 
     // Search and Quick Add
@@ -82,6 +83,7 @@ class InvoiceEdit extends Component
         $this->discount_type = $this->invoice->discount_type ?: 'fixed';
         $this->discount_value = (string)($this->invoice->discount_value ?: '0.000');
         $this->paid_amount = (string)($this->invoice->paid_amount ?: '0.000');
+        $this->receipt_settled = $this->invoice->status === 'confirmed' ? $this->invoice->receiptSettledAmount() : '0.000';
         $this->notes = $this->invoice->notes;
 
         if ($this->invoice->customer) {
@@ -504,14 +506,20 @@ class InvoiceEdit extends Component
         $net = bcadd($afterDiscount, $customerExpTotal, 3);
         $this->net_total = bccomp($net, '0.000', 3) > 0 ? $net : '0.000';
 
+        // Money already collected by customer receipts always counts as paid
+        $settled = bccomp($this->receipt_settled, $this->net_total, 3) > 0 ? $this->net_total : $this->receipt_settled;
+
         if ($this->payment_type === 'cash') {
             $this->paid_amount = $this->net_total;
             $this->remaining_amount = '0.000';
         } elseif ($this->payment_type === 'credit') {
-            $this->paid_amount = '0.000';
-            $this->remaining_amount = $this->net_total;
+            $this->paid_amount = $settled;
+            $this->remaining_amount = bcsub($this->net_total, $settled, 3);
         } else {
-            $paid = $this->paid_amount ?: '0.000';
+            $paid = is_numeric($this->paid_amount) ? (string)$this->paid_amount : '0.000';
+            if (bccomp($paid, $settled, 3) < 0) {
+                $paid = $settled;
+            }
             $rem = bcsub($this->net_total, $paid, 3);
             $this->remaining_amount = bccomp($rem, '0.000', 3) > 0 ? $rem : '0.000';
         }

@@ -76,14 +76,14 @@
                 <span class="text-slate-500">حالة السداد:</span>
                 <div class="font-bold text-sm mt-1">
                     @if($invoice->payment_status === 'paid')
-                        <span class="text-emerald-600 dark:text-emerald-400">مدفوعة بالكامل (نقدي)</span>
+                        <span class="text-emerald-600 dark:text-emerald-400">مدفوعة بالكامل{{ $invoice->payment_type === 'credit' ? ' (بسند قبض)' : ' (نقدي)' }}</span>
                     @elseif($invoice->payment_status === 'partially_paid')
                         <span class="text-amber-600 dark:text-amber-400">مسددة جزئياً</span>
                     @else
                         <span class="text-rose-600 dark:text-rose-400">غير مسددة (آجل على الحساب)</span>
                     @endif
                 </div>
-                <div class="text-slate-500 dark:text-slate-400 mt-0.5">طريقة الدفع: {{ $invoice->payment_type }}</div>
+                <div class="text-slate-500 dark:text-slate-400 mt-0.5">نوع الفاتورة: {{ ['cash' => 'كاش فوري', 'credit' => 'آجل (ذمم)', 'partial' => 'دفع جزئي'][$invoice->payment_type] ?? $invoice->payment_type }}</div>
             </div>
         </div>
 

@@ -320,6 +320,13 @@ class InvoiceService
             $oldCustomerId = $lockedInvoice->customer_id;
             $newCustomerId = $data['customer_id'];
 
+            // Part of the invoice may already be collected by separate customer receipts
+            // (سند قبض). That money is never collected again by the edit.
+            $receiptSettled = $lockedInvoice->status === 'confirmed' ? $lockedInvoice->receiptSettledAmount() : '0.000';
+            if (bccomp($receiptSettled, '0.000', 3) > 0 && (int)$newCustomerId !== (int)$oldCustomerId) {
+                throw new Exception("لا يمكن تغيير عميل الفاتورة لأنه تم تحصيل " . number_format((float)$receiptSettled, 2) . " ج.م منها بسند قبض من حساب العميل الحالي.");
+            }
+
             // 1. If invoice was confirmed, reverse previous stock back to warehouse
             if ($lockedInvoice->status === 'confirmed') {
                 foreach ($lockedInvoice->items as $oldLine) {
@@ -480,6 +487,16 @@ class InvoiceService
                 $paidAmount = '0.000';
             }
 
+            // Receipts already collected count as paid; only the rest gets a new voucher.
+            $settledApplied = bccomp($receiptSettled, $netTotal, 3) > 0 ? $netTotal : $receiptSettled;
+            if (bccomp($paidAmount, $settledApplied, 3) < 0) {
+                $paidAmount = $settledApplied;
+            }
+            if (bccomp($paidAmount, $netTotal, 3) > 0) {
+                $paidAmount = $netTotal;
+            }
+            $voucherAmount = bcsub($paidAmount, $settledApplied, 3);
+
             $remainingAmount = bcsub($netTotal, $paidAmount, 3);
             if (bccomp($remainingAmount, '0.000', 3) < 0) {
                 $remainingAmount = '0.000';
@@ -511,16 +528,18 @@ class InvoiceService
                 'notes'            => $data['notes'] ?? $lockedInvoice->notes,
             ]);
 
-            // 6. Delete previous payments and re-create payment voucher if paid
-            Payment::where('invoice_id', $lockedInvoice->id)->delete();
+            // 6. Replace only the invoice's own voucher; separate customer receipts stay untouched
+            Payment::where('invoice_id', $lockedInvoice->id)
+                ->where('payment_number', 'like', 'PAY-INV-%')
+                ->delete();
 
-            if (bccomp($paidAmount, '0.000', 3) > 0) {
+            if (bccomp($voucherAmount, '0.000', 3) > 0) {
                 Payment::create([
                     'payment_number' => 'PAY-INV-' . strtoupper(uniqid()),
                     'customer_id'    => $newCustomerId,
                     'invoice_id'     => $lockedInvoice->id,
                     'user_id'        => Auth::id() ?? 1,
-                    'amount'         => $paidAmount,
+                    'amount'         => $voucherAmount,
                     'payment_date'   => $lockedInvoice->invoice_date,
                     'payment_method' => $data['payment_method'] ?? 'cash',
                     'notes'          => "سداد عند تعديل الفاتورة رقم {$lockedInvoice->invoice_number}",
