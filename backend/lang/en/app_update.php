@@ -34,4 +34,5 @@ return [
     'checking_updates' => 'Checking...',
     'up_to_date_title' => 'App is fully up to date 🚀',
     'up_to_date_desc' => 'You are already running the latest release (v:version)',
+    'file_not_available' => 'The update file is not currently available on the server.',
 ];

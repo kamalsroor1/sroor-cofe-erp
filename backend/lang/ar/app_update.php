@@ -34,4 +34,5 @@ return [
     'checking_updates' => 'جاري الفحص...',
     'up_to_date_title' => 'التطبيق محدث بالكامل 🚀',
     'up_to_date_desc' => 'أنت تستخدم أحدث إصدار متوفر حالياً (v:version)',
+    'file_not_available' => 'ملف التحديث غير متوفر حالياً على السيرفر.',
 ];

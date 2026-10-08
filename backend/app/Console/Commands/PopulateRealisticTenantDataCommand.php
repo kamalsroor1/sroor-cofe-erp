@@ -4,42 +4,46 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\AdditionalExpense;
+use App\Models\CashShift;
 use App\Models\Category;
 use App\Models\Customer;
-use App\Models\Item;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
-use App\Models\Expense;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\CashShift;
-use App\Models\AdditionalExpense;
-use App\Services\InvoiceService;
-use App\Services\PurchaseService;
-use App\Services\PaymentService;
 use App\Services\CustomerBalanceService;
-use App\Services\SupplierBalanceService;
+use App\Services\InvoiceService;
+use App\Services\PaymentService;
+use App\Services\PurchaseService;
 use App\Services\StockService;
+use App\Services\SupplierBalanceService;
 use Carbon\Carbon;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 final class PopulateRealisticTenantDataCommand extends Command
 {
     protected $signature = 'tenant:populate-realistic-data 
                             {tenant=2m : The tenant slug or ID (default 2m)}
-                            {--fresh : Wipe existing operational data first}';
+                            {--fresh : Wipe existing operational data first}
+                            {--force-unsafe : Allow running in production (requires interactive confirmation)}
+                            {--password= : Password for newly created demo users; random if omitted}';
 
-    protected $description = 'Wipe and generate authentic 1-year operational dataset for tenant 2M using real domain Services and Actions';
+    protected $description = 'Generate an authentic 1-year demo operational dataset for a tenant (wipes existing data only with --fresh); refuses to run in production without --force-unsafe';
 
     public function handle(
         InvoiceService $invoiceService,
@@ -49,7 +53,23 @@ final class PopulateRealisticTenantDataCommand extends Command
         SupplierBalanceService $supplierBalanceService,
         StockService $stockService
     ): int {
-        $tenantIdentifier = (string)$this->argument('tenant');
+        // Production guard: must run before any tenant lookup/creation, DB creation, migration or truncation.
+        if (app()->environment('production')) {
+            if (! $this->option('force-unsafe')) {
+                $this->error(__('console.populate_realistic_data.refused_production'));
+
+                return self::FAILURE;
+            }
+
+            if (! $this->input->isInteractive()
+                || ! $this->confirm(__('console.populate_realistic_data.confirm_production'), false)) {
+                $this->error(__('console.populate_realistic_data.aborted'));
+
+                return self::FAILURE;
+            }
+        }
+
+        $tenantIdentifier = (string) $this->argument('tenant');
         $this->info("Starting realistic 1-year data generation for tenant: [{$tenantIdentifier}]");
 
         // 1. Resolve or Create Tenant
@@ -57,26 +77,26 @@ final class PopulateRealisticTenantDataCommand extends Command
             ->orWhere('slug', $tenantIdentifier)
             ->orWhereHas('domains', function ($q) use ($tenantIdentifier) {
                 $q->where('domain', $tenantIdentifier)
-                  ->orWhere('domain', 'like', "{$tenantIdentifier}.%");
+                    ->orWhere('domain', 'like', "{$tenantIdentifier}.%");
             })
             ->first();
 
-        if (!$tenant) {
+        if (! $tenant) {
             $this->warn("Tenant [{$tenantIdentifier}] not found in database. Creating workspace '{$tenantIdentifier}'...");
             $tenant = Tenant::create([
-                'id'                   => $tenantIdentifier,
-                'name'                 => 'مؤسسة 2M لاكسسوارات وسماعات وشواحن المحمول',
-                'slug'                 => $tenantIdentifier,
-                'email'                => 'info@2m.com',
-                'phone'                => '01002003004',
-                'status'               => 'active',
-                'trial_ends_at'        => now()->addYear(),
+                'id' => $tenantIdentifier,
+                'name' => 'مؤسسة 2M لاكسسوارات وسماعات وشواحن المحمول',
+                'slug' => $tenantIdentifier,
+                'email' => 'info@2m.com',
+                'phone' => '01000000137',
+                'status' => 'active',
+                'trial_ends_at' => now()->addYear(),
                 'subscription_ends_at' => now()->addYear(),
-                'settings'             => [
-                    'company_name'     => 'مؤسسة 2M لاكسسوارات وسماعات وشواحن المحمول',
+                'settings' => [
+                    'company_name' => 'مؤسسة 2M لاكسسوارات وسماعات وشواحن المحمول',
                     'company_subtitle' => 'الوكيل الأول لسماعات الإيربودز، السبيكرات، الشواحن السريعة، وكابلات الهواتف الذكية',
                     'theme_preference' => 'dark',
-                    'currency'         => 'ج.م',
+                    'currency' => 'ج.م',
                 ],
             ]);
 
@@ -90,89 +110,107 @@ final class PopulateRealisticTenantDataCommand extends Command
 
         // Ensure database exists and is migrated
         try {
-            if (!$tenant->database()->manager()->databaseExists($tenant->database()->getName())) {
-                $this->info("Creating tenant database: [" . $tenant->database()->getName() . "]...");
+            if (! $tenant->database()->manager()->databaseExists($tenant->database()->getName())) {
+                $this->info('Creating tenant database: ['.$tenant->database()->getName().']...');
                 $tenant->database()->manager()->createDatabase($tenant);
             }
         } catch (\Throwable $e) {
-            $this->warn("Database check: " . $e->getMessage());
+            $this->warn('Database check: '.$e->getMessage());
         }
 
         // Initialize Tenancy
         tenancy()->initialize($tenant);
-        $this->info("Tenancy initialized successfully on database: [" . config('database.connections.tenant.database') . "]");
+        $this->info('Tenancy initialized successfully on database: ['.config('database.connections.tenant.database').']');
 
         // Run migrations on tenant database to ensure all tables exist
         $this->callSilent('tenants:migrate', ['--tenants' => [$tenant->id], '--force' => true]);
-        $this->callSilent(\Database\Seeders\PermissionsSeeder::class);
+        $this->callSilent(PermissionsSeeder::class);
 
-        // 2. Wipe operational data cleanly
-        $this->info("Wiping previous operational data...");
-        $driver = DB::connection()->getDriverName();
-        if ($driver === 'mysql') {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        } elseif ($driver === 'sqlite') {
-            DB::statement('PRAGMA busy_timeout = 15000;');
-            DB::statement('PRAGMA journal_mode = WAL;');
-            DB::statement('PRAGMA foreign_keys = OFF;');
-        }
-        
-        InvoiceItem::truncate();
-        Payment::truncate();
-        AdditionalExpense::truncate();
-        Invoice::truncate();
-        PurchaseItem::truncate();
-        Purchase::truncate();
-        StockMovement::truncate();
-        Expense::truncate();
-        CashShift::truncate();
-        StoreStock::truncate();
-        Item::truncate();
-        Category::truncate();
-        Customer::truncate();
-        Supplier::truncate();
-        DB::table('activity_logs')->truncate();
-        
-        if ($driver === 'mysql') {
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        } elseif ($driver === 'sqlite') {
-            DB::statement('PRAGMA foreign_keys = ON;');
-        }
-        $this->info("Database cleaned.");
+        // 2. Wipe operational data cleanly — only when explicitly requested with --fresh
+        if (! $this->option('fresh')) {
+            if (Invoice::query()->exists() || Item::query()->exists() || Purchase::query()->exists()) {
+                $this->error(__('console.populate_realistic_data.existing_data'));
 
-        // 3. Ensure Staff Users
-        $adminUser = User::updateOrCreate(
-            ['phone' => '01012316954'],
+                return self::FAILURE;
+            }
+        } else {
+            $this->info('Wiping previous operational data...');
+            $driver = DB::connection()->getDriverName();
+            if ($driver === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            } elseif ($driver === 'sqlite') {
+                DB::statement('PRAGMA busy_timeout = 15000;');
+                DB::statement('PRAGMA journal_mode = WAL;');
+                DB::statement('PRAGMA foreign_keys = OFF;');
+            }
+
+            InvoiceItem::truncate();
+            Payment::truncate();
+            AdditionalExpense::truncate();
+            Invoice::truncate();
+            PurchaseItem::truncate();
+            Purchase::truncate();
+            StockMovement::truncate();
+            Expense::truncate();
+            CashShift::truncate();
+            StoreStock::truncate();
+            Item::truncate();
+            Category::truncate();
+            Customer::truncate();
+            Supplier::truncate();
+            DB::table('activity_logs')->truncate();
+
+            if ($driver === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            } elseif ($driver === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = ON;');
+            }
+            $this->info('Database cleaned.');
+        }
+
+        // 3. Ensure Staff Users — never overwrite an existing user's password or name
+        $passwordFromOption = filled($this->option('password'));
+        $plainPassword = (string) ($this->option('password') ?: Str::password(16));
+        $hashedPassword = Hash::make($plainPassword);
+
+        $adminUser = User::firstOrCreate(
+            ['phone' => '01000000010'],
             [
-                'name'     => 'كمال سرور (المدير العام)',
-                'email'    => 'admin@2m.com',
-                'password' => Hash::make('password'),
-                'is_active'=> true,
+                'name' => 'كمال سرور (المدير العام)',
+                'email' => 'admin@2m.com',
+                'password' => $hashedPassword,
+                'is_active' => true,
             ]
         );
         $adminUser->assignRole('admin');
 
-        $cashierMorning = User::updateOrCreate(
-            ['phone' => '01122334455'],
+        $cashierMorning = User::firstOrCreate(
+            ['phone' => '01000000011'],
             [
-                'name'     => 'أحمد محمود (مسؤول المبيعات الصباحي)',
-                'email'    => 'cashier1@2m.com',
-                'password' => Hash::make('password'),
-                'is_active'=> true,
+                'name' => 'أحمد محمود (مسؤول المبيعات الصباحي)',
+                'email' => 'cashier1@2m.com',
+                'password' => $hashedPassword,
+                'is_active' => true,
             ]
         );
         $cashierMorning->assignRole('cashier');
 
-        $cashierEvening = User::updateOrCreate(
-            ['phone' => '01233445566'],
+        $cashierEvening = User::firstOrCreate(
+            ['phone' => '01000000012'],
             [
-                'name'     => 'كريم فتحي (مسؤول المبيعات المسائي)',
-                'email'    => 'cashier2@2m.com',
-                'password' => Hash::make('password'),
-                'is_active'=> true,
+                'name' => 'كريم فتحي (مسؤول المبيعات المسائي)',
+                'email' => 'cashier2@2m.com',
+                'password' => $hashedPassword,
+                'is_active' => true,
             ]
         );
         $cashierEvening->assignRole('cashier');
+
+        $newlyCreatedUsers = array_values(array_filter(
+            [$adminUser, $cashierMorning, $cashierEvening],
+            static fn (User $user): bool => $user->wasRecentlyCreated
+        ));
+        unset($hashedPassword);
 
         Auth::login($adminUser);
 
@@ -180,38 +218,38 @@ final class PopulateRealisticTenantDataCommand extends Command
         $mainStore = Store::firstOrCreate(
             ['code' => 'STR-MAIN'],
             [
-                'name'      => 'معرض 2M الرئيسي ومخزن التوزيع',
-                'address'   => 'شارع التحرير الرئيسي، مول التكنولوجيا، وسط البلد',
-                'phone'     => '01002003004',
+                'name' => 'معرض 2M الرئيسي ومخزن التوزيع',
+                'address' => 'شارع التحرير الرئيسي، مول التكنولوجيا، وسط البلد',
+                'phone' => '01000000137',
                 'is_active' => true,
-                'is_main'   => true,
+                'is_main' => true,
             ]
         );
 
         $branchStore = Store::firstOrCreate(
             ['code' => 'STR-BR01'],
             [
-                'name'      => 'فرع المهندسين للاكسسوارات والسماعات',
-                'address'   => 'شارع شهاب، المهندسين، الجيزة',
-                'phone'     => '01002003005',
+                'name' => 'فرع المهندسين للاكسسوارات والسماعات',
+                'address' => 'شارع شهاب، المهندسين، الجيزة',
+                'phone' => '01000000138',
                 'is_active' => true,
-                'is_main'   => false,
+                'is_main' => false,
             ]
         );
 
         $vanStore = Store::firstOrCreate(
             ['code' => 'STR-VAN1'],
             [
-                'name'      => 'سيارة شحن وتوزيع المحلات (فان 1)',
-                'address'   => 'خط توزيع محلات الموبايل بالقاهرة والجيزة',
-                'phone'     => '01002003006',
+                'name' => 'سيارة شحن وتوزيع المحلات (فان 1)',
+                'address' => 'خط توزيع محلات الموبايل بالقاهرة والجيزة',
+                'phone' => '01000000139',
                 'is_active' => true,
-                'is_main'   => false,
+                'is_main' => false,
             ]
         );
 
         // 5. Create Categories for Mobile, Audio & Chargers
-        $this->info("Creating Mobile & Audio Categories...");
+        $this->info('Creating Mobile & Audio Categories...');
         $categoriesData = [
             ['name' => 'سماعات إيربودز وبلوتوث (Earbuds)', 'code' => 'CAT-EAR', 'icon' => 'Headphones', 'color' => '#8B5CF6', 'color_light' => '#EDE9FE', 'sort' => 1],
             ['name' => 'سماعات سبيكر ومكبرات صوت (Speakers)', 'code' => 'CAT-SPK', 'icon' => 'Volume2', 'color' => '#F59E0B', 'color_light' => '#FEF3C7', 'sort' => 2],
@@ -224,18 +262,18 @@ final class PopulateRealisticTenantDataCommand extends Command
         $categories = [];
         foreach ($categoriesData as $c) {
             $categories[$c['code']] = Category::create([
-                'name'        => $c['name'],
-                'code'        => $c['code'],
-                'icon'        => $c['icon'],
-                'color'       => $c['color'],
+                'name' => $c['name'],
+                'code' => $c['code'],
+                'icon' => $c['icon'],
+                'color' => $c['color'],
                 'color_light' => $c['color_light'],
-                'sort_order'  => $c['sort'],
-                'is_active'   => true,
+                'sort_order' => $c['sort'],
+                'is_active' => true,
             ]);
         }
 
         // 6. Create Realistic Items for Mobile, Headphones, Speakers, Chargers
-        $this->info("Creating Realistic Products Catalogue...");
+        $this->info('Creating Realistic Products Catalogue...');
         $itemsData = [
             // 🎧 سماعات إيربودز وبلوتوث
             ['name' => 'سماعة Joyroom JR-T03S Pro الأصلية عزل ضوضاء ANC', 'code' => 'EAR-JOY-T03SP', 'cat' => 'CAT-EAR', 'unit' => 'قطعة', 'cost' => '650.000', 'retail' => '950.000', 'wholesale' => '820.000', 'min_price' => '780.000', 'min_stock' => 15],
@@ -286,59 +324,59 @@ final class PopulateRealisticTenantDataCommand extends Command
         foreach ($itemsData as $row) {
             $cat = $categories[$row['cat']] ?? null;
             $items[$row['code']] = Item::create([
-                'name'               => $row['name'],
-                'code'               => $row['code'],
-                'category'           => $cat?->name,
-                'category_id'        => $cat?->id,
-                'unit'               => $row['unit'],
-                'current_stock'      => '0.000',
-                'cost_price'         => $row['cost'],
-                'selling_price'      => $row['retail'],
-                'min_selling_price'  => $row['min_price'],
-                'price_retail'       => $row['retail'],
-                'price_wholesale'    => $row['wholesale'],
-                'weighted_avg_cost'  => $row['cost'],
-                'min_stock_level'    => $row['min_stock'],
-                'is_active'          => true,
-                'is_pos_pinned'      => in_array($row['code'], ['TRK-SP-MID', 'TRK-PLN-LGT', 'TRK-ROYAL', 'SPC-BRZ-SAN', 'SP-CARD-JMB']),
-                'pos_sales_count'    => 0,
+                'name' => $row['name'],
+                'code' => $row['code'],
+                'category' => $cat?->name,
+                'category_id' => $cat?->id,
+                'unit' => $row['unit'],
+                'current_stock' => '0.000',
+                'cost_price' => $row['cost'],
+                'selling_price' => $row['retail'],
+                'min_selling_price' => $row['min_price'],
+                'price_retail' => $row['retail'],
+                'price_wholesale' => $row['wholesale'],
+                'weighted_avg_cost' => $row['cost'],
+                'min_stock_level' => $row['min_stock'],
+                'is_active' => true,
+                'is_pos_pinned' => in_array($row['code'], ['TRK-SP-MID', 'TRK-PLN-LGT', 'TRK-ROYAL', 'SPC-BRZ-SAN', 'SP-CARD-JMB']),
+                'pos_sales_count' => 0,
             ]);
         }
 
         // 7. Create Suppliers
-        $this->info("Creating Verified Electronics Suppliers...");
+        $this->info('Creating Verified Electronics Suppliers...');
         $suppliersData = [
-            ['name' => 'شركة دلتا مصر لاستيراد وتوزيع أجهزة أنكر وساوندكور', 'phone' => '01099887766', 'contact' => 'م. طارق رضوان', 'address' => 'المنطقة الحرة، ميناء الإسكندرية / مخازن العبور'],
-            ['name' => 'التوكيل المصري لاكسسوارات جويروم وريماكس وباسيوس', 'phone' => '01288776655', 'contact' => 'الحاج جلال التاجوري', 'address' => 'مول البستان، باب اللوق، وسط البلد، القاهرة'],
-            ['name' => 'الشركة المصرية الدولية للصوتيات ومكبرات JBL وسوني', 'phone' => '01177665544', 'contact' => 'أ. حسام البنا', 'address' => 'شارع عبدالعزيز، العتبة، القاهرة'],
-            ['name' => 'مؤسسة النور لحلول الشحن السريع وكابلات LDNIO', 'phone' => '01566554433', 'contact' => 'د. وائل سلامة', 'address' => 'شارع الهرم، الجيزة'],
+            ['name' => 'شركة دلتا مصر لاستيراد وتوزيع أجهزة أنكر وساوندكور', 'phone' => '01000000102', 'contact' => 'م. طارق رضوان', 'address' => 'المنطقة الحرة، ميناء الإسكندرية / مخازن العبور'],
+            ['name' => 'التوكيل المصري لاكسسوارات جويروم وريماكس وباسيوس', 'phone' => '01000000114', 'contact' => 'الحاج جلال التاجوري', 'address' => 'مول البستان، باب اللوق، وسط البلد، القاهرة'],
+            ['name' => 'الشركة المصرية الدولية للصوتيات ومكبرات JBL وسوني', 'phone' => '01000000133', 'contact' => 'أ. حسام البنا', 'address' => 'شارع عبدالعزيز، العتبة، القاهرة'],
+            ['name' => 'مؤسسة النور لحلول الشحن السريع وكابلات LDNIO', 'phone' => '01000000140', 'contact' => 'د. وائل سلامة', 'address' => 'شارع الهرم، الجيزة'],
         ];
 
         $suppliers = [];
         foreach ($suppliersData as $s) {
             $suppliers[] = Supplier::create([
-                'name'            => $s['name'],
-                'phone'           => $s['phone'],
-                'contact_person'  => $s['contact'],
-                'address'         => $s['address'],
+                'name' => $s['name'],
+                'phone' => $s['phone'],
+                'contact_person' => $s['contact'],
+                'address' => $s['address'],
                 'current_balance' => '0.000',
-                'is_active'       => true,
+                'is_active' => true,
             ]);
         }
 
         // 8. Create Customers (Walk-in, Tech Shops, Online Resellers)
-        $this->info("Creating Customers Database...");
+        $this->info('Creating Customers Database...');
         $customersData = [
             ['name' => 'عميل نقدي عام (معرض وصالة)', 'phone' => '0000000000', 'tier' => 'retail', 'limit' => 0],
-            ['name' => 'محل آبل ستور المهندسين (أ. وليد)', 'phone' => '01011112222', 'tier' => 'wholesale', 'limit' => 50000],
-            ['name' => 'محل تكنو فون الدقي (م. هشام)', 'phone' => '01022223333', 'tier' => 'wholesale', 'limit' => 40000],
-            ['name' => 'مكتبة وخدمات التجمع الخامس', 'phone' => '01033334444', 'tier' => 'wholesale', 'limit' => 60000],
-            ['name' => 'مكتب المستشار القانوني خالد عزمي (شواحن وكابلات)', 'phone' => '01044445555', 'tier' => 'retail', 'limit' => 5000],
-            ['name' => 'شركة برمجيات كلاود إنتل (اكسسوارات موظفين)', 'phone' => '01055556666', 'tier' => 'retail', 'limit' => 10000],
-            ['name' => 'محل رنين فون شبرا (أ. رامي فوزي)', 'phone' => '01066667777', 'tier' => 'wholesale', 'limit' => 35000],
-            ['name' => 'مؤسسة النيل بلازا للفنادق (سبيكرات وشواحن غرف)', 'phone' => '01077778888', 'tier' => 'wholesale', 'limit' => 100000],
-            ['name' => 'معرض الصفا للإلكترونيات والموبايل (جملة)', 'phone' => '01088889999', 'tier' => 'wholesale', 'limit' => 80000],
-            ['name' => 'د. سمير عبدالعزيز (ايربودز برو وسبيكر)', 'phone' => '01099990000', 'tier' => 'retail', 'limit' => 3000],
+            ['name' => 'محل آبل ستور المهندسين (أ. وليد)', 'phone' => '01000000141', 'tier' => 'wholesale', 'limit' => 50000],
+            ['name' => 'محل تكنو فون الدقي (م. هشام)', 'phone' => '01000000142', 'tier' => 'wholesale', 'limit' => 40000],
+            ['name' => 'مكتبة وخدمات التجمع الخامس', 'phone' => '01000000143', 'tier' => 'wholesale', 'limit' => 60000],
+            ['name' => 'مكتب المستشار القانوني خالد عزمي (شواحن وكابلات)', 'phone' => '01000000144', 'tier' => 'retail', 'limit' => 5000],
+            ['name' => 'شركة برمجيات كلاود إنتل (اكسسوارات موظفين)', 'phone' => '01000000145', 'tier' => 'retail', 'limit' => 10000],
+            ['name' => 'محل رنين فون شبرا (أ. رامي فوزي)', 'phone' => '01000000146', 'tier' => 'wholesale', 'limit' => 35000],
+            ['name' => 'مؤسسة النيل بلازا للفنادق (سبيكرات وشواحن غرف)', 'phone' => '01000000147', 'tier' => 'wholesale', 'limit' => 100000],
+            ['name' => 'معرض الصفا للإلكترونيات والموبايل (جملة)', 'phone' => '01000000148', 'tier' => 'wholesale', 'limit' => 80000],
+            ['name' => 'د. سمير عبدالعزيز (ايربودز برو وسبيكر)', 'phone' => '01000000149', 'tier' => 'retail', 'limit' => 3000],
             ['name' => 'م. أيمن الشناوي (شاحن أنكر وباور بنك)', 'phone' => '01112345678', 'tier' => 'retail', 'limit' => 2000],
             ['name' => 'أ. نادية الحسيني (كابلات وشواحن منزلية)', 'phone' => '01223456789', 'tier' => 'retail', 'limit' => 1500],
         ];
@@ -346,86 +384,86 @@ final class PopulateRealisticTenantDataCommand extends Command
         $customers = [];
         foreach ($customersData as $c) {
             $customers[] = Customer::create([
-                'name'            => $c['name'],
-                'phone'           => $c['phone'],
-                'price_tier'      => $c['tier'],
-                'credit_limit'    => $c['limit'],
+                'name' => $c['name'],
+                'phone' => $c['phone'],
+                'price_tier' => $c['tier'],
+                'credit_limit' => $c['limit'],
                 'current_balance' => '0.000',
-                'is_active'       => true,
+                'is_active' => true,
             ]);
         }
 
         // 9. Execute 1-Year Purchases History (via PurchaseService to establish genuine stock movements and moving average costs)
-        $this->info("Simulating 12 Months of Supply Chain & Purchases via PurchaseService...");
+        $this->info('Simulating 12 Months of Supply Chain & Purchases via PurchaseService...');
         $startDate = Carbon::now()->subYear()->startOfMonth();
 
         // 12 Purchase Invoices spread over 12 months
         for ($m = 0; $m < 12; $m++) {
             $pDate = $startDate->copy()->addMonths($m)->addDays(rand(2, 6))->toDateString();
-            
+
             // Purchase Green Coffee & Packaging from Suppliers
             $sup = $suppliers[$m % count($suppliers)];
-            
+
             $purchaseLines = [];
             $selectedItemKeys = array_rand($items, rand(6, 9));
-            foreach ((array)$selectedItemKeys as $key) {
+            foreach ((array) $selectedItemKeys as $key) {
                 $it = $items[$key];
                 $qty = rand(80, 200); // Large stock quantity
                 $purchaseLines[] = [
-                    'item_id'    => $it->id,
-                    'quantity'   => (string)$qty,
+                    'item_id' => $it->id,
+                    'quantity' => (string) $qty,
                     'cost_price' => $it->cost_price,
                 ];
             }
 
             $purchaseData = [
-                'supplier_id'               => $sup->id,
-                'store_id'                  => $mainStore->id,
-                'purchase_date'             => $pDate,
-                'purchase_number'           => 'PUR-' . date('Ymd', strtotime($pDate)) . '-' . str_pad((string)($m + 1), 4, '0', STR_PAD_LEFT),
-                'supplier_invoice_ref'      => 'INV-SUP-' . rand(1000, 9999),
-                'discount_amount'           => '0.000',
-                'items'                     => $purchaseLines,
-                'additional_expenses'       => [
+                'supplier_id' => $sup->id,
+                'store_id' => $mainStore->id,
+                'purchase_date' => $pDate,
+                'purchase_number' => 'PUR-'.date('Ymd', strtotime($pDate)).'-'.str_pad((string) ($m + 1), 4, '0', STR_PAD_LEFT),
+                'supplier_invoice_ref' => 'INV-SUP-'.rand(1000, 9999),
+                'discount_amount' => '0.000',
+                'items' => $purchaseLines,
+                'additional_expenses' => [
                     [
-                        'title'             => 'شحن ونقل وتعتيق شيكارات',
-                        'amount'            => (string)rand(300, 800),
-                        'paid_by'           => 'supplier_account',
+                        'title' => 'شحن ونقل وتعتيق شيكارات',
+                        'amount' => (string) rand(300, 800),
+                        'paid_by' => 'supplier_account',
                         'allocation_method' => 'by_quantity',
-                    ]
+                    ],
                 ],
             ];
 
             $purch = $purchaseService->createPurchase($purchaseData);
-            
+
             // Record payment for purchase (85% paid, 15% credit)
-            $paidAmt = bcmul((string)$purch->net_total, '0.85', 3);
+            $paidAmt = bcmul((string) $purch->net_total, '0.85', 3);
             if (bccomp($paidAmt, '0.000', 3) > 0) {
                 Payment::create([
-                    'payment_number' => 'PAY-PUR-' . strtoupper(uniqid()),
-                    'supplier_id'    => $sup->id,
-                    'purchase_id'    => $purch->id,
-                    'user_id'        => $adminUser->id,
-                    'amount'         => $paidAmt,
-                    'payment_date'   => $pDate,
+                    'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                    'supplier_id' => $sup->id,
+                    'purchase_id' => $purch->id,
+                    'user_id' => $adminUser->id,
+                    'amount' => $paidAmt,
+                    'payment_date' => $pDate,
                     'payment_method' => 'bank_transfer',
-                    'notes'          => 'سداد تحويل بنكي لفاتورة مشتريات',
+                    'notes' => 'سداد تحويل بنكي لفاتورة مشتريات',
                 ]);
                 $purch->update([
-                    'paid_amount'      => $paidAmt,
-                    'remaining_amount' => bcsub((string)$purch->net_total, $paidAmt, 3),
-                    'payment_status'   => 'partially_paid',
+                    'paid_amount' => $paidAmt,
+                    'remaining_amount' => bcsub((string) $purch->net_total, $paidAmt, 3),
+                    'payment_status' => 'partially_paid',
                 ]);
                 $supplierBalanceService->updateBalance($sup->id);
             }
         }
 
         // Distribute some initial stock to branch and van
-        $this->info("Distributing Initial Stock to Branch & Distribution Van...");
+        $this->info('Distributing Initial Stock to Branch & Distribution Van...');
         foreach ($items as $it) {
             $mainStock = StoreStock::where('store_id', $mainStore->id)->where('item_id', $it->id)->first();
-            if ($mainStock && (float)$mainStock->quantity > 30) {
-                $transferQty = number_format((float)$mainStock->quantity * 0.25, 3, '.', '');
+            if ($mainStock && (float) $mainStock->quantity > 30) {
+                $transferQty = number_format((float) $mainStock->quantity * 0.25, 3, '.', '');
                 StoreStock::firstOrCreate(
                     ['store_id' => $branchStore->id, 'item_id' => $it->id],
                     ['quantity' => $transferQty, 'min_stock' => $it->min_stock_level]
@@ -434,7 +472,7 @@ final class PopulateRealisticTenantDataCommand extends Command
         }
 
         // 10. Simulate 1-Year Daily Operations (Shifts, Invoices, POS Checkouts, Expenses, Payments)
-        $this->info("Simulating 365 Days of Authentic Sales & POS Transactions...");
+        $this->info('Simulating 365 Days of Authentic Sales & POS Transactions...');
         $totalInvoicesCount = 0;
         $totalSalesAmount = '0.000';
 
@@ -448,21 +486,21 @@ final class PopulateRealisticTenantDataCommand extends Command
 
             // Shift for the day
             $shift = CashShift::create([
-                'user_id'               => ($dayIndex % 2 === 0) ? $cashierMorning->id : $cashierEvening->id,
-                'store_id'              => $mainStore->id,
-                'shift_number'          => 'SHF-' . $curDay->format('Ymd') . '-' . str_pad((string)$dayIndex, 4, '0', STR_PAD_LEFT),
-                'status'                => 'closed',
-                'opened_at'             => $curDay->copy()->setTime(8, 30, 0),
-                'closed_at'             => $curDay->copy()->setTime(23, 30, 0),
-                'opening_cash_balance'  => '500.000',
-                'total_cash_sales'      => '0.000',
-                'total_credit_sales'    => '0.000',
-                'total_payments_collected'=> '0.000',
-                'total_refunds'         => '0.000',
+                'user_id' => ($dayIndex % 2 === 0) ? $cashierMorning->id : $cashierEvening->id,
+                'store_id' => $mainStore->id,
+                'shift_number' => 'SHF-'.$curDay->format('Ymd').'-'.str_pad((string) $dayIndex, 4, '0', STR_PAD_LEFT),
+                'status' => 'closed',
+                'opened_at' => $curDay->copy()->setTime(8, 30, 0),
+                'closed_at' => $curDay->copy()->setTime(23, 30, 0),
+                'opening_cash_balance' => '500.000',
+                'total_cash_sales' => '0.000',
+                'total_credit_sales' => '0.000',
+                'total_payments_collected' => '0.000',
+                'total_refunds' => '0.000',
                 'expected_cash_balance' => '500.000',
-                'actual_cash_balance'   => '500.000',
-                'cash_difference'       => '0.000',
-                'notes'                 => 'يومية عمل منتظمة ومقفلة بالكامل',
+                'actual_cash_balance' => '500.000',
+                'cash_difference' => '0.000',
+                'notes' => 'يومية عمل منتظمة ومقفلة بالكامل',
             ]);
 
             // Daily Invoices: 2 to 5 realistic orders per day
@@ -477,17 +515,17 @@ final class PopulateRealisticTenantDataCommand extends Command
                 // Pick 1 to 3 items for the cart
                 $orderItems = [];
                 $pickedItems = array_rand($items, rand(1, 3));
-                foreach ((array)$pickedItems as $pKey) {
+                foreach ((array) $pickedItems as $pKey) {
                     $it = $items[$pKey];
                     // Quantities for roastery: e.g. 0.250kg, 0.500kg, 1kg, 2kg, or 1 unit
                     $q = (in_array($it->unit, ['كجم']))
                         ? [0.250, 0.500, 1.000, 1.500, 2.000][rand(0, 4)]
-                        : (float)rand(1, 3);
+                        : (float) rand(1, 3);
 
-                    $price = ($cust->price_tier === 'wholesale') ? (float)$it->price_wholesale : (float)$it->selling_price;
+                    $price = ($cust->price_tier === 'wholesale') ? (float) $it->price_wholesale : (float) $it->selling_price;
                     $orderItems[] = [
-                        'item_id'    => $it->id,
-                        'quantity'   => $q,
+                        'item_id' => $it->id,
+                        'quantity' => $q,
                         'unit_price' => $price,
                     ];
                 }
@@ -528,36 +566,36 @@ final class PopulateRealisticTenantDataCommand extends Command
                 $orderExpenses = [];
                 if (rand(1, 10) === 1) {
                     $orderExpenses[] = [
-                        'title'   => 'مصاريف توصيل وشحن سريع',
-                        'amount'  => '40.000',
+                        'title' => 'مصاريف توصيل وشحن سريع',
+                        'amount' => '40.000',
                         'paid_by' => 'customer_account',
                     ];
                 }
 
                 $invoiceData = [
-                    'customer_id'         => $cust->id,
-                    'store_id'            => $mainStore->id,
-                    'invoice_date'        => $dateStr,
-                    'payment_type'        => $pType,
-                    'payment_method'      => $pMethod,
-                    'discount_type'       => 'percentage',
-                    'discount_value'      => (rand(1, 10) === 1) ? 5.0 : 0.0,
-                    'paid_amount'         => 0.0,
-                    'notes'               => 'طلب كاشير سريع - وردية ' . $shift->shift_number,
-                    'items'               => $orderItems,
+                    'customer_id' => $cust->id,
+                    'store_id' => $mainStore->id,
+                    'invoice_date' => $dateStr,
+                    'payment_type' => $pType,
+                    'payment_method' => $pMethod,
+                    'discount_type' => 'percentage',
+                    'discount_value' => (rand(1, 10) === 1) ? 5.0 : 0.0,
+                    'paid_amount' => 0.0,
+                    'notes' => 'طلب كاشير سريع - وردية '.$shift->shift_number,
+                    'items' => $orderItems,
                     'additional_expenses' => $orderExpenses,
-                    'payments'            => $paymentsArray,
+                    'payments' => $paymentsArray,
                 ];
 
                 try {
                     $inv = $invoiceService->confirmInvoice($invoiceData);
                     $totalInvoicesCount++;
-                    $totalSalesAmount = bcadd($totalSalesAmount, (string)$inv->net_total, 3);
+                    $totalSalesAmount = bcadd($totalSalesAmount, (string) $inv->net_total, 3);
 
                     if ($pType === 'cash') {
-                        $shiftCashSales = bcadd($shiftCashSales, (string)$inv->paid_amount, 3);
+                        $shiftCashSales = bcadd($shiftCashSales, (string) $inv->paid_amount, 3);
                     } else {
-                        $shiftCreditSales = bcadd($shiftCreditSales, (string)$inv->net_total, 3);
+                        $shiftCreditSales = bcadd($shiftCreditSales, (string) $inv->net_total, 3);
                     }
                 } catch (\Throwable $e) {
                     // Continue gracefully if any line had stock shortage
@@ -567,46 +605,46 @@ final class PopulateRealisticTenantDataCommand extends Command
             // Monthly Operational Expense
             if ($curDay->day === 1) {
                 Expense::create([
-                    'expense_number' => 'EXP-' . $curDay->format('Ym') . '-RENT',
-                    'store_id'       => $mainStore->id,
-                    'user_id'        => $adminUser->id,
-                    'category'       => 'rent',
-                    'title'          => 'إيجار معرض ومخزن 2M للاكسسوارات لشهر ' . $curDay->format('F Y'),
-                    'amount'         => '12000.000',
-                    'expense_date'   => $dateStr,
+                    'expense_number' => 'EXP-'.$curDay->format('Ym').'-RENT',
+                    'store_id' => $mainStore->id,
+                    'user_id' => $adminUser->id,
+                    'category' => 'rent',
+                    'title' => 'إيجار معرض ومخزن 2M للاكسسوارات لشهر '.$curDay->format('F Y'),
+                    'amount' => '12000.000',
+                    'expense_date' => $dateStr,
                     'payment_method' => 'bank_transfer',
-                    'notes'          => 'سداد إيجار المعرض التجاري',
+                    'notes' => 'سداد إيجار المعرض التجاري',
                 ]);
             }
             if ($curDay->day === 15) {
                 Expense::create([
-                    'expense_number' => 'EXP-' . $curDay->format('Ymd') . '-UTIL',
-                    'store_id'       => $mainStore->id,
-                    'user_id'        => $adminUser->id,
-                    'category'       => 'utilities',
-                    'title'          => 'فاتورة كهرباء وتكييف المعرض والإنارة',
-                    'amount'         => '2800.000',
-                    'expense_date'   => $dateStr,
+                    'expense_number' => 'EXP-'.$curDay->format('Ymd').'-UTIL',
+                    'store_id' => $mainStore->id,
+                    'user_id' => $adminUser->id,
+                    'category' => 'utilities',
+                    'title' => 'فاتورة كهرباء وتكييف المعرض والإنارة',
+                    'amount' => '2800.000',
+                    'expense_date' => $dateStr,
                     'payment_method' => 'cash',
-                    'notes'          => 'سداد كاش من الخزينة',
+                    'notes' => 'سداد كاش من الخزينة',
                 ]);
             }
 
             // Reconcile and close shift
             $expectedCash = bcadd('500.000', $shiftCashSales, 3);
             $shift->update([
-                'total_cash_sales'      => $shiftCashSales,
-                'total_credit_sales'    => $shiftCreditSales,
+                'total_cash_sales' => $shiftCashSales,
+                'total_credit_sales' => $shiftCreditSales,
                 'expected_cash_balance' => $expectedCash,
-                'actual_cash_balance'   => $expectedCash,
-                'cash_difference'       => '0.000',
+                'actual_cash_balance' => $expectedCash,
+                'cash_difference' => '0.000',
             ]);
 
             $curDay->addDay();
         }
 
         // 11. Customer Debt Settlements over the year
-        $this->info("Simulating Customer Debt Settlements & Receipts...");
+        $this->info('Simulating Customer Debt Settlements & Receipts...');
         $allCustomers = Customer::where('id', '>', 1)->get();
         foreach ($allCustomers as $c) {
             try {
@@ -615,15 +653,15 @@ final class PopulateRealisticTenantDataCommand extends Command
                     $c->refresh();
 
                     // If customer has debt, pay 75% of it
-                    if (bccomp((string)$c->current_balance, '0.000', 3) > 0) {
-                        $payAmt = bcmul((string)$c->current_balance, '0.75', 3);
+                    if (bccomp((string) $c->current_balance, '0.000', 3) > 0) {
+                        $payAmt = bcmul((string) $c->current_balance, '0.75', 3);
                         if (bccomp($payAmt, '0.000', 3) > 0) {
                             $paymentService->recordCustomerPayment([
-                                'customer_id'    => $c->id,
-                                'amount'         => $payAmt,
-                                'payment_date'   => now()->subDays(rand(1, 15))->toDateString(),
+                                'customer_id' => $c->id,
+                                'amount' => $payAmt,
+                                'payment_date' => now()->subDays(rand(1, 15))->toDateString(),
                                 'payment_method' => 'instapay',
-                                'notes'          => 'سداد دفعة من الحساب الجاري عبر إنستاباي',
+                                'notes' => 'سداد دفعة من الحساب الجاري عبر إنستاباي',
                             ]);
                         }
                     }
@@ -636,31 +674,47 @@ final class PopulateRealisticTenantDataCommand extends Command
         // 12. Final Balances Recomputation
         foreach (Customer::all() as $c) {
             try {
-                DB::transaction(fn() => $customerBalanceService->updateBalance($c->id));
-            } catch (\Throwable $e) {}
+                DB::transaction(fn () => $customerBalanceService->updateBalance($c->id));
+            } catch (\Throwable $e) {
+            }
         }
         foreach (Supplier::all() as $s) {
             try {
-                DB::transaction(fn() => $supplierBalanceService->updateBalance($s->id));
-            } catch (\Throwable $e) {}
+                DB::transaction(fn () => $supplierBalanceService->updateBalance($s->id));
+            } catch (\Throwable $e) {
+            }
         }
 
         $this->newLine();
-        $this->info("=========================================================");
-        $this->info("1-YEAR REALISTIC DATASET GENERATION COMPLETE!");
-        $this->info("=========================================================");
+        $this->info('=========================================================');
+        $this->info('1-YEAR REALISTIC DATASET GENERATION COMPLETE!');
+        $this->info('=========================================================');
         $this->info("Tenant Workspace:       {$tenant->name} ({$tenant->id})");
-        $this->info("Products Created:        " . Item::count() . " active products");
-        $this->info("Categories:              " . Category::count() . " categories");
-        $this->info("Suppliers:               " . Supplier::count() . " suppliers");
-        $this->info("Customers:               " . Customer::count() . " customers");
-        $this->info("Purchase Invoices:       " . Purchase::count() . " confirmed shipments");
-        $this->info("Sales & POS Invoices:    " . Invoice::count() . " genuine invoices");
-        $this->info("Total 1-Year Sales:      " . number_format((float)$totalSalesAmount, 2) . " EGP");
-        $this->info("Cash Shifts Closed:      " . CashShift::count() . " reconciled shifts");
-        $this->info("Payment Receipts:        " . Payment::count() . " payments logged");
-        $this->info("Inventory Movements:     " . StockMovement::count() . " audit movements");
-        $this->info("=========================================================");
+        $this->info('Products Created:        '.Item::count().' active products');
+        $this->info('Categories:              '.Category::count().' categories');
+        $this->info('Suppliers:               '.Supplier::count().' suppliers');
+        $this->info('Customers:               '.Customer::count().' customers');
+        $this->info('Purchase Invoices:       '.Purchase::count().' confirmed shipments');
+        $this->info('Sales & POS Invoices:    '.Invoice::count().' genuine invoices');
+        $this->info('Total 1-Year Sales:      '.number_format((float) $totalSalesAmount, 2).' EGP');
+        $this->info('Cash Shifts Closed:      '.CashShift::count().' reconciled shifts');
+        $this->info('Payment Receipts:        '.Payment::count().' payments logged');
+        $this->info('Inventory Movements:     '.StockMovement::count().' audit movements');
+        $this->info('=========================================================');
+
+        if ($newlyCreatedUsers !== []) {
+            $this->newLine();
+            $this->warn(__('console.populate_realistic_data.created_users'));
+            foreach ($newlyCreatedUsers as $user) {
+                $this->line("  - {$user->phone} ({$user->email})");
+            }
+            if ($passwordFromOption) {
+                $this->warn(__('console.populate_realistic_data.password_from_option'));
+            } else {
+                $this->warn(__('console.populate_realistic_data.generated_password', ['password' => $plainPassword]));
+            }
+            $this->warn(__('console.populate_realistic_data.change_password_warning'));
+        }
 
         return Command::SUCCESS;
     }

@@ -41,21 +41,22 @@ final class AppUpdateController extends Controller
         $isForce = (bool) ($result['is_force_update'] ?? false);
 
         return response()->json([
-            'success'             => true,
-            'has_update'          => $hasUpdate,
-            'force_update'        => $isForce,
+            'success' => true,
+            'has_update' => $hasUpdate,
+            'force_update' => $isForce,
             'current_app_version' => $versionName,
-            'latest_version'      => $latest['version_name'] ?? $versionName,
+            'latest_version' => $latest['version_name'] ?? $versionName,
             'latest_version_code' => $latest['version_code'] ?? $versionCode,
-            'download_url'        => $latest['download_url'] ?? url('/api/v1/app/download-apk'),
-            'file_size'           => $latest['file_size'] ?? '18.5 MB',
-            'file_size_bytes'     => $latest['file_size_bytes'] ?? 0,
-            'release_notes_ar'    => $latest['release_notes_ar'] ?? '',
-            'release_notes'       => !empty($latest['release_notes_ar']) ? explode("\n", (string)$latest['release_notes_ar']) : [],
-            'published_at'        => $latest['published_at'] ?? now()->toDateTimeString(),
-            'title'               => $isForce ? 'تحديث إلزامي جديد متاح 🚀' : 'تحديث جديد متاح للتحميل 🚀',
-            'message'             => $hasUpdate
-                ? "يتوفر إصدار جديد (" . ($latest['version_name'] ?? $versionName) . ") من تطبيق ERP."
+            'download_url' => $latest['download_url'] ?? url('/api/v1/app/download-apk'),
+            'file_size' => $latest['file_size'] ?? '18.5 MB',
+            'file_size_bytes' => $latest['file_size_bytes'] ?? 0,
+            'checksum' => $latest['checksum'] ?? null,
+            'release_notes_ar' => $latest['release_notes_ar'] ?? '',
+            'release_notes' => ! empty($latest['release_notes_ar']) ? explode("\n", (string) $latest['release_notes_ar']) : [],
+            'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
+            'title' => $isForce ? 'تحديث إلزامي جديد متاح 🚀' : 'تحديث جديد متاح للتحميل 🚀',
+            'message' => $hasUpdate
+                ? 'يتوفر إصدار جديد ('.($latest['version_name'] ?? $versionName).') من تطبيق ERP.'
                 : 'أنت تستخدم أحدث إصدار من التطبيق.',
         ]);
     }
@@ -66,6 +67,7 @@ final class AppUpdateController extends Controller
     public function downloadApk(CheckUpdateRequest $request): BinaryFileResponse
     {
         $platform = (string) $request->input('platform', 'android');
+
         return $this->downloadLatestApkAction->execute($platform);
     }
 }

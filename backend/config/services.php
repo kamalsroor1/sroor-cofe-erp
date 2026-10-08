@@ -37,8 +37,10 @@ return [
 
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
-        'chat_id'   => env('TELEGRAM_CHAT_ID'),
-        'enabled'   => env('TELEGRAM_NOTIFICATIONS_ENABLED', true),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+        'enabled' => env('TELEGRAM_NOTIFICATIONS_ENABLED', true),
+        // Central scheduler jobs (backup:telegram, notify:*) are off until they are tenant-aware and backups are encrypted.
+        'scheduled_jobs_enabled' => (bool) env('TELEGRAM_SCHEDULED_JOBS_ENABLED', false),
     ],
 
 ];
