@@ -46,6 +46,9 @@ return new class extends Migration
 
     private const INDEX_STATUS_CYCLE = 'subscriptions_status_billing_cycle_index';
 
+    /** Name MySQL gives the implicit index of the `subscriptions_tenant_id_foreign` FK. */
+    private const INDEX_TENANT_FK = 'subscriptions_tenant_id_foreign';
+
     public function up(): void
     {
         if (! Schema::hasTable('subscriptions')) {
@@ -94,6 +97,18 @@ return new class extends Migration
         }
         foreach (self::DOWN_CYCLE_MAP as $new => $legacy) {
             DB::table('subscriptions')->where('billing_cycle', $new)->update(['billing_cycle' => $legacy]);
+        }
+
+        // MySQL/InnoDB: the FK on tenant_id originally got an implicit index, which the
+        // server silently dropped when up() added (tenant_id, status). That composite index
+        // is now the one enforcing the FK, so it cannot be dropped (error 1553) until a
+        // standalone tenant_id index exists again. Recreate it under the implicit name.
+        // sqlite never auto-indexes FKs, so its original schema had no such index.
+        if (in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb'], true)
+            && ! Schema::hasIndex('subscriptions', ['tenant_id'])) {
+            Schema::table('subscriptions', function (Blueprint $table) {
+                $table->index('tenant_id', self::INDEX_TENANT_FK);
+            });
         }
 
         Schema::table('subscriptions', function (Blueprint $table) {
