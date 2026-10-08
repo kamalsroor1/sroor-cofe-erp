@@ -142,7 +142,7 @@ class ProfitLossService
                     'store_id' => $store->id,
                     'store_name' => $store->name,
                     'store_code' => $store->code,
-                    'is_default' => $store->is_default,
+                    'is_default' => $store->is_main,
                     'invoices_count' => $invoicesCount,
                     'gross_sales' => $storeRevenue,
                     'returns_amount' => $returnAmount,

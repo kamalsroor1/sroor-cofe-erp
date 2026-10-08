@@ -193,6 +193,59 @@ class DashboardApiTest extends TestCase
         $this->assertEquals(1300.0, (float) $response->json('data.metrics.today_sales'));
     }
 
+    public function test_active_shift_reports_opening_cash_and_expected_drawer_cash(): void
+    {
+        $today = now()->toDateString();
+
+        CashShift::create([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->mainStore->id,
+            'shift_number' => 'SHF-DASH-02',
+            'status' => 'open',
+            'opened_at' => now()->subMinutes(5),
+            'opening_cash_balance' => '1000.000',
+        ]);
+
+        Invoice::create([
+            'invoice_number' => 'INV-DASH-CASH',
+            'store_id' => $this->mainStore->id,
+            'customer_id' => $this->customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => $today,
+            'subtotal' => '1300.000',
+            'discount_amount' => '0.000',
+            'tax_amount' => '0.000',
+            'net_total' => '1300.000',
+            'paid_amount' => '1300.000',
+            'remaining_amount' => '0.000',
+            'status' => 'confirmed',
+            'payment_type' => 'cash',
+        ]);
+
+        Expense::create([
+            'store_id' => $this->mainStore->id,
+            'user_id' => $this->adminUser->id,
+            'expense_number' => 'EXP-DASH-02',
+            'title' => 'مصروف نقدي',
+            'amount' => '200.000',
+            'category' => 'تشغيلي',
+            'cost_center' => 'operational',
+            'expense_date' => $today,
+            'payment_method' => 'cash',
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->getJson('/api/v1/dashboard');
+
+        $response->assertStatus(200);
+        // Opening balance comes from opening_cash_balance; current cash is the
+        // shift's expected drawer balance: 1000 + 1300 cash sale - 200 cash expense.
+        $this->assertEquals(1000.0, $response->json('data.active_shift.starting_cash'));
+        $this->assertEquals(2100.0, $response->json('data.active_shift.current_cash'));
+    }
+
     public function test_dashboard_respects_x_store_id_header(): void
     {
         $today = now()->toDateString();

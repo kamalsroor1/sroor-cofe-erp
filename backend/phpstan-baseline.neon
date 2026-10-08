@@ -13,12 +13,6 @@ parameters:
 			path: app/Actions/Auth/ApiLogoutAction.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\CashShift\:\:\$starting_cash\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Actions/Dashboard/GetDashboardOverviewAction.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\InvoiceItem\:\:\$item_code\.$#'
 			identifier: property.notFound
 			count: 1
@@ -107,18 +101,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Actions/Logs/ExportActivityLogsCsvAction.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ActivityLog\:\:\$payload\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Actions/Logs/GetActivityLogsAction.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Models\\ActivityLog\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Actions/Logs/GetActivityLogsAction.php
 
 		-
 			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
@@ -229,12 +211,6 @@ parameters:
 			path: app/Actions/Tenants/ResolveTenantWorkspaceAction.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\ReturnDocument\:\:\$net_total\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Actions/Trash/GetTrashRecordsAction.php
-
-		-
 			message: '#^Offset ''ar'' on array\{ar\: array\<string, array\<mixed, mixed\>\>, en\: array\<string, array\<mixed, mixed\>\>\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
@@ -275,12 +251,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Api/UserController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$total_amount\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/POSController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Customer\:\:\$period_invoices_count\.$#'
@@ -559,144 +529,6 @@ parameters:
 			path: app/Http/Resources/Api/CashShiftResource.php
 
 		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$client_uuid\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$created_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$customer\.$#'
-			identifier: property.notFound
-			count: 4
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$customer_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$discount_amount\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$discount_type\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$discount_value\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$invoice_date\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$invoice_number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$items\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$notes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$paid_amount\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$payment_method\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$payment_status\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$payment_type\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$payments\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$remaining_amount\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$shipping_cost\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$status\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$store_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceResource\:\:\$subtotal\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Call to an undefined method App\\Http\\Resources\\InvoiceResource\:\:relationLoaded\(\)\.$#'
-			identifier: method.notFound
-			count: 3
-			path: app/Http/Resources/InvoiceResource.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 6
@@ -709,46 +541,10 @@ parameters:
 			path: app/Http/Resources/InvoiceResource.php
 
 		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\InvoiceSummaryResource\:\:\$total_amount\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Resources/InvoiceSummaryResource.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
 			path: app/Http/Resources/InvoiceSummaryResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\PurchaseItemResource\:\:\$cost_price\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Resources/PurchaseItemResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\PurchaseItemResource\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/PurchaseItemResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\PurchaseItemResource\:\:\$item\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Resources/PurchaseItemResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\PurchaseItemResource\:\:\$item_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/PurchaseItemResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\PurchaseItemResource\:\:\$quantity\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Resources/PurchaseItemResource.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>unit" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -835,12 +631,6 @@ parameters:
 			path: app/Models/StoreStock.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\CashShift\:\:\$difference\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/ActivityLogService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
@@ -881,18 +671,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/InvoiceService.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Store\:\:\$is_default\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/ProfitLossService.php
-
-		-
-			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/ProfitLossService.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -1001,12 +779,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/SuperAdminAnalyticsService.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\CashShift\:\:\$opening_cash\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/TelegramService.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'

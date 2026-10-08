@@ -135,7 +135,7 @@ final class GetTrashRecordsAction
             $records = collect($paged->items())->map(fn ($r) => [
                 'id' => $r->id,
                 'title' => $r->return_number,
-                'subtitle' => (string) $r->net_total.' ج.م',
+                'subtitle' => (string) $r->total_amount.' ج.م',
                 'deleted_at' => $r->deleted_at?->diffForHumans(),
             ]);
             $pagination = [

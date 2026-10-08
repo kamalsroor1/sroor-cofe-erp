@@ -94,7 +94,7 @@ class ActivityLogService
             'shift_number' => $shift->shift_number,
             'opening_cash_balance' => (string) $shift->opening_cash_balance,
             'actual_cash_balance' => (string) $shift->actual_cash_balance,
-            'difference' => (string) $shift->difference,
+            'difference' => (string) $shift->cash_difference,
             'status' => $shift->status,
         ];
 

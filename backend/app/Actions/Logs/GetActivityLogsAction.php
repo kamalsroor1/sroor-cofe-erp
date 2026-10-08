@@ -101,7 +101,7 @@ final class GetActivityLogsAction
                 'store_name' => $log->store?->name ?? __('common.main_store_default'),
                 'ip_address' => $log->ip_address,
                 'user_agent' => $log->user_agent,
-                'payload' => $log->payload,
+                'payload' => $log->properties,
                 'created_at' => $log->created_at?->format('Y-m-d H:i:s'),
                 'time_ago' => $log->created_at?->diffForHumans(),
             ];

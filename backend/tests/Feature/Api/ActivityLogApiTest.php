@@ -144,6 +144,27 @@ class ActivityLogApiTest extends TestCase
             ]);
     }
 
+    public function test_log_payload_carries_the_stored_properties(): void
+    {
+        ActivityLog::create([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->mainStore->id,
+            'module' => 'shifts',
+            'action' => 'shift_closed',
+            'description' => 'إغلاق وردية',
+            'properties' => ['expected_cash' => '2100.000', 'difference' => '-5.000'],
+            'created_at' => now(),
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/activity-logs');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.properties.difference', '-5.000')
+            ->assertJsonPath('data.0.payload.expected_cash', '2100.000')
+            ->assertJsonPath('data.0.payload.difference', '-5.000');
+    }
+
     public function test_can_filter_logs_by_search_keyword(): void
     {
         ActivityLog::create([

@@ -16,6 +16,7 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Services\ShiftService;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +26,7 @@ final class GetDashboardOverviewAction
         private readonly DashboardAnalyticsService $analyticsService,
         private readonly ProfitService $profitService,
         private readonly TenantClock $tenantClock,
+        private readonly ShiftService $shiftService,
     ) {}
 
     /**
@@ -188,8 +190,8 @@ final class GetDashboardOverviewAction
                     'id' => $shift->id,
                     'shift_number' => $shift->shift_number,
                     'user_name' => $shift->user?->name ?? 'الكاشير',
-                    'starting_cash' => (float) $shift->starting_cash,
-                    'current_cash' => (float) ($shift->current_cash ?? $shift->starting_cash),
+                    'starting_cash' => (float) $shift->opening_cash_balance,
+                    'current_cash' => (float) $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'],
                     'opened_at' => $shift->opened_at?->toDateTimeString(),
                 ];
             }

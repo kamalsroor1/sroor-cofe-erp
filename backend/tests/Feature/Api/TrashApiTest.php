@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\Item;
+use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
@@ -110,6 +111,26 @@ class TrashApiTest extends TestCase
                     'items' => 1,
                 ],
             ]);
+    }
+
+    public function test_trashed_returns_show_the_return_total_amount(): void
+    {
+        $return = ReturnDocument::create([
+            'return_number' => 'RET-TRASH-01',
+            'return_type' => 'sales_return',
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->store->id,
+            'total_amount' => '150.500',
+            'return_date' => now()->toDateString(),
+        ]);
+        $return->delete();
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/trash?tab=returns');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.title', 'RET-TRASH-01');
+        $this->assertStringStartsWith('150.500', $response->json('data.0.subtitle'));
     }
 
     public function test_can_restore_trashed_item(): void

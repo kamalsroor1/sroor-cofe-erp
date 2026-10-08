@@ -316,7 +316,7 @@ class TelegramService
             $msg .= "👤 <b>الكاشير:</b> {$cashierName}\n";
             $msg .= "🏢 <b>الفرع/الدرج:</b> {$storeName}\n";
             $msg .= "⏱️ <b>وقت الفتح:</b> {$openTime} (مفتوح منذ {$hours} ساعة)\n";
-            $msg .= '💰 <b>رصيد البداية:</b> '.number_format((float) $shift->opening_cash, 2)." ج.م\n\n";
+            $msg .= '💰 <b>رصيد البداية:</b> '.number_format((float) $shift->opening_cash_balance, 2)." ج.م\n\n";
         }
 
         $msg .= '⚠️ <i>يُرجى التواصل مع الكاشير فوراً لتقفيل اليومية ومراجعة عهدة الدرج.</i>';
