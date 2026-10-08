@@ -86,6 +86,7 @@ return [
     'yes' => 'Yes',
     'no' => 'No',
     'loading' => 'Loading...',
+    'unlimited' => 'Unlimited',
     'item_default_name' => 'this item',
 
     'total_sales' => 'Total Sales',

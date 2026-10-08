@@ -2,6 +2,7 @@ import { ref, onMounted } from 'vue';
 import api from '../Services/api';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
+import { pickPlanLimits, preparePlanLimits } from '../helpers/planLimits';
 
 export function useSuperAdminPlans() {
     const { t } = useTrans();
@@ -11,15 +12,12 @@ export function useSuperAdminPlans() {
     const isSubmitting = ref(false);
     const showEditModal = ref(false);
     const selectedPlan = ref(null);
+    const editErrors = ref({});
 
     const editForm = ref({
         name: '',
         price_monthly: 0,
         price_yearly: 0,
-        max_users: 1,
-        max_stores: 1,
-        max_items: 100,
-        max_invoices_per_month: 1000,
         is_active: true,
         is_popular: false,
         features: {},
@@ -43,26 +41,33 @@ export function useSuperAdminPlans() {
             name: plan.name,
             price_monthly: plan.price_monthly,
             price_yearly: plan.price_yearly,
-            max_users: plan.max_users,
-            max_stores: plan.max_stores,
-            max_items: plan.max_items,
-            max_invoices_per_month: plan.max_invoices_per_month,
+            // null = unlimited; never default it to 0.
+            ...pickPlanLimits(plan),
             is_active: !!plan.is_active,
             is_popular: !!plan.is_popular,
             features: plan.features || {},
         };
+        editErrors.value = {};
         showEditModal.value = true;
     };
 
     const updateEditField = (field, val) => {
         editForm.value[field] = val;
+        if (editErrors.value[field]) {
+            const { [field]: _removed, ...rest } = editErrors.value;
+            editErrors.value = rest;
+        }
     };
 
     const submitEditPlan = async () => {
         if (!selectedPlan.value) return;
+        const { values: limits, errors } = preparePlanLimits(editForm.value);
+        editErrors.value = errors;
+        if (Object.keys(errors).length) return;
+
         isSubmitting.value = true;
         try {
-            await api.put(`/super-admin/plans/${selectedPlan.value.id}`, editForm.value);
+            await api.put(`/super-admin/plans/${selectedPlan.value.id}`, { ...editForm.value, ...limits });
             DarkSwal.fire({
                 icon: 'success',
                 title: t('common.success'),
@@ -73,6 +78,7 @@ export function useSuperAdminPlans() {
             showEditModal.value = false;
             fetchPlans();
         } catch (e) {
+            editErrors.value = e.response?.data?.errors || {};
             DarkSwal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -94,6 +100,7 @@ export function useSuperAdminPlans() {
         showEditModal,
         selectedPlan,
         editForm,
+        editErrors,
         fetchPlans,
         openEditModal,
         updateEditField,

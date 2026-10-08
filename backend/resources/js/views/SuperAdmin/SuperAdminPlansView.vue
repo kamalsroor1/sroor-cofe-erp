@@ -30,6 +30,7 @@
     <EditPlanModal
       :show="showEditModal"
       :form="editForm"
+      :errors="editErrors"
       :is-submitting="isSubmitting"
       @update:field="updateEditField"
       @submit="submitEditPlan"
@@ -45,6 +46,15 @@ import PlansGrid from '../../Components/SuperAdmin/PlansGrid.vue';
 import EditPlanModal from '../../Components/SuperAdmin/EditPlanModal.vue';
 import { useSuperAdminPlans } from '../../Composables/useSuperAdminPlans';
 
-const { plans, isLoading, isSubmitting, showEditModal, editForm, openEditModal, updateEditField, submitEditPlan } =
-  useSuperAdminPlans();
+const {
+  plans,
+  isLoading,
+  isSubmitting,
+  showEditModal,
+  editForm,
+  editErrors,
+  openEditModal,
+  updateEditField,
+  submitEditPlan,
+} = useSuperAdminPlans();
 </script>

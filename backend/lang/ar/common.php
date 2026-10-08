@@ -86,6 +86,7 @@ return [
     'yes' => 'نعم',
     'no' => 'لا',
     'loading' => 'جاري التحميل...',
+    'unlimited' => 'غير محدود',
     'item_default_name' => 'هذا العنصر',
 
     'total_sales' => 'إجمالي المبيعات',

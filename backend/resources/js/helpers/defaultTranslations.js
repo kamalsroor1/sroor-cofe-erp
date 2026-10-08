@@ -282,6 +282,10 @@ export const defaultArabicTranslations = {
             "payment_tenant_mismatch": "الدفعة لا تخص حساب هذا الاشتراك.",
             "cycle_not_sellable": "دورة الفوترة «:cycle» غير متاحة للشراء.",
             "invalid_configuration": "إعداد سعر المؤسسين :key غير صحيح."
+        },
+        "subscription_addon": {
+            "subscription_missing": "لا يمكن حفظ بند الإضافة بدون اشتراك موجود.",
+            "tenant_mismatch": "بند الإضافة لا يخص حساب الاشتراك الذي يتبعه."
         }
     },
     "central_audit": {
@@ -397,6 +401,7 @@ export const defaultArabicTranslations = {
         "yes": "نعم",
         "no": "لا",
         "loading": "جاري التحميل...",
+        "unlimited": "غير محدود",
         "item_default_name": "هذا العنصر",
         "total_sales": "إجمالي المبيعات",
         "main_branch": "الفرع الرئيسي",
@@ -2563,6 +2568,16 @@ export const defaultArabicTranslations = {
         "stores_limit_label": "الفروع",
         "items_limit_label": "الأصناف",
         "invoices_limit_label": "الفواتير\/شهر",
+        "warehouses_limit_label": "المخازن",
+        "vans_limit_label": "عربات التوزيع",
+        "storage_limit_label": "المساحة التخزينية (ميجابايت)",
+        "max_warehouses_label": "الحد الأقصى للمخازن:",
+        "max_vans_label": "الحد الأقصى لعربات التوزيع:",
+        "max_storage_mb_label": "المساحة التخزينية (ميجابايت):",
+        "plan_limits_title": "حدود الباقة",
+        "plan_limits_hint": "فعّل «غير محدود» أو اترك الخانة فارغة لإلغاء الحد.",
+        "limit_invalid": "اكتب رقم صحيح من :min إلى :max، أو فعّل «غير محدود».",
+        "plan_slug_label": "المعرّف: :slug",
         "plan_active_checkbox": "باقة مفعلة",
         "popular_plan_checkbox": "الأكثر طلباً (Popular)",
         "app_versions_page_title": "إدارة إصدارات التطبيق وحزم الـ APK",
@@ -3502,6 +3517,10 @@ export const defaultEnglishTranslations = {
             "payment_tenant_mismatch": "The payment does not belong to the subscription account.",
             "cycle_not_sellable": "The :cycle billing cycle is not available for purchase.",
             "invalid_configuration": "The founder pricing setting :key is invalid."
+        },
+        "subscription_addon": {
+            "subscription_missing": "An add-on line cannot be saved without an existing subscription.",
+            "tenant_mismatch": "The add-on line does not belong to the account of its subscription."
         }
     },
     "central_audit": {
@@ -3617,6 +3636,7 @@ export const defaultEnglishTranslations = {
         "yes": "Yes",
         "no": "No",
         "loading": "Loading...",
+        "unlimited": "Unlimited",
         "item_default_name": "this item",
         "total_sales": "Total Sales",
         "main_branch": "Main Branch",
@@ -5783,6 +5803,16 @@ export const defaultEnglishTranslations = {
         "stores_limit_label": "Stores",
         "items_limit_label": "Items",
         "invoices_limit_label": "Invoices\/month",
+        "warehouses_limit_label": "Warehouses",
+        "vans_limit_label": "Delivery vans",
+        "storage_limit_label": "Storage (MB)",
+        "max_warehouses_label": "Max Warehouses:",
+        "max_vans_label": "Max Delivery Vans:",
+        "max_storage_mb_label": "Storage (MB):",
+        "plan_limits_title": "Plan limits",
+        "plan_limits_hint": "Turn on \"Unlimited\" or leave a field empty to remove the limit.",
+        "limit_invalid": "Enter a whole number from :min to :max, or turn on \"Unlimited\".",
+        "plan_slug_label": "Slug: :slug",
         "plan_active_checkbox": "Plan Active",
         "popular_plan_checkbox": "Most Popular",
         "app_versions_page_title": "App Versions & APK Releases Management",

@@ -8,7 +8,7 @@
     <!-- Popular Badge -->
     <div
       v-if="plan.is_popular"
-      class="absolute -top-3 start-1/2 -translate-x-1/2 px-3 py-0.5 bg-theme-primary text-white font-black text-[10px] rounded-full uppercase tracking-wider shadow-sm"
+      class="absolute -top-3 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 px-3 py-0.5 bg-theme-primary text-white font-black text-[10px] rounded-full uppercase tracking-wider shadow-sm"
     >
       {{ $t('super.popular_badge') }}
     </div>
@@ -17,7 +17,9 @@
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-base font-black text-slate-900 dark:text-white">{{ plan.name }}</h3>
-          <span class="text-[10px] text-slate-400 font-mono">Slug: {{ plan.slug }}</span>
+          <span class="text-[10px] text-slate-400 font-mono">{{
+            $t('super.plan_slug_label', { slug: plan.slug })
+          }}</span>
         </div>
         <span
           class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
@@ -48,21 +50,19 @@
 
       <!-- Resource Limits List -->
       <div class="space-y-2 text-xs text-slate-700 dark:text-slate-300">
-        <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800/80">
-          <span class="text-slate-500 dark:text-slate-400">{{ $t('super.max_users_label') }}</span>
-          <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_users }}</span>
-        </div>
-        <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800/80">
-          <span class="text-slate-500 dark:text-slate-400">{{ $t('super.max_stores_label') }}</span>
-          <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_stores }}</span>
-        </div>
-        <div class="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800/80">
-          <span class="text-slate-500 dark:text-slate-400">{{ $t('super.max_items_label') }}</span>
-          <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_items }}</span>
-        </div>
-        <div class="flex items-center justify-between py-1.5">
-          <span class="text-slate-500 dark:text-slate-400">{{ $t('super.monthly_invoices_label') }}</span>
-          <span class="font-mono font-bold text-slate-900 dark:text-white">{{ plan.max_invoices_per_month }}</span>
+        <div
+          v-for="field in limitFields"
+          :key="field.key"
+          class="flex items-center justify-between gap-2 py-1.5 border-b last:border-b-0 border-slate-100 dark:border-slate-800/80"
+        >
+          <span class="text-slate-500 dark:text-slate-400">{{ $t(field.cardLabel) }}</span>
+          <span v-if="isUnlimited(plan[field.key])" class="inline-flex items-center gap-1 font-bold text-theme-primary">
+            <InfinityIcon class="w-3.5 h-3.5" aria-hidden="true" />
+            {{ $t('common.unlimited') }}
+          </span>
+          <span v-else class="font-mono font-bold text-slate-900 dark:text-white">
+            {{ formatQty(plan[field.key]) }}
+          </span>
         </div>
       </div>
     </div>
@@ -81,14 +81,19 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { Infinity as InfinityIcon } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { isUnlimited, presentLimitFields } from '../../helpers/planLimits';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, formatQty } = useFormatters();
 
-defineProps({
+const props = defineProps({
   plan: { type: Object, required: true },
 });
+
+const limitFields = computed(() => presentLimitFields(props.plan));
 
 defineEmits(['edit']);
 </script>

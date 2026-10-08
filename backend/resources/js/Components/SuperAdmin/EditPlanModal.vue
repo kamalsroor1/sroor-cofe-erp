@@ -1,5 +1,10 @@
 <template>
-  <AppModal :show="show" :title="$t('super.edit_plan_modal_title', { name: form.name })" @close="$emit('close')">
+  <AppModal
+    :show="show"
+    max-width="lg"
+    :title="$t('super.edit_plan_modal_title', { name: form.name })"
+    @close="$emit('close')"
+  >
     <form @submit.prevent="$emit('submit')" class="space-y-3.5 text-xs font-tajawal">
       <div>
         <BaseInput
@@ -36,51 +41,25 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div>
-          <BaseInput
-            :model-value="form.max_users"
-            @update:model-value="$emit('update:field', 'max_users', Number($event))"
-            :label="$t('super.users_limit_label')"
-            type="number"
-            class="font-mono"
-            required
+      <fieldset class="space-y-2">
+        <legend class="text-xs font-black text-slate-700 dark:text-slate-200 mb-2">
+          {{ $t('super.plan_limits_title') }}
+        </legend>
+        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          {{ $t('super.plan_limits_hint') }}
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <BaseLimitInput
+            v-for="field in limitFields"
+            :key="field.key"
+            :model-value="form[field.key]"
+            :label="$t(field.formLabel)"
+            :min="field.min"
+            :error="limitErrorText(field.key)"
+            @update:model-value="$emit('update:field', field.key, $event)"
           />
         </div>
-
-        <div>
-          <BaseInput
-            :model-value="form.max_stores"
-            @update:model-value="$emit('update:field', 'max_stores', Number($event))"
-            :label="$t('super.stores_limit_label')"
-            type="number"
-            class="font-mono"
-            required
-          />
-        </div>
-
-        <div>
-          <BaseInput
-            :model-value="form.max_items"
-            @update:model-value="$emit('update:field', 'max_items', Number($event))"
-            :label="$t('super.items_limit_label')"
-            type="number"
-            class="font-mono"
-            required
-          />
-        </div>
-
-        <div>
-          <BaseInput
-            :model-value="form.max_invoices_per_month"
-            @update:model-value="$emit('update:field', 'max_invoices_per_month', Number($event))"
-            :label="$t('super.invoices_limit_label')"
-            type="number"
-            class="font-mono"
-            required
-          />
-        </div>
-      </div>
+      </fieldset>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         <BaseCheckbox
@@ -118,16 +97,33 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseCheckbox from '../Form/BaseCheckbox.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import BaseLimitInput from '../Form/BaseLimitInput.vue';
+import { presentLimitFields } from '../../helpers/planLimits';
+import { useTrans } from '../../Composables/useTrans';
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   form: { type: Object, default: () => ({}) },
+  errors: { type: Object, default: () => ({}) },
   isSubmitting: { type: Boolean, default: false },
 });
+
+const { t } = useTrans();
+
+const limitFields = computed(() => presentLimitFields(props.form));
+
+// Client errors are { min, max }; server (422) errors are string arrays.
+const limitErrorText = (key) => {
+  const error = props.errors?.[key];
+  if (!error) return null;
+  if (Array.isArray(error) || typeof error === 'string') return error;
+  return t('super.limit_invalid', error);
+};
 
 defineEmits(['close', 'submit', 'update:field']);
 </script>
