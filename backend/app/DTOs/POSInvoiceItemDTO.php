@@ -6,16 +6,18 @@ class POSInvoiceItemDTO
 {
     public function __construct(
         public readonly int $itemId,
-        public readonly float $quantity,
-        public readonly float $unitPrice,
+        public readonly string $quantity,
+        public readonly string $unitPrice,
+        public readonly string $discountAmount = '0.000',
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            itemId: (int)$data['item_id'],
-            quantity: (float)$data['quantity'],
-            unitPrice: (float)$data['unit_price'],
+            itemId: (int) $data['item_id'],
+            quantity: (string) $data['quantity'],
+            unitPrice: (string) $data['unit_price'],
+            discountAmount: (string) ($data['discount'] ?? $data['discount_amount'] ?? '0.000'),
         );
     }
 
@@ -23,8 +25,9 @@ class POSInvoiceItemDTO
     {
         return [
             'item_id' => $this->itemId,
-            'quantity' => (string)$this->quantity,
-            'unit_price' => (string)$this->unitPrice,
+            'quantity' => $this->quantity,
+            'unit_price' => $this->unitPrice,
+            'discount_amount' => $this->discountAmount,
         ];
     }
 }

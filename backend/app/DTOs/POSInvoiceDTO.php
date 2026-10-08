@@ -5,7 +5,7 @@ namespace App\DTOs;
 class POSInvoiceDTO
 {
     /**
-     * @param POSInvoiceItemDTO[] $items
+     * @param  POSInvoiceItemDTO[]  $items
      */
     public function __construct(
         public readonly int $customerId,
@@ -14,34 +14,36 @@ class POSInvoiceDTO
         public readonly string $paymentType,
         public readonly string $paymentMethod,
         public readonly string $discountType,
-        public readonly float $discountValue,
-        public readonly float $paidAmount,
+        public readonly string $discountValue,
+        public readonly string $paidAmount,
         public readonly ?string $notes,
         public readonly array $items,
         public readonly array $additionalExpenses = [],
         public readonly ?array $payments = null,
+        public readonly ?string $clientUuid = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         $items = array_map(
-            fn($item) => POSInvoiceItemDTO::fromArray($item),
+            fn ($item) => POSInvoiceItemDTO::fromArray($item),
             $data['items'] ?? []
         );
 
         return new self(
-            customerId: (int)$data['customer_id'],
-            storeId: (int)$data['store_id'],
+            customerId: (int) $data['customer_id'],
+            storeId: (int) $data['store_id'],
             invoiceDate: $data['invoice_date'] ?? now()->toDateString(),
             paymentType: $data['payment_type'] ?? 'cash',
             paymentMethod: $data['payment_method'] ?? 'cash',
             discountType: $data['discount_type'] ?? 'fixed',
-            discountValue: (float)($data['discount_value'] ?? 0),
-            paidAmount: (float)($data['paid_amount'] ?? 0),
+            discountValue: (string) ($data['discount_value'] ?? '0.000'),
+            paidAmount: (string) ($data['paid_amount'] ?? '0.000'),
             notes: $data['notes'] ?? null,
             items: $items,
             additionalExpenses: $data['additional_expenses'] ?? $data['expenses'] ?? [],
             payments: $data['payments'] ?? null,
+            clientUuid: ! empty($data['client_uuid']) ? strtolower((string) $data['client_uuid']) : null,
         );
     }
 
@@ -54,12 +56,13 @@ class POSInvoiceDTO
             'payment_type' => $this->paymentType,
             'payment_method' => $this->paymentMethod,
             'discount_type' => $this->discountType,
-            'discount_value' => (string)$this->discountValue,
-            'paid_amount' => (string)$this->paidAmount,
+            'discount_value' => $this->discountValue,
+            'paid_amount' => $this->paidAmount,
             'notes' => $this->notes,
-            'items' => array_map(fn($item) => $item->toArray(), $this->items),
+            'items' => array_map(fn ($item) => $item->toArray(), $this->items),
             'additional_expenses' => $this->additionalExpenses,
             'payments' => $this->payments,
+            'client_uuid' => $this->clientUuid,
         ];
     }
 }

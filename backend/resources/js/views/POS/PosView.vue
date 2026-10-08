@@ -1,10 +1,15 @@
 <template>
-  <div class="h-full w-full max-h-full min-h-0 overflow-hidden flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none" dir="rtl">
+  <div
+    class="h-full w-full max-h-full min-h-0 overflow-hidden flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 select-none"
+    dir="rtl"
+  >
     <!-- 🔄 POS Skeleton Loading State -->
     <POSSkeleton v-if="isLoading" />
 
-    <div v-else class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
-      
+    <div
+      v-else
+      class="h-full max-h-full min-h-0 overflow-y-auto lg:overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col"
+    >
       <!-- 🔝 1. Header & Search Command Bar -->
       <POSHeader
         ref="headerRef"
@@ -33,7 +38,6 @@
 
       <!-- 🖥️ 2. Main Workspace: Hybrid Layout (Cart [DOMINANT HERO - flex-1] + Compact 3-Column Best Sellers) -->
       <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
-        
         <!-- 🛒 Invoice Cart & Payment Checkout Panel (DOMINANT HERO - Takes maximum width) -->
         <section
           class="flex-1 flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 overflow-visible lg:overflow-hidden order-2 lg:order-1 min-w-0 transition-all duration-200 min-h-[380px] lg:min-h-0"
@@ -81,7 +85,7 @@
               @apply-discount="applyDiscountPreset"
               @submit="submitInvoice"
               @open-expenses="showExpensesModal = true"
-              @open-multi-payment="showMultiPaymentModal = true"
+              @open-multi-payment="openMultiPayment"
             />
           </div>
         </section>
@@ -111,7 +115,6 @@
           :total-items-count="totalItemsCount"
           @select-category="handleCategorySelect"
         />
-
       </div>
     </div>
 
@@ -132,6 +135,7 @@
     <POSSuccessModal
       :show="showSuccessModal"
       :invoice="lastCreatedInvoice"
+      :change-amount="lastChangeAmount"
       @close="showSuccessModal = false"
       @print="printLastInvoice"
     />
@@ -141,18 +145,23 @@
       :show="showExpensesModal"
       :expenses="additionalExpenses"
       @close="showExpensesModal = false"
-      @update:expenses="(val) => { additionalExpenses = val; showExpensesModal = false; }"
+      @update:expenses="
+        (val) => {
+          additionalExpenses = val;
+          showExpensesModal = false;
+        }
+      "
     />
 
     <!-- 💳 Multi-Payment Split Modal -->
     <POSMultiPaymentModal
       :show="showMultiPaymentModal"
-      :net-total="cartNetTotal"
+      :net-total="checkoutNet"
       :payments="multiPayments"
+      :payment-type="paymentType === 'partial' ? 'partial' : 'cash'"
       @close="showMultiPaymentModal = false"
       @confirm="handleMultiPaymentConfirm"
     />
-
   </div>
 </template>
 
@@ -165,19 +174,19 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
+import { newUuid } from '../../helpers/uuid';
 import versionData from '../../version.json';
 
-import POSHeader           from '../../Components/POS/POSHeader.vue';
-import POSCartTable        from '../../Components/POS/POSCartTable.vue';
-import POSOrderTabs        from '../../Components/POS/POSOrderTabs.vue';
-import POSQuickPinnedItems from '../../Components/POS/POSQuickPinnedItems.vue';
-import POSCheckoutPanel    from '../../Components/POS/POSCheckoutPanel.vue';
-import POSCustomerModal    from '../../Components/POS/POSCustomerModal.vue';
-import POSSuccessModal     from '../../Components/POS/POSSuccessModal.vue';
-import POSSkeleton         from '../../Components/POS/POSSkeleton.vue';
-import POSCategorySidebar  from '../../Components/POS/POSCategorySidebar.vue';
-import POSProductGrid      from '../../Components/POS/POSProductGrid.vue';
-import POSExpensesModal    from '../../Components/POS/POSExpensesModal.vue';
+import POSHeader from '../../Components/POS/POSHeader.vue';
+import POSCartTable from '../../Components/POS/POSCartTable.vue';
+import POSOrderTabs from '../../Components/POS/POSOrderTabs.vue';
+import POSCheckoutPanel from '../../Components/POS/POSCheckoutPanel.vue';
+import POSCustomerModal from '../../Components/POS/POSCustomerModal.vue';
+import POSSuccessModal from '../../Components/POS/POSSuccessModal.vue';
+import POSSkeleton from '../../Components/POS/POSSkeleton.vue';
+import POSCategorySidebar from '../../Components/POS/POSCategorySidebar.vue';
+import POSProductGrid from '../../Components/POS/POSProductGrid.vue';
+import POSExpensesModal from '../../Components/POS/POSExpensesModal.vue';
 import POSMultiPaymentModal from '../../Components/POS/POSMultiPaymentModal.vue';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useAuthStore } from '../../stores/auth';
@@ -185,6 +194,8 @@ import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useFormatters } from '../../Composables/useFormatters';
 import { usePosOrders } from '../../Composables/usePosOrders';
+import { usePosCheckout } from '../../Composables/usePosCheckout';
+import { normalize, dSum, isPositive } from '../../helpers/decimal';
 
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
@@ -217,7 +228,10 @@ const activeShift = ref(null);
 const activeCategoryId = ref('favorites');
 
 const favoriteItemsCount = computed(() => {
-  return items.value.filter(i => (i.pos_sales_count || 0) > 0 || i.is_pos_pinned).length || Math.min(items.value.length, 20);
+  return (
+    items.value.filter((i) => (i.pos_sales_count || 0) > 0 || i.is_pos_pinned).length ||
+    Math.min(items.value.length, 20)
+  );
 });
 
 const showCatalog = ref(localStorage.getItem('pos_show_catalog') !== 'false');
@@ -231,52 +245,72 @@ const isSubmitting = ref(false);
 
 const cart = computed({
   get: () => activeOrder.value?.cart || [],
-  set: (val) => { if (activeOrder.value) activeOrder.value.cart = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.cart = val;
+  },
 });
 
 const selectedCustomerId = computed({
   get: () => activeOrder.value?.selectedCustomerId ?? null,
-  set: (val) => { if (activeOrder.value) activeOrder.value.selectedCustomerId = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.selectedCustomerId = val;
+  },
 });
 
 const activePriceTier = computed({
   get: () => activeOrder.value?.activePriceTier || 'retail',
-  set: (val) => { if (activeOrder.value) activeOrder.value.activePriceTier = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.activePriceTier = val;
+  },
 });
 
 const discountType = computed({
   get: () => activeOrder.value?.discountType || 'percentage',
-  set: (val) => { if (activeOrder.value) activeOrder.value.discountType = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.discountType = val;
+  },
 });
 
 const discountValue = computed({
   get: () => activeOrder.value?.discountValue ?? '0',
-  set: (val) => { if (activeOrder.value) activeOrder.value.discountValue = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.discountValue = val;
+  },
 });
 
 const paymentType = computed({
   get: () => activeOrder.value?.paymentType || 'cash',
-  set: (val) => { if (activeOrder.value) activeOrder.value.paymentType = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.paymentType = val;
+  },
 });
 
 const paymentMethod = computed({
   get: () => activeOrder.value?.paymentMethod || 'cash',
-  set: (val) => { if (activeOrder.value) activeOrder.value.paymentMethod = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.paymentMethod = val;
+  },
 });
 
 const paidAmount = computed({
   get: () => activeOrder.value?.paidAmount ?? '0.000',
-  set: (val) => { if (activeOrder.value) activeOrder.value.paidAmount = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.paidAmount = val;
+  },
 });
 
 const cashReceived = computed({
   get: () => activeOrder.value?.cashReceived ?? '0.000',
-  set: (val) => { if (activeOrder.value) activeOrder.value.cashReceived = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.cashReceived = val;
+  },
 });
 
 const additionalExpenses = computed({
   get: () => activeOrder.value?.additionalExpenses || [],
-  set: (val) => { if (activeOrder.value) activeOrder.value.additionalExpenses = val; },
+  set: (val) => {
+    if (activeOrder.value) activeOrder.value.additionalExpenses = val;
+  },
 });
 
 const searchQuery = ref('');
@@ -289,6 +323,7 @@ const isSubmittingQuickCustomer = ref(false);
 
 const showSuccessModal = ref(false);
 const lastCreatedInvoice = ref(null);
+const lastChangeAmount = ref('0.000');
 const showExpensesModal = ref(false);
 const showMultiPaymentModal = ref(false);
 const multiPayments = ref([]);
@@ -297,7 +332,7 @@ const getItemPrice = (item) => {
   if (!item) return 0;
   const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
   const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
-  return activePriceTier.value === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : (retail > 0 ? retail : wholesale);
+  return activePriceTier.value === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : retail > 0 ? retail : wholesale;
 };
 
 const isSearchingRemote = ref(false);
@@ -412,44 +447,46 @@ const searchDropdownResults = computed(() => {
   if (!q) return [];
 
   // 1. Instant local filter
-  const localMatches = items.value.filter(i => 
-    (i.name && i.name.toLowerCase().includes(q)) || 
-    (i.code && i.code.toLowerCase().includes(q))
+  const localMatches = items.value.filter(
+    (i) => (i.name && i.name.toLowerCase().includes(q)) || (i.code && i.code.toLowerCase().includes(q))
   );
 
   // 2. Merge with remote 10,000-items database matches (deduplicated by ID)
   const mergedMap = new Map();
-  localMatches.forEach(item => mergedMap.set(item.id, item));
-  remoteSearchResults.value.forEach(item => mergedMap.set(item.id, item));
+  localMatches.forEach((item) => mergedMap.set(item.id, item));
+  remoteSearchResults.value.forEach((item) => mergedMap.set(item.id, item));
 
   return Array.from(mergedMap.values()).slice(0, 15);
 });
 
-const quickPinnedItems = computed(() => items.value.slice(0, 10));
-
 const selectedCustomer = computed(() => {
   if (!selectedCustomerId.value) return { id: null, name: trans('pos.general_cash_customer'), phone: '' };
-  return customers.value.find(c => c.id === selectedCustomerId.value) || { id: null, name: trans('pos.general_cash_customer'), phone: '' };
+  return (
+    customers.value.find((c) => c.id === selectedCustomerId.value) || {
+      id: null,
+      name: trans('pos.general_cash_customer'),
+      phone: '',
+    }
+  );
 });
 
 const filteredCustomerList = computed(() => {
   const q = customerSearchQuery.value.trim().toLowerCase();
   if (!q) return customers.value;
 
-  const localMatches = customers.value.filter(c => 
-    (c.name && c.name.toLowerCase().includes(q)) || 
-    (c.phone && c.phone.includes(q))
+  const localMatches = customers.value.filter(
+    (c) => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q))
   );
 
   const mergedMap = new Map();
-  localMatches.forEach(c => mergedMap.set(c.id, c));
-  remoteCustomerResults.value.forEach(c => mergedMap.set(c.id, c));
+  localMatches.forEach((c) => mergedMap.set(c.id, c));
+  remoteCustomerResults.value.forEach((c) => mergedMap.set(c.id, c));
 
   return Array.from(mergedMap.values());
 });
 
 const cartSubtotal = computed(() => {
-  return cart.value.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unit_price)), 0);
+  return cart.value.reduce((sum, item) => sum + parseFloat(item.quantity) * parseFloat(item.unit_price), 0);
 });
 
 const cartTotalQuantity = computed(() => {
@@ -464,33 +501,64 @@ const discountAmount = computed(() => {
 });
 
 const customerExpensesTotal = computed(() => {
-  return additionalExpenses.value.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+  return additionalExpenses.value
+    .filter((exp) => (exp.paid_by || 'customer_account') === 'customer_account')
+    .reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
 });
 
-const cartNetTotal = computed(() => {
-  return Math.max(0, cartSubtotal.value - discountAmount.value + customerExpensesTotal.value);
+// Exact (scale 3) checkout math lives in usePosCheckout; the numbers below are display previews only.
+const { checkoutNet, changePreview, buildPayment, buildPayloadLines } = usePosCheckout({
+  cart,
+  discountType,
+  discountValue,
+  additionalExpenses,
+  paymentType,
+  paymentMethod,
+  cashReceived,
+  multiPayments,
 });
 
-const changeDue = computed(() => {
-  if (paymentType.value === 'credit') return 0;
-  const received = parseFloat(cashReceived.value) || 0;
-  return received - cartNetTotal.value;
-});
+const cartNetTotal = computed(() => Number(checkoutNet.value));
+const changeDue = computed(() => Number(changePreview.value));
 
-watch(cartNetTotal, (newNet) => {
-  const roundedNet = Math.round(newNet);
+watch(checkoutNet, (newNet) => {
+  // A split built for the previous net must never be sent; the server rejects mismatches.
+  multiPayments.value = [];
   if (paymentType.value === 'cash') {
-    paidAmount.value = roundedNet.toString();
-    cashReceived.value = roundedNet.toString();
+    paidAmount.value = normalize(newNet);
+    cashReceived.value = normalize(newNet);
   } else if (paymentType.value === 'credit') {
-    paidAmount.value = '0';
-    cashReceived.value = '0';
+    paidAmount.value = '0.000';
+    cashReceived.value = '0.000';
   }
+});
+
+// A split belongs to the payment type it was built for.
+watch(paymentType, () => {
+  multiPayments.value = [];
+});
+
+// Idempotency key lives per checkout attempt: any change to what is being sold starts a new one.
+const checkoutFingerprint = computed(() =>
+  JSON.stringify([
+    cart.value.map((i) => [i.id, i.quantity, i.unit_price]),
+    discountType.value,
+    discountValue.value,
+    paymentType.value,
+    paymentMethod.value,
+    multiPayments.value,
+    additionalExpenses.value,
+  ])
+);
+
+watch([activeOrderId, checkoutFingerprint], ([orderId, fingerprint], [prevOrderId, prevFingerprint]) => {
+  if (orderId !== prevOrderId || fingerprint === prevFingerprint) return;
+  if (activeOrder.value?.checkoutUuid) activeOrder.value.checkoutUuid = null;
 });
 
 const addToCart = (item, qty = 1) => {
   playScanBeep();
-  const existing = cart.value.find(c => c.id === item.id);
+  const existing = cart.value.find((c) => c.id === item.id);
   const price = getItemPrice(item);
   if (existing) {
     existing.quantity = parseFloat(existing.quantity) + qty;
@@ -522,7 +590,8 @@ const navigateDropdown = (direction) => {
   if (direction === 'down') {
     highlightedIndex.value = (highlightedIndex.value + 1) % searchDropdownResults.value.length;
   } else if (direction === 'up') {
-    highlightedIndex.value = (highlightedIndex.value - 1 + searchDropdownResults.value.length) % searchDropdownResults.value.length;
+    highlightedIndex.value =
+      (highlightedIndex.value - 1 + searchDropdownResults.value.length) % searchDropdownResults.value.length;
   }
 };
 
@@ -533,7 +602,9 @@ const selectHighlightedOrFirstItem = () => {
   }
 };
 
-const increaseCartItemQty = (idx) => { cart.value[idx].quantity = parseFloat(cart.value[idx].quantity) + 1; };
+const increaseCartItemQty = (idx) => {
+  cart.value[idx].quantity = parseFloat(cart.value[idx].quantity) + 1;
+};
 const decreaseCartItemQty = (idx) => {
   if (parseFloat(cart.value[idx].quantity) > 1) {
     cart.value[idx].quantity = parseFloat(cart.value[idx].quantity) - 1;
@@ -549,7 +620,9 @@ const onCartPriceUpdate = ({ index, value }) => {
   const parsed = parseFloat(value);
   if (!isNaN(parsed) && parsed >= 0) cart.value[index].unit_price = parsed;
 };
-const removeFromCart = (idx) => { cart.value.splice(idx, 1); };
+const removeFromCart = (idx) => {
+  cart.value.splice(idx, 1);
+};
 
 const clearCart = () => {
   if (cart.value.length === 0) return;
@@ -571,7 +644,10 @@ const handleCreateOrder = () => {
 
 const handleCloseOrder = async (order) => {
   if (order.cart && order.cart.length > 0) {
-    const subtotal = order.cart.reduce((s, i) => s + ((parseFloat(i.quantity) || 0) * (parseFloat(i.unit_price) || 0)), 0);
+    const subtotal = order.cart.reduce(
+      (s, i) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.unit_price) || 0),
+      0
+    );
     const result = await Swal.fire({
       title: trans('pos.confirm_close_order_title'),
       text: trans('pos.confirm_close_order_text', {
@@ -595,19 +671,20 @@ const applyDiscountPreset = ({ value, type }) => {
   discountType.value = type;
 };
 
+const openMultiPayment = () => {
+  // A credit order has no payments; switch to cash visibly instead of splitting behind the cashier's back.
+  if (paymentType.value === 'credit') paymentType.value = 'cash';
+  showMultiPaymentModal.value = true;
+};
+
+// The payment type stays what the cashier chose; the modal already validated the split for it.
 const handleMultiPaymentConfirm = (payments) => {
-  multiPayments.value = payments;
+  const lines = payments.map((p) => ({ method: p.method, amount: normalize(p.amount) }));
+  const totalPaid = dSum(lines.map((p) => p.amount));
+  multiPayments.value = lines;
   showMultiPaymentModal.value = false;
-  // Set total paid amount from multi-payment
-  const totalPaid = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-  paidAmount.value = totalPaid.toString();
-  cashReceived.value = totalPaid.toString();
-  // Set payment type to cash (since multi-payment covers full amount)
-  if (totalPaid >= cartNetTotal.value) {
-    paymentType.value = 'cash';
-  } else {
-    paymentType.value = 'partial';
-  }
+  paidAmount.value = paymentType.value === 'partial' ? totalPaid : checkoutNet.value;
+  cashReceived.value = totalPaid;
 };
 
 const selectCustomer = (cust) => {
@@ -646,7 +723,11 @@ const fetchPOSInitialData = async () => {
     customers.value = customersRes.data?.data || [];
     activeShift.value = shiftRes.data?.data || null;
     categories.value = categoriesRes.data?.data || [];
-    totalItemsCount.value = categoriesRes.data?.total_items_count || itemsRes.data?.meta?.total || itemsRes.data?.summary?.total_items || items.value.length;
+    totalItemsCount.value =
+      categoriesRes.data?.total_items_count ||
+      itemsRes.data?.meta?.total ||
+      itemsRes.data?.summary?.total_items ||
+      items.value.length;
   } catch (e) {
     console.error('Failed to load POS data:', e);
   } finally {
@@ -665,8 +746,8 @@ const handleCategorySelect = async (catId) => {
     const res = await api.get('/items', { params });
     if (res.data?.data) {
       const newItems = res.data.data;
-      const existingIds = new Set(items.value.map(i => i.id));
-      const toAdd = newItems.filter(i => !existingIds.has(i.id));
+      const existingIds = new Set(items.value.map((i) => i.id));
+      const toAdd = newItems.filter((i) => !existingIds.has(i.id));
       if (toAdd.length > 0) {
         items.value = [...items.value, ...toAdd];
       }
@@ -679,7 +760,7 @@ const handleCategorySelect = async (catId) => {
 };
 
 const handleSwitchStore = async (storeId) => {
-  const store = authStore.stores?.find(s => String(s.id) === String(storeId));
+  const store = authStore.stores?.find((s) => String(s.id) === String(storeId));
   if (store) {
     authStore.switchStore(store);
     activeStore.value = store;
@@ -690,7 +771,11 @@ const handleSwitchStore = async (storeId) => {
       ]);
       items.value = itemsRes.data?.data || [];
       categories.value = categoriesRes.data?.data || [];
-      totalItemsCount.value = categoriesRes.data?.total_items_count || itemsRes.data?.meta?.total || itemsRes.data?.summary?.total_items || items.value.length;
+      totalItemsCount.value =
+        categoriesRes.data?.total_items_count ||
+        itemsRes.data?.meta?.total ||
+        itemsRes.data?.summary?.total_items ||
+        items.value.length;
     } catch (e) {
       console.error('Failed to refresh items for switched store:', e);
     }
@@ -698,45 +783,66 @@ const handleSwitchStore = async (storeId) => {
 };
 
 const submitInvoice = async (printImmediately = false) => {
+  if (isSubmitting.value) return;
   if (cart.value.length === 0) {
     Swal.fire({ icon: 'warning', title: trans('pos.empty_cart_error'), timer: 1500, showConfirmButton: false });
     return;
   }
+
+  const payment = buildPayment();
+  if (!payment.valid) {
+    Swal.fire({ icon: 'warning', title: trans('pos.partial_amount_invalid') });
+    return;
+  }
+
+  // Reused on retry after an error/timeout: the first request may already have committed.
+  if (!activeOrder.value.checkoutUuid) activeOrder.value.checkoutUuid = newUuid();
+  const checkoutUuid = activeOrder.value.checkoutUuid;
+  saveOrders();
+
   isSubmitting.value = true;
   try {
     const payload = {
+      client_uuid: checkoutUuid,
       store_id: activeStore.value?.id || 1,
       customer_id: selectedCustomerId.value,
       payment_type: paymentType.value,
       payment_method: paymentType.value === 'credit' ? null : paymentMethod.value,
       discount_type: discountType.value,
-      discount_value: parseFloat(discountValue.value) || 0,
-      paid_amount: paymentType.value === 'credit' ? 0 : (paymentType.value === 'cash' ? cartNetTotal.value : (parseFloat(paidAmount.value) || 0)),
-      items: cart.value.map(i => ({
-        item_id: i.id,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-      })),
-      expenses: additionalExpenses.value,
-      payments: multiPayments.value.length > 0 ? multiPayments.value : undefined,
+      ...buildPayloadLines(),
+      paid_amount: payment.paidAmount,
+      payments: payment.payments,
     };
 
-    const res = await api.post('/invoices', payload);
+    const res = await api.post('/invoices', payload, { headers: { 'Idempotency-Key': checkoutUuid } });
     lastCreatedInvoice.value = res.data?.data;
+    // The server owns the change; the panel value was only a preview.
+    lastChangeAmount.value = normalize(res.data?.data?.change_amount ?? '0');
     playSuccessChime();
-    
+
     if (printImmediately && lastCreatedInvoice.value?.id) {
       printLastInvoice();
+      // The cashier still has to see the change to hand back.
+      if (isPositive(lastChangeAmount.value)) showSuccessModal.value = true;
     } else {
       showSuccessModal.value = true;
     }
-    
+
     // Clear completed order & switch to remaining or fresh order
+    if (activeOrder.value) activeOrder.value.checkoutUuid = null;
     clearActiveOrder();
     headerRef.value?.focusSearch();
   } catch (e) {
     playErrorTone();
-    Swal.fire({ icon: 'error', title: trans('pos.checkout_failed'), text: e.userMessage || trans('pos.checkout_failed_desc') });
+    // 401 and 403 are already handled (redirect / alert) by the api interceptor.
+    const handledByInterceptor = [401, 403].includes(e.response?.status);
+    if (!handledByInterceptor) {
+      Swal.fire({
+        icon: 'error',
+        title: trans('pos.checkout_failed'),
+        text: e.userMessage || trans('pos.checkout_failed_desc'),
+      });
+    }
   } finally {
     isSubmitting.value = false;
   }
@@ -750,13 +856,17 @@ const printLastInvoice = async () => {
       const res = await api.get(`/invoices/${lastCreatedInvoice.value.id}`);
       const inv = res.data?.data || lastCreatedInvoice.value;
 
-      const itemsRows = (inv.items || []).map(item => `
+      const itemsRows = (inv.items || [])
+        .map(
+          (item) => `
         <tr>
           <td style="text-align: right; padding: 2px 0;">${item.item_name || item.name}</td>
           <td style="text-align: center; padding: 2px 0;">${parseFloat(item.quantity)}</td>
           <td style="text-align: left; padding: 2px 0;">${parseFloat(item.total_price || 0).toFixed(2)}</td>
         </tr>
-      `).join('');
+      `
+        )
+        .join('');
 
       const thermalHtml = `
         <div style="font-family: sans-serif; font-size: 11px; text-align: center;">
@@ -798,7 +908,7 @@ const printLastInvoice = async () => {
   }
 
   // Fallback for Web Browser
-  window.open(`/invoices/${lastCreatedInvoice.value.id}/print`, '_blank', 'width=800,height=600');
+  window.open(`/invoices/${lastCreatedInvoice.value.id}/print?autoprint=true`, '_blank', 'width=800,height=600');
 };
 
 const handleGlobalKeydown = (e) => {
@@ -813,7 +923,7 @@ const handleGlobalKeydown = (e) => {
     toggleCatalog();
   } else if (e.key === 'F9' || (e.ctrlKey && e.key === 'Enter')) {
     e.preventDefault();
-    if (!showSuccessModal.value && cart.value.length > 0) {
+    if (!isSubmitting.value && !showSuccessModal.value && cart.value.length > 0) {
       submitInvoice(false);
     }
   } else if (e.key === 'Enter' && showSuccessModal.value) {

@@ -2,17 +2,46 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $invoice_number
+ * @property string|null $client_uuid
+ * @property int $customer_id
+ * @property int $user_id
+ * @property int|null $store_id
+ * @property Carbon|null $invoice_date
+ * @property string $payment_type
+ * @property string|null $payment_method
+ * @property string $status
+ * @property string $payment_status
+ * @property string $subtotal
+ * @property string $discount_type
+ * @property string $discount_value
+ * @property string $discount_amount
+ * @property string $shipping_cost
+ * @property string $net_total
+ * @property string $paid_amount
+ * @property string $remaining_amount
+ * @property string $change_amount
+ * @property string $total_cost
+ * @property string|null $notes
+ */
 class Invoice extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'invoice_number',
+        'client_uuid',
         'customer_id',
         'user_id',
         'store_id',
@@ -29,6 +58,7 @@ class Invoice extends Model
         'net_total',
         'paid_amount',
         'remaining_amount',
+        'change_amount',
         'total_cost',
         'notes',
     ];
@@ -36,34 +66,47 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
-            'invoice_date'     => 'date',
-            'subtotal'         => 'decimal:3',
-            'discount_value'   => 'decimal:3',
-            'discount_amount'  => 'decimal:3',
-            'shipping_cost'    => 'decimal:3',
-            'net_total'        => 'decimal:3',
-            'paid_amount'      => 'decimal:3',
+            'invoice_date' => 'date',
+            'subtotal' => 'decimal:3',
+            'discount_value' => 'decimal:3',
+            'discount_amount' => 'decimal:3',
+            'shipping_cost' => 'decimal:3',
+            'net_total' => 'decimal:3',
+            'paid_amount' => 'decimal:3',
             'remaining_amount' => 'decimal:3',
-            'total_cost'       => 'decimal:3',
+            'change_amount' => 'decimal:3',
+            'total_cost' => 'decimal:3',
         ];
     }
 
-    public function customer()
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function store()
+    /**
+     * @return BelongsTo<Store, $this>
+     */
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class)->withTrashed();
     }
 
-    public function items()
+    /**
+     * @return HasMany<InvoiceItem, $this>
+     */
+    public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
     }
@@ -73,7 +116,10 @@ class Invoice extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public function additionalExpenses()
+    /**
+     * @return MorphMany<AdditionalExpense, $this>
+     */
+    public function additionalExpenses(): MorphMany
     {
         return $this->morphMany(AdditionalExpense::class, 'document');
     }
@@ -96,7 +142,7 @@ class Invoice extends Model
     public function scopePendingDebts(Builder $query): Builder
     {
         return $query->where('status', 'confirmed')
-                     ->whereIn('payment_status', ['unpaid', 'partially_paid']);
+            ->whereIn('payment_status', ['unpaid', 'partially_paid']);
     }
 
     public function getProfitAttribute(): string
@@ -109,6 +155,7 @@ class Invoice extends Model
         if (bccomp($this->net_total, '0.000', 3) <= 0) {
             return '0.0';
         }
+
         return bcmul(bcdiv($this->profit, $this->net_total, 4), '100', 1);
     }
 }

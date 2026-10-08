@@ -33,23 +33,23 @@ final class InvoiceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('invoices.view') && !$user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $rawStoreId = $request->input('store_id') ?: $request->header('X-Store-Id');
-        $storeId = ($rawStoreId && $rawStoreId !== 'all' && is_numeric($rawStoreId) && (int)$rawStoreId > 0)
-            ? (int)$rawStoreId
+        $storeId = ($rawStoreId && $rawStoreId !== 'all' && is_numeric($rawStoreId) && (int) $rawStoreId > 0)
+            ? (int) $rawStoreId
             : null;
 
-        $search = trim((string)$request->input('search', ''));
-        $status = (string)$request->input('status', 'all');
+        $search = trim((string) $request->input('search', ''));
+        $status = (string) $request->input('status', 'all');
         $customerId = $request->input('customer_id');
         $paymentType = $request->input('payment_type');
         $paymentMethod = $request->input('payment_method');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
+        $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
         $query = Invoice::query()->with(['customer:id,name,phone,current_balance', 'user:id,name', 'store:id,name']);
 
@@ -58,7 +58,7 @@ final class InvoiceController extends Controller
         }
 
         if ($customerId && $customerId !== 'all') {
-            $query->where('customer_id', (int)$customerId);
+            $query->where('customer_id', (int) $customerId);
         }
 
         if ($status !== 'all' && $status !== '') {
@@ -84,34 +84,34 @@ final class InvoiceController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function ($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('phone', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('customer', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $totalSales = (float)(clone $query)->where('status', '!=', 'cancelled')->sum('net_total');
-        $totalPaid = (float)(clone $query)->where('status', '!=', 'cancelled')->sum('paid_amount');
-        $totalDue = (float)bcsub((string)$totalSales, (string)$totalPaid, 3);
-        $totalCount = (int)(clone $query)->count();
+        $totalSales = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('net_total');
+        $totalPaid = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('paid_amount');
+        $totalDue = (float) bcsub((string) $totalSales, (string) $totalPaid, 3);
+        $totalCount = (int) (clone $query)->count();
 
         $invoices = $query->latest('id')->paginate($perPage);
 
         return response()->json([
-            'success'  => true,
-            'data'     => InvoiceSummaryResource::collection($invoices->items())->resolve(),
-            'meta'     => [
+            'success' => true,
+            'data' => InvoiceSummaryResource::collection($invoices->items())->resolve(),
+            'meta' => [
                 'current_page' => $invoices->currentPage(),
-                'last_page'    => $invoices->lastPage(),
-                'per_page'     => $invoices->perPage(),
-                'total'        => $invoices->total(),
+                'last_page' => $invoices->lastPage(),
+                'per_page' => $invoices->perPage(),
+                'total' => $invoices->total(),
             ],
-            'summary'  => [
+            'summary' => [
                 'total_count' => $totalCount,
                 'total_sales' => $totalSales,
-                'total_paid'  => $totalPaid,
-                'total_due'   => $totalDue,
+                'total_paid' => $totalPaid,
+                'total_due' => $totalDue,
             ],
         ], 200);
     }
@@ -122,15 +122,15 @@ final class InvoiceController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('invoices.view') && !$user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $result = $this->getInvoiceDetailsAction->execute($id);
 
         return response()->json([
-            'success'  => true,
-            'data'     => (new InvoiceResource($result['invoice']))->resolve(),
+            'success' => true,
+            'data' => (new InvoiceResource($result['invoice']))->resolve(),
             'whatsapp' => $result['whatsapp'],
         ], 200);
     }
@@ -145,17 +145,19 @@ final class InvoiceController extends Controller
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $dto = CreateInvoiceDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $dto = CreateInvoiceDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
         $invoice = $this->createSalesInvoiceAction->execute($dto);
 
         $details = $this->getInvoiceDetailsAction->execute($invoice->id);
 
+        $replayed = ! $invoice->wasRecentlyCreated;
+
         return response()->json([
-            'success'  => true,
-            'message'  => __('invoices.invoice_created') ?: "تم حفظ واعتماد الفاتورة رقم: {$invoice->invoice_number} بنجاح ✓",
-            'data'     => (new InvoiceResource($details['invoice']))->resolve(),
+            'success' => true,
+            'message' => __('invoices.invoice_created', ['number' => $invoice->invoice_number]),
+            'data' => (new InvoiceResource($details['invoice']))->resolve(),
             'whatsapp' => $details['whatsapp'],
-        ], 201);
+        ], $replayed ? 200 : 201, $replayed ? ['Idempotent-Replayed' => 'true'] : []);
     }
 
     /**
@@ -169,7 +171,7 @@ final class InvoiceController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('invoices.invoice_cancelled') ?: "تم إلغاء الفاتورة رقم {$cancelled->invoice_number} بنجاح وعكس رصيد المخزن والحساب ✓",
-            'data'    => (new InvoiceResource($cancelled))->resolve(),
+            'data' => (new InvoiceResource($cancelled))->resolve(),
         ], 200);
     }
 }

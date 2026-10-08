@@ -34,7 +34,7 @@ final class PosController extends Controller
     public function bootstrap(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -42,7 +42,7 @@ final class PosController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ], 200);
     }
 
@@ -56,12 +56,14 @@ final class PosController extends Controller
 
         $details = $this->getInvoiceDetailsAction->execute($invoice->id);
 
+        $replayed = ! $invoice->wasRecentlyCreated;
+
         return response()->json([
-            'success'  => true,
-            'message'  => __('pos.invoice_saved_success') ?: "تم حفظ واعتماد الفاتورة رقم: {$invoice->invoice_number} بنجاح ✓",
-            'data'     => (new InvoiceResource($details['invoice']))->resolve(),
+            'success' => true,
+            'message' => __('pos.invoice_saved_success'),
+            'data' => (new InvoiceResource($details['invoice']))->resolve(),
             'whatsapp' => $details['whatsapp'],
-        ], 201);
+        ], $replayed ? 200 : 201, $replayed ? ['Idempotent-Replayed' => 'true'] : []);
     }
 
     /**
@@ -72,13 +74,13 @@ final class PosController extends Controller
         $customer = $this->quickCreateCustomerAction->execute($request->validated());
 
         return response()->json([
-            'success'  => true,
-            'message'  => __('pos.customer_registered_success') ?: 'تم تسجيل العميل بنجاح',
+            'success' => true,
+            'message' => __('pos.customer_registered_success') ?: 'تم تسجيل العميل بنجاح',
             'customer' => [
-                'id'              => $customer->id,
-                'name'            => $customer->name,
-                'phone'           => $customer->phone,
-                'price_tier'      => $customer->price_tier ?? 'retail',
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'price_tier' => $customer->price_tier ?? 'retail',
                 'current_balance' => 0,
             ],
         ], 201);
@@ -90,12 +92,12 @@ final class PosController extends Controller
     public function lastPrice(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $customerId = (int)$request->query('customer_id');
-        $itemId = (int)$request->query('item_id');
+        $customerId = (int) $request->query('customer_id');
+        $itemId = (int) $request->query('item_id');
         $storeId = $request->header('X-Store-Id')
             ?: $request->query('store_id')
             ?: $user?->getCurrentStore()?->id
@@ -104,11 +106,11 @@ final class PosController extends Controller
         $lastPrice = $this->getCustomerLastSoldPriceAction->execute(
             customerId: $customerId,
             itemId: $itemId,
-            storeId: $storeId ? (int)$storeId : null
+            storeId: $storeId ? (int) $storeId : null
         );
 
         return response()->json([
-            'success'    => true,
+            'success' => true,
             'last_price' => $lastPrice,
         ], 200);
     }

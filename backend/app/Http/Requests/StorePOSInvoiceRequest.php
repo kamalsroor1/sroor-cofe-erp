@@ -10,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePOSInvoiceRequest extends FormRequest
 {
+    use Concerns\ValidatesCheckoutPayments;
+
     public function authorize(): bool
     {
         return $this->user()?->hasRole('admin')
@@ -19,6 +21,21 @@ final class StorePOSInvoiceRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        // Idempotency: accept the key from the body or the standard Idempotency-Key header.
+        if (! $this->filled('client_uuid') && $this->hasHeader('Idempotency-Key')) {
+            $this->merge(['client_uuid' => (string) $this->header('Idempotency-Key')]);
+        }
+
+        $this->normalizeCheckoutPayload();
+
+        // Backward compatibility: legacy clients send a flat discount_amount.
+        if ($this->input('discount_value') === null && $this->filled('discount_amount')) {
+            $this->merge([
+                'discount_type' => 'fixed',
+                'discount_value' => $this->input('discount_amount'),
+            ]);
+        }
+
         $storeId = $this->input('store_id')
             ?? $this->header('X-Store-Id')
             ?? session('current_store_id')
@@ -38,23 +55,23 @@ final class StorePOSInvoiceRequest extends FormRequest
                 ->orWhere('phone', '0000000000')
                 ->first();
 
-            if (!$defaultCustomer) {
+            if (! $defaultCustomer) {
                 $defaultCustomer = Customer::create([
-                    'name'            => 'عميل نقدي',
-                    'phone'           => '0000000000',
+                    'name' => 'عميل نقدي',
+                    'phone' => '0000000000',
                     'current_balance' => 0,
-                    'price_tier'      => 'retail',
-                    'is_active'       => true,
+                    'price_tier' => 'retail',
+                    'is_active' => true,
                 ]);
             }
             $customerId = $defaultCustomer->id;
         }
 
         $this->merge([
-            'customer_id'    => $customerId ? (int)$customerId : null,
-            'store_id'       => $storeId ? (int)$storeId : null,
-            'invoice_date'   => $this->input('invoice_date') ?? now()->toDateString(),
-            'payment_type'   => $paymentType,
+            'customer_id' => $customerId ? (int) $customerId : null,
+            'store_id' => $storeId ? (int) $storeId : null,
+            'invoice_date' => $this->input('invoice_date') ?? now()->toDateString(),
+            'payment_type' => $paymentType,
             'payment_method' => $paymentMethod,
         ]);
     }
@@ -62,27 +79,24 @@ final class StorePOSInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id'       => ['required', 'exists:customers,id'],
-            'store_id'          => ['required', 'exists:stores,id'],
-            'invoice_date'      => ['required', 'date'],
-            'payment_type'      => ['required', 'string', 'in:cash,credit'],
-            'payment_method'    => ['required', 'string', 'in:cash,visa,instapay,e_wallet,bank_transfer,check,other'],
-            'discount_amount'   => ['nullable', 'numeric', 'min:0'],
-            'paid_amount'       => ['nullable', 'numeric', 'min:0'],
-            'notes'             => ['nullable', 'string', 'max:500'],
-            'payments'          => ['nullable', 'array'],
-            'payments.*.method' => ['required_with:payments', 'string', 'in:cash,visa,instapay,e_wallet,bank_transfer,check,other'],
-            'payments.*.amount' => ['required_with:payments', 'numeric', 'min:0.001'],
-            'expenses'          => ['nullable', 'array'],
-            'expenses.*.title'  => ['required_with:expenses', 'string', 'max:150'],
-            'expenses.*.amount' => ['required_with:expenses', 'numeric', 'min:0.001'],
-            'expenses.*.paid_by'=> ['nullable', 'string'],
-            'items'             => ['required', 'array', 'min:1'],
-            'items.*.item_id'   => ['required', 'exists:items,id'],
-            'items.*.quantity'  => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price'=> ['required', 'numeric', 'min:0'],
-            'items.*.discount'  => ['nullable', 'numeric', 'min:0'],
-            'items.*.notes'     => ['nullable', 'string', 'max:255'],
+            'client_uuid' => ['nullable', 'uuid'],
+            'customer_id' => ['required', 'exists:customers,id'],
+            'store_id' => ['required', 'exists:stores,id'],
+            'invoice_date' => ['required', 'date'],
+            'payment_type' => ['required', 'string', 'in:cash,credit,partial'],
+            'payment_method' => ['required', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_type' => ['nullable', 'in:fixed,percentage'],
+            'discount_value' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
+            'paid_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            ...$this->checkoutPaymentAndExpenseRules(),
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.item_id' => ['required', 'exists:items,id'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0'],
+            'items.*.notes' => ['nullable', 'string', 'max:255'],
         ];
     }
 }
