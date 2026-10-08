@@ -9,6 +9,7 @@ use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Exceptions\Billing\AddonPricingException;
+use App\Exceptions\Billing\SubscriptionAddonException;
 use App\Models\Addon;
 use App\Models\Plan;
 use App\Models\Subscription;
@@ -230,6 +231,133 @@ final class SubscriptionAddonModelTest extends TenantTestCase
         // up() is idempotent too.
         $this->runMigration('up');
         $this->assertTrue(Schema::hasTable('subscription_addons'));
+    }
+
+    public function test_tenant_id_is_copied_from_the_subscription_when_not_given(): void
+    {
+        [$tenant, $subscription] = $this->subscribedTenant();
+        $addon = $this->addon('addon.copy', '79.000');
+
+        $line = SubscriptionAddon::query()->create([
+            'subscription_id' => $subscription->id,
+            'addon_id' => $addon->id,
+            'unit_price' => '79.000',
+        ]);
+
+        $this->assertSame((string) $tenant->id, $line->tenant_id);
+        $this->assertSame((string) $tenant->id, $this->storedTenantId($line->id));
+    }
+
+    public function test_tenant_id_from_input_is_never_trusted(): void
+    {
+        [$tenant, $subscription] = $this->subscribedTenant();
+        [$attacker] = $this->subscribedTenant();
+        $addon = $this->addon('addon.spoof', '79.000');
+
+        // Mass assignment: tenant_id is not fillable, the parent's tenant wins.
+        $line = SubscriptionAddon::query()->create([
+            'subscription_id' => $subscription->id,
+            'tenant_id' => $attacker->id,
+            'addon_id' => $addon->id,
+            'unit_price' => '79.000',
+            'status' => SubscriptionAddonStatus::Active,
+            'starts_at' => now()->subDay(),
+        ]);
+
+        $this->assertSame((string) $tenant->id, $this->storedTenantId($line->id));
+        $this->assertSame([], SubscriptionAddon::query()->activeFor($attacker)->pluck('id')->all(), 'The spoofed tenant must not gain the add-on.');
+        $this->assertSame([$line->id], SubscriptionAddon::query()->activeFor($tenant)->pluck('id')->all());
+    }
+
+    public function test_a_forced_foreign_tenant_id_is_refused_before_anything_is_written(): void
+    {
+        [, $subscription] = $this->subscribedTenant();
+        [$attacker] = $this->subscribedTenant();
+        $addon = $this->addon('addon.force', '79.000');
+
+        $line = new SubscriptionAddon(['subscription_id' => $subscription->id, 'addon_id' => $addon->id, 'unit_price' => '79.000']);
+        $line->forceFill(['tenant_id' => $attacker->id]);
+
+        $this->assertAddonFails('tenant_mismatch', fn () => $line->save());
+        $this->assertSame(0, SubscriptionAddon::query()->count());
+    }
+
+    public function test_a_line_without_an_existing_subscription_is_refused(): void
+    {
+        $addon = $this->addon('addon.orphan', '79.000');
+
+        $this->assertAddonFails('subscription_missing', fn () => SubscriptionAddon::query()->create([
+            'addon_id' => $addon->id,
+            'unit_price' => '79.000',
+        ]));
+        $this->assertAddonFails('subscription_missing', fn () => SubscriptionAddon::query()->create([
+            'subscription_id' => 999999,
+            'addon_id' => $addon->id,
+            'unit_price' => '79.000',
+        ]));
+
+        $this->assertSame(0, SubscriptionAddon::query()->count());
+    }
+
+    public function test_moving_a_line_is_allowed_within_the_tenant_only(): void
+    {
+        [$tenant, $subscription] = $this->subscribedTenant();
+        [, $otherTenantSubscription] = $this->subscribedTenant();
+        $addon = $this->addon('addon.move', '79.000');
+        $line = $this->line($subscription, $addon, SubscriptionAddonStatus::Active, now()->subDay(), null);
+
+        $renewal = Subscription::query()->create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $subscription->plan_id,
+            'billing_cycle' => BillingCycle::Monthly,
+            'status' => SubscriptionStatus::Active,
+            'amount' => '449.000',
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth(),
+        ]);
+
+        $line->update(['subscription_id' => $renewal->id]);
+        $this->assertSame((string) $tenant->id, $this->storedTenantId($line->id));
+
+        $this->assertAddonFails('tenant_mismatch', fn () => $line->update(['subscription_id' => $otherTenantSubscription->id]));
+
+        $row = DB::connection($this->centralConnectionName())->table('subscription_addons')->where('id', $line->id)->first();
+        $this->assertNotNull($row);
+        $this->assertSame($renewal->id, (int) $row->subscription_id, 'A refused move must not be written.');
+        $this->assertSame((string) $tenant->id, $row->tenant_id);
+    }
+
+    public function test_tenant_is_copied_from_the_central_subscription_inside_a_tenant_context(): void
+    {
+        [$tenant, $subscription] = $this->subscribedTenant();
+        $addon = $this->addon('addon.ctx', '79.000');
+
+        $lineId = $this->inTenant($tenant, fn (): int => (int) SubscriptionAddon::query()->create([
+            'subscription_id' => $subscription->id,
+            'addon_id' => $addon->id,
+            'unit_price' => '79.000',
+        ])->getKey());
+
+        $this->assertSame((string) $tenant->id, $this->storedTenantId($lineId));
+    }
+
+    private function storedTenantId(int $lineId): ?string
+    {
+        $value = DB::connection($this->centralConnectionName())->table('subscription_addons')->where('id', $lineId)->value('tenant_id');
+
+        return $value === null ? null : (string) $value;
+    }
+
+    private function assertAddonFails(string $reason, \Closure $callback): void
+    {
+        try {
+            $callback();
+            $this->fail("Saving the add-on line must fail with [{$reason}].");
+        } catch (SubscriptionAddonException $e) {
+            $this->assertSame($reason, $e->reason());
+            $this->assertSame(__('billing.subscription_addon.'.$reason), $e->getMessage());
+            $this->assertNotSame('billing.subscription_addon.'.$reason, $e->getMessage(), 'The message must be translated.');
+        }
     }
 
     /**

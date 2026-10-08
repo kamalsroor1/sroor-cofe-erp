@@ -7,6 +7,7 @@ namespace Tests\Feature\Billing;
 use App\Exceptions\Billing\BillingSequenceException;
 use App\Models\BillingSequence;
 use App\Services\Billing\BillingSequenceService;
+use App\Services\Billing\FounderPricingService;
 use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
@@ -66,7 +67,7 @@ final class BillingSequenceServiceTest extends TenantTestCase
         $this->assertSame(4, $service->current('billing_invoice', '2026'));
         $this->assertSame(1, $service->current('billing_invoice', '2027'));
         $this->assertSame(0, $service->current('never_used', '2026'));
-        $this->assertSame(3, BillingSequence::query()->count(), 'One row per (key, period).');
+        $this->assertSame(3, $this->issuedSequenceRows(), 'One row per (key, period).');
     }
 
     public function test_a_rolled_back_transaction_does_not_consume_a_number(): void
@@ -137,7 +138,7 @@ final class BillingSequenceServiceTest extends TenantTestCase
             }
         }
 
-        $this->assertSame(0, BillingSequence::query()->count(), 'Nothing may be written outside a transaction.');
+        $this->assertSame(0, $this->issuedSequenceRows(), 'Nothing may be written outside a transaction.');
     }
 
     public function test_invoice_number_uses_the_configured_prefix_year_and_padding(): void
@@ -258,7 +259,7 @@ final class BillingSequenceServiceTest extends TenantTestCase
             $this->assertSame(__('billing.sequence.invalid_configuration', ['key' => $key]), $e->getMessage());
         }
 
-        $this->assertSame(0, BillingSequence::query()->count());
+        $this->assertSame(0, $this->issuedSequenceRows());
     }
 
     /**
@@ -364,6 +365,15 @@ final class BillingSequenceServiceTest extends TenantTestCase
         } finally {
             $connection->statement('SET SESSION innodb_lock_wait_timeout = 50');
         }
+    }
+
+    /**
+     * Counter rows written by the numbering under test. The founder-slot counter row is
+     * created by its own migration (2026_10_10_200530) and is not a numbering sequence.
+     */
+    private function issuedSequenceRows(): int
+    {
+        return BillingSequence::query()->where('key', '!=', FounderPricingService::SLOT_SEQUENCE)->count();
     }
 
     private function service(): BillingSequenceService

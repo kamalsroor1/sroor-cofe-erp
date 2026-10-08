@@ -233,6 +233,163 @@ final class CentralAuditLoggerTest extends TenantTestCase
         );
     }
 
+    public function test_record_inside_a_tenant_transaction_waits_for_its_commit(): void
+    {
+        $tenant = $this->createTenant();
+
+        $inside = $this->inTenant($tenant, function (): array {
+            return DB::transaction(function (): array {
+                $log = $this->logger()->record(CentralAuditEvent::TenantUpdated, description: 'tenant-commit');
+
+                return [
+                    'connection' => DB::getDefaultConnection(),
+                    'exists' => $log->exists,
+                    'rows' => $this->auditRows('tenant-commit'),
+                ];
+            });
+        });
+
+        $this->assertNotSame($this->centralConnectionName(), $inside['connection'], 'The transaction must be a tenant one for this test to mean anything.');
+        $this->assertFalse($inside['exists'], 'Nothing may be written while the tenant transaction is open.');
+        $this->assertSame(0, $inside['rows']);
+        $this->assertSame(1, $this->auditRows('tenant-commit'), 'The row is written once the tenant transaction commits.');
+    }
+
+    public function test_record_is_dropped_when_the_tenant_transaction_rolls_back(): void
+    {
+        $tenant = $this->createTenant();
+
+        $this->inTenant($tenant, function (): void {
+            try {
+                DB::transaction(function (): void {
+                    $this->logger()->record(CentralAuditEvent::TenantUpdated, description: 'tenant-rollback');
+
+                    throw new \RuntimeException('tenant operation failed');
+                });
+            } catch (\RuntimeException) {
+            }
+        });
+
+        $this->assertSame(0, $this->auditRows('tenant-rollback'), 'A change that never happened must not be audited as done.');
+    }
+
+    public function test_record_attempt_survives_a_tenant_rollback_and_is_written_immediately(): void
+    {
+        $tenant = $this->createTenant();
+
+        $existsInside = $this->inTenant($tenant, function (): bool {
+            $exists = null;
+
+            try {
+                DB::transaction(function () use (&$exists): void {
+                    $exists = $this->logger()->recordAttempt(CentralAuditEvent::ImpersonationDestructiveUsed, description: 'tenant-attempt')->exists;
+
+                    throw new \RuntimeException('tenant operation failed');
+                });
+            } catch (\RuntimeException) {
+            }
+
+            return (bool) $exists;
+        });
+
+        $this->assertTrue($existsInside, 'An attempt outside any central transaction is written at once.');
+        $this->assertSame(1, $this->auditRows('tenant-attempt'));
+    }
+
+    public function test_record_rolls_back_with_the_central_change_it_describes(): void
+    {
+        $central = DB::connection($this->centralConnectionName());
+
+        try {
+            $central->transaction(function (): void {
+                $this->logger()->record(CentralAuditEvent::PlanUpdated, description: 'central-rollback');
+
+                throw new \RuntimeException('central change failed');
+            });
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertSame(0, $this->auditRows('central-rollback'));
+
+        $central->transaction(fn () => $this->logger()->record(CentralAuditEvent::PlanUpdated, description: 'central-commit'));
+        $this->assertSame(1, $this->auditRows('central-commit'));
+    }
+
+    public function test_record_attempt_survives_a_central_rollback_exactly_once(): void
+    {
+        $central = DB::connection($this->centralConnectionName());
+
+        try {
+            $central->transaction(function (): void {
+                $log = $this->logger()->recordAttempt(CentralAuditEvent::LoginFailed, ['password' => 'guess'], description: 'central-attempt-rollback');
+                $this->assertFalse($log->exists, 'Inside a central transaction the attempt waits for it to finish.');
+
+                throw new \RuntimeException('login failed');
+            });
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertSame(1, $this->auditRows('central-attempt-rollback'), 'A rolled-back caller must not erase the attempt.');
+        $stored = CentralAuditLog::query()->where('description', 'central-attempt-rollback')->firstOrFail();
+        $this->assertSame(CentralAuditLogger::REDACTED, $stored->properties['password'] ?? null);
+
+        $central->transaction(fn () => $this->logger()->recordAttempt(CentralAuditEvent::LoginFailed, description: 'central-attempt-commit'));
+        $this->assertSame(1, $this->auditRows('central-attempt-commit'), 'A committed caller writes the attempt once, not twice.');
+    }
+
+    public function test_record_attempt_in_a_rolled_back_savepoint_is_kept_when_the_outer_transaction_commits(): void
+    {
+        $central = DB::connection($this->centralConnectionName());
+
+        $central->transaction(function () use ($central): void {
+            try {
+                $central->transaction(function (): void {
+                    $this->logger()->recordAttempt(CentralAuditEvent::LoginFailed, description: 'savepoint-attempt');
+
+                    throw new \RuntimeException('inner step failed');
+                });
+            } catch (\RuntimeException) {
+            }
+        });
+
+        $this->assertSame(1, $this->auditRows('savepoint-attempt'));
+
+        try {
+            $central->transaction(function () use ($central): void {
+                $central->transaction(fn () => $this->logger()->recordAttempt(CentralAuditEvent::LoginFailed, description: 'outer-rollback-attempt'));
+
+                throw new \RuntimeException('outer step failed');
+            });
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertSame(1, $this->auditRows('outer-rollback-attempt'));
+    }
+
+    public function test_record_inside_a_central_transaction_nested_in_a_tenant_transaction_waits_for_the_tenant(): void
+    {
+        $tenant = $this->createTenant();
+        $central = DB::connection($this->centralConnectionName());
+
+        $this->inTenant($tenant, function () use ($central): void {
+            try {
+                DB::transaction(function () use ($central): void {
+                    $central->transaction(fn () => $this->logger()->record(CentralAuditEvent::TenantUpdated, description: 'nested-tenant-rollback'));
+
+                    throw new \RuntimeException('tenant step failed after the central commit');
+                });
+            } catch (\RuntimeException) {
+            }
+        });
+
+        $this->assertSame(0, $this->auditRows('nested-tenant-rollback'), 'The tenant change it describes never happened.');
+    }
+
+    private function auditRows(string $description): int
+    {
+        return DB::connection($this->centralConnectionName())->table('central_audit_logs')->where('description', $description)->count();
+    }
+
     public function test_every_event_has_an_arabic_and_english_label(): void
     {
         foreach (CentralAuditEvent::cases() as $event) {

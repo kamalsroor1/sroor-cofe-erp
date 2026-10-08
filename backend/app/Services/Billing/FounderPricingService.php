@@ -28,7 +28,10 @@ use Illuminate\Support\Carbon;
  * The slot counter is the row ('founder_slot', '') of central `billing_sequences`, read
  * with lockForUpdate() inside the CALLER's central transaction (ActivateSubscriptionAction,
  * ENTI-3.x): the slot is consumed only if the activation commits, and concurrent
- * activations queue on the row, so slot N+1 is never handed out.
+ * activations queue on the row, so slot N+1 is never handed out. The count check and the
+ * increment both happen while that lock is held; claimedSlots() / remainingSlots() /
+ * hasAvailableSlot() are unlocked reads for display only and must never gate a claim.
+ * Proven on MySQL with parallel processes by FounderPricingServiceTest (group `mysql`).
  *
  * Lock order inside claim(): subscription row, then counter row. Callers that also lock
  * the subscription must lock it before calling claim() (same order, no deadlock).
@@ -226,8 +229,11 @@ final class FounderPricingService
 
     private function lockCounter(): BillingSequence
     {
-        // Insert only when missing: INSERT IGNORE on an existing locked row would take a
-        // shared lock and could deadlock with other claimers (same pattern as ENTI-1.6).
+        // The row is created by migration 2026_10_10_200530 so every claim normally takes
+        // only the exclusive row lock below. The insert is a fallback for a database where
+        // the row went missing; it runs only when the row is absent, because INSERT IGNORE
+        // on an existing locked row takes a shared lock and could deadlock with other
+        // claimers on the upgrade (same pattern as ENTI-1.6).
         $exists = BillingSequence::query()
             ->where('key', self::SLOT_SEQUENCE)
             ->where('period', self::SLOT_PERIOD)

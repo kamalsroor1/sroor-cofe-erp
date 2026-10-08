@@ -47,6 +47,14 @@ final class FounderPricingServiceTest extends TenantTestCase
 {
     private const LOCK_WAIT_TIMEOUT = 1205;
 
+    private const COUNTER_MIGRATION = 'migrations/2026_10_10_200530_create_founder_slot_counter_row.php';
+
+    /** Parallel first payments racing for the last two founder slots. */
+    private const RACE_WORKERS = 6;
+
+    /** Seconds a worker may take to boot Laravel and connect before the race starts. */
+    private const WORKER_READY_TIMEOUT = 60;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -386,13 +394,16 @@ final class FounderPricingServiceTest extends TenantTestCase
         [, $subscription, $payment] = $this->paidTenant();
         $holder = $this->centralSideConnection('qa_founder_slot_holder');
 
-        $holder->table('billing_sequences')->insertOrIgnore([
+        // Normally a no-op (the migration created the row); only a row this test inserted
+        // is removed afterwards, never the migrated counter (that one is reset to 0).
+        $inserted = $holder->table('billing_sequences')->insertOrIgnore([
             'key' => FounderPricingService::SLOT_SEQUENCE, 'period' => '', 'last_value' => 0, 'created_at' => now(), 'updated_at' => now(),
         ]);
 
-        $this->beforeApplicationDestroyed(function (): void {
-            $this->centralSideConnection('qa_founder_slot_cleanup')->table('billing_sequences')
-                ->where('key', FounderPricingService::SLOT_SEQUENCE)->where('period', '')->delete();
+        $this->beforeApplicationDestroyed(function () use ($inserted): void {
+            $counter = $this->centralSideConnection('qa_founder_slot_cleanup')->table('billing_sequences')
+                ->where('key', FounderPricingService::SLOT_SEQUENCE)->where('period', '');
+            $inserted > 0 ? $counter->delete() : $counter->update(['last_value' => 0]);
             DB::purge('qa_founder_slot_cleanup');
         });
 
@@ -431,6 +442,200 @@ final class FounderPricingServiceTest extends TenantTestCase
         }
     }
 
+    public function test_the_counter_row_is_created_by_its_migration(): void
+    {
+        $this->assertSame(1, BillingSequence::query()->where('key', FounderPricingService::SLOT_SEQUENCE)->count());
+        $this->assertSame(
+            0,
+            (int) BillingSequence::query()->where('key', FounderPricingService::SLOT_SEQUENCE)->where('period', '')->value('last_value'),
+            'Concurrent first claims must find the row and only take its exclusive lock (no INSERT IGNORE race).',
+        );
+    }
+
+    public function test_counter_migration_is_idempotent_and_never_drops_a_used_counter(): void
+    {
+        $migration = require database_path(self::COUNTER_MIGRATION);
+        $counter = fn () => BillingSequence::query()->where('key', FounderPricingService::SLOT_SEQUENCE)->where('period', '');
+
+        // up() again: still one row, a used count is never reset.
+        $this->setCounter(7);
+        $migration->up();
+        $this->assertSame(1, $counter()->count());
+        $this->assertSame(7, (int) $counter()->value('last_value'));
+
+        // down() keeps a counter that already handed out slots.
+        $migration->down();
+        $this->assertSame(7, (int) $counter()->value('last_value'), 'Dropping a used counter would let more than the configured slots be sold.');
+
+        // An unused counter is removed by down() and recreated by up().
+        $this->setCounter(0);
+        $migration->down();
+        $this->assertFalse($counter()->exists());
+        $migration->up();
+        $this->assertSame(0, (int) $counter()->value('last_value'));
+    }
+
+    public function test_claim_recreates_a_missing_counter_row(): void
+    {
+        BillingSequence::query()->where('key', FounderPricingService::SLOT_SEQUENCE)->delete();
+        [, $subscription, $payment] = $this->paidTenant();
+
+        $this->assertTrue($this->inCentralTransaction(fn (): bool => $this->service()->claim($subscription, $payment)));
+        $this->assertSame(1, $this->service()->claimedSlots());
+    }
+
+    public function test_parallel_first_payments_never_exceed_the_founder_slots_on_mysql(): void
+    {
+        $central = $this->centralConnectionName();
+        if (! in_array(DB::connection($central)->getDriverName(), ['mysql', 'mariadb'], true)) {
+            $this->markTestSkipped('MySQL-only: sqlite serialises writers on a file lock. Runs in the CI `mysql` job (phpunit.mysql.xml).');
+        }
+
+        // Committed fixtures on a separate session: the worker processes cannot see rows
+        // inside this test's RefreshDatabase transaction.
+        $side = $this->centralSideConnection('qa_founder_race');
+        $counter = fn () => $side->table('billing_sequences')->where('key', FounderPricingService::SLOT_SEQUENCE)->where('period', '');
+        $previous = (int) $counter()->value('last_value');
+        $tenantIds = [];
+        $planId = null;
+
+        try {
+            $now = Carbon::now()->startOfSecond();
+            $slug = 'race-'.Str::lower(Str::random(10));
+            $planId = (int) $side->table('plans')->insertGetId([
+                'name' => $slug, 'slug' => $slug, 'price_monthly' => '449.000', 'price_yearly' => '4490.000',
+                'founder_price_monthly' => '299.000', 'features' => '[]', 'is_active' => true, 'sort_order' => 1,
+                'created_at' => $now, 'updated_at' => $now,
+            ]);
+
+            $payloads = [];
+            for ($i = 0; $i < self::RACE_WORKERS; $i++) {
+                $tenantId = 'qarace'.Str::lower(Str::random(10));
+                $tenantIds[] = $tenantId;
+                $side->table('tenants')->insert([
+                    'id' => $tenantId, 'name' => $tenantId, 'slug' => $tenantId, 'email' => $tenantId.'@race.harness.test',
+                    'status' => 'active', 'created_at' => $now, 'updated_at' => $now,
+                ]);
+                $subscriptionId = (int) $side->table('subscriptions')->insertGetId([
+                    'tenant_id' => $tenantId, 'plan_id' => $planId, 'billing_cycle' => BillingCycle::Monthly->value,
+                    'status' => SubscriptionStatus::Active->value, 'amount' => '449.000', 'currency' => 'EGP',
+                    'price_locked' => false, 'is_founder' => false,
+                    'starts_at' => $now, 'ends_at' => $now->copy()->addMonth(), 'created_at' => $now, 'updated_at' => $now,
+                ]);
+                $invoiceId = (int) $side->table('billing_invoices')->insertGetId([
+                    'number' => 'RACE-'.Str::lower(Str::random(12)), 'tenant_id' => $tenantId, 'subscription_id' => $subscriptionId,
+                    'type' => BillingInvoiceType::Plan->value, 'lines' => '[]', 'subtotal' => '449.000', 'total' => '449.000',
+                    'created_at' => $now, 'updated_at' => $now,
+                ]);
+                $paymentId = (int) $side->table('billing_payments')->insertGetId([
+                    'billing_invoice_id' => $invoiceId, 'tenant_id' => $tenantId, 'amount' => '449.000',
+                    'method' => BillingPaymentMethod::Instapay->value, 'status' => BillingPaymentStatus::Verified->value,
+                    'paid_at' => $now, 'verified_at' => $now, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+
+                $payloads[] = ['subscription_id' => $subscriptionId, 'payment_id' => $paymentId];
+            }
+
+            // Two slots left out of the configured 50 for six simultaneous first payments.
+            $counter()->update(['last_value' => 48]);
+
+            $results = $this->runFounderWorkers($payloads);
+
+            foreach ($results as $result) {
+                $this->assertTrue($result['ok'], 'No claim may crash or deadlock: '.json_encode($result, JSON_UNESCAPED_UNICODE));
+            }
+            $claimed = array_values(array_filter($results, fn (array $r): bool => $r['claimed'] === true));
+            $this->assertCount(2, $claimed, 'Exactly the two free slots may be handed out: '.json_encode($results, JSON_UNESCAPED_UNICODE));
+            $this->assertSame(50, (int) $counter()->value('last_value'), 'The counter must stop at the configured 50 slots.');
+
+            $founderIds = $side->table('subscriptions')->whereIn('tenant_id', $tenantIds)->where('is_founder', true)
+                ->orderBy('id')->pluck('id')->map(fn ($id): int => (int) $id)->all();
+            $claimedIds = array_map(fn (array $r): int => (int) $r['subscription_id'], $claimed);
+            sort($claimedIds);
+            $this->assertSame($claimedIds, $founderIds, 'Only the winning subscriptions are marked as founders.');
+        } finally {
+            $side->table('billing_payments')->whereIn('tenant_id', $tenantIds)->delete();
+            $side->table('billing_invoices')->whereIn('tenant_id', $tenantIds)->delete();
+            $side->table('tenants')->whereIn('id', $tenantIds)->delete();
+            if ($planId !== null) {
+                $side->table('plans')->where('id', $planId)->delete();
+            }
+            $counter()->update(['last_value' => $previous]);
+            DB::purge('qa_founder_race');
+        }
+    }
+
+    /**
+     * Start one PHP process per payload (tests/Support/founder-slot-worker.php), release
+     * them at the same moment and collect their JSON results.
+     *
+     * @param  list<array{subscription_id: int, payment_id: int}>  $payloads
+     * @return list<array<string, mixed>>
+     */
+    private function runFounderWorkers(array $payloads): array
+    {
+        $script = base_path('tests/Support/founder-slot-worker.php');
+        $workers = [];
+
+        try {
+            foreach ($payloads as $payload) {
+                $stderr = (string) tempnam(sys_get_temp_dir(), 'qa-founder-');
+                $pipes = [];
+                $process = proc_open(
+                    [PHP_BINARY, $script, base64_encode((string) json_encode($payload))],
+                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['file', $stderr, 'w']],
+                    $pipes,
+                    base_path(),
+                );
+
+                if (! is_resource($process)) {
+                    throw new RuntimeException('Could not start a founder-slot worker.');
+                }
+
+                $workers[] = ['process' => $process, 'pipes' => $pipes, 'stderr' => $stderr];
+            }
+
+            foreach ($workers as $worker) {
+                stream_set_timeout($worker['pipes'][1], self::WORKER_READY_TIMEOUT);
+                $line = trim((string) fgets($worker['pipes'][1]));
+                if ($line !== 'READY') {
+                    throw new RuntimeException('Worker did not become ready: '.$line.' '.(string) file_get_contents($worker['stderr']));
+                }
+            }
+
+            // Barrier released: all workers claim at (almost) the same moment.
+            foreach ($workers as $worker) {
+                fwrite($worker['pipes'][0], "GO\n");
+                fflush($worker['pipes'][0]);
+            }
+
+            $results = [];
+            foreach ($workers as $worker) {
+                $output = trim((string) stream_get_contents($worker['pipes'][1]));
+                $lines = preg_split('/\r?\n/', $output) ?: [];
+                $decoded = json_decode((string) end($lines), true);
+
+                if (! is_array($decoded) || ! array_key_exists('ok', $decoded)) {
+                    throw new RuntimeException('Worker returned no result: '.$output.' '.(string) file_get_contents($worker['stderr']));
+                }
+
+                $results[] = $decoded;
+            }
+
+            return $results;
+        } finally {
+            foreach ($workers as $worker) {
+                foreach ($worker['pipes'] as $pipe) {
+                    if (is_resource($pipe)) {
+                        fclose($pipe);
+                    }
+                }
+                proc_close($worker['process']);
+                @unlink($worker['stderr']);
+            }
+        }
+    }
+
     private function assertClaimFails(string $reason, Subscription $subscription, BillingPayment $payment): void
     {
         try {
@@ -449,7 +654,12 @@ final class FounderPricingServiceTest extends TenantTestCase
 
     private function setCounter(int $value): void
     {
-        BillingSequence::query()->create(['key' => FounderPricingService::SLOT_SEQUENCE, 'period' => '', 'last_value' => $value]);
+        // The row exists from migration 2026_10_10_200530; updateOrCreate keeps the helper
+        // valid for a database where it went missing (the service's lazy-insert fallback).
+        BillingSequence::query()->updateOrCreate(
+            ['key' => FounderPricingService::SLOT_SEQUENCE, 'period' => ''],
+            ['last_value' => $value],
+        );
     }
 
     /**

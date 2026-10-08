@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Exceptions\Billing\AddonPricingException;
+use App\Exceptions\Billing\SubscriptionAddonException;
 use App\Models\Concerns\UsesCentralConnection;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,12 @@ use Illuminate\Support\Carbon;
  * `lineTotal()` multiplies it by the quantity with bcmath. A line counts towards the
  * tenant's entitlements only while `activeFor()` returns it: status `active` and
  * starts_at <= moment < ends_at (NULL ends_at = open-ended, NULL starts_at = not started).
+ *
+ * `tenant_id` is denormalised from the parent subscription and is NEVER taken from input:
+ * it is not mass assignable, and every save copies it from `subscriptions.tenant_id`
+ * (saving hook below). A line whose tenant_id was forced to another tenant, or whose
+ * subscription does not exist, is refused with SubscriptionAddonException before any
+ * write, so a line can never grant add-on entitlements to a tenant that did not buy it.
  *
  * @property int $id
  * @property int $subscription_id
@@ -46,7 +53,7 @@ class SubscriptionAddon extends Model
 
     protected $fillable = [
         'subscription_id',
-        'tenant_id',
+        // tenant_id is deliberately NOT fillable: it is copied from the subscription on save.
         'addon_id',
         'quantity',
         'unit_price',
@@ -83,6 +90,42 @@ class SubscriptionAddon extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(static function (SubscriptionAddon $line): void {
+            $line->copyTenantFromSubscription();
+        });
+    }
+
+    /**
+     * Server-side source of truth for tenant_id: the parent subscription's tenant.
+     * Runs on every save (create and update), so changing subscription_id re-checks it.
+     *
+     * @throws SubscriptionAddonException when the subscription is missing or the line
+     *                                    was forced onto another tenant
+     */
+    private function copyTenantFromSubscription(): void
+    {
+        $subscriptionId = $this->getAttribute('subscription_id');
+
+        $parentTenantId = $subscriptionId === null
+            ? null
+            : Subscription::query()->whereKey($subscriptionId)->value('tenant_id');
+
+        if ($parentTenantId === null) {
+            throw SubscriptionAddonException::subscriptionMissing();
+        }
+
+        $parentTenantId = (string) $parentTenantId;
+        $current = $this->getAttribute('tenant_id');
+
+        if ($current !== null && (string) $current !== $parentTenantId) {
+            throw SubscriptionAddonException::tenantMismatch();
+        }
+
+        $this->setAttribute('tenant_id', $parentTenantId);
     }
 
     /**

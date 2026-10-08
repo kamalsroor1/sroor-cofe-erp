@@ -78,4 +78,8 @@ return [
         'cycle_not_sellable' => 'The :cycle billing cycle is not available for purchase.',
         'invalid_configuration' => 'The founder pricing setting :key is invalid.',
     ],
+    'subscription_addon' => [
+        'subscription_missing' => 'An add-on line cannot be saved without an existing subscription.',
+        'tenant_mismatch' => 'The add-on line does not belong to the account of its subscription.',
+    ],
 ];

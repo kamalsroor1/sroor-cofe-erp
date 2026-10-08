@@ -78,4 +78,8 @@ return [
         'cycle_not_sellable' => 'دورة الفوترة «:cycle» غير متاحة للشراء.',
         'invalid_configuration' => 'إعداد سعر المؤسسين :key غير صحيح.',
     ],
+    'subscription_addon' => [
+        'subscription_missing' => 'لا يمكن حفظ بند الإضافة بدون اشتراك موجود.',
+        'tenant_mismatch' => 'بند الإضافة لا يخص حساب الاشتراك الذي يتبعه.',
+    ],
 ];
