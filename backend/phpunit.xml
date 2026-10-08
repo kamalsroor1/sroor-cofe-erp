@@ -12,6 +12,16 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <!--
+        Tests that only make sense on a real MySQL server (row locks, parallel workers)
+        live in the `mysql-only` group and run in the CI `mysql` job via phpunit.mysql.xml.
+        Driver-agnostic `mysql`-group tests still run here on sqlite.
+    -->
+    <groups>
+        <exclude>
+            <group>mysql-only</group>
+        </exclude>
+    </groups>
     <source>
         <include>
             <directory>app</directory>

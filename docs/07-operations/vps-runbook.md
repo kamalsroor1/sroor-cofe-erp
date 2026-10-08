@@ -237,7 +237,7 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 - [ ] `ssh root@...` وبكلمة مرور مرفوضان؛ `opsadmin` بالمفتاح يعمل و`sudo` يطلب كلمة المرور.
 - [ ] من OPS-2: إنشاء مستأجر تجريبي بحساب `provisioner` ← DB + مستخدم المستأجر؛ `SHOW GRANTS FOR` مستخدم المستأجر = قائمة stancl على **الاسم المهرَّب** (`tenant\_<id>` مع `\_`) فقط؛ ومستأجران `x_y` و`x-y` لا يصل أي منهما لـ DB الآخر.
 - [ ] رفع APK تجريبي (~80 MB) من شاشة الـ super-admin ← `201` لا `413`.
-- [ ] من OPS-3: deploy + rollback ناجحان، Horizon يعيد التشغيل، الـ scheduler يعمل (`storage/logs`).
+- [ ] من OPS-3: deploy + rollback ناجحان، Horizon يعيد التشغيل، الـ scheduler يعمل (`storage/logs`). الترتيب الكامل (ومنه `storage:link --force` في كل release) في `deploy-runbook.md`.
 - [ ] من OPS-5: backup يومي مشفّر ← restore إلى DB منفصلة يطابق عدد الصفوف.
 - [ ] `reboot` ← كل الخدمات تعود (`verify.sh`).
 - [ ] **قبل go-live: مسح كامل** — Rebuild للخادم من Hetzner على صورة Ubuntu 24.04 نظيفة، **أسرار جديدة كلها** (أسرار البروفة تُعتبر محروقة)، `CERTBOT_STAGING=0`، ثم التهيئة والتحقق من جديد.

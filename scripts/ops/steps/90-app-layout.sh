@@ -7,6 +7,11 @@
 #     shared/.env          production env, owner app user, chmod 600 (filled by OPS-4)
 #     shared/storage/      persistent storage, symlinked into every release
 #
+# Every release then runs `php artisan storage:link --force` (OPS-3, see
+# docs/07-operations/deploy-runbook.md): public/ lives inside the release, so the
+# public/storage and public/central-assets links must be recreated per release.
+# Their targets (storage/app/public, storage/app/central/public) are created here.
+#
 # Directories are setgid www-data so nginx can read public/ assets; .env is
 # readable by the app user only.
 set -euo pipefail
@@ -19,7 +24,8 @@ require_vars APP_ROOT APP_USER
 
 install -d -m 2750 -o "$APP_USER" -g www-data "$APP_ROOT" "$APP_ROOT/releases" "$APP_ROOT/shared"
 
-for dir in storage storage/app storage/app/public storage/app/private storage/framework \
+for dir in storage storage/app storage/app/public storage/app/private \
+    storage/app/central storage/app/central/public storage/app/central/private storage/framework \
     storage/framework/cache storage/framework/cache/data storage/framework/sessions \
     storage/framework/views storage/logs; do
     install -d -m 2770 -o "$APP_USER" -g www-data "$APP_ROOT/shared/$dir"

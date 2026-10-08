@@ -15,7 +15,11 @@
 #
 # The `mysql` job (QA-1) runs the `mysql` PHPUnit group (tenant harness smoke
 # test, concurrency / row-lock tests, DECIMAL round trips) on a throwaway MySQL 8.4
-# container, because sqlite cannot prove row locks (phase-1-plan R7).
+# container, because sqlite cannot prove row locks (phase-1-plan R7). Tests that are
+# MySQL-ONLY also carry the `mysql-only` group, which phpunit.xml excludes from the
+# sqlite run in the `php` job (so they are not collected there instead of skipped).
+#
+# The `frontend` job also runs the JS unit tests (`npm run test:js`, node:test).
 #
 # The one-time full format pass has landed, so formatting and linting are checked
 # on the whole codebase:
@@ -249,6 +253,10 @@ jobs:
 
       - name: Prettier format:check (whole codebase)
         run: npm run format:check
+
+      # node's built-in runner (no extra package): tests/js/*.test.js + scripts/**/*.test.mjs.
+      - name: JS unit tests (node --test)
+        run: npm run test:js
 
       - name: Build (runs lang:export via prebuild)
         run: npm run build

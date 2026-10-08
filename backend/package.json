@@ -21,6 +21,7 @@
         "capacitor:copy:before": "node scripts/capacitor/build-web.mjs",
         "capacitor:copy:after": "node scripts/capacitor/check-apk.mjs",
         "test:scripts": "node --test \"scripts/**/*.test.mjs\"",
+        "test:js": "node --test \"tests/js/*.test.js\" \"scripts/**/*.test.mjs\"",
         "cap:open": "npx cap open android",
         "e2e:all": "npx playwright test --config=../playwright.config.js",
         "e2e:desktop": "npx playwright test --config=../playwright.config.js --project=desktop",

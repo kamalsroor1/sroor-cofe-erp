@@ -31,9 +31,13 @@ use Tests\TenantTestCase;
  *    the same stock row and on the same POS idempotency key (`client_uuid`);
  *  - exact DECIMAL(12,3) round trips through MySQL.
  *
- * On sqlite every test is skipped with an explicit reason.
+ * Group `mysql-only`: excluded from the default sqlite suite by phpunit.xml (so it is
+ * never collected there, instead of being reported as skipped) and run by
+ * phpunit.mysql.xml through its `mysql` group. Other `mysql`-group tests are
+ * driver-agnostic and keep running on sqlite as well.
  */
 #[Group('mysql')]
+#[Group('mysql-only')]
 #[Group('concurrency')]
 final class MysqlConcurrencyTest extends TenantTestCase
 {
@@ -51,7 +55,9 @@ final class MysqlConcurrencyTest extends TenantTestCase
 
         $driver = DB::connection($this->centralConnectionName())->getDriverName();
         if (! in_array($driver, ['mysql', 'mariadb'], true)) {
-            $this->markTestSkipped('MySQL-only: sqlite has no row locks. Runs in the CI `mysql` job (phpunit.mysql.xml).');
+            // Only reachable by forcing the group onto sqlite (e.g. `--group mysql-only`
+            // with phpunit.xml): fail loudly, a lock test that cannot lock proves nothing.
+            $this->fail("MySQL-only test run on `{$driver}`. Use: php artisan test -c phpunit.mysql.xml");
         }
     }
 
