@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\CashShift;
+use App\Models\Expense;
+use App\Models\Invoice;
+use App\Models\Item;
+use App\Models\Purchase;
+use App\Models\ReturnDocument;
+use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
-use App\Models\Item;
 use App\Models\User;
-use App\Models\Invoice;
-use App\Models\Purchase;
-use App\Models\Expense;
-use App\Models\ReturnDocument;
-use App\Models\CashShift;
-use App\Models\StockMovement;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class StoreSystemMigrationSeeder extends Seeder
 {
@@ -28,13 +28,13 @@ class StoreSystemMigrationSeeder extends Seeder
             $mainStore = Store::firstOrCreate(
                 ['is_main' => true],
                 [
-                    'name'      => 'الفرع والمخزن الرئيسي',
-                    'code'      => 'MAIN-01',
-                    'type'      => 'main_warehouse',
-                    'phone'     => '01012316954',
-                    'address'   => 'المقر الرئيسي والمخزن المركزي',
+                    'name' => 'الفرع والمخزن الرئيسي',
+                    'code' => 'MAIN-01',
+                    'type' => 'main_warehouse',
+                    'phone' => '01000000100',
+                    'address' => 'المقر الرئيسي والمخزن المركزي',
                     'is_active' => true,
-                    'is_main'   => true,
+                    'is_main' => true,
                 ]
             );
 
@@ -42,13 +42,13 @@ class StoreSystemMigrationSeeder extends Seeder
             Store::firstOrCreate(
                 ['code' => 'VAN-01'],
                 [
-                    'name'      => 'عربية توزيع رقم 1 (جملة)',
-                    'code'      => 'VAN-01',
-                    'type'      => 'wholesale_van',
-                    'phone'     => null,
-                    'address'   => 'سيارة توزيع جملة ومطاحن',
+                    'name' => 'عربية توزيع رقم 1 (جملة)',
+                    'code' => 'VAN-01',
+                    'type' => 'wholesale_van',
+                    'phone' => null,
+                    'address' => 'سيارة توزيع جملة ومطاحن',
                     'is_active' => true,
-                    'is_main'   => false,
+                    'is_main' => false,
                 ]
             );
 
@@ -58,11 +58,11 @@ class StoreSystemMigrationSeeder extends Seeder
                 StoreStock::firstOrCreate(
                     [
                         'store_id' => $mainStore->id,
-                        'item_id'  => $item->id,
+                        'item_id' => $item->id,
                     ],
                     [
-                        'quantity'             => $item->current_stock,
-                        'min_stock'            => $item->min_stock_level,
+                        'quantity' => $item->current_stock,
+                        'min_stock' => $item->min_stock_level,
                         'custom_selling_price' => null,
                     ]
                 );
@@ -71,7 +71,7 @@ class StoreSystemMigrationSeeder extends Seeder
             // 3. Link all existing Users to the Main Store
             $users = User::all();
             foreach ($users as $user) {
-                if (!$user->default_store_id) {
+                if (! $user->default_store_id) {
                     $user->update(['default_store_id' => $mainStore->id]);
                 }
                 $user->stores()->syncWithoutDetaching([$mainStore->id]);

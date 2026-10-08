@@ -6,6 +6,12 @@ namespace Tests\Feature\Api;
 
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Stancl\Tenancy\Events\CreatingDatabase;
+use Stancl\Tenancy\Events\DatabaseCreated;
+use Stancl\Tenancy\Events\DatabaseMigrated;
+use Stancl\Tenancy\Events\MigratingDatabase;
+use Stancl\Tenancy\Events\TenantCreated;
 use Tests\TestCase;
 
 class CentralTenantResolverApiTest extends TestCase
@@ -16,22 +22,22 @@ class CentralTenantResolverApiTest extends TestCase
     {
         parent::setUp();
 
-        \Illuminate\Support\Facades\Event::fake([
-            \Stancl\Tenancy\Events\TenantCreated::class,
-            \Stancl\Tenancy\Events\CreatingDatabase::class,
-            \Stancl\Tenancy\Events\DatabaseCreated::class,
-            \Stancl\Tenancy\Events\MigratingDatabase::class,
-            \Stancl\Tenancy\Events\DatabaseMigrated::class,
+        Event::fake([
+            TenantCreated::class,
+            CreatingDatabase::class,
+            DatabaseCreated::class,
+            MigratingDatabase::class,
+            DatabaseMigrated::class,
         ]);
     }
 
     public function test_resolves_active_tenant_by_id(): void
     {
         $tenant = Tenant::create([
-            'id'     => '2m',
-            'name'   => '2M Coffee Roastery',
-            'slug'   => '2m',
-            'email'  => 'info@2m.com',
+            'id' => '2m',
+            'name' => '2M Coffee Roastery',
+            'slug' => '2m',
+            'email' => 'info@2m.com',
             'status' => 'active',
         ]);
         $tenant->domains()->create(['domain' => '2m.baraa-solutions.com']);
@@ -41,13 +47,13 @@ class CentralTenantResolverApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'tenant_id'  => '2m',
-                    'name'       => '2M Coffee Roastery',
-                    'slug'       => '2m',
-                    'domain'     => '2m.baraa-solutions.com',
+                'data' => [
+                    'tenant_id' => '2m',
+                    'name' => '2M Coffee Roastery',
+                    'slug' => '2m',
+                    'domain' => '2m.baraa-solutions.com',
                     'server_url' => 'https://2m.baraa-solutions.com',
-                    'status'     => 'active',
+                    'status' => 'active',
                 ],
             ]);
     }
@@ -55,10 +61,10 @@ class CentralTenantResolverApiTest extends TestCase
     public function test_resolves_tenant_case_insensitively(): void
     {
         $tenant = Tenant::create([
-            'id'     => 'wadi-elbon',
-            'name'   => 'Wadi Elbon Roasters',
-            'slug'   => 'wadi-elbon',
-            'email'  => 'wadi@elbon.com',
+            'id' => 'wadi-elbon',
+            'name' => 'Wadi Elbon Roasters',
+            'slug' => 'wadi-elbon',
+            'email' => 'wadi@elbon.com',
             'status' => 'active',
         ]);
         $tenant->domains()->create(['domain' => 'wadi-elbon.baraa-solutions.com']);
@@ -73,10 +79,10 @@ class CentralTenantResolverApiTest extends TestCase
     public function test_resolves_tenant_using_tenant_query_parameter(): void
     {
         $tenant = Tenant::create([
-            'id'     => 'test-cafe',
-            'name'   => 'Test Cafe',
-            'slug'   => 'test-cafe',
-            'email'  => 'cafe@test.com',
+            'id' => 'test-cafe',
+            'name' => 'Test Cafe',
+            'slug' => 'test-cafe',
+            'email' => 'cafe@test.com',
             'status' => 'active',
         ]);
 
@@ -99,10 +105,10 @@ class CentralTenantResolverApiTest extends TestCase
     public function test_returns_403_when_tenant_is_suspended(): void
     {
         Tenant::create([
-            'id'     => 'suspended-shop',
-            'name'   => 'Suspended Shop',
-            'slug'   => 'suspended-shop',
-            'email'  => 'suspended@shop.com',
+            'id' => 'suspended-shop',
+            'name' => 'Suspended Shop',
+            'slug' => 'suspended-shop',
+            'email' => 'suspended@shop.com',
             'status' => 'suspended',
         ]);
 
@@ -125,10 +131,10 @@ class CentralTenantResolverApiTest extends TestCase
     public function test_direct_unversioned_alias_route_works(): void
     {
         Tenant::create([
-            'id'     => 'alias-test',
-            'name'   => 'Alias Cafe',
-            'slug'   => 'alias-test',
-            'email'  => 'alias@cafe.com',
+            'id' => 'alias-test',
+            'name' => 'Alias Cafe',
+            'slug' => 'alias-test',
+            'email' => 'alias@cafe.com',
             'status' => 'active',
         ]);
 
@@ -136,5 +142,35 @@ class CentralTenantResolverApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.tenant_id', 'alias-test');
+    }
+
+    /**
+     * AUTH-2: the public workspace resolver is rate limited (tenant-resolve, 10/min per IP)
+     * so workspace codes cannot be enumerated.
+     */
+    public function test_v1_resolver_is_throttled_after_ten_requests_per_minute(): void
+    {
+        $this->assertResolverThrottled('/api/v1/central/tenants/resolve');
+    }
+
+    /**
+     * AUTH-2: the unversioned alias must carry the same limiter; it is easy to forget.
+     */
+    public function test_unversioned_resolver_alias_is_throttled_after_ten_requests_per_minute(): void
+    {
+        $this->assertResolverThrottled('/api/central/tenants/resolve');
+    }
+
+    private function assertResolverThrottled(string $path): void
+    {
+        for ($i = 1; $i <= 10; $i++) {
+            $this->getJson($path.'?code=probe-'.$i)->assertStatus(404);
+        }
+
+        $this->getJson($path.'?code=probe-11')
+            ->assertStatus(429)
+            ->assertJsonPath('message', __('auth.too_many_requests'));
+
+        $this->assertNotSame('auth.too_many_requests', __('auth.too_many_requests'), 'auth.too_many_requests lang key must exist');
     }
 }

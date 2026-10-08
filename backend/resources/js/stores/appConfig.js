@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
 import { applyThemeColor } from '../helpers/themeHelper';
+import { trans } from '../helpers/trans';
 
 export const useAppConfigStore = defineStore('appConfig', {
     state: () => ({
         system: {
-            platform_name: 'منظومة ERP السحابية',
-            company_name: 'مؤسسة تجارية',
-            company_subtitle: 'لإدارة المبيعات والمخزون والفروع',
+            platform_name: '',
+            company_name: '',
+            company_subtitle: '',
             system_theme_color: 'amber',
             server_time: null,
         },
@@ -27,8 +28,9 @@ export const useAppConfigStore = defineStore('appConfig', {
 
     getters: {
         isDark: (state) => state.theme === 'dark',
-        platformName: (state) => state.system.platform_name || state.system.company_name || 'منظومة ERP',
-        companyName: (state) => state.system.company_name,
+        platformName: (state) =>
+            state.system.platform_name || state.system.company_name || trans('common.platform_name'),
+        companyName: (state) => state.system.company_name || trans('auth.default_company_name'),
         companySubtitle: (state) => state.system.company_subtitle,
         currentShiftNumber: (state) => state.activeShift?.shift_number || null,
         hasOpenShift: (state) => !!state.activeShift,

@@ -17,49 +17,48 @@ class PermissionsSeeder extends Seeder
         // 1. Define all permissions grouped by module
         $permissions = [
             // POS & Invoices
-            'pos.access'          => 'الوصول لشاشة نقطة البيع (POS)',
-            'invoices.view'       => 'عرض سجل فواتير المبيعات',
-            'invoices.create'     => 'إنشاء واعتماد فواتير المبيعات',
-            'invoices.edit'       => 'تعديل فواتير المبيعات المعتمدة',
-            'invoices.cancel'     => 'إلغاء الفواتير وعكس أثر المخزون',
-            'invoices.delete'     => 'حذف وأرشفة فواتير المبيعات',
-            'invoices.discount'   => 'صلاحية منح خصومات للعملاء',
+            'pos.access' => 'الوصول لشاشة نقطة البيع (POS)',
+            'invoices.view' => 'عرض سجل فواتير المبيعات',
+            'invoices.create' => 'إنشاء واعتماد فواتير المبيعات',
+            'invoices.edit' => 'تعديل فواتير المبيعات المعتمدة',
+            'invoices.cancel' => 'إلغاء الفواتير وعكس أثر المخزون',
+            'invoices.delete' => 'حذف وأرشفة فواتير المبيعات',
+            'invoices.discount' => 'صلاحية منح خصومات للعملاء',
 
             // Items & Inventory
-            'items.view'          => 'عرض قائمة الأصناف والأسعار',
-            'items.create'        => 'إضافة أصناف جديدة للمخزون',
-            'items.edit'          => 'تعديل بيانات وأسعار الأصناف',
-            'items.delete'        => 'أرشفة وحذف الأصناف',
-            'items.view_cost'     => 'رؤية سعر التكلفة وهوامش الربح',
+            'items.view' => 'عرض قائمة الأصناف والأسعار',
+            'items.create' => 'إضافة أصناف جديدة للمخزون',
+            'items.edit' => 'تعديل بيانات وأسعار الأصناف',
+            'items.delete' => 'أرشفة وحذف الأصناف',
+            'items.view_cost' => 'رؤية سعر التكلفة وهوامش الربح',
 
             // Purchases
-            'purchases.view'      => 'عرض سجل فواتير المشتريات',
-            'purchases.create'    => 'تسجيل وتوريد مشتريات جديدة للمخزن',
-            'purchases.delete'    => 'أرشفة فواتير المشتريات',
+            'purchases.view' => 'عرض سجل فواتير المشتريات',
+            'purchases.create' => 'تسجيل وتوريد مشتريات جديدة للمخزن',
+            'purchases.delete' => 'أرشفة فواتير المشتريات',
 
             // Stores & Transfers
-            'stores.manage'       => 'إدارة الفروع وتعيين الموظفين',
-            'transfers.view'      => 'عرض أذونات التحويل المخزني',
-            'transfers.create'    => 'إنشاء أذونات تحويل وشحن عربات التوزيع',
+            'stores.manage' => 'إدارة الفروع وتعيين الموظفين',
+            'transfers.view' => 'عرض أذونات التحويل المخزني',
+            'transfers.create' => 'إنشاء أذونات تحويل وشحن عربات التوزيع',
 
             // Contacts
-            'customers.manage'    => 'إدارة دليل العملاء',
+            'customers.manage' => 'إدارة دليل العملاء',
             'customers.statement' => 'عرض وتصدير كشف حساب عميل',
-            'suppliers.manage'    => 'إدارة دليل الموردين وحساباتهم',
+            'suppliers.manage' => 'إدارة دليل الموردين وحساباتهم',
             'suppliers.statement' => 'عرض وتصدير كشف حساب مورد',
 
             // Financials & Daily Journal
-            'daily_journal.view'        => 'عرض اليومية النقدية وحركة الدرج والشفتات',
+            'daily_journal.view' => 'عرض اليومية النقدية وحركة الدرج والشفتات',
             'daily_journal.close_shift' => 'فتح وتقفيل ورديات الكاشير واليومية',
-            'expenses.manage'           => 'تسجيل وتعديل وحذف المصروفات',
-            'returns.manage'            => 'إدارة مرتجعات المبيعات والمشتريات',
+            'expenses.manage' => 'تسجيل وتعديل وحذف المصروفات',
+            'returns.manage' => 'إدارة مرتجعات المبيعات والمشتريات',
 
             // Admin & Reports
-            'reports.view'        => 'عرض التقارير المالية والأرباح ومقارنة الفروع',
-            'trash.access'        => 'الوصول لسلة المحذوفات المركزية واسترجاع البيانات',
-            'roles.manage'        => 'إدارة المستخدمين والأدوار والصلاحيات',
-            'logs.view'           => 'عرض وفحص سجل العمليات والرقابة الذاتية',
-            'super_admin.access'  => 'الوصول للمنصة المركزية وإدارة المشتركين والباقات',
+            'reports.view' => 'عرض التقارير المالية والأرباح ومقارنة الفروع',
+            'trash.access' => 'الوصول لسلة المحذوفات المركزية واسترجاع البيانات',
+            'roles.manage' => 'إدارة المستخدمين والأدوار والصلاحيات',
+            'logs.view' => 'عرض وفحص سجل العمليات والرقابة الذاتية',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -67,17 +66,14 @@ class PermissionsSeeder extends Seeder
         }
 
         // 2. Roles Setup & Permission Assignment
-        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
         $storeRole = Role::firstOrCreate(['name' => 'storekeeper']);
         $accountantRole = Role::firstOrCreate(['name' => 'accountant']);
 
-        // Super Admin gets ALL permissions including central platform
-        $superAdminRole->syncPermissions(Permission::all());
-
-        // Store Admin gets all local ERP permissions EXCEPT central super_admin.access
-        $storeAdminPermissions = Permission::where('name', '!=', 'super_admin.access')->get();
+        // Tenant admin gets every local ERP permission. super_admin.* is central-only
+        // (see CentralPermissionsSeeder) and is excluded even if a legacy row exists.
+        $storeAdminPermissions = Permission::where('name', 'not like', 'super_admin.%')->get();
         $adminRole->syncPermissions($storeAdminPermissions);
 
         // Cashier permissions

@@ -32,7 +32,7 @@ final class ApiLogoutAction
         $this->activityLogService->log(
             module: 'auth',
             action: 'api_logout',
-            description: "تسجيل خروج API للمستخدم [{$user->name}]",
+            description: __('auth.activity_logout', ['name' => $user->name]),
             subject: $user,
             userId: $user->id
         );

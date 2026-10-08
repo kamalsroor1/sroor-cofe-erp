@@ -33,10 +33,10 @@ final class GetSystemContextAction
         $activeStore = null;
         $storeHeader = $request->header('X-Store-Id');
         if ($storeHeader && is_numeric($storeHeader)) {
-            $activeStore = Store::where('id', (int)$storeHeader)->where('is_active', true)->first();
+            $activeStore = Store::where('id', (int) $storeHeader)->where('is_active', true)->first();
         }
 
-        if (!$activeStore) {
+        if (! $activeStore) {
             $activeStore = $user->getCurrentStore();
         }
 
@@ -61,83 +61,85 @@ final class GetSystemContextAction
 
         if ($lowStockCount > 0) {
             $alerts[] = [
-                'type'        => 'danger',
-                'icon'        => '🚨',
-                'title'       => "نواقص بالمخزن ({$lowStockCount} صنف)",
+                'type' => 'danger',
+                'icon' => '🚨',
+                'title' => "نواقص بالمخزن ({$lowStockCount} صنف)",
                 'description' => 'أصناف بلغت أو تجاوزت حد الطلب الأدنى',
-                'link'        => '/purchases/smart-reorder',
-                'link_label'  => 'إعادة الطلب الذكي',
+                'link' => '/purchases/smart-reorder',
+                'link_label' => 'إعادة الطلب الذكي',
             ];
         }
 
         $debtCount = Customer::where('is_active', true)->where('current_balance', '>', 0)->count();
         if ($debtCount > 0) {
             $alerts[] = [
-                'type'        => 'warning',
-                'icon'        => '👥',
-                'title'       => "مديونيات عملاء ({$debtCount} عميل)",
+                'type' => 'warning',
+                'icon' => '👥',
+                'title' => "مديونيات عملاء ({$debtCount} عميل)",
                 'description' => 'يوجد عملاء مستحق عليهم مبالغ آجلة بحاجة للتحصيل',
-                'link'        => '/customers',
-                'link_label'  => 'قائمة العملاء المدينين',
+                'link' => '/customers',
+                'link_label' => 'قائمة العملاء المدينين',
             ];
         }
 
         if ($user->can('daily_journal.view') || $user->hasRole('admin')) {
             try {
                 $balances = $this->treasuryService->getBalances($activeStore?->id);
-                $cashExpected = (float)($balances['cash']['balance'] ?? 0);
+                $cashExpected = (float) ($balances['cash']['balance'] ?? 0);
                 if ($cashExpected >= 10000) {
                     $alerts[] = [
-                        'type'        => 'info',
-                        'icon'        => '💰',
-                        'title'       => 'سيولة نقدية عالية بالدرج',
-                        'description' => 'يوجد حالياً ' . number_format($cashExpected, 0) . ' ج.م نقداً بالدرج. يُنصح بتوريد الفائض.',
-                        'link'        => '/daily-journal',
-                        'link_label'  => 'دفتر اليومية والخزينة',
+                        'type' => 'info',
+                        'icon' => '💰',
+                        'title' => 'سيولة نقدية عالية بالدرج',
+                        'description' => 'يوجد حالياً '.number_format($cashExpected, 0).' ج.م نقداً بالدرج. يُنصح بتوريد الفائض.',
+                        'link' => '/daily-journal',
+                        'link_label' => 'دفتر اليومية والخزينة',
                     ];
                 }
-            } catch (\Throwable) {}
+            } catch (\Throwable) {
+            }
         }
 
         // 4. System Settings & Branding
-        $locale = $request->header('X-Locale') ?: app()->getLocale();
+        $headerLocale = $request->header('X-Locale');
+        $locale = GetTranslationsAction::normalizeLocale(is_string($headerLocale) ? $headerLocale : null);
         $translations = $this->translationsAction->execute($locale);
 
         return [
             'auth' => [
-                'user'             => (new UserResource($user))->resolve(),
-                'is_impersonating' => (bool)session('is_impersonating', false),
+                'user' => (new UserResource($user))->resolve(),
+                'is_impersonating' => (bool) session('is_impersonating', false),
             ],
             'tenant' => $tenant ? (new TenantResource($tenant))->resolve() : null,
             'active_store' => $activeStore ? [
-                'id'      => $activeStore->id,
-                'name'    => $activeStore->name,
-                'code'    => $activeStore->code,
-                'type'    => $activeStore->type,
-                'is_main' => (bool)$activeStore->is_main,
+                'id' => $activeStore->id,
+                'name' => $activeStore->name,
+                'code' => $activeStore->code,
+                'type' => $activeStore->type,
+                'is_main' => (bool) $activeStore->is_main,
             ] : null,
             'stores' => $userStores,
             'active_shift' => $activeShift ? [
-                'id'                   => $activeShift->id,
-                'shift_number'         => $activeShift->shift_number ?? $activeShift->id,
-                'opened_at'            => $activeShift->opened_at,
-                'opening_cash_balance' => (float)$activeShift->opening_cash_balance,
+                'id' => $activeShift->id,
+                'shift_number' => $activeShift->shift_number ?? $activeShift->id,
+                'opened_at' => $activeShift->opened_at,
+                'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
             ] : null,
             'system' => [
-                'platform_name'      => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
-                'company_name'       => Setting::get('company_name') ?: ($tenant?->name ?? 'مؤسسة تجارية'),
-                'company_subtitle'   => Setting::get('company_subtitle') ?: '',
+                'platform_name' => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', __('common.platform_name')),
+                'company_name' => Setting::get('company_name') ?: ($tenant?->name ?? __('auth.default_company_name')),
+                'company_subtitle' => Setting::get('company_subtitle') ?: '',
                 'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
-                'server_time'        => now()->toDateTimeString(),
+                'server_time' => now()->toDateTimeString(),
             ],
             'branding' => [
-                'logo_light' => '/logo-light.png?v=' . Setting::get('logo_light_v', '1'),
-                'logo_dark'  => '/logo-dark.png?v=' . Setting::get('logo_dark_v', '1'),
-                'logo'       => '/logo.png?v=' . Setting::get('logo_v', '1'),
+                'logo_light' => '/logo-light.png?v='.Setting::get('logo_light_v', '1'),
+                'logo_dark' => '/logo-dark.png?v='.Setting::get('logo_dark_v', '1'),
+                'logo' => '/logo.png?v='.Setting::get('logo_v', '1'),
             ],
             'notifications' => $alerts,
-            'locale'        => $locale,
-            'translations'  => $translations,
+            'locale' => $locale,
+            'translations' => $translations,
         ];
     }
 }

@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Support\PlatformSuperAdmin;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePlanRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return PlatformSuperAdmin::check($this->user());
     }
 
     public function rules(): array

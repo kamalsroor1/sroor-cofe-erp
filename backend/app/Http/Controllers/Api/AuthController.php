@@ -7,10 +7,15 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Auth\ApiLoginAction;
 use App\Actions\Auth\ApiLogoutAction;
 use App\Actions\Auth\ApiMeAction;
-use App\Actions\Auth\ApiQuickLoginAction;
+use App\Actions\Auth\ListQuickLoginUsersAction;
+use App\Actions\Auth\QuickLoginAction;
 use App\DTOs\Auth\ApiLoginDTO;
+use App\DTOs\Auth\QuickLoginDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ApiLoginRequest;
+use App\Http\Requests\Auth\QuickLoginRequest;
+use App\Http\Resources\QuickLoginUserResource;
+use App\Support\QuickLoginGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +26,8 @@ final class AuthController extends Controller
         private readonly ApiLoginAction $loginAction,
         private readonly ApiLogoutAction $logoutAction,
         private readonly ApiMeAction $meAction,
-        private readonly ApiQuickLoginAction $quickLoginAction,
+        private readonly QuickLoginAction $quickLoginAction,
+        private readonly ListQuickLoginUsersAction $listQuickLoginUsersAction,
     ) {}
 
     /**
@@ -40,7 +46,7 @@ final class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => __('auth.login_success'),
-                'data'    => $result,
+                'data' => $result,
             ], 200);
         } catch (ValidationException $e) {
             $request->hitRateLimit();
@@ -55,7 +61,7 @@ final class AuthController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => __('auth.unauthorized'),
@@ -66,7 +72,7 @@ final class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $result,
+            'data' => $result,
         ], 200);
     }
 
@@ -88,47 +94,44 @@ final class AuthController extends Controller
     }
 
     /**
-     * Get list of active workspace users for quick login selection (Guest allowed)
+     * Testing-only passwordless login (gated by QuickLoginGate + EnsureQuickLoginAllowed).
      */
-    public function workspaceUsers(Request $request): JsonResponse
+    public function quickLogin(QuickLoginRequest $request): JsonResponse
     {
-        $users = \App\Models\User::query()
-            ->where('is_active', true)
-            ->select(['id', 'name', 'phone', 'email'])
-            ->orderBy('id')
-            ->get()
-            ->map(fn ($u) => [
-                'id'    => $u->id,
-                'name'  => $u->name,
-                'login' => $u->phone ?: $u->email,
-            ]);
-
-        return response()->json([
-            'success' => true,
-            'data'    => $users,
-        ], 200);
-    }
-
-    /**
-     * Authenticate workspace user quickly without password
-     */
-    public function quickLogin(Request $request): JsonResponse
-    {
-        $request->validate([
-            'login'       => ['required', 'string'],
-            'device_name' => ['nullable', 'string'],
+        $dto = QuickLoginDTO::fromArray([
+            ...$request->validated(),
+            'device_ip' => $request->ip(),
         ]);
-
-        $result = $this->quickLoginAction->execute(
-            login: (string)$request->input('login'),
-            deviceName: (string)$request->input('device_name', 'quick-login'),
-            deviceIp: $request->ip()
-        );
 
         return response()->json([
             'success' => true,
             'message' => __('auth.login_success'),
-            'data'    => $result,
+            'data' => $this->quickLoginAction->execute($dto),
+        ], 200);
+    }
+
+    /**
+     * Testing-only picker list for quick login (id + name only).
+     */
+    public function quickLoginUsers(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => QuickLoginUserResource::collection($this->listQuickLoginUsersAction->execute())->resolve(),
+        ], 200);
+    }
+
+    /**
+     * Public: which login methods the login screen may offer.
+     */
+    public function authOptions(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'quick_login' => QuickLoginGate::allowed(),
+                'default_method' => 'password',
+            ],
         ], 200);
     }
 }

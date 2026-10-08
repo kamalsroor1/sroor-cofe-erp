@@ -2,18 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\StoreStock;
-use App\Models\Item;
 use App\Models\Customer;
-use App\Models\Supplier;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Item;
 use App\Models\Payment;
-use App\Models\Expense;
+use App\Models\Store;
+use App\Models\StoreStock;
+use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class RichDemoDataSeeder extends Seeder
 {
@@ -25,7 +24,7 @@ class RichDemoDataSeeder extends Seeder
                 'code' => 'MAIN-01',
                 'name' => 'المخزن والفرع الرئيسي - العاشر من رمضان',
                 'type' => 'main_warehouse',
-                'phone' => '01012316954',
+                'phone' => '01000000100',
                 'address' => 'المنطقة الصناعية الثالثة، العاشر من رمضان',
                 'is_active' => true,
                 'is_main' => true,
@@ -34,7 +33,7 @@ class RichDemoDataSeeder extends Seeder
                 'code' => 'BR-ZAG-02',
                 'name' => 'فرع التجزئة والمبيعات المباشرة - الزقازيق',
                 'type' => 'retail_shop',
-                'phone' => '01099887766',
+                'phone' => '01000000102',
                 'address' => 'شارع المحطة - بجوار ميدان المنتزه، الزقازيق',
                 'is_active' => true,
                 'is_main' => false,
@@ -43,7 +42,7 @@ class RichDemoDataSeeder extends Seeder
                 'code' => 'BR-MANS-03',
                 'name' => 'مطحنة وفرع تجزئة - المنصورة',
                 'type' => 'retail_shop',
-                'phone' => '01033445566',
+                'phone' => '01000000103',
                 'address' => 'شارع الجيش - أمام الجامعة، المنصورة',
                 'is_active' => true,
                 'is_main' => false,
@@ -52,7 +51,7 @@ class RichDemoDataSeeder extends Seeder
                 'code' => 'VAN-CANAL-01',
                 'name' => 'سيارة توزيع جملة 1 - خط القناة والدلتا',
                 'type' => 'wholesale_van',
-                'phone' => '01011223344',
+                'phone' => '01000000106',
                 'address' => 'خط الإسماعيلية وبورسعيد والسويس',
                 'is_active' => true,
                 'is_main' => false,
@@ -61,7 +60,7 @@ class RichDemoDataSeeder extends Seeder
                 'code' => 'VAN-CAIRO-02',
                 'name' => 'سيارة توزيع جملة 2 - القاهرة الكبرى',
                 'type' => 'wholesale_van',
-                'phone' => '01077889900',
+                'phone' => '01000000107',
                 'address' => 'خط التجمع والمعادي وشبرا',
                 'is_active' => true,
                 'is_main' => false,
@@ -248,7 +247,7 @@ class RichDemoDataSeeder extends Seeder
         $customers = [
             [
                 'name' => 'مطاحن بن الأندلس - كفر الشيخ',
-                'phone' => '01099881122',
+                'phone' => '01000000117',
                 'address' => 'شارع الخليفة المأمون، كفر الشيخ',
                 'tax_number' => 'TR-44589',
                 'current_balance' => '32500.000',
@@ -257,7 +256,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'name' => 'كافيه ومحمصة البارون - التجمع الخامس',
-                'phone' => '01122334455',
+                'phone' => '01000000104',
                 'address' => 'شارع التسعين الشمالي، القاهرة الجديدة',
                 'tax_number' => 'TR-99214',
                 'current_balance' => '14200.000',
@@ -266,7 +265,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'name' => 'محمصة الشرق الذهبية - طنطا',
-                'phone' => '01233445566',
+                'phone' => '01000000118',
                 'address' => 'شارع البحر، طنطا',
                 'tax_number' => 'TR-33120',
                 'current_balance' => '21000.000',
@@ -275,7 +274,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'name' => 'قهوة المعلم رجب التراثية - شبرا',
-                'phone' => '01055667788',
+                'phone' => '01000000119',
                 'address' => 'شارع شبرا مصر، القاهرة',
                 'tax_number' => null,
                 'current_balance' => '4800.000',
@@ -284,7 +283,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'name' => 'سوبر ماركت خير زمان - فرع الزقازيق',
-                'phone' => '01066778899',
+                'phone' => '01000000120',
                 'address' => 'شارع طلبة عويضة، الزقازيق',
                 'tax_number' => 'TR-11450',
                 'current_balance' => '8500.000',
@@ -293,7 +292,7 @@ class RichDemoDataSeeder extends Seeder
             ],
             [
                 'name' => 'مطعم وكافيه لافازا - الإسماعيلية',
-                'phone' => '01011447788',
+                'phone' => '01000000121',
                 'address' => 'نمرة 6، الإسماعيلية',
                 'tax_number' => null,
                 'current_balance' => '6200.000',
@@ -321,7 +320,7 @@ class RichDemoDataSeeder extends Seeder
             [
                 'name' => 'شركة النيل الدولية لتجارة واستيراد البن الأخضر',
                 'company_name' => 'شركة النيل الدولية للبن',
-                'phone' => '01001234567',
+                'phone' => '01000000108',
                 'address' => 'ميناء الإسكندرية - المنطقة الحرة',
                 'current_balance' => '85000.000',
                 'is_active' => true,
@@ -339,7 +338,7 @@ class RichDemoDataSeeder extends Seeder
             [
                 'name' => 'المؤسسة الهندية الدولية للتوابل والحبهان',
                 'company_name' => 'المؤسسة الهندية',
-                'phone' => '01223344556',
+                'phone' => '01000000136',
                 'address' => 'العتبة - شارع الجيش، القاهرة',
                 'current_balance' => '18500.000',
                 'is_active' => true,
@@ -348,7 +347,7 @@ class RichDemoDataSeeder extends Seeder
             [
                 'name' => 'مصنع المتحدة للتغليف وصمامات حفظ القهوة',
                 'company_name' => 'المتحدة للتغليف',
-                'phone' => '01144556677',
+                'phone' => '01000000115',
                 'address' => 'مدينة بدر الصناعية',
                 'current_balance' => '9400.000',
                 'is_active' => true,
@@ -377,11 +376,11 @@ class RichDemoDataSeeder extends Seeder
 
             $qty1 = '10.000';
             $price1 = $item1->selling_price;
-            $line1Total = bcmul($qty1, (string)$price1, 3);
+            $line1Total = bcmul($qty1, (string) $price1, 3);
 
             $qty2 = '5.000';
             $price2 = $item2->selling_price;
-            $line2Total = bcmul($qty2, (string)$price2, 3);
+            $line2Total = bcmul($qty2, (string) $price2, 3);
 
             $subtotal = bcadd($line1Total, $line2Total, 3);
             $discount = '50.000';
@@ -389,7 +388,7 @@ class RichDemoDataSeeder extends Seeder
             $paid = $idx === 0 ? $netTotal : bcmul($netTotal, '0.6', 3);
             $remaining = bcsub($netTotal, $paid, 3);
 
-            $invNumber = 'INV-' . strtoupper($store->code) . '-' . str_replace('-', '', $invDate) . '-' . strtoupper(substr(uniqid(), -4));
+            $invNumber = 'INV-'.strtoupper($store->code).'-'.str_replace('-', '', $invDate).'-'.strtoupper(substr(uniqid(), -4));
 
             $inv = Invoice::firstOrCreate(['invoice_number' => $invNumber], [
                 'customer_id' => $cust->id,
@@ -406,7 +405,7 @@ class RichDemoDataSeeder extends Seeder
                 'net_total' => $netTotal,
                 'paid_amount' => $paid,
                 'remaining_amount' => $remaining,
-                'total_cost' => bcadd(bcmul($qty1, (string)$item1->cost_price, 3), bcmul($qty2, (string)$item2->cost_price, 3), 3),
+                'total_cost' => bcadd(bcmul($qty1, (string) $item1->cost_price, 3), bcmul($qty2, (string) $item2->cost_price, 3), 3),
                 'notes' => 'فاتورة مبيعات توريد خامات بن مطاحن',
             ]);
 
@@ -430,7 +429,7 @@ class RichDemoDataSeeder extends Seeder
         }
 
         // 6. Payment Vouchers (Receipts & Disbursements)
-        Payment::firstOrCreate(['payment_number' => 'PAY-RCV-2026-' . strtoupper(substr(uniqid(), -4))], [
+        Payment::firstOrCreate(['payment_number' => 'PAY-RCV-2026-'.strtoupper(substr(uniqid(), -4))], [
             'customer_id' => $customerModels[0]->id,
             'supplier_id' => null,
             'user_id' => 1,
@@ -440,7 +439,7 @@ class RichDemoDataSeeder extends Seeder
             'notes' => 'تحصيل نقدي دفعة من حساب مطاحن الأندلس',
         ]);
 
-        Payment::firstOrCreate(['payment_number' => 'PAY-RCV-2026-' . strtoupper(substr(uniqid(), -4))], [
+        Payment::firstOrCreate(['payment_number' => 'PAY-RCV-2026-'.strtoupper(substr(uniqid(), -4))], [
             'customer_id' => $customerModels[1]->id,
             'supplier_id' => null,
             'user_id' => 1,
@@ -450,7 +449,7 @@ class RichDemoDataSeeder extends Seeder
             'notes' => 'تحويل بنكي من كافيه البارون',
         ]);
 
-        Payment::firstOrCreate(['payment_number' => 'PAY-DSP-2026-' . strtoupper(substr(uniqid(), -4))], [
+        Payment::firstOrCreate(['payment_number' => 'PAY-DSP-2026-'.strtoupper(substr(uniqid(), -4))], [
             'customer_id' => null,
             'supplier_id' => $supplierModels[0]->id,
             'user_id' => 1,
@@ -460,7 +459,7 @@ class RichDemoDataSeeder extends Seeder
             'notes' => 'سداد دفعة نقدية لشركة النيل لاستيراد البن',
         ]);
 
-        Payment::firstOrCreate(['payment_number' => 'PAY-DSP-2026-' . strtoupper(substr(uniqid(), -4))], [
+        Payment::firstOrCreate(['payment_number' => 'PAY-DSP-2026-'.strtoupper(substr(uniqid(), -4))], [
             'customer_id' => null,
             'supplier_id' => $supplierModels[2]->id,
             'user_id' => 1,
@@ -473,26 +472,26 @@ class RichDemoDataSeeder extends Seeder
         // 7. Operational Expenses
         Expense::create([
             'expense_number' => 'EXP-2026-001',
-            'category'       => 'صيانة وتشغيل',
-            'user_id'        => 1,
-            'store_id'       => $storeModels[0]->id,
-            'amount'         => '1200.000',
-            'expense_date'   => now()->toDateString(),
+            'category' => 'صيانة وتشغيل',
+            'user_id' => 1,
+            'store_id' => $storeModels[0]->id,
+            'amount' => '1200.000',
+            'expense_date' => now()->toDateString(),
             'payment_method' => 'cash',
-            'title'          => 'صيانة ماكينة تحميص البن الهوائية وتغيير فلاتر',
-            'notes'          => 'صيانة دورية للمحمص الرئيسي',
+            'title' => 'صيانة ماكينة تحميص البن الهوائية وتغيير فلاتر',
+            'notes' => 'صيانة دورية للمحمص الرئيسي',
         ]);
 
         Expense::create([
             'expense_number' => 'EXP-2026-002',
-            'category'       => 'نقل ومحروقات',
-            'user_id'        => 1,
-            'store_id'       => $storeModels[3]->id,
-            'amount'         => '650.000',
-            'expense_date'   => now()->toDateString(),
+            'category' => 'نقل ومحروقات',
+            'user_id' => 1,
+            'store_id' => $storeModels[3]->id,
+            'amount' => '650.000',
+            'expense_date' => now()->toDateString(),
             'payment_method' => 'cash',
-            'title'          => 'سولار وبنزين سيارة توزيع الجملة 1 (خط القناة)',
-            'notes'          => 'تفويلة سولار خط الإسماعيلية وبورسعيد',
+            'title' => 'سولار وبنزين سيارة توزيع الجملة 1 (خط القناة)',
+            'notes' => 'تفويلة سولار خط الإسماعيلية وبورسعيد',
         ]);
     }
 }

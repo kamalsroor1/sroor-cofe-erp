@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Actions\Auth;
 
 use App\Http\Resources\UserResource;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\Setting;
 use App\Models\CashShift;
+use App\Models\Setting;
+use App\Models\Store;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 final class ApiMeAction
@@ -23,10 +23,10 @@ final class ApiMeAction
         $activeStore = null;
         $storeHeader = $request->header('X-Store-Id');
         if ($storeHeader && is_numeric($storeHeader)) {
-            $activeStore = Store::where('id', (int)$storeHeader)->where('is_active', true)->first();
+            $activeStore = Store::where('id', (int) $storeHeader)->where('is_active', true)->first();
         }
 
-        if (!$activeStore) {
+        if (! $activeStore) {
             $activeStore = $user->getCurrentStore();
         }
 
@@ -45,24 +45,24 @@ final class ApiMeAction
         return [
             'user' => (new UserResource($user))->resolve(),
             'store' => $activeStore ? [
-                'id'      => $activeStore->id,
-                'name'    => $activeStore->name,
-                'code'    => $activeStore->code,
-                'type'    => $activeStore->type,
-                'is_main' => (bool)$activeStore->is_main,
+                'id' => $activeStore->id,
+                'name' => $activeStore->name,
+                'code' => $activeStore->code,
+                'type' => $activeStore->type,
+                'is_main' => (bool) $activeStore->is_main,
             ] : null,
             'stores' => $userStores,
             'active_shift' => $activeShift ? [
-                'id'                   => $activeShift->id,
-                'shift_number'         => $activeShift->shift_number ?? $activeShift->id,
-                'opened_at'            => $activeShift->opened_at,
-                'opening_cash_balance' => (float)$activeShift->opening_cash_balance,
+                'id' => $activeShift->id,
+                'shift_number' => $activeShift->shift_number ?? $activeShift->id,
+                'opened_at' => $activeShift->opened_at,
+                'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
             ] : null,
             'system' => [
-                'company_name'     => Setting::get('company_name') ?: (function_exists('tenant') && tenant('name') ? tenant('name') : 'مؤسسة تجارية'),
+                'company_name' => Setting::get('company_name') ?: (function_exists('tenant') && tenant('name') ? tenant('name') : __('auth.default_company_name')),
                 'company_subtitle' => Setting::get('company_subtitle') ?: '',
-                'system_theme'     => Setting::get('system_theme_color', 'emerald'),
-                'server_time'      => now()->toDateTimeString(),
+                'system_theme' => Setting::get('system_theme_color', 'emerald'),
+                'server_time' => now()->toDateTimeString(),
             ],
         ];
     }

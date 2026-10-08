@@ -30,8 +30,12 @@ export function useNativeBridge() {
         } catch (e) {
             // Web browser fallback
             isOnline.value = navigator.onLine;
-            window.addEventListener('online', () => { isOnline.value = true; });
-            window.addEventListener('offline', () => { isOnline.value = false; });
+            window.addEventListener('online', () => {
+                isOnline.value = true;
+            });
+            window.addEventListener('offline', () => {
+                isOnline.value = false;
+            });
         }
     });
 
@@ -57,7 +61,7 @@ export function useNativeBridge() {
                 }
             } else if (typeof navigator !== 'undefined' && navigator.vibrate) {
                 // Web Vibration API fallback
-                const duration = type === 'heavy' ? 80 : (type === 'medium' ? 40 : 20);
+                const duration = type === 'heavy' ? 80 : type === 'medium' ? 40 : 20;
                 navigator.vibrate(duration);
             }
         } catch (e) {
@@ -113,7 +117,7 @@ export function useNativeBridge() {
                 return await window.BluetoothPrinter.printReceipt(invoiceData);
             }
             // Standard web window.print fallback
-            window.open(`/invoices/${invoiceData.id || invoiceData}/print-thermal`, '_blank');
+            window.open(`/invoices/${invoiceData.id || invoiceData}/print?autoprint=true`, '_blank');
         } catch (e) {
             console.error('Thermal print error:', e);
         }

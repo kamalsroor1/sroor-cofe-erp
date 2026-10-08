@@ -63,9 +63,11 @@ return [
     'login_failed_log' => 'Failed Super Admin login attempt with identifier [:identifier]',
     'unauthorized_attempt_log' => 'Unauthorized Super Admin access attempt by user [:user]',
     'login_success_log' => 'Successful Super Admin login for user [:user]',
+    'telescope_link_issued_log' => 'Temporary monitoring dashboard (Telescope) access link issued for user [:user]',
     'plan_upgrade_required' => 'This feature requires a plan upgrade',
     'upgrade_now' => 'Upgrade Now',
     'app_versions' => 'App Releases (APK)',
+    'nav_telescope' => 'System monitor (Telescope)',
     'platform_admin' => 'Platform Admin',
     'logout_title' => 'Logout from Super Admin Console',
     'super_admin_title' => 'Super Admin Console (Central Platform Management)',
@@ -189,7 +191,7 @@ return [
     'multi_db_engine_desc' => 'Instant schema provisioning per tenant workspace.',
     'multi_db_arch_title' => 'Multi-Database Architecture',
     'multi_db_arch_desc' => 'Isolated tenant databases provisioned instantly with zero cross-tenant contamination.',
-    
+
     // Platform Settings & Whitelabel
     'platform_settings_title' => 'Platform Whitelabel & Branding',
     'platform_settings_subtitle' => 'Change platform & project name, subtitle, and support contacts reflected system-wide across all views and apps',
@@ -239,6 +241,7 @@ return [
     'delete_tenant_confirm_title' => 'Permanently Delete Tenant?',
     'delete_tenant_confirm_desc' => 'The organization (:name) and all its domains will be deleted. Cannot be undone!',
     'delete_tenant_confirm_btn' => 'Yes, Delete Tenant',
+    'tenant_delete_disabled' => 'Tenant deletion is temporarily disabled — suspend the tenant instead',
     'units_page_title' => 'System Units of Measurement',
     'units_page_subtitle' => 'Define and manage standard measurement units available across all tenants',
     'active_units_count' => 'Currently Active System Units (:count)',

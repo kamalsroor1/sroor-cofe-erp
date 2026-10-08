@@ -11,80 +11,94 @@ use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Stancl\Tenancy\Events\CreatingDatabase;
+use Stancl\Tenancy\Events\DatabaseCreated;
+use Stancl\Tenancy\Events\DatabaseMigrated;
+use Stancl\Tenancy\Events\MigratingDatabase;
+use Stancl\Tenancy\Events\TenantCreated;
+use Tests\Concerns\SeedsCentralPlatformRoles;
 use Tests\TestCase;
 
 class SuperAdminApiTest extends TestCase
 {
     use RefreshDatabase;
+    use SeedsCentralPlatformRoles;
 
     protected User $superAdminUser;
+
     protected string $superAdminToken;
+
     protected User $unauthorizedUser;
+
     protected string $unauthorizedToken;
+
     protected Plan $plan;
+
     protected Store $store;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        \Illuminate\Support\Facades\Event::fake([
-            \Stancl\Tenancy\Events\TenantCreated::class,
-            \Stancl\Tenancy\Events\CreatingDatabase::class,
-            \Stancl\Tenancy\Events\DatabaseCreated::class,
-            \Stancl\Tenancy\Events\MigratingDatabase::class,
-            \Stancl\Tenancy\Events\DatabaseMigrated::class,
+        Event::fake([
+            TenantCreated::class,
+            CreatingDatabase::class,
+            DatabaseCreated::class,
+            MigratingDatabase::class,
+            DatabaseMigrated::class,
         ]);
 
         $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
         $this->seed(PermissionsSeeder::class);
 
-        $superRole = Role::findByName('super_admin');
+        // super_admin is a CENTRAL role; it must not depend on the tenant PermissionsSeeder.
+        $superRole = $this->seedCentralPlatformRoles();
 
         $this->store = Store::create([
-            'name'      => 'المحمصة المركزية',
-            'code'      => 'CENTRAL-01',
-            'type'      => 'retail',
-            'is_main'   => true,
+            'name' => 'المحمصة المركزية',
+            'code' => 'CENTRAL-01',
+            'type' => 'retail',
+            'is_main' => true,
             'is_active' => true,
         ]);
 
         $this->superAdminUser = User::factory()->create([
-            'name'             => 'سوبر أدمن المنصة',
-            'phone'            => '01000000001',
-            'email'            => 'superadmin@sroor.com',
-            'password'         => Hash::make('password123'),
-            'is_active'        => true,
+            'name' => 'سوبر أدمن المنصة',
+            'phone' => '01000000001',
+            'email' => 'superadmin@sroor.com',
+            'password' => Hash::make('password123'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->superAdminUser->assignRole($superRole);
         $this->superAdminToken = $this->superAdminUser->createToken('super-admin-token')->plainTextToken;
 
         $this->unauthorizedUser = User::factory()->create([
-            'name'             => 'مستخدم عادي',
-            'phone'            => '01000000000',
-            'email'            => 'user@sroor.com',
-            'password'         => Hash::make('password123'),
-            'is_active'        => true,
+            'name' => 'مستخدم عادي',
+            'phone' => '01000000000',
+            'email' => 'user@sroor.com',
+            'password' => Hash::make('password123'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
 
         $this->plan = Plan::create([
-            'name'                   => 'باقة المحامص الاحترافية',
-            'slug'                   => 'pro-roastery',
-            'price_monthly'          => '500.000',
-            'price_yearly'           => '5000.000',
-            'max_users'              => 10,
-            'max_stores'             => 3,
-            'max_items'              => 500,
+            'name' => 'باقة المحامص الاحترافية',
+            'slug' => 'pro-roastery',
+            'price_monthly' => '500.000',
+            'price_yearly' => '5000.000',
+            'max_users' => 10,
+            'max_stores' => 3,
+            'max_items' => 500,
             'max_invoices_per_month' => 5000,
-            'is_active'              => true,
-            'is_popular'             => true,
-            'sort_order'             => 1,
-            'features'               => ['coffee_blender' => true, 'smart_reorder' => true],
+            'is_active' => true,
+            'is_popular' => true,
+            'sort_order' => 1,
+            'features' => ['coffee_blender' => true, 'smart_reorder' => true],
         ]);
     }
 
@@ -96,7 +110,7 @@ class SuperAdminApiTest extends TestCase
 
     public function test_unauthorized_user_cannot_access_super_admin(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
             ->getJson('/api/v1/super-admin/dashboard');
 
         $response->assertStatus(403);
@@ -104,7 +118,7 @@ class SuperAdminApiTest extends TestCase
 
     public function test_can_get_super_admin_dashboard_metrics(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->getJson('/api/v1/super-admin/dashboard');
 
         $response->assertStatus(200)
@@ -114,7 +128,7 @@ class SuperAdminApiTest extends TestCase
 
     public function test_can_get_tenants_and_provision_new_tenant(): void
     {
-        $getResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $getResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->getJson('/api/v1/super-admin/tenants');
 
         $getResponse->assertStatus(200)
@@ -122,30 +136,30 @@ class SuperAdminApiTest extends TestCase
             ->assertJsonStructure(['plans', 'tenants']);
 
         $payload = [
-            'name'       => 'محمصة وادي البن',
-            'slug'       => 'wadi-elbon',
-            'email'      => 'wadi@elbon.com',
-            'phone'      => '01011112222',
-            'password'   => 'secret1234',
-            'plan_id'    => $this->plan->id,
+            'name' => 'محمصة وادي البن',
+            'slug' => 'wadi-elbon',
+            'email' => 'wadi@elbon.com',
+            'phone' => '01000007002',
+            'password' => 'secret1234',
+            'plan_id' => $this->plan->id,
             'trial_days' => 14,
         ];
 
-        $postResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $postResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->postJson('/api/v1/super-admin/tenants', $payload);
 
         $postResponse->assertStatus(201)
             ->assertJson(['success' => true]);
 
         $this->assertDatabaseHas('tenants', [
-            'slug'  => 'wadi-elbon',
+            'slug' => 'wadi-elbon',
             'email' => 'wadi@elbon.com',
         ]);
     }
 
     public function test_store_tenant_fails_validation_on_missing_fields(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->postJson('/api/v1/super-admin/tenants', [
                 'name' => '',
             ]);
@@ -157,18 +171,18 @@ class SuperAdminApiTest extends TestCase
     public function test_can_toggle_tenant_status_and_override_feature(): void
     {
         $tenant = Tenant::create([
-            'id'      => 'test-tenant-01',
-            'name'    => 'مطاحن الفخامة',
-            'slug'    => 'fakhamah-roast',
-            'email'   => 'fakhamah@roast.com',
+            'id' => 'test-tenant-01',
+            'name' => 'مطاحن الفخامة',
+            'slug' => 'fakhamah-roast',
+            'email' => 'fakhamah@roast.com',
             'plan_id' => $this->plan->id,
-            'status'  => 'active',
+            'status' => 'active',
         ]);
 
         // Toggle Status
-        $statusResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $statusResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->postJson("/api/v1/super-admin/tenants/{$tenant->id}/toggle-status", [
-                'status'      => 'suspended',
+                'status' => 'suspended',
                 'extend_days' => 0,
             ]);
 
@@ -178,7 +192,7 @@ class SuperAdminApiTest extends TestCase
         $this->assertEquals('suspended', $tenant->fresh()->status);
 
         // Override Feature
-        $featureResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $featureResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->postJson("/api/v1/super-admin/tenants/{$tenant->id}/override-feature", [
                 'feature_key' => 'custom_branding',
             ]);
@@ -189,26 +203,26 @@ class SuperAdminApiTest extends TestCase
 
     public function test_can_get_plans_and_update_plan(): void
     {
-        $getResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $getResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->getJson('/api/v1/super-admin/plans');
 
         $getResponse->assertStatus(200)
             ->assertJson(['success' => true]);
 
         $updatePayload = [
-            'name'                   => 'باقة المحامص الذهبية المطورة',
-            'price_monthly'          => 750.00,
-            'price_yearly'           => 7500.00,
-            'max_users'              => 20,
-            'max_stores'             => 5,
-            'max_items'              => 1000,
+            'name' => 'باقة المحامص الذهبية المطورة',
+            'price_monthly' => 750.00,
+            'price_yearly' => 7500.00,
+            'max_users' => 20,
+            'max_stores' => 5,
+            'max_items' => 1000,
             'max_invoices_per_month' => 10000,
-            'is_active'              => true,
-            'is_popular'             => true,
-            'features'               => ['coffee_blender' => true, 'smart_reorder' => true, 'pos_offline' => true],
+            'is_active' => true,
+            'is_popular' => true,
+            'features' => ['coffee_blender' => true, 'smart_reorder' => true, 'pos_offline' => true],
         ];
 
-        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $updateResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $updatePayload);
 
         $updateResponse->assertStatus(200)
@@ -220,24 +234,24 @@ class SuperAdminApiTest extends TestCase
 
     public function test_can_get_and_update_platform_settings(): void
     {
-        $getResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $getResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->getJson('/api/v1/super-admin/settings');
 
         $getResponse->assertStatus(200)
             ->assertJson(['success' => true]);
 
-        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $updateResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->postJson('/api/v1/super-admin/settings', [
-                'platform_name'     => 'منظومة سرور كلاود ERP',
+                'platform_name' => 'منظومة سرور كلاود ERP',
                 'platform_subtitle' => 'المنصة السحابية الموحدة للمحامص والمقاهي',
-                'support_email'     => 'support@sroor-erp.com',
-                'support_phone'     => '01012316954',
+                'support_email' => 'support@sroor-erp.com',
+                'support_phone' => self::ADMIN_PHONE,
             ]);
 
         $updateResponse->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'platform_name' => 'منظومة سرور كلاود ERP',
                 ],
             ]);
@@ -247,14 +261,14 @@ class SuperAdminApiTest extends TestCase
 
     public function test_can_get_and_update_system_units(): void
     {
-        $getResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $getResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->getJson('/api/v1/super-admin/units');
 
         $getResponse->assertStatus(200)
             ->assertJson(['success' => true])
             ->assertJsonStructure(['units']);
 
-        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . $this->superAdminToken)
+        $updateResponse = $this->withHeader('Authorization', 'Bearer '.$this->superAdminToken)
             ->postJson('/api/v1/super-admin/units', [
                 'units' => ['كجم', 'جرام', 'شيكارة', 'علبة', 'طرد', 'دستة', 'باكت'],
             ]);

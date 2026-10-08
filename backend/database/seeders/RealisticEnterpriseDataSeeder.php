@@ -2,40 +2,48 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\StoreStock;
+use App\Models\ActivityLog;
+use App\Models\CashShift;
 use App\Models\Category;
-use App\Models\Item;
 use App\Models\Customer;
-use App\Models\Supplier;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Item;
+use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
-use App\Models\Payment;
-use App\Models\Expense;
-use App\Models\CashShift;
-use App\Models\StockTransfer;
-use App\Models\StockTransferItem;
 use App\Models\ReturnDocument;
 use App\Models\ReturnItem;
 use App\Models\StockMovement;
-use App\Models\ActivityLog;
+use App\Models\StockTransfer;
+use App\Models\StockTransferItem;
+use App\Models\Store;
+use App\Models\StoreStock;
+use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class RealisticEnterpriseDataSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::transaction(function () {
-            $user = User::first() ?? User::create([
-                'name' => 'المدير العام',
-                'email' => 'admin@demo.com',
-                'password' => bcrypt('password'),
-            ]);
+        $generatedPassword = null;
+
+        DB::transaction(function () use (&$generatedPassword) {
+            $user = User::first();
+            if ($user === null) {
+                $generatedPassword = Str::password(16);
+                $user = User::create([
+                    'name' => 'المدير العام',
+                    'email' => 'admin@demo.com',
+                    'password' => Hash::make($generatedPassword),
+                ]);
+            }
 
             // =========================================================================
             // 1. STORES & BRANCHES (الفروع والمخازن وسيارات التوزيع)
@@ -45,7 +53,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'MAIN-10TH',
                     'name' => 'المخزن والفرع الرئيسي - العاشر من رمضان',
                     'type' => 'main_warehouse',
-                    'phone' => '01012316954',
+                    'phone' => '01000000100',
                     'address' => 'المنطقة الصناعية الثالثة B4، العاشر من رمضان',
                     'is_active' => true,
                     'is_main' => true,
@@ -54,7 +62,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'BR-ZAG-01',
                     'name' => 'فرع التجزئة والمبيعات المباشرة - الزقازيق',
                     'type' => 'retail_shop',
-                    'phone' => '01099887766',
+                    'phone' => '01000000102',
                     'address' => 'شارع المحطة - بجوار ميدان المنتزه، الزقازيق',
                     'is_active' => true,
                     'is_main' => false,
@@ -63,7 +71,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'BR-MANS-02',
                     'name' => 'مطحنة وفرع تجزئة - المنصورة',
                     'type' => 'retail_shop',
-                    'phone' => '01033445566',
+                    'phone' => '01000000103',
                     'address' => 'شارع الجيش - أمام بوابة الجامعة، المنصورة',
                     'is_active' => true,
                     'is_main' => false,
@@ -72,7 +80,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'BR-TAG-03',
                     'name' => 'فرع كافيه ومطحنة - التجمع الخامس',
                     'type' => 'retail_shop',
-                    'phone' => '01122334455',
+                    'phone' => '01000000104',
                     'address' => 'مجمع البنوك - شارع التسعين الشمالي، التجمع الخامس',
                     'is_active' => true,
                     'is_main' => false,
@@ -81,7 +89,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'BR-MAADI-04',
                     'name' => 'فرع ومحمصة المعادي - دجلة',
                     'type' => 'retail_shop',
-                    'phone' => '01088776655',
+                    'phone' => '01000000105',
                     'address' => 'شارع 233 - دجلة، المعادي، القاهرة',
                     'is_active' => true,
                     'is_main' => false,
@@ -90,7 +98,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'VAN-DELTA-01',
                     'name' => 'سيارة توزيع جملة 1 - خط الدلتا والقناة',
                     'type' => 'wholesale_van',
-                    'phone' => '01011223344',
+                    'phone' => '01000000106',
                     'address' => 'خط الإسماعيلية، بورسعيد، السويس، والشرقية',
                     'is_active' => true,
                     'is_main' => false,
@@ -99,7 +107,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     'code' => 'VAN-CAIRO-02',
                     'name' => 'سيارة توزيع جملة 2 - القاهرة الكبرى والجيزة',
                     'type' => 'wholesale_van',
-                    'phone' => '01077889900',
+                    'phone' => '01000000107',
                     'address' => 'خط التجمع، المعادي، الشيخ زايد، ووسط البلد',
                     'is_active' => true,
                     'is_main' => false,
@@ -218,15 +226,15 @@ class RealisticEnterpriseDataSeeder extends Seeder
             // 4. SUPPLIERS (الموردون وشركات الاستيراد والتجهيزات)
             // =========================================================================
             $suppliersData = [
-                ['name' => 'شركة الأهرام الدولية لاستيراد البن الأخضر', 'company_name' => 'الأهرام كوفي تريدينج', 'phone' => '01001234567', 'address' => 'المنطقة الحرة، الإسكندرية', 'current_balance' => '185000.000'],
-                ['name' => 'مجموعة البستاني لتجارة وتوزيع البن الإفريقي', 'company_name' => 'البستاني كوفي جروب', 'phone' => '01007654321', 'address' => 'ميناء بورسعيد، المنطقة اللوجستية', 'current_balance' => '142000.000'],
-                ['name' => 'الشركة المتحدة لاستيراد البن الهندي والإندونيسي', 'company_name' => 'يونايتد كوفي إمبورت', 'phone' => '01221144778', 'address' => 'مدينة نصر - المنطقة الحرة، القاهرة', 'current_balance' => '96000.000'],
-                ['name' => 'مطاحن وتجهيزات الشرق الأوسط للماكينات', 'company_name' => 'ميدل إيست روسترز', 'phone' => '01112233990', 'address' => 'العاشر من رمضان - المنطقة الصناعية A1', 'current_balance' => '45000.000'],
-                ['name' => 'مصنع النصر للكرتون والأكياس والتعبئة', 'company_name' => 'النصر باك', 'phone' => '01556677889', 'address' => 'مدينة العبور - المنطقة الصناعية الثانية', 'current_balance' => '28000.000'],
-                ['name' => 'شركة مصر للمحاصيل والتوابل والبهارات', 'company_name' => 'مصر للتوابل والمحوجات', 'phone' => '01099883344', 'address' => 'سوق الجملة للحبوب والتوابل، طنطا', 'current_balance' => '54000.000'],
-                ['name' => 'الفيروز لمنتجات الألبان ومكملات المشروبات', 'company_name' => 'الفيروز ديري فودز', 'phone' => '01288776655', 'address' => 'مدينة السادات الصناعية', 'current_balance' => '18500.000'],
-                ['name' => 'الشركة السويسرية لصوصات وسيروب الكافيهات', 'company_name' => 'سويس سيروبس إيجيبت', 'phone' => '01144556677', 'address' => 'القرية الذكية - طريق مصر إسكندرية الصحراوي', 'current_balance' => '32000.000'],
-                ['name' => 'الرواد لقطع غيار ماكينات الإسبريسو والمطاحن', 'company_name' => 'الرواد تكنولوجي سبيرز', 'phone' => '01012398745', 'address' => 'شارع رمسيس - وسط البلد، القاهرة', 'current_balance' => '12500.000'],
+                ['name' => 'شركة الأهرام الدولية لاستيراد البن الأخضر', 'company_name' => 'الأهرام كوفي تريدينج', 'phone' => '01000000108', 'address' => 'المنطقة الحرة، الإسكندرية', 'current_balance' => '185000.000'],
+                ['name' => 'مجموعة البستاني لتجارة وتوزيع البن الإفريقي', 'company_name' => 'البستاني كوفي جروب', 'phone' => '01000000109', 'address' => 'ميناء بورسعيد، المنطقة اللوجستية', 'current_balance' => '142000.000'],
+                ['name' => 'الشركة المتحدة لاستيراد البن الهندي والإندونيسي', 'company_name' => 'يونايتد كوفي إمبورت', 'phone' => '01000000110', 'address' => 'مدينة نصر - المنطقة الحرة، القاهرة', 'current_balance' => '96000.000'],
+                ['name' => 'مطاحن وتجهيزات الشرق الأوسط للماكينات', 'company_name' => 'ميدل إيست روسترز', 'phone' => '01000000111', 'address' => 'العاشر من رمضان - المنطقة الصناعية A1', 'current_balance' => '45000.000'],
+                ['name' => 'مصنع النصر للكرتون والأكياس والتعبئة', 'company_name' => 'النصر باك', 'phone' => '01000000112', 'address' => 'مدينة العبور - المنطقة الصناعية الثانية', 'current_balance' => '28000.000'],
+                ['name' => 'شركة مصر للمحاصيل والتوابل والبهارات', 'company_name' => 'مصر للتوابل والمحوجات', 'phone' => '01000000113', 'address' => 'سوق الجملة للحبوب والتوابل، طنطا', 'current_balance' => '54000.000'],
+                ['name' => 'الفيروز لمنتجات الألبان ومكملات المشروبات', 'company_name' => 'الفيروز ديري فودز', 'phone' => '01000000114', 'address' => 'مدينة السادات الصناعية', 'current_balance' => '18500.000'],
+                ['name' => 'الشركة السويسرية لصوصات وسيروب الكافيهات', 'company_name' => 'سويس سيروبس إيجيبت', 'phone' => '01000000115', 'address' => 'القرية الذكية - طريق مصر إسكندرية الصحراوي', 'current_balance' => '32000.000'],
+                ['name' => 'الرواد لقطع غيار ماكينات الإسبريسو والمطاحن', 'company_name' => 'الرواد تكنولوجي سبيرز', 'phone' => '01000000116', 'address' => 'شارع رمسيس - وسط البلد، القاهرة', 'current_balance' => '12500.000'],
                 ['name' => 'العروبة لتجارة الشاي والأعشاب الطبيعية الفاخرة', 'company_name' => 'العروبة هيربس آند تي', 'phone' => '01234567890', 'address' => 'شارع المعز - القاهرة الفاطمية', 'current_balance' => '22000.000'],
             ];
 
@@ -252,26 +260,26 @@ class RealisticEnterpriseDataSeeder extends Seeder
             );
 
             $customersData = [
-                ['name' => 'مطاحن ومحمصة الأندلس الكبرى', 'phone' => '01099881122', 'address' => 'شارع الخليفة المأمون، كفر الشيخ', 'tax_number' => 'TR-44589', 'price_tier' => 'wholesale', 'current_balance' => '42500.000'],
-                ['name' => 'كافيه ومحمصة البارون - التجمع الخامس', 'phone' => '01122334455', 'address' => 'شارع التسعين الشمالي، القاهرة الجديدة', 'tax_number' => 'TR-99214', 'price_tier' => 'special', 'current_balance' => '18400.000'],
-                ['name' => 'محمصة الشرق الذهبية - طنطا', 'phone' => '01233445566', 'address' => 'شارع البحر، طنطا', 'tax_number' => 'TR-33120', 'price_tier' => 'wholesale', 'current_balance' => '26500.000'],
-                ['name' => 'سلسلة كافيهات أروما لاونج (5 فروع)', 'phone' => '01055667788', 'address' => 'شارع الثورة - مصر الجديدة، القاهرة', 'tax_number' => 'TR-77890', 'price_tier' => 'wholesale', 'current_balance' => '58000.000'],
-                ['name' => 'قهوة ومقهى المعلم رجب التراثي', 'phone' => '01066778899', 'address' => 'شارع شبرا مصر - دوران شبرا', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '5200.000'],
-                ['name' => 'سوبر ماركت خير زمان - فرع الزقازيق', 'phone' => '01011447788', 'address' => 'شارع طلبة عويضة، الزقازيق', 'tax_number' => 'TR-11450', 'price_tier' => 'wholesale', 'current_balance' => '14200.000'],
-                ['name' => 'مطعم وكافيه دي روما - الإسماعيلية', 'phone' => '01022338899', 'address' => 'شارع محمد علي - نمرة 6، الإسماعيلية', 'tax_number' => 'TR-66120', 'price_tier' => 'special', 'current_balance' => '8900.000'],
-                ['name' => 'كافيه باريستا هب - المعادي', 'phone' => '01155661122', 'address' => 'شارع 9 - المعادي، القاهرة', 'tax_number' => 'TR-88190', 'price_tier' => 'special', 'current_balance' => '12600.000'],
-                ['name' => 'محمصة وبن السلطان - المنصورة', 'phone' => '01277889944', 'address' => 'شارع المشاية السفلية، المنصورة', 'tax_number' => 'TR-22340', 'price_tier' => 'wholesale', 'current_balance' => '31000.000'],
-                ['name' => 'هايبر ماركت المحلاوي - فرع العاشر', 'phone' => '01066554433', 'address' => 'المجاورة السادسة - سنتر الأردنية، العاشر', 'tax_number' => 'TR-55410', 'price_tier' => 'wholesale', 'current_balance' => '22500.000'],
-                ['name' => 'كافيه جاردن فيو - نادي الصيد', 'phone' => '01033221199', 'address' => 'نادي الصيد - الدقي، الجيزة', 'tax_number' => null, 'price_tier' => 'special', 'current_balance' => '9400.000'],
-                ['name' => 'كافتيريا مستشفى دار الفؤاد', 'phone' => '01188990011', 'address' => 'محور 26 يوليو - 6 أكتوبر', 'tax_number' => 'TR-99014', 'price_tier' => 'wholesale', 'current_balance' => '16800.000'],
-                ['name' => 'مطاحن بن العروبة - الزقازيق', 'phone' => '01299001122', 'address' => 'شارع فاروق، الزقازيق', 'tax_number' => null, 'price_tier' => 'wholesale', 'current_balance' => '19500.000'],
-                ['name' => 'كافيه ريفير سايد - الزمالك', 'phone' => '01044556611', 'address' => 'شارع 26 يوليو - الزمالك، القاهرة', 'tax_number' => 'TR-33980', 'price_tier' => 'special', 'current_balance' => '15200.000'],
-                ['name' => 'د. حسام عبد الفتاح (عميل مميز)', 'phone' => '01011112233', 'address' => 'فيلا 14 - حي النرجس، التجمع الخامس', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '0.000'],
-                ['name' => 'م. طارق الهواري (عميل منزلي سبيشالتي)', 'phone' => '01022223344', 'address' => 'كمبوند بالم هيلز، الشيخ زايد', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '0.000'],
-                ['name' => 'أ. نهى الشناوي (طلبات أونلاين)', 'phone' => '01033334455', 'address' => 'عمارة 8 - شارع عباس العقاد، مدينة نصر', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '0.000'],
-                ['name' => 'كافيه اسبريسو لاب - المهندسين', 'phone' => '01177665544', 'address' => 'شارع جامعة الدول العربية، المهندسين', 'tax_number' => 'TR-88421', 'price_tier' => 'special', 'current_balance' => '24000.000'],
-                ['name' => 'محمصة بن النور - بنها', 'phone' => '01288997766', 'address' => 'شارع الأهرام، بنها، القليوبية', 'tax_number' => null, 'price_tier' => 'wholesale', 'current_balance' => '17500.000'],
-                ['name' => 'كافيه لاونج 90 - السويس', 'phone' => '01055443322', 'address' => 'بورتوفيق - كورنيش السويس الجديد', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '7800.000'],
+                ['name' => 'مطاحن ومحمصة الأندلس الكبرى', 'phone' => '01000000117', 'address' => 'شارع الخليفة المأمون، كفر الشيخ', 'tax_number' => 'TR-44589', 'price_tier' => 'wholesale', 'current_balance' => '42500.000'],
+                ['name' => 'كافيه ومحمصة البارون - التجمع الخامس', 'phone' => '01000000104', 'address' => 'شارع التسعين الشمالي، القاهرة الجديدة', 'tax_number' => 'TR-99214', 'price_tier' => 'special', 'current_balance' => '18400.000'],
+                ['name' => 'محمصة الشرق الذهبية - طنطا', 'phone' => '01000000118', 'address' => 'شارع البحر، طنطا', 'tax_number' => 'TR-33120', 'price_tier' => 'wholesale', 'current_balance' => '26500.000'],
+                ['name' => 'سلسلة كافيهات أروما لاونج (5 فروع)', 'phone' => '01000000119', 'address' => 'شارع الثورة - مصر الجديدة، القاهرة', 'tax_number' => 'TR-77890', 'price_tier' => 'wholesale', 'current_balance' => '58000.000'],
+                ['name' => 'قهوة ومقهى المعلم رجب التراثي', 'phone' => '01000000120', 'address' => 'شارع شبرا مصر - دوران شبرا', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '5200.000'],
+                ['name' => 'سوبر ماركت خير زمان - فرع الزقازيق', 'phone' => '01000000121', 'address' => 'شارع طلبة عويضة، الزقازيق', 'tax_number' => 'TR-11450', 'price_tier' => 'wholesale', 'current_balance' => '14200.000'],
+                ['name' => 'مطعم وكافيه دي روما - الإسماعيلية', 'phone' => '01000000122', 'address' => 'شارع محمد علي - نمرة 6، الإسماعيلية', 'tax_number' => 'TR-66120', 'price_tier' => 'special', 'current_balance' => '8900.000'],
+                ['name' => 'كافيه باريستا هب - المعادي', 'phone' => '01000000123', 'address' => 'شارع 9 - المعادي، القاهرة', 'tax_number' => 'TR-88190', 'price_tier' => 'special', 'current_balance' => '12600.000'],
+                ['name' => 'محمصة وبن السلطان - المنصورة', 'phone' => '01000000124', 'address' => 'شارع المشاية السفلية، المنصورة', 'tax_number' => 'TR-22340', 'price_tier' => 'wholesale', 'current_balance' => '31000.000'],
+                ['name' => 'هايبر ماركت المحلاوي - فرع العاشر', 'phone' => '01000000125', 'address' => 'المجاورة السادسة - سنتر الأردنية، العاشر', 'tax_number' => 'TR-55410', 'price_tier' => 'wholesale', 'current_balance' => '22500.000'],
+                ['name' => 'كافيه جاردن فيو - نادي الصيد', 'phone' => '01000000126', 'address' => 'نادي الصيد - الدقي، الجيزة', 'tax_number' => null, 'price_tier' => 'special', 'current_balance' => '9400.000'],
+                ['name' => 'كافتيريا مستشفى دار الفؤاد', 'phone' => '01000000127', 'address' => 'محور 26 يوليو - 6 أكتوبر', 'tax_number' => 'TR-99014', 'price_tier' => 'wholesale', 'current_balance' => '16800.000'],
+                ['name' => 'مطاحن بن العروبة - الزقازيق', 'phone' => '01000000128', 'address' => 'شارع فاروق، الزقازيق', 'tax_number' => null, 'price_tier' => 'wholesale', 'current_balance' => '19500.000'],
+                ['name' => 'كافيه ريفير سايد - الزمالك', 'phone' => '01000000129', 'address' => 'شارع 26 يوليو - الزمالك، القاهرة', 'tax_number' => 'TR-33980', 'price_tier' => 'special', 'current_balance' => '15200.000'],
+                ['name' => 'د. حسام عبد الفتاح (عميل مميز)', 'phone' => '01000000130', 'address' => 'فيلا 14 - حي النرجس، التجمع الخامس', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '0.000'],
+                ['name' => 'م. طارق الهواري (عميل منزلي سبيشالتي)', 'phone' => '01000000131', 'address' => 'كمبوند بالم هيلز، الشيخ زايد', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '0.000'],
+                ['name' => 'أ. نهى الشناوي (طلبات أونلاين)', 'phone' => '01000000132', 'address' => 'عمارة 8 - شارع عباس العقاد، مدينة نصر', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '0.000'],
+                ['name' => 'كافيه اسبريسو لاب - المهندسين', 'phone' => '01000000133', 'address' => 'شارع جامعة الدول العربية، المهندسين', 'tax_number' => 'TR-88421', 'price_tier' => 'special', 'current_balance' => '24000.000'],
+                ['name' => 'محمصة بن النور - بنها', 'phone' => '01000000134', 'address' => 'شارع الأهرام، بنها، القليوبية', 'tax_number' => null, 'price_tier' => 'wholesale', 'current_balance' => '17500.000'],
+                ['name' => 'كافيه لاونج 90 - السويس', 'phone' => '01000000135', 'address' => 'بورتوفيق - كورنيش السويس الجديد', 'tax_number' => null, 'price_tier' => 'retail', 'current_balance' => '7800.000'],
             ];
 
             $customers = [$defaultWalkIn];
@@ -288,7 +296,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
             for ($p = 1; $p <= 45; $p++) {
                 $purchaseDate = $startDate->copy()->addDays($p * 3)->addHours(rand(8, 16));
                 $supplier = $suppliers[array_rand($suppliers)];
-                $pNum = 'PUR-' . $purchaseDate->format('Ym') . '-' . str_pad($p, 4, '0', STR_PAD_LEFT);
+                $pNum = 'PUR-'.$purchaseDate->format('Ym').'-'.str_pad($p, 4, '0', STR_PAD_LEFT);
 
                 // Pick 2 to 5 random items
                 $selectedItems = collect($items)->random(rand(2, 5));
@@ -328,7 +336,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                         'net_total' => $netTotal,
                         'paid_amount' => $paidAmount,
                         'remaining_amount' => $remainingAmount,
-                        'supplier_invoice_ref' => 'SUP-INV-' . rand(10000, 99999),
+                        'supplier_invoice_ref' => 'SUP-INV-'.rand(10000, 99999),
                         'notes' => 'توريد شحنة بضائع وخامات للمخزن الرئيسي',
                         'created_at' => $purchaseDate,
                         'updated_at' => $purchaseDate,
@@ -352,7 +360,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                         'source_id' => $purchase->id,
                         'document_number' => $purchase->purchase_number,
                         'user_id' => $user->id,
-                        'notes' => 'وارد توريد مشتريات فاتورة #' . $purchase->purchase_number,
+                        'notes' => 'وارد توريد مشتريات فاتورة #'.$purchase->purchase_number,
                         'created_at' => $purchaseDate,
                     ]);
                 }
@@ -360,14 +368,14 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 // If paid, create payment voucher
                 if (floatval($paidAmount) > 0) {
                     Payment::create([
-                        'payment_number' => 'PAY-OUT-' . $purchaseDate->format('Ym') . '-' . str_pad($p, 4, '0', STR_PAD_LEFT),
+                        'payment_number' => 'PAY-OUT-'.$purchaseDate->format('Ym').'-'.str_pad($p, 4, '0', STR_PAD_LEFT),
                         'supplier_id' => $supplier->id,
                         'purchase_id' => $purchase->id,
                         'user_id' => $user->id,
                         'amount' => $paidAmount,
                         'payment_date' => $purchaseDate->toDateString(),
                         'payment_method' => $paymentMethods[array_rand($paymentMethods)],
-                        'notes' => 'سداد دفعة توريد مشتريات فاتورة #' . $purchase->purchase_number,
+                        'notes' => 'سداد دفعة توريد مشتريات فاتورة #'.$purchase->purchase_number,
                         'created_at' => $purchaseDate,
                     ]);
                 }
@@ -384,10 +392,10 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 $hour = rand(8, 23);
                 $minute = rand(0, 59);
                 $invDate = $invStartDate->copy()->addDays($daysOffset)->setHour($hour)->setMinute($minute);
-                
+
                 $isPosSale = (rand(1, 10) <= 6); // 60% POS counter sales, 40% Wholesale / B2B delivery
                 $customer = $isPosSale ? $defaultWalkIn : $customers[array_rand($customers)];
-                $invNum = ($isPosSale ? 'POS-' : 'INV-') . $invDate->format('Ym') . '-' . str_pad($i, 4, '0', STR_PAD_LEFT);
+                $invNum = ($isPosSale ? 'POS-' : 'INV-').$invDate->format('Ym').'-'.str_pad($i, 4, '0', STR_PAD_LEFT);
 
                 $selectedItems = collect($items)->random(rand(1, $isPosSale ? 3 : 6));
                 $subtotal = '0.000';
@@ -398,10 +406,10 @@ class RealisticEnterpriseDataSeeder extends Seeder
                     $qty = $isPosSale ? sprintf('%.3f', rand(1, 4) * 0.5) : sprintf('%.3f', rand(5, 50));
                     $unitPrice = sprintf('%.3f', (float) $item->selling_price);
                     $unitCost = sprintf('%.3f', (float) $item->cost_price);
-                    
+
                     $lineTotal = bcmul($qty, $unitPrice, 3);
                     $lineCost = bcmul($qty, $unitCost, 3);
-                    
+
                     $subtotal = bcadd($subtotal, $lineTotal, 3);
                     $totalCost = bcadd($totalCost, $lineCost, 3);
 
@@ -463,21 +471,21 @@ class RealisticEnterpriseDataSeeder extends Seeder
                         'source_id' => $invoice->id,
                         'document_number' => $invoice->invoice_number,
                         'user_id' => $user->id,
-                        'notes' => 'صادر مبيعات فاتورة #' . $invoice->invoice_number,
+                        'notes' => 'صادر مبيعات فاتورة #'.$invoice->invoice_number,
                         'created_at' => $invDate,
                     ]);
                 }
 
                 if (floatval($paidAmount) > 0) {
                     Payment::create([
-                        'payment_number' => 'PAY-IN-' . $invDate->format('Ym') . '-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                        'payment_number' => 'PAY-IN-'.$invDate->format('Ym').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
                         'customer_id' => $customer->id,
                         'invoice_id' => $invoice->id,
                         'user_id' => $user->id,
                         'amount' => $paidAmount,
                         'payment_date' => $invDate->toDateString(),
                         'payment_method' => (rand(1, 10) > 3 ? 'cash' : 'instapay'),
-                        'notes' => 'تحصيل قيمة مبيعات فاتورة #' . $invoice->invoice_number,
+                        'notes' => 'تحصيل قيمة مبيعات فاتورة #'.$invoice->invoice_number,
                         'created_at' => $invDate,
                     ]);
                 }
@@ -497,14 +505,14 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 $creditSales = sprintf('%.3f', rand(1000, 6000));
                 $collected = $cashSales;
                 $refunds = (rand(1, 10) > 8) ? '150.000' : '0.000';
-                
+
                 $expected = bcsub(bcadd($openingCash, $collected, 3), $refunds, 3);
                 $diff = (rand(1, 10) > 8) ? (rand(0, 1) ? '5.000' : '-3.000') : '0.000';
                 $actual = bcadd($expected, $diff, 3);
 
                 CashShift::create([
                     'user_id' => $user->id,
-                    'shift_number' => 'SFT-' . $shiftDate->format('Ymd') . '-' . $s,
+                    'shift_number' => 'SFT-'.$shiftDate->format('Ymd').'-'.$s,
                     'status' => 'closed',
                     'opened_at' => $openTime,
                     'closed_at' => $closeTime,
@@ -524,7 +532,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
             // Create ONE active open shift for today in the Main Store
             CashShift::create([
                 'user_id' => $user->id,
-                'shift_number' => 'SFT-' . Carbon::now()->format('Ymd') . '-LIVE',
+                'shift_number' => 'SFT-'.Carbon::now()->format('Ymd').'-LIVE',
                 'status' => 'open',
                 'opened_at' => Carbon::now()->startOfDay()->addHours(8),
                 'closed_at' => null,
@@ -563,7 +571,7 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 $tpl = $expenseTemplates[array_rand($expenseTemplates)];
 
                 Expense::create([
-                    'expense_number' => 'EXP-' . $expDate->format('Ym') . '-' . str_pad($e, 4, '0', STR_PAD_LEFT),
+                    'expense_number' => 'EXP-'.$expDate->format('Ym').'-'.str_pad($e, 4, '0', STR_PAD_LEFT),
                     'category' => $tpl['category'],
                     'cost_center' => $tpl['cost_center'],
                     'title' => $tpl['title'],
@@ -585,13 +593,13 @@ class RealisticEnterpriseDataSeeder extends Seeder
                 $toStore = $stores[rand(1, count($stores) - 1)];
 
                 $transfer = StockTransfer::create([
-                    'transfer_number' => 'TRF-' . $trDate->format('Ym') . '-' . str_pad($t, 4, '0', STR_PAD_LEFT),
+                    'transfer_number' => 'TRF-'.$trDate->format('Ym').'-'.str_pad($t, 4, '0', STR_PAD_LEFT),
                     'from_store_id' => $fromStore->id,
                     'to_store_id' => $toStore->id,
                     'user_id' => $user->id,
                     'transfer_date' => $trDate->toDateString(),
                     'status' => 'confirmed',
-                    'notes' => 'إذن تحويل بضاعة لتغذية رصيد فرع ' . $toStore->name,
+                    'notes' => 'إذن تحويل بضاعة لتغذية رصيد فرع '.$toStore->name,
                     'created_at' => $trDate,
                 ]);
 
@@ -614,14 +622,16 @@ class RealisticEnterpriseDataSeeder extends Seeder
             foreach ($sampleInvoices as $sampleInv) {
                 $retDate = Carbon::parse($sampleInv->invoice_date)->addDays(rand(1, 4));
                 $retItem = $sampleInv->items->first();
-                if (!$retItem) continue;
+                if (! $retItem) {
+                    continue;
+                }
 
                 $retQty = '1.000';
                 $itemUnitPrice = sprintf('%.3f', (float) $retItem->unit_price);
                 $retAmount = bcmul($retQty, $itemUnitPrice, 3);
 
                 $retDoc = ReturnDocument::create([
-                    'return_number' => 'RET-' . $retDate->format('Ym') . '-' . str_pad($retCounter++, 4, '0', STR_PAD_LEFT),
+                    'return_number' => 'RET-'.$retDate->format('Ym').'-'.str_pad($retCounter++, 4, '0', STR_PAD_LEFT),
                     'return_type' => 'sales_return',
                     'invoice_id' => $sampleInv->id,
                     'customer_id' => $sampleInv->customer_id,
@@ -665,11 +675,16 @@ class RealisticEnterpriseDataSeeder extends Seeder
                         default => 'expenses',
                     },
                     'description' => 'تمت العملية بنجاح عبر لوحة تحكم ERP',
-                    'ip_address' => '197.35.' . rand(10, 250) . '.' . rand(1, 250),
+                    'ip_address' => '197.35.'.rand(10, 250).'.'.rand(1, 250),
                     'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CloudERP/1.0.2',
                     'created_at' => $actDate,
                 ]);
             }
         });
+
+        if ($generatedPassword !== null && $this->command !== null) {
+            $this->command->warn(__('console.seed.generated_password', ['user' => 'admin@demo.com', 'password' => $generatedPassword]));
+            $this->command->warn(__('console.seed.change_password_warning'));
+        }
     }
 }

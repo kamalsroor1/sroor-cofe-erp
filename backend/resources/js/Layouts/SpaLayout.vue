@@ -1,9 +1,15 @@
 <template>
-  <div class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200" dir="rtl">
+  <div
+    class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200"
+    dir="rtl"
+  >
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <header v-if="!isPosView" class="min-h-[3.5rem] sm:min-h-[4rem] py-1.5 sm:py-0 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-2.5 sm:px-5 flex items-center justify-between shadow-xs select-none backdrop-blur-md mobile-safe-header transition-all duration-200">
+    <header
+      v-if="!isPosView"
+      class="min-h-[3.5rem] sm:min-h-[4rem] py-1.5 sm:py-0 shrink-0 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800/80 z-40 px-2.5 sm:px-5 flex items-center justify-between shadow-xs select-none backdrop-blur-md mobile-safe-header transition-all duration-200"
+    >
       <!-- Right Side (in RTL): Menu Toggle, User Pill, Theme, Notifications, Branch -->
       <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
         <!-- Mobile Menu Toggle Button -->
@@ -27,9 +33,14 @@
             <!-- Mobile: Short user/role name. Desktop: Full name & role -->
             <span class="font-black truncate max-w-[100px] sm:max-w-[200px]">
               {{ authStore.userName }}
-              <span class="hidden sm:inline text-slate-500 dark:text-slate-400 font-normal"> - {{ authStore.roles?.[0] || 'المدير' }}</span>
+              <span class="hidden sm:inline text-slate-500 dark:text-slate-400 font-normal">
+                - {{ authStore.roles?.[0] || 'المدير' }}</span
+              >
             </span>
-            <ChevronDown class="w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0" :class="{ 'rotate-180': isUserDropdownOpen }" />
+            <ChevronDown
+              class="w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0"
+              :class="{ 'rotate-180': isUserDropdownOpen }"
+            />
           </button>
 
           <!-- User Dropdown Menu -->
@@ -38,9 +49,18 @@
               v-if="isUserDropdownOpen"
               class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 font-tajawal space-y-1"
             >
-              <div class="p-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1">
-                <div class="font-black text-xs text-slate-900 dark:text-white">{{ authStore.userName }} - {{ authStore.roles?.[0] || 'المدير العام' }}</div>
-                <div class="text-[11px] text-slate-400 font-mono mt-0.5">{{ authStore.user?.phone || authStore.user?.email || '01012316954' }}</div>
+              <div
+                class="p-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1"
+              >
+                <div class="font-black text-xs text-slate-900 dark:text-white">
+                  {{ authStore.userName }} - {{ authStore.roles?.[0] || 'المدير العام' }}
+                </div>
+                <div
+                  v-if="authStore.user?.phone || authStore.user?.email"
+                  class="text-[11px] text-slate-400 font-mono mt-0.5"
+                >
+                  {{ authStore.user?.phone || authStore.user?.email }}
+                </div>
               </div>
 
               <router-link
@@ -126,7 +146,9 @@
             title="الإشعارات والتنبيهات"
           >
             <Bell class="w-3.5 h-3.5 text-theme-primary" />
-            <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
+            <span
+              class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse"
+            >
               {{ notificationsList.length }}
             </span>
           </button>
@@ -190,7 +212,10 @@
             </select>
           </div>
           <!-- Single Store Badge -->
-          <div v-else class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 shadow-2xs">
+          <div
+            v-else
+            class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 shadow-2xs"
+          >
             <StoreIcon class="w-3.5 h-3.5" />
             <span>{{ authStore.activeStoreName || 'المخزن والفرع الرئيسي' }}</span>
           </div>
@@ -199,13 +224,20 @@
           <router-link
             to="/daily-journal"
             class="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer shadow-2xs"
-            :class="appConfigStore.hasOpenShift
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-              : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'"
+            :class="
+              appConfigStore.hasOpenShift
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
+            "
             :title="appConfigStore.hasOpenShift ? 'يومية مفتوحة' : 'اضغط لفتح يومية جديدة'"
           >
-            <span class="w-2 h-2 rounded-full" :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"></span>
-            <span>{{ appConfigStore.hasOpenShift ? `• يومية (#${appConfigStore.currentShiftNumber})` : '• فتح يومية' }}</span>
+            <span
+              class="w-2 h-2 rounded-full"
+              :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"
+            ></span>
+            <span>{{
+              appConfigStore.hasOpenShift ? `• يومية (#${appConfigStore.currentShiftNumber})` : '• فتح يومية'
+            }}</span>
           </router-link>
         </div>
       </div>
@@ -213,7 +245,9 @@
       <!-- Left Side (in RTL): Live Clock & Super Admin / Logout -->
       <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
         <!-- Live Realtime Clock (Full on desktop/tablet, hidden on small phone to prevent clutter) -->
-        <div class="hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 font-mono tracking-tight items-center gap-2">
+        <div
+          class="hidden sm:flex text-xs font-bold text-slate-500 dark:text-slate-400 font-mono tracking-tight items-center gap-2"
+        >
           <span>{{ currentTimeStr }}</span>
         </div>
 
@@ -247,15 +281,14 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="flex-1 flex overflow-hidden relative min-h-0">
       <!-- 💻 MODERN DESKTOP SIDEBAR -->
-      <DesktopSidebar
-        :is-collapsed="isSidebarCollapsed"
-        @toggle-collapse="toggleSidebarCollapse"
-      />
+      <DesktopSidebar :is-collapsed="isSidebarCollapsed" @toggle-collapse="toggleSidebarCollapse" />
 
       <!-- Main Content Stage -->
       <main
         class="flex-1 h-full min-h-0 bg-slate-50 dark:bg-slate-950"
-        :class="isPosView ? 'p-0 overflow-hidden pb-0' : 'overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 custom-scrollbar'"
+        :class="
+          isPosView ? 'p-0 overflow-hidden pb-0' : 'overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 custom-scrollbar'
+        "
       >
         <slot />
       </main>
@@ -281,7 +314,9 @@
           dir="rtl"
         >
           <!-- Drawer Header -->
-          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 mobile-safe-header">
+          <div
+            class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 mobile-safe-header"
+          >
             <div class="flex items-center gap-2.5 min-w-0">
               <div
                 class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-base shadow-sm shrink-0"
@@ -290,8 +325,12 @@
                 <Coffee class="w-5 h-5 stroke-[2.5]" />
               </div>
               <div class="min-w-0">
-                <span class="font-black text-sm text-slate-900 dark:text-white truncate block">{{ appConfigStore.companyName }}</span>
-                <span class="text-[10px] text-slate-400 font-bold truncate block">{{ authStore.userName }} ({{ authStore.roles?.[0] || 'المدير' }})</span>
+                <span class="font-black text-sm text-slate-900 dark:text-white truncate block">{{
+                  appConfigStore.companyName
+                }}</span>
+                <span class="text-[10px] text-slate-400 font-bold truncate block"
+                  >{{ authStore.userName }} ({{ authStore.roles?.[0] || 'المدير' }})</span
+                >
               </div>
             </div>
             <button
@@ -333,11 +372,16 @@
                     class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 hover:border-theme-primary flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
                   >
                     <div class="flex items-center gap-3 min-w-0">
-                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="section.iconBg">
+                      <div
+                        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        :class="section.iconBg"
+                      >
                         <component :is="section.icon" class="w-5 h-5" />
                       </div>
                       <div class="min-w-0">
-                        <div class="text-xs font-black text-slate-900 dark:text-white group-hover:text-theme-primary transition truncate">
+                        <div
+                          class="text-xs font-black text-slate-900 dark:text-white group-hover:text-theme-primary transition truncate"
+                        >
                           {{ section.title }}
                         </div>
                         <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
@@ -357,38 +401,52 @@
                     :class="[
                       section.comingSoon
                         ? 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/40 opacity-50 cursor-not-allowed'
-                        : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800/80 hover:border-theme-primary cursor-pointer active:scale-[0.98]'
+                        : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800/80 hover:border-theme-primary cursor-pointer active:scale-[0.98]',
                     ]"
                   >
                     <div class="flex items-center gap-3 min-w-0">
-                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="section.iconBg">
+                      <div
+                        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        :class="section.iconBg"
+                      >
                         <component :is="section.icon" class="w-5 h-5" />
                       </div>
                       <div class="min-w-0">
-                        <div class="text-xs font-black text-slate-900 dark:text-white transition truncate"
+                        <div
+                          class="text-xs font-black text-slate-900 dark:text-white transition truncate"
                           :class="section.comingSoon ? '' : 'group-hover:text-theme-primary'"
                         >
                           {{ section.title }}
                         </div>
-                        <div class="text-[10px] font-bold truncate mt-0.5"
+                        <div
+                          class="text-[10px] font-bold truncate mt-0.5"
                           :class="section.comingSoon ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400'"
                         >
-                          {{ section.comingSoon ? $t('nav.coming_soon') : (section.subtitle || `${section.items?.length || 0} روابط`) }}
+                          {{
+                            section.comingSoon
+                              ? $t('nav.coming_soon')
+                              : section.subtitle || `${section.items?.length || 0} روابط`
+                          }}
                         </div>
                       </div>
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                      <span v-if="section.comingSoon"
+                      <span
+                        v-if="section.comingSoon"
                         class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20"
                       >
                         🚀 {{ $t('nav.coming_soon') }}
                       </span>
                       <template v-else>
-                        <span class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold">
+                        <span
+                          class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold"
+                        >
                           {{ section.items?.length || 0 }} روابط
                         </span>
-                        <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition" />
+                        <ChevronLeft
+                          class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition"
+                        />
                       </template>
                     </div>
                   </button>
@@ -402,12 +460,16 @@
                   class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 hover:border-purple-500 flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
                 >
                   <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-lg">
+                    <div
+                      class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-lg"
+                    >
                       👑
                     </div>
                     <div class="min-w-0">
                       <div class="text-xs font-black text-purple-400 truncate">لوحة السوبر أدمن</div>
-                      <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">إدارة المستأجرين والباقات والمنصة</div>
+                      <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
+                        إدارة المستأجرين والباقات والمنصة
+                      </div>
                     </div>
                   </div>
                   <ChevronLeft class="w-4 h-4 text-purple-400 shrink-0" />
@@ -418,7 +480,9 @@
             <!-- 📂 LEVEL 2: DRILL-DOWN SUB-MENU (When Category is Active) -->
             <div v-else class="space-y-3 animate-in fade-in slide-in-from-left duration-200">
               <!-- Back to Modules Bar -->
-              <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div
+                class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+              >
                 <button
                   type="button"
                   @click="activeMobileSection = null"
@@ -440,23 +504,34 @@
                   v-for="item in activeMobileSection.items"
                   :key="'drill-mob-' + item.key"
                   :to="item.path"
-                  @click="isSidebarOpen = false; activeMobileSection = null"
+                  @click="
+                    isSidebarOpen = false;
+                    activeMobileSection = null;
+                  "
                   class="flex items-center justify-between p-3.5 rounded-2xl text-xs font-bold transition-all border shadow-2xs active:scale-[0.98] cursor-pointer"
-                  :class="isItemActive(item)
-                    ? 'font-black border-theme-primary shadow-sm'
-                    : 'bg-white dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-theme-primary'"
-                  :style="isItemActive(item) ? {
-                    color: 'var(--color-primary, #f59e0b)',
-                    borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
-                    backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))'
-                  } : {}"
+                  :class="
+                    isItemActive(item)
+                      ? 'font-black border-theme-primary shadow-sm'
+                      : 'bg-white dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-theme-primary'
+                  "
+                  :style="
+                    isItemActive(item)
+                      ? {
+                          color: 'var(--color-primary, #f59e0b)',
+                          borderColor: 'var(--color-primary-border, rgba(245, 158, 11, 0.35))',
+                          backgroundColor: 'var(--color-primary-light, rgba(245, 158, 11, 0.15))',
+                        }
+                      : {}
+                  "
                 >
                   <div class="flex items-center gap-3 min-w-0">
                     <div
                       class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                      :class="isItemActive(item)
-                        ? 'text-slate-950'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'"
+                      :class="
+                        isItemActive(item)
+                          ? 'text-slate-950'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      "
                       :style="isItemActive(item) ? { backgroundColor: 'var(--color-primary, #f59e0b)' } : {}"
                     >
                       <component :is="item.icon" class="w-4 h-4 stroke-[2.4]" />
@@ -470,10 +545,14 @@
           </div>
 
           <!-- Drawer Footer Version & Quick Update Check -->
-          <div class="p-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-xs font-mono">
+          <div
+            class="p-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-xs font-mono"
+          >
             <div class="flex items-center gap-2">
               <span class="font-tajawal font-bold text-slate-700 dark:text-slate-300">الإصدار الحالي:</span>
-              <span class="px-2 py-0.5 rounded-lg bg-theme-primary/10 text-theme-primary font-black font-mono">v{{ currentVersionName }}</span>
+              <span class="px-2 py-0.5 rounded-lg bg-theme-primary/10 text-theme-primary font-black font-mono"
+                >v{{ currentVersionName }}</span
+              >
             </div>
             <button
               type="button"
@@ -509,30 +588,29 @@ import { useDesktopHardware } from '../Composables/useDesktopHardware';
 import { useTabsStore } from '../stores/tabs';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
-import versionData from '../version.json';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import Swal from 'sweetalert2';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import {
-    Store as StoreIcon,
-    LogOut,
-    Sun,
-    Moon,
-    Bell,
-    Menu,
-    Plus,
-    ChevronDown,
-    ChevronRight,
-    ChevronLeft,
-    User,
-    Users,
-    ShieldCheck,
-    FileText,
-    Printer,
-    Crown,
-    Coffee,
-    X,
+  Store as StoreIcon,
+  LogOut,
+  Sun,
+  Moon,
+  Bell,
+  Menu,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  User,
+  Users,
+  ShieldCheck,
+  FileText,
+  Printer,
+  Crown,
+  Coffee,
+  X,
 } from 'lucide-vue-next';
 
 const { currentVersionName, checkForUpdates } = useAppUpdate();
@@ -549,43 +627,41 @@ const router = useRouter();
 
 // 🗂️ Sync route with desktop multi-tabs store
 watch(
-    () => route.fullPath,
-    () => {
-        if (isDesktop.value) {
-            tabsStore.addTab(route);
-        }
-    },
-    { immediate: true }
+  () => route.fullPath,
+  () => {
+    if (isDesktop.value) {
+      tabsStore.addTab(route);
+    }
+  },
+  { immediate: true }
 );
 
 const isSidebarOpen = ref(false);
 const activeMobileSection = ref(null);
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
-let wasCollapsedBeforePos = localStorage.getItem('sidebar_collapsed') === 'true';
 
 const isPosView = computed(() => route.path === '/pos' || route.path.startsWith('/pos'));
 
 // 📱 Smart Adaptive Sidebar: Auto-collapse on POS, restore user's original state on exit
 watch(
-    () => route.path,
-    (newPath, oldPath) => {
-        isSidebarOpen.value = false;
-        activeMobileSection.value = null;
+  () => route.path,
+  (newPath, oldPath) => {
+    isSidebarOpen.value = false;
+    activeMobileSection.value = null;
 
-        const isGoingToPos = newPath === '/pos' || newPath.startsWith('/pos');
-        const isComingFromPos = oldPath && (oldPath === '/pos' || oldPath.startsWith('/pos'));
+    const isGoingToPos = newPath === '/pos' || newPath.startsWith('/pos');
+    const isComingFromPos = oldPath && (oldPath === '/pos' || oldPath.startsWith('/pos'));
 
-        if (isGoingToPos) {
-            wasCollapsedBeforePos = localStorage.getItem('sidebar_collapsed') === 'true';
-            isSidebarCollapsed.value = true;
-        } else if (isComingFromPos) {
-            const savedPref = localStorage.getItem('sidebar_collapsed') === 'true';
-            isSidebarCollapsed.value = savedPref;
-        } else {
-            isSidebarCollapsed.value = localStorage.getItem('sidebar_collapsed') === 'true';
-        }
-    },
-    { immediate: true }
+    if (isGoingToPos) {
+      isSidebarCollapsed.value = true;
+    } else if (isComingFromPos) {
+      const savedPref = localStorage.getItem('sidebar_collapsed') === 'true';
+      isSidebarCollapsed.value = savedPref;
+    } else {
+      isSidebarCollapsed.value = localStorage.getItem('sidebar_collapsed') === 'true';
+    }
+  },
+  { immediate: true }
 );
 
 const isUserDropdownOpen = ref(false);
@@ -596,140 +672,129 @@ const notificationsRef = ref(null);
 const currentTimeStr = ref('');
 let clockInterval = null;
 
-// Floating tooltip for collapsed sidebar (Teleported directly into <body>)
-const hoveredTooltip = ref({
-    show: false,
-    text: '',
-    top: 0,
-    right: 0,
-});
-
-const handleItemHover = (e, text) => {
-    if (!isSidebarCollapsed.value) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    hoveredTooltip.value = {
-        show: true,
-        text,
-        top: rect.top + (rect.height / 2),
-        right: window.innerWidth - rect.left + 16,
-    };
-};
-
-const handleItemLeave = () => {
-    hoveredTooltip.value.show = false;
-};
-
 const notificationsList = computed(() => [
-    { icon: '📦', title: 'تنبيه نواقص المخزون', desc: 'صنف جيهان أخضر وصل للحد الأدنى (5 كجم)' },
-    { icon: '🧾', title: 'فاتورة مبيعات جديدة', desc: 'تم اعتماد فاتورة للعميل بن الأصيل بقيمة 4,495 ج.م' },
-    { icon: '🛡️', title: 'جلسة تسجيل دخول', desc: 'تم تسجيل الدخول بنجاح من لوحة الإدارة' },
+  { icon: '📦', title: 'تنبيه نواقص المخزون', desc: 'صنف جيهان أخضر وصل للحد الأدنى (5 كجم)' },
+  { icon: '🧾', title: 'فاتورة مبيعات جديدة', desc: 'تم اعتماد فاتورة للعميل بن الأصيل بقيمة 4,495 ج.م' },
+  { icon: '🛡️', title: 'جلسة تسجيل دخول', desc: 'تم تسجيل الدخول بنجاح من لوحة الإدارة' },
 ]);
 
 const isSuperAdminPanel = computed(() => {
-    return route.path.startsWith('/super-admin');
+  return route.path.startsWith('/super-admin');
 });
 
-const canAccessSuperAdmin = computed(() => {
-    return authStore.user?.roles?.includes('super_admin') || authStore.roles?.includes('super_admin') || authStore.user?.email?.includes('admin');
-});
+const canAccessSuperAdmin = computed(() => authStore.isSuperAdmin);
 
 const toggleSidebarCollapse = () => {
-    isSidebarCollapsed.value = !isSidebarCollapsed.value;
-    localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? 'true' : 'false');
-    hoveredTooltip.value.show = false;
+  isSidebarCollapsed.value = !isSidebarCollapsed.value;
+  localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? 'true' : 'false');
 };
 
 const updateLiveClock = () => {
-    const now = new Date();
-    const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-    const dayName = days[now.getDay()];
-    const day = now.getDate();
-    const monthName = months[now.getMonth()];
-    const year = now.getFullYear();
-    const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-    currentTimeStr.value = `${dayName}، ${day} ${monthName} ${year} | ${time}`;
+  const now = new Date();
+  const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const months = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ];
+  const dayName = days[now.getDay()];
+  const day = now.getDate();
+  const monthName = months[now.getMonth()];
+  const year = now.getFullYear();
+  const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  currentTimeStr.value = `${dayName}، ${day} ${monthName} ${year} | ${time}`;
 };
 
 const toggleTheme = () => {
-    const nextTheme = appConfigStore.isDark ? 'light' : 'dark';
-    appConfigStore.setTheme(nextTheme);
+  const nextTheme = appConfigStore.isDark ? 'light' : 'dark';
+  appConfigStore.setTheme(nextTheme);
 };
 
 const handleStoreSwitch = (storeId) => {
-    const store = authStore.stores?.find(s => String(s.id) === String(storeId));
-    if (store) {
-        authStore.switchStore(store);
-    }
+  const store = authStore.stores?.find((s) => String(s.id) === String(storeId));
+  if (store) {
+    authStore.switchStore(store);
+  }
 };
 
 const confirmLogout = async () => {
-    isUserDropdownOpen.value = false;
-    const result = await Swal.fire({
-        title: 'تسجيل الخروج؟',
-        text: 'هل أنت متأكد من رغبتك في تسجيل الخروج وإنهاء الجلسة؟',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'نعم، تسجيل الخروج',
-        cancelButtonText: 'إلغاء',
-        confirmButtonColor: '#e11d48',
-        cancelButtonColor: '#64748b',
-    });
+  isUserDropdownOpen.value = false;
+  const result = await Swal.fire({
+    title: 'تسجيل الخروج؟',
+    text: 'هل أنت متأكد من رغبتك في تسجيل الخروج وإنهاء الجلسة؟',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، تسجيل الخروج',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#e11d48',
+    cancelButtonColor: '#64748b',
+  });
 
-    if (result.isConfirmed) {
-        await authStore.logout();
-        router.push({ name: 'login' });
-    }
+  if (result.isConfirmed) {
+    await authStore.logout();
+    router.push({ name: 'login' });
+  }
 };
 
 // Close dropdowns on outside click
 const handleOutsideClick = (e) => {
-    if (userDropdownRef.value && !userDropdownRef.value.contains(e.target)) {
-        isUserDropdownOpen.value = false;
-    }
-    if (notificationsRef.value && !notificationsRef.value.contains(e.target)) {
-        isNotificationsOpen.value = false;
-    }
+  if (userDropdownRef.value && !userDropdownRef.value.contains(e.target)) {
+    isUserDropdownOpen.value = false;
+  }
+  if (notificationsRef.value && !notificationsRef.value.contains(e.target)) {
+    isNotificationsOpen.value = false;
+  }
 };
 
 onMounted(() => {
-    updateLiveClock();
-    clockInterval = setInterval(updateLiveClock, 1000);
-    document.addEventListener('click', handleOutsideClick);
+  updateLiveClock();
+  clockInterval = setInterval(updateLiveClock, 1000);
+  document.addEventListener('click', handleOutsideClick);
 });
 
 onUnmounted(() => {
-    if (clockInterval) clearInterval(clockInterval);
-    document.removeEventListener('click', handleOutsideClick);
+  if (clockInterval) clearInterval(clockInterval);
+  document.removeEventListener('click', handleOutsideClick);
 });
 </script>
 
 <style scoped>
 .sidebar-drawer-enter-active,
 .sidebar-drawer-leave-active {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .sidebar-drawer-enter-from,
 .sidebar-drawer-leave-to {
-    transform: translateX(100%);
+  transform: translateX(100%);
 }
 
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 .fade-enter-from,
 .fade-leave-to {
-    opacity: 0;
+  opacity: 0;
 }
 
 .tooltip-fade-enter-active,
 .tooltip-fade-leave-active {
-    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tooltip-fade-enter-from,
 .tooltip-fade-leave-to {
-    opacity: 0;
-    transform: translate(6px, -50%);
+  opacity: 0;
+  transform: translate(6px, -50%);
 }
 </style>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CentralUser;
 use App\Models\User;
 
 return [
@@ -80,7 +81,7 @@ return [
         ],
         'central_users' => [
             'driver' => 'eloquent',
-            'model' => \App\Models\CentralUser::class,
+            'model' => CentralUser::class,
         ],
     ],
 
@@ -124,5 +125,23 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Quick Login (testing only)
+    |--------------------------------------------------------------------------
+    |
+    | Passwordless "pick a user" login for test/staging tenants. It is off by
+    | default and is NEVER honoured in production (see App\Support\QuickLoginGate).
+    | Issued tokens carry only the `quick-login` ability and expire after
+    | `token_ttl_minutes`.
+    |
+    */
+
+    'quick_login' => [
+        'enabled' => (bool) env('QUICK_LOGIN_ENABLED', false),
+        'token_ttl_minutes' => (int) env('QUICK_LOGIN_TOKEN_TTL', 480),
+        'per_minute' => 5,
+    ],
 
 ];

@@ -1,14 +1,15 @@
 import { defineStore } from 'pinia';
 import api from '../services/api';
+import { trans } from '../helpers/trans';
 
 export const useAuthStore = defineStore('auth', {
     state: () => {
-        let savedUser = null;
-        let savedStore = null;
+        let savedUser;
+        let savedStore;
         try {
             savedUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
             savedStore = JSON.parse(localStorage.getItem('auth_store') || 'null');
-        } catch (e) {
+        } catch {
             savedUser = null;
             savedStore = null;
         }
@@ -26,10 +27,12 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         isAuthenticated: (state) => !!state.token && !!state.user,
-        isSuperAdmin: (state) => !!state.user?.is_super_admin || state.roles.includes('super_admin') || state.permissions.includes('super_admin.access'),
-        isAdmin: (state) => state.roles.includes('admin') || state.roles.includes('super_admin'),
-        userName: (state) => state.user?.name || 'مستخدم',
-        activeStoreName: (state) => state.currentStore?.name || 'الفرع الرئيسي',
+        // Platform super admin comes only from the backend central flag (PlatformSuperAdmin::check()).
+        // Tenant role names / permissions must never grant it.
+        isSuperAdmin: (state) => state.user?.is_super_admin === true,
+        isAdmin: (state) => state.roles.includes('admin') || state.user?.is_super_admin === true,
+        userName: (state) => state.user?.name || trans('common.default_user_name'),
+        activeStoreName: (state) => state.currentStore?.name || trans('common.main_branch'),
         themePreference: (state) => state.user?.theme_preference || 'dark',
     },
 
@@ -41,66 +44,53 @@ export const useAuthStore = defineStore('auth', {
             this.isLoading = true;
             try {
                 const response = await api.post('/auth/login', credentials);
-                const payload = response.data?.data;
-
-                if (payload && payload.token) {
-                    this.token = payload.token;
-                    this.user = payload.user;
-                    this.roles = payload.user?.roles || [];
-                    this.permissions = payload.user?.permissions || [];
-                    this.currentStore = payload.store;
-                    this.stores = payload.stores || [];
-
-                    // Persist to storage
-                    localStorage.setItem('auth_token', payload.token);
-                    localStorage.setItem('auth_user', JSON.stringify(payload.user));
-                    if (payload.store) {
-                        localStorage.setItem('auth_store', JSON.stringify(payload.store));
-                        localStorage.setItem('current_store_id', payload.store.id);
-                    }
-
-                    return response.data;
-                }
-                throw new Error(response.data?.message || 'فشل تسجيل الدخول');
+                return this.applyAuthPayload(response);
             } finally {
                 this.isLoading = false;
             }
         },
 
         /**
-         * Quick login for workspace employees without password
+         * Testing-only passwordless login (offered only when /auth/options allows it).
          */
-        async quickLogin(login) {
+        async quickLogin(userId, deviceName) {
             this.isLoading = true;
             try {
                 const response = await api.post('/auth/quick-login', {
-                    login: login,
-                    device_name: 'vue-spa-quick',
+                    user_id: userId,
+                    device_name: deviceName,
                 });
-                const payload = response.data?.data;
-
-                if (payload && payload.token) {
-                    this.token = payload.token;
-                    this.user = payload.user;
-                    this.roles = payload.user?.roles || [];
-                    this.permissions = payload.user?.permissions || [];
-                    this.currentStore = payload.store;
-                    this.stores = payload.stores || [];
-
-                    // Persist to storage
-                    localStorage.setItem('auth_token', payload.token);
-                    localStorage.setItem('auth_user', JSON.stringify(payload.user));
-                    if (payload.store) {
-                        localStorage.setItem('auth_store', JSON.stringify(payload.store));
-                        localStorage.setItem('current_store_id', payload.store.id);
-                    }
-
-                    return response.data;
-                }
-                throw new Error(response.data?.message || 'فشل الدخول السريع');
+                return this.applyAuthPayload(response);
             } finally {
                 this.isLoading = false;
             }
+        },
+
+        /**
+         * Shared session persistence for every login flow.
+         */
+        applyAuthPayload(response) {
+            const payload = response.data?.data;
+
+            if (!payload || !payload.token) {
+                throw new Error(response.data?.message || trans('auth.failed'));
+            }
+
+            this.token = payload.token;
+            this.user = payload.user;
+            this.roles = payload.user?.roles || [];
+            this.permissions = payload.user?.permissions || [];
+            this.currentStore = payload.store;
+            this.stores = payload.stores || [];
+
+            localStorage.setItem('auth_token', payload.token);
+            localStorage.setItem('auth_user', JSON.stringify(payload.user));
+            if (payload.store) {
+                localStorage.setItem('auth_store', JSON.stringify(payload.store));
+                localStorage.setItem('current_store_id', payload.store.id);
+            }
+
+            return response.data;
         },
 
         /**
@@ -154,9 +144,9 @@ export const useAuthStore = defineStore('auth', {
         hasPermission(permissionName) {
             if (!this.user) return false;
             if (permissionName === 'super_admin.access' || permissionName === 'view_telescope') {
-                return !!this.user?.is_super_admin || this.roles.includes('super_admin') || this.permissions.includes('super_admin.access') || this.permissions.includes('view_telescope');
+                return this.user?.is_super_admin === true;
             }
-            if (this.roles.includes('admin') || this.roles.includes('super_admin')) return true;
+            if (this.roles.includes('admin') || this.user?.is_super_admin === true) return true;
             return this.permissions.includes(permissionName);
         },
 

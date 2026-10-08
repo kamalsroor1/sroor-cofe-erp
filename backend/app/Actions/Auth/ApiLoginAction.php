@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Auth;
 
 use App\DTOs\Auth\ApiLoginDTO;
-use App\Http\Resources\UserResource;
-use App\Models\User;
 use App\Models\Store;
-use App\Models\Setting;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -17,7 +15,8 @@ use Spatie\Permission\Models\Role;
 final class ApiLoginAction
 {
     public function __construct(
-        private readonly ActivityLogService $activityLogService
+        private readonly ActivityLogService $activityLogService,
+        private readonly BuildAuthPayload $buildAuthPayload,
     ) {}
 
     /**
@@ -30,11 +29,12 @@ final class ApiLoginAction
         // 1. Find user by phone or email
         $user = User::where(function ($query) use ($login) {
             $query->where('phone', $login)
-                  ->orWhere('email', $login);
+                ->orWhere('email', $login);
         })->first();
 
         // 2. Central Super Admin Fallback when in Tenant Context
-        if (!$user && function_exists('tenant') && tenant()) {
+        // TODO(Phase 1 central identity, 00-REPORT row 8): replace this central-admin mirror.
+        if (! $user && function_exists('tenant') && tenant()) {
             $centralUser = tenancy()->central(function () use ($login) {
                 return User::where('phone', $login)->orWhere('email', $login)->first();
             });
@@ -44,13 +44,13 @@ final class ApiLoginAction
                 $user = User::firstOrCreate(
                     ['phone' => $centralUser->phone],
                     [
-                        'name'                => $centralUser->name,
-                        'email'               => $centralUser->email,
-                        'password'            => $centralUser->password,
-                        'is_active'           => true,
-                        'default_store_id'    => $mainStore?->id,
-                        'theme_preference'    => $centralUser->theme_preference ?? 'dark',
-                        'show_print_subtitle' => (bool)$centralUser->show_print_subtitle,
+                        'name' => $centralUser->name,
+                        'email' => $centralUser->email,
+                        'password' => $centralUser->password,
+                        'is_active' => true,
+                        'default_store_id' => $mainStore?->id,
+                        'theme_preference' => $centralUser->theme_preference ?? 'dark',
+                        'show_print_subtitle' => (bool) $centralUser->show_print_subtitle,
                     ]
                 );
 
@@ -60,11 +60,11 @@ final class ApiLoginAction
         }
 
         // 3. Verify credentials
-        if (!$user || !Hash::check($dto->password, $user->password)) {
+        if (! $user || ! Hash::check($dto->password, $user->password)) {
             $this->activityLogService->log(
                 module: 'auth',
                 action: 'api_login_failed',
-                description: "محاولة تسجيل دخول API غير ناجحة للحساب [{$login}]",
+                description: __('auth.activity_login_failed', ['login' => $login]),
                 properties: ['login' => $login, 'ip' => $dto->deviceIp]
             );
 
@@ -74,61 +74,33 @@ final class ApiLoginAction
         }
 
         // 4. Check active status
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             throw ValidationException::withMessages([
                 'login' => __('auth.account_disabled'),
             ]);
         }
 
         // 5. Create Sanctum token
-        $tokenName = $dto->deviceName . '-' . now()->format('YmdHis');
+        $tokenName = $dto->deviceName.'-'.now()->format('YmdHis');
         $token = $user->createToken($tokenName, ['*'])->plainTextToken;
 
         // 6. Update user metadata
         $user->update([
-            'api_token'     => $token,
+            'api_token' => null,
             'last_login_at' => now(),
         ]);
 
-        // 7. Store Context (Only applicable in tenant context)
-        $currentStore = null;
-        $userStores = [];
-
-        if (function_exists('tenant') && tenant()) {
-            $user->loadMissing('stores');
-            $currentStore = $user->getCurrentStore();
-            $userStores = $user->hasRole('admin')
-                ? Store::where('is_active', true)->orderBy('is_main', 'desc')->get(['id', 'name', 'code', 'type', 'is_main'])
-                : $user->stores()->where('is_active', true)->get(['stores.id', 'name', 'code', 'type', 'is_main']);
-        }
-
-        // 8. Log success
+        // 7. Log success
         $this->activityLogService->log(
             module: 'auth',
             action: 'api_login',
-            description: "تسجيل دخول API ناجح للمستخدم [{$user->name}] من جهاز ({$dto->deviceName})",
+            description: __('auth.activity_login', ['name' => $user->name, 'device' => $dto->deviceName]),
             subject: $user,
             userId: $user->id,
             properties: ['device' => $dto->deviceName, 'ip' => $dto->deviceIp]
         );
 
-        return [
-            'token' => $token,
-            'user'  => (new UserResource($user))->resolve(),
-            'store' => $currentStore ? [
-                'id'      => $currentStore->id,
-                'name'    => $currentStore->name,
-                'code'    => $currentStore->code,
-                'type'    => $currentStore->type,
-                'is_main' => (bool)$currentStore->is_main,
-            ] : null,
-            'stores' => $userStores,
-            'system' => [
-                'company_name'     => Setting::get('company_name') ?: (function_exists('tenant') && tenant('name') ? tenant('name') : 'مؤسسة تجارية'),
-                'company_subtitle' => Setting::get('company_subtitle') ?: '',
-                'system_theme'     => Setting::get('system_theme_color', 'emerald'),
-                'server_time'      => now()->toDateTimeString(),
-            ],
-        ];
+        // 8. Shared response payload (same shape as QuickLoginAction)
+        return $this->buildAuthPayload->execute($user, $token);
     }
 }

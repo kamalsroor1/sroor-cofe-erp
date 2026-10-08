@@ -1,33 +1,65 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\StoreController;
-use App\Http\Controllers\Api\CustomerController;
-use App\Http\Controllers\Api\SupplierController;
-use App\Http\Controllers\Api\ItemController;
-use App\Http\Controllers\Api\InvoiceController;
-use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\TreasuryController;
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AppUpdateController;
-use App\Http\Middleware\ApiTokenAuth;
-use App\Http\Middleware\ResolveApiTenancy;
-
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryApiController;
+use App\Http\Controllers\Api\CentralTenantResolverController;
+use App\Http\Controllers\Api\CoffeeBlenderController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DailyJournalController;
+use App\Http\Controllers\Api\DashboardApiController;
+use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionApiController;
+use App\Http\Controllers\Api\PosController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReturnController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\StockTransferController;
+use App\Http\Controllers\Api\StoreController;
+use App\Http\Controllers\Api\SuperAdminApiController;
+use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemContextApiController;
+use App\Http\Controllers\Api\TrashController;
+use App\Http\Controllers\Api\TreasuryController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController;
+use App\Http\Controllers\Api\V1\SuperAdmin\TelescopeLinkController;
+use App\Http\Middleware\ApiTokenAuth;
+use App\Http\Middleware\DenyQuickLoginToken;
+use App\Http\Middleware\EnsureCentralContext;
+use App\Http\Middleware\EnsureQuickLoginAllowed;
+use App\Http\Middleware\ResolveApiTenancy;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
     Route::get('/ping', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]))->name('api.ping');
-    Route::get('/central/tenants/resolve', [\App\Http\Controllers\Api\CentralTenantResolverController::class, 'resolve'])->name('api.central.tenants.resolve');
+    Route::get('/central/tenants/resolve', [CentralTenantResolverController::class, 'resolve'])->middleware('throttle:tenant-resolve')->name('api.central.tenants.resolve');
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
     Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->name('api.app.check_update');
     Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
     Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_latest_apk');
-    Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
-    Route::post('/auth/quick-login', [AuthController::class, 'quickLogin'])->name('api.auth.quick_login');
-    Route::get('/auth/workspace-users', [AuthController::class, 'workspaceUsers'])->name('api.auth.workspace_users');
-    Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->name('api.system.translations');
+    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login')->name('api.auth.login');
+    Route::get('/auth/options', [AuthController::class, 'authOptions'])->middleware('throttle:public-config')->name('api.auth.options');
+
+    // Quick login: TESTING ONLY. Registered only when the flag is on outside production;
+    // EnsureQuickLoginAllowed re-checks at runtime (stale route cache, central host, prod).
+    if (config('auth.quick_login.enabled') === true && ! app()->isProduction()) {
+        Route::middleware([EnsureQuickLoginAllowed::class, 'throttle:quick-login'])->group(function () {
+            Route::post('/auth/quick-login', [AuthController::class, 'quickLogin'])->name('api.auth.quick_login');
+            Route::get('/auth/quick-login/users', [AuthController::class, 'quickLoginUsers'])->name('api.auth.quick_login.users');
+        });
+    }
+
+    Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->middleware('throttle:public-translations')->name('api.system.translations');
 
     // 2. Protected Endpoints (Requires valid Bearer Token)
     Route::middleware(ApiTokenAuth::class)->group(function () {
@@ -42,8 +74,8 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/permissions', [PermissionApiController::class, 'index'])->name('api.permissions.index');
 
         // High-Performance Consolidated Dashboard Summary
-        Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.index');
-        Route::get('/dashboard/summary', [\App\Http\Controllers\Api\DashboardApiController::class, 'index'])->name('api.dashboard.summary');
+        Route::get('/dashboard', [DashboardApiController::class, 'index'])->name('api.dashboard.index');
+        Route::get('/dashboard/summary', [DashboardApiController::class, 'index'])->name('api.dashboard.summary');
 
         // Stores & Branches (CRUD, Stocks & Switching)
         Route::get('/stores', [StoreController::class, 'index'])->name('api.stores.index');
@@ -76,11 +108,11 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('api.suppliers.pay');
         Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->name('api.suppliers.statement');
         // Purchases & Coffee Bean Inbound & Smart Reorder
-        Route::get('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'index'])->name('api.purchases.index');
-        Route::get('/purchases/smart-reorder', [\App\Http\Controllers\Api\PurchaseController::class, 'smartReorder'])->name('api.purchases.smart_reorder');
-        Route::get('/purchases/{id}', [\App\Http\Controllers\Api\PurchaseController::class, 'show'])->name('api.purchases.show');
-        Route::post('/purchases', [\App\Http\Controllers\Api\PurchaseController::class, 'store'])->name('api.purchases.store');
-        Route::post('/purchases/{id}/cancel', [\App\Http\Controllers\Api\PurchaseController::class, 'cancel'])->name('api.purchases.cancel');
+        Route::get('/purchases', [PurchaseController::class, 'index'])->name('api.purchases.index');
+        Route::get('/purchases/smart-reorder', [PurchaseController::class, 'smartReorder'])->name('api.purchases.smart_reorder');
+        Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->name('api.purchases.show');
+        Route::post('/purchases', [PurchaseController::class, 'store'])->name('api.purchases.store');
+        Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->name('api.purchases.cancel');
 
         // Items & Stock by Branch & Low Stock Radar & Movements
         Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
@@ -94,22 +126,22 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements');
 
         // Categories Management
-        Route::get('/categories', [\App\Http\Controllers\Api\CategoryApiController::class, 'index'])->name('api.categories.index');
-        Route::post('/categories', [\App\Http\Controllers\Api\CategoryApiController::class, 'store'])->name('api.categories.store');
-        Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'update'])->name('api.categories.update');
-        Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
+        Route::get('/categories', [CategoryApiController::class, 'index'])->name('api.categories.index');
+        Route::post('/categories', [CategoryApiController::class, 'store'])->name('api.categories.store');
+        Route::put('/categories/{id}', [CategoryApiController::class, 'update'])->name('api.categories.update');
+        Route::delete('/categories/{id}', [CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
 
         // POS & Sales Invoices & WhatsApp
-        Route::get('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'index'])->name('api.invoices.index');
-        Route::get('/invoices/{id}', [\App\Http\Controllers\Api\InvoiceController::class, 'show'])->name('api.invoices.show');
-        Route::post('/invoices', [\App\Http\Controllers\Api\InvoiceController::class, 'store'])->name('api.invoices.store');
-        Route::post('/invoices/{id}/cancel', [\App\Http\Controllers\Api\InvoiceController::class, 'cancel'])->name('api.invoices.cancel');
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index');
+        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show');
+        Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store');
+        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel');
 
         // POS Fast Operations
-        Route::get('/pos/bootstrap', [\App\Http\Controllers\Api\PosController::class, 'bootstrap'])->name('api.pos.bootstrap');
-        Route::post('/pos/checkout', [\App\Http\Controllers\Api\PosController::class, 'checkout'])->name('api.pos.checkout');
-        Route::post('/pos/quick-customer', [\App\Http\Controllers\Api\PosController::class, 'quickCustomer'])->name('api.pos.quick_customer');
-        Route::get('/pos/last-price', [\App\Http\Controllers\Api\PosController::class, 'lastPrice'])->name('api.pos.last_price');
+        Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap');
+        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout');
+        Route::post('/pos/quick-customer', [PosController::class, 'quickCustomer'])->name('api.pos.quick_customer');
+        Route::get('/pos/last-price', [PosController::class, 'lastPrice'])->name('api.pos.last_price');
 
         // Payments & Vouchers (Customer Receipts / Supplier Disbursements)
         Route::get('/payments', [PaymentController::class, 'index'])->name('api.payments.index');
@@ -117,110 +149,120 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::post('/payments/supplier-voucher', [PaymentController::class, 'supplierVoucher'])->name('api.payments.supplier_voucher');
 
         // Cashier Shifts & Z-Report & Daily Journal
-        Route::get('/shifts', [\App\Http\Controllers\Api\ShiftController::class, 'index'])->name('api.shifts.index');
-        Route::get('/shifts/current', [\App\Http\Controllers\Api\ShiftController::class, 'current'])->name('api.shifts.current');
-        Route::post('/shifts/open', [\App\Http\Controllers\Api\ShiftController::class, 'open'])->name('api.shifts.open');
-        Route::post('/shifts/close', [\App\Http\Controllers\Api\ShiftController::class, 'close'])->name('api.shifts.close');
-        Route::get('/shifts/{id}/z-report', [\App\Http\Controllers\Api\ShiftController::class, 'zReport'])->name('api.shifts.z_report');
-        Route::get('/daily-journal', [\App\Http\Controllers\Api\DailyJournalController::class, 'index'])->name('api.daily_journal.index');
+        Route::get('/shifts', [ShiftController::class, 'index'])->name('api.shifts.index');
+        Route::get('/shifts/current', [ShiftController::class, 'current'])->name('api.shifts.current');
+        Route::post('/shifts/open', [ShiftController::class, 'open'])->name('api.shifts.open');
+        Route::post('/shifts/close', [ShiftController::class, 'close'])->name('api.shifts.close');
+        Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport'])->name('api.shifts.z_report');
+        Route::get('/daily-journal', [DailyJournalController::class, 'index'])->name('api.daily_journal.index');
 
         // Expenses & Petty Cash
-        Route::get('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'index'])->name('api.expenses.index');
-        Route::get('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'show'])->name('api.expenses.show');
-        Route::post('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'store'])->name('api.expenses.store');
-        Route::put('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'update'])->name('api.expenses.update');
-        Route::delete('/expenses/{id}', [\App\Http\Controllers\Api\ExpenseController::class, 'destroy'])->name('api.expenses.destroy');
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('api.expenses.index');
+        Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->name('api.expenses.show');
+        Route::post('/expenses', [ExpenseController::class, 'store'])->name('api.expenses.store');
+        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('api.expenses.update');
+        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('api.expenses.destroy');
 
         // Treasury & Quick Financial Stats
         Route::get('/treasury/summary', [TreasuryController::class, 'summary'])->name('api.treasury.summary');
 
         // Profit & Loss Reports & Business Analytics
-        Route::get('/reports/summary', [\App\Http\Controllers\Api\ReportController::class, 'summary'])->name('api.reports.summary');
-        Route::get('/reports/comprehensive', [\App\Http\Controllers\Api\ReportController::class, 'comprehensive'])->name('api.reports.comprehensive');
-        Route::get('/reports/items', [\App\Http\Controllers\Api\ReportController::class, 'items'])->name('api.reports.items');
-        Route::get('/reports/stores', [\App\Http\Controllers\Api\ReportController::class, 'stores'])->name('api.reports.stores');
-        Route::get('/reports/customers', [\App\Http\Controllers\Api\ReportController::class, 'customers'])->name('api.reports.customers');
-        Route::get('/reports/expenses', [\App\Http\Controllers\Api\ReportController::class, 'expenses'])->name('api.reports.expenses');
-        Route::get('/reports/inventory', [\App\Http\Controllers\Api\ReportController::class, 'inventory'])->name('api.reports.inventory');
-        Route::get('/reports/treasury', [\App\Http\Controllers\Api\ReportController::class, 'treasury'])->name('api.reports.treasury');
-        Route::get('/reports/top-items', [\App\Http\Controllers\Api\ReportController::class, 'topItems'])->name('api.reports.top_items');
-        Route::get('/reports/items/{id}/card', [\App\Http\Controllers\Api\ReportController::class, 'itemCard'])->name('api.reports.item_card');
+        Route::get('/reports/summary', [ReportController::class, 'summary'])->name('api.reports.summary');
+        Route::get('/reports/comprehensive', [ReportController::class, 'comprehensive'])->name('api.reports.comprehensive');
+        Route::get('/reports/items', [ReportController::class, 'items'])->name('api.reports.items');
+        Route::get('/reports/stores', [ReportController::class, 'stores'])->name('api.reports.stores');
+        Route::get('/reports/customers', [ReportController::class, 'customers'])->name('api.reports.customers');
+        Route::get('/reports/expenses', [ReportController::class, 'expenses'])->name('api.reports.expenses');
+        Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('api.reports.inventory');
+        Route::get('/reports/treasury', [ReportController::class, 'treasury'])->name('api.reports.treasury');
+        Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items');
+        Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card');
 
         // Returns (Sales & Purchase Returns)
-        Route::get('/returns', [\App\Http\Controllers\Api\ReturnController::class, 'index'])->name('api.returns.index');
-        Route::get('/returns/{id}', [\App\Http\Controllers\Api\ReturnController::class, 'show'])->name('api.returns.show');
-        Route::post('/returns', [\App\Http\Controllers\Api\ReturnController::class, 'store'])->name('api.returns.store');
-        Route::delete('/returns/{id}', [\App\Http\Controllers\Api\ReturnController::class, 'destroy'])->name('api.returns.destroy');
+        Route::get('/returns', [ReturnController::class, 'index'])->name('api.returns.index');
+        Route::get('/returns/{id}', [ReturnController::class, 'show'])->name('api.returns.show');
+        Route::post('/returns', [ReturnController::class, 'store'])->name('api.returns.store');
+        Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->name('api.returns.destroy');
 
         // Stock Transfers between stores/branches
-        Route::get('/transfers', [\App\Http\Controllers\Api\StockTransferController::class, 'index'])->name('api.transfers.index');
-        Route::get('/transfers/{id}', [\App\Http\Controllers\Api\StockTransferController::class, 'show'])->name('api.transfers.show');
-        Route::post('/transfers', [\App\Http\Controllers\Api\StockTransferController::class, 'store'])->name('api.transfers.store');
-        Route::post('/transfers/{id}/cancel', [\App\Http\Controllers\Api\StockTransferController::class, 'cancel'])->name('api.transfers.cancel');
+        Route::get('/transfers', [StockTransferController::class, 'index'])->name('api.transfers.index');
+        Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->name('api.transfers.show');
+        Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store');
+        Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel');
 
         // Coffee Blender Engine & Custom Roasting Studio
-        Route::post('/coffee-blender/calculate', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate');
-        Route::post('/coffee-blender/invoice', [\App\Http\Controllers\Api\CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice');
+        Route::post('/coffee-blender/calculate', [CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate');
+        Route::post('/coffee-blender/invoice', [CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice');
 
-        // Users & Employees Management
-        Route::get('/users', [\App\Http\Controllers\Api\UserController::class, 'index'])->name('api.users.index');
-        Route::get('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'show'])->name('api.users.show');
-        Route::post('/users', [\App\Http\Controllers\Api\UserController::class, 'store'])->name('api.users.store');
-        Route::put('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'update'])->name('api.users.update');
-        Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy'])->name('api.users.destroy');
-        Route::patch('/users/{id}/toggle-active', [\App\Http\Controllers\Api\UserController::class, 'toggleActive'])->name('api.users.toggle_active');
+        // Administrative areas: never reachable with a testing-only quick-login token.
+        Route::middleware(DenyQuickLoginToken::class)->group(function () {
+            // Users & Employees Management
+            Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+            Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
+            Route::post('/users', [UserController::class, 'store'])->name('api.users.store');
+            Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
+            Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('api.users.destroy');
+            Route::patch('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('api.users.toggle_active');
 
-        // Roles & Permissions Matrix
-        Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->name('api.roles.index');
-        Route::put('/roles/{id}/permissions', [\App\Http\Controllers\Api\RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
+            // Roles & Permissions Matrix
+            Route::get('/roles', [RoleController::class, 'index'])->name('api.roles.index');
+            Route::put('/roles/{id}/permissions', [RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
+        });
 
         // Activity & Audit Logs
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogController::class, 'index'])->name('api.activity_logs.index')->middleware('can:logs.view');
-        Route::get('/activity-logs/export-csv', [\App\Http\Controllers\Api\ActivityLogController::class, 'exportCsv'])->name('api.activity_logs.export_csv')->middleware('can:logs.view');
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('api.activity_logs.index')->middleware('can:logs.view');
+        Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('api.activity_logs.export_csv')->middleware('can:logs.view');
 
         // User Profile & Preferences
-        Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show'])->name('api.profile.show');
-        Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update'])->name('api.profile.update');
+        Route::get('/profile', [ProfileController::class, 'show'])->name('api.profile.show');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('api.profile.update');
 
-        // Admin Settings & Integrations
-        Route::get('/settings', [\App\Http\Controllers\Api\SettingController::class, 'index'])->name('api.settings.index');
-        Route::post('/settings', [\App\Http\Controllers\Api\SettingController::class, 'update'])->name('api.settings.update');
-        Route::post('/settings/telegram/test', [\App\Http\Controllers\Api\SettingController::class, 'sendTestTelegram'])->name('api.settings.telegram_test');
+        Route::middleware(DenyQuickLoginToken::class)->group(function () {
+            // Admin Settings & Integrations
+            Route::get('/settings', [SettingController::class, 'index'])->name('api.settings.index');
+            Route::post('/settings', [SettingController::class, 'update'])->name('api.settings.update');
+            Route::post('/settings/telegram/test', [SettingController::class, 'sendTestTelegram'])->name('api.settings.telegram_test');
 
-        // Trash Bin (Soft-deleted records recovery)
-        Route::get('/trash', [\App\Http\Controllers\Api\TrashController::class, 'index'])->name('api.trash.index');
-        Route::post('/trash/{type}/{id}/restore', [\App\Http\Controllers\Api\TrashController::class, 'restore'])->name('api.trash.restore');
-        Route::delete('/trash/{type}/{id}/force', [\App\Http\Controllers\Api\TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
-
-        // Super Admin & Multi-Tenant Management
-        Route::prefix('super-admin')->middleware('can:super_admin.access')->group(function () {
-            Route::get('/dashboard', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'dashboard'])->name('api.super_admin.dashboard');
-            Route::get('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'tenants'])->name('api.super_admin.tenants');
-            Route::post('/tenants', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'storeTenant'])->name('api.super_admin.tenants.store');
-            Route::get('/tenants/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'showTenant'])->name('api.super_admin.tenants.show');
-            Route::delete('/tenants/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'destroyTenant'])->name('api.super_admin.tenants.destroy');
-            Route::post('/tenants/{id}/update-db-config', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateDatabaseConfig'])->name('api.super_admin.tenants.update_db_config');
-            Route::post('/tenants/{id}/toggle-status', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'toggleStatus'])->name('api.super_admin.tenants.toggle_status');
-            Route::post('/tenants/{id}/override-feature', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
-            Route::post('/tenants/{id}/update-units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateTenantUnits'])->name('api.super_admin.tenants.update_units');
-            Route::post('/tenants/{id}/run-migrations', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'runTenantMigrations'])->name('api.super_admin.tenants.run_migrations');
-            Route::get('/plans', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
-            Route::put('/plans/{id}', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
-
-            // Central Platform Settings & Whitelabel & Units
-            Route::get('/settings', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'getPlatformSettings'])->name('api.super_admin.settings.get');
-            Route::post('/settings', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updatePlatformSettings'])->name('api.super_admin.settings.update');
-            Route::get('/units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'getUnits'])->name('api.super_admin.units.get');
-            Route::post('/units', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'updateUnits'])->name('api.super_admin.units.update');
-
-            // App Versions & APK Releases Management
-            Route::get('/app-versions', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'index'])->name('api.super_admin.app_versions.index');
-            Route::post('/app-versions', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'store'])->name('api.super_admin.app_versions.store');
-            Route::patch('/app-versions/{appVersion}/toggle-active', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'toggleActive'])->name('api.super_admin.app_versions.toggle_active');
-            Route::delete('/app-versions/{appVersion}', [\App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController::class, 'destroy'])->name('api.super_admin.app_versions.destroy');
+            // Trash Bin (Soft-deleted records recovery)
+            Route::get('/trash', [TrashController::class, 'index'])->name('api.trash.index');
+            Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('api.trash.restore');
+            Route::delete('/trash/{type}/{id}/force', [TrashController::class, 'forceDelete'])->name('api.trash.force_delete');
         });
+
     });
 });
 
+// Super Admin & Multi-Tenant Management (central context only, never tenant-initialised).
+// EnsureCentralContext runs first: tenant host / tenancy => 404 before auth (guest => 404, not 401).
+Route::prefix('v1/super-admin')->middleware([EnsureCentralContext::class, ApiTokenAuth::class, 'can:super_admin.access'])->group(function () {
+    Route::get('/dashboard', [SuperAdminApiController::class, 'dashboard'])->name('api.super_admin.dashboard');
+    Route::get('/tenants', [SuperAdminApiController::class, 'tenants'])->name('api.super_admin.tenants');
+    Route::post('/tenants', [SuperAdminApiController::class, 'storeTenant'])->name('api.super_admin.tenants.store');
+    Route::get('/tenants/{id}', [SuperAdminApiController::class, 'showTenant'])->name('api.super_admin.tenants.show');
+    Route::delete('/tenants/{id}', [SuperAdminApiController::class, 'destroyTenant'])->name('api.super_admin.tenants.destroy');
+    Route::post('/tenants/{id}/update-db-config', [SuperAdminApiController::class, 'updateDatabaseConfig'])->name('api.super_admin.tenants.update_db_config');
+    Route::post('/tenants/{id}/toggle-status', [SuperAdminApiController::class, 'toggleStatus'])->name('api.super_admin.tenants.toggle_status');
+    Route::post('/tenants/{id}/override-feature', [SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
+    Route::post('/tenants/{id}/update-units', [SuperAdminApiController::class, 'updateTenantUnits'])->name('api.super_admin.tenants.update_units');
+    Route::post('/tenants/{id}/run-migrations', [SuperAdminApiController::class, 'runTenantMigrations'])->name('api.super_admin.tenants.run_migrations');
+    Route::get('/plans', [SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
+    Route::put('/plans/{id}', [SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
+
+    // Telescope: short-lived single-use signed link (replaces /telescope-access?token=)
+    Route::post('/telescope-link', TelescopeLinkController::class)->middleware('throttle:10,1')->name('api.super_admin.telescope_link');
+
+    // Central Platform Settings & Whitelabel & Units
+    Route::get('/settings', [SuperAdminApiController::class, 'getPlatformSettings'])->name('api.super_admin.settings.get');
+    Route::post('/settings', [SuperAdminApiController::class, 'updatePlatformSettings'])->name('api.super_admin.settings.update');
+    Route::get('/units', [SuperAdminApiController::class, 'getUnits'])->name('api.super_admin.units.get');
+    Route::post('/units', [SuperAdminApiController::class, 'updateUnits'])->name('api.super_admin.units.update');
+
+    // App Versions & APK Releases Management
+    Route::get('/app-versions', [SuperAdminAppVersionController::class, 'index'])->name('api.super_admin.app_versions.index');
+    Route::post('/app-versions', [SuperAdminAppVersionController::class, 'store'])->name('api.super_admin.app_versions.store');
+    Route::patch('/app-versions/{appVersion}/toggle-active', [SuperAdminAppVersionController::class, 'toggleActive'])->name('api.super_admin.app_versions.toggle_active');
+    Route::delete('/app-versions/{appVersion}', [SuperAdminAppVersionController::class, 'destroy'])->name('api.super_admin.app_versions.destroy');
+});
+
 // Direct Central Workspace Resolver alias without v1 prefix
-Route::get('/central/tenants/resolve', [\App\Http\Controllers\Api\CentralTenantResolverController::class, 'resolve'])->name('api.central.tenants.resolve.alias');
+Route::get('/central/tenants/resolve', [CentralTenantResolverController::class, 'resolve'])->middleware('throttle:tenant-resolve')->name('api.central.tenants.resolve.alias');

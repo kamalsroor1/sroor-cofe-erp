@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Support\PlatformSuperAdmin;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTenantRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Super Admin authorization handled via middleware/roles
+        return PlatformSuperAdmin::check($this->user());
     }
 
     public function rules(): array

@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Actions\Auth;
 
 use App\DTOs\Auth\LoginDTO;
-use App\Models\User;
 use App\Models\Store;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -23,22 +24,22 @@ final class LoginAction
 
         // 1. Direct Tenant / Local DB Attempt by Phone
         $attempt = Auth::attempt([
-            'phone'     => $cleanPhone,
-            'password'  => $dto->password,
+            'phone' => $cleanPhone,
+            'password' => $dto->password,
             'is_active' => true,
         ], $dto->remember);
 
         // 2. Direct Attempt by Email Fallback
-        if (!$attempt) {
+        if (! $attempt) {
             $attempt = Auth::attempt([
-                'email'     => $cleanPhone,
-                'password'  => $dto->password,
+                'email' => $cleanPhone,
+                'password' => $dto->password,
                 'is_active' => true,
             ], $dto->remember);
         }
 
         // 3. Central Super Admin Fallback when in Tenant Context
-        if (!$attempt && function_exists('tenant') && tenant()) {
+        if (! $attempt && function_exists('tenant') && tenant()) {
             $centralUser = tenancy()->central(function () use ($cleanPhone) {
                 return User::where('phone', $cleanPhone)->orWhere('email', $cleanPhone)->first();
             });
@@ -48,10 +49,10 @@ final class LoginAction
                 $tenantUser = User::firstOrCreate(
                     ['phone' => $centralUser->phone],
                     [
-                        'name'             => $centralUser->name,
-                        'email'            => $centralUser->email,
-                        'password'         => $centralUser->password,
-                        'is_active'        => true,
+                        'name' => $centralUser->name,
+                        'email' => $centralUser->email,
+                        'password' => $centralUser->password,
+                        'is_active' => true,
                         'default_store_id' => $mainStore?->id,
                         'theme_preference' => $centralUser->theme_preference ?? 'dark',
                     ]
@@ -65,11 +66,11 @@ final class LoginAction
             }
         }
 
-        if (!$attempt) {
+        if (! $attempt) {
             $this->activityLogService->log(
                 module: 'auth',
                 action: 'login_failed',
-                description: "محاولة تسجيل دخول غير ناجحة برقم [{$cleanPhone}]",
+                description: __('auth.activity_web_login_failed', ['phone' => $cleanPhone]),
                 properties: ['attempted_phone' => $cleanPhone]
             );
 
@@ -80,7 +81,7 @@ final class LoginAction
         $this->activityLogService->log(
             module: 'auth',
             action: 'login',
-            description: "تسجيل دخول ناجح للمستخدم [{$user->name}] برقم ({$user->phone})",
+            description: __('auth.activity_web_login', ['name' => $user->name, 'phone' => $user->phone]),
             subject: $user,
             userId: $user->id
         );

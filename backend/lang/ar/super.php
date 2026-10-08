@@ -63,9 +63,11 @@ return [
     'login_failed_log' => 'محاولة تسجيل دخول غير ناجحة للسوبر أدمن بالمعرف [:identifier]',
     'unauthorized_attempt_log' => 'محاولة وصول غير مصرح بها للوحة السوبر أدمن من المستخدم [:user]',
     'login_success_log' => 'تسجيل دخول ناجح للوحة السوبر أدمن للمستخدم [:user]',
+    'telescope_link_issued_log' => 'تم إصدار رابط دخول مؤقت للوحة المراقبة (Telescope) للمستخدم [:user]',
     'plan_upgrade_required' => 'هذه الميزة تتطلب ترقية الباقة',
     'upgrade_now' => 'ترقية الآن',
     'app_versions' => 'إصدارات التطبيق (APK)',
+    'nav_telescope' => 'مراقب النظام (Telescope)',
     'platform_admin' => 'مدير المنصة',
     'logout_title' => 'تسجيل الخروج من لوحة السوبر أدمن',
     'super_admin_title' => 'لوحة تحكم السوبر أدمن (إدارة المنصة المركزية)',
@@ -188,7 +190,7 @@ return [
     'multi_db_engine_desc' => 'تجهيز فوري ومستقل لقواعد بيانات المؤسسات والمستأجرين.',
     'multi_db_arch_title' => 'معمارية العزل التام للمستأجرين',
     'multi_db_arch_desc' => 'قواعد بيانات سحابية معزولة تماماً لكل مستأجر لمنع أي تداخل في البيانات.',
-    
+
     // Platform Settings & Whitelabel
     'platform_settings_title' => 'الهوية واسم المنصة العام (Platform Whitelabel & Branding)',
     'platform_settings_subtitle' => 'تغيير اسم المنصة والمشروع، الوصف، وبيانات الدعم الفني المنعكسة مركزياً في كافة واجهات وتطبيقات النظام',
@@ -240,6 +242,7 @@ return [
     'delete_tenant_confirm_title' => 'تأكيد حذف المستأجر نهائياً؟',
     'delete_tenant_confirm_desc' => 'سيتم حذف المنشأة (:name) وكافة نطاقاتها. لا يمكن التراجع!',
     'delete_tenant_confirm_btn' => 'نعم، احذف المستأجر',
+    'tenant_delete_disabled' => 'حذف المستأجر متوقف مؤقتًا — استخدم الإيقاف',
     'units_page_title' => 'إدارة وحدات القياس للنظام',
     'units_page_subtitle' => 'تحديد وتخصيص وحدات القياس المتاحة لكافة المستأجرين في المنظومة',
     'active_units_count' => 'الوحدات المفعلة حالياً بالنظام (:count)',
