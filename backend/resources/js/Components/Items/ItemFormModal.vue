@@ -10,7 +10,8 @@
       <!-- Row 1: Name & Code/Barcode -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <BaseInput
-          v-model="form.name"
+          :model-value="form.name"
+          @update:model-value="updateForm('name', $event)"
           :label="$t('inventory.item_name')"
           :required="true"
           :placeholder="$t('inventory.item_name_placeholder')"
@@ -18,7 +19,8 @@
         />
 
         <BaseInput
-          v-model="form.code"
+          :model-value="form.code"
+          @update:model-value="updateForm('code', $event)"
           :label="`${$t('inventory.code')} (${$t('inventory.barcode')})`"
           :placeholder="$t('inventory.auto_code_placeholder')"
           :error="errors?.code"
@@ -30,7 +32,8 @@
       <!-- Row 2: Category & Unit -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <BaseSelect
-          v-model="form.category"
+          :model-value="form.category"
+          @update:model-value="updateForm('category', $event)"
           :label="$t('inventory.category')"
           :placeholder="$t('inventory.category_placeholder')"
           :options="categoryOptions"
@@ -38,7 +41,8 @@
         />
 
         <BaseSelect
-          v-model="form.unit"
+          :model-value="form.unit"
+          @update:model-value="updateForm('unit', $event)"
           :label="$t('inventory.unit')"
           :required="true"
           :options="unitOptions"
@@ -50,7 +54,8 @@
       <!-- Row 3: Pricing Grid (Cost, Retail, Min Selling/Wholesale, Min Stock Level) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <BaseNumberInput
-          v-model="form.cost_price"
+          :model-value="form.cost_price"
+          @update:model-value="updateForm('cost_price', $event)"
           :label="$t('inventory.cost_price')"
           :required="true"
           :min="0"
@@ -59,7 +64,8 @@
         />
 
         <BaseNumberInput
-          v-model="form.selling_price"
+          :model-value="form.selling_price"
+          @update:model-value="updateForm('selling_price', $event)"
           :label="$t('inventory.selling_price')"
           :required="true"
           :min="0"
@@ -68,7 +74,8 @@
         />
 
         <BaseNumberInput
-          v-model="form.min_selling_price"
+          :model-value="form.min_selling_price"
+          @update:model-value="updateForm('min_selling_price', $event)"
           :label="$t('inventory.min_selling_price')"
           :min="0"
           :step="0.001"
@@ -76,7 +83,8 @@
         />
 
         <BaseNumberInput
-          v-model="form.min_stock_level"
+          :model-value="form.min_stock_level"
+          @update:model-value="updateForm('min_stock_level', $event)"
           :label="$t('inventory.min_stock_level')"
           :min="0"
           :step="0.001"
@@ -86,7 +94,8 @@
 
       <!-- Row 4: Notes -->
       <BaseTextarea
-        v-model="form.notes"
+        :model-value="form.notes"
+        @update:model-value="updateForm('notes', $event)"
         :label="$t('common.notes')"
         :placeholder="$t('inventory.item_notes_placeholder')"
         :rows="2"
@@ -122,7 +131,10 @@ const props = defineProps({
   isSubmitting: { type: Boolean, default: false },
 });
 
-defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'update:form']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
 const categoryOptions = computed(() => {
   return props.categories.map((c) => ({

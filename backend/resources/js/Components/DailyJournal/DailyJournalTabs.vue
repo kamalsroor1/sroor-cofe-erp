@@ -224,7 +224,7 @@
 </template>
 
 <script setup>
-import { ShoppingCart, Receipt, Banknote } from 'lucide-vue-next';
+import { ShoppingCart, Receipt } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';

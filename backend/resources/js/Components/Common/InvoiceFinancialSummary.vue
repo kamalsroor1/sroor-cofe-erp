@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+defineProps({
   title: { type: String, default: '' },
   subtotal: { type: Number, default: null }, // null = don't show subtotal row
   netTotal: { type: Number, required: true },
@@ -13,7 +13,7 @@ const props = defineProps({
   submitIcon: { type: String, default: '✅' },
 });
 
-const emit = defineEmits(['update:discountAmount', 'update:paidAmount', 'update:refundAmount', 'submit']);
+defineEmits(['update:discountAmount', 'update:paidAmount', 'update:refundAmount', 'submit']);
 
 const formatMoney = (val) => {
   if (!val && val !== 0) return '0.000';

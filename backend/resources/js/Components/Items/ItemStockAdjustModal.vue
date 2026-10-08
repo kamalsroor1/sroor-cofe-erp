@@ -19,7 +19,8 @@
 
       <!-- Movement Type Select -->
       <BaseSelect
-        v-model="adjustForm.movement_type"
+        :model-value="adjustForm.movement_type"
+        @update:model-value="updateAdjustForm('movement_type', $event)"
         :label="$t('inventory.movement_type')"
         :required="true"
         :options="movementTypeOptions"
@@ -28,7 +29,8 @@
 
       <!-- Quantity Input -->
       <BaseNumberInput
-        v-model="adjustForm.quantity"
+        :model-value="adjustForm.quantity"
+        @update:model-value="updateAdjustForm('quantity', $event)"
         :label="$t('inventory.quantity')"
         :required="true"
         :min="0.001"
@@ -38,7 +40,8 @@
 
       <!-- Reason / Notes Input -->
       <BaseInput
-        v-model="adjustForm.notes"
+        :model-value="adjustForm.notes"
+        @update:model-value="updateAdjustForm('notes', $event)"
         :label="$t('inventory.adjust_reason_prompt')"
         :placeholder="$t('inventory.adjust_reason_placeholder')"
       />
@@ -72,14 +75,17 @@ import { trans } from '../../helpers/trans';
 
 const { formatQty } = useFormatters();
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   targetItem: { type: Object, default: null },
   adjustForm: { type: Object, required: true },
   isSubmitting: { type: Boolean, default: false },
 });
 
-defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'update:adjustForm']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateAdjustForm = (key, value) => emit('update:adjustForm', { ...props.adjustForm, [key]: value });
 
 const movementTypeOptions = computed(() => [
   { value: 'stock_adjustment_in', label: trans('inventory.movement_adj_in') },

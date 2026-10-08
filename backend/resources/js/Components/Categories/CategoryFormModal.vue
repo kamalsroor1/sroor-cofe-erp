@@ -9,7 +9,8 @@
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Name -->
       <BaseInput
-        v-model="form.name"
+        :model-value="form.name"
+        @update:model-value="updateForm('name', $event)"
         :label="$t('inventory.category_name')"
         :required="true"
         :placeholder="$t('inventory.category_name_placeholder')"
@@ -28,7 +29,8 @@
             {{ form.icon || '☕' }}
           </div>
           <BaseInput
-            v-model="form.icon"
+            :model-value="form.icon"
+            @update:model-value="updateForm('icon', $event)"
             placeholder="☕"
             input-class="h-12 text-center text-lg font-mono"
             wrapper-class="flex-1"
@@ -41,7 +43,7 @@
             v-for="emoji in emojiPresets"
             :key="emoji"
             type="button"
-            @click="form.icon = emoji"
+            @click="updateForm('icon', emoji)"
             class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base transition active:scale-90 cursor-pointer shadow-2xs"
             :class="form.icon === emoji ? 'border-theme-primary ring-2 ring-theme-primary/30' : ''"
           >
@@ -52,7 +54,8 @@
 
       <!-- Sort Order -->
       <BaseNumberInput
-        v-model="form.sort_order"
+        :model-value="form.sort_order"
+        @update:model-value="updateForm('sort_order', $event)"
         :label="$t('inventory.sort_order')"
         :step="1"
         :min="0"
@@ -61,7 +64,8 @@
 
       <!-- Active Status -->
       <BaseSwitch
-        v-model="form.is_active"
+        :model-value="form.is_active"
+        @update:model-value="updateForm('is_active', $event)"
         :label="$t('common.status')"
         :description="$t('inventory.category_active_desc')"
       />
@@ -90,7 +94,7 @@ import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseSwitch from '../Form/BaseSwitch.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   editingCategory: { type: Object, default: null },
   form: { type: Object, required: true },
@@ -98,7 +102,10 @@ defineProps({
   isSubmitting: { type: Boolean, default: false },
 });
 
-defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'update:form']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
 const emojiPresets = ['☕', '🍵', '🧃', '🥪', '🍰', '🍫', '🥤', '🍟', '🥐', '🍪', '🍨', '🍳'];
 </script>

@@ -118,7 +118,6 @@ import {
   Settings,
   Coffee,
   Radar,
-  CreditCard,
   FolderOpen,
   Sparkles,
   Banknote,

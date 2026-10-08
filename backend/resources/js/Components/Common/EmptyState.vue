@@ -1,9 +1,8 @@
 <script setup>
-import { computed } from 'vue';
 import { PackageOpen } from 'lucide-vue-next';
 import DynamicIcon from './DynamicIcon.vue';
 
-const props = defineProps({
+defineProps({
   icon: {
     type: [Object, Function, String],
     default: () => PackageOpen,

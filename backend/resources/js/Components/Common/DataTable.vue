@@ -225,14 +225,16 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
         <!-- tbody -->
         <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
           <!-- ── Loading Skeleton ── -->
-          <tr v-if="loading" v-for="n in skeletonRows" :key="`sk-${n}`" class="animate-pulse">
-            <td v-if="selectable" class="py-3.5 text-center">
-              <div class="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded mx-auto"></div>
-            </td>
-            <td v-for="col in columns" :key="col.key" class="py-3.5">
-              <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
-            </td>
-          </tr>
+          <template v-if="loading">
+            <tr v-for="n in skeletonRows" :key="`sk-${n}`" class="animate-pulse">
+              <td v-if="selectable" class="py-3.5 text-center">
+                <div class="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded mx-auto"></div>
+              </td>
+              <td v-for="col in columns" :key="col.key" class="py-3.5">
+                <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
+              </td>
+            </tr>
+          </template>
 
           <!-- ── Data Rows ── -->
           <template v-else-if="rows && rows.length > 0">
@@ -288,23 +290,24 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
     <!-- ═══════════════════════════════════════════════════════ -->
     <div class="md:hidden space-y-3">
       <!-- Loading Skeleton Cards -->
-      <div
-        v-if="loading"
-        v-for="n in skeletonRows"
-        :key="`msk-${n}`"
-        class="animate-pulse p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3"
-      >
-        <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
-          <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/3"></div>
-          <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4"></div>
+      <template v-if="loading">
+        <div
+          v-for="n in skeletonRows"
+          :key="`msk-${n}`"
+          class="animate-pulse p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 space-y-3"
+        >
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/3"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
+            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-2/3"></div>
+            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-1/2"></div>
+            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/5"></div>
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
-          <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-2/3"></div>
-          <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-1/2"></div>
-          <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/5"></div>
-        </div>
-      </div>
+      </template>
 
       <!-- Data Cards -->
       <template v-else-if="rows && rows.length > 0">

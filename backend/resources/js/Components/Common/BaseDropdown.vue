@@ -68,7 +68,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { ChevronDown } from 'lucide-vue-next';
 
-const props = defineProps({
+defineProps({
   label: { type: String, default: '' },
   icon: { type: [Object, Function], default: null },
   iconClass: { type: String, default: 'text-slate-500' },

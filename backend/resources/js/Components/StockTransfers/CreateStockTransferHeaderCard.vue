@@ -14,7 +14,7 @@
       <div>
         <BaseSelect
           :model-value="form.from_store_id"
-          @update:model-value="form.from_store_id = Number($event)"
+          @update:model-value="updateForm('from_store_id', Number($event))"
           :label="$t('inventory.from_store_label')"
           :options="fromStoreOptions"
           :placeholder="$t('inventory.choose_source_store')"
@@ -26,7 +26,7 @@
       <div>
         <BaseSelect
           :model-value="form.to_store_id"
-          @update:model-value="form.to_store_id = Number($event)"
+          @update:model-value="updateForm('to_store_id', Number($event))"
           :label="$t('inventory.to_store_label')"
           :options="toStoreOptions"
           :placeholder="$t('inventory.choose_dest_store')"
@@ -36,13 +36,20 @@
 
       <!-- Transfer Date -->
       <div>
-        <BaseInput v-model="form.transfer_date" type="date" :label="$t('inventory.transfer_date_label')" required />
+        <BaseInput
+          :model-value="form.transfer_date"
+          @update:model-value="updateForm('transfer_date', $event)"
+          type="date"
+          :label="$t('inventory.transfer_date_label')"
+          required
+        />
       </div>
 
       <!-- Notes -->
       <div class="sm:col-span-3">
         <BaseInput
-          v-model="form.notes"
+          :model-value="form.notes"
+          @update:model-value="updateForm('notes', $event)"
           type="text"
           :label="$t('inventory.blend_notes')"
           :placeholder="$t('inventory.transfer_notes_placeholder')"
@@ -56,9 +63,14 @@
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseInput from '../Form/BaseInput.vue';
 
-defineProps({
+const props = defineProps({
   form: { type: Object, required: true },
   fromStoreOptions: { type: Array, default: () => [] },
   toStoreOptions: { type: Array, default: () => [] },
 });
+
+const emit = defineEmits(['update:form']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 </script>

@@ -46,6 +46,7 @@
       :show="showStoreModal"
       :editing-store="editingStore"
       :form="form"
+      @update:form="Object.assign(form, $event)"
       :is-submitting="isSubmitting"
       @close="showStoreModal = false"
       @submit="saveStore"

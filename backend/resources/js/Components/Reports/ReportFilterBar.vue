@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import DatePicker from '@/Components/DatePicker.vue';
 
 const props = defineProps({
@@ -12,7 +13,16 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['apply', 'set-period']);
+const emit = defineEmits(['apply', 'set-period', 'update:filterForm']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateFilterForm = (key, value) => emit('update:filterForm', { ...props.filterForm, [key]: value });
+
+// Writable computed keeps native <select> v-model semantics (option values stay typed).
+const storeId = computed({
+  get: () => props.filterForm.store_id,
+  set: (value) => updateFilterForm('store_id', value),
+});
 </script>
 
 <template>
@@ -51,7 +61,7 @@ const emit = defineEmits(['apply', 'set-period']);
           >{{ $t('inventory.store') }}:</span
         >
         <select
-          v-model="filterForm.store_id"
+          v-model="storeId"
           class="w-full sm:w-auto h-11 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:border-theme-primary focus:outline-none shadow-inner"
           @change="$emit('apply')"
         >
@@ -65,8 +75,16 @@ const emit = defineEmits(['apply', 'set-period']);
     <div
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/80 items-end"
     >
-      <DatePicker v-model="filterForm.from" :label="$t('common.date_from')" />
-      <DatePicker v-model="filterForm.to" :label="$t('common.date_to')" />
+      <DatePicker
+        :model-value="filterForm.from"
+        @update:model-value="updateFilterForm('from', $event)"
+        :label="$t('common.date_from')"
+      />
+      <DatePicker
+        :model-value="filterForm.to"
+        @update:model-value="updateFilterForm('to', $event)"
+        :label="$t('common.date_to')"
+      />
       <div>
         <button
           type="button"

@@ -68,7 +68,7 @@ import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
-const tabsStore = useTabsStore();
+useTabsStore(); // instantiate the tabs store at boot (side effect kept; the binding was unused)
 const { checkForUpdates } = useAppUpdate();
 const { isDesktop, openCashDrawer } = useDesktopHardware();
 

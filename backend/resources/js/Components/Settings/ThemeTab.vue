@@ -24,7 +24,10 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['save']);
+const emit = defineEmits(['save', 'update:form']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const setThemeColor = (value) => emit('update:form', { ...props.form, system_theme_color: value });
 
 const { applyColorTheme } = useTheme();
 
@@ -133,7 +136,7 @@ const activeHexColor = computed(() => {
 const customPickerColor = ref(activeHexColor.value);
 
 const selectPalette = (paletteId) => {
-  props.form.system_theme_color = paletteId;
+  setThemeColor(paletteId);
   const preset = palettes.value.find((p) => p.id === paletteId);
   if (preset) customPickerColor.value = preset.hex;
   applyColorTheme(paletteId);
@@ -142,7 +145,7 @@ const selectPalette = (paletteId) => {
 const onCustomColorInput = (e) => {
   const newHex = e.target.value;
   customPickerColor.value = newHex;
-  props.form.system_theme_color = newHex;
+  setThemeColor(newHex);
   applyColorTheme(newHex);
 };
 
@@ -151,7 +154,7 @@ const onHexTextInput = (val) => {
   let hex = val.trim();
   if (!hex.startsWith('#')) hex = `#${hex}`;
   customPickerColor.value = hex;
-  props.form.system_theme_color = hex;
+  setThemeColor(hex);
   applyColorTheme(hex);
 };
 </script>

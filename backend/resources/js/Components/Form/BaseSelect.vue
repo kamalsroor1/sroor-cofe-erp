@@ -141,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { ChevronDown, Check, Search, X, Loader2, AlertCircle } from 'lucide-vue-next';
 
 defineOptions({

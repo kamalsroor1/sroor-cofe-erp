@@ -23,14 +23,11 @@ import {
   Layers,
   Flame,
   Droplet,
-  GlassWater,
   Folder,
-  CircleDot,
   ShoppingBag,
   ShoppingCart,
   Users,
   ShieldCheck,
-  Activity,
   Trash2,
   Sliders,
   Truck,
@@ -49,7 +46,6 @@ import {
   Lock,
   Calendar,
   AlertTriangle,
-  HelpCircle,
 } from 'lucide-vue-next';
 
 const props = defineProps({

@@ -10,7 +10,7 @@
       class="flex-1 flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5"
     >
       <div
-        v-for="(tab, index) in tabsStore.tabs"
+        v-for="tab in tabsStore.tabs"
         :key="tab.id"
         @click="tabsStore.selectTab(tab)"
         @contextmenu.prevent="openContextMenu($event, tab)"

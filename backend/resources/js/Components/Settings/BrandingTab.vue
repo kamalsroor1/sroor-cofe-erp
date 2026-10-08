@@ -1,9 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Building2, Sun, Moon, Save } from 'lucide-vue-next';
 import BaseInput from '@/Components/Form/BaseInput.vue';
 import BaseTextarea from '@/Components/Form/BaseTextarea.vue';
-import BaseCheckbox from '@/Components/Form/BaseCheckbox.vue';
 
 const props = defineProps({
   form: {
@@ -12,7 +11,22 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['save']);
+const emit = defineEmits(['save', 'update:form']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
+
+// Writable computed keeps native checkbox v-model semantics.
+const formField = (key) =>
+  computed({
+    get: () => props.form[key],
+    set: (value) => updateForm(key, value),
+  });
+
+const showPrintLogo = formField('show_print_logo');
+const showPrintCompanyName = formField('show_print_company_name');
+const thermalShowCustomerBalance = formField('thermal_show_customer_balance');
+const printShowQr = formField('print_show_qr');
 
 const logoLightPreview = ref(null);
 const logoDarkPreview = ref(null);
@@ -20,7 +34,7 @@ const logoDarkPreview = ref(null);
 const handleLogoLightChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    props.form.logo_light_file = file;
+    updateForm('logo_light_file', file);
     logoLightPreview.value = URL.createObjectURL(file);
   }
 };
@@ -28,7 +42,7 @@ const handleLogoLightChange = (e) => {
 const handleLogoDarkChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    props.form.logo_dark_file = file;
+    updateForm('logo_dark_file', file);
     logoDarkPreview.value = URL.createObjectURL(file);
   }
 };
@@ -121,16 +135,40 @@ const handleLogoDarkChange = (e) => {
 
         <!-- Basic Information -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <BaseInput v-model="form.company_name" :label="$t('settings.company_name')" :required="true" />
+          <BaseInput
+            :model-value="form.company_name"
+            @update:model-value="updateForm('company_name', $event)"
+            :label="$t('settings.company_name')"
+            :required="true"
+          />
 
-          <BaseInput v-model="form.company_subtitle" :label="$t('settings.company_subtitle')" />
+          <BaseInput
+            :model-value="form.company_subtitle"
+            @update:model-value="updateForm('company_subtitle', $event)"
+            :label="$t('settings.company_subtitle')"
+          />
 
-          <BaseInput v-model="form.company_phone" type="tel" dir="ltr" :label="$t('settings.company_phone')" />
+          <BaseInput
+            :model-value="form.company_phone"
+            @update:model-value="updateForm('company_phone', $event)"
+            type="tel"
+            dir="ltr"
+            :label="$t('settings.company_phone')"
+          />
 
-          <BaseInput v-model="form.company_address" :label="$t('settings.company_address')" />
+          <BaseInput
+            :model-value="form.company_address"
+            @update:model-value="updateForm('company_address', $event)"
+            :label="$t('settings.company_address')"
+          />
 
           <div class="sm:col-span-2">
-            <BaseTextarea v-model="form.invoice_footer_note" :label="$t('settings.invoice_footer')" :rows="2" />
+            <BaseTextarea
+              :model-value="form.invoice_footer_note"
+              @update:model-value="updateForm('invoice_footer_note', $event)"
+              :label="$t('settings.invoice_footer')"
+              :rows="2"
+            />
           </div>
         </div>
 
@@ -143,7 +181,7 @@ const handleLogoDarkChange = (e) => {
             >
               <input
                 type="checkbox"
-                v-model="form.show_print_logo"
+                v-model="showPrintLogo"
                 class="w-4 h-4 rounded accent-theme-primary focus:ring-0"
               />
               <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{
@@ -156,7 +194,7 @@ const handleLogoDarkChange = (e) => {
             >
               <input
                 type="checkbox"
-                v-model="form.show_print_company_name"
+                v-model="showPrintCompanyName"
                 class="w-4 h-4 rounded accent-theme-primary focus:ring-0"
               />
               <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{
@@ -169,7 +207,7 @@ const handleLogoDarkChange = (e) => {
             >
               <input
                 type="checkbox"
-                v-model="form.thermal_show_customer_balance"
+                v-model="thermalShowCustomerBalance"
                 class="w-4 h-4 rounded accent-theme-primary focus:ring-0"
               />
               <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{
@@ -180,11 +218,7 @@ const handleLogoDarkChange = (e) => {
             <label
               class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary cursor-pointer transition active:scale-98 min-h-[48px]"
             >
-              <input
-                type="checkbox"
-                v-model="form.print_show_qr"
-                class="w-4 h-4 rounded accent-theme-primary focus:ring-0"
-              />
+              <input type="checkbox" v-model="printShowQr" class="w-4 h-4 rounded accent-theme-primary focus:ring-0" />
               <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('settings.show_qr') }}</span>
             </label>
           </div>

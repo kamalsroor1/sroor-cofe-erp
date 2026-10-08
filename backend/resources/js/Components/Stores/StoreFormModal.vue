@@ -7,7 +7,8 @@
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Store Name -->
       <BaseInput
-        v-model="form.name"
+        :model-value="form.name"
+        @update:model-value="updateForm('name', $event)"
         :label="$t('inventory.store_name')"
         :placeholder="$t('inventory.store_name_placeholder')"
         required
@@ -16,14 +17,16 @@
       <!-- Code & Type Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <BaseInput
-          v-model="form.code"
+          :model-value="form.code"
+          @update:model-value="updateForm('code', $event)"
           :label="$t('inventory.store_code')"
           :placeholder="$t('inventory.store_code_placeholder')"
           class="font-mono uppercase"
         />
 
         <BaseSelect
-          v-model="form.type"
+          :model-value="form.type"
+          @update:model-value="updateForm('type', $event)"
           :label="$t('inventory.store_type')"
           :options="storeTypeOptions"
           :searchable="false"
@@ -34,13 +37,15 @@
       <!-- Address & Phone Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <BaseInput
-          v-model="form.address"
+          :model-value="form.address"
+          @update:model-value="updateForm('address', $event)"
           :label="$t('inventory.address')"
           :placeholder="$t('inventory.address_placeholder')"
         />
 
         <BaseInput
-          v-model="form.phone"
+          :model-value="form.phone"
+          @update:model-value="updateForm('phone', $event)"
           :label="$t('inventory.phone')"
           :placeholder="$t('inventory.phone_placeholder')"
           dir="ltr"
@@ -49,9 +54,18 @@
 
       <!-- Checkboxes (Is Main / Is Active) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-        <BaseCheckbox v-model="form.is_main" :label="$t('inventory.is_main_branch')" />
+        <BaseCheckbox
+          :model-value="form.is_main"
+          @update:model-value="updateForm('is_main', $event)"
+          :label="$t('inventory.is_main_branch')"
+        />
 
-        <BaseCheckbox v-if="editingStore" v-model="form.is_active" :label="$t('inventory.is_active_branch')" />
+        <BaseCheckbox
+          v-if="editingStore"
+          :model-value="form.is_active"
+          @update:model-value="updateForm('is_active', $event)"
+          :label="$t('inventory.is_active_branch')"
+        />
       </div>
 
       <!-- Form Actions Footer -->
@@ -87,14 +101,17 @@ import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   editingStore: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
 });
 
-defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'update:form']);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
 const storeTypeOptions = [
   { value: 'retail_shop', label: '🏬 ' + t('inventory.retail_shop') },

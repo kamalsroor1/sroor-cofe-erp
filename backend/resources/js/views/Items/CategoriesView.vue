@@ -32,6 +32,7 @@
       :show="showModal"
       :editing-category="editingCategory"
       :form="form"
+      @update:form="Object.assign(form, $event)"
       :errors="formErrors"
       :is-submitting="isSaving"
       @close="showModal = false"

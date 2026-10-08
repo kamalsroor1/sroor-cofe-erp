@@ -227,7 +227,6 @@ import {
   FileText,
   ShoppingCart,
   Package,
-  Wallet,
   Users,
   Menu,
   Crown,
@@ -265,8 +264,4 @@ const isInvoicesActive = computed(() => currentPath.value.startsWith('/invoices'
 const isPosActive = computed(() => currentPath.value.startsWith('/pos'));
 const isItemsActive = computed(() => currentPath.value.startsWith('/items'));
 const isCustomersActive = computed(() => currentPath.value.startsWith('/customers'));
-const isShiftActive = computed(
-  () => currentPath.value.startsWith('/daily-journal') || currentPath.value.startsWith('/shifts')
-);
-const hasOpenShift = computed(() => appConfigStore.hasOpenShift);
 </script>

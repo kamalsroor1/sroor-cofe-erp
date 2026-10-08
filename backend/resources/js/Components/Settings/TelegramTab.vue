@@ -1,23 +1,33 @@
 <script setup>
 import { Send, BarChart3, AlertTriangle, RotateCcw, HardDrive, Save } from 'lucide-vue-next';
+import { computed } from 'vue';
 import BaseInput from '@/Components/Form/BaseInput.vue';
-import BaseCheckbox from '@/Components/Form/BaseCheckbox.vue';
 
-defineProps({
+const props = defineProps({
   form: {
     type: Object,
     required: true,
   },
 });
 
-defineEmits([
+const emit = defineEmits([
   'save',
   'send-test',
   'send-daily-summary',
   'send-low-stock',
   'send-overdue-shifts',
   'send-backup-telegram',
+  'update:form',
 ]);
+
+// Never mutate the prop: emit a patched shallow copy and let the parent apply it.
+const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
+
+// Writable computed keeps native checkbox v-model semantics.
+const notificationsEnabled = computed({
+  get: () => props.form.telegram_notifications_enabled,
+  set: (value) => updateForm('telegram_notifications_enabled', value),
+});
 </script>
 
 <template>
@@ -40,7 +50,7 @@ defineEmits([
           <label class="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
-              v-model="form.telegram_notifications_enabled"
+              v-model="notificationsEnabled"
               class="w-4 h-4 rounded accent-theme-primary focus:ring-0"
             />
             <span class="text-xs font-bold text-slate-900 dark:text-white">{{ $t('settings.enable_bot') }}</span>
@@ -49,14 +59,16 @@ defineEmits([
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <BaseInput
-            v-model="form.telegram_bot_token"
+            :model-value="form.telegram_bot_token"
+            @update:model-value="updateForm('telegram_bot_token', $event)"
             :label="$t('settings.bot_token')"
             placeholder="123456789:ABCdef..."
             dir="ltr"
           />
 
           <BaseInput
-            v-model="form.telegram_chat_id"
+            :model-value="form.telegram_chat_id"
+            @update:model-value="updateForm('telegram_chat_id', $event)"
             :label="$t('settings.chat_id')"
             :placeholder="$t('settings.chat_id_placeholder')"
             dir="ltr"

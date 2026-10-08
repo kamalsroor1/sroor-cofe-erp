@@ -1,6 +1,5 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
 import { useModules } from './useModules';
 import {
     LayoutDashboard,
@@ -27,7 +26,6 @@ import {
 } from 'lucide-vue-next';
 
 export function useNavigation() {
-    const authStore = useAuthStore();
     const route = useRoute();
     const { isModuleEnabled } = useModules();
 

@@ -195,7 +195,7 @@ import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
 
-const props = defineProps({
+defineProps({
   stores: {
     type: Array,
     default: () => [],

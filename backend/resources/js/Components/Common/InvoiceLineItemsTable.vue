@@ -1,7 +1,7 @@
 <script setup>
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 
-const props = defineProps({
+defineProps({
   items: { type: Array, required: true },
   itemOptions: { type: Array, required: true },
   selectedItem: { type: [Number, String, null], default: null },

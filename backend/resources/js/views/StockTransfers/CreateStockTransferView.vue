@@ -17,6 +17,7 @@
       <!-- Branches & Date Selection Card -->
       <CreateStockTransferHeaderCard
         :form="form"
+        @update:form="Object.assign(form, $event)"
         :from-store-options="fromStoreOptions"
         :to-store-options="toStoreOptions"
       />
