@@ -111,3 +111,6 @@ test-results/
 __pycache__/
 *.pyc
 /*.png
+
+# Capacitor webDir (APP-2): generated allow-listed shell, see backend/scripts/capacitor/
+/backend/capacitor-www/

@@ -5,6 +5,7 @@ const https = require('https');
 const settingsStore = require('./src/config/settingsStore');
 const printerManager = require('./src/hardware/printerManager');
 const cashDrawer = require('./src/hardware/cashDrawer');
+const { normalizePrintJob } = require('./src/hardware/printJob');
 const { createApplicationMenu } = require('./src/menu/appMenu');
 const { downloadAndApplyUpdate } = require('./src/updater/nativeUpdater');
 const urlPolicy = require('./src/security/urlPolicy');
@@ -493,35 +494,23 @@ handleTrusted('hardware:get-printers', async () => {
     return await printerManager.getPrinters(mainWindow);
 });
 
-const MAX_PRINT_HTML_LENGTH = 1024 * 1024;
-const MAX_PRINT_COPIES = 5;
-
+// Silent print first; if the printer fails or is missing, the print dialog (choose a printer
+// or "Microsoft Print to PDF") and then a PDF save are offered. Results carry codes only.
 handleTrusted('hardware:print-thermal', async (event, data) => {
-    if (
-        !data ||
-        typeof data !== 'object' ||
-        Array.isArray(data) ||
-        typeof data.html !== 'string' ||
-        data.html.length > MAX_PRINT_HTML_LENGTH
-    ) {
+    const job = normalizePrintJob(data, {
+        thermalPrinterName: settingsStore.get('thermalPrinterName'),
+        paperWidth: settingsStore.get('paperWidth'),
+    });
+    if (!job) {
         return { success: false, error: 'invalid_print_job' };
     }
-    const { html, printerName, paperWidth } = data;
-    const requestedCopies = Math.trunc(Number(data.copies));
-    const copies = Number.isFinite(requestedCopies) ? Math.min(MAX_PRINT_COPIES, Math.max(1, requestedCopies)) : 1;
-    const targetPrinter = (typeof printerName === 'string' && printerName) || settingsStore.get('thermalPrinterName');
-    const targetWidth = (typeof paperWidth === 'string' && paperWidth) || settingsStore.get('paperWidth') || '80mm';
-    return await printerManager.printThermalSilent(html, {
-        printerName: targetPrinter,
-        paperWidth: targetWidth,
-        copies,
-    });
+    return await printerManager.printThermal(job.html, job, mainWindow);
 });
 
 // 3. Hardware: Cash Drawer Kick
+// ESC/POS pulse to the receipt printer, driver job as fallback (see drawerKick.js).
 handleTrusted('hardware:kick-drawer', async (event, printerName) => {
-    const targetPrinter = printerName || settingsStore.get('thermalPrinterName');
-    return await cashDrawer.kickDrawer(targetPrinter);
+    return await cashDrawer.kickDrawer(typeof printerName === 'string' ? printerName : '');
 });
 
 // 4. Network Ping (Latency Check)

@@ -100,4 +100,13 @@ return [
     'activity_web_login_failed' => 'Failed sign-in attempt with phone [:phone]',
     'cannot_disable_own_account' => 'You cannot disable your own account',
     'user_status_updated' => 'Account status updated successfully',
+
+    // APP-5: native biometric prompts and feedback (Android)
+    'biometric_prompt_enable_title' => 'Confirm your fingerprint to enable quick sign-in',
+    'biometric_prompt_login_reason' => 'Confirm your identity to sign in',
+    'biometric_prompt_login_title' => 'Sign in with fingerprint',
+    'biometric_prompt_login_subtitle' => 'Scan your fingerprint to continue',
+    'biometric_prompt_cancel' => 'Cancel',
+    'biometric_enabled_success' => 'Fingerprint sign-in is enabled on this device',
+    'biometric_disabled' => 'Fingerprint sign-in is off and its data was removed from this device',
 ];

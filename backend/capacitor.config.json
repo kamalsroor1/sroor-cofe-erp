@@ -1,7 +1,7 @@
 {
   "appId": "com.sroor.cofe.erp",
   "appName": "منظومة سرور كوفي ERP",
-  "webDir": "public",
+  "webDir": "capacitor-www",
   "bundledWebRuntime": false,
   "server": {
     "url": "https://2m.baraa-solutions.com",

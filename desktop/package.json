@@ -22,13 +22,10 @@
     "format:dirty": "node ../backend/scripts/run-on-changed.mjs prettier --write",
     "format:dirty:check": "node ../backend/scripts/run-on-changed.mjs prettier --check"
   },
-  "dependencies": {
-    "electron-store": "^8.2.0"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "electron": "^33.2.1",
-    "electron-builder": "^25.1.8",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.13.0",
@@ -52,11 +49,16 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "ia32"]
+          "arch": [
+            "x64",
+            "ia32"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",

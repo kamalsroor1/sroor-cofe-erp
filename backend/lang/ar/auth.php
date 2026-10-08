@@ -95,4 +95,13 @@ return [
     'activity_web_login_failed' => 'محاولة تسجيل دخول غير ناجحة برقم [:phone]',
     'cannot_disable_own_account' => 'لا يمكنك تعطيل حسابك الشخصي الحالي',
     'user_status_updated' => 'تم تحديث حالة نشاط الحساب بنجاح',
+
+    // APP-5: native biometric prompts and feedback (Android)
+    'biometric_prompt_enable_title' => 'أكّد بصمتك لتفعيل الدخول السريع',
+    'biometric_prompt_login_reason' => 'أكّد هويتك لتسجيل الدخول',
+    'biometric_prompt_login_title' => 'تسجيل الدخول بالبصمة',
+    'biometric_prompt_login_subtitle' => 'امسح بصمتك للمتابعة',
+    'biometric_prompt_cancel' => 'إلغاء',
+    'biometric_enabled_success' => 'تم تفعيل الدخول بالبصمة على هذا الجهاز',
+    'biometric_disabled' => 'تم إيقاف الدخول بالبصمة ومسح بياناته من هذا الجهاز',
 ];
