@@ -918,3 +918,41 @@ flowchart LR
 ---
 
 *الخطوة التالية بعد الاعتماد:* **[CTO-2026-10-08]** أسئلة W0 مُجابة؛ يبدأ W0 (OPS-11 أولًا، ثم blocker الـ cash split، وبدء شراء شهادة Authenticode)، وبعد كل wave مراجعة الـ CTO (Q-P2)، و`docs-historian` يضيف قسم Phase 1 إلى `docs/05-planning/tasks-breakdown.md` بنفس الـ ids (جزء من DOC-1، يبدأ مبكرًا).
+
+---
+
+## 8. حالة W1 (2026-10-09)
+
+> ملحق حالة فقط. الخطة نفسها لم تتغير. المصدر: [سجل W1](../history/2026-10-09/01-phase1-w1.md). كل الشغل **uncommitted**، ولسه مستني مراجعة الـ CTO (Q-P2).
+> الرموز: **منجز** = الـ lane بلّغ done والـ quality gate أخضر على ملفاته. **منجز بشرط** = منجز، بس فيه بند مفتوح لازم يتقفل قبل الدمج. **غير موثّق** = الملفات في الشجرة ومفيش تقرير.
+
+| المهمة | الحالة | ملاحظة |
+|---|---|---|
+| IDEN-4.1 | منجز | |
+| IDEN-4.6 | منجز | ثغرة الـ oracle (unknown tenant قبل الـ throttle) اتقفلت بـ `ThrottleTenantMisses` |
+| IDEN-1.1 | منجز | التستات الحمرا عند الـ lanes التانية اتعالجت في fixups B وE. تحويل الـ auth لسه في W2 (IDEN-1.2/1.3/1.4) |
+| IDEN-1.5 | منجز بشرط | fallback يدوي بدل spatie/activitylog (`TODO(CTO)`). الباكدج اتثبت بعدها في PKG-1 (4.12.3) |
+| IDEN-3.1 | منجز | |
+| ENTI-1.1…1.7 | منجز بشرط | اختبارات الـ row-lock على MySQL مستنية CI. فشلين على MySQL بس (`AddonModelTest`، `SubscriptionsSchemaMigrationTest::down`) إصلاحهم غير موثّق |
+| CORE-1 | منجز | |
+| SETG-1 | منجز | |
+| SETG-2 | منجز بشرط | المنطقة الزمنية مقفولة مؤقتًا على `app.timezone` لحد ما جانب الكتابة يستخدم `TenantClock::today()` (`TODO(CTO)`) |
+| SETG-3 | منجز | أولوية `X-Locale` قبل default المستأجر معلّقة على قرار CTO |
+| SETG-7 (من tenant-settings-catalog §6.2، مش في §4) | منجز | ضمّه للخطة محتاج تأكيد من الـ CTO |
+| BRND-1 | منجز | |
+| PKG-1 | منجز | Q-O2 = Sentry (محتاج تأكيد) |
+| PKG-2 | منجز | الـ MySQL harness ما اتشغلش محليًا |
+| IDEN-4.8 | منجز بشرط | حد 1.5 ث/مستأجر على MySQL متحققش (Windows: 2–7.5 ث) |
+| QA-1 | منجز بشرط | الـ job ما اتشغلش على GitHub. يتحول لـ required check بعد ما فشل الـ MySQL يتصلح |
+| OPS-4 | منجز بشرط | الـ PR التجريبي وتشغيل الـ job على GitHub مستنيين الـ CTO. لازم ينزل مع OPS-1 |
+| APP-2 | منجز | |
+| APP-3 | منجز بشرط | مراجعة blocking: الأجهزة القديمة من غير plugin `AppUpdater` ممكن تتقفل في forced update. الـ fixup غير موثّق |
+| APP-5 | منجز بشرط | Electron 44 ما اتشغلش فعليًا، ومفيش تجربة طابعة أو درج |
+| OFFL-1 | غير موثّق | الملفات موجودة (`useConnectivity`، `OfflineBanner`) |
+| OPS-1 | غير موثّق | `scripts/ops/**` و`vps-runbook.md` موجودين. `run-tests.sh` 136/136 حسب lane E |
+| POSB-2 | غير موثّق | الملفات موجودة (scale barcode، `store_pos_settings`، `is_weighted`) |
+
+**قبل قفل W1:**
+- تشغيل full suite واحد بعد كل الـ fixups.
+- أول تشغيل لـ jobs الـ `mysql` و`gitleaks` على CI.
+- قرارات الـ CTO المجمّعة في السجل.
