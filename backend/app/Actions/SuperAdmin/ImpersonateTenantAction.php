@@ -33,9 +33,14 @@ final class ImpersonateTenantAction
             throw new \RuntimeException(__('super.no_active_user_in_store', ['name' => $tenant->name]));
         }
 
-        // 2. Generate Impersonation Token via Stancl
-        /** @var ImpersonationToken $token */
-        $token = tenancy()->impersonate($tenant, (string) $targetUser->id, '/');
+        // 2. Generate the impersonation token directly (same as stancl's `impersonate` macro,
+        // which only exists once the Tenancy singleton has been resolved and its features booted).
+        $token = ImpersonationToken::create([
+            'tenant_id' => $tenant->getTenantKey(),
+            'user_id' => (string) $targetUser->id,
+            'redirect_url' => '/',
+            'auth_guard' => null,
+        ]);
 
         // 3. Resolve Primary Domain
         $centralDomain = config('tenancy.central_domains.0', 'localhost');

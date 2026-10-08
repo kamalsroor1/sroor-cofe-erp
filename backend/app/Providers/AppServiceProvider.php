@@ -27,6 +27,13 @@ use Stancl\Tenancy\Events\TenancyInitialized;
 class AppServiceProvider extends ServiceProvider
 {
     /**
+     * CTO decision W1 Q1 (2026-10-09): budget of the tenant-resolve limiter and of the
+     * tenant-miss bucket (ThrottleTenantMisses), per client IP and minute. Fallback when
+     * config/rate_limits.php does not provide a value.
+     */
+    public const TENANT_RESOLVE_PER_MINUTE = 30;
+
+    /**
      * Register any application services.
      */
     public function register(): void
@@ -63,9 +70,9 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
             // Platform-only abilities: a store `admin` must never pass these through the
-            // blanket grant below (Telescope/Pulse expose cross-tenant data).
+            // blanket grant below (Telescope/Pulse/Horizon expose cross-tenant data).
             if (str_starts_with((string) $ability, 'super_admin.')
-                || in_array($ability, ['viewTelescope', 'viewPulse'], true)) {
+                || in_array($ability, ['viewTelescope', 'viewPulse', 'viewHorizon'], true)) {
                 return false;
             }
 
@@ -155,8 +162,8 @@ class AppServiceProvider extends ServiceProvider
                 ->by('public-api|'.$endpoint.'|'.$request->ip());
         });
 
-        // Central workspace resolver: low cap to stop workspace-code enumeration.
-        RateLimiter::for('tenant-resolve', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.tenant_resolve.per_minute', 10))
+        // Central workspace resolver: caps workspace-code enumeration (CTO W1 Q1: 30/min per IP).
+        RateLimiter::for('tenant-resolve', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.tenant_resolve.per_minute', self::TENANT_RESOLVE_PER_MINUTE))
             ->by('tenant-resolve|'.$request->ip()));
 
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.

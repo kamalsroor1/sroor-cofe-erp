@@ -145,10 +145,15 @@ class CentralTenantResolverApiTest extends TestCase
     }
 
     /**
-     * AUTH-2: the public workspace resolver is rate limited (tenant-resolve, 10/min per IP)
-     * so workspace codes cannot be enumerated.
+     * AUTH-2 + CTO W1 Q1 (2026-10-09): the public workspace resolver is rate limited
+     * (tenant-resolve, 30/min per IP, was 10) so workspace codes cannot be enumerated.
      */
-    public function test_v1_resolver_is_throttled_after_ten_requests_per_minute(): void
+    public function test_tenant_resolve_budget_is_thirty_per_minute(): void
+    {
+        $this->assertSame(30, config('rate_limits.tenant_resolve.per_minute'));
+    }
+
+    public function test_v1_resolver_is_throttled_after_thirty_requests_per_minute(): void
     {
         $this->assertResolverThrottled('/api/v1/central/tenants/resolve');
     }
@@ -156,18 +161,20 @@ class CentralTenantResolverApiTest extends TestCase
     /**
      * AUTH-2: the unversioned alias must carry the same limiter; it is easy to forget.
      */
-    public function test_unversioned_resolver_alias_is_throttled_after_ten_requests_per_minute(): void
+    public function test_unversioned_resolver_alias_is_throttled_after_thirty_requests_per_minute(): void
     {
         $this->assertResolverThrottled('/api/central/tenants/resolve');
     }
 
     private function assertResolverThrottled(string $path): void
     {
-        for ($i = 1; $i <= 10; $i++) {
+        $budget = (int) config('rate_limits.tenant_resolve.per_minute');
+
+        for ($i = 1; $i <= $budget; $i++) {
             $this->getJson($path.'?code=probe-'.$i)->assertStatus(404);
         }
 
-        $this->getJson($path.'?code=probe-11')
+        $this->getJson($path.'?code=probe-'.($budget + 1))
             ->assertStatus(429)
             ->assertJsonPath('message', __('auth.too_many_requests'));
 

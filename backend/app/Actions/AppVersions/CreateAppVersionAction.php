@@ -18,16 +18,21 @@ class CreateAppVersionAction
             $apkChecksum = null;
 
             if ($dto->apkFile) {
+                // W1 hardening note 5: nothing from the client's file (name or extension)
+                // is used. The extension follows the validated platform; the file on disk
+                // gets a unique server-generated name, so re-uploading a version never
+                // overwrites (or, on delete, removes) another release's binary.
                 $ext = match ($dto->platform) {
                     'windows' => 'exe',
-                    'android' => 'apk',
                     'ios' => 'ipa',
-                    default => $dto->apkFile->getClientOriginalExtension() ?: 'bin',
+                    default => 'apk',
                 };
+                $apkPath = $dto->apkFile->storeAs('apks/'.$dto->platform, Str::lower((string) Str::ulid()).'.'.$ext, 'public');
+
+                // Download name only (Content-Disposition), built from validated fields.
                 $appNameSlug = Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
                 $prefix = $dto->platform === 'windows' ? $appNameSlug.'-Setup-v' : $appNameSlug.'-v';
                 $apkFilename = $prefix.Str::slug($dto->versionName).'.'.$ext;
-                $apkPath = $dto->apkFile->storeAs('apks/'.$dto->platform, $apkFilename, 'public');
                 $apkSizeBytes = $dto->apkFile->getSize();
                 $apkChecksum = hash_file('sha256', $dto->apkFile->getRealPath());
             }

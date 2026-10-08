@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Providers\AppServiceProvider;
 use Closure;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
@@ -78,8 +79,8 @@ final class ThrottleTenantMisses
 
     private function maxAttempts(): int
     {
-        $value = config('rate_limits.tenant_resolve.per_minute', 10);
+        $value = config('rate_limits.tenant_resolve.per_minute', AppServiceProvider::TENANT_RESOLVE_PER_MINUTE);
 
-        return max(1, is_numeric($value) ? (int) $value : 10);
+        return max(1, is_numeric($value) ? (int) $value : AppServiceProvider::TENANT_RESOLVE_PER_MINUTE);
     }
 }

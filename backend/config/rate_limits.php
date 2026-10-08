@@ -45,9 +45,12 @@ return [
         'per_minute' => (int) env('RATE_LIMIT_PUBLIC_API', 60),
     ],
 
-    // Central workspace resolver: low cap to stop workspace-code enumeration.
+    // Central workspace resolver (shop-code lookup) and the tenant-miss bucket of
+    // ThrottleTenantMisses: caps workspace-code enumeration per client IP.
+    // CTO decision W1 Q1 (2026-10-09): 30 per minute (was 10), so a shop installing
+    // several devices behind one NAT address is not locked out.
     'tenant_resolve' => [
-        'per_minute' => (int) env('RATE_LIMIT_TENANT_RESOLVE', 10),
+        'per_minute' => (int) env('RATE_LIMIT_TENANT_RESOLVE', 30),
     ],
 
 ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Media\ServerGeneratedFileNamer;
 use Spatie\ImageOptimizer\Optimizers\Avifenc;
 use Spatie\ImageOptimizer\Optimizers\Cwebp;
 use Spatie\ImageOptimizer\Optimizers\Gifsicle;
@@ -19,7 +20,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Observers\MediaObserver;
 use Spatie\MediaLibrary\ResponsiveImages\Jobs\GenerateResponsiveImagesJob;
 use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred;
 use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator;
-use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 use Spatie\MediaLibrary\Support\FileRemover\DefaultFileRemover;
 use Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator;
 use Spatie\MediaLibrary\Support\UrlGenerator\DefaultUrlGenerator;
@@ -137,8 +137,11 @@ return [
 
     /*
      * This is the class that is responsible for naming generated files.
+     *
+     * W1 hardening note 5: stored file names are generated server-side (ULID); the
+     * client's upload name never becomes a file name on disk.
      */
-    'file_namer' => DefaultFileNamer::class,
+    'file_namer' => ServerGeneratedFileNamer::class,
 
     /*
      * The class that contains the strategy for determining a media file's path.

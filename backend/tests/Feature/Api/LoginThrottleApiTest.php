@@ -156,8 +156,9 @@ final class LoginThrottleApiTest extends TenantTestCase
 
     public function test_unknown_tenant_probes_on_ping_are_throttled_per_ip(): void
     {
+        // CTO W1 Q1 (2026-10-09): the tenant-miss bucket shares the tenant-resolve budget, 30/min.
         $budget = (int) config('rate_limits.tenant_resolve.per_minute');
-        $this->assertGreaterThan(0, $budget);
+        $this->assertSame(30, $budget);
 
         for ($i = 1; $i <= $budget; $i++) {
             $this->getJson('/api/v1/ping', ['X-Tenant' => "guess-{$i}"])->assertStatus(404);
