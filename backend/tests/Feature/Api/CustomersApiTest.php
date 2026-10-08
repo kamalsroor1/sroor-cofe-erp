@@ -19,9 +19,13 @@ class CustomersApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+
     protected string $adminToken;
+
     protected User $unauthorizedUser;
+
     protected string $unauthorizedToken;
+
     protected Store $store;
 
     protected function setUp(): void
@@ -32,30 +36,30 @@ class CustomersApiTest extends TestCase
         $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
-            'name'      => 'المخزن الرئيسي',
-            'code'      => 'MAIN-001',
-            'type'      => 'warehouse',
-            'is_main'   => true,
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN-001',
+            'type' => 'warehouse',
+            'is_main' => true,
             'is_active' => true,
         ]);
 
         $adminRole = Role::findByName('admin');
 
         $this->adminUser = User::factory()->create([
-            'name'             => 'كمال سرور',
-            'phone'            => '01012316954',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->adminUser->assignRole($adminRole);
         $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
 
         $this->unauthorizedUser = User::factory()->create([
-            'name'             => 'مستخدم بدون صلاحيات',
-            'phone'            => '01000000000',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'مستخدم بدون صلاحيات',
+            'phone' => '01000000000',
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
@@ -69,7 +73,7 @@ class CustomersApiTest extends TestCase
 
     public function test_unauthorized_user_cannot_create_or_delete_customer(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
             ->postJson('/api/v1/customers', [
                 'name' => 'عميل ممنوع',
             ]);
@@ -80,13 +84,13 @@ class CustomersApiTest extends TestCase
     public function test_authenticated_user_can_list_customers_with_metrics(): void
     {
         Customer::create([
-            'name'            => 'عميل تجريبي مدين',
-            'phone'           => '01011112222',
+            'name' => 'عميل تجريبي مدين',
+            'phone' => '01000007002',
             'current_balance' => '1500.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->getJson('/api/v1/customers');
 
         $response->assertStatus(200)
@@ -99,7 +103,7 @@ class CustomersApiTest extends TestCase
             ->assertJson([
                 'success' => true,
                 'summary' => [
-                    'debtors_count'   => 1,
+                    'debtors_count' => 1,
                     'total_customers' => 1,
                 ],
             ]);
@@ -108,38 +112,38 @@ class CustomersApiTest extends TestCase
     public function test_can_create_a_new_customer_with_opening_balance(): void
     {
         $payload = [
-            'name'            => 'مطحن الأمل للبن',
-            'phone'           => '01099887766',
-            'address'         => 'وسط البلد، القاهرة',
-            'tax_number'      => '123-456-789',
+            'name' => 'مطحن الأمل للبن',
+            'phone' => '01000007003',
+            'address' => 'وسط البلد، القاهرة',
+            'tax_number' => '123-456-789',
             'opening_balance' => '2500.000',
-            'notes'           => 'عميل جملة',
+            'notes' => 'عميل جملة',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->postJson('/api/v1/customers', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'name'            => 'مطحن الأمل للبن',
-                    'phone'           => '01099887766',
+                'data' => [
+                    'name' => 'مطحن الأمل للبن',
+                    'phone' => '01000007003',
                     'current_balance' => 2500.000,
                 ],
             ]);
 
         $this->assertDatabaseHas('customers', [
-            'name'  => 'مطحن الأمل للبن',
-            'phone' => '01099887766',
+            'name' => 'مطحن الأمل للبن',
+            'phone' => '01000007003',
         ]);
     }
 
     public function test_create_customer_fails_validation_on_missing_name(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->postJson('/api/v1/customers', [
-                'phone' => '01011112222',
+                'phone' => '01000007002',
             ]);
 
         $response->assertStatus(422)
@@ -149,21 +153,21 @@ class CustomersApiTest extends TestCase
     public function test_can_view_single_customer_profile(): void
     {
         $customer = Customer::create([
-            'name'            => 'كافيه السلام',
-            'phone'           => '01044332211',
+            'name' => 'كافيه السلام',
+            'phone' => '01000007018',
             'current_balance' => '750.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->getJson('/api/v1/customers/' . $customer->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/customers/'.$customer->id);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'id'              => $customer->id,
-                    'name'            => 'كافيه السلام',
+                'data' => [
+                    'id' => $customer->id,
+                    'name' => 'كافيه السلام',
                     'current_balance' => 750.000,
                 ],
             ]);
@@ -172,32 +176,32 @@ class CustomersApiTest extends TestCase
     public function test_can_update_customer_details(): void
     {
         $customer = Customer::create([
-            'name'            => 'محل النور',
-            'phone'           => '01055554444',
+            'name' => 'محل النور',
+            'phone' => '01000007004',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         $payload = [
-            'name'    => 'محل النور للقهوة الفاخرة',
-            'phone'   => '01055554444',
+            'name' => 'محل النور للقهوة الفاخرة',
+            'phone' => '01000007004',
             'address' => 'ميدان التحرير',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->putJson('/api/v1/customers/' . $customer->id, $payload);
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->putJson('/api/v1/customers/'.$customer->id, $payload);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'name'    => 'محل النور للقهوة الفاخرة',
+                'data' => [
+                    'name' => 'محل النور للقهوة الفاخرة',
                     'address' => 'ميدان التحرير',
                 ],
             ]);
 
         $this->assertDatabaseHas('customers', [
-            'id'   => $customer->id,
+            'id' => $customer->id,
             'name' => 'محل النور للقهوة الفاخرة',
         ]);
     }
@@ -205,100 +209,100 @@ class CustomersApiTest extends TestCase
     public function test_can_collect_customer_payment_and_decrease_balance(): void
     {
         $customer = Customer::create([
-            'name'            => 'عميل سداد مديونية',
-            'phone'           => '01077778888',
+            'name' => 'عميل سداد مديونية',
+            'phone' => '01000007009',
             'current_balance' => '1000.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         Invoice::create([
-            'store_id'        => $this->store->id,
-            'customer_id'     => $customer->id,
-            'user_id'         => $this->adminUser->id,
-            'invoice_number'  => 'INV-1000',
-            'invoice_date'    => now(),
-            'subtotal'        => 1000.000,
+            'store_id' => $this->store->id,
+            'customer_id' => $customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_number' => 'INV-1000',
+            'invoice_date' => now(),
+            'subtotal' => 1000.000,
             'discount_amount' => 0.000,
-            'tax_amount'      => 0.000,
-            'net_total'       => 1000.000,
-            'paid_amount'     => 0.000,
-            'remaining_amount'=> 1000.000,
-            'payment_type'    => 'credit',
-            'status'          => 'confirmed',
+            'tax_amount' => 0.000,
+            'net_total' => 1000.000,
+            'paid_amount' => 0.000,
+            'remaining_amount' => 1000.000,
+            'payment_type' => 'credit',
+            'status' => 'confirmed',
         ]);
 
         $payload = [
-            'amount'         => 400.000,
+            'amount' => 400.000,
             'payment_method' => 'cash',
-            'payment_date'   => now()->toDateString(),
-            'notes'          => 'سداد دفعة نقدية',
+            'payment_date' => now()->toDateString(),
+            'notes' => 'سداد دفعة نقدية',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->postJson('/api/v1/customers/' . $customer->id . '/collect-payment', $payload);
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->postJson('/api/v1/customers/'.$customer->id.'/collect-payment', $payload);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'customer' => [
-                        'id'              => $customer->id,
+                        'id' => $customer->id,
                         'current_balance' => 600.000, // 1000 - 400
                     ],
                 ],
             ]);
 
-        $this->assertEquals('600.000', (string)$customer->fresh()->current_balance);
+        $this->assertEquals('600.000', (string) $customer->fresh()->current_balance);
         $this->assertDatabaseHas('payments', [
             'customer_id' => $customer->id,
-            'amount'      => '400.000',
+            'amount' => '400.000',
         ]);
     }
 
     public function test_can_generate_customer_account_statement_ledger(): void
     {
         $customer = Customer::create([
-            'name'            => 'عميل كشف حساب',
-            'phone'           => '01099990000',
+            'name' => 'عميل كشف حساب',
+            'phone' => '01000007007',
             'current_balance' => '1200.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         Invoice::create([
-            'store_id'        => $this->store->id,
-            'customer_id'     => $customer->id,
-            'user_id'         => $this->adminUser->id,
-            'invoice_number'  => 'INV-1001',
-            'invoice_date'    => now(),
-            'subtotal'        => 1200.000,
+            'store_id' => $this->store->id,
+            'customer_id' => $customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_number' => 'INV-1001',
+            'invoice_date' => now(),
+            'subtotal' => 1200.000,
             'discount_amount' => 0.000,
-            'tax_amount'      => 0.000,
-            'net_total'       => 1200.000,
-            'paid_amount'     => 0.000,
-            'remaining_amount'=> 1200.000,
-            'payment_type'    => 'credit',
-            'status'          => 'confirmed',
+            'tax_amount' => 0.000,
+            'net_total' => 1200.000,
+            'paid_amount' => 0.000,
+            'remaining_amount' => 1200.000,
+            'payment_type' => 'credit',
+            'status' => 'confirmed',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->getJson('/api/v1/customers/' . $customer->id . '/statement');
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/customers/'.$customer->id.'/statement');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'success',
                 'data' => [
                     'customer' => ['id', 'name', 'current_balance'],
-                    'summary'  => ['total_debit', 'total_credit', 'current_balance', 'transactions_count'],
-                    'ledger'   => [
+                    'summary' => ['total_debit', 'total_credit', 'current_balance', 'transactions_count'],
+                    'ledger' => [
                         '*' => ['date', 'type', 'ref_number', 'debit', 'credit', 'balance_after', 'notes'],
                     ],
                 ],
             ])
             ->assertJson([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'summary' => [
-                        'total_debit'     => 1200.000,
+                        'total_debit' => 1200.000,
                         'current_balance' => 1200.000,
                     ],
                 ],
@@ -308,37 +312,37 @@ class CustomersApiTest extends TestCase
     public function test_can_toggle_customer_active_status(): void
     {
         $customer = Customer::create([
-            'name'            => 'عميل إيقاف',
-            'phone'           => '01088889999',
+            'name' => 'عميل إيقاف',
+            'phone' => '01000007019',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->patchJson('/api/v1/customers/' . $customer->id . '/toggle-active');
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->patchJson('/api/v1/customers/'.$customer->id.'/toggle-active');
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'is_active' => false,
                 ],
             ]);
 
-        $this->assertFalse((bool)$customer->fresh()->is_active);
+        $this->assertFalse((bool) $customer->fresh()->is_active);
     }
 
     public function test_can_delete_customer_successfully(): void
     {
         $customer = Customer::create([
-            'name'            => 'عميل للحذف',
-            'phone'           => '01033332222',
+            'name' => 'عميل للحذف',
+            'phone' => '01000007020',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->deleteJson('/api/v1/customers/' . $customer->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->deleteJson('/api/v1/customers/'.$customer->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
-use App\Models\Store;
 use App\Models\CashShift;
+use App\Models\Store;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class PermissionsAndContextApiTest extends TestCase
@@ -22,9 +22,9 @@ class PermissionsAndContextApiTest extends TestCase
         parent::setUp();
 
         $this->store = Store::create([
-            'name'      => 'المخزن الرئيسي',
-            'code'      => 'MAIN',
-            'is_main'   => true,
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN',
+            'is_main' => true,
             'is_active' => true,
         ]);
     }
@@ -41,7 +41,7 @@ class PermissionsAndContextApiTest extends TestCase
             ])
             ->assertJson([
                 'success' => true,
-                'locale'  => 'ar',
+                'locale' => 'ar',
             ]);
     }
 
@@ -60,16 +60,16 @@ class PermissionsAndContextApiTest extends TestCase
         $role->givePermissionTo($permission);
 
         $user = User::factory()->create([
-            'name'      => 'محمد كاشير',
-            'phone'     => '01099887766',
-            'password'  => Hash::make('password'),
+            'name' => 'محمد كاشير',
+            'phone' => '01000007003',
+            'password' => Hash::make('password'),
             'is_active' => true,
         ]);
         $user->assignRole($role);
 
         $token = $user->createToken('test-spa')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/permissions');
 
         $response->assertStatus(200)
@@ -92,9 +92,9 @@ class PermissionsAndContextApiTest extends TestCase
             ])
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'is_admin'         => false,
-                    'user_roles'       => ['cashier'],
+                'data' => [
+                    'is_admin' => false,
+                    'user_roles' => ['cashier'],
                     'user_permissions' => ['pos.access'],
                 ],
             ]);
@@ -112,9 +112,9 @@ class PermissionsAndContextApiTest extends TestCase
     {
         $role = Role::create(['name' => 'admin']);
         $user = User::factory()->create([
-            'name'      => 'كمال سرور',
-            'phone'     => '01012316954',
-            'password'  => Hash::make('password'),
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'password' => Hash::make('password'),
             'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
@@ -122,18 +122,18 @@ class PermissionsAndContextApiTest extends TestCase
 
         // Open a cash shift for testing
         CashShift::create([
-            'store_id'             => $this->store->id,
-            'user_id'              => $user->id,
-            'shift_number'         => 'SH-001',
+            'store_id' => $this->store->id,
+            'user_id' => $user->id,
+            'shift_number' => 'SH-001',
             'opening_cash_balance' => 500.000,
-            'opened_at'            => now(),
-            'status'               => 'open',
+            'opened_at' => now(),
+            'status' => 'open',
         ]);
 
         $token = $user->createToken('test-spa')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->withHeader('X-Store-Id', (string)$this->store->id)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->withHeader('X-Store-Id', (string) $this->store->id)
             ->getJson('/api/v1/system/context');
 
         $response->assertStatus(200)
@@ -153,14 +153,14 @@ class PermissionsAndContextApiTest extends TestCase
             ])
             ->assertJson([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'auth' => [
                         'user' => [
                             'name' => 'كمال سرور',
                         ],
                     ],
                     'active_store' => [
-                        'id'   => $this->store->id,
+                        'id' => $this->store->id,
                         'name' => 'المخزن الرئيسي',
                     ],
                 ],

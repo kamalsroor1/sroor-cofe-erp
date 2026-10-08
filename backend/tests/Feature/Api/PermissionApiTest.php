@@ -9,7 +9,6 @@ use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -18,9 +17,13 @@ class PermissionApiTest extends TestCase
     use RefreshDatabase;
 
     protected Store $store;
+
     protected User $adminUser;
+
     protected string $adminToken;
+
     protected User $staffUser;
+
     protected string $staffToken;
 
     protected function setUp(): void
@@ -31,18 +34,18 @@ class PermissionApiTest extends TestCase
         $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
-            'name'      => 'المخزن الرئيسي',
-            'code'      => 'MAIN-001',
-            'is_main'   => true,
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN-001',
+            'is_main' => true,
             'is_active' => true,
         ]);
 
         $adminRole = Role::findByName('admin');
         $this->adminUser = User::factory()->create([
-            'name'             => 'كمال سرور',
-            'phone'            => '01012316954',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->adminUser->assignRole($adminRole);
@@ -50,10 +53,10 @@ class PermissionApiTest extends TestCase
 
         $cashierRole = Role::findByName('cashier');
         $this->staffUser = User::factory()->create([
-            'name'             => 'أحمد كاشير',
-            'phone'            => '01099887766',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'أحمد كاشير',
+            'phone' => '01000007003',
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->staffUser->assignRole($cashierRole);
@@ -69,7 +72,7 @@ class PermissionApiTest extends TestCase
 
     public function test_authenticated_admin_fetches_permissions_tree_with_is_admin_true(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->getJson('/api/v1/permissions');
 
         $response->assertStatus(200)
@@ -91,8 +94,8 @@ class PermissionApiTest extends TestCase
             ])
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'is_admin'   => true,
+                'data' => [
+                    'is_admin' => true,
                     'user_roles' => ['admin'],
                 ],
             ]);
@@ -100,14 +103,14 @@ class PermissionApiTest extends TestCase
 
     public function test_authenticated_staff_fetches_permissions_tree_with_exact_role_and_permissions(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->staffToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->staffToken)
             ->getJson('/api/v1/permissions');
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'is_admin'   => false,
+                'data' => [
+                    'is_admin' => false,
                     'user_roles' => ['cashier'],
                 ],
             ]);

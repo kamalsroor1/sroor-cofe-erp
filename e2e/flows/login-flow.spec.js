@@ -14,7 +14,7 @@ test.describe('Flow: Complete Authentication & Navigation Journey', () => {
             fs.mkdirSync(flowDir, { recursive: true });
         }
 
-        const testPhone = process.env.E2E_USER_PHONE || '01012316954';
+        const testPhone = process.env.E2E_USER_PHONE || '01000000001';
         const testPassword = process.env.E2E_USER_PASSWORD || 'password';
 
         // Step 1: Open Login Page

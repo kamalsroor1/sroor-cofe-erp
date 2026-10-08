@@ -18,9 +18,13 @@ class SettingApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+
     protected string $adminToken;
+
     protected User $unauthorizedUser;
+
     protected string $unauthorizedToken;
+
     protected Store $store;
 
     protected function setUp(): void
@@ -31,32 +35,32 @@ class SettingApiTest extends TestCase
         $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
-            'name'      => 'المحمصة الرئيسية',
-            'code'      => 'MAIN-01',
-            'type'      => 'retail',
-            'is_main'   => true,
+            'name' => 'المحمصة الرئيسية',
+            'code' => 'MAIN-01',
+            'type' => 'retail',
+            'is_main' => true,
             'is_active' => true,
         ]);
 
         $adminRole = Role::findByName('admin');
 
         $this->adminUser = User::factory()->create([
-            'name'             => 'كمال سرور',
-            'phone'            => '01012316954',
-            'email'            => 'kamal@sroor.com',
-            'password'         => Hash::make('password123'),
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'email' => 'kamal@sroor.com',
+            'password' => Hash::make('password123'),
             'theme_preference' => 'dark',
-            'is_active'        => true,
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->adminUser->assignRole($adminRole);
         $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
 
         $this->unauthorizedUser = User::factory()->create([
-            'name'             => 'مستخدم بدون صلاحيات',
-            'phone'            => '01000000000',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'مستخدم بدون صلاحيات',
+            'phone' => '01000000000',
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
@@ -70,7 +74,7 @@ class SettingApiTest extends TestCase
 
     public function test_unauthorized_user_cannot_access_or_update_settings(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
             ->getJson('/api/v1/settings');
 
         $response->assertStatus(403);
@@ -78,7 +82,7 @@ class SettingApiTest extends TestCase
 
     public function test_can_get_settings_dictionary(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->getJson('/api/v1/settings');
 
         $response->assertStatus(200)
@@ -114,20 +118,20 @@ class SettingApiTest extends TestCase
     public function test_can_update_settings(): void
     {
         $payload = [
-            'company_name'                   => 'محامص سرور العالمية',
-            'company_subtitle'               => 'أجود أنواع البن الفاخر',
-            'company_phone'                  => '01099998888',
-            'company_address'                => 'القاهرة الجديدة',
-            'invoice_footer_note'            => 'أهلاً بكم في سرور كوفي',
-            'show_print_company_name'        => true,
-            'show_print_subtitle'            => true,
-            'show_print_logo'                => true,
-            'thermal_show_customer_balance'  => true,
-            'print_show_qr'                  => true,
+            'company_name' => 'محامص سرور العالمية',
+            'company_subtitle' => 'أجود أنواع البن الفاخر',
+            'company_phone' => '01000007005',
+            'company_address' => 'القاهرة الجديدة',
+            'invoice_footer_note' => 'أهلاً بكم في سرور كوفي',
+            'show_print_company_name' => true,
+            'show_print_subtitle' => true,
+            'show_print_logo' => true,
+            'thermal_show_customer_balance' => true,
+            'print_show_qr' => true,
             'telegram_notifications_enabled' => false,
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->postJson('/api/v1/settings', $payload);
 
         $response->assertStatus(200)
@@ -140,7 +144,7 @@ class SettingApiTest extends TestCase
 
     public function test_update_settings_fails_validation_on_empty_company_name(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->postJson('/api/v1/settings', [
                 'company_name' => '',
             ]);
@@ -151,10 +155,10 @@ class SettingApiTest extends TestCase
 
     public function test_can_send_test_telegram_notification(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->postJson('/api/v1/settings/telegram/test', [
                 'bot_token' => 'test_bot_token_123',
-                'chat_id'   => '123456789',
+                'chat_id' => '123456789',
             ]);
 
         $response->assertStatus(200)

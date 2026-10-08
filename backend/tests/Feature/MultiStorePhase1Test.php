@@ -2,24 +2,26 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\StoreStock;
 use App\Models\Item;
-use App\Models\Invoice;
 use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
+use App\Models\Store;
+use App\Models\StoreStock;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class MultiStorePhase1Test extends TestCase
 {
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Store $mainStore;
+
     protected Store $vanStore;
+
     protected Item $item;
 
     protected function setUp(): void
@@ -29,43 +31,43 @@ class MultiStorePhase1Test extends TestCase
         Role::firstOrCreate(['name' => 'admin']);
 
         $this->mainStore = Store::create([
-            'name'      => 'المخزن الرئيسي',
-            'code'      => 'MAIN-01',
-            'type'      => 'main_warehouse',
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN-01',
+            'type' => 'main_warehouse',
             'is_active' => true,
-            'is_main'   => true,
+            'is_main' => true,
         ]);
 
         $this->vanStore = Store::create([
-            'name'      => 'عربية توزيع رقم 1',
-            'code'      => 'VAN-01',
-            'type'      => 'wholesale_van',
+            'name' => 'عربية توزيع رقم 1',
+            'code' => 'VAN-01',
+            'type' => 'wholesale_van',
             'is_active' => true,
-            'is_main'   => false,
+            'is_main' => false,
         ]);
 
         $this->admin = User::create([
-            'name'             => 'كمال سرور',
-            'phone'            => '01012316954',
-            'email'            => 'admin@sroor.com',
-            'password'         => bcrypt('password'),
-            'is_active'        => true,
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'email' => 'admin@sroor.com',
+            'password' => bcrypt('password'),
+            'is_active' => true,
             'default_store_id' => $this->mainStore->id,
         ]);
         $this->admin->assignRole('admin');
         $this->admin->stores()->attach([$this->mainStore->id, $this->vanStore->id]);
 
         $this->item = Item::create([
-            'code'              => 'COF-001',
-            'name'              => 'بن كولومبي فاخر',
-            'category'          => 'بن سادة',
-            'unit'              => 'كجم',
-            'current_stock'     => '100.000',
-            'cost_price'        => '250.000',
+            'code' => 'COF-001',
+            'name' => 'بن كولومبي فاخر',
+            'category' => 'بن سادة',
+            'unit' => 'كجم',
+            'current_stock' => '100.000',
+            'cost_price' => '250.000',
             'weighted_avg_cost' => '250.000',
-            'selling_price'     => '400.000',
-            'min_stock_level'   => '10.000',
-            'is_active'         => true,
+            'selling_price' => '400.000',
+            'min_stock_level' => '10.000',
+            'is_active' => true,
         ]);
     }
 
@@ -83,10 +85,10 @@ class MultiStorePhase1Test extends TestCase
     {
         // 1. Stock in main store with NO custom price (should fallback to 400.000)
         $mainStock = StoreStock::create([
-            'store_id'             => $this->mainStore->id,
-            'item_id'              => $this->item->id,
-            'quantity'             => '80.000',
-            'min_stock'            => '10.000',
+            'store_id' => $this->mainStore->id,
+            'item_id' => $this->item->id,
+            'quantity' => '80.000',
+            'min_stock' => '10.000',
             'custom_selling_price' => null,
         ]);
 
@@ -96,10 +98,10 @@ class MultiStorePhase1Test extends TestCase
 
         // 2. Stock in van store with CUSTOM wholesale price 360.000
         $vanStock = StoreStock::create([
-            'store_id'             => $this->vanStore->id,
-            'item_id'              => $this->item->id,
-            'quantity'             => '20.000',
-            'min_stock'            => '5.000',
+            'store_id' => $this->vanStore->id,
+            'item_id' => $this->item->id,
+            'quantity' => '20.000',
+            'min_stock' => '5.000',
             'custom_selling_price' => '360.000',
         ]);
 
@@ -124,18 +126,18 @@ class MultiStorePhase1Test extends TestCase
     {
         $transfer = StockTransfer::create([
             'transfer_number' => 'TRF-20260811-0001',
-            'from_store_id'   => $this->mainStore->id,
-            'to_store_id'     => $this->vanStore->id,
-            'user_id'         => $this->admin->id,
-            'transfer_date'   => now()->toDateString(),
-            'status'          => 'pending',
-            'notes'           => 'شحن عهدة بضاعة لعربية التوزيع',
+            'from_store_id' => $this->mainStore->id,
+            'to_store_id' => $this->vanStore->id,
+            'user_id' => $this->admin->id,
+            'transfer_date' => now()->toDateString(),
+            'status' => 'pending',
+            'notes' => 'شحن عهدة بضاعة لعربية التوزيع',
         ]);
 
         $item = StockTransferItem::create([
             'stock_transfer_id' => $transfer->id,
-            'item_id'           => $this->item->id,
-            'quantity'          => '25.000',
+            'item_id' => $this->item->id,
+            'quantity' => '25.000',
         ]);
 
         $this->assertEquals('TRF-20260811-0001', $transfer->transfer_number);

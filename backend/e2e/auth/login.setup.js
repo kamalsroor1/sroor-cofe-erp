@@ -1,4 +1,4 @@
-import { test as setup, expect } from '@playwright/test';
+import { test as setup } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,7 +13,7 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         fs.mkdirSync(authDir, { recursive: true });
     }
 
-    const testPhone = process.env.E2E_USER_PHONE || '01012316954';
+    const testPhone = process.env.E2E_USER_PHONE || '01000000001';
     const testPassword = process.env.E2E_USER_PASSWORD || 'password';
 
     console.log(`\n🔑 Setting up E2E Auth Session with user: ${testPhone}...`);
@@ -23,7 +23,11 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 15000 });
 
         // Dismiss update modal if present
-        const closeUpdateModalBtn = page.locator('button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق")').first();
+        const closeUpdateModalBtn = page
+            .locator(
+                'button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق")'
+            )
+            .first();
         if (await closeUpdateModalBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
             await closeUpdateModalBtn.click().catch(() => {});
             await page.waitForTimeout(300);
@@ -34,7 +38,7 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
 
         await phoneInput.fill(testPhone);
         await passwordInput.fill(testPassword);
-        
+
         // Submit via enter or click
         await passwordInput.press('Enter');
 
@@ -52,7 +56,7 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
                 ? primary.origin.replace('localhost', '127.0.0.1')
                 : primary.origin.replace('127.0.0.1', 'localhost');
 
-            if (!storage.origins.some(o => o.origin === altOriginUrl)) {
+            if (!storage.origins.some((o) => o.origin === altOriginUrl)) {
                 storage.origins.push({
                     origin: altOriginUrl,
                     localStorage: [...primary.localStorage],

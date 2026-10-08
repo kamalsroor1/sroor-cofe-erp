@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\Customer;
-use App\Models\Supplier;
-use App\Models\Item;
-use App\Models\Invoice;
-use App\Models\CashShift;
-use App\Models\Expense;
+use App\Actions\Dashboard\GetDashboardApiOverviewAction;
+use App\Http\Resources\Api\DashboardOverviewResource;
 use App\Models\ActivityLog;
+use App\Models\CashShift;
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Item;
+use App\Models\Store;
+use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class DashboardApiControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $user;
+
     protected Store $store;
 
     protected function setUp(): void
@@ -31,18 +33,18 @@ class DashboardApiControllerTest extends TestCase
         $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 
         $this->store = Store::create([
-            'name'      => 'المقر الرئيسي',
-            'code'      => 'MAIN-01',
-            'type'      => 'retail_shop',
+            'name' => 'المقر الرئيسي',
+            'code' => 'MAIN-01',
+            'type' => 'retail_shop',
             'is_active' => true,
-            'is_main'   => true,
+            'is_main' => true,
         ]);
 
         $this->user = User::factory()->create([
-            'name'             => 'مدير الفرع',
-            'phone'            => '01099887766',
+            'name' => 'مدير الفرع',
+            'phone' => '01000007003',
             'default_store_id' => $this->store->id,
-            'is_active'        => true,
+            'is_active' => true,
         ]);
         $this->user->assignRole($role);
     }
@@ -53,78 +55,78 @@ class DashboardApiControllerTest extends TestCase
 
         // 1. Customer & Supplier with balances
         $customer = Customer::create([
-            'name'            => 'عميل تجريبي',
-            'phone'           => '01011111111',
+            'name' => 'عميل تجريبي',
+            'phone' => '01011111111',
             'current_balance' => '1500.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         Supplier::create([
-            'name'            => 'مورد تجريبي',
-            'phone'           => '01022222222',
+            'name' => 'مورد تجريبي',
+            'phone' => '01022222222',
             'current_balance' => '700.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         // 2. Item & Invoice
         $item = Item::create([
-            'name'          => 'بن برازيلي فاخر',
-            'code'          => 'BRZ-01',
-            'unit'          => 'كجم',
-            'cost_price'    => '100.000',
+            'name' => 'بن برازيلي فاخر',
+            'code' => 'BRZ-01',
+            'unit' => 'كجم',
+            'cost_price' => '100.000',
             'selling_price' => '160.000',
             'current_stock' => '2.000',
             'min_stock_level' => '10.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $invoice = Invoice::create([
-            'invoice_number'   => 'INV-API-001',
-            'customer_id'      => $customer->id,
-            'store_id'         => $this->store->id,
-            'user_id'          => $this->user->id,
-            'invoice_date'     => now()->toDateString(),
-            'subtotal'         => '320.000',
-            'total_amount'     => '320.000',
-            'net_total'        => '320.000',
-            'paid_amount'      => '320.000',
+            'invoice_number' => 'INV-API-001',
+            'customer_id' => $customer->id,
+            'store_id' => $this->store->id,
+            'user_id' => $this->user->id,
+            'invoice_date' => now()->toDateString(),
+            'subtotal' => '320.000',
+            'total_amount' => '320.000',
+            'net_total' => '320.000',
+            'paid_amount' => '320.000',
             'remaining_amount' => '0.000',
-            'status'           => 'confirmed',
-            'payment_type'     => 'cash',
+            'status' => 'confirmed',
+            'payment_type' => 'cash',
         ]);
 
         $invoice->items()->create([
-            'item_id'     => $item->id,
-            'quantity'    => '2.000',
-            'unit_price'  => '160.000',
-            'cost_price'  => '100.000',
+            'item_id' => $item->id,
+            'quantity' => '2.000',
+            'unit_price' => '160.000',
+            'cost_price' => '100.000',
             'total_price' => '320.000',
         ]);
 
         // 3. Shift
         CashShift::create([
-            'store_id'             => $this->store->id,
-            'user_id'              => $this->user->id,
-            'shift_number'         => 1,
-            'status'               => 'open',
+            'store_id' => $this->store->id,
+            'user_id' => $this->user->id,
+            'shift_number' => 1,
+            'status' => 'open',
             'opening_cash_balance' => '500.000',
-            'opened_at'            => now(),
+            'opened_at' => now(),
         ]);
 
         // 4. Activity Log
         ActivityLog::create([
-            'user_id'     => $this->user->id,
-            'store_id'    => $this->store->id,
-            'module'      => 'invoices',
-            'action'      => 'create',
+            'user_id' => $this->user->id,
+            'store_id' => $this->store->id,
+            'module' => 'invoices',
+            'action' => 'create',
             'description' => 'إنشاء فاتورة تجريبية',
-            'ip_address'  => '127.0.0.1',
+            'ip_address' => '127.0.0.1',
         ]);
 
         // Call Action & Resource
-        $action = app(\App\Actions\Dashboard\GetDashboardApiOverviewAction::class);
+        $action = app(GetDashboardApiOverviewAction::class);
         $data = $action->execute($this->store->id);
-        $resource = new \App\Http\Resources\Api\DashboardOverviewResource($data);
+        $resource = new DashboardOverviewResource($data);
         $response = $resource->response()->getData(true);
 
         $this->assertTrue($response['data']['success']);

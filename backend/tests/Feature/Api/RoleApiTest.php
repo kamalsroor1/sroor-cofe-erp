@@ -17,11 +17,17 @@ class RoleApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+
     protected string $adminToken;
+
     protected User $unauthorizedUser;
+
     protected string $unauthorizedToken;
+
     protected Store $store;
+
     protected Role $adminRole;
+
     protected Role $cashierRole;
 
     protected function setUp(): void
@@ -32,10 +38,10 @@ class RoleApiTest extends TestCase
         $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
-            'name'      => 'المحمصة الرئيسية',
-            'code'      => 'MAIN-01',
-            'type'      => 'retail',
-            'is_main'   => true,
+            'name' => 'المحمصة الرئيسية',
+            'code' => 'MAIN-01',
+            'type' => 'retail',
+            'is_main' => true,
             'is_active' => true,
         ]);
 
@@ -43,20 +49,20 @@ class RoleApiTest extends TestCase
         $this->cashierRole = Role::findByName('cashier');
 
         $this->adminUser = User::factory()->create([
-            'name'             => 'كمال سرور المدير',
-            'phone'            => '01012316954',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'كمال سرور المدير',
+            'phone' => self::ADMIN_PHONE,
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->adminUser->assignRole($this->adminRole);
         $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
 
         $this->unauthorizedUser = User::factory()->create([
-            'name'             => 'مستخدم بدون صلاحيات',
-            'phone'            => '01000000000',
-            'password'         => Hash::make('password'),
-            'is_active'        => true,
+            'name' => 'مستخدم بدون صلاحيات',
+            'phone' => '01000000000',
+            'password' => Hash::make('password'),
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
@@ -70,7 +76,7 @@ class RoleApiTest extends TestCase
 
     public function test_unauthorized_user_cannot_access_roles(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->unauthorizedToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
             ->getJson('/api/v1/roles');
 
         $response->assertStatus(403);
@@ -78,7 +84,7 @@ class RoleApiTest extends TestCase
 
     public function test_can_get_roles_permissions_matrix(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->getJson('/api/v1/roles');
 
         $response->assertStatus(200)
@@ -97,15 +103,15 @@ class RoleApiTest extends TestCase
 
     public function test_can_get_matrix_for_specific_role(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
-            ->getJson('/api/v1/roles?role_id=' . $this->cashierRole->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/roles?role_id='.$this->cashierRole->id);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'selected_role' => [
-                        'id'   => $this->cashierRole->id,
+                        'id' => $this->cashierRole->id,
                         'name' => 'cashier',
                     ],
                 ],
@@ -118,14 +124,14 @@ class RoleApiTest extends TestCase
             'permissions' => ['pos.access', 'invoices.view'],
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->putJson("/api/v1/roles/{$this->cashierRole->id}/permissions", $payload);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'id'   => $this->cashierRole->id,
+                'data' => [
+                    'id' => $this->cashierRole->id,
                     'name' => 'cashier',
                 ],
             ]);
@@ -139,7 +145,7 @@ class RoleApiTest extends TestCase
             'permissions' => ['non_existing_permission_xyz'],
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->adminToken)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
             ->putJson("/api/v1/roles/{$this->cashierRole->id}/permissions", $payload);
 
         $response->assertStatus(422)

@@ -12,7 +12,11 @@ test.describe('UsersView Comprehensive 4-Axes Audit & Multi-Viewport Verificatio
     ];
 
     const dismissAnyModal = async (page) => {
-        const modalBtn = page.locator('button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق"), button:has-text("فتح الوردية"), button:has-text("بدء الوردية")').first();
+        const modalBtn = page
+            .locator(
+                'button:has-text("لاحقاً"), button:has-text("تخطي"), button:has-text("إغلاق"), button:has-text("تم والإغلاق"), button:has-text("فتح الوردية"), button:has-text("بدء الوردية")'
+            )
+            .first();
         if (await modalBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
             await modalBtn.click({ force: true }).catch(() => {});
             await page.waitForTimeout(400);
@@ -24,8 +28,12 @@ test.describe('UsersView Comprehensive 4-Axes Audit & Multi-Viewport Verificatio
             await page.setViewportSize({ width: vp.width, height: vp.height });
 
             const consoleErrors = [];
-            page.on('console', msg => {
-                if (msg.type() === 'error' && !msg.text().includes('favicon') && !msg.text().includes('ERR_CONNECTION_REFUSED')) {
+            page.on('console', (msg) => {
+                if (
+                    msg.type() === 'error' &&
+                    !msg.text().includes('favicon') &&
+                    !msg.text().includes('ERR_CONNECTION_REFUSED')
+                ) {
                     consoleErrors.push(msg.text());
                 }
             });
@@ -47,7 +55,7 @@ test.describe('UsersView Comprehensive 4-Axes Audit & Multi-Viewport Verificatio
             await expect(page.locator('input[placeholder*="بحث"]').first()).toBeVisible();
 
             // 4. Verify Users Table / Cards Render
-            await expect(page.locator('text=01012316954').locator('visible=true').first()).toBeVisible();
+            await expect(page.locator('text=01000000001').locator('visible=true').first()).toBeVisible();
 
             // 5. Verify No Console Errors
             expect(consoleErrors).toEqual([]);

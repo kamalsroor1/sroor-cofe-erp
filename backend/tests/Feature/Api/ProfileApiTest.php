@@ -17,7 +17,9 @@ class ProfileApiTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected string $token;
+
     protected Store $store;
 
     protected function setUp(): void
@@ -28,21 +30,21 @@ class ProfileApiTest extends TestCase
         $this->seed(PermissionsSeeder::class);
 
         $this->store = Store::create([
-            'name'      => 'الفرع الرئيسي',
-            'code'      => 'MAIN-001',
-            'is_main'   => true,
+            'name' => 'الفرع الرئيسي',
+            'code' => 'MAIN-001',
+            'is_main' => true,
             'is_active' => true,
         ]);
 
         $adminRole = Role::findByName('admin');
 
         $this->user = User::factory()->create([
-            'name'             => 'كمال سرور',
-            'phone'            => '01012316954',
-            'email'            => 'kamal@sroor.com',
-            'password'         => Hash::make('password123'),
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'email' => 'kamal@sroor.com',
+            'password' => Hash::make('password123'),
             'theme_preference' => 'dark',
-            'is_active'        => true,
+            'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
         $this->user->assignRole($adminRole);
@@ -57,17 +59,17 @@ class ProfileApiTest extends TestCase
 
     public function test_authenticated_user_can_view_profile(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->getJson('/api/v1/profile');
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'id'               => $this->user->id,
-                    'name'             => 'كمال سرور',
-                    'phone'            => '01012316954',
-                    'email'            => 'kamal@sroor.com',
+                'data' => [
+                    'id' => $this->user->id,
+                    'name' => 'كمال سرور',
+                    'phone' => self::ADMIN_PHONE,
+                    'email' => 'kamal@sroor.com',
                     'theme_preference' => 'dark',
                 ],
             ]);
@@ -76,28 +78,28 @@ class ProfileApiTest extends TestCase
     public function test_authenticated_user_can_update_profile_info(): void
     {
         $payload = [
-            'name'             => 'كمال سرور المهندس',
-            'phone'            => '01012316954',
-            'email'            => 'kamal.dev@sroor.com',
+            'name' => 'كمال سرور المهندس',
+            'phone' => self::ADMIN_PHONE,
+            'email' => 'kamal.dev@sroor.com',
             'theme_preference' => 'light',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/v1/profile', $payload);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'data'    => [
-                    'name'             => 'كمال سرور المهندس',
-                    'email'            => 'kamal.dev@sroor.com',
+                'data' => [
+                    'name' => 'كمال سرور المهندس',
+                    'email' => 'kamal.dev@sroor.com',
                     'theme_preference' => 'light',
                 ],
             ]);
 
         $this->assertDatabaseHas('users', [
-            'id'               => $this->user->id,
-            'name'             => 'كمال سرور المهندس',
+            'id' => $this->user->id,
+            'name' => 'كمال سرور المهندس',
             'theme_preference' => 'light',
         ]);
     }
@@ -105,15 +107,15 @@ class ProfileApiTest extends TestCase
     public function test_authenticated_user_can_change_password(): void
     {
         $payload = [
-            'name'                  => 'كمال سرور',
-            'phone'                 => '01012316954',
-            'theme_preference'      => 'dark',
-            'current_password'      => 'password123',
-            'new_password'          => 'newSecretPass123',
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'theme_preference' => 'dark',
+            'current_password' => 'password123',
+            'new_password' => 'newSecretPass123',
             'new_password_confirmation' => 'newSecretPass123',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/v1/profile', $payload);
 
         $response->assertStatus(200)
@@ -126,15 +128,15 @@ class ProfileApiTest extends TestCase
     public function test_update_profile_fails_on_wrong_current_password(): void
     {
         $payload = [
-            'name'                  => 'كمال سرور',
-            'phone'                 => '01012316954',
-            'theme_preference'      => 'dark',
-            'current_password'      => 'wrongPassword',
-            'new_password'          => 'newSecretPass123',
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'theme_preference' => 'dark',
+            'current_password' => 'wrongPassword',
+            'new_password' => 'newSecretPass123',
             'new_password_confirmation' => 'newSecretPass123',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/v1/profile', $payload);
 
         $response->assertStatus(422)
@@ -144,16 +146,16 @@ class ProfileApiTest extends TestCase
     public function test_update_profile_fails_validation_on_duplicate_phone(): void
     {
         User::factory()->create([
-            'phone' => '01099998888',
+            'phone' => '01000007005',
         ]);
 
         $payload = [
-            'name'             => 'كمال سرور',
-            'phone'            => '01099998888',
+            'name' => 'كمال سرور',
+            'phone' => '01000007005',
             'theme_preference' => 'dark',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
             ->putJson('/api/v1/profile', $payload);
 
         $response->assertStatus(422)
