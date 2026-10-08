@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import api from '../services/api';
+import api from '../Services/api';
 import { applyThemeColor } from '../helpers/themeHelper';
 import { trans } from '../helpers/trans';
 

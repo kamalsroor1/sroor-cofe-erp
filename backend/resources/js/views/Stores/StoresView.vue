@@ -69,7 +69,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { Plus, Package } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
-import api from '../../services/api';
+import api from '../../Services/api';
 import { useTrans } from '../../Composables/useTrans';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';

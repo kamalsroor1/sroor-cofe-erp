@@ -171,7 +171,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Printer, ArrowRight } from 'lucide-vue-next';
-import api from '../../services/api';
+import api from '../../Services/api';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';

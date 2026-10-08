@@ -49,7 +49,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
-import api from '../../services/api';
+import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
 
 import PageHeader from '../../Components/Common/PageHeader.vue';

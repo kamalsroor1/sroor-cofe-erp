@@ -1,6 +1,6 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import api from '../services/api';
+import api from '../Services/api';
 
 export function useSupplierStatement() {
     const route = useRoute();

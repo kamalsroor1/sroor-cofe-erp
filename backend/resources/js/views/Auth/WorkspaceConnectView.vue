@@ -37,7 +37,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import api from '../../services/api';
+import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
 import WorkspaceStepInput from '../../Components/Auth/WorkspaceStepInput.vue';
 import WorkspaceConnectingState from '../../Components/Auth/WorkspaceConnectingState.vue';

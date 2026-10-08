@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue';
-import api from '../services/api';
+import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useTrans } from './useTrans';
 

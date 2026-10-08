@@ -40,7 +40,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppConfigStore } from '../stores/appConfig';
-import api from '../services/api';
+import api from '../Services/api';
 
 import DashboardWelcomeBanner from '../Components/Dashboard/DashboardWelcomeBanner.vue';
 import DashboardAppMenuHub from '../Components/Dashboard/DashboardAppMenuHub.vue';

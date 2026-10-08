@@ -74,7 +74,7 @@ import ItemsSearchFilterBar from '../../Components/Items/ItemsSearchFilterBar.vu
 import ItemsTable from '../../Components/Items/ItemsTable.vue';
 import ItemFormModal from '../../Components/Items/ItemFormModal.vue';
 import ItemStockAdjustModal from '../../Components/Items/ItemStockAdjustModal.vue';
-import api from '../../services/api';
+import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 

@@ -1,6 +1,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import api from '../services/api';
+import api from '../Services/api';
 import { useTrans } from './useTrans';
 
 export function useStoreStocks() {

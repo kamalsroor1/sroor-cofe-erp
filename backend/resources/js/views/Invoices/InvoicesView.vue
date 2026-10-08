@@ -111,7 +111,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
-import api from '../../services/api';
+import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import PageHeader from '../../Components/Common/PageHeader.vue';

@@ -1,6 +1,6 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2 } from 'lucide-vue-next';
-import api from '../services/api';
+import api from '../Services/api';
 import { useTrans } from './useTrans';
 
 export function useReports() {

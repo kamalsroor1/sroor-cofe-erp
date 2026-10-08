@@ -1,6 +1,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import api from '../services/api';
+import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useFormatters } from './useFormatters';
 import { useTrans } from './useTrans';

@@ -1,6 +1,6 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../services/api';
+import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 
