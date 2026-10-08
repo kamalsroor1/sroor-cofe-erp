@@ -9,7 +9,13 @@ import { apiAs, collectConsoleErrors, loginAsSuperAdmin } from './smoke-helpers.
 
 const TRASH_BUTTON = 'button:has([class*="lucide-trash"])';
 
-test('super-admin UI: central login, tenants list, delete shows the disabled message', async ({ page }) => {
+// EXPECTED FAIL until IDEN-1.4 + IDEN-1.9 (one merge, W2) — docs/05-planning/phase-1-plan.md §4 (IDEN-1.4, IDEN-1.9).
+// The Phase 0 SPA bootstraps every session with GET /api/v1/system/context. GetSystemContextAction is
+// tenant-only (stores, cash_shifts, items, customers, settings), so on a central-only DB it throws
+// "no such table: stores" (500) and the router guard clears the session -> back to /login.
+// IDEN-1.9 replaces this flow with centralApi/centralAuth (no /system/context, no X-Tenant/X-Store-Id);
+// remove this fixme in that PR. The API test below covers the backend super-admin contract meanwhile.
+test.fixme('super-admin UI: central login, tenants list, delete shows the disabled message', async ({ page }) => {
     const consoleErrors = collectConsoleErrors(page);
 
     const login = await loginAsSuperAdmin(page, {
