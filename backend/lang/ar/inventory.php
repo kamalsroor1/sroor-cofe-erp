@@ -413,4 +413,10 @@ return [
     'all_store_types' => 'كافة أنواع الفروع والمخازن',
     'create_store' => 'حفظ وإنشاء الفرع',
     'save_staff_assignments' => 'حفظ وتعيين الموظفين',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'cancel_transfer' => 'إلغاء التحويل',
+    'min_selling_price' => 'أقل سعر بيع',
+    'quantity' => 'الكمية',
+    'view_transfer_details' => 'عرض تفاصيل التحويل',
 ];

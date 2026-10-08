@@ -166,4 +166,9 @@ return [
     'treasurer_cashier_sig' => 'Treasurer / Cashier Signature',
     'accountant_auditor_sig' => 'Accountant / Auditor Signature',
     'management_stamp_approval' => 'Management Approval & Official Stamp',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'drawer_balanced' => 'Drawer balanced',
+    'drawer_surplus' => 'Drawer surplus',
+    'record_expense_btn' => 'Record expense',
 ];

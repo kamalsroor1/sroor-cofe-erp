@@ -168,4 +168,8 @@ return [
     'urgency_safe_badge' => '✅ Safe Stock',
     'no_shortages_found_title' => 'No Inventory Shortages Currently',
     'no_shortages_found_desc' => 'All items and warehouses have safe stock levels based on current burn rate.',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'final_net_total' => 'Net total',
+    'remaining_debt' => 'Remaining owed to supplier',
 ];

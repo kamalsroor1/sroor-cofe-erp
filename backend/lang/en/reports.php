@@ -143,4 +143,11 @@ return [
     'gross_profit_egp' => 'Gross Profit',
     'profit_margin_pct' => 'Profit Margin %',
     'profit_contribution_pct' => 'Profit Share %',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'low_stock_only' => 'Low stock only',
+    'no_data_desc' => 'No data for the selected period or filters. Try changing the filters.',
+    'no_data_title' => 'No data',
+    'out_of_stock_only' => 'Out of stock only',
+    'total_sales' => 'Total sales',
 ];

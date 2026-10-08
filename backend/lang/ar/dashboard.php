@@ -122,4 +122,7 @@ return [
     'menu_hub_subtitle' => 'الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة',
     'search_screens_placeholder' => '🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...',
     'no_screens_found' => 'لم يتم العثور على أي شاشة مطابقة لبحثك',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'company_title' => 'مؤسستي',
 ];

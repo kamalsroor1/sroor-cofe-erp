@@ -150,4 +150,12 @@ return [
     'total_results_suppliers' => 'إجمالي النتائج: :count مورد',
 
     'name' => 'الاسم',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'customer_initial_balance_hint' => 'المبلغ المستحق على العميل قبل بدء العمل على النظام، اتركه صفرًا إن لم يوجد',
+    'initial_balance_hint' => 'المبلغ المستحق للمورد قبل بدء العمل على النظام، اتركه صفرًا إن لم يوجد',
+    'pay_to' => 'سداد للمورد',
+    'payment_notes_placeholder' => 'ملاحظات اختيارية (مثال: رقم الإيصال أو التحويل)',
+    'save_customer' => 'حفظ العميل',
+    'save_supplier' => 'حفظ المورد',
 ];

@@ -172,6 +172,23 @@ return [
     |
     */
 
+    // Framework rule messages present in lang/en but missing here (parity fix)
+    'any_of' => 'الحقل :attribute غير صالح.',
+    'array_keys' => 'يجب أن يحتوي الحقل :attribute على المفاتيح التالية فقط: :values.',
+    'base64' => 'يجب أن يكون الحقل :attribute نصًا صالحًا بترميز Base64.',
+    'doesnt_contain' => 'يجب ألا يحتوي الحقل :attribute على أي من القيم التالية: :values.',
+    'encoding' => 'يجب أن يكون الحقل :attribute بترميز :encoding.',
+    'in_array_keys' => 'يجب أن يحتوي الحقل :attribute على مفتاح واحد على الأقل من التالي: :values.',
+    'prohibited_if_accepted' => 'الحقل :attribute غير مسموح به عند قبول :other.',
+    'prohibited_if_declined' => 'الحقل :attribute غير مسموح به عند رفض :other.',
+
+    // Laravel skeleton stub kept for key parity with lang/en (not user-visible)
+    'custom' => [
+        'attribute-name' => [
+            'rule-name' => 'custom-message',
+        ],
+    ],
+
     'attributes' => [
         // System & Users
         'name' => 'الاسم',

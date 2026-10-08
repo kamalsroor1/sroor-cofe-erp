@@ -168,4 +168,8 @@ return [
     'urgency_safe_badge' => '✅ رصيد آمن',
     'no_shortages_found_title' => 'لا توجد نواقص في المخزون حالياً',
     'no_shortages_found_desc' => 'كافة الأصناف والمخازن تتمتع بمستويات رصيد آمنة وفقاً لمعدل السحب الحالي.',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'final_net_total' => 'صافي الفاتورة',
+    'remaining_debt' => 'المتبقي للمورد (آجل)',
 ];

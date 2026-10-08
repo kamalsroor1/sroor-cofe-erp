@@ -223,4 +223,8 @@ return [
     'payment_note_on_issue' => 'Payment on issuing invoice :number',
     'credit_invoice_cannot_have_payments' => 'A credit invoice cannot have payments',
     'idempotency_key_conflict' => 'This request key was already used for a different invoice, customer, or store',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'payment_ewallet' => 'E-wallet',
+    'total_net' => 'Net total',
 ];

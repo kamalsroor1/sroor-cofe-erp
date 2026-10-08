@@ -8,19 +8,29 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
- * P0-POS-0: ar and en must expose the same key set for the POS / invoice
- * translation files, so new checkout validation and idempotency messages
- * never fall back to a raw key in one locale.
+ * ar and en must expose the same key set for every translation file, so no
+ * message ever falls back to a raw key in one locale.
  */
 class LangKeyParityTest extends TestCase
 {
+    /**
+     * Every file under lang/ar and lang/en (union, so a file that exists in
+     * only one locale fails the assertFileExists check in load()).
+     */
     public static function langFileProvider(): array
     {
-        return [
-            'invoices' => ['invoices'],
-            'pos' => ['pos'],
-            'connectivity' => ['connectivity'],
-        ];
+        $langDir = dirname(__DIR__, 2).'/lang';
+        $files = array_merge(glob($langDir.'/ar/*.php') ?: [], glob($langDir.'/en/*.php') ?: []);
+
+        $names = array_unique(array_map(static fn (string $path): string => basename($path, '.php'), $files));
+        sort($names);
+
+        $cases = [];
+        foreach ($names as $name) {
+            $cases[$name] = [$name];
+        }
+
+        return $cases;
     }
 
     #[DataProvider('langFileProvider')]

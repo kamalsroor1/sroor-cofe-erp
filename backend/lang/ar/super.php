@@ -257,4 +257,22 @@ return [
     'units_updated_success' => 'تم تحديث وحدات القياس للنظام بنجاح ✓',
     'units_save_error' => 'تعذر حفظ وحدات القياس',
     'at_least_one_system_unit' => 'يجب الإبقاء على وحدة قياس واحدة على الأقل في النظام',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'account_status_and_plan_modal_title' => 'حالة الحساب والباقة',
+    'creating_org_status' => 'جارٍ إنشاء المؤسسة وتجهيزها...',
+    'custom_db_warning' => 'اترك هذه الحقول فارغة لاستخدام الخادم الافتراضي، وعدّلها فقط إذا كانت قاعدة بيانات المؤسسة على خادم منفصل',
+    'db_host_label' => 'عنوان خادم قاعدة البيانات',
+    'db_name_label' => 'اسم قاعدة البيانات',
+    'db_pass_label' => 'كلمة مرور قاعدة البيانات',
+    'db_user_label' => 'مستخدم قاعدة البيانات',
+    'extend_days_placeholder' => 'مثال: 30',
+    'extend_subscription_label' => 'تمديد الاشتراك (بالأيام)',
+    'hide_custom_db_settings' => 'إخفاء إعدادات قاعدة البيانات المخصصة',
+    'initial_password_label' => 'كلمة مرور المدير المبدئية',
+    'initial_password_placeholder' => '6 أحرف على الأقل',
+    'manage_tenant_status_modal_title' => 'إدارة حالة المستأجر',
+    'show_custom_db_settings' => 'إظهار إعدادات قاعدة البيانات المخصصة',
+    'status_cancelled' => 'ملغي',
+    'status_pending' => 'قيد الانتظار',
 ];

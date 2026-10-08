@@ -223,4 +223,8 @@ return [
     'payment_note_on_issue' => 'سداد عند إصدار الفاتورة رقم :number',
     'credit_invoice_cannot_have_payments' => 'الفاتورة الآجلة لا يمكن تسجيل مدفوعات عليها',
     'idempotency_key_conflict' => 'رقم العملية ده اتستخدم قبل كده مع فاتورة أو عميل أو فرع مختلف',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'payment_ewallet' => 'محفظة إلكترونية',
+    'total_net' => 'الصافي',
 ];

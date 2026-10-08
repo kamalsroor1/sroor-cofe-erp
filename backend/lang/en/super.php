@@ -256,4 +256,22 @@ return [
     'units_updated_success' => 'System measurement units updated successfully ✓',
     'units_save_error' => 'Failed to save measurement units',
     'at_least_one_system_unit' => 'At least one measurement unit must be retained in the system',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'account_status_and_plan_modal_title' => 'Account status and plan',
+    'creating_org_status' => 'Creating and provisioning the organization...',
+    'custom_db_warning' => 'Leave these fields empty to use the default server. Change them only if the organization database is on a separate server.',
+    'db_host_label' => 'Database host',
+    'db_name_label' => 'Database name',
+    'db_pass_label' => 'Database password',
+    'db_user_label' => 'Database username',
+    'extend_days_placeholder' => 'e.g. 30',
+    'extend_subscription_label' => 'Extend subscription (days)',
+    'hide_custom_db_settings' => 'Hide custom database settings',
+    'initial_password_label' => 'Initial admin password',
+    'initial_password_placeholder' => 'At least 6 characters',
+    'manage_tenant_status_modal_title' => 'Manage tenant status',
+    'show_custom_db_settings' => 'Show custom database settings',
+    'status_cancelled' => 'Cancelled',
+    'status_pending' => 'Pending',
 ];

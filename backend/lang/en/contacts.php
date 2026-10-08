@@ -150,4 +150,12 @@ return [
     'total_results_suppliers' => 'Total results: :count suppliers',
 
     'name' => 'Name',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'customer_initial_balance_hint' => 'Amount the customer owed before you started using the system. Leave 0 if none.',
+    'initial_balance_hint' => 'Amount owed to the supplier before you started using the system. Leave 0 if none.',
+    'pay_to' => 'Pay supplier',
+    'payment_notes_placeholder' => 'Optional notes (e.g. receipt or transfer number)',
+    'save_customer' => 'Save customer',
+    'save_supplier' => 'Save supplier',
 ];

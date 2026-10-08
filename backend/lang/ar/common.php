@@ -120,4 +120,11 @@ return [
     'store_access_denied' => 'غير مصرح لك بالوصول لبيانات هذا الفرع',
     'platform_name' => 'منظومة ERP السحابية',
     'default_company_subtitle' => 'لإدارة المبيعات والمخزون والفروع',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'details' => 'التفاصيل',
+    'filter_search' => 'بحث وتصفية',
+    'save_changes' => 'حفظ التعديلات',
+    'saving' => 'جارٍ الحفظ...',
+    'server_error' => 'حدث خطأ في الخادم، حاول مرة أخرى',
 ];

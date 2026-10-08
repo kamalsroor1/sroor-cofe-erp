@@ -172,4 +172,9 @@ return [
     'treasurer_cashier_sig' => 'توقيع أمين الخزينة / الكاشير',
     'accountant_auditor_sig' => 'توقيع المحاسب / المراجع',
     'management_stamp_approval' => 'اعتماد الإدارة والختم الرسمي',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'drawer_balanced' => 'الدرج مطابق',
+    'drawer_surplus' => 'زيادة بالدرج',
+    'record_expense_btn' => 'تسجيل المصروف',
 ];

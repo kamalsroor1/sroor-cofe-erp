@@ -122,4 +122,7 @@ return [
     'menu_hub_subtitle' => 'Direct 1-touch visual access to all system screens and documents',
     'search_screens_placeholder' => '🔍 Search any screen or document (e.g. sale, purchase, stock)...',
     'no_screens_found' => 'No screens matching your search query',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'company_title' => 'My business',
 ];

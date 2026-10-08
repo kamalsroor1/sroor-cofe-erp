@@ -378,4 +378,10 @@ return [
     'all_store_types' => 'All Store Types',
     'create_store' => 'Save & Create Store',
     'save_staff_assignments' => 'Save Staff Assignments',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'cancel_transfer' => 'Cancel transfer',
+    'min_selling_price' => 'Minimum selling price',
+    'quantity' => 'Quantity',
+    'view_transfer_details' => 'View transfer details',
 ];

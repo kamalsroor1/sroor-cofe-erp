@@ -143,4 +143,11 @@ return [
     'gross_profit_egp' => 'مجمل الربح',
     'profit_margin_pct' => 'هامش الربح %',
     'profit_contribution_pct' => 'نسبة المساهمة في الأرباح %',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'low_stock_only' => 'الأصناف تحت حد الطلب فقط',
+    'no_data_desc' => 'لا توجد بيانات للفترة أو الفلاتر المحددة، جرّب تغيير الفلاتر',
+    'no_data_title' => 'لا توجد بيانات',
+    'out_of_stock_only' => 'الأصناف النافدة فقط',
+    'total_sales' => 'إجمالي المبيعات',
 ];

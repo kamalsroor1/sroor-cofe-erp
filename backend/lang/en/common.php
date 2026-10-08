@@ -120,4 +120,11 @@ return [
     'store_access_denied' => 'You are not allowed to access this store\'s data',
     'platform_name' => 'Cloud ERP platform',
     'default_company_subtitle' => 'Sales, inventory and branch management',
+
+    // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
+    'details' => 'Details',
+    'filter_search' => 'Search and filter',
+    'save_changes' => 'Save changes',
+    'saving' => 'Saving...',
+    'server_error' => 'A server error occurred. Please try again.',
 ];
