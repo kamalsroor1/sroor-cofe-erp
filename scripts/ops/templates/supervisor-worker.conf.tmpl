@@ -1,0 +1,18 @@
+; Managed by scripts/ops (OPS-1). Fallback when Horizon is not installed
+; (QUEUE_MODE=worker). A release switch runs `php artisan queue:restart`.
+[program:sroor-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=/usr/bin/php ${APP_ROOT}/current/backend/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+directory=${APP_ROOT}/current/backend
+user=${APP_USER}
+numprocs=${QUEUE_WORKER_PROCESSES}
+autostart=true
+autorestart=true
+startsecs=5
+stopasgroup=true
+killasgroup=true
+stopwaitsecs=3600
+redirect_stderr=true
+stdout_logfile=${APP_ROOT}/shared/storage/logs/worker.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=5

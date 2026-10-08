@@ -1,0 +1,11 @@
+# Managed by scripts/ops (OPS-1). Included from /etc/redis/redis.conf.
+# Contains the Redis password: file is root:redis 0640.
+bind 127.0.0.1 -::1
+protected-mode yes
+port 6379
+requirepass ${REDIS_PASSWORD}
+maxmemory ${REDIS_MAXMEMORY}
+# Queue + Horizon live here: never silently drop jobs under memory pressure.
+maxmemory-policy noeviction
+appendonly yes
+appendfsync everysec

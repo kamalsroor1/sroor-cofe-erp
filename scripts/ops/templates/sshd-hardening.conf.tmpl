@@ -1,0 +1,16 @@
+# Managed by scripts/ops (OPS-1). Loaded first (00-), so it wins over
+# 50-cloud-init.conf: sshd keeps the FIRST value it reads for each keyword.
+Port ${SSH_PORT}
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+AllowUsers ${ADMIN_USER} ${APP_USER}
+MaxAuthTries 3
+LoginGraceTime 30
+X11Forwarding no
+AllowAgentForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2

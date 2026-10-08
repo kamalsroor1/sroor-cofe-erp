@@ -1,0 +1,117 @@
+# Managed by scripts/ops (OPS-1). Edit the template in the repo, not this file.
+# Serves the platform apex, every shop subdomain (<code>.${PLATFORM_DOMAIN}) and
+# the super-admin host from one wildcard certificate (DNS-01).
+
+# Plain HTTP: redirect known hosts to HTTPS, drop everything else.
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    return 444;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${PLATFORM_DOMAIN} *.${PLATFORM_DOMAIN};
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS for unknown Host / SNI values: refuse the handshake.
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name _;
+    ssl_reject_handshake on;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name ${PLATFORM_DOMAIN} *.${PLATFORM_DOMAIN};
+
+    root ${APP_ROOT}/current/backend/public;
+    index index.php;
+    charset utf-8;
+
+    ssl_certificate /etc/letsencrypt/live/${PLATFORM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${PLATFORM_DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SroorSSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    # add_header is NOT inherited by locations that define their own, so no
+    # location below uses add_header.
+    add_header Strict-Transport-Security "max-age=${HSTS_MAX_AGE}" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    client_max_body_size 25m;
+
+    access_log /var/log/nginx/sroor.access.log;
+    error_log /var/log/nginx/sroor.error.log warn;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    # Hashed Vite assets are immutable.
+    location /build/ {
+        expires 1y;
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Dotfiles (.env, .git ...) are never served.
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # Only the front controller executes. Any other *.php under public/
+    # (legacy webhook scripts included) returns 404 on the VPS.
+    location = /index.php {
+        fastcgi_pass unix:/run/php/sroor-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        # $realpath_root resolves the `current` symlink so a release switch
+        # never mixes files from two releases.
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param HTTPS on;
+        fastcgi_hide_header X-Powered-By;
+        fastcgi_read_timeout 120s;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+    }
+
+    # Super-admin APK publishing (POST, StoreAppVersionRequest apk_file max
+    # 150 MB). The only route with a large body cap; everything else stays at
+    # 25m. It must call PHP directly: an internal redirect to /index.php would
+    # re-apply the 25m limit of that location and answer 413.
+    location = /api/v1/super-admin/app-versions {
+        client_max_body_size 160m;
+        client_body_timeout 300s;
+        fastcgi_pass unix:/run/php/sroor-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_URI /index.php;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param HTTPS on;
+        fastcgi_hide_header X-Powered-By;
+        fastcgi_read_timeout 300s;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+    }
+
+    location ~ \.php$ {
+        return 404;
+    }
+}

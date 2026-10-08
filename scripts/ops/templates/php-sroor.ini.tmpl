@@ -1,0 +1,27 @@
+; Managed by scripts/ops (OPS-1). Production PHP settings (fpm + cli).
+expose_php = Off
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+memory_limit = 256M
+max_execution_time = 120
+; Sized for the super-admin APK upload (StoreAppVersionRequest apk_file max
+; 150 MB). nginx is the real gate: 25m on every route, 160m only on
+; /api/v1/super-admin/app-versions, so these values are never reachable
+; elsewhere. Bodies are spooled to disk, not memory. Per-request PHP_VALUE is
+; avoided on purpose (FPM workers can keep it for later requests).
+upload_max_filesize = 155M
+post_max_size = 160M
+date.timezone = UTC
+session.cookie_secure = 1
+session.cookie_httponly = 1
+session.use_strict_mode = 1
+realpath_cache_size = 4096K
+realpath_cache_ttl = 600
+
+opcache.enable = 1
+opcache.memory_consumption = 256
+opcache.interned_strings_buffer = 32
+opcache.max_accelerated_files = 50000
+; Code only changes through a release switch, which reloads php-fpm (OPS-3).
+opcache.validate_timestamps = 0

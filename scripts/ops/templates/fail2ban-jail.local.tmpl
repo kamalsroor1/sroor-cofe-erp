@@ -1,0 +1,19 @@
+# Managed by scripts/ops (OPS-1).
+[DEFAULT]
+backend = systemd
+banaction = ufw
+bantime = 1h
+findtime = 10m
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ${SSH_PORT}
+
+[recidive]
+enabled = true
+bantime = 1w
+findtime = 1d
+maxretry = 5
+backend = auto
+logpath = /var/log/fail2ban.log

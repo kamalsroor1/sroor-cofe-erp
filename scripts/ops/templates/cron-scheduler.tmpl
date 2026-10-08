@@ -1,0 +1,5 @@
+# Managed by scripts/ops (OPS-1). Laravel scheduler, every minute.
+# Tenant-aware jobs must iterate tenants themselves (tenancy()->runForMultiple).
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * ${APP_USER} cd ${APP_ROOT}/current/backend && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
