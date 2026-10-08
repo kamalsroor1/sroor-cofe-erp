@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Listeners\Tenancy\ResetPermissionCacheToCentral;
+use App\Listeners\Tenancy\ScopePermissionCacheToTenant;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -36,13 +39,10 @@ class TenancyServiceProvider extends ServiceProvider
             Events\UpdatingTenant::class => [],
             Events\TenantUpdated::class => [],
             Events\DeletingTenant::class => [],
-            Events\TenantDeleted::class => [
-                JobPipeline::make([
-                    Jobs\DeleteDatabase::class,
-                ])->send(function (Events\TenantDeleted $event) {
-                    return $event->tenant;
-                })->shouldBeQueued(false), // `false` by default, but you probably want to make this `true` for production.
-            ],
+            // OPS-11 (Q-B13): tenant deletion is disabled. Jobs\DeleteDatabase is intentionally NOT
+            // wired here so no code path can drop a tenant database synchronously. Re-enabling it
+            // requires a reviewed, queued, backup-first deletion flow.
+            Events\TenantDeleted::class => [],
 
             // Domain events
             Events\CreatingDomain::class => [],
@@ -73,9 +73,9 @@ class TenancyServiceProvider extends ServiceProvider
             ],
 
             Events\BootstrappingTenancy::class => [],
-            Events\TenancyBootstrapped::class => [],
+            Events\TenancyBootstrapped::class => [ScopePermissionCacheToTenant::class],
             Events\RevertingToCentralContext::class => [],
-            Events\RevertedToCentralContext::class => [],
+            Events\RevertedToCentralContext::class => [ResetPermissionCacheToCentral::class],
 
             // Resource syncing
             Events\SyncedResourceSaved::class => [
@@ -137,7 +137,7 @@ class TenancyServiceProvider extends ServiceProvider
         ];
 
         foreach (array_reverse($tenancyMiddleware) as $middleware) {
-            $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
+            $this->app[Kernel::class]->prependToMiddlewarePriority($middleware);
         }
     }
 }

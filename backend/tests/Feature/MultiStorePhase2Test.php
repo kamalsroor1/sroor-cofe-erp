@@ -2,32 +2,33 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
+use App\Models\Customer;
+use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
-use App\Models\Item;
-use App\Models\Customer;
 use App\Models\Supplier;
-use App\Models\Invoice;
-use App\Models\StockTransfer;
-use App\Services\StockService;
-use App\Services\StockTransferService;
-use App\Services\InvoiceService;
-use App\Services\PurchaseService;
+use App\Models\User;
 use App\Services\CustomerPricingHelper;
+use App\Services\InvoiceService;
+use App\Services\StockTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class MultiStorePhase2Test extends TestCase
 {
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Store $mainStore;
+
     protected Store $vanStore;
+
     protected Item $item;
+
     protected Customer $customer;
+
     protected Supplier $supplier;
 
     protected function setUp(): void
@@ -37,74 +38,74 @@ class MultiStorePhase2Test extends TestCase
         Role::firstOrCreate(['name' => 'admin']);
 
         $this->mainStore = Store::create([
-            'name'      => 'المخزن الرئيسي',
-            'code'      => 'MAIN-01',
-            'type'      => 'main_warehouse',
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN-01',
+            'type' => 'main_warehouse',
             'is_active' => true,
-            'is_main'   => true,
+            'is_main' => true,
         ]);
 
         $this->vanStore = Store::create([
-            'name'      => 'عربية توزيع رقم 1 (جملة)',
-            'code'      => 'VAN-01',
-            'type'      => 'wholesale_van',
+            'name' => 'عربية توزيع رقم 1 (جملة)',
+            'code' => 'VAN-01',
+            'type' => 'wholesale_van',
             'is_active' => true,
-            'is_main'   => false,
+            'is_main' => false,
         ]);
 
         $this->admin = User::create([
-            'name'             => 'كمال سرور',
-            'phone'            => '01012316954',
-            'email'            => 'admin@sroor.com',
-            'password'         => bcrypt('password'),
-            'is_active'        => true,
+            'name' => 'كمال سرور',
+            'phone' => self::ADMIN_PHONE,
+            'email' => 'admin@sroor.com',
+            'password' => bcrypt('password'),
+            'is_active' => true,
             'default_store_id' => $this->mainStore->id,
         ]);
         $this->admin->assignRole('admin');
         $this->admin->stores()->attach([$this->mainStore->id, $this->vanStore->id]);
 
         $this->item = Item::create([
-            'code'              => 'COF-001',
-            'name'              => 'بن برازيلي فاخر',
-            'category'          => 'بن سادة',
-            'unit'              => 'كجم',
-            'current_stock'     => '100.000',
-            'cost_price'        => '250.000',
+            'code' => 'COF-001',
+            'name' => 'بن برازيلي فاخر',
+            'category' => 'بن سادة',
+            'unit' => 'كجم',
+            'current_stock' => '100.000',
+            'cost_price' => '250.000',
             'weighted_avg_cost' => '250.000',
-            'selling_price'     => '400.000',
-            'min_stock_level'   => '10.000',
-            'is_active'         => true,
+            'selling_price' => '400.000',
+            'min_stock_level' => '10.000',
+            'is_active' => true,
         ]);
 
         // Initialize 100 kg in Main Store
         StoreStock::create([
-            'store_id'             => $this->mainStore->id,
-            'item_id'              => $this->item->id,
-            'quantity'             => '100.000',
-            'min_stock'            => '10.000',
+            'store_id' => $this->mainStore->id,
+            'item_id' => $this->item->id,
+            'quantity' => '100.000',
+            'min_stock' => '10.000',
             'custom_selling_price' => null,
         ]);
 
         // Initialize 0 kg in Van Store with custom price 360.000
         StoreStock::create([
-            'store_id'             => $this->vanStore->id,
-            'item_id'              => $this->item->id,
-            'quantity'             => '0.000',
-            'min_stock'            => '5.000',
+            'store_id' => $this->vanStore->id,
+            'item_id' => $this->item->id,
+            'quantity' => '0.000',
+            'min_stock' => '5.000',
             'custom_selling_price' => '360.000',
         ]);
 
         $this->customer = Customer::create([
-            'name'            => 'مطحنة الأهرام للبن',
-            'phone'           => '01011112222',
+            'name' => 'مطحنة الأهرام للبن',
+            'phone' => '01000007002',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         $this->supplier = Supplier::create([
-            'name'            => 'شركة استيراد البن العالمية',
+            'name' => 'شركة استيراد البن العالمية',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
     }
 
@@ -116,14 +117,14 @@ class MultiStorePhase2Test extends TestCase
         // Transfer 30 kg from Main Store to Van
         $transfer = $transferService->createTransfer([
             'from_store_id' => $this->mainStore->id,
-            'to_store_id'   => $this->vanStore->id,
-            'notes'         => 'شحن عهدة بضاعة للعربية',
-            'items'         => [
+            'to_store_id' => $this->vanStore->id,
+            'notes' => 'شحن عهدة بضاعة للعربية',
+            'items' => [
                 [
-                    'item_id'  => $this->item->id,
+                    'item_id' => $this->item->id,
                     'quantity' => '30.000',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $this->assertEquals('confirmed', $transfer->status);
@@ -146,13 +147,13 @@ class MultiStorePhase2Test extends TestCase
 
         $transfer = $transferService->createTransfer([
             'from_store_id' => $this->mainStore->id,
-            'to_store_id'   => $this->vanStore->id,
-            'items'         => [
+            'to_store_id' => $this->vanStore->id,
+            'items' => [
                 [
-                    'item_id'  => $this->item->id,
+                    'item_id' => $this->item->id,
                     'quantity' => '25.000',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $this->assertEquals('75.000', $this->item->getStockInStore($this->mainStore->id));
@@ -175,27 +176,27 @@ class MultiStorePhase2Test extends TestCase
         // 1. Transfer 40 kg to Van
         $transferService->createTransfer([
             'from_store_id' => $this->mainStore->id,
-            'to_store_id'   => $this->vanStore->id,
-            'items'         => [
+            'to_store_id' => $this->vanStore->id,
+            'items' => [
                 [
-                    'item_id'  => $this->item->id,
+                    'item_id' => $this->item->id,
                     'quantity' => '40.000',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         // 2. Van sells 15 kg to customer at custom price 360.000
         $invoice = $invoiceService->confirmInvoice([
-            'customer_id'  => $this->customer->id,
-            'store_id'     => $this->vanStore->id,
+            'customer_id' => $this->customer->id,
+            'store_id' => $this->vanStore->id,
             'payment_type' => 'cash',
-            'items'        => [
+            'items' => [
                 [
-                    'item_id'    => $this->item->id,
-                    'quantity'   => '15.000',
+                    'item_id' => $this->item->id,
+                    'quantity' => '15.000',
                     'unit_price' => '360.000',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $this->assertEquals($this->vanStore->id, $invoice->store_id);
@@ -219,16 +220,16 @@ class MultiStorePhase2Test extends TestCase
 
         // 1. Sell at negotiated price 345.000
         $invoiceService->confirmInvoice([
-            'customer_id'  => $this->customer->id,
-            'store_id'     => $this->mainStore->id,
+            'customer_id' => $this->customer->id,
+            'store_id' => $this->mainStore->id,
             'payment_type' => 'credit',
-            'items'        => [
+            'items' => [
                 [
-                    'item_id'    => $this->item->id,
-                    'quantity'   => '10.000',
+                    'item_id' => $this->item->id,
+                    'quantity' => '10.000',
                     'unit_price' => '345.000',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         // 2. Query last sold price for this customer and item

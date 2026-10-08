@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Plans\GetSuperAdminPlansDataAction;
 use App\Actions\Plans\UpdatePlanAction;
-use App\Actions\Tenants\DeleteTenantAction;
 use App\Actions\Tenants\GetTenantDetailsAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
@@ -30,6 +29,10 @@ use App\Models\Setting;
 use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Stancl\Tenancy\Facades\Tenancy;
 use Throwable;
 
 final class SuperAdminApiController extends Controller
@@ -52,22 +55,23 @@ final class SuperAdminApiController extends Controller
     {
         $mysqlVersion = '8.0';
         try {
-            $mysqlVersion = \Illuminate\Support\Facades\DB::select("SELECT VERSION() as v")[0]->v ?? '8.0';
-        } catch (\Throwable $e) {}
+            $mysqlVersion = DB::select('SELECT VERSION() as v')[0]->v ?? '8.0';
+        } catch (Throwable $e) {
+        }
 
         return response()->json([
-            'success'        => true,
-            'metrics'        => $this->analyticsService->getPlatformMetrics(),
-            'plan_stats'     => $this->analyticsService->getPlanStatistics(),
+            'success' => true,
+            'metrics' => $this->analyticsService->getPlatformMetrics(),
+            'plan_stats' => $this->analyticsService->getPlanStatistics(),
             'recent_tenants' => $this->analyticsService->getRecentTenants(),
-            'system_info'    => [
-                'php_version'     => PHP_VERSION,
+            'system_info' => [
+                'php_version' => PHP_VERSION,
                 'laravel_version' => app()->version(),
-                'environment'     => app()->environment(),
-                'db_driver'       => config('database.default'),
-                'mysql_version'   => $mysqlVersion,
+                'environment' => app()->environment(),
+                'db_driver' => config('database.default'),
+                'mysql_version' => $mysqlVersion,
                 'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Hostinger Cloud / LiteSpeed',
-                'storage_writable'=> is_writable(storage_path()),
+                'storage_writable' => is_writable(storage_path()),
             ],
         ]);
     }
@@ -82,7 +86,7 @@ final class SuperAdminApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'plans'   => PlanResource::collection($plans)->resolve(),
+            'plans' => PlanResource::collection($plans)->resolve(),
             'tenants' => $data['tenants'],
         ]);
     }
@@ -99,10 +103,11 @@ final class SuperAdminApiController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => __('super.tenant_created_success', ['name' => $tenant->name]) ?: 'تم إنشاء وتهيئة المستأجر بنجاح ✓',
-                'tenant'  => $tenant,
+                'tenant' => $tenant,
             ], 201);
         } catch (Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Tenant Provisioning Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Tenant Provisioning Failed: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json([
                 'success' => false,
                 'message' => $this->formatTenantException($e),
@@ -120,12 +125,12 @@ final class SuperAdminApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => $data,
+                'data' => $data,
             ]);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'تعذر العثور على المستأجر: ' . $e->getMessage(),
+                'message' => 'تعذر العثور على المستأجر: '.$e->getMessage(),
             ], 404);
         }
     }
@@ -137,8 +142,8 @@ final class SuperAdminApiController extends Controller
     {
         try {
             $tenant = Tenant::findOrFail($id);
-            $status = (string)$request->validated('status');
-            $extendDays = (int)($request->validated('extend_days') ?? 0);
+            $status = (string) $request->validated('status');
+            $extendDays = (int) ($request->validated('extend_days') ?? 0);
 
             $this->toggleStatusAction->execute($tenant, $status, $extendDays);
 
@@ -161,7 +166,7 @@ final class SuperAdminApiController extends Controller
     {
         try {
             $tenant = Tenant::findOrFail($id);
-            $featureKey = (string)$request->validated('feature_key');
+            $featureKey = (string) $request->validated('feature_key');
 
             $this->overrideFeatureAction->execute($tenant, $featureKey);
 
@@ -195,23 +200,23 @@ final class SuperAdminApiController extends Controller
 
             // 2. Initialize tenant and sync to settings table
             try {
-                \Stancl\Tenancy\Facades\Tenancy::initialize($tenant);
-                \App\Models\Setting::set('inventory_units', $unitsStr);
-                \App\Models\Setting::clearCache();
-                \Stancl\Tenancy\Facades\Tenancy::end();
-            } catch (\Throwable $te) {
-                \Illuminate\Support\Facades\Log::warning("Tenant units sync exception: " . $te->getMessage());
+                Tenancy::initialize($tenant);
+                Setting::set('inventory_units', $unitsStr);
+                Setting::clearCache();
+                Tenancy::end();
+            } catch (Throwable $te) {
+                Log::warning('Tenant units sync exception: '.$te->getMessage());
             }
 
             return response()->json([
-                'success'       => true,
-                'message'       => 'تم حفظ وتخصيص وحدات القياس للمستأجر بنجاح ✓',
+                'success' => true,
+                'message' => 'تم حفظ وتخصيص وحدات القياس للمستأجر بنجاح ✓',
                 'allowed_units' => $unitsList,
             ]);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'تعذر تحديث الوحدات للمستأجر: ' . $e->getMessage(),
+                'message' => 'تعذر تحديث الوحدات للمستأجر: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -223,43 +228,34 @@ final class SuperAdminApiController extends Controller
     {
         try {
             $tenant = Tenant::findOrFail($id);
-            \Illuminate\Support\Facades\Artisan::call('tenants:migrate', [
+            Artisan::call('tenants:migrate', [
                 '--tenants' => [$tenant->id],
             ]);
-            $output = \Illuminate\Support\Facades\Artisan::output();
+            $output = Artisan::output();
 
             return response()->json([
                 'success' => true,
                 'message' => 'تم تشغيل وتحديث ميجريشن المستأجر بنجاح ✓',
-                'output'  => $output,
+                'output' => $output,
             ]);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'فشل تشغيل الميجريشن: ' . $e->getMessage(),
+                'message' => 'فشل تشغيل الميجريشن: '.$e->getMessage(),
             ], 422);
         }
     }
 
     /**
-     * Delete / Destroy Tenant and all domains
+     * Tenant deletion is disabled (OPS-11 / Q-B13): always 403, nothing is deleted.
+     * Super admins must suspend the tenant via toggle-status instead.
      */
-    public function destroyTenant(string $id, DeleteTenantAction $action): JsonResponse
+    public function destroyTenant(string $id): JsonResponse
     {
-        try {
-            $tenant = Tenant::findOrFail($id);
-            $action->execute($tenant);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'تم حذف المستأجر بنجاح ✓',
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'تعذر حذف المستأجر: ' . $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => __('super.tenant_delete_disabled'),
+        ], 403);
     }
 
     /**
@@ -292,7 +288,7 @@ final class SuperAdminApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ]);
     }
 
@@ -324,11 +320,11 @@ final class SuperAdminApiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => [
-                'platform_name'     => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
+            'data' => [
+                'platform_name' => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
                 'platform_subtitle' => Setting::get('platform_subtitle', 'منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع'),
-                'support_email'     => Setting::get('support_email', 'support@baraa-solutions.com'),
-                'support_phone'     => Setting::get('support_phone', '01000000000'),
+                'support_email' => Setting::get('support_email', 'support@baraa-solutions.com'),
+                'support_phone' => Setting::get('support_phone', '01000000000'),
             ],
         ]);
     }
@@ -357,11 +353,11 @@ final class SuperAdminApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('common.success') ?: 'تم حفظ إعدادات واسم المنصة بنجاح ✓',
-            'data'    => [
-                'platform_name'     => Setting::get('platform_name'),
+            'data' => [
+                'platform_name' => Setting::get('platform_name'),
                 'platform_subtitle' => Setting::get('platform_subtitle'),
-                'support_email'     => Setting::get('support_email'),
-                'support_phone'     => Setting::get('support_phone'),
+                'support_email' => Setting::get('support_email'),
+                'support_phone' => Setting::get('support_phone'),
             ],
         ]);
     }
@@ -376,7 +372,7 @@ final class SuperAdminApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'units'   => $units,
+            'units' => $units,
         ]);
     }
 
@@ -392,14 +388,14 @@ final class SuperAdminApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم حفظ وتحديث وحدات القياس للنظام بنجاح ✓',
-            'units'   => $units,
+            'units' => $units,
         ]);
     }
 
     /**
      * تحويل الأخطاء البرمجية وقواعد البيانات إلى رسائل عربية واضحة ومفهومة للمستخدم
      */
-    private function formatTenantException(\Throwable $e): string
+    private function formatTenantException(Throwable $e): string
     {
         $message = $e->getMessage();
 
@@ -407,22 +403,23 @@ final class SuperAdminApiController extends Controller
         if (str_contains($message, 'Unknown database') || str_contains($message, '1049')) {
             preg_match("/database '([^']+)'/", $message, $matches);
             $dbName = $matches[1] ?? 'المحددة';
+
             return "قاعدة البيانات ($dbName) غير موجودة في MySQL على هوستنجر. يرجى إنشاؤها أولاً من لوحة الاستضافة (Databases) والتأكد من تطابق الاسم.";
         }
 
         // 2. Access Denied / Missing Privileges (الصلاحيات غير ممنوحة)
         if (str_contains($message, 'Access denied') || str_contains($message, '1044') || str_contains($message, '1045')) {
-            return "تعذر الاتصال بقاعدة البيانات بسبب عدم منح الصلاحيات لمستخدم MySQL. يرجى التأكد من ربط المستخدم بالقاعدة في هوستنجر واختيار (All Privileges).";
+            return 'تعذر الاتصال بقاعدة البيانات بسبب عدم منح الصلاحيات لمستخدم MySQL. يرجى التأكد من ربط المستخدم بالقاعدة في هوستنجر واختيار (All Privileges).';
         }
 
         // 3. Duplicate domain or slug
         if (str_contains($message, 'Duplicate entry') || str_contains($message, 'UNIQUE constraint')) {
-            return "اسم النطاق أو المعرف البرمجي مستخدم بالفعل لمستأجر آخر. يرجى اختيار اسم معرف مختلف.";
+            return 'اسم النطاق أو المعرف البرمجي مستخدم بالفعل لمستأجر آخر. يرجى اختيار اسم معرف مختلف.';
         }
 
         // 4. Connection refused
         if (str_contains($message, 'Connection refused') || str_contains($message, '2002')) {
-            return "تعذر الاتصال بخادم MySQL. يرجى التحقق من حالة خادم قواعد البيانات.";
+            return 'تعذر الاتصال بخادم MySQL. يرجى التحقق من حالة خادم قواعد البيانات.';
         }
 
         // Generic fallback without raw SQL keywords
@@ -430,6 +427,6 @@ final class SuperAdminApiController extends Controller
             return 'حدث خطأ أثناء إعداد قاعدة بيانات المستأجر. يرجى التأكد من إنشاء قاعدة البيانات في هوستنجر وربط المستخدم بها.';
         }
 
-        return 'تعذر إتمام تهيئة المستأجر: ' . $message;
+        return 'تعذر إتمام تهيئة المستأجر: '.$message;
     }
 }

@@ -2,11 +2,19 @@
 
 namespace App\Models;
 
-use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
+use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 
+/**
+ * Virtual attributes stored in stancl's `data` JSON column (not custom columns):
+ *
+ * @property string|null $tenancy_db_name
+ * @property string|null $tenancy_db_username
+ * @property string|null $tenancy_db_password
+ */
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
@@ -38,6 +46,17 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     // ========================================================================
     // العلاقات (Relationships)
     // ========================================================================
+
+    /**
+     * Typed override of stancl's HasDomains::domains() (same query) so static analysis
+     * can resolve the relation.
+     *
+     * @return HasMany<Domain, $this>
+     */
+    public function domains(): HasMany
+    {
+        return $this->hasMany(Domain::class, 'tenant_id');
+    }
 
     public function plan()
     {
@@ -74,11 +93,12 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
         // 2. التحقق من فيتشرز الباقة الحالية
         $plan = $this->plan;
-        if (!$plan) {
+        if (! $plan) {
             return false;
         }
 
         $planFeatures = $plan->features ?? [];
+
         return isset($planFeatures[$key]) && $planFeatures[$key] === true;
     }
 
@@ -89,11 +109,12 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function getFeatureLimit(string $key): int
     {
         $plan = $this->plan;
-        if (!$plan) {
+        if (! $plan) {
             return 0;
         }
 
         $features = $plan->features ?? [];
+
         return (int) ($features[$key] ?? 0);
     }
 
@@ -103,10 +124,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function checkLimit(string $resource): bool
     {
         return match ($resource) {
-            'users'  => User::where('tenant_id', $this->id)->count() < $this->getFeatureLimit('limits.users'),
+            'users' => User::where('tenant_id', $this->id)->count() < $this->getFeatureLimit('limits.users'),
             'stores' => Store::where('tenant_id', $this->id)->count() < $this->getFeatureLimit('limits.stores'),
-            'items'  => Item::where('tenant_id', $this->id)->count() < $this->getFeatureLimit('limits.items'),
-            default  => true,
+            'items' => Item::where('tenant_id', $this->id)->count() < $this->getFeatureLimit('limits.items'),
+            default => true,
         };
     }
 
@@ -133,16 +154,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function getAllLimits(): array
     {
         $plan = $this->plan;
-        if (!$plan) {
+        if (! $plan) {
             return [];
         }
 
         return [
-            'users'             => $plan->max_users,
-            'stores'            => $plan->max_stores,
-            'items'             => $plan->max_items,
-            'invoices_month'    => $plan->max_invoices_per_month,
-            'storage_mb'        => $plan->max_storage_mb,
+            'users' => $plan->max_users,
+            'stores' => $plan->max_stores,
+            'items' => $plan->max_items,
+            'invoices_month' => $plan->max_invoices_per_month,
+            'storage_mb' => $plan->max_storage_mb,
         ];
     }
 
@@ -185,7 +206,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function enableFeature(string $key): void
     {
         $features = $this->enabled_features ?? [];
-        if (!in_array($key, $features, true)) {
+        if (! in_array($key, $features, true)) {
             $features[] = $key;
             $this->update(['enabled_features' => $features]);
         }
@@ -197,7 +218,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function disableFeature(string $key): void
     {
         $features = $this->enabled_features ?? [];
-        $features = array_values(array_filter($features, fn($f) => $f !== $key));
+        $features = array_values(array_filter($features, fn ($f) => $f !== $key));
         $this->update(['enabled_features' => $features]);
     }
 }

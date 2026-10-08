@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\System\GetSystemContextAction;
 use App\Actions\System\GetTranslationsAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\System\GetTranslationsRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ final class SystemContextApiController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => __('auth.unauthorized'),
@@ -35,22 +36,23 @@ final class SystemContextApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ], 200);
     }
 
     /**
      * Get translation dictionary for active or requested locale
      */
-    public function translations(Request $request): JsonResponse
+    public function translations(GetTranslationsRequest $request): JsonResponse
     {
-        $locale = (string)($request->query('locale') ?: $request->header('X-Locale') ?: app()->getLocale());
+        $requested = $request->validated('locale') ?? $request->header('X-Locale');
+        $locale = GetTranslationsAction::normalizeLocale(is_string($requested) ? $requested : null);
         $translations = $this->getTranslationsAction->execute($locale);
 
         return response()->json([
             'success' => true,
-            'locale'  => $locale,
-            'data'    => $translations,
+            'locale' => $locale,
+            'data' => $translations,
         ], 200);
     }
 }
