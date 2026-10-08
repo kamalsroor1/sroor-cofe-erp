@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\PurchaseItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin PurchaseItem
+ */
 class PurchaseItemResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -21,7 +25,7 @@ class PurchaseItemResource extends JsonResource
             'base_cost_price' => (float) ($this->base_cost_price ?? $this->cost_price),
             'allocated_expense' => (float) ($this->allocated_expense ?? 0),
             'cost_price' => (float) $this->cost_price,
-            'total_price' => (float) ($this->total_price ?? ($this->quantity * $this->cost_price)),
+            'total_price' => (float) ($this->total_price ?? bcmul((string) $this->quantity, (string) $this->cost_price, 3)),
         ];
     }
 }

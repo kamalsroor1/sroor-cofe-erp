@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Invoice
+ */
 class InvoiceResource extends JsonResource
 {
     public function toArray(Request $request): array
@@ -18,12 +22,12 @@ class InvoiceResource extends JsonResource
             'customer_id' => $this->customer_id,
             'customer_name' => $this->customer?->name ?? 'عميل نقدي سريع',
             'customer_phone' => $this->customer?->phone,
-            'customer_balance' => $this->customer ? (float) $this->customer->balance : 0,
+            'customer_balance' => $this->customer ? (float) $this->customer->current_balance : 0,
             'customer' => [
                 'id' => $this->customer_id,
                 'name' => $this->customer?->name ?? 'عميل نقدي سريع',
                 'phone' => $this->customer?->phone,
-                'balance' => $this->customer ? (float) $this->customer->balance : 0,
+                'balance' => $this->customer ? (float) $this->customer->current_balance : 0,
             ],
             'store_id' => $this->store_id,
             'store_name' => $this->store?->name ?? 'الفرع الرئيسي',

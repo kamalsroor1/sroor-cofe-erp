@@ -46,7 +46,7 @@ class POSController extends Controller
                     'invoice' => [
                         'id' => $invoice->id,
                         'invoice_number' => $invoice->invoice_number,
-                        'total_amount' => (float) $invoice->total_amount,
+                        'total_amount' => (float) $invoice->net_total,
                         'net_total' => (float) $invoice->net_total,
                         'paid_amount' => (float) $invoice->paid_amount,
                         'remaining_amount' => (float) $invoice->remaining_amount,
