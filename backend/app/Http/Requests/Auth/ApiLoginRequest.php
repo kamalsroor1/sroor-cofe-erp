@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\RateLimitKey;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ApiLoginRequest extends FormRequest
@@ -46,7 +46,7 @@ class ApiLoginRequest extends FormRequest
 
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 6)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $this->maxFailedAttempts())) {
             return;
         }
 
@@ -70,10 +70,22 @@ class ApiLoginRequest extends FormRequest
         RateLimiter::clear($this->throttleKey());
     }
 
+    /**
+     * IDEN-4.6: failure counter key = tenant + login + IP. The cache store is shared by all
+     * tenants, so without the tenant scope six failures for a login in one shop would lock
+     * the same login string in every other shop.
+     */
     public function throttleKey(): string
     {
-        $identifier = $this->input('login') ?? $this->input('phone') ?? $this->input('email') ?? '';
+        $identifier = RateLimitKey::identifier($this->input('login') ?? $this->input('phone') ?? $this->input('email'));
 
-        return Str::transliterate(Str::lower((string) $identifier).'|'.$this->ip());
+        return 'api-login|'.RateLimitKey::scope().'|'.$identifier.'|'.$this->ip();
+    }
+
+    private function maxFailedAttempts(): int
+    {
+        $value = config('rate_limits.tenant_login.max_failed_attempts', 6);
+
+        return max(1, is_numeric($value) ? (int) $value : 6);
     }
 }

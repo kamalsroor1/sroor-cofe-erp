@@ -5,22 +5,18 @@ declare(strict_types=1);
 namespace App\Support;
 
 /**
- * Runtime gate for the testing-only passwordless quick login.
+ * Runtime (request-time) gate for the testing-only passwordless quick login.
  *
  * Allowed only when ALL hold:
- *  - config('auth.quick_login.enabled') is true (QUICK_LOGIN_ENABLED, off by default),
- *  - the application is not running in production,
+ *  - QuickLogin::allowed(): flag QUICK_LOGIN_ENABLED strictly true AND APP_ENV is local/testing
+ *    (never production, never staging),
  *  - a tenant context is initialised (never on the central host, never for central users).
  */
 final class QuickLoginGate
 {
     public static function allowed(): bool
     {
-        if (config('auth.quick_login.enabled') !== true) {
-            return false;
-        }
-
-        if (app()->isProduction()) {
+        if (! QuickLogin::allowed()) {
             return false;
         }
 
@@ -29,8 +25,6 @@ final class QuickLoginGate
 
     public static function tokenTtlMinutes(): int
     {
-        $ttl = (int) config('auth.quick_login.token_ttl_minutes', 480);
-
-        return $ttl > 0 ? $ttl : 480;
+        return QuickLogin::tokenTtlMinutes();
     }
 }

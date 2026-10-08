@@ -87,11 +87,11 @@ final class ApiTokenAuth
 
         // Set authenticated user for this request across guards
         Auth::setUser($user);
+        // IDEN-1.1: the `super_admin` guard is gone and `central` belongs to CentralUser
+        // only, so a legacy App\Models\User is never placed on an operator guard. The
+        // Phase 0 central flow keeps working through the default guard until IDEN-1.3/1.4.
         if (function_exists('tenant') && tenant()) {
             Auth::guard('tenant')->setUser($user);
-        } else {
-            Auth::guard('super_admin')->setUser($user);
-            Auth::guard('central')->setUser($user);
         }
         $request->setUserResolver(fn () => $user);
 

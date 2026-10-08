@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\CentralUser;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -132,18 +131,16 @@ final class AuditTenantSuperAdminRolesCommand extends Command
     }
 
     /**
-     * Morph types a central user's role row can carry. No morphMap is registered, and
-     * CentralUser extends User while seeders assign roles via App\Models\User, so both
-     * class names can appear in central model_has_roles.
+     * Morph types a legacy central `users` row's role can carry. CentralUser (IDEN-1.1)
+     * is standalone and lives in `central_users`, so its morph type must NOT be joined
+     * onto `users.id`: an operator sharing an id with a legacy user would otherwise pull
+     * that user's phone into the list.
      *
      * @return list<string>
      */
     private function userMorphTypes(): array
     {
-        return array_values(array_unique([
-            (new User)->getMorphClass(),
-            (new CentralUser)->getMorphClass(),
-        ]));
+        return [(new User)->getMorphClass()];
     }
 
     /**

@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\StockTransferController;
 use App\Http\Controllers\Api\StoreController;
+use App\Http\Controllers\Api\StorePosSettingsController;
 use App\Http\Controllers\Api\SuperAdminApiController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemContextApiController;
@@ -37,18 +38,21 @@ use App\Http\Middleware\DenyQuickLoginToken;
 use App\Http\Middleware\EnsureCentralContext;
 use App\Http\Middleware\EnsureQuickLoginAllowed;
 use App\Http\Middleware\ResolveApiTenancy;
+use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
+// IDEN-4.6: ThrottleTenantMisses caps unknown-tenant 404s per IP before tenancy resolves.
+Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy::class])->group(function () {
     // 1. App Updates & Guest Endpoints
-    Route::get('/ping', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]))->name('api.ping');
+    // IDEN-4.6: every public route carries a named limiter (AppServiceProvider::registerRateLimiters).
+    Route::get('/ping', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->timestamp]))->middleware('throttle:public-api')->name('api.ping');
     Route::get('/central/tenants/resolve', [CentralTenantResolverController::class, 'resolve'])->middleware('throttle:tenant-resolve')->name('api.central.tenants.resolve');
-    Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->name('api.app.version');
-    Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->name('api.app.check_update');
-    Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_apk');
-    Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->name('api.app.download_latest_apk');
-    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login')->name('api.auth.login');
-    Route::get('/auth/options', [AuthController::class, 'authOptions'])->middleware('throttle:public-config')->name('api.auth.options');
+    Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->middleware('throttle:public-api')->name('api.app.version');
+    Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->middleware('throttle:public-api')->name('api.app.check_update');
+    Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->middleware('throttle:public-api')->name('api.app.download_apk');
+    Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->middleware('throttle:public-api')->name('api.app.download_latest_apk');
+    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:tenant-login')->name('api.auth.login');
+    Route::get('/auth/options', [AuthController::class, 'authOptions'])->middleware('throttle:public-api')->name('api.auth.options');
 
     // Quick login: TESTING ONLY. Registered only when the flag is on outside production;
     // EnsureQuickLoginAllowed re-checks at runtime (stale route cache, central host, prod).
@@ -59,7 +63,7 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         });
     }
 
-    Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->middleware('throttle:public-translations')->name('api.system.translations');
+    Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->middleware('throttle:public-api')->name('api.system.translations');
 
     // 2. Protected Endpoints (Requires valid Bearer Token)
     Route::middleware(ApiTokenAuth::class)->group(function () {
@@ -87,6 +91,12 @@ Route::prefix('v1')->middleware([ResolveApiTenancy::class])->group(function () {
         Route::delete('/stores/{id}', [StoreController::class, 'destroy'])->name('api.stores.destroy');
         Route::patch('/stores/{id}/toggle-active', [StoreController::class, 'toggleActive'])->name('api.stores.toggle_active');
         Route::post('/stores/{id}/assign-users', [StoreController::class, 'assignUsers'])->name('api.stores.assign_users');
+
+        // POSB-2: per-store POS settings (scale-label parser + max discount). settings.manage + store access.
+        Route::middleware(DenyQuickLoginToken::class)->group(function () {
+            Route::get('/stores/{store}/pos-settings', [StorePosSettingsController::class, 'show'])->whereNumber('store')->name('api.stores.pos_settings.show');
+            Route::put('/stores/{store}/pos-settings', [StorePosSettingsController::class, 'update'])->whereNumber('store')->name('api.stores.pos_settings.update');
+        });
 
         // Customers & Statements
         Route::get('/customers', [CustomerController::class, 'index'])->name('api.customers.index');

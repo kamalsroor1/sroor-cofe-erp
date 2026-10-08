@@ -43,11 +43,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'super_admin' => [
-            'driver' => 'session',
+        // IDEN-1.1: platform operators (App\Models\CentralUser, `central_users`).
+        // `central` = Bearer API (tokens in `central_personal_access_tokens`, resolved by
+        // AuthenticateCentral, IDEN-1.3); `central_web` = session for Pulse/Telescope
+        // (IDEN-1.7). There is no `super_admin` guard any more.
+        'central' => [
+            'driver' => 'sanctum',
             'provider' => 'central_users',
         ],
-        'central' => [
+        'central_web' => [
             'driver' => 'session',
             'provider' => 'central_users',
         ],
@@ -131,17 +135,34 @@ return [
     | Quick Login (testing only)
     |--------------------------------------------------------------------------
     |
-    | Passwordless "pick a user" login for test/staging tenants. It is off by
-    | default and is NEVER honoured in production (see App\Support\QuickLoginGate).
-    | Issued tokens carry only the `quick-login` ability and expire after
-    | `token_ttl_minutes`.
+    | Passwordless "pick a user" login for local/testing tenants only. It is off
+    | by default and honoured only when APP_ENV is local or testing (see
+    | App\Support\QuickLogin). With the flag on, APP_ENV=production refuses to
+    | serve HTTP at boot (fail-fast). Issued tokens carry only the `quick-login`
+    | ability and expire after `token_ttl_minutes` (default 8 hours).
     |
     */
 
     'quick_login' => [
-        'enabled' => (bool) env('QUICK_LOGIN_ENABLED', false),
-        'token_ttl_minutes' => (int) env('QUICK_LOGIN_TOKEN_TTL', 480),
+        'enabled' => filter_var(env('QUICK_LOGIN_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'token_ttl_minutes' => (int) (env('QUICK_LOGIN_TOKEN_TTL') ?: 480),
         'per_minute' => 5,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | API token lifetimes
+    |--------------------------------------------------------------------------
+    |
+    | Every personal access token is issued with its own `expires_at`; that is
+    | the single source of truth (config/sanctum.php keeps `expiration` null).
+    | Tenant tokens: 30 days, renewed on use (CTO Q-B10, enforced by IDEN-2.2).
+    | Central (operator) token TTL lives in config/central.php (IDEN-1.1).
+    |
+    */
+
+    'tokens' => [
+        'tenant_ttl_minutes' => (int) (env('TENANT_TOKEN_TTL_MINUTES') ?: 43200),
     ],
 
 ];

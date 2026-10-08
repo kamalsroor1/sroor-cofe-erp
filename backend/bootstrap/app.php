@@ -1,11 +1,15 @@
 <?php
 
+use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
+use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
@@ -27,6 +31,22 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             StoreScope::class,
         ]);
+
+        // IDEN-4.6: the tenant must be resolved before any named limiter runs (tenant-login and
+        // quick-login key by tenant) and before route-model binding. Without this entry the
+        // framework priority sorts ThrottleRequests and SubstituteBindings ahead of the v1
+        // group's ResolveApiTenancy. Tenancy → auth → throttle → bindings.
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: ResolveApiTenancy::class,
+        );
+
+        // ResolveApiTenancy answers 404 for an unknown tenant before any named limiter, so the
+        // per-IP miss counter must run ahead of it (closes the workspace-code enumeration oracle).
+        $middleware->prependToPriorityList(
+            before: ResolveApiTenancy::class,
+            prepend: ThrottleTenantMisses::class,
+        );
 
         $middleware->alias([
             'role' => RoleMiddleware::class,
@@ -56,6 +76,21 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => __('auth.unauthorized').' - '.$e->getMessage(),
                 ], 403);
+            }
+        });
+
+        // IDEN-4.6: one localized 429 for every named limiter, keeping Retry-After and the
+        // X-RateLimit-* headers set by ThrottleRequests.
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $headers = $e->getHeaders();
+                $retryAfter = $headers['Retry-After'] ?? null;
+
+                return response()->json([
+                    'success' => false,
+                    'message' => __('auth.too_many_requests'),
+                    'retry_after' => is_numeric($retryAfter) ? (int) $retryAfter : null,
+                ], 429, $headers);
             }
         });
 

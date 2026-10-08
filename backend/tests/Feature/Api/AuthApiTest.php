@@ -426,12 +426,16 @@ class AuthApiTest extends TestCase
     }
 
     /**
-     * AUTH-2: the auth-login limiter caps one IP at 20 attempts/minute even when every
-     * attempt uses a different login (the failure counter in ApiLoginRequest is per login).
+     * AUTH-2 / IDEN-4.6: the tenant-login limiter caps one IP (default 30 attempts/minute,
+     * config rate_limits.tenant_login.per_ip_per_minute) even when every attempt uses a
+     * different login (the failure counter in ApiLoginRequest is per login).
      */
     public function test_api_login_is_throttled_per_ip_across_different_logins(): void
     {
-        for ($i = 1; $i <= 20; $i++) {
+        $cap = (int) config('rate_limits.tenant_login.per_ip_per_minute');
+        $this->assertSame(30, $cap);
+
+        for ($i = 1; $i <= $cap; $i++) {
             $status = $this->postJson('/api/v1/auth/login', [
                 'login' => "spray{$i}@sroor.test",
                 'password' => 'wrong-pass',
@@ -441,7 +445,7 @@ class AuthApiTest extends TestCase
         }
 
         $this->postJson('/api/v1/auth/login', [
-            'login' => 'spray21@sroor.test',
+            'login' => 'spray-over-cap@sroor.test',
             'password' => 'wrong-pass',
         ])
             ->assertStatus(429)

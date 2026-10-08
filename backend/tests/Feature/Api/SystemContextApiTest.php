@@ -282,7 +282,7 @@ class SystemContextApiTest extends TestCase
     }
 
     /**
-     * AUTH-2: the public translations endpoint is rate limited (public-translations, 60/min per IP).
+     * AUTH-2: the public translations endpoint is rate limited (IDEN-4.6 public-api, 60/min per endpoint and IP).
      */
     public function test_public_translations_endpoint_is_throttled_after_sixty_requests_per_minute(): void
     {
