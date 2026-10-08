@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useMoney } from '@/Composables/useMoney';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
+import { stepQuantity } from '@/helpers/posCartLines';
 import { Trash2, Minus, Plus, Tag } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -9,9 +10,10 @@ const props = defineProps({
   index: { type: Number, required: true },
 });
 
-const emit = defineEmits(['remove', 'apply-last-price', 'change']);
+// The parent owns the cart: quantity/price edits are emitted as { index, value } and applied there.
+const emit = defineEmits(['remove', 'apply-last-price', 'update-qty', 'update-price']);
 
-const { formatMoney, formatQty } = useMoney();
+const { formatMoney } = useMoney();
 const { triggerHaptic } = useNativeBridge();
 
 // Touch Swipe State
@@ -47,10 +49,6 @@ const onTouchEnd = () => {
   isSwiping.value = false;
 };
 
-const resetSwipe = () => {
-  swipeOffset.value = 0;
-};
-
 const handleDelete = () => {
   triggerHaptic('heavy');
   emit('remove', props.index);
@@ -60,29 +58,26 @@ const isWeightBased = computed(() => {
   return props.line.unit === 'كجم' || props.line.unit === 'جم' || props.line.unit?.includes('كيلو');
 });
 
+const emitQty = (value) => emit('update-qty', { index: props.index, value });
+
 const setExactWeight = (w) => {
   triggerHaptic('light');
-  props.line.quantity = w;
-  emit('change');
+  emitQty(w);
 };
 
 const decreaseQty = () => {
   triggerHaptic('light');
-  const step = isWeightBased.value ? 0.25 : 1;
-  const min = isWeightBased.value ? 0.125 : 1;
-  if (props.line.quantity > min) {
-    props.line.quantity = Number((props.line.quantity - step).toFixed(3));
-    emit('change');
-  } else {
+  const next = stepQuantity(props.line.quantity, { weightBased: isWeightBased.value, direction: -1 });
+  if (next === null) {
     handleDelete();
+  } else {
+    emitQty(next);
   }
 };
 
 const increaseQty = () => {
   triggerHaptic('light');
-  const step = isWeightBased.value ? 0.25 : 1;
-  props.line.quantity = Number((props.line.quantity + step).toFixed(3));
-  emit('change');
+  emitQty(stepQuantity(props.line.quantity, { weightBased: isWeightBased.value, direction: 1 }));
 };
 </script>
 
@@ -114,8 +109,8 @@ const increaseQty = () => {
           <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1.5 mt-1">
             <span>{{ $t('invoices.unit_price') }}:</span>
             <input
-              v-model.number="line.unit_price"
-              @input="emit('change')"
+              :value="line.unit_price"
+              @input="emit('update-price', { index, value: $event.target.value })"
               type="number"
               inputmode="decimal"
               min="0"
@@ -131,14 +126,14 @@ const increaseQty = () => {
             @click="decreaseQty"
             type="button"
             class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
-            aria-label="Decrease quantity"
+            :aria-label="$t('pos.decrease_qty')"
           >
             <Minus class="w-3.5 h-3.5" />
           </button>
 
           <input
-            v-model.number="line.quantity"
-            @input="emit('change')"
+            :value="line.quantity"
+            @input="emitQty($event.target.value)"
             type="number"
             inputmode="decimal"
             step="0.001"
@@ -149,7 +144,7 @@ const increaseQty = () => {
             @click="increaseQty"
             type="button"
             class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-base flex items-center justify-center transition active:scale-90 cursor-pointer border border-slate-200 dark:border-transparent shadow-xs"
-            aria-label="Increase quantity"
+            :aria-label="$t('pos.increase_qty')"
           >
             <Plus class="w-3.5 h-3.5" />
           </button>
@@ -203,7 +198,7 @@ const increaseQty = () => {
           type="button"
           class="h-7 px-2.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-500 hover:text-white text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs transition active:scale-90"
         >
-          1ك
+          {{ $t('pos.one_kg_chip') }}
         </button>
       </div>
 

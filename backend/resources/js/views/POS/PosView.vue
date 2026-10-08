@@ -199,6 +199,13 @@ import { usePosOrders } from '../../Composables/usePosOrders';
 import { usePosCheckout } from '../../Composables/usePosCheckout';
 import { useConnectivity } from '../../Composables/useConnectivity';
 import { normalize, dSum, isPositive } from '../../helpers/decimal';
+import {
+  increaseLineQty,
+  decreaseLineQty,
+  updateLineQty,
+  updateLinePrice,
+  removeLine,
+} from '../../helpers/posCartLines';
 
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
@@ -607,27 +614,11 @@ const selectHighlightedOrFirstItem = () => {
   }
 };
 
-const increaseCartItemQty = (idx) => {
-  cart.value[idx].quantity = parseFloat(cart.value[idx].quantity) + 1;
-};
-const decreaseCartItemQty = (idx) => {
-  if (parseFloat(cart.value[idx].quantity) > 1) {
-    cart.value[idx].quantity = parseFloat(cart.value[idx].quantity) - 1;
-  } else {
-    removeFromCart(idx);
-  }
-};
-const onCartQtyUpdate = ({ index, value }) => {
-  const parsed = parseFloat(value);
-  if (!isNaN(parsed) && parsed > 0) cart.value[index].quantity = parsed;
-};
-const onCartPriceUpdate = ({ index, value }) => {
-  const parsed = parseFloat(value);
-  if (!isNaN(parsed) && parsed >= 0) cart.value[index].unit_price = parsed;
-};
-const removeFromCart = (idx) => {
-  cart.value.splice(idx, 1);
-};
+const increaseCartItemQty = (idx) => increaseLineQty(cart.value, idx);
+const decreaseCartItemQty = (idx) => decreaseLineQty(cart.value, idx);
+const onCartQtyUpdate = (change) => updateLineQty(cart.value, change);
+const onCartPriceUpdate = (change) => updateLinePrice(cart.value, change);
+const removeFromCart = (idx) => removeLine(cart.value, idx);
 
 const clearCart = () => {
   if (cart.value.length === 0) return;

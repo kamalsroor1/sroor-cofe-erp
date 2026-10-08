@@ -255,4 +255,9 @@ return [
     'pos_settings_saved' => 'تم حفظ إعدادات نقطة البيع للفرع',
     'scale_barcode_invalid_check_digit' => 'باركود الميزان غير صحيح (رقم التحقق لا يطابق). أعد طباعة الملصق أو امسحه مرة أخرى',
     'store_not_found' => 'الفرع غير موجود',
+
+    // Touch cart card (POSCartItem)
+    'decrease_qty' => 'إنقاص الكمية',
+    'increase_qty' => 'زيادة الكمية',
+    'one_kg_chip' => '1 كجم',
 ];

@@ -352,7 +352,7 @@ const props = defineProps({
   isSearching: { type: Boolean, default: false },
 });
 
-const emit = defineEmits([
+defineEmits([
   'update:searchQuery',
   'update:isSearchFocused',
   'update:highlightedIndex',

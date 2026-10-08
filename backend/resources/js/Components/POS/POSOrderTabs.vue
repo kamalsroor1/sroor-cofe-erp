@@ -57,7 +57,7 @@
 import { Receipt, Clock, Plus, X } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const props = defineProps({
+defineProps({
   orders: {
     type: Array,
     required: true,

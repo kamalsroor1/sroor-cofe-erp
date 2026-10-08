@@ -2,7 +2,7 @@
 import { useMoney } from '@/Composables/useMoney';
 import { User, ChevronDown, UserPlus } from 'lucide-vue-next';
 
-const props = defineProps({
+defineProps({
   selectedCustomer: {
     type: Object,
     default: null,

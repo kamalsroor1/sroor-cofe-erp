@@ -4,7 +4,7 @@ import { customerService } from '@/Services/customerService';
 import BaseInput from '@/Components/Form/BaseInput.vue';
 import { X } from 'lucide-vue-next';
 
-const props = defineProps({
+defineProps({
   show: { type: Boolean, default: false },
 });
 

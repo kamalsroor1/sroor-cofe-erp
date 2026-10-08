@@ -5,7 +5,7 @@
  * server will compute. Everything here is a preview: the server stays the
  * authority for the paid amount, the change and every 422.
  */
-import { normalize, dAdd, dSub, dMul, dPercent, dCmp, dMin, dMax0, dSum, isPositive } from './decimal';
+import { normalize, dAdd, dSub, dMul, dPercent, dCmp, dMin, dMax0, dSum, isPositive } from './decimal.js';
 
 const CUSTOMER_PAID_BY = 'customer_account';
 

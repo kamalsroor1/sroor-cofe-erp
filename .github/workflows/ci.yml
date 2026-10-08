@@ -17,12 +17,12 @@
 # test, concurrency / row-lock tests, DECIMAL round trips) on a throwaway MySQL 8.4
 # container, because sqlite cannot prove row locks (phase-1-plan R7).
 #
-# The one-time full format pass has landed, so formatting is checked on the
-# whole codebase:
+# The one-time full format pass has landed, so formatting and linting are checked
+# on the whole codebase:
 #   - Pint checks every PHP file (scope set by backend/pint.json).
 #   - Prettier checks everything covered by `npm run format:check` (backend + desktop).
+#   - ESLint runs `npm run lint` (backend + desktop); errors fail the job, warnings do not.
 # Remaining legacy debt:
-#   - ESLint (frontend job) runs only on .js/.vue files changed by the push / PR.
 #   - Larastan runs on everything, against phpstan-baseline.neon.
 
 name: CI
@@ -244,35 +244,8 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: Determine changed frontend files
-        id: changed
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE="${{ github.event.pull_request.base.sha }}"
-            RANGE="$BASE...HEAD"
-          else
-            BASE="${{ github.event.before }}"
-            RANGE="$BASE HEAD"
-          fi
-          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "Base commit not available, falling back to HEAD~1"
-            RANGE="HEAD~1 HEAD"
-          fi
-          # .js/.vue/.css under backend/, excluding generated/vendored output.
-          git diff -z --name-only --diff-filter=ACMR $RANGE -- '*.js' '*.vue' '*.css' \
-            | tr '\0' '\n' | grep '^backend/' | sed 's#^backend/##' \
-            | grep -vE '^(public/|vendor/|node_modules/|android/)' \
-            | grep -vE '^resources/js/helpers/defaultTranslations\.' \
-            > "$RUNNER_TEMP/changed-fe.txt" || true
-          echo "count=$(wc -l < "$RUNNER_TEMP/changed-fe.txt")" >> "$GITHUB_OUTPUT"
-          cat "$RUNNER_TEMP/changed-fe.txt"
-
-      # The legacy tree still has ~108 ESLint errors, so lint only the changed .js/.vue files.
-      # Switch this step to `npm run lint` once those errors are fixed.
-      - name: ESLint (changed files only)
-        if: steps.changed.outputs.count != '0'
-        run: grep -E '\.(js|vue)$' "$RUNNER_TEMP/changed-fe.txt" | tr '\n' '\0' | xargs -0 -r npx --no-install eslint --no-warn-ignored
+      - name: ESLint (whole codebase)
+        run: npm run lint
 
       - name: Prettier format:check (whole codebase)
         run: npm run format:check

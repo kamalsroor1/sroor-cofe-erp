@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useMoney } from '@/Composables/useMoney';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 import { trans } from '@/helpers/trans';
-import { X, Scale } from 'lucide-vue-next';
+import { X } from 'lucide-vue-next';
 
 const props = defineProps({
   show: { type: Boolean, default: false },

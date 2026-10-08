@@ -1,5 +1,4 @@
 <script setup>
-import { computed } from 'vue';
 import { RefreshCw } from 'lucide-vue-next';
 import { useMoney } from '@/Composables/useMoney';
 

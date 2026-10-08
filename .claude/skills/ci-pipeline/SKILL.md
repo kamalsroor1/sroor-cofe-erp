@@ -8,7 +8,7 @@ description: Maintain and debug Sroor ERP's GitHub Actions — the CI quality ga
 ## Workflows
 | File | Trigger | What it does | Risk |
 |---|---|---|---|
-| `.github/workflows/ci.yml` | push / PR on `feature/multi-tenant` | **php**: Pint `--test` + `composer analyse` + `php artisan test`. **frontend**: `npm ci`, ESLint on changed files, `npm run format:check` (whole codebase), `npm run build`. **desktop**: `npm ci` + `npm run lint` + `npm run format:check` in `desktop/` | Safe, read-only |
+| `.github/workflows/ci.yml` | push / PR on `feature/multi-tenant` | **php**: Pint `--test` + `composer analyse` + `php artisan test`. **frontend**: `npm ci`, `npm run lint` (whole codebase), `npm run format:check` (whole codebase), `npm run build`. **desktop**: `npm ci` + `npm run lint` + `npm run format:check` in `desktop/` | Safe, read-only |
 | `.github/workflows/deploy.yml` | push to `main` / `master` | Deploys the **single-tenant `main` app to the live shop server** | **Production.** Never edit it, trigger it or push to `main` without the CTO explicitly asking in that message |
 
 ## Reproduce a failing job locally
@@ -19,7 +19,7 @@ description: Maintain and debug Sroor ERP's GitHub Actions — the CI quality ga
 ## Changing CI
 - Keep jobs parallel and cached (composer and npm caches keyed on lockfiles).
 - Tests in CI use sqlite `:memory:` and a generated `APP_KEY`. **Never put real secrets in workflow files.** Anything sensitive goes in GitHub Actions Secrets, referenced as `${{ secrets.NAME }}`, and you tell the CTO which secret to create.
-- The one-time full format pass has landed: Pint (`./vendor/bin/pint --test`, scoped by `backend/pint.json`) and Prettier (`npm run format:check`) check the **whole codebase**. ESLint in the frontend job is still **changed files only** because of legacy lint errors; switch it to `npm run lint` once those are fixed.
+- The one-time full format pass has landed: Pint (`./vendor/bin/pint --test`, scoped by `backend/pint.json`) and Prettier (`npm run format:check`) check the **whole codebase**. ESLint also checks the **whole codebase** (`npm run lint` in the frontend and desktop jobs); errors fail the job, warnings don't.
 - Job names are the "required status checks" in branch protection. If you rename a job, tell the CTO to update the protection rule.
 
 ## Branch protection (the CTO does this in GitHub settings, or Claude does it only with explicit permission)

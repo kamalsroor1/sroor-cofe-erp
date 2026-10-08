@@ -255,4 +255,9 @@ return [
     'pos_settings_saved' => 'Branch POS settings saved',
     'scale_barcode_invalid_check_digit' => 'Invalid scale barcode (check digit mismatch). Reprint the label or scan it again',
     'store_not_found' => 'Branch not found',
+
+    // Touch cart card (POSCartItem)
+    'decrease_qty' => 'Decrease quantity',
+    'increase_qty' => 'Increase quantity',
+    'one_kg_chip' => '1 kg',
 ];
