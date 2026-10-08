@@ -65,7 +65,7 @@
         <button
           type="button"
           @click="submitQuickCustomer"
-          :disabled="!quickCustomerName.trim() || isSubmitting"
+          :disabled="!quickCustomerName.trim() || isSubmitting || offline"
           class="min-h-[44px] w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition disabled:opacity-50 cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-2"
         >
           <span
@@ -192,6 +192,7 @@ const props = defineProps({
   selectedCustomerId: { type: [Number, String], default: null },
   isSearching: { type: Boolean, default: false },
   isSubmitting: { type: Boolean, default: false },
+  offline: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'update:searchQuery', 'select-customer', 'create-customer']);
@@ -240,7 +241,7 @@ const openQuickAddWithQuery = () => {
 };
 
 const submitQuickCustomer = () => {
-  if (!quickCustomerName.value.trim()) return;
+  if (!quickCustomerName.value.trim() || props.offline) return;
   emit('create-customer', {
     name: quickCustomerName.value.trim(),
     phone: quickCustomerPhone.value.trim(),

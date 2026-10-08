@@ -37,6 +37,7 @@ final class CreateItemAction
                 'current_stock' => '0.000',
                 'is_active' => $dto->is_active,
                 'notes' => $dto->notes,
+                'is_weighted' => $dto->is_weighted ?? false,
             ]);
 
             // Auto-initialize StoreStock for existing stores

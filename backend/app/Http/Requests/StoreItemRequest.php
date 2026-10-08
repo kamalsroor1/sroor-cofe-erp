@@ -25,6 +25,8 @@ class StoreItemRequest extends FormRequest
             'selling_price' => ['required', 'numeric', 'min:0'],
             'min_stock_level' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            // POSB-2: explicit weighed-item flag (scale labels, fractional qty).
+            'is_weighted' => ['sometimes', 'boolean'],
         ];
     }
 }

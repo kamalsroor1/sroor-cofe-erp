@@ -250,4 +250,9 @@ return [
     'partial_amount_invalid' => 'Paid amount must be greater than zero and less than the invoice net',
     'split_total_mismatch' => 'Payment methods total does not equal the invoice net',
     'cash_received_placeholder' => 'Cash received...',
+
+    // POSB-2: per-store POS settings & scale labels
+    'pos_settings_saved' => 'Branch POS settings saved',
+    'scale_barcode_invalid_check_digit' => 'Invalid scale barcode (check digit mismatch). Reprint the label or scan it again',
+    'store_not_found' => 'Branch not found',
 ];

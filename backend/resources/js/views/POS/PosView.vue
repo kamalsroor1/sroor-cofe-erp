@@ -81,6 +81,7 @@
               :change-due="changeDue"
               :cart-empty="cart.length === 0"
               :is-submitting="isSubmitting"
+              :offline="!isOnline"
               :expenses-count="additionalExpenses.length"
               @apply-discount="applyDiscountPreset"
               @submit="submitInvoice"
@@ -126,6 +127,7 @@
       :selected-customer-id="selectedCustomerId"
       :is-searching="isSearchingCustomers"
       :is-submitting="isSubmittingQuickCustomer"
+      :offline="!isOnline"
       @close="showCustomerPickerModal = false"
       @select-customer="selectCustomer"
       @create-customer="handleQuickCustomerSubmit"
@@ -195,6 +197,7 @@ import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useFormatters } from '../../Composables/useFormatters';
 import { usePosOrders } from '../../Composables/usePosOrders';
 import { usePosCheckout } from '../../Composables/usePosCheckout';
+import { useConnectivity } from '../../Composables/useConnectivity';
 import { normalize, dSum, isPositive } from '../../helpers/decimal';
 
 const authStore = useAuthStore();
@@ -202,6 +205,8 @@ const appConfigStore = useAppConfigStore();
 const { isDesktop, printThermalReceipt, openCashDrawer } = useDesktopHardware();
 const { playScanBeep, playSuccessChime, playDrawerSound, playErrorTone } = useAudioFeedback();
 const { formatMoney } = useFormatters();
+// OFFL-1: no offline queue yet (end of Phase 2) — every server write is blocked while offline.
+const { isOnline } = useConnectivity();
 
 const {
   orders,
@@ -693,6 +698,7 @@ const selectCustomer = (cust) => {
 };
 
 const handleQuickCustomerSubmit = async ({ name, phone }) => {
+  if (!isOnline.value) return;
   isSubmittingQuickCustomer.value = true;
   try {
     const res = await api.post('/customers', { name, phone });
@@ -784,6 +790,15 @@ const handleSwitchStore = async (storeId) => {
 
 const submitInvoice = async (printImmediately = false) => {
   if (isSubmitting.value) return;
+  if (!isOnline.value) {
+    playErrorTone();
+    Swal.fire({
+      icon: 'warning',
+      title: trans('connectivity.checkout_blocked'),
+      text: trans('connectivity.checkout_blocked_desc'),
+    });
+    return;
+  }
   if (cart.value.length === 0) {
     Swal.fire({ icon: 'warning', title: trans('pos.empty_cart_error'), timer: 1500, showConfirmButton: false });
     return;

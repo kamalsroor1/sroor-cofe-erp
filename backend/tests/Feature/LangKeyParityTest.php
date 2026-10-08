@@ -19,6 +19,7 @@ class LangKeyParityTest extends TestCase
         return [
             'invoices' => ['invoices'],
             'pos' => ['pos'],
+            'connectivity' => ['connectivity'],
         ];
     }
 

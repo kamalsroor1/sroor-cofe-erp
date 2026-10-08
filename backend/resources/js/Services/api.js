@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { trans } from '../helpers/trans';
+import { isNetworkError, reportRequestFailure, reportServerReachable } from '../helpers/connectivity';
 
 // 1. Create centralized Axios instance
 const apiClient = axios.create({
@@ -47,9 +48,14 @@ apiClient.interceptors.request.use(
 // 3. Response Interceptor: Global Error Handling & Toast Notifications
 apiClient.interceptors.response.use(
     (response) => {
+        reportServerReachable();
         return response;
     },
     (error) => {
+        // Feeds the offline banner (OFFL-1): any HTTP answer means the server is reachable.
+        if (error.response) reportServerReachable();
+        else reportRequestFailure(error);
+
         const status = error.response ? error.response.status : null;
         const data = error.response ? error.response.data : null;
         const message = data?.message || error.message || trans('common.unexpected_error');
@@ -92,6 +98,8 @@ apiClient.interceptors.response.use(
         if (status === 422 && data?.errors) {
             const firstError = Object.values(data.errors).flat()[0] || message;
             error.userMessage = firstError;
+        } else if (isNetworkError(error)) {
+            error.userMessage = trans('connectivity.network_error');
         } else {
             error.userMessage = message;
         }

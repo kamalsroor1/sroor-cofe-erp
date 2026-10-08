@@ -17,6 +17,8 @@ final class ItemDTO
         public readonly string $min_stock_level = '0.000',
         public readonly ?string $notes = null,
         public readonly bool $is_active = true,
+        /** POSB-2: null = not sent (update keeps the stored flag; create defaults to false). */
+        public readonly ?bool $is_weighted = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -32,6 +34,7 @@ final class ItemDTO
             min_stock_level: isset($data['min_stock_level']) ? (string) $data['min_stock_level'] : '0.000',
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
             is_active: ! isset($data['is_active']) || (bool) $data['is_active'],
+            is_weighted: isset($data['is_weighted']) ? (bool) $data['is_weighted'] : null,
         );
     }
 
@@ -48,6 +51,7 @@ final class ItemDTO
             'min_stock_level' => $this->min_stock_level,
             'notes' => $this->notes,
             'is_active' => $this->is_active,
+            'is_weighted' => $this->is_weighted,
         ];
     }
 }

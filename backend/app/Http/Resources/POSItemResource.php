@@ -28,6 +28,7 @@ class POSItemResource extends JsonResource
             'current_stock' => $stock,
             'min_stock_level' => (float) ($this->min_stock_level ?: 0),
             'unit' => $this->unit ?: 'كجم',
+            'is_weighted' => (bool) $this->resource->is_weighted,
         ];
     }
 }

@@ -276,6 +276,9 @@
     <!-- 🗂️ 1.5 DESKTOP MULTI-TABS BAR (Visible ONLY on Desktop) -->
     <DesktopTabsBar v-if="isDesktop" />
 
+    <!-- Connectivity banner: always mounted, visible only while offline / server unreachable -->
+    <OfflineBanner />
+
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🖥️ MAIN BODY: DYNAMIC SIDEBAR + STAGE                        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -590,6 +593,7 @@ import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSett
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
+import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
 import Swal from 'sweetalert2';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import {

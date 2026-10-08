@@ -1,0 +1,112 @@
+{
+    "version": 1,
+    "description": "POSB-2 shared scale-label test vectors. Used by the PHP ScaleBarcodeParser test now and by the frontend parser in Phase 2. Layout: <prefix><PLU><value>[check digit]. Check digit = GS1 mod-10 (EAN-13). Every amount is a string with scale 3. `config` keys override the store defaults; `expected` is null when the code is NOT a scale label.",
+    "defaults": {
+        "scale_barcode_enabled": true,
+        "scale_prefixes": ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29"],
+        "scale_plu_length": 5,
+        "scale_value_type": "weight",
+        "scale_value_length": 5,
+        "scale_weight_divisor": 1000,
+        "scale_price_divisor": 100,
+        "scale_check_digit": true
+    },
+    "cases": [
+        {
+            "name": "weight label 1.250 kg",
+            "config": {},
+            "barcode": "2034567012501",
+            "expected": { "prefix": "20", "plu": "34567", "value_type": "weight", "quantity": "1.250", "price": null }
+        },
+        {
+            "name": "weight label with leading-zero PLU, prefix 29, 0.500 kg",
+            "config": {},
+            "barcode": "2900042005002",
+            "expected": { "prefix": "29", "plu": "00042", "value_type": "weight", "quantity": "0.500", "price": null }
+        },
+        {
+            "name": "price label in piasters 15.750",
+            "config": { "scale_value_type": "price" },
+            "barcode": "2234567015759",
+            "expected": { "prefix": "22", "plu": "34567", "value_type": "price", "quantity": null, "price": "15.750" }
+        },
+        {
+            "name": "price label with divisor 1 (whole pounds)",
+            "config": { "scale_value_type": "price", "scale_price_divisor": 1 },
+            "barcode": "2234567015759",
+            "expected": { "prefix": "22", "plu": "34567", "value_type": "price", "quantity": null, "price": "1575.000" }
+        },
+        {
+            "name": "4-digit PLU and 6-digit value",
+            "config": { "scale_plu_length": 4, "scale_value_length": 6 },
+            "barcode": "2134560012505",
+            "expected": { "prefix": "21", "plu": "3456", "value_type": "weight", "quantity": "1.250", "price": null }
+        },
+        {
+            "name": "weight divisor 1 (counted units)",
+            "config": { "scale_weight_divisor": 1 },
+            "barcode": "2034567000034",
+            "expected": { "prefix": "20", "plu": "34567", "value_type": "weight", "quantity": "3.000", "price": null }
+        },
+        {
+            "name": "custom prefix list",
+            "config": { "scale_prefixes": ["02"] },
+            "barcode": "0234567012507",
+            "expected": { "prefix": "02", "plu": "34567", "value_type": "weight", "quantity": "1.250", "price": null }
+        },
+        {
+            "name": "no check digit configured (12 digits)",
+            "config": { "scale_check_digit": false },
+            "barcode": "203456701250",
+            "expected": { "prefix": "20", "plu": "34567", "value_type": "weight", "quantity": "1.250", "price": null }
+        },
+        {
+            "name": "surrounding whitespace from the scanner is ignored",
+            "config": {},
+            "barcode": " 2034567012501\n",
+            "expected": { "prefix": "20", "plu": "34567", "value_type": "weight", "quantity": "1.250", "price": null }
+        },
+        {
+            "name": "prefix outside the list is not a scale label",
+            "config": {},
+            "barcode": "6221234567890",
+            "expected": null
+        },
+        {
+            "name": "prefix outside a custom list is not a scale label",
+            "config": { "scale_prefixes": ["02"] },
+            "barcode": "2034567012501",
+            "expected": null
+        },
+        {
+            "name": "scale labels disabled for the store",
+            "config": { "scale_barcode_enabled": false },
+            "barcode": "2034567012501",
+            "expected": null
+        },
+        {
+            "name": "matching prefix but wrong length is not a scale label",
+            "config": {},
+            "barcode": "20345670125",
+            "expected": null
+        },
+        {
+            "name": "non-numeric code is not a scale label",
+            "config": {},
+            "barcode": "20ABCDE012501",
+            "expected": null
+        },
+        {
+            "name": "empty input",
+            "config": {},
+            "barcode": "",
+            "expected": null
+        },
+        {
+            "name": "wrong check digit is an error",
+            "config": {},
+            "barcode": "2034567012500",
+            "expected": { "error": "pos.scale_barcode_invalid_check_digit" }
+        }
+    ]
+}

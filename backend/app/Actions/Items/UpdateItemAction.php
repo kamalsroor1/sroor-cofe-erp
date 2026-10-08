@@ -27,6 +27,8 @@ final class UpdateItemAction
                 'min_stock_level' => $dto->min_stock_level,
                 'is_active' => $dto->is_active,
                 'notes' => $dto->notes,
+                // POSB-2: legacy clients that do not send the flag keep the stored value.
+                'is_weighted' => $dto->is_weighted ?? $item->is_weighted,
             ]);
 
             return $item->fresh(['storeStocks.store']);

@@ -193,11 +193,21 @@
 
     <!-- 4. Execution Buttons (Always Pinned & Accessible) -->
     <div class="space-y-1.5 pt-1">
+      <p
+        v-if="offline"
+        data-testid="pos-checkout-offline-hint"
+        role="status"
+        class="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-black text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60"
+      >
+        <WifiOff class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+        <span>{{ $t('connectivity.checkout_blocked') }}</span>
+      </p>
+
       <button
         type="button"
         data-testid="pos-checkout-submit"
         @click="$emit('submit', false)"
-        :disabled="cartEmpty || isSubmitting"
+        :disabled="cartEmpty || isSubmitting || offline"
         class="w-full h-11 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
       >
         <span
@@ -211,7 +221,7 @@
       <button
         type="button"
         @click="$emit('submit', true)"
-        :disabled="cartEmpty || isSubmitting"
+        :disabled="cartEmpty || isSubmitting || offline"
         class="w-full h-8 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-[11px] transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
       >
         <Printer class="w-3.5 h-3.5" />
@@ -222,7 +232,7 @@
 </template>
 
 <script setup>
-import { Printer, CheckCircle2, Truck } from 'lucide-vue-next';
+import { Printer, CheckCircle2, Truck, WifiOff } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
@@ -241,6 +251,7 @@ defineProps({
   changeDue: { type: Number, default: 0 },
   cartEmpty: { type: Boolean, default: true },
   isSubmitting: { type: Boolean, default: false },
+  offline: { type: Boolean, default: false },
   expensesCount: { type: Number, default: 0 },
 });
 

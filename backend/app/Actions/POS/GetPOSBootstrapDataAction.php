@@ -3,6 +3,7 @@
 namespace App\Actions\POS;
 
 use App\Http\Resources\POSCustomerResource;
+use App\Http\Resources\StorePosSettingResource;
 use App\Models\CashShift;
 use App\Models\Category;
 use App\Models\Customer;
@@ -13,6 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class GetPOSBootstrapDataAction
 {
+    public function __construct(
+        private readonly GetStorePosSettingsAction $getStorePosSettingsAction,
+    ) {}
+
     /**
      * تجميع وتهيئة بيانات شاشة الكاشير ونقاط البيع السريعة عبر JsonResources
      */
@@ -62,6 +67,7 @@ class GetPOSBootstrapDataAction
                     'items.pos_sort_order',
                     'items.is_pos_pinned',
                     'items.pos_sales_count',
+                    'items.is_weighted',
                     DB::raw('COALESCE(store_stocks.quantity, items.current_stock) as calculated_stock'),
                 ])
                 ->orderBy('items.name')
@@ -71,7 +77,7 @@ class GetPOSBootstrapDataAction
                 ->select([
                     'id', 'code', 'name', 'image', 'category', 'category_id', 'unit',
                     'cost_price', 'selling_price', 'min_selling_price', 'min_stock_level',
-                    'pos_sort_order', 'is_pos_pinned', 'pos_sales_count',
+                    'pos_sort_order', 'is_pos_pinned', 'pos_sales_count', 'is_weighted',
                     'current_stock as calculated_stock',
                 ])
                 ->orderBy('name')
@@ -96,6 +102,7 @@ class GetPOSBootstrapDataAction
                 'pos_sort_order' => (int) ($it->pos_sort_order ?? 0),
                 'is_pos_pinned' => (bool) ($it->is_pos_pinned ?? false),
                 'pos_sales_count' => (int) ($it->pos_sales_count ?? 0),
+                'is_weighted' => (bool) $it->is_weighted,
             ];
         })->values()->all();
 
@@ -167,6 +174,10 @@ class GetPOSBootstrapDataAction
                 'shift_number' => $activeShift->shift_number ?? $activeShift->id,
                 'opened_at' => $activeShift->opened_at,
             ] : null,
+            // POSB-2: scale-label parser + max discount of the ACTIVE store only (defaults if never saved).
+            'pos_settings' => $activeStore
+                ? (new StorePosSettingResource($this->getStorePosSettingsAction->execute((int) $activeStore->id)))->resolve()
+                : null,
         ];
     }
 }

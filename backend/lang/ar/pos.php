@@ -250,4 +250,9 @@ return [
     'partial_amount_invalid' => 'المبلغ المدفوع لازم يكون أكبر من صفر وأقل من صافي الفاتورة',
     'split_total_mismatch' => 'مجموع طرق الدفع لا يساوي صافي الفاتورة',
     'cash_received_placeholder' => 'المدفوع نقداً...',
+
+    // POSB-2: per-store POS settings & scale labels
+    'pos_settings_saved' => 'تم حفظ إعدادات نقطة البيع للفرع',
+    'scale_barcode_invalid_check_digit' => 'باركود الميزان غير صحيح (رقم التحقق لا يطابق). أعد طباعة الملصق أو امسحه مرة أخرى',
+    'store_not_found' => 'الفرع غير موجود',
 ];

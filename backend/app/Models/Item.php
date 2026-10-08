@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property bool $is_weighted POSB-2: sold by weight (scale labels, fractional qty); explicit, not inferred from the unit
+ */
 class Item extends Model
 {
     use HasFactory, SoftDeletes;
@@ -29,6 +32,7 @@ class Item extends Model
         'pos_sort_order',
         'is_pos_pinned',
         'pos_sales_count',
+        'is_weighted',
     ];
 
     protected $appends = [
@@ -59,6 +63,7 @@ class Item extends Model
             'pos_sort_order' => 'integer',
             'is_pos_pinned' => 'boolean',
             'pos_sales_count' => 'integer',
+            'is_weighted' => 'boolean',
         ];
     }
 

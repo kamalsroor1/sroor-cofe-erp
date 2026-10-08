@@ -33,6 +33,7 @@ class ItemResource extends JsonResource
             'total_stock' => (float) $this->current_stock,
             'min_stock_level' => (float) $this->min_stock_level,
             'is_active' => (bool) $this->is_active,
+            'is_weighted' => (bool) $this->resource->is_weighted,
             'is_low_stock' => method_exists($this->resource, 'isLowStock') ? $this->isLowStock() : false,
             'notes' => $this->notes,
             'store_stocks' => $this->relationLoaded('storeStocks') ? $this->storeStocks->map(fn ($ss) => [
