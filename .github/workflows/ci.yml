@@ -1,0 +1,237 @@
+# Quality gates for the multi-tenant codebase (feature/multi-tenant).
+#
+# This workflow does NOT deploy anything and needs no secrets.
+# `main` is a different (single-tenant) codebase handled by deploy.yml; it is
+# deliberately excluded here.
+#
+# Job names (php / frontend / desktop) are the "required status checks" to
+# enable in branch protection for feature/multi-tenant. Renaming a job breaks
+# that protection rule - update the rule at the same time.
+#
+# Legacy debt handling (temporary, until the one-time formatting passes land):
+#   - Pint runs only on PHP files changed by the push / PR.
+#   - Prettier runs only on .js/.vue/.css files changed by the push / PR.
+#   - Larastan runs on everything, against phpstan-baseline.neon.
+
+name: CI
+
+on:
+  push:
+    branches:
+      - feature/multi-tenant
+  pull_request:
+    branches:
+      - feature/multi-tenant
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.3'
+  PHP_EXTENSIONS: bcmath, ctype, curl, dom, fileinfo, gd, iconv, intl, mbstring, pdo, pdo_sqlite, sqlite3, tokenizer, xml, zip
+  NODE_VERSION: '24'
+
+jobs:
+  php:
+    name: php
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed to diff against the base commit
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+
+      - name: Composer install
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (no real secrets)
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Determine changed PHP files
+        id: changed
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            RANGE="$BASE...HEAD"
+          else
+            BASE="${{ github.event.before }}"
+            RANGE="$BASE HEAD"
+          fi
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "Base commit not available, falling back to HEAD~1"
+            RANGE="HEAD~1 HEAD"
+          fi
+          # Paths relative to backend/, only files that still exist.
+          git diff -z --name-only --diff-filter=ACMR $RANGE -- '*.php' \
+            | tr '\0' '\n' | grep '^backend/' | sed 's#^backend/##' \
+            | grep -v '^vendor/' > "$RUNNER_TEMP/changed-php.txt" || true
+          echo "count=$(wc -l < "$RUNNER_TEMP/changed-php.txt")" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/changed-php.txt"
+
+      - name: Pint (changed files only)
+        if: steps.changed.outputs.count != '0'
+        run: tr '\n' '\0' < "$RUNNER_TEMP/changed-php.txt" | xargs -0 ./vendor/bin/pint --test
+
+      - name: Cache PHPStan result cache
+        uses: actions/cache@v4
+        with:
+          path: backend/storage/framework/cache/phpstan
+          key: phpstan-${{ runner.os }}-${{ github.sha }}
+          restore-keys: phpstan-${{ runner.os }}-
+
+      - name: Larastan (level 5 + baseline)
+        run: composer analyse
+
+      - name: PHPUnit (sqlite :memory:)
+        run: php artisan test
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # `npm run build` has a `prebuild` hook that runs `php artisan lang:export`,
+      # so this job needs PHP + vendor/ as well.
+      - name: Setup PHP (for lang:export)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+
+      - name: Composer install
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (no real secrets)
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Determine changed frontend files
+        id: changed
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            RANGE="$BASE...HEAD"
+          else
+            BASE="${{ github.event.before }}"
+            RANGE="$BASE HEAD"
+          fi
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "Base commit not available, falling back to HEAD~1"
+            RANGE="HEAD~1 HEAD"
+          fi
+          # .js/.vue/.css under backend/, excluding generated/vendored output.
+          git diff -z --name-only --diff-filter=ACMR $RANGE -- '*.js' '*.vue' '*.css' \
+            | tr '\0' '\n' | grep '^backend/' | sed 's#^backend/##' \
+            | grep -vE '^(public/|vendor/|node_modules/|android/)' \
+            | grep -vE '^resources/js/helpers/defaultTranslations\.' \
+            > "$RUNNER_TEMP/changed-fe.txt" || true
+          echo "count=$(wc -l < "$RUNNER_TEMP/changed-fe.txt")" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/changed-fe.txt"
+
+      # The legacy tree still has ~108 ESLint errors, so lint only the changed .js/.vue files.
+      # Switch this step to `npm run lint` once those errors are fixed.
+      - name: ESLint (changed files only)
+        if: steps.changed.outputs.count != '0'
+        run: grep -E '\.(js|vue)$' "$RUNNER_TEMP/changed-fe.txt" | tr '\n' '\0' | xargs -0 -r npx --no-install eslint --no-warn-ignored
+
+      # Same check as `npm run format:check`, but restricted to the changed files.
+      # Prettier is called directly because the npm script carries its own glob,
+      # and appending file arguments to it would still check the whole legacy tree.
+      # Switch this step to `npm run format:check` after the one-time full format pass.
+      - name: Prettier format:check (changed files only)
+        if: steps.changed.outputs.count != '0'
+        run: tr '\n' '\0' < "$RUNNER_TEMP/changed-fe.txt" | xargs -0 npx --no-install prettier --check --ignore-unknown
+
+      - name: Build (runs lang:export via prebuild)
+        run: npm run build
+
+  desktop:
+    name: desktop
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: desktop
+    env:
+      # Lint does not need the Electron binary; skip the ~100 MB download.
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint

@@ -9,17 +9,30 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
+    "test": "node --test \"test/**/*.test.js\"",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis",
-    "dist:portable": "electron-builder --win portable"
+    "dist:portable": "electron-builder --win portable",
+    "lint": "eslint main.js preload.js src test eslint.config.mjs",
+    "lint:fix": "eslint main.js preload.js src test eslint.config.mjs --fix",
+    "lint:dirty": "node ../backend/scripts/run-on-changed.mjs eslint",
+    "format": "prettier --write main.js preload.js src test eslint.config.mjs",
+    "format:check": "prettier --check main.js preload.js src test eslint.config.mjs",
+    "format:dirty": "node ../backend/scripts/run-on-changed.mjs prettier --write",
+    "format:dirty:check": "node ../backend/scripts/run-on-changed.mjs prettier --check"
   },
   "dependencies": {
     "electron-store": "^8.2.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "electron": "^33.2.1",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9"
   },
   "build": {
     "appId": "com.baraasolutions.sroorerp",

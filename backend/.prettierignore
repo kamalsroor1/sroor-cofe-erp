@@ -1,0 +1,21 @@
+# Generated / vendored / build output
+public/build/
+public/vendor/
+vendor/
+node_modules/
+android/
+storage/
+bootstrap/cache/
+test-results/
+playwright-report/
+
+# Generated (lang:export, build version bump) — never hand-edit or format
+resources/js/**/defaultTranslations.*
+resources/js/version.json
+
+# Lockfiles
+package-lock.json
+composer.lock
+
+# Server-side templates (Prettier has no PHP parser configured)
+*.php

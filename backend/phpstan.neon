@@ -1,0 +1,33 @@
+# Larastan / PHPStan configuration.
+#
+#   composer analyse            -> run the analysis (must stay green)
+#   composer analyse:baseline   -> regenerate phpstan-baseline.neon
+#
+# Rule: new or changed PHP code must pass level 5 WITHOUT adding entries to
+# phpstan-baseline.neon. The baseline only freezes legacy debt; shrink it, never grow it.
+
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - app/
+        - routes/
+        - database/
+
+    excludePaths:
+        analyseAndScan:
+            - bootstrap/cache/*
+            - storage/*
+
+    tmpDir: storage/framework/cache/phpstan
+
+    # A stale baseline entry (code that got fixed) must not fail the build while
+    # files are being cleaned up; regenerate the baseline to drop it instead.
+    reportUnmatchedIgnoredErrors: false
+
+    # Memory limit is passed on the command line (composer scripts use
+    # --memory-limit=2G); PHPStan has no neon key for it.

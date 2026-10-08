@@ -101,3 +101,13 @@ e2e/.run-meta.json
 /desktop/build/*.ico
 /desktop/build/*.png
 /desktop/*.log
+
+# Data dumps, local artifacts & scratch output (never commit)
+/backups/
+*.sql
+*.sql.gz
+*.dump
+test-results/
+__pycache__/
+*.pyc
+/*.png
