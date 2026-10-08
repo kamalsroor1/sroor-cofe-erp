@@ -17,13 +17,13 @@ final class UpdateExpenseAction
     {
         return DB::transaction(function () use ($expense, $dto) {
             $expense->update([
-                'title'          => $dto->title,
-                'category'       => $dto->category,
-                'cost_center'    => $dto->cost_center,
-                'amount'         => $dto->amount,
-                'expense_date'   => $dto->expense_date,
+                'title' => $dto->title,
+                'category' => $dto->category,
+                'cost_center' => $dto->cost_center,
+                'amount' => $dto->amount,
+                'expense_date' => $dto->expense_date,
                 'payment_method' => $dto->payment_method,
-                'notes'          => $dto->notes,
+                'notes' => $dto->notes,
             ]);
 
             return $expense->fresh();

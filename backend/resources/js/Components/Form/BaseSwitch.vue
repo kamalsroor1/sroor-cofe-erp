@@ -42,10 +42,7 @@
     </label>
 
     <!-- Error Message -->
-    <p
-      v-if="hasError"
-      class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5"
-    >
+    <p v-if="hasError" class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5">
       <AlertCircle class="w-3.5 h-3.5 shrink-0" />
       <span>{{ errorMessage }}</span>
     </p>
@@ -57,7 +54,7 @@ import { computed } from 'vue';
 import { AlertCircle } from 'lucide-vue-next';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps({
@@ -67,14 +64,14 @@ const props = defineProps({
   error: { type: [String, Array], default: null },
   disabled: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
-  wrapperClass: { type: String, default: '' }
+  wrapperClass: { type: String, default: '' },
 });
 
 defineEmits(['change']);
 
 const model = defineModel({
   type: Boolean,
-  default: false
+  default: false,
 });
 
 const autoId = 'sw-' + Math.random().toString(36).substring(2, 9);

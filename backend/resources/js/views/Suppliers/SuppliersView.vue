@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('contacts.suppliers_title')"
-      :subtitle="$t('contacts.suppliers_subtitle')"
-      icon="🏭"
-    >
+    <PageHeader :title="$t('contacts.suppliers_title')" :subtitle="$t('contacts.suppliers_subtitle')" icon="🏭">
       <template #actions>
         <BaseButton
           type="button"
@@ -21,10 +17,7 @@
     </PageHeader>
 
     <!-- Summary Metrics Grid -->
-    <SuppliersMetricsGrid
-      :metrics="metrics"
-      :loading="isLoading"
-    />
+    <SuppliersMetricsGrid :metrics="metrics" :loading="isLoading" />
 
     <!-- Filters & Search Bar -->
     <SuppliersFilterBar

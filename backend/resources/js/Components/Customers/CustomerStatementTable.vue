@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+  >
     <!-- Loading State -->
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="8" />
@@ -11,13 +13,19 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-tajawal">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-tajawal"
+            >
               <th class="py-3 px-4 text-start font-bold">#</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('common.date') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.transaction_type') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.reference_no') }}</th>
-              <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.period_debit') }} ({{ $t('contacts.withdrawals') }})</th>
-              <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.period_credit') }} ({{ $t('contacts.payments_received') }})</th>
+              <th class="py-3 px-4 text-end font-bold">
+                {{ $t('contacts.period_debit') }} ({{ $t('contacts.withdrawals') }})
+              </th>
+              <th class="py-3 px-4 text-end font-bold">
+                {{ $t('contacts.period_credit') }} ({{ $t('contacts.payments_received') }})
+              </th>
               <th class="py-3 px-4 text-end font-bold">{{ $t('contacts.closing_balance') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('common.notes') }}</th>
             </tr>
@@ -32,16 +40,33 @@
               <td class="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">{{ row.date }}</td>
               <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ row.type }}</td>
               <td class="py-3.5 px-4 font-mono text-theme-primary">{{ row.ref_number || '—' }}</td>
-              <td class="py-3.5 px-4 text-end font-mono font-bold" :class="row.debit > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'">
+              <td
+                class="py-3.5 px-4 text-end font-mono font-bold"
+                :class="row.debit > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400'"
+              >
                 {{ formatMoney(row.debit) }}
               </td>
-              <td class="py-3.5 px-4 text-end font-mono font-bold" :class="row.credit > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'">
+              <td
+                class="py-3.5 px-4 text-end font-mono font-bold"
+                :class="row.credit > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400'"
+              >
                 {{ formatMoney(row.credit) }}
               </td>
-              <td class="py-3.5 px-4 text-end font-mono font-black" :class="row.balance_after > 0 ? 'text-rose-500 dark:text-rose-400' : (row.balance_after < 0 ? 'text-cyan-500 dark:text-cyan-400' : 'text-emerald-500 dark:text-emerald-400')">
+              <td
+                class="py-3.5 px-4 text-end font-mono font-black"
+                :class="
+                  row.balance_after > 0
+                    ? 'text-rose-500 dark:text-rose-400'
+                    : row.balance_after < 0
+                      ? 'text-cyan-500 dark:text-cyan-400'
+                      : 'text-emerald-500 dark:text-emerald-400'
+                "
+              >
                 {{ formatMoney(row.balance_after) }} {{ $t('common.currency') }}
               </td>
-              <td class="py-3.5 px-4 font-tajawal text-slate-500 dark:text-slate-400 max-w-xs truncate">{{ row.notes || '—' }}</td>
+              <td class="py-3.5 px-4 font-tajawal text-slate-500 dark:text-slate-400 max-w-xs truncate">
+                {{ row.notes || '—' }}
+              </td>
             </tr>
           </tbody>
         </table>

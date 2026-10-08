@@ -14,18 +14,24 @@
           >
             <!-- 🌟 State 1: Download Complete / Success State -->
             <div v-if="isDownloaded" class="p-6 text-center space-y-4">
-              <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-600 p-0.5 shadow-xl shadow-emerald-500/25 mx-auto flex items-center justify-center text-white">
+              <div
+                class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-600 p-0.5 shadow-xl shadow-emerald-500/25 mx-auto flex items-center justify-center text-white"
+              >
                 <CheckCircle class="w-8 h-8" />
               </div>
 
               <div class="space-y-1.5">
-                <h2 class="text-lg font-black text-slate-900 dark:text-white">{{ $t('app_update.download_success_title') }}</h2>
+                <h2 class="text-lg font-black text-slate-900 dark:text-white">
+                  {{ $t('app_update.download_success_title') }}
+                </h2>
                 <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed px-2">
                   {{ $t('app_update.download_success_desc') }}
                 </p>
               </div>
 
-              <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-start space-y-1">
+              <div
+                class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-start space-y-1"
+              >
                 <div class="flex items-center gap-2 text-emerald-400 font-bold">
                   <Sparkles class="w-4 h-4" />
                   <span>{{ $t('app_update.install_steps_title') }}</span>
@@ -58,7 +64,9 @@
             <!-- 🚀 State 2: Update Available & Downloading Details -->
             <template v-else>
               <!-- Top Gradient Accent Header -->
-              <div class="p-6 bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent border-b border-slate-200 dark:border-slate-800 text-center relative">
+              <div
+                class="p-6 bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-transparent border-b border-slate-200 dark:border-slate-800 text-center relative"
+              >
                 <!-- Close button (Only available if NOT forced) -->
                 <button
                   v-if="!isForceUpdate"
@@ -71,16 +79,22 @@
                 </button>
 
                 <!-- Glowing Rocket Icon Badge -->
-                <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-xl shadow-theme-primary mx-auto mb-3 flex items-center justify-center text-slate-950 animate-bounce">
+                <div
+                  class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-xl shadow-theme-primary mx-auto mb-3 flex items-center justify-center text-slate-950 animate-bounce"
+                >
                   <Rocket class="w-8 h-8" />
                 </div>
 
                 <h2 class="text-lg font-black text-slate-900 dark:text-white">
-                  {{ isForceUpdate ? $t('app_update.mandatory_update_title') : $t('app_update.update_available_title') }}
+                  {{
+                    isForceUpdate ? $t('app_update.mandatory_update_title') : $t('app_update.update_available_title')
+                  }}
                 </h2>
 
                 <!-- Version Comparison Badge -->
-                <div class="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-bold">
+                <div
+                  class="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-bold"
+                >
                   <span class="text-slate-400">{{ $t('app_update.current_version') }} v{{ currentVersionName }}</span>
                   <span class="text-theme-primary font-mono">➔</span>
                   <span class="text-emerald-400 font-black">v{{ latestVersionData?.latest_version || '1.1.0' }}</span>
@@ -90,7 +104,10 @@
               <!-- Body Details -->
               <div class="p-6 space-y-4 text-xs">
                 <!-- Force Update Notice -->
-                <div v-if="isForceUpdate" class="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2.5">
+                <div
+                  v-if="isForceUpdate"
+                  class="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2.5"
+                >
                   <AlertTriangle class="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
                   <div>
                     <div class="font-bold">{{ $t('app_update.security_update_badge') }}</div>
@@ -101,7 +118,9 @@
                 </div>
 
                 <!-- Metadata Chips -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-slate-400 text-[11px]">
+                <div
+                  class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-slate-400 text-[11px]"
+                >
                   <div class="flex items-center gap-1.5">
                     <HardDrive class="w-4 h-4 text-theme-primary" />
                     <span>{{ $t('app_update.file_size') }}</span>
@@ -111,7 +130,9 @@
                   <div class="flex items-center gap-1.5">
                     <Calendar class="w-4 h-4 text-emerald-400" />
                     <span>{{ $t('app_update.publish_date') }}</span>
-                    <span class="text-white font-bold">{{ latestVersionData?.published_at?.split(' ')[0] || $t('app_update.today') }}</span>
+                    <span class="text-white font-bold">{{
+                      latestVersionData?.published_at?.split(' ')[0] || $t('app_update.today')
+                    }}</span>
                   </div>
                 </div>
 
@@ -122,7 +143,9 @@
                     <span>{{ $t('app_update.changelog_title') }}</span>
                   </div>
 
-                  <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed">
+                  <div
+                    class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar leading-relaxed"
+                  >
                     <template v-if="latestVersionData?.release_notes?.length">
                       <div
                         v-for="(note, idx) in latestVersionData.release_notes"
@@ -148,7 +171,9 @@
                     </span>
                     <span class="text-slate-900 dark:text-white font-mono font-black">{{ downloadProgress }}%</span>
                   </div>
-                  <div class="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-slate-700">
+                  <div
+                    class="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-slate-700"
+                  >
                     <div
                       class="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 rounded-full transition-all duration-150 shadow-md shadow-amber-500/50"
                       :style="{ width: `${downloadProgress}%` }"
@@ -158,7 +183,9 @@
               </div>
 
               <!-- Footer Action Buttons -->
-              <div class="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex items-center gap-3">
+              <div
+                class="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 flex items-center gap-3"
+              >
                 <button
                   type="button"
                   @click="startDownloadAndInstall"
@@ -167,7 +194,9 @@
                 >
                   <Download v-if="!isDownloading" class="w-4.5 h-4.5" />
                   <Loader2 v-else class="w-4 h-4 animate-spin" />
-                  <span>{{ isDownloading ? $t('app_update.downloading_package') : $t('app_update.update_and_install_now') }}</span>
+                  <span>{{
+                    isDownloading ? $t('app_update.downloading_package') : $t('app_update.update_and_install_now')
+                  }}</span>
                 </button>
 
                 <button
@@ -190,31 +219,31 @@
 <script setup>
 import { useAppUpdate } from '../Composables/useAppUpdate';
 import {
-    Rocket,
-    X,
-    AlertTriangle,
-    HardDrive,
-    Calendar,
-    Sparkles,
-    Download,
-    CheckCircle,
-    Check,
-    Loader2
+  Rocket,
+  X,
+  AlertTriangle,
+  HardDrive,
+  Calendar,
+  Sparkles,
+  Download,
+  CheckCircle,
+  Check,
+  Loader2,
 } from 'lucide-vue-next';
 
 const {
-    isNative,
-    isDesktop,
-    isEligible,
-    currentVersionName,
-    isForceUpdate,
-    latestVersionData,
-    isModalOpen,
-    isDownloading,
-    isDownloaded,
-    downloadProgress,
-    downloadStageText,
-    startDownloadAndInstall,
-    closeModal
+  isNative,
+  isDesktop,
+  isEligible,
+  currentVersionName,
+  isForceUpdate,
+  latestVersionData,
+  isModalOpen,
+  isDownloading,
+  isDownloaded,
+  downloadProgress,
+  downloadStageText,
+  startDownloadAndInstall,
+  closeModal,
 } = useAppUpdate();
 </script>

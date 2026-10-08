@@ -25,7 +25,7 @@
               ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/30'
               : model
                 ? 'bg-theme-primary border-theme-primary text-white'
-                : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'
+                : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600',
           ]"
         >
           <Check v-if="model" class="w-3.5 h-3.5 stroke-[3] text-slate-950" />
@@ -48,10 +48,7 @@
     </label>
 
     <!-- Error Message -->
-    <p
-      v-if="hasError"
-      class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5"
-    >
+    <p v-if="hasError" class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5">
       <AlertCircle class="w-3.5 h-3.5 shrink-0" />
       <span>{{ errorMessage }}</span>
     </p>
@@ -63,7 +60,7 @@ import { computed } from 'vue';
 import { Check, AlertCircle } from 'lucide-vue-next';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps({
@@ -74,14 +71,14 @@ const props = defineProps({
   error: { type: [String, Array], default: null },
   disabled: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
-  wrapperClass: { type: String, default: '' }
+  wrapperClass: { type: String, default: '' },
 });
 
 defineEmits(['change']);
 
 const model = defineModel({
   type: [Boolean, Array],
-  default: false
+  default: false,
 });
 
 const autoId = 'chk-' + Math.random().toString(36).substring(2, 9);

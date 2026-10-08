@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('users') && !Schema::hasColumn('users', 'theme_preference')) {
+        if (Schema::hasTable('users') && ! Schema::hasColumn('users', 'theme_preference')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->string('theme_preference', 20)->default('dark')->after('is_active');
             });

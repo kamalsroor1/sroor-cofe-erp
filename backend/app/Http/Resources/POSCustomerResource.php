@@ -14,7 +14,7 @@ class POSCustomerResource extends JsonResource
             'name' => $this->name,
             'phone' => $this->phone,
             'price_tier' => $this->price_tier ?? 'retail',
-            'current_balance' => (float)($this->current_balance ?? 0),
+            'current_balance' => (float) ($this->current_balance ?? 0),
             'address' => $this->address,
         ];
     }

@@ -16,11 +16,11 @@ final class GetItemsProfitabilityReportAction
     public function execute(ReportFilterDTO $dto): array
     {
         $itemProfits = InvoiceItem::whereHas('invoice', function ($q) use ($dto) {
-                $q->where('status', 'confirmed')
-                  ->whereDate('invoice_date', '>=', $dto->from_date)
-                  ->whereDate('invoice_date', '<=', $dto->to_date)
-                  ->when($dto->store_id, fn($sub) => $sub->where('store_id', $dto->store_id));
-            })
+            $q->where('status', 'confirmed')
+                ->whereDate('invoice_date', '>=', $dto->from_date)
+                ->whereDate('invoice_date', '<=', $dto->to_date)
+                ->when($dto->store_id, fn ($sub) => $sub->where('store_id', $dto->store_id));
+        })
             ->select(
                 'item_id',
                 DB::raw('SUM(quantity) as total_qty'),
@@ -31,22 +31,23 @@ final class GetItemsProfitabilityReportAction
             ->with('item')
             ->get()
             ->map(function ($row) {
-                $profit = bcsub((string)$row->total_revenue, (string)$row->total_cogs, 3);
+                $profit = bcsub((string) $row->total_revenue, (string) $row->total_cogs, 3);
                 $margin = '0.0';
-                if (bccomp((string)$row->total_revenue, '0.000', 3) > 0) {
-                    $margin = bcmul(bcdiv($profit, (string)$row->total_revenue, 4), '100', 1);
+                if (bccomp((string) $row->total_revenue, '0.000', 3) > 0) {
+                    $margin = bcmul(bcdiv($profit, (string) $row->total_revenue, 4), '100', 1);
                 }
+
                 return [
-                    'item_id'       => $row->item_id,
-                    'name'          => $row->item?->name ?? 'صنف محذوف',
-                    'code'          => $row->item?->code,
-                    'category'      => $row->item?->category,
-                    'unit'          => $row->item?->unit,
-                    'total_qty'     => (float)$row->total_qty,
-                    'total_revenue' => (float)$row->total_revenue,
-                    'total_cogs'    => (float)$row->total_cogs,
-                    'profit'        => (float)$profit,
-                    'margin'        => (float)$margin,
+                    'item_id' => $row->item_id,
+                    'name' => $row->item?->name ?? 'صنف محذوف',
+                    'code' => $row->item?->code,
+                    'category' => $row->item?->category,
+                    'unit' => $row->item?->unit,
+                    'total_qty' => (float) $row->total_qty,
+                    'total_revenue' => (float) $row->total_revenue,
+                    'total_cogs' => (float) $row->total_cogs,
+                    'profit' => (float) $profit,
+                    'margin' => (float) $margin,
                 ];
             })
             ->sortByDesc('total_revenue')

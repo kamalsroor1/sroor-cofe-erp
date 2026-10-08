@@ -16,8 +16,8 @@ final class CloseShiftDTO
     {
         return new self(
             shift_id: $shiftId,
-            actual_cash_balance: (string)$data['actual_cash_balance'],
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
+            actual_cash_balance: (string) $data['actual_cash_balance'],
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
         );
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Item;
 use App\Models\Customer;
-use App\Services\StockService;
+use App\Models\Item;
+use App\Models\User;
 use App\Services\InvoiceService;
+use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class FractionalWeightSaleTest extends TestCase
 {
@@ -24,22 +24,22 @@ class FractionalWeightSaleTest extends TestCase
 
         // 1. Create Coffee Item in Kg
         $coffee = Item::create([
-            'code'              => 'COF-TEST-50',
-            'name'              => 'بن برازيلي خام شيكارة',
-            'category'          => 'بن وتوليفات',
-            'unit'              => 'كجم',
-            'current_stock'     => '0.000',
-            'cost_price'        => '400.000', // 400 ج.م للكيلو
+            'code' => 'COF-TEST-50',
+            'name' => 'بن برازيلي خام شيكارة',
+            'category' => 'بن وتوليفات',
+            'unit' => 'كجم',
+            'current_stock' => '0.000',
+            'cost_price' => '400.000', // 400 ج.م للكيلو
             'weighted_avg_cost' => '400.000',
-            'selling_price'     => '600.000', // 600 ج.م للكيلو (ربع كيلو = 150 ج.م، ثمن كيلو = 75 ج.م)
-            'min_stock_level'   => '5.000',
-            'is_active'         => true,
+            'selling_price' => '600.000', // 600 ج.م للكيلو (ربع كيلو = 150 ج.م، ثمن كيلو = 75 ج.م)
+            'min_stock_level' => '5.000',
+            'is_active' => true,
         ]);
 
         $customer = Customer::create([
-            'name'            => 'عميل تجزئة قطاعي',
+            'name' => 'عميل تجزئة قطاعي',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         // 2. Deposit a 50 kg sack into warehouse
@@ -56,19 +56,19 @@ class FractionalWeightSaleTest extends TestCase
 
         // 3. Sell 0.250 kg (ربع كيلو = 250 جم)
         $invoice1 = $invoiceService->confirmInvoice([
-            'customer_id'    => $customer->id,
-            'invoice_date'   => now()->toDateString(),
-            'payment_type'   => 'cash',
-            'discount_type'  => 'fixed',
+            'customer_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
             'discount_value' => '0.000',
-            'paid_amount'    => '150.000', // 0.250 * 600 = 150
-            'items'          => [
+            'paid_amount' => '150.000', // 0.250 * 600 = 150
+            'items' => [
                 [
-                    'item_id'         => $coffee->id,
-                    'quantity'        => '0.250', // ربع كيلو
-                    'unit_price'      => $coffee->selling_price,
+                    'item_id' => $coffee->id,
+                    'quantity' => '0.250', // ربع كيلو
+                    'unit_price' => $coffee->selling_price,
                     'discount_amount' => '0.000',
-                ]
+                ],
             ],
         ]);
 
@@ -79,19 +79,19 @@ class FractionalWeightSaleTest extends TestCase
 
         // 4. Sell 0.125 kg (ثمن كيلو = 125 جم)
         $invoice2 = $invoiceService->confirmInvoice([
-            'customer_id'    => $customer->id,
-            'invoice_date'   => now()->toDateString(),
-            'payment_type'   => 'cash',
-            'discount_type'  => 'fixed',
+            'customer_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
             'discount_value' => '0.000',
-            'paid_amount'    => '75.000', // 0.125 * 600 = 75
-            'items'          => [
+            'paid_amount' => '75.000', // 0.125 * 600 = 75
+            'items' => [
                 [
-                    'item_id'         => $coffee->id,
-                    'quantity'        => '0.125', // ثمن كيلو
-                    'unit_price'      => $coffee->selling_price,
+                    'item_id' => $coffee->id,
+                    'quantity' => '0.125', // ثمن كيلو
+                    'unit_price' => $coffee->selling_price,
                     'discount_amount' => '0.000',
-                ]
+                ],
             ],
         ]);
 

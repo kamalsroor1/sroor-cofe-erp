@@ -26,7 +26,10 @@ export function useCreateReturn() {
     });
 
     const netTotal = computed(() => {
-        return form.items.reduce((sum, it) => sum + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0), 0);
+        return form.items.reduce(
+            (sum, it) => sum + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0),
+            0
+        );
     });
 
     const loadFormDependencies = async () => {
@@ -54,10 +57,13 @@ export function useCreateReturn() {
 
     const onTypeChange = (type) => {
         form.return_type = type;
-        form.items.forEach(line => {
-            const it = items.value.find(i => i.id === line.item_id);
+        form.items.forEach((line) => {
+            const it = items.value.find((i) => i.id === line.item_id);
             if (it) {
-                line.unit_price = type === 'sales_return' ? (parseFloat(it.price_retail || it.selling_price) || 0) : (parseFloat(it.cost_price) || 0);
+                line.unit_price =
+                    type === 'sales_return'
+                        ? parseFloat(it.price_retail || it.selling_price) || 0
+                        : parseFloat(it.cost_price) || 0;
             }
         });
     };
@@ -70,14 +76,15 @@ export function useCreateReturn() {
         if (!selectedItemToAdd.value) return;
         const it = selectedItemToAdd.value;
 
-        if (form.items.some(i => i.item_id === it.id)) {
+        if (form.items.some((i) => i.item_id === it.id)) {
             Swal.fire({ icon: 'info', title: t('common.warning'), text: t('returns.item_already_in_return') });
             return;
         }
 
-        const unitPrice = form.return_type === 'sales_return'
-            ? (parseFloat(it.price_retail || it.selling_price) || 0)
-            : (parseFloat(it.cost_price) || 0);
+        const unitPrice =
+            form.return_type === 'sales_return'
+                ? parseFloat(it.price_retail || it.selling_price) || 0
+                : parseFloat(it.cost_price) || 0;
 
         form.items.push({
             item_id: it.id,
@@ -109,7 +116,7 @@ export function useCreateReturn() {
                 return_date: form.return_date,
                 refund_amount: parseFloat(form.refund_amount) || 0,
                 reason: form.reason || null,
-                items: form.items.map(it => ({
+                items: form.items.map((it) => ({
                     item_id: it.item_id,
                     quantity: parseFloat(it.quantity),
                     unit_price: parseFloat(it.unit_price),

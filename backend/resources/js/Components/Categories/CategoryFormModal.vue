@@ -22,7 +22,9 @@
           {{ $t('inventory.category_icon_emoji') }}
         </label>
         <div class="flex items-center gap-2">
-          <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+          <div
+            class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 shadow-2xs"
+          >
             {{ form.icon || '☕' }}
           </div>
           <BaseInput
@@ -66,13 +68,7 @@
 
       <!-- Modal Footer Actions -->
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="ghost"
-          size="md"
-          :label="$t('common.cancel')"
-          @click="$emit('close')"
-        />
+        <BaseButton type="button" variant="ghost" size="md" :label="$t('common.cancel')" @click="$emit('close')" />
 
         <BaseButton
           type="submit"

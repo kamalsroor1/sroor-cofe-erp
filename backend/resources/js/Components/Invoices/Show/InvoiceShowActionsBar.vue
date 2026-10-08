@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3 font-tajawal no-print">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3 font-tajawal no-print"
+  >
     <!-- Print & Share Options Group -->
     <div class="flex flex-wrap items-center gap-2.5">
       <!-- Print Thermal 80mm -->

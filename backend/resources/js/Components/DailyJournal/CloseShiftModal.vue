@@ -1,18 +1,24 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="`${$t('treasury.close_shift')} - ${shiftNumber || ''}`"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="`${$t('treasury.close_shift')} - ${shiftNumber || ''}`" @close="$emit('close')">
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
-      <div class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+      <div
+        class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2"
+      >
         <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('treasury.shift_opening_balance_label') }}</span>
-          <span class="font-mono text-slate-900 dark:text-slate-200 font-bold">{{ formatMoney(openingCashBalance) }} {{ $t('common.currency') }}</span>
+          <span class="text-slate-500 dark:text-slate-400 font-bold">{{
+            $t('treasury.shift_opening_balance_label')
+          }}</span>
+          <span class="font-mono text-slate-900 dark:text-slate-200 font-bold"
+            >{{ formatMoney(openingCashBalance) }} {{ $t('common.currency') }}</span
+          >
         </div>
         <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('treasury.shift_expected_balance_label') }}</span>
-          <span class="font-mono text-theme-primary font-black text-sm">{{ formatMoney(expectedCashInDrawer) }} {{ $t('common.currency') }}</span>
+          <span class="text-slate-500 dark:text-slate-400 font-bold">{{
+            $t('treasury.shift_expected_balance_label')
+          }}</span>
+          <span class="font-mono text-theme-primary font-black text-sm"
+            >{{ formatMoney(expectedCashInDrawer) }} {{ $t('common.currency') }}</span
+          >
         </div>
       </div>
 
@@ -46,12 +52,7 @@
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

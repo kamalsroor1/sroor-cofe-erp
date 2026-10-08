@@ -21,7 +21,7 @@ final class DeleteUserAction
             throw new Exception(__('auth.cannot_delete_own_account') ?: 'لا يمكنك حذف حسابك الشخصي الحالي');
         }
 
-        return (bool)DB::transaction(function () use ($user) {
+        return (bool) DB::transaction(function () use ($user) {
             return $user->delete();
         });
     }

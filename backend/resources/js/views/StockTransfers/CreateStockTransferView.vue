@@ -1,11 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6 font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('inventory.new_transfer')"
-      :subtitle="$t('inventory.transfers_subtitle')"
-      icon="🚚"
-    >
+    <PageHeader :title="$t('inventory.new_transfer')" :subtitle="$t('inventory.transfers_subtitle')" icon="🚚">
       <template #actions>
         <router-link
           to="/stock-transfers"

@@ -23,7 +23,7 @@ final class UpdateSettingsAction
             if (is_bool($value)) {
                 Setting::set($key, $value ? '1' : '0');
             } else {
-                Setting::set($key, (string)($value ?? ''));
+                Setting::set($key, (string) ($value ?? ''));
             }
         }
 

@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal"
+  >
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="6" />
     </div>
@@ -8,7 +10,9 @@
       <!-- Desktop Table -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs">
-          <thead class="bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold font-tajawal">
+          <thead
+            class="bg-slate-100/90 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold font-tajawal"
+          >
             <tr>
               <th class="p-4 text-start">{{ $t('users.employee_col') }}</th>
               <th class="p-4 text-start">{{ $t('users.phone_col') }}</th>
@@ -21,12 +25,16 @@
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
             <tr v-for="u in users" :key="u.id" class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
               <td class="p-4 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-theme-primary font-bold text-sm">
+                <div
+                  class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-theme-primary font-bold text-sm"
+                >
                   {{ u.name.charAt(0) }}
                 </div>
                 <div>
                   <div class="font-tajawal text-xs text-slate-900 dark:text-white font-bold">{{ u.name }}</div>
-                  <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{{ u.email || $t('users.no_email') }}</div>
+                  <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                    {{ u.email || $t('users.no_email') }}
+                  </div>
                 </div>
               </td>
 
@@ -41,14 +49,20 @@
                 </span>
               </td>
 
-              <td class="p-4 font-sans text-slate-700 dark:text-slate-300 font-tajawal">{{ u.default_store_name || $t('users.no_store_assigned') }}</td>
+              <td class="p-4 font-sans text-slate-700 dark:text-slate-300 font-tajawal">
+                {{ u.default_store_name || $t('users.no_store_assigned') }}
+              </td>
 
               <td class="p-4 text-center font-sans">
                 <button
                   type="button"
                   @click="$emit('toggle-active', u)"
                   class="min-h-[28px] px-3 py-1 rounded-full text-[11px] font-bold border transition cursor-pointer font-tajawal active:scale-95"
-                  :class="u.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'"
+                  :class="
+                    u.is_active
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
+                  "
                 >
                   {{ u.is_active ? $t('users.status_active_badge') : $t('users.status_inactive_badge') }}
                 </button>
@@ -88,7 +102,9 @@
         >
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-theme-primary font-bold text-sm">
+              <div
+                class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-theme-primary font-bold text-sm"
+              >
                 {{ u.name.charAt(0) }}
               </div>
               <div>
@@ -101,7 +117,11 @@
               type="button"
               @click="$emit('toggle-active', u)"
               class="min-h-[32px] px-3 py-1 rounded-full text-[10px] font-bold border transition cursor-pointer active:scale-95"
-              :class="u.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'"
+              :class="
+                u.is_active
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+              "
             >
               {{ u.is_active ? $t('users.status_active_badge') : $t('users.status_inactive_badge') }}
             </button>
@@ -135,7 +155,10 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
+      <div
+        v-if="pagination.total > pagination.per_page"
+        class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono"
+      >
         <span class="font-tajawal">{{ $t('users.total_users_count', { count: pagination.total }) }}</span>
         <div class="flex items-center gap-2 font-sans font-tajawal">
           <button
@@ -159,12 +182,7 @@
       </div>
     </div>
 
-    <EmptyState
-      v-else
-      :title="$t('users.no_users_found')"
-      :description="$t('users.no_users_hint')"
-      icon="👥"
-    />
+    <EmptyState v-else :title="$t('users.no_users_found')" :description="$t('users.no_users_hint')" icon="👥" />
   </div>
 </template>
 
@@ -186,21 +204,31 @@ defineEmits(['edit', 'delete', 'toggle-active', 'page-change']);
 
 const getRoleLabel = (role) => {
   switch (role) {
-    case 'admin': return t('users.role_admin');
-    case 'cashier': return t('users.role_cashier');
-    case 'storekeeper': return t('users.role_storekeeper');
-    case 'accountant': return t('users.role_accountant');
-    default: return role;
+    case 'admin':
+      return t('users.role_admin');
+    case 'cashier':
+      return t('users.role_cashier');
+    case 'storekeeper':
+      return t('users.role_storekeeper');
+    case 'accountant':
+      return t('users.role_accountant');
+    default:
+      return role;
   }
 };
 
 const getRoleBadgeClass = (role) => {
   switch (role) {
-    case 'admin': return 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400';
-    case 'cashier': return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-    case 'storekeeper': return 'bg-theme-light border-theme-border text-theme-primary';
-    case 'accountant': return 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
-    default: return 'bg-slate-500/10 border-slate-500/30 text-slate-600 dark:text-slate-400';
+    case 'admin':
+      return 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400';
+    case 'cashier':
+      return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+    case 'storekeeper':
+      return 'bg-theme-light border-theme-border text-theme-primary';
+    case 'accountant':
+      return 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
+    default:
+      return 'bg-slate-500/10 border-slate-500/30 text-slate-600 dark:text-slate-400';
   }
 };
 </script>

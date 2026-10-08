@@ -75,9 +75,9 @@ const props = defineProps({
   },
 });
 
-const activeStoresCount = computed(() => props.stores.filter(s => s.is_active).length);
+const activeStoresCount = computed(() => props.stores.filter((s) => s.is_active).length);
 
-const mainStore = computed(() => props.stores.find(s => s.is_main));
+const mainStore = computed(() => props.stores.find((s) => s.is_main));
 const mainStoreName = computed(() => mainStore.value?.name || '-');
 
 const totalSkusCount = computed(() => props.stores.reduce((acc, s) => acc + (s.stocks_count || 0), 0));

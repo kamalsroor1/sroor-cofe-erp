@@ -15,10 +15,15 @@
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h3 class="text-sm font-black text-slate-900 dark:text-white group-hover:text-theme-primary dark:group-hover:text-theme-primary transition-colors truncate">
+            <h3
+              class="text-sm font-black text-slate-900 dark:text-white group-hover:text-theme-primary dark:group-hover:text-theme-primary transition-colors truncate"
+            >
               {{ sec.label }}
             </h3>
-            <span v-if="sec.badge" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">
+            <span
+              v-if="sec.badge"
+              class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold"
+            >
               {{ sec.badge }}
             </span>
           </div>
@@ -28,7 +33,9 @@
         </div>
       </div>
 
-      <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-theme-primary group-hover:bg-slate-200 dark:group-hover:bg-slate-800 transition-all shrink-0">
+      <div
+        class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-theme-primary group-hover:bg-slate-200 dark:group-hover:bg-slate-800 transition-all shrink-0"
+      >
         <ChevronLeft class="w-5 h-5" />
       </div>
     </div>

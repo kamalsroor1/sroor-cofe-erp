@@ -21,15 +21,15 @@ Split the list into three groups: PHP under `backend/`, `.vue/.js/.css` under `b
 | Order | Check | Command (from `backend/` unless noted) | Must be |
 |---|---|---|---|
 | 1 | PHP syntax | `php -l <file>` | clean |
-| 2 | Pint (format) | `./vendor/bin/pint --dirty` (this writes), then `./vendor/bin/pint --test <files>` | 0 files |
+| 2 | Pint (format) | `./vendor/bin/pint --dirty` (this writes), then `./vendor/bin/pint --test` (whole codebase, same as CI) | 0 files |
 | 3 | Larastan level 5 | `composer analyse`, or `./vendor/bin/phpstan analyse <files>` for speed | 0 new errors |
 | 4 | ESLint | `npm run lint:dirty` (changed files; `desktop/` has the same script) | 0 errors |
-| 5 | Prettier | `npm run format:dirty`, then `npm run format:dirty:check` | clean |
+| 5 | Prettier | `npm run format:dirty`, then `npm run format:check` (whole codebase, same as CI; `desktop/` has the same scripts) | clean |
 | 6 | Tests | `php artisan test --filter=<Relevant>`, and the full suite if you touched shared Services, middleware, tenancy or auth | green |
 | 7 | Build (frontend changes only) | `npm run build` | 0 errors |
 | 8 | Desktop (desktop changes only) | `cd desktop && npx eslint <files>` | 0 errors |
 
-Run Pint and Prettier on **changed files only**. Never run them across the whole codebase unless the task is the one-time format pass, which must be its own `style:` commit.
+The one-time full format pass has landed, so the whole codebase is Pint- and Prettier-clean and CI checks the whole codebase (`./vendor/bin/pint --test`, `npm run format:check`). Write only to the files you changed (`pint --dirty`, `format:dirty`); a whole-codebase check that fails means one of your changes is unformatted. ESLint stays changed-files-only (`lint:dirty`) until the legacy lint errors are fixed.
 
 ## 3. Fix in this order
 1. Syntax and test failures. These are real bugs.

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('expenses', function (Blueprint $table) {
-            if (!Schema::hasColumn('expenses', 'cost_center')) {
+            if (! Schema::hasColumn('expenses', 'cost_center')) {
                 $table->string('cost_center', 50)->default('operational')->after('category')->index();
             }
         });

@@ -24,37 +24,37 @@ final class GetCustomerStatementAction
         $totalCredit = '0.000';
 
         foreach ($ledgerData['entries'] as $entry) {
-            $totalDebit = bcadd($totalDebit, (string)$entry['debit'], 3);
-            $totalCredit = bcadd($totalCredit, (string)$entry['credit'], 3);
+            $totalDebit = bcadd($totalDebit, (string) $entry['debit'], 3);
+            $totalCredit = bcadd($totalCredit, (string) $entry['credit'], 3);
         }
 
         return [
             'customer' => [
-                'id'              => $customer->id,
-                'name'            => $customer->name,
-                'phone'           => $customer->phone,
-                'address'         => $customer->address,
-                'tax_number'      => $customer->tax_number,
-                'current_balance' => (float)$customer->current_balance,
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'address' => $customer->address,
+                'tax_number' => $customer->tax_number,
+                'current_balance' => (float) $customer->current_balance,
             ],
             'filters' => [
                 'from_date' => $fromDate,
-                'to_date'   => $toDate,
+                'to_date' => $toDate,
             ],
             'summary' => [
-                'total_debit'        => (float)$totalDebit,
-                'total_credit'       => (float)$totalCredit,
-                'current_balance'    => (float)$customer->current_balance,
+                'total_debit' => (float) $totalDebit,
+                'total_credit' => (float) $totalCredit,
+                'current_balance' => (float) $customer->current_balance,
                 'transactions_count' => count($ledgerData['entries']),
             ],
-            'ledger' => array_map(fn($row) => [
-                'date'          => $row['date'],
-                'type'          => $row['type'],
-                'ref_number'    => $row['ref_number'],
-                'debit'         => (float)$row['debit'],
-                'credit'        => (float)$row['credit'],
-                'balance_after' => (float)$row['balance_after'],
-                'notes'         => $row['notes'],
+            'ledger' => array_map(fn ($row) => [
+                'date' => $row['date'],
+                'type' => $row['type'],
+                'ref_number' => $row['ref_number'],
+                'debit' => (float) $row['debit'],
+                'credit' => (float) $row['credit'],
+                'balance_after' => (float) $row['balance_after'],
+                'notes' => $row['notes'],
             ], $ledgerData['entries']),
         ];
     }

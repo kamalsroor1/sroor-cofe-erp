@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Actions -->
-    <PageHeader
-      :title="$t('reports.title')"
-      :subtitle="$t('reports.subtitle')"
-      :icon="BarChart3"
-    >
+    <PageHeader :title="$t('reports.title')" :subtitle="$t('reports.subtitle')" :icon="BarChart3">
       <template #actions>
         <button
           type="button"
@@ -35,19 +31,11 @@
     />
 
     <!-- Navigation Tabs -->
-    <ReportsNavigationTabs
-      :tabs="tabs"
-      v-model:active-tab="activeTab"
-    />
+    <ReportsNavigationTabs :tabs="tabs" v-model:active-tab="activeTab" />
 
     <!-- Tab Contents -->
     <Transition name="report-tab-fade" mode="out-in">
-      <ReportsSalesTab
-        v-if="activeTab === 'sales'"
-        :key="'sales'"
-        :summary="summary"
-        :loading="isLoading"
-      />
+      <ReportsSalesTab v-if="activeTab === 'sales'" :key="'sales'" :summary="summary" :loading="isLoading" />
 
       <ReportsItemsTab
         v-else-if="activeTab === 'items'"

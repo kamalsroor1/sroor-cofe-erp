@@ -30,7 +30,7 @@ final class CoffeeBlenderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $result,
+            'data' => $result,
         ], 200);
     }
 
@@ -44,13 +44,13 @@ final class CoffeeBlenderController extends Controller
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $dto = CreateBlenderInvoiceDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $dto = CreateBlenderInvoiceDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
         $invoice = $this->createBlenderInvoiceAction->execute($dto);
 
         return response()->json([
             'success' => true,
             'message' => __('inventory.blend_invoice_success') ?: "تم إصدار واعتماد فاتورة التوليفة رقم {$invoice->invoice_number} بنجاح ✓",
-            'data'    => (new InvoiceResource($invoice->load(['customer', 'store', 'user', 'items.item'])))->resolve(),
+            'data' => (new InvoiceResource($invoice->load(['customer', 'store', 'user', 'items.item'])))->resolve(),
         ], 201);
     }
 }

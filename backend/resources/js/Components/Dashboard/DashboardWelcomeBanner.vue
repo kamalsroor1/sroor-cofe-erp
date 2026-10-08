@@ -1,8 +1,12 @@
 <template>
-  <div class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-5">
+  <div
+    class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-5"
+  >
     <div>
       <div class="flex items-center gap-2">
-        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-theme-primary/10 text-theme-primary shrink-0">
+        <span
+          class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-theme-primary/10 text-theme-primary shrink-0"
+        >
           <Coffee class="w-4 h-4 stroke-[2.5]" />
         </span>
         <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">

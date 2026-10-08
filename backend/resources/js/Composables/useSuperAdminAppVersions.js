@@ -41,7 +41,7 @@ export function useSuperAdminAppVersions() {
     };
 
     const openCreateModal = () => {
-        const nextCode = versions.value.length ? Math.max(...versions.value.map(v => v.version_code)) + 1 : 2;
+        const nextCode = versions.value.length ? Math.max(...versions.value.map((v) => v.version_code)) + 1 : 2;
         form.value = {
             platform: 'android',
             version_name: `1.${nextCode - 1}.0`,
@@ -76,7 +76,7 @@ export function useSuperAdminAppVersions() {
             }
 
             await api.post('/super-admin/app-versions', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             DarkSwal.fire({
@@ -123,7 +123,11 @@ export function useSuperAdminAppVersions() {
         if (result.isConfirmed) {
             try {
                 await api.delete(`/super-admin/app-versions/${v.id}`);
-                DarkSwal.fire({ icon: 'success', title: t('common.success'), text: t('super.version_deleted_success') });
+                DarkSwal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('super.version_deleted_success'),
+                });
                 fetchVersions();
             } catch (e) {
                 DarkSwal.fire({ icon: 'error', title: t('common.error'), text: t('super.version_delete_failed') });

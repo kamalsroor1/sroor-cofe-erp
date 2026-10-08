@@ -15,7 +15,7 @@ final class CancelPurchaseDTO
     {
         return new self(
             purchase_id: $purchaseId,
-            reason: isset($data['reason']) && $data['reason'] !== '' ? (string)$data['reason'] : null,
+            reason: isset($data['reason']) && $data['reason'] !== '' ? (string) $data['reason'] : null,
         );
     }
 }

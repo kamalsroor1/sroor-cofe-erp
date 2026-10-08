@@ -31,13 +31,13 @@ class Purchase extends Model
     protected function casts(): array
     {
         return [
-            'purchase_date'             => 'date',
-            'subtotal'                  => 'decimal:3',
-            'discount_amount'           => 'decimal:3',
+            'purchase_date' => 'date',
+            'subtotal' => 'decimal:3',
+            'discount_amount' => 'decimal:3',
             'additional_expenses_total' => 'decimal:3',
-            'net_total'                 => 'decimal:3',
-            'paid_amount'               => 'decimal:3',
-            'remaining_amount'          => 'decimal:3',
+            'net_total' => 'decimal:3',
+            'paid_amount' => 'decimal:3',
+            'remaining_amount' => 'decimal:3',
         ];
     }
 

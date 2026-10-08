@@ -19,18 +19,28 @@
             icon-class="text-emerald-500"
             align="end"
             :items="[
-              { label: $t('invoices.export_excel_csv'), icon: Download, iconColor: 'text-emerald-500', onClick: exportToExcel },
-              { label: $t('invoices.print_filtered_report'), icon: Printer, iconColor: 'text-cyan-500', onClick: printReport },
-              { label: $t('invoices.refresh_now'), icon: RefreshCw, iconColor: 'text-theme-primary', onClick: () => fetchInvoices(pagination.current_page) }
+              {
+                label: $t('invoices.export_excel_csv'),
+                icon: Download,
+                iconColor: 'text-emerald-500',
+                onClick: exportToExcel,
+              },
+              {
+                label: $t('invoices.print_filtered_report'),
+                icon: Printer,
+                iconColor: 'text-cyan-500',
+                onClick: printReport,
+              },
+              {
+                label: $t('invoices.refresh_now'),
+                icon: RefreshCw,
+                iconColor: 'text-theme-primary',
+                onClick: () => fetchInvoices(pagination.current_page),
+              },
             ]"
           />
 
-          <BaseButton
-            to="/pos"
-            variant="gradient"
-            :icon="Zap"
-            :label="$t('invoices.pos_fast_badge')"
-          />
+          <BaseButton to="/pos" variant="gradient" :icon="Zap" :label="$t('invoices.pos_fast_badge')" />
         </div>
       </template>
     </PageHeader>
@@ -41,16 +51,60 @@
     <!-- Workspace: Search + Table + Sidebar -->
     <div class="flex flex-col lg:flex-row gap-5 items-start">
       <div class="flex-1 w-full space-y-4 min-w-0">
-        <InvoicesQuickSearch v-model="searchQuery" :active-preset="activeDatePreset" :presets="datePresets" @select-preset="applyDatePreset" @update:model-value="debounceSearch" />
-        <InvoicesBulkActionsBar :selected-count="selectedInvoiceIds.length" @bulk-print="bulkPrintReceipts" @bulk-export="bulkExportSelected" @bulk-cancel="bulkCancelSelected" @deselect-all="selectedInvoiceIds = []" />
-        <InvoicesTable :invoices="invoices" :is-loading="isLoading" :selected-ids="selectedInvoiceIds" :is-all-selected="isAllSelected" :pagination="pagination" @toggle-select="toggleSelectInvoice" @toggle-select-all="toggleSelectAll" @preview="openDetailsModal" @print="openPrintReceipt" @cancel="cancelInvoice" @change-page="fetchInvoices" @reset-filters="resetAllFilters" />
+        <InvoicesQuickSearch
+          v-model="searchQuery"
+          :active-preset="activeDatePreset"
+          :presets="datePresets"
+          @select-preset="applyDatePreset"
+          @update:model-value="debounceSearch"
+        />
+        <InvoicesBulkActionsBar
+          :selected-count="selectedInvoiceIds.length"
+          @bulk-print="bulkPrintReceipts"
+          @bulk-export="bulkExportSelected"
+          @bulk-cancel="bulkCancelSelected"
+          @deselect-all="selectedInvoiceIds = []"
+        />
+        <InvoicesTable
+          :invoices="invoices"
+          :is-loading="isLoading"
+          :selected-ids="selectedInvoiceIds"
+          :is-all-selected="isAllSelected"
+          :pagination="pagination"
+          @toggle-select="toggleSelectInvoice"
+          @toggle-select-all="toggleSelectAll"
+          @preview="openDetailsModal"
+          @print="openPrintReceipt"
+          @cancel="cancelInvoice"
+          @change-page="fetchInvoices"
+          @reset-filters="resetAllFilters"
+        />
       </div>
 
-      <InvoicesFilterSidebar :is-open="isFilterSidebarOpen" v-model:store-id="selectedStoreId" v-model:payment-type="selectedPaymentType" v-model:status="selectedStatus" v-model:date-from="dateFrom" v-model:date-to="dateTo" :store-options="storeOptions" :payment-type-options="paymentTypeOptions" :status-options="statusOptions" @close="isFilterSidebarOpen = false" @apply="fetchInvoices(1)" @reset="resetAllFilters" />
+      <InvoicesFilterSidebar
+        :is-open="isFilterSidebarOpen"
+        v-model:store-id="selectedStoreId"
+        v-model:payment-type="selectedPaymentType"
+        v-model:status="selectedStatus"
+        v-model:date-from="dateFrom"
+        v-model:date-to="dateTo"
+        :store-options="storeOptions"
+        :payment-type-options="paymentTypeOptions"
+        :status-options="statusOptions"
+        @close="isFilterSidebarOpen = false"
+        @apply="fetchInvoices(1)"
+        @reset="resetAllFilters"
+      />
     </div>
 
     <!-- Invoice Details Modal -->
-    <InvoiceDetailsModal :show="showDetailsModal" :invoice="selectedInvoiceDetails" :whats-app="whatsAppData" @close="showDetailsModal = false" @print="openPrintReceipt" />
+    <InvoiceDetailsModal
+      :show="showDetailsModal"
+      :invoice="selectedInvoiceDetails"
+      :whats-app="whatsAppData"
+      @close="showDetailsModal = false"
+      @print="openPrintReceipt"
+    />
   </div>
 </template>
 
@@ -92,23 +146,23 @@ const paymentTypeOptions = computed(() => [
   { value: 'all', label: trans('invoices.all_payment_types') },
   { value: 'cash', label: trans('invoices.payment_cash_option') },
   { value: 'credit', label: trans('invoices.payment_credit_option') },
-  { value: 'partial', label: trans('invoices.payment_partial_option') }
+  { value: 'partial', label: trans('invoices.payment_partial_option') },
 ]);
 const statusOptions = computed(() => [
   { value: 'all', label: trans('invoices.status_all') },
   { value: 'confirmed', label: trans('invoices.status_confirmed_option') },
-  { value: 'cancelled', label: trans('invoices.status_cancelled_option') }
+  { value: 'cancelled', label: trans('invoices.status_cancelled_option') },
 ]);
 const storeOptions = computed(() => [
   { value: 'all', label: trans('invoices.all_stores') },
-  { value: '1', label: trans('invoices.main_branch') }
+  { value: '1', label: trans('invoices.main_branch') },
 ]);
 const datePresets = [
   { id: 'all', label: trans('invoices.date_preset_all') },
   { id: 'today', label: trans('invoices.date_preset_today') },
   { id: 'yesterday', label: trans('invoices.date_preset_yesterday') },
   { id: 'week', label: trans('invoices.date_preset_week') },
-  { id: 'month', label: trans('invoices.date_preset_month') }
+  { id: 'month', label: trans('invoices.date_preset_month') },
 ];
 
 const activeFiltersCount = computed(() => {
@@ -120,7 +174,9 @@ const activeFiltersCount = computed(() => {
   return count;
 });
 
-const isAllSelected = computed(() => invoices.value.length > 0 && selectedInvoiceIds.value.length === invoices.value.length);
+const isAllSelected = computed(
+  () => invoices.value.length > 0 && selectedInvoiceIds.value.length === invoices.value.length
+);
 
 const fetchInvoices = async (page = 1) => {
   isLoading.value = true;
@@ -139,7 +195,12 @@ const fetchInvoices = async (page = 1) => {
     });
     invoices.value = res.data?.data || [];
     summary.value = res.data?.summary || { total_sales: 0, total_paid: 0, total_due: 0, total_count: 0 };
-    pagination.value = res.data?.meta || { current_page: page, last_page: 1, per_page: 15, total: invoices.value.length };
+    pagination.value = res.data?.meta || {
+      current_page: page,
+      last_page: 1,
+      per_page: 15,
+      total: invoices.value.length,
+    };
   } catch (e) {
     console.error('Failed to load invoices:', e);
   } finally {
@@ -155,16 +216,40 @@ const debounceSearch = () => {
 const applyDatePreset = (presetId) => {
   activeDatePreset.value = presetId;
   const now = new Date();
-  if (presetId === 'all') { dateFrom.value = ''; dateTo.value = ''; }
-  else if (presetId === 'today') { const s = now.toISOString().split('T')[0]; dateFrom.value = s; dateTo.value = s; }
-  else if (presetId === 'yesterday') { const y = new Date(); y.setDate(y.getDate() - 1); const s = y.toISOString().split('T')[0]; dateFrom.value = s; dateTo.value = s; }
-  else if (presetId === 'week') { const w = new Date(); w.setDate(w.getDate() - 7); dateFrom.value = w.toISOString().split('T')[0]; dateTo.value = now.toISOString().split('T')[0]; }
-  else if (presetId === 'month') { const m = new Date(now.getFullYear(), now.getMonth(), 1); dateFrom.value = m.toISOString().split('T')[0]; dateTo.value = now.toISOString().split('T')[0]; }
+  if (presetId === 'all') {
+    dateFrom.value = '';
+    dateTo.value = '';
+  } else if (presetId === 'today') {
+    const s = now.toISOString().split('T')[0];
+    dateFrom.value = s;
+    dateTo.value = s;
+  } else if (presetId === 'yesterday') {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    const s = y.toISOString().split('T')[0];
+    dateFrom.value = s;
+    dateTo.value = s;
+  } else if (presetId === 'week') {
+    const w = new Date();
+    w.setDate(w.getDate() - 7);
+    dateFrom.value = w.toISOString().split('T')[0];
+    dateTo.value = now.toISOString().split('T')[0];
+  } else if (presetId === 'month') {
+    const m = new Date(now.getFullYear(), now.getMonth(), 1);
+    dateFrom.value = m.toISOString().split('T')[0];
+    dateTo.value = now.toISOString().split('T')[0];
+  }
   fetchInvoices(1);
 };
 
 const resetAllFilters = () => {
-  searchQuery.value = ''; selectedStoreId.value = 'all'; selectedPaymentType.value = 'all'; selectedStatus.value = 'all'; dateFrom.value = ''; dateTo.value = ''; activeDatePreset.value = 'all';
+  searchQuery.value = '';
+  selectedStoreId.value = 'all';
+  selectedPaymentType.value = 'all';
+  selectedStatus.value = 'all';
+  dateFrom.value = '';
+  dateTo.value = '';
+  activeDatePreset.value = 'all';
   fetchInvoices(1);
 };
 
@@ -175,7 +260,7 @@ const toggleSelectInvoice = (id) => {
 };
 
 const toggleSelectAll = () => {
-  selectedInvoiceIds.value = isAllSelected.value ? [] : invoices.value.map(i => i.id);
+  selectedInvoiceIds.value = isAllSelected.value ? [] : invoices.value.map((i) => i.id);
 };
 
 const openDetailsModal = async (inv) => {
@@ -195,7 +280,9 @@ const openPrintReceipt = (id) => {
 
 const cancelInvoice = async (inv) => {
   const result = await Swal.fire({
-    title: trans('invoices.cancel_invoice_confirm_title', { number: inv.invoice_number }) || `هل أنت متأكد من إلغاء الفاتورة ${inv.invoice_number}؟`,
+    title:
+      trans('invoices.cancel_invoice_confirm_title', { number: inv.invoice_number }) ||
+      `هل أنت متأكد من إلغاء الفاتورة ${inv.invoice_number}؟`,
     text: trans('invoices.cancel_invoice_confirm_text'),
     icon: 'warning',
     showCancelButton: true,
@@ -206,21 +293,34 @@ const cancelInvoice = async (inv) => {
   if (result.isConfirmed) {
     try {
       await api.post(`/invoices/${inv.id}/cancel`, { reason: trans('invoices.cancel_reason_default') });
-      Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('invoices.invoice_cancelled_success'), timer: 1500, showConfirmButton: false });
+      Swal.fire({
+        icon: 'success',
+        title: trans('common.success'),
+        text: trans('invoices.invoice_cancelled_success'),
+        timer: 1500,
+        showConfirmButton: false,
+      });
       await fetchInvoices(pagination.value.current_page);
     } catch (e) {
-      Swal.fire({ icon: 'error', title: trans('common.error'), text: e.userMessage || trans('invoices.invoice_cancelled_failed') });
+      Swal.fire({
+        icon: 'error',
+        title: trans('common.error'),
+        text: e.userMessage || trans('invoices.invoice_cancelled_failed'),
+      });
     }
   }
 };
 
-const bulkPrintReceipts = () => selectedInvoiceIds.value.forEach(id => window.open(`/invoices/${id}/print`, '_blank'));
+const bulkPrintReceipts = () =>
+  selectedInvoiceIds.value.forEach((id) => window.open(`/invoices/${id}/print`, '_blank'));
 
 const bulkExportSelected = () => {
-  const selected = invoices.value.filter(inv => selectedInvoiceIds.value.includes(inv.id));
-  let csv = "رقم الفاتورة,العميل,الهاتف,التاريخ,طريقة الدفع,الصافي,المدفوع,المتبقي,الحالة\n";
-  selected.forEach(inv => { csv += `"${inv.invoice_number}","${inv.customer_name || ''}","${inv.customer_phone || ''}","${inv.invoice_date}","${inv.payment_type}","${inv.net_total}","${inv.paid_amount}","${inv.remaining_amount}","${inv.status}"\n`; });
-  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+  const selected = invoices.value.filter((inv) => selectedInvoiceIds.value.includes(inv.id));
+  let csv = 'رقم الفاتورة,العميل,الهاتف,التاريخ,طريقة الدفع,الصافي,المدفوع,المتبقي,الحالة\n';
+  selected.forEach((inv) => {
+    csv += `"${inv.invoice_number}","${inv.customer_name || ''}","${inv.customer_phone || ''}","${inv.invoice_date}","${inv.payment_type}","${inv.net_total}","${inv.paid_amount}","${inv.remaining_amount}","${inv.status}"\n`;
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `invoices_export_${new Date().toISOString().split('T')[0]}.csv`;
@@ -248,16 +348,22 @@ const bulkCancelSelected = async () => {
         console.error(`Failed to cancel invoice ${id}:`, e);
       }
     }
-    Swal.fire({ icon: 'success', title: trans('common.success'), text: trans('invoices.bulk_cancel_success', { count: successCount }) || `تم إلغاء ${successCount} فواتير بنجاح.` });
+    Swal.fire({
+      icon: 'success',
+      title: trans('common.success'),
+      text: trans('invoices.bulk_cancel_success', { count: successCount }) || `تم إلغاء ${successCount} فواتير بنجاح.`,
+    });
     selectedInvoiceIds.value = [];
     await fetchInvoices(pagination.value.current_page);
   }
 };
 
 const exportToExcel = () => {
-  let csv = "رقم الفاتورة,العميل,الهاتف,التاريخ,طريقة الدفع,الصافي,المدفوع,المتبقي,الحالة\n";
-  invoices.value.forEach(inv => { csv += `"${inv.invoice_number}","${inv.customer_name || ''}","${inv.customer_phone || ''}","${inv.invoice_date}","${inv.payment_type}","${inv.net_total}","${inv.paid_amount}","${inv.remaining_amount}","${inv.status}"\n`; });
-  const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+  let csv = 'رقم الفاتورة,العميل,الهاتف,التاريخ,طريقة الدفع,الصافي,المدفوع,المتبقي,الحالة\n';
+  invoices.value.forEach((inv) => {
+    csv += `"${inv.invoice_number}","${inv.customer_name || ''}","${inv.customer_phone || ''}","${inv.invoice_date}","${inv.payment_type}","${inv.net_total}","${inv.paid_amount}","${inv.remaining_amount}","${inv.status}"\n`;
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `all_invoices_${new Date().toISOString().split('T')[0]}.csv`;

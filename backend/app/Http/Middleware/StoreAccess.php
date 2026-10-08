@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Store;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Store;
 use Symfony\Component\HttpFoundation\Response;
 
 class StoreAccess
@@ -28,7 +28,7 @@ class StoreAccess
 
             if ($storeId) {
                 $hasAccess = $user->stores()->where('stores.id', $storeId)->exists();
-                if (!$hasAccess && (int)$user->default_store_id !== (int)$storeId) {
+                if (! $hasAccess && (int) $user->default_store_id !== (int) $storeId) {
                     abort(403, 'غير مصرح لك بالوصول لبيانات هذا الفرع أو عربية التوزيع.');
                 }
             }

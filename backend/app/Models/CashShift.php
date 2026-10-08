@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CashShift extends Model
 {
@@ -29,16 +29,16 @@ class CashShift extends Model
     ];
 
     protected $casts = [
-        'opened_at'                 => 'datetime',
-        'closed_at'                 => 'datetime',
-        'opening_cash_balance'      => 'decimal:3',
-        'total_cash_sales'          => 'decimal:3',
-        'total_credit_sales'        => 'decimal:3',
-        'total_payments_collected'  => 'decimal:3',
-        'total_refunds'             => 'decimal:3',
-        'expected_cash_balance'     => 'decimal:3',
-        'actual_cash_balance'       => 'decimal:3',
-        'cash_difference'           => 'decimal:3',
+        'opened_at' => 'datetime',
+        'closed_at' => 'datetime',
+        'opening_cash_balance' => 'decimal:3',
+        'total_cash_sales' => 'decimal:3',
+        'total_credit_sales' => 'decimal:3',
+        'total_payments_collected' => 'decimal:3',
+        'total_refunds' => 'decimal:3',
+        'expected_cash_balance' => 'decimal:3',
+        'actual_cash_balance' => 'decimal:3',
+        'cash_difference' => 'decimal:3',
     ];
 
     public function user(): BelongsTo

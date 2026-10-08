@@ -27,11 +27,11 @@ final class TreasuryController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('daily_journal.view') && !$user->can('reports.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('reports.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = (int)($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
+        $storeId = (int) ($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
         $today = now()->toDateString();
 
         // Today's Sales
@@ -39,21 +39,21 @@ final class TreasuryController extends Controller
         if ($storeId) {
             $todaySalesQuery->where('store_id', $storeId);
         }
-        $todaySalesTotal = (string)$todaySalesQuery->sum('net_total');
-        $todayCashCollected = (string)$todaySalesQuery->sum('paid_amount');
+        $todaySalesTotal = (string) $todaySalesQuery->sum('net_total');
+        $todayCashCollected = (string) $todaySalesQuery->sum('paid_amount');
 
         // Today's Customer Receipts
-        $todayReceipts = (string)Payment::whereNotNull('customer_id')->whereDate('payment_date', $today)->sum('amount');
+        $todayReceipts = (string) Payment::whereNotNull('customer_id')->whereDate('payment_date', $today)->sum('amount');
 
         // Today's Supplier Payments
-        $todaySupplierPaid = (string)Payment::whereNotNull('supplier_id')->whereDate('payment_date', $today)->sum('amount');
+        $todaySupplierPaid = (string) Payment::whereNotNull('supplier_id')->whereDate('payment_date', $today)->sum('amount');
 
         // Today's Expenses
         $todayExpensesQuery = Expense::query()->whereDate('expense_date', $today);
         if ($storeId) {
             $todayExpensesQuery->where('store_id', $storeId);
         }
-        $todayExpensesTotal = (string)$todayExpensesQuery->sum('amount');
+        $todayExpensesTotal = (string) $todayExpensesQuery->sum('amount');
 
         // Net Cash Flow Today = (Cash from sales + Customer receipts) - (Supplier paid + Expenses)
         $totalInflow = bcadd($todayCashCollected, $todayReceipts, 3);
@@ -61,8 +61,8 @@ final class TreasuryController extends Controller
         $netCashToday = bcsub($totalInflow, $totalOutflow, 3);
 
         // All Time Receivables & Payables
-        $totalReceivable = (string)Customer::where('current_balance', '>', 0)->sum('current_balance');
-        $totalPayable    = (string)Supplier::where('current_balance', '>', 0)->sum('current_balance');
+        $totalReceivable = (string) Customer::where('current_balance', '>', 0)->sum('current_balance');
+        $totalPayable = (string) Supplier::where('current_balance', '>', 0)->sum('current_balance');
 
         // Active Shift
         $activeShift = CashShift::where('store_id', $storeId)->where('status', 'open')->latest('id')->first();
@@ -71,29 +71,29 @@ final class TreasuryController extends Controller
         $balances = $this->treasuryService->getBalances($storeId);
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'store_id' => $storeId,
-            'today'    => [
-                'date'              => $today,
-                'sales_total'       => (float)$todaySalesTotal,
-                'cash_collected'    => (float)$todayCashCollected,
-                'customer_receipts' => (float)$todayReceipts,
-                'total_inflow'      => (float)$totalInflow,
-                'supplier_paid'     => (float)$todaySupplierPaid,
-                'expenses_total'    => (float)$todayExpensesTotal,
-                'total_outflow'     => (float)$totalOutflow,
-                'net_cash'          => (float)$netCashToday,
+            'today' => [
+                'date' => $today,
+                'sales_total' => (float) $todaySalesTotal,
+                'cash_collected' => (float) $todayCashCollected,
+                'customer_receipts' => (float) $todayReceipts,
+                'total_inflow' => (float) $totalInflow,
+                'supplier_paid' => (float) $todaySupplierPaid,
+                'expenses_total' => (float) $todayExpensesTotal,
+                'total_outflow' => (float) $totalOutflow,
+                'net_cash' => (float) $netCashToday,
             ],
             'balances' => [
-                'total_receivable' => (float)$totalReceivable,
-                'total_payable'    => (float)$totalPayable,
-                'accounts'         => $balances,
+                'total_receivable' => (float) $totalReceivable,
+                'total_payable' => (float) $totalPayable,
+                'accounts' => $balances,
             ],
             'active_shift' => $activeShift ? [
-                'id'                   => $activeShift->id,
-                'shift_number'         => $activeShift->shift_number ?? $activeShift->id,
-                'opening_cash_balance' => (float)$activeShift->opening_cash_balance,
-                'opened_at'            => $activeShift->opened_at,
+                'id' => $activeShift->id,
+                'shift_number' => $activeShift->shift_number ?? $activeShift->id,
+                'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
+                'opened_at' => $activeShift->opened_at,
             ] : null,
         ], 200);
     }

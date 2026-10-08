@@ -17,13 +17,13 @@ final class CreateCustomerAction
     {
         return DB::transaction(function () use ($dto) {
             return Customer::create([
-                'name'            => $dto->name,
-                'phone'           => $dto->phone,
-                'address'         => $dto->address,
-                'tax_number'      => $dto->tax_number,
+                'name' => $dto->name,
+                'phone' => $dto->phone,
+                'address' => $dto->address,
+                'tax_number' => $dto->tax_number,
                 'current_balance' => $dto->opening_balance,
-                'is_active'       => $dto->is_active,
-                'notes'           => $dto->notes,
+                'is_active' => $dto->is_active,
+                'notes' => $dto->notes,
             ]);
         });
     }

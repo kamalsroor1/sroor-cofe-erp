@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 font-tajawal">
+  <div
+    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 font-tajawal"
+  >
     <!-- Search Input -->
     <div class="flex-1">
       <BaseSearchInput

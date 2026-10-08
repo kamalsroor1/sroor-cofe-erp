@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Models\Item;
+use App\Models\StockDeposit;
+use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
-use App\Models\StockMovement;
-use App\Models\StockDeposit;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Exception;
+use Illuminate\Support\Facades\DB;
 
 class StockService
 {
@@ -20,13 +21,14 @@ class StockService
     {
         if ($storeId) {
             $stock = StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->first();
-            if (!$stock) {
+            if (! $stock) {
                 return false;
             }
-            return bccomp((string)$stock->quantity, $requestedQuantity, 3) >= 0;
+
+            return bccomp((string) $stock->quantity, $requestedQuantity, 3) >= 0;
         }
 
-        return bccomp((string)$item->current_stock, $requestedQuantity, 3) >= 0;
+        return bccomp((string) $item->current_stock, $requestedQuantity, 3) >= 0;
     }
 
     /**
@@ -44,12 +46,12 @@ class StockService
         // 1. Lock master item row
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
-        if (bccomp((string)$lockedItem->current_stock, $quantity, 3) < 0) {
+        if (bccomp((string) $lockedItem->current_stock, $quantity, 3) < 0) {
             throw new Exception("رصيد الصنف [{$lockedItem->name}] غير كافٍ. المتوفر حالياً: {$lockedItem->current_stock}");
         }
 
         // If no storeId passed, try to resolve from user session/default or main store
-        if (!$storeId) {
+        if (! $storeId) {
             $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
         }
 
@@ -61,37 +63,37 @@ class StockService
                 ->lockForUpdate()
                 ->first();
 
-            if ($storeStock && bccomp((string)$storeStock->quantity, $quantity, 3) < 0) {
-                $available = (string)$storeStock->quantity;
+            if ($storeStock && bccomp((string) $storeStock->quantity, $quantity, 3) < 0) {
+                $available = (string) $storeStock->quantity;
                 $storeName = $store ? $store->name : "الفرع #{$storeId}";
                 throw new Exception("رصيد الصنف [{$lockedItem->name}] في [{$storeName}] غير كافٍ. المتوفر حالياً: {$available} {$lockedItem->unit}");
             }
 
             if ($storeStock) {
-                $storeStock->quantity = bcsub((string)$storeStock->quantity, $quantity, 3);
+                $storeStock->quantity = bcsub((string) $storeStock->quantity, $quantity, 3);
                 $storeStock->save();
             }
         }
 
         // 3. Deduct from master item stock
-        $stockBefore = (string)$lockedItem->current_stock;
+        $stockBefore = (string) $lockedItem->current_stock;
         $stockAfter = bcsub($stockBefore, $quantity, 3);
         $lockedItem->current_stock = $stockAfter;
         $lockedItem->save();
 
         return StockMovement::create([
-            'item_id'         => $lockedItem->id,
-            'store_id'        => $storeId,
-            'movement_type'   => $movementType,
-            'quantity'        => $quantity,
-            'stock_before'    => $stockBefore,
-            'stock_after'     => $stockAfter,
-            'unit_cost'       => $lockedItem->cost_price,
-            'source_type'     => get_class($source),
-            'source_id'       => $source->getKey(),
+            'item_id' => $lockedItem->id,
+            'store_id' => $storeId,
+            'movement_type' => $movementType,
+            'quantity' => $quantity,
+            'stock_before' => $stockBefore,
+            'stock_after' => $stockAfter,
+            'unit_cost' => $lockedItem->cost_price,
+            'source_type' => get_class($source),
+            'source_id' => $source->getKey(),
             'document_number' => $documentNumber,
-            'user_id'         => Auth::id() ?? 1,
-            'notes'           => $notes ?? "صرف مخزني للمستند {$documentNumber}",
+            'user_id' => Auth::id() ?? 1,
+            'notes' => $notes ?? "صرف مخزني للمستند {$documentNumber}",
         ]);
     }
 
@@ -112,7 +114,7 @@ class StockService
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
         // If no storeId passed, resolve
-        if (!$storeId) {
+        if (! $storeId) {
             $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
         }
 
@@ -121,40 +123,40 @@ class StockService
             $storeStock = StoreStock::firstOrCreate(
                 [
                     'store_id' => $storeId,
-                    'item_id'  => $lockedItem->id,
+                    'item_id' => $lockedItem->id,
                 ],
                 [
-                    'quantity'             => '0.000',
-                    'min_stock'            => $lockedItem->min_stock_level,
+                    'quantity' => '0.000',
+                    'min_stock' => $lockedItem->min_stock_level,
                     'custom_selling_price' => null,
                 ]
             );
 
             // Re-lock for update
             $storeStock = StoreStock::where('id', $storeStock->id)->lockForUpdate()->first();
-            $storeStock->quantity = bcadd((string)$storeStock->quantity, $quantity, 3);
+            $storeStock->quantity = bcadd((string) $storeStock->quantity, $quantity, 3);
             $storeStock->save();
         }
 
         // 3. Add to master item stock
-        $stockBefore = (string)$lockedItem->current_stock;
+        $stockBefore = (string) $lockedItem->current_stock;
         $stockAfter = bcadd($stockBefore, $quantity, 3);
         $lockedItem->current_stock = $stockAfter;
         $lockedItem->save();
 
         return StockMovement::create([
-            'item_id'         => $lockedItem->id,
-            'store_id'        => $storeId,
-            'movement_type'   => $movementType,
-            'quantity'        => $quantity,
-            'stock_before'    => $stockBefore,
-            'stock_after'     => $stockAfter,
-            'unit_cost'       => $unitCost,
-            'source_type'     => get_class($source),
-            'source_id'       => $source->getKey(),
+            'item_id' => $lockedItem->id,
+            'store_id' => $storeId,
+            'movement_type' => $movementType,
+            'quantity' => $quantity,
+            'stock_before' => $stockBefore,
+            'stock_after' => $stockAfter,
+            'unit_cost' => $unitCost,
+            'source_type' => get_class($source),
+            'source_id' => $source->getKey(),
             'document_number' => $documentNumber,
-            'user_id'         => Auth::id() ?? 1,
-            'notes'           => $notes ?? "إضافة مخزنية للمستند {$documentNumber}",
+            'user_id' => Auth::id() ?? 1,
+            'notes' => $notes ?? "إضافة مخزنية للمستند {$documentNumber}",
         ]);
     }
 
@@ -172,7 +174,7 @@ class StockService
     ): StockDeposit {
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
-        if (!$storeId) {
+        if (! $storeId) {
             $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
         }
 
@@ -180,21 +182,21 @@ class StockService
             $storeStock = StoreStock::firstOrCreate(
                 [
                     'store_id' => $storeId,
-                    'item_id'  => $lockedItem->id,
+                    'item_id' => $lockedItem->id,
                 ],
                 [
-                    'quantity'             => '0.000',
-                    'min_stock'            => $lockedItem->min_stock_level,
+                    'quantity' => '0.000',
+                    'min_stock' => $lockedItem->min_stock_level,
                     'custom_selling_price' => null,
                 ]
             );
 
             $storeStock = StoreStock::where('id', $storeStock->id)->lockForUpdate()->first();
-            $storeStock->quantity = bcadd((string)$storeStock->quantity, $quantity, 3);
+            $storeStock->quantity = bcadd((string) $storeStock->quantity, $quantity, 3);
             $storeStock->save();
         }
 
-        $stockBefore = (string)$lockedItem->current_stock;
+        $stockBefore = (string) $lockedItem->current_stock;
         $stockAfter = bcadd($stockBefore, $quantity, 3);
 
         $lockedItem->current_stock = $stockAfter;
@@ -204,28 +206,28 @@ class StockService
         $lockedItem->save();
 
         $deposit = StockDeposit::create([
-            'item_id'      => $lockedItem->id,
-            'user_id'      => Auth::id() ?? 1,
+            'item_id' => $lockedItem->id,
+            'user_id' => Auth::id() ?? 1,
             'deposit_type' => $depositType,
-            'quantity'     => $quantity,
-            'cost_price'   => $costPrice,
-            'reason'       => $reason,
+            'quantity' => $quantity,
+            'cost_price' => $costPrice,
+            'reason' => $reason,
             'deposit_date' => $depositDate ?? now()->toDateString(),
         ]);
 
         StockMovement::create([
-            'item_id'         => $lockedItem->id,
-            'store_id'        => $storeId,
-            'movement_type'   => 'stock_deposit_in',
-            'quantity'        => $quantity,
-            'stock_before'    => $stockBefore,
-            'stock_after'     => $stockAfter,
-            'unit_cost'       => $costPrice,
-            'source_type'     => StockDeposit::class,
-            'source_id'       => $deposit->id,
+            'item_id' => $lockedItem->id,
+            'store_id' => $storeId,
+            'movement_type' => 'stock_deposit_in',
+            'quantity' => $quantity,
+            'stock_before' => $stockBefore,
+            'stock_after' => $stockAfter,
+            'unit_cost' => $costPrice,
+            'source_type' => StockDeposit::class,
+            'source_id' => $deposit->id,
             'document_number' => "DEP-{$deposit->id}",
-            'user_id'         => Auth::id() ?? 1,
-            'notes'           => $reason ?? "إيداع مخزني يدوي",
+            'user_id' => Auth::id() ?? 1,
+            'notes' => $reason ?? 'إيداع مخزني يدوي',
         ]);
 
         return $deposit;
@@ -241,31 +243,31 @@ class StockService
         string $reason,
         ?int $storeId = null
     ): StockMovement {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($item, $actualQuantity, $reason, $storeId) {
+        return DB::transaction(function () use ($item, $actualQuantity, $reason, $storeId) {
             $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
-            if (!$storeId) {
+            if (! $storeId) {
                 $storeId = Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
             }
 
             $storeStock = null;
-            $currentStoreQty = (string)$lockedItem->current_stock;
+            $currentStoreQty = (string) $lockedItem->current_stock;
 
             if ($storeId) {
                 $storeStock = StoreStock::firstOrCreate(
                     [
                         'store_id' => $storeId,
-                        'item_id'  => $lockedItem->id,
+                        'item_id' => $lockedItem->id,
                     ],
                     [
-                        'quantity'             => '0.000',
-                        'min_stock'            => $lockedItem->min_stock_level,
+                        'quantity' => '0.000',
+                        'min_stock' => $lockedItem->min_stock_level,
                         'custom_selling_price' => null,
                     ]
                 );
 
                 $storeStock = StoreStock::where('id', $storeStock->id)->lockForUpdate()->first();
-                $currentStoreQty = (string)$storeStock->quantity;
+                $currentStoreQty = (string) $storeStock->quantity;
             }
 
             $diff = bcsub($actualQuantity, $currentStoreQty, 3);
@@ -274,8 +276,8 @@ class StockService
                 throw new Exception("الرصيد الفعلي المدخل ({$actualQuantity}) مطابق تماماً للرصيد المسجل حالياً بالمخزن.");
             }
 
-            $stockBefore = (string)$lockedItem->current_stock;
-            $stockAfter  = bcadd($stockBefore, $diff, 3);
+            $stockBefore = (string) $lockedItem->current_stock;
+            $stockAfter = bcadd($stockBefore, $diff, 3);
 
             if (bccomp($stockAfter, '0.000', 3) < 0) {
                 throw new Exception("لا يمكن تنفيذ التسوية: الرصيد الإجمالي للصنف سيصبح سالباً ({$stockAfter}).");
@@ -294,21 +296,21 @@ class StockService
             $isSurplus = bccomp($diff, '0.000', 3) > 0;
             $movementType = $isSurplus ? 'stock_adjustment_in' : 'stock_adjustment_out';
             $adjQty = $isSurplus ? $diff : bcmul($diff, '-1', 3);
-            $docNumber = 'ADJ-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $docNumber = 'ADJ-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
 
             $movement = StockMovement::create([
-                'item_id'         => $lockedItem->id,
-                'store_id'        => $storeId,
-                'movement_type'   => $movementType,
-                'quantity'        => $adjQty,
-                'stock_before'    => $stockBefore,
-                'stock_after'     => $stockAfter,
-                'unit_cost'       => $lockedItem->cost_price,
-                'source_type'     => Item::class,
-                'source_id'       => $lockedItem->id,
+                'item_id' => $lockedItem->id,
+                'store_id' => $storeId,
+                'movement_type' => $movementType,
+                'quantity' => $adjQty,
+                'stock_before' => $stockBefore,
+                'stock_after' => $stockAfter,
+                'unit_cost' => $lockedItem->cost_price,
+                'source_type' => Item::class,
+                'source_id' => $lockedItem->id,
                 'document_number' => $docNumber,
-                'user_id'         => Auth::id() ?? 1,
-                'notes'           => "تسوية جردية: {$reason} (الرصيد قبل: {$currentStoreQty} | الفعلي الجديد: {$actualQuantity})",
+                'user_id' => Auth::id() ?? 1,
+                'notes' => "تسوية جردية: {$reason} (الرصيد قبل: {$currentStoreQty} | الفعلي الجديد: {$actualQuantity})",
             ]);
 
             app(ActivityLogService::class)->log(
@@ -318,9 +320,9 @@ class StockService
                 subject: $lockedItem,
                 properties: [
                     'actual_quantity' => $actualQuantity,
-                    'diff'            => $diff,
-                    'movement_type'   => $movementType,
-                    'reason'          => $reason,
+                    'diff' => $diff,
+                    'movement_type' => $movementType,
+                    'reason' => $reason,
                 ],
                 storeId: $storeId
             );

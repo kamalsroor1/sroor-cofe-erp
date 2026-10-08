@@ -11,16 +11,24 @@
           {{ category.icon || '☕' }}
         </div>
         <div class="min-w-0">
-          <h4 class="font-black text-sm text-slate-900 dark:text-white truncate group-hover:text-theme-primary transition-colors">
+          <h4
+            class="font-black text-sm text-slate-900 dark:text-white truncate group-hover:text-theme-primary transition-colors"
+          >
             {{ category.name }}
           </h4>
           <div class="flex items-center gap-2 mt-1">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-theme-light text-theme-primary border border-theme-border">
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-theme-light text-theme-primary border border-theme-border"
+            >
               {{ category.items_count || 0 }} {{ $t('inventory.items_unit') }}
             </span>
             <span
               class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-              :class="category.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'"
+              :class="
+                category.is_active
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
+              "
             >
               {{ category.is_active ? $t('common.active') : $t('common.inactive') }}
             </span>
@@ -31,9 +39,7 @@
 
     <!-- Bottom Actions with ActionMenu Standard -->
     <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-      <span class="text-[10px] text-slate-400 font-mono">
-        #{{ category.sort_order ?? 0 }}
-      </span>
+      <span class="text-[10px] text-slate-400 font-mono"> #{{ category.sort_order ?? 0 }} </span>
 
       <ActionMenu
         :items="getCategoryActions(category)"

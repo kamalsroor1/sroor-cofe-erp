@@ -1,5 +1,7 @@
 <template>
-  <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4">
+  <div
+    class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4"
+  >
     <div class="flex items-center justify-between">
       <h2 class="text-xs font-black text-theme-primary flex items-center gap-2">
         <Package class="w-4 h-4" />
@@ -22,7 +24,9 @@
     <div class="hidden md:block overflow-x-auto">
       <table class="w-full text-start text-xs border-collapse">
         <thead>
-          <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+          <tr
+            class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+          >
             <th class="p-3 text-start font-bold">{{ $t('purchases.item_material') }}</th>
             <th class="p-3 text-center font-bold w-32">{{ $t('common.quantity') }}</th>
             <th class="p-3 text-center font-bold w-36">{{ $t('inventory.purchase_price') }}</th>
@@ -55,7 +59,7 @@
                 required
                 class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-theme-primary font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 placeholder="1.000"
-              >
+              />
             </td>
 
             <td class="p-2.5">
@@ -67,11 +71,12 @@
                 required
                 class="w-full h-10 px-2 text-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-500 dark:text-emerald-400 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 placeholder="0.00"
-              >
+              />
             </td>
 
             <td class="p-2.5 text-end font-mono font-black text-slate-900 dark:text-white text-sm">
-              {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }} {{ $t('common.currency') }}
+              {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
+              {{ $t('common.currency') }}
             </td>
 
             <td class="p-2.5 text-center">
@@ -133,7 +138,7 @@
               min="0.001"
               required
               class="w-full h-10 px-2 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-theme-primary font-mono font-bold focus:ring-2 focus:ring-theme-primary focus:outline-none"
-            >
+            />
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-500 mb-1">{{ $t('inventory.purchase_price') }}</label>
@@ -144,14 +149,17 @@
               min="0"
               required
               class="w-full h-10 px-2 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-emerald-500 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-            >
+            />
           </div>
         </div>
 
-        <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-xs font-mono">
+        <div
+          class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-xs font-mono"
+        >
           <span class="font-sans font-bold text-slate-500">{{ $t('common.total') }}:</span>
           <span class="font-black text-slate-900 dark:text-white">
-            {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }} {{ $t('common.currency') }}
+            {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
+            {{ $t('common.currency') }}
           </span>
         </div>
       </div>

@@ -19,13 +19,13 @@ final class CreateUserDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            name: (string)$data['name'],
-            phone: (string)$data['phone'],
-            password: (string)$data['password'],
-            role: (string)($data['role'] ?? 'cashier'),
-            email: isset($data['email']) && $data['email'] !== '' ? (string)$data['email'] : null,
-            default_store_id: isset($data['default_store_id']) && $data['default_store_id'] !== '' ? (int)$data['default_store_id'] : null,
-            is_active: (bool)($data['is_active'] ?? true),
+            name: (string) $data['name'],
+            phone: (string) $data['phone'],
+            password: (string) $data['password'],
+            role: (string) ($data['role'] ?? 'cashier'),
+            email: isset($data['email']) && $data['email'] !== '' ? (string) $data['email'] : null,
+            default_store_id: isset($data['default_store_id']) && $data['default_store_id'] !== '' ? (int) $data['default_store_id'] : null,
+            is_active: (bool) ($data['is_active'] ?? true),
         );
     }
 }

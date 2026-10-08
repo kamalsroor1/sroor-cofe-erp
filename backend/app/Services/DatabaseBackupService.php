@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DatabaseBackupService
 {
@@ -14,7 +13,7 @@ class DatabaseBackupService
     public function createSqlGzBackup(): string
     {
         $backupDir = storage_path('app/backups');
-        if (!is_dir($backupDir)) {
+        if (! is_dir($backupDir)) {
             @mkdir($backupDir, 0775, true);
         }
 
@@ -24,14 +23,14 @@ class DatabaseBackupService
         $gzPath = "{$sqlPath}.gz";
 
         $handle = fopen($sqlPath, 'w');
-        if (!$handle) {
+        if (! $handle) {
             throw new \RuntimeException("تعذر إنشاء ملف النسخة الاحتياطية في: {$sqlPath}");
         }
 
         $appName = config('app.name', 'Laravel');
         fwrite($handle, "-- ========================================================\n");
         fwrite($handle, "-- {$appName} Database Backup\n");
-        fwrite($handle, "-- Generated: " . now()->toDateTimeString() . "\n");
+        fwrite($handle, '-- Generated: '.now()->toDateTimeString()."\n");
         fwrite($handle, "-- ========================================================\n\n");
         fwrite($handle, "SET FOREIGN_KEY_CHECKS=0;\n");
         fwrite($handle, "SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';\n\n");
@@ -42,7 +41,7 @@ class DatabaseBackupService
         if ($driver === 'mysql') {
             $tableResults = DB::select('SHOW TABLES');
             foreach ($tableResults as $row) {
-                $arr = (array)$row;
+                $arr = (array) $row;
                 $tables[] = reset($arr);
             }
         } elseif ($driver === 'sqlite') {
@@ -55,8 +54,8 @@ class DatabaseBackupService
         foreach ($tables as $table) {
             if ($driver === 'mysql') {
                 $createTable = DB::select("SHOW CREATE TABLE `{$table}`");
-                if (!empty($createTable)) {
-                    $createSql = ((array)$createTable[0])['Create Table'] ?? '';
+                if (! empty($createTable)) {
+                    $createSql = ((array) $createTable[0])['Create Table'] ?? '';
                     fwrite($handle, "-- Structure for table `{$table}`\n");
                     fwrite($handle, "DROP TABLE IF EXISTS `{$table}`;\n");
                     fwrite($handle, "{$createSql};\n\n");
@@ -69,17 +68,17 @@ class DatabaseBackupService
                     return;
                 }
 
-                $columns = array_keys((array)$rows[0]);
-                $colList = '`' . implode('`, `', $columns) . '`';
+                $columns = array_keys((array) $rows[0]);
+                $colList = '`'.implode('`, `', $columns).'`';
 
                 fwrite($handle, "-- Data for table `{$table}`\n");
                 foreach ($rows as $row) {
                     $vals = [];
-                    foreach ((array)$row as $val) {
+                    foreach ((array) $row as $val) {
                         if ($val === null) {
                             $vals[] = 'NULL';
                         } else {
-                            $vals[] = "'" . addslashes((string)$val) . "'";
+                            $vals[] = "'".addslashes((string) $val)."'";
                         }
                     }
                     $valList = implode(', ', $vals);

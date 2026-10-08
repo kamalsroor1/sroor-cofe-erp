@@ -24,8 +24,8 @@ class StockDeposit extends Model
     {
         return [
             'deposit_date' => 'date',
-            'quantity'     => 'decimal:3',
-            'cost_price'   => 'decimal:3',
+            'quantity' => 'decimal:3',
+            'cost_price' => 'decimal:3',
         ];
     }
 

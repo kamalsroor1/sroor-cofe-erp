@@ -2,25 +2,28 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Item;
 use App\Models\Customer;
-use App\Models\Supplier;
+use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Supplier;
+use App\Models\User;
 use App\Services\ReturnService;
 use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ReturnServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $user;
+
     protected Store $mainStore;
+
     protected ReturnService $returnService;
+
     protected StockService $stockService;
 
     protected function setUp(): void
@@ -33,10 +36,10 @@ class ReturnServiceTest extends TestCase
         $this->actingAs($this->user);
 
         $this->mainStore = Store::create([
-            'name'       => 'المخزن الرئيسي',
-            'code'       => 'MAIN-01',
-            'type'       => 'main_store',
-            'is_active'  => true,
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN-01',
+            'type' => 'main_store',
+            'is_active' => true,
             'is_default' => true,
         ]);
 
@@ -47,19 +50,19 @@ class ReturnServiceTest extends TestCase
     public function test_sales_return_increases_stock_and_reduces_customer_debt(): void
     {
         $customer = Customer::create([
-            'name'             => 'عميل تجريبي',
-            'current_balance'  => '500.000',
-            'initial_balance'  => '500.000',
+            'name' => 'عميل تجريبي',
+            'current_balance' => '500.000',
+            'initial_balance' => '500.000',
         ]);
 
         $item = Item::create([
-            'name'              => 'بن برازيلي وسط',
-            'code'              => 'BRZ-01',
-            'unit'              => 'كجم',
-            'selling_price'     => '240.000',
-            'cost_price'        => '180.000',
+            'name' => 'بن برازيلي وسط',
+            'code' => 'BRZ-01',
+            'unit' => 'كجم',
+            'selling_price' => '240.000',
+            'cost_price' => '180.000',
             'weighted_avg_cost' => '180.000',
-            'current_stock'     => '0.000',
+            'current_stock' => '0.000',
         ]);
 
         $this->stockService->addStock(
@@ -75,20 +78,20 @@ class ReturnServiceTest extends TestCase
 
         $returnDoc = $this->returnService->createSalesReturn([
             'customer_id' => $customer->id,
-            'store_id'    => $this->mainStore->id,
-            'reason'      => 'إرجاع نصف كيلو بالخطأ',
-            'items'       => [
+            'store_id' => $this->mainStore->id,
+            'reason' => 'إرجاع نصف كيلو بالخطأ',
+            'items' => [
                 [
-                    'item_id'    => $item->id,
-                    'quantity'   => '0.500',
+                    'item_id' => $item->id,
+                    'quantity' => '0.500',
                     'unit_price' => '240.000',
-                ]
+                ],
             ],
         ]);
 
         $this->assertDatabaseHas('returns', [
-            'id'           => $returnDoc->id,
-            'return_type'  => 'sales_return',
+            'id' => $returnDoc->id,
+            'return_type' => 'sales_return',
             'total_amount' => '120.000',
         ]);
 
@@ -103,20 +106,20 @@ class ReturnServiceTest extends TestCase
     public function test_purchase_return_deducts_stock_and_reduces_supplier_debt(): void
     {
         $supplier = Supplier::create([
-            'name'             => 'شركة الأهرام للبن',
-            'company_name'     => 'الأهرام',
-            'current_balance'  => '2000.000',
-            'initial_balance'  => '2000.000',
+            'name' => 'شركة الأهرام للبن',
+            'company_name' => 'الأهرام',
+            'current_balance' => '2000.000',
+            'initial_balance' => '2000.000',
         ]);
 
         $item = Item::create([
-            'name'              => 'بن كولومبي سوبريمو',
-            'code'              => 'COL-01',
-            'unit'              => 'كجم',
-            'selling_price'     => '320.000',
-            'cost_price'        => '250.000',
+            'name' => 'بن كولومبي سوبريمو',
+            'code' => 'COL-01',
+            'unit' => 'كجم',
+            'selling_price' => '320.000',
+            'cost_price' => '250.000',
             'weighted_avg_cost' => '250.000',
-            'current_stock'     => '0.000',
+            'current_stock' => '0.000',
         ]);
 
         $this->stockService->addStock(
@@ -132,20 +135,20 @@ class ReturnServiceTest extends TestCase
 
         $returnDoc = $this->returnService->createPurchaseReturn([
             'supplier_id' => $supplier->id,
-            'store_id'    => $this->mainStore->id,
-            'reason'      => 'إرجاع 5 كجم لوجود عيب في التحميص',
-            'items'       => [
+            'store_id' => $this->mainStore->id,
+            'reason' => 'إرجاع 5 كجم لوجود عيب في التحميص',
+            'items' => [
                 [
-                    'item_id'    => $item->id,
-                    'quantity'   => '5.000',
+                    'item_id' => $item->id,
+                    'quantity' => '5.000',
                     'unit_price' => '250.000',
-                ]
+                ],
             ],
         ]);
 
         $this->assertDatabaseHas('returns', [
-            'id'           => $returnDoc->id,
-            'return_type'  => 'purchase_return',
+            'id' => $returnDoc->id,
+            'return_type' => 'purchase_return',
             'total_amount' => '1250.000',
         ]);
 

@@ -17,16 +17,16 @@ final class UpdateItemAction
     {
         return DB::transaction(function () use ($item, $dto) {
             $item->update([
-                'name'            => $dto->name,
-                'code'            => $dto->code ?: $item->code,
-                'category'        => $dto->category,
-                'unit'            => $dto->unit,
-                'cost_price'      => $dto->cost_price,
+                'name' => $dto->name,
+                'code' => $dto->code ?: $item->code,
+                'category' => $dto->category,
+                'unit' => $dto->unit,
+                'cost_price' => $dto->cost_price,
                 'min_selling_price' => $dto->min_selling_price,
-                'selling_price'   => $dto->selling_price,
+                'selling_price' => $dto->selling_price,
                 'min_stock_level' => $dto->min_stock_level,
-                'is_active'       => $dto->is_active,
-                'notes'           => $dto->notes,
+                'is_active' => $dto->is_active,
+                'notes' => $dto->notes,
             ]);
 
             return $item->fresh(['storeStocks.store']);

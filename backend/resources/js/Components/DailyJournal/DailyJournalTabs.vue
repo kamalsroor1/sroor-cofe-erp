@@ -1,12 +1,20 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal"
+  >
     <!-- Tabs Header -->
-    <div class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/60 p-1.5 gap-2">
+    <div
+      class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/60 p-1.5 gap-2"
+    >
       <button
         type="button"
         @click="$emit('update:activeTab', 'invoices')"
         class="min-h-[40px] flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-        :class="activeTab === 'invoices' ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'"
+        :class="
+          activeTab === 'invoices'
+            ? 'bg-theme-primary text-white font-black shadow-theme-primary'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+        "
       >
         <ShoppingCart class="w-4 h-4" />
         <span>{{ $t('treasury.journal_invoices_tab') }} ({{ invoices.length }})</span>
@@ -16,7 +24,11 @@
         type="button"
         @click="$emit('update:activeTab', 'expenses')"
         class="min-h-[40px] flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-        :class="activeTab === 'expenses' ? 'bg-theme-primary text-white font-black shadow-theme-primary' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'"
+        :class="
+          activeTab === 'expenses'
+            ? 'bg-theme-primary text-white font-black shadow-theme-primary'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+        "
       >
         <Receipt class="w-4 h-4" />
         <span>{{ $t('treasury.journal_expenses_tab') }} ({{ expenses.length }})</span>
@@ -35,7 +47,9 @@
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr
+                class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+              >
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.customer') }}</th>
@@ -47,13 +61,21 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-              <tr v-for="(inv, idx) in invoices" :key="inv.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <tr
+                v-for="(inv, idx) in invoices"
+                :key="inv.id"
+                class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              >
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
                 <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">{{ inv.invoice_number }}</td>
-                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ inv.customer_name }}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">
+                  {{ inv.customer_name }}
+                </td>
                 <td class="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400">{{ inv.time || '—' }}</td>
                 <td class="py-3.5 px-4 text-center">
-                  <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                  <span
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                  >
                     {{ formatPaymentMethod(inv.payment_method) }}
                   </span>
                 </td>
@@ -64,7 +86,9 @@
                   {{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}
                 </td>
                 <td class="py-3.5 px-4 text-center">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400">
+                  <span
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400"
+                  >
                     {{ $t('treasury.approved_status') }}
                   </span>
                 </td>
@@ -86,16 +110,25 @@
                 <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ inv.customer_name }}</h4>
               </div>
               <div class="text-end">
-                <span class="text-sm font-black font-mono text-emerald-500">{{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}</span>
+                <span class="text-sm font-black font-mono text-emerald-500"
+                  >{{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}</span
+                >
                 <span class="text-[10px] text-slate-400 block font-mono">{{ inv.time || '—' }}</span>
               </div>
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <span
+                class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              >
                 {{ formatPaymentMethod(inv.payment_method) }}
               </span>
-              <span class="text-slate-500">{{ $t('common.total') }}: <span class="font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(inv.net_total) }}</span></span>
+              <span class="text-slate-500"
+                >{{ $t('common.total') }}:
+                <span class="font-mono font-bold text-slate-900 dark:text-white">{{
+                  formatMoney(inv.net_total)
+                }}</span></span
+              >
             </div>
           </div>
         </div>
@@ -116,7 +149,9 @@
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-start text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr
+                class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+              >
                 <th class="py-3 px-4 text-start font-bold">#</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
                 <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
@@ -126,13 +161,21 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-              <tr v-for="(e, idx) in expenses" :key="e.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <tr
+                v-for="(e, idx) in expenses"
+                :key="e.id"
+                class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              >
                 <td class="py-3.5 px-4 font-mono text-slate-500">{{ idx + 1 }}</td>
                 <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">{{ e.expense_number }}</td>
                 <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white font-tajawal">{{ e.title }}</td>
-                <td class="py-3.5 px-4 font-tajawal text-slate-700 dark:text-slate-300">{{ e.cost_center_label || e.cost_center }}</td>
+                <td class="py-3.5 px-4 font-tajawal text-slate-700 dark:text-slate-300">
+                  {{ e.cost_center_label || e.cost_center }}
+                </td>
                 <td class="py-3.5 px-4 text-center">
-                  <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                  <span
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                  >
                     {{ formatPaymentMethod(e.payment_method) }}
                   </span>
                 </td>
@@ -158,8 +201,12 @@
                 <p class="text-xs text-slate-500">{{ e.cost_center_label || e.cost_center }}</p>
               </div>
               <div class="text-end">
-                <span class="text-sm font-black font-mono text-rose-500">{{ formatMoney(e.amount) }} {{ $t('common.currency') }}</span>
-                <span class="text-[10px] font-bold block text-slate-400">{{ formatPaymentMethod(e.payment_method) }}</span>
+                <span class="text-sm font-black font-mono text-rose-500"
+                  >{{ formatMoney(e.amount) }} {{ $t('common.currency') }}</span
+                >
+                <span class="text-[10px] font-bold block text-slate-400">{{
+                  formatPaymentMethod(e.payment_method)
+                }}</span>
               </div>
             </div>
           </div>

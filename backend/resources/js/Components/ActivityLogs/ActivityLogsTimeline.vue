@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal"
+  >
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="4" />
     </div>
@@ -25,9 +27,17 @@
               </div>
 
               <div class="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap font-sans">
-                <span>{{ $t('activity.staff_label') }} <strong class="text-slate-700 dark:text-slate-300 font-bold">{{ log.user_name }}</strong></span>
-                <span>{{ $t('activity.branch_label') }} <strong class="text-slate-700 dark:text-slate-300 font-bold">{{ log.store_name }}</strong></span>
-                <span v-if="log.ip_address" class="font-mono text-slate-400">{{ $t('activity.ip_address') }}: {{ log.ip_address }}</span>
+                <span
+                  >{{ $t('activity.staff_label') }}
+                  <strong class="text-slate-700 dark:text-slate-300 font-bold">{{ log.user_name }}</strong></span
+                >
+                <span
+                  >{{ $t('activity.branch_label') }}
+                  <strong class="text-slate-700 dark:text-slate-300 font-bold">{{ log.store_name }}</strong></span
+                >
+                <span v-if="log.ip_address" class="font-mono text-slate-400"
+                  >{{ $t('activity.ip_address') }}: {{ log.ip_address }}</span
+                >
               </div>
             </div>
           </div>
@@ -47,7 +57,10 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
+      <div
+        v-if="pagination.total > pagination.per_page"
+        class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono"
+      >
         <span class="font-tajawal">{{ $t('activity.total_records') }} {{ pagination.total }}</span>
         <div class="flex items-center gap-2 font-sans font-tajawal">
           <button

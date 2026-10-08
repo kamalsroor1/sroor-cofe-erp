@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-4 font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-4 font-tajawal"
+  >
     <div class="flex items-center justify-between">
       <h2 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
         <HardDrive class="w-4.5 h-4.5 text-purple-500 dark:text-purple-400" />
@@ -45,7 +47,9 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-xs text-start">
           <thead>
-            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold text-[11px]">
+            <tr
+              class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold text-[11px]"
+            >
               <th class="pb-3 text-start">{{ $t('super.version_col') }}</th>
               <th class="pb-3 text-start">{{ $t('super.platform_col') }}</th>
               <th class="pb-3 text-start">{{ $t('super.type_col') }}</th>
@@ -61,7 +65,9 @@
               <td class="py-3.5">
                 <div class="flex items-center gap-2">
                   <span class="font-black text-slate-900 dark:text-white font-mono text-sm">v{{ v.version_name }}</span>
-                  <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-mono">
+                  <span
+                    class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-mono"
+                  >
                     Code: {{ v.version_code }}
                   </span>
                 </div>
@@ -117,7 +123,11 @@
                   type="button"
                   @click="$emit('toggle-active', v)"
                   class="px-2.5 py-1 rounded-full text-[10px] font-bold transition cursor-pointer active:scale-95"
-                  :class="v.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
+                  :class="
+                    v.is_active
+                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                  "
                 >
                   {{ v.is_active ? $t('super.active_available_badge') : $t('super.disabled_badge') }}
                 </button>
@@ -166,7 +176,11 @@
               type="button"
               @click="$emit('toggle-active', v)"
               class="px-2.5 py-1 rounded-full text-[10px] font-bold border"
-              :class="v.is_active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
+              :class="
+                v.is_active
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              "
             >
               {{ v.is_active ? $t('super.active_available_badge') : $t('super.disabled_badge') }}
             </button>
@@ -216,9 +230,9 @@ defineProps({
 defineEmits(['refresh', 'open-create', 'toggle-active', 'delete-version']);
 
 const formatBytes = (bytes) => {
-    if (!bytes) return '0 B';
-    if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
-    if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return bytes + ' B';
+  if (!bytes) return '0 B';
+  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+  if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return bytes + ' B';
 };
 </script>

@@ -17,7 +17,8 @@ class Setting extends Model
 
     public static function getCacheKey(): string
     {
-        $tenantId = function_exists('tenant') && tenant('id') ? (string)tenant('id') : 'central';
+        $tenantId = function_exists('tenant') && tenant('id') ? (string) tenant('id') : 'central';
+
         return "app_settings_{$tenantId}";
     }
 
@@ -36,7 +37,8 @@ class Setting extends Model
     {
         try {
             $all = static::allCached();
-            return array_key_exists($key, $all) ? (string)$all[$key] : $default;
+
+            return array_key_exists($key, $all) ? (string) $all[$key] : $default;
         } catch (\Throwable) {
             return $default;
         }
@@ -58,6 +60,7 @@ class Setting extends Model
     public static function getBool(string $key, bool $default = true): bool
     {
         $val = static::get($key, $default ? '1' : '0');
+
         return in_array($val, ['1', 'true', 'on', 'yes', true, 1], true);
     }
 

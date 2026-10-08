@@ -19,21 +19,21 @@ final class CreateExpenseAction
         return DB::transaction(function () use ($dto, $userId) {
             $storeId = $dto->store_id ?: Store::getMainStore()?->id ?: Store::first()?->id;
 
-            $prefix = 'EXP-' . date('ymd');
+            $prefix = 'EXP-'.date('ymd');
             $count = Expense::whereDate('created_at', now()->toDateString())->count() + 1;
-            $expenseNumber = $prefix . '-' . str_pad((string)$count, 4, '0', STR_PAD_LEFT);
+            $expenseNumber = $prefix.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
 
             return Expense::create([
                 'expense_number' => $expenseNumber,
-                'title'          => $dto->title,
-                'category'       => $dto->category,
-                'cost_center'    => $dto->cost_center,
-                'amount'         => $dto->amount,
-                'expense_date'   => $dto->expense_date,
+                'title' => $dto->title,
+                'category' => $dto->category,
+                'cost_center' => $dto->cost_center,
+                'amount' => $dto->amount,
+                'expense_date' => $dto->expense_date,
                 'payment_method' => $dto->payment_method,
-                'user_id'        => $userId,
-                'store_id'       => $storeId,
-                'notes'          => $dto->notes,
+                'user_id' => $userId,
+                'store_id' => $storeId,
+                'notes' => $dto->notes,
             ]);
         });
     }

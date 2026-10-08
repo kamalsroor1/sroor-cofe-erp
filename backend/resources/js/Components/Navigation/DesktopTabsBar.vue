@@ -15,9 +15,11 @@
         @click="tabsStore.selectTab(tab)"
         @contextmenu.prevent="openContextMenu($event, tab)"
         class="group relative flex items-center gap-1.5 h-8 px-3 rounded-t-xl transition-all duration-150 cursor-pointer shrink-0 text-xs font-bold border-t border-x"
-        :class="tabsStore.activeTabId === tab.id
-          ? 'bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white border-slate-300 dark:border-slate-700 font-black shadow-xs'
-          : 'bg-slate-200/60 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400 border-transparent'"
+        :class="
+          tabsStore.activeTabId === tab.id
+            ? 'bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white border-slate-300 dark:border-slate-700 font-black shadow-xs'
+            : 'bg-slate-200/60 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400 border-transparent'
+        "
         :title="tab.title"
       >
         <!-- Active Bottom Glowing Indicator -->
@@ -27,7 +29,10 @@
         ></span>
 
         <!-- Tab Icon -->
-        <DynamicIcon :name="tab.icon" class="w-3.5 h-3.5 shrink-0 text-slate-500 group-hover:text-theme-primary transition-colors" />
+        <DynamicIcon
+          :name="tab.icon"
+          class="w-3.5 h-3.5 shrink-0 text-slate-500 group-hover:text-theme-primary transition-colors"
+        />
 
         <!-- Tab Title -->
         <span class="truncate max-w-[130px] sm:max-w-[160px]">{{ tab.title }}</span>

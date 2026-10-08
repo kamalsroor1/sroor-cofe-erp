@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('super.units_page_title')"
-      :subtitle="$t('super.units_page_subtitle')"
-      :icon="Scale"
-    >
+    <PageHeader :title="$t('super.units_page_title')" :subtitle="$t('super.units_page_subtitle')" :icon="Scale">
       <template #actions>
         <div class="flex items-center gap-3">
           <router-link
@@ -32,7 +28,9 @@
     </PageHeader>
 
     <!-- Active Units Container Card -->
-    <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-6">
+    <div
+      class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-6"
+    >
       <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <h2 class="text-base font-black text-slate-900 dark:text-white">
@@ -46,7 +44,9 @@
 
       <!-- Loading State -->
       <div v-if="isLoading" class="p-12 text-center">
-        <div class="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <div
+          class="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"
+        ></div>
         <p class="text-xs text-slate-400">{{ $t('super.loading_units') }}</p>
       </div>
 
@@ -73,15 +73,6 @@ import AddCustomUnitSection from '../../Components/SuperAdmin/AddCustomUnitSecti
 import UnitPresetSuggestions from '../../Components/SuperAdmin/UnitPresetSuggestions.vue';
 import { useSuperAdminUnits } from '../../Composables/useSuperAdminUnits';
 
-const {
-  units,
-  presets,
-  newUnitInput,
-  isLoading,
-  isSaving,
-  addCustomUnit,
-  addPreset,
-  removeUnit,
-  saveUnits,
-} = useSuperAdminUnits();
+const { units, presets, newUnitInput, isLoading, isSaving, addCustomUnit, addPreset, removeUnit, saveUnits } =
+  useSuperAdminUnits();
 </script>

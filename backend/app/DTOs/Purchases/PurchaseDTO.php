@@ -22,32 +22,32 @@ final class PurchaseDTO
     public static function fromArray(array $data, ?int $storeId = null): self
     {
         return new self(
-            supplier_id: (int)$data['supplier_id'],
-            purchase_date: (string)($data['purchase_date'] ?? now()->toDateString()),
-            items: (array)($data['items'] ?? []),
-            paid_amount: isset($data['paid_amount']) ? (string)$data['paid_amount'] : '0.000',
-            discount_amount: isset($data['discount_amount']) ? (string)$data['discount_amount'] : '0.000',
-            payment_method: (string)($data['payment_method'] ?? 'cash'),
-            supplier_invoice_ref: isset($data['supplier_invoice_ref']) && $data['supplier_invoice_ref'] !== '' ? (string)$data['supplier_invoice_ref'] : null,
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
-            store_id: isset($data['store_id']) ? (int)$data['store_id'] : $storeId,
-            additional_expenses: (array)($data['additional_expenses'] ?? []),
+            supplier_id: (int) $data['supplier_id'],
+            purchase_date: (string) ($data['purchase_date'] ?? now()->toDateString()),
+            items: (array) ($data['items'] ?? []),
+            paid_amount: isset($data['paid_amount']) ? (string) $data['paid_amount'] : '0.000',
+            discount_amount: isset($data['discount_amount']) ? (string) $data['discount_amount'] : '0.000',
+            payment_method: (string) ($data['payment_method'] ?? 'cash'),
+            supplier_invoice_ref: isset($data['supplier_invoice_ref']) && $data['supplier_invoice_ref'] !== '' ? (string) $data['supplier_invoice_ref'] : null,
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
+            store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
+            additional_expenses: (array) ($data['additional_expenses'] ?? []),
         );
     }
 
     public function toArray(): array
     {
         return [
-            'supplier_id'          => $this->supplier_id,
-            'purchase_date'        => $this->purchase_date,
-            'items'                => $this->items,
-            'paid_amount'          => $this->paid_amount,
-            'discount_amount'      => $this->discount_amount,
-            'payment_method'       => $this->payment_method,
+            'supplier_id' => $this->supplier_id,
+            'purchase_date' => $this->purchase_date,
+            'items' => $this->items,
+            'paid_amount' => $this->paid_amount,
+            'discount_amount' => $this->discount_amount,
+            'payment_method' => $this->payment_method,
             'supplier_invoice_ref' => $this->supplier_invoice_ref,
-            'notes'                => $this->notes,
-            'store_id'             => $this->store_id,
-            'additional_expenses'  => $this->additional_expenses,
+            'notes' => $this->notes,
+            'store_id' => $this->store_id,
+            'additional_expenses' => $this->additional_expenses,
         ];
     }
 }

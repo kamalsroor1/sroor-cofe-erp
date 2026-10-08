@@ -16,11 +16,11 @@ class StoreStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'    => ['required', 'string', 'max:255'],
-            'code'    => ['nullable', 'string', 'max:50', 'unique:stores,code'],
-            'type'    => ['required', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:stores,code'],
+            'type' => ['required', 'string'],
             'address' => ['nullable', 'string', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:50'],
+            'phone' => ['nullable', 'string', 'max:50'],
             'is_main' => ['nullable', 'boolean'],
         ];
     }

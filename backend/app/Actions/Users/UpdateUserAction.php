@@ -20,11 +20,11 @@ final class UpdateUserAction
             $user = User::findOrFail($dto->id);
 
             $data = [
-                'name'             => $dto->name,
-                'phone'            => $dto->phone,
-                'email'            => $dto->email,
+                'name' => $dto->name,
+                'phone' => $dto->phone,
+                'email' => $dto->email,
                 'default_store_id' => $dto->default_store_id,
-                'is_active'        => $dto->is_active,
+                'is_active' => $dto->is_active,
             ];
 
             if ($dto->password) {

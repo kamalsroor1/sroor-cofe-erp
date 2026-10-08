@@ -17,12 +17,7 @@
             <span>{{ $t('inventory.items_list') }}</span>
           </router-link>
 
-          <BaseButton
-            variant="secondary"
-            size="md"
-            @click="printReport"
-            class="font-bold flex items-center gap-1.5"
-          >
+          <BaseButton variant="secondary" size="md" @click="printReport" class="font-bold flex items-center gap-1.5">
             <Printer class="w-4 h-4 text-theme-primary" />
             <span>{{ $t('common.print') }}</span>
           </BaseButton>

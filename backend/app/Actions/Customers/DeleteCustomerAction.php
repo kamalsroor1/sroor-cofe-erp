@@ -14,13 +14,13 @@ final class DeleteCustomerAction
      */
     public function execute(Customer $customer): bool
     {
-        if (!$customer->canBeDeleted()) {
+        if (! $customer->canBeDeleted()) {
             $blockers = implode(', ', $customer->getDeletionBlockers());
             throw ValidationException::withMessages([
                 'customer' => [__('contacts.cannot_delete_has_balance') ?: "لا يمكن حذف العميل ({$customer->name}) لوجود موانع: {$blockers}"],
             ]);
         }
 
-        return (bool)$customer->delete();
+        return (bool) $customer->delete();
     }
 }

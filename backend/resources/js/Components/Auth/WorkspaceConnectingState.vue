@@ -3,7 +3,9 @@
     <!-- Animated Glowing Pulse Avatar / Logo -->
     <div class="relative inline-flex items-center justify-center">
       <div class="absolute inset-0 rounded-3xl bg-theme-primary/20 animate-ping"></div>
-      <div class="relative w-24 h-24 rounded-3xl bg-white dark:bg-slate-800 border-2 border-theme-primary p-2 shadow-2xl flex items-center justify-center overflow-hidden">
+      <div
+        class="relative w-24 h-24 rounded-3xl bg-white dark:bg-slate-800 border-2 border-theme-primary p-2 shadow-2xl flex items-center justify-center overflow-hidden"
+      >
         <img
           v-if="resolvedTenant?.logo_url"
           :src="resolvedTenant.logo_url"
@@ -56,24 +58,24 @@ import { computed } from 'vue';
 import { Coffee, Monitor } from 'lucide-vue-next';
 
 const props = defineProps({
-    tenantCode: {
-        type: String,
-        default: '',
-    },
-    resolvedTenant: {
-        type: Object,
-        default: null,
-    },
-    statusMessage: {
-        type: String,
-        default: '',
-    },
+  tenantCode: {
+    type: String,
+    default: '',
+  },
+  resolvedTenant: {
+    type: Object,
+    default: null,
+  },
+  statusMessage: {
+    type: String,
+    default: '',
+  },
 });
 
 defineEmits(['cancel', 'retry']);
 
 const desktopDeepLink = computed(() => {
-    const code = props.resolvedTenant?.slug || props.resolvedTenant?.tenant_id || props.tenantCode;
-    return code ? `sroor://connect?tenant=${encodeURIComponent(code)}` : null;
+  const code = props.resolvedTenant?.slug || props.resolvedTenant?.tenant_id || props.tenantCode;
+  return code ? `sroor://connect?tenant=${encodeURIComponent(code)}` : null;
 });
 </script>

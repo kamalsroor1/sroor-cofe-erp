@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class SendDailySummaryReportJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public ?string $date;
 

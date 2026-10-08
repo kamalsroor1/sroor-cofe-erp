@@ -1,8 +1,12 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6 font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6 font-tajawal"
+  >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center">
+        <div
+          class="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center"
+        >
           <Palette class="w-5 h-5" />
         </div>
         <div>
@@ -17,7 +21,7 @@
       <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
         {{ $t('settings.preset_palettes_label') }}
       </label>
-      
+
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
           v-for="color in colorPalettes"
@@ -25,9 +29,16 @@
           type="button"
           @click="$emit('select-color', color.id)"
           class="p-3.5 rounded-2xl border transition-all flex flex-col items-center gap-2.5 cursor-pointer relative active:scale-95 select-none"
-          :class="themeColor === color.id ? 'border-theme-primary bg-theme-light ring-2 ring-theme-primary shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'"
+          :class="
+            themeColor === color.id
+              ? 'border-theme-primary bg-theme-light ring-2 ring-theme-primary shadow-sm'
+              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'
+          "
         >
-          <div class="w-8 h-8 rounded-full shadow-md flex items-center justify-center" :style="{ backgroundColor: color.hex }">
+          <div
+            class="w-8 h-8 rounded-full shadow-md flex items-center justify-center"
+            :style="{ backgroundColor: color.hex }"
+          >
             <span v-if="themeColor === color.id" class="text-white text-xs font-black">✓</span>
           </div>
           <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ color.name }}</span>
@@ -35,7 +46,9 @@
       </div>
 
       <!-- Custom Color Picker -->
-      <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-3">
+      <div
+        class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-3"
+      >
         <div class="flex items-center gap-3">
           <div class="relative flex items-center justify-center">
             <input
@@ -49,7 +62,10 @@
           <div>
             <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span>{{ $t('settings.custom_color_title') }}</span>
-              <span v-if="themeColor.startsWith('#')" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-theme-light border border-theme-border text-theme-primary">
+              <span
+                v-if="themeColor.startsWith('#')"
+                class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-theme-light border border-theme-border text-theme-primary"
+              >
                 {{ $t('settings.active_badge') }}
               </span>
             </div>
@@ -96,7 +112,11 @@
           type="button"
           @click="$emit('set-theme', 'dark')"
           class="p-4 rounded-2xl border transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 select-none"
-          :class="isDark ? 'border-theme-primary bg-slate-900 text-white font-bold ring-1 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600'"
+          :class="
+            isDark
+              ? 'border-theme-primary bg-slate-900 text-white font-bold ring-1 ring-theme-primary'
+              : 'border-slate-200 dark:border-slate-800 bg-slate-50 text-slate-600'
+          "
         >
           <Moon class="w-5 h-5 text-theme-primary" />
           <span>{{ $t('settings.dark_mode') }}</span>
@@ -106,7 +126,11 @@
           type="button"
           @click="$emit('set-theme', 'light')"
           class="p-4 rounded-2xl border transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 select-none"
-          :class="!isDark ? 'border-theme-primary bg-white text-slate-900 font-bold shadow-md ring-1 ring-theme-primary' : 'border-slate-200 dark:border-slate-800 bg-slate-900/40 text-slate-400'"
+          :class="
+            !isDark
+              ? 'border-theme-primary bg-white text-slate-900 font-bold shadow-md ring-1 ring-theme-primary'
+              : 'border-slate-200 dark:border-slate-800 bg-slate-900/40 text-slate-400'
+          "
         >
           <Sun class="w-5 h-5 text-theme-primary" />
           <span>{{ $t('settings.light_mode') }}</span>
@@ -140,7 +164,9 @@
       <!-- Details Sub-grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <!-- Current Version Card -->
-        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div
+          class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+        >
           <div class="flex items-center gap-2.5">
             <span class="text-lg">📦</span>
             <div>
@@ -148,19 +174,23 @@
               <div class="text-xs font-black font-mono text-slate-900 dark:text-white">v{{ currentVersionName }}</div>
             </div>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+          <span
+            class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+          >
             مستقر
           </span>
         </div>
 
         <!-- Biometric Status Card -->
-        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div
+          class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+        >
           <div class="flex items-center gap-2.5">
             <Fingerprint class="w-5 h-5 text-emerald-500" />
             <div>
               <div class="text-[10px] text-slate-400 font-bold">الدخول بالبصمة / Face ID</div>
               <div class="text-xs font-black text-slate-900 dark:text-white">
-                {{ isBiometricEnabled ? 'مفعل على هذا الجهاز' : (isAvailable ? 'متاح للتفعيل' : 'غير مدعوم') }}
+                {{ isBiometricEnabled ? 'مفعل على هذا الجهاز' : isAvailable ? 'متاح للتفعيل' : 'غير مدعوم' }}
               </div>
             </div>
           </div>

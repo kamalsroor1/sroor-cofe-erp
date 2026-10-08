@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-4 text-xs font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-xl space-y-4 text-xs font-tajawal"
+  >
     <div>
       <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
         <span>🔐</span>

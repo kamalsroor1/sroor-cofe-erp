@@ -2,26 +2,31 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Item;
 use App\Models\Customer;
+use App\Models\Item;
 use App\Models\Store;
+use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\StockService;
 use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ConcurrencyTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $user;
+
     protected Store $mainStore;
+
     protected Customer $customer;
+
     protected Item $item;
+
     protected StockService $stockService;
+
     protected InvoiceService $invoiceService;
 
     protected function setUp(): void
@@ -34,26 +39,26 @@ class ConcurrencyTest extends TestCase
         $this->actingAs($this->user);
 
         $this->mainStore = Store::create([
-            'name'       => 'المخزن الرئيسي',
-            'code'       => 'MAIN-01',
-            'type'       => 'main_store',
-            'is_active'  => true,
+            'name' => 'المخزن الرئيسي',
+            'code' => 'MAIN-01',
+            'type' => 'main_store',
+            'is_active' => true,
             'is_default' => true,
         ]);
 
         $this->customer = Customer::create([
-            'name'            => 'عميل تجريبي',
+            'name' => 'عميل تجريبي',
             'current_balance' => '0.000',
         ]);
 
         $this->item = Item::create([
-            'name'              => 'بن يمني مطري فاخر',
-            'code'              => 'YEM-01',
-            'unit'              => 'كجم',
-            'selling_price'     => '400.000',
-            'cost_price'        => '300.000',
+            'name' => 'بن يمني مطري فاخر',
+            'code' => 'YEM-01',
+            'unit' => 'كجم',
+            'selling_price' => '400.000',
+            'cost_price' => '300.000',
             'weighted_avg_cost' => '300.000',
-            'current_stock'     => '0.000',
+            'current_stock' => '0.000',
         ]);
 
         $this->stockService = app(StockService::class);
@@ -76,19 +81,19 @@ class ConcurrencyTest extends TestCase
     {
         // First sale of 0.750 kg succeeds
         $inv1 = $this->invoiceService->confirmInvoice([
-            'customer_id'    => $this->customer->id,
-            'store_id'       => $this->mainStore->id,
-            'invoice_date'   => now()->toDateString(),
-            'payment_type'   => 'cash',
-            'discount_type'  => 'fixed',
+            'customer_id' => $this->customer->id,
+            'store_id' => $this->mainStore->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
             'discount_value' => '0.000',
-            'items'          => [
+            'items' => [
                 [
-                    'item_id'         => $this->item->id,
-                    'quantity'        => '0.750',
-                    'unit_price'      => '400.000',
+                    'item_id' => $this->item->id,
+                    'quantity' => '0.750',
+                    'unit_price' => '400.000',
                     'discount_amount' => '0.000',
-                ]
+                ],
             ],
         ]);
 
@@ -100,19 +105,19 @@ class ConcurrencyTest extends TestCase
         $this->expectException(Exception::class);
 
         $this->invoiceService->confirmInvoice([
-            'customer_id'    => $this->customer->id,
-            'store_id'       => $this->mainStore->id,
-            'invoice_date'   => now()->toDateString(),
-            'payment_type'   => 'cash',
-            'discount_type'  => 'fixed',
+            'customer_id' => $this->customer->id,
+            'store_id' => $this->mainStore->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_type' => 'cash',
+            'discount_type' => 'fixed',
             'discount_value' => '0.000',
-            'items'          => [
+            'items' => [
                 [
-                    'item_id'         => $this->item->id,
-                    'quantity'        => '0.500',
-                    'unit_price'      => '400.000',
+                    'item_id' => $this->item->id,
+                    'quantity' => '0.500',
+                    'unit_price' => '400.000',
                     'discount_amount' => '0.000',
-                ]
+                ],
             ],
         ]);
 

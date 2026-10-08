@@ -15,7 +15,7 @@ final class CancelInvoiceDTO
     {
         return new self(
             invoice_id: $invoiceId,
-            reason: (string)($data['reason'] ?? 'إلغاء من النظام'),
+            reason: (string) ($data['reason'] ?? 'إلغاء من النظام'),
         );
     }
 }

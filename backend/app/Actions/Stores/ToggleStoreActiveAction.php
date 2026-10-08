@@ -20,7 +20,7 @@ final class ToggleStoreActiveAction
             ]);
         }
 
-        $store->update(['is_active' => !$store->is_active]);
+        $store->update(['is_active' => ! $store->is_active]);
 
         return $store->fresh();
     }

@@ -6,7 +6,7 @@ const triggerToastHaptic = async (type = 'success') => {
     try {
         if (Capacitor.isNativePlatform()) {
             await Haptics.notification({
-                type: type === 'error' ? NotificationType.Error : NotificationType.Success
+                type: type === 'error' ? NotificationType.Error : NotificationType.Success,
             });
         } else if (typeof navigator !== 'undefined' && navigator.vibrate) {
             navigator.vibrate(type === 'error' ? [40, 60, 40] : 30);

@@ -30,8 +30,8 @@
         v-if="isOpen"
         class="absolute top-full mt-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 space-y-1 min-w-[200px]"
         :class="[
-          align === 'start' ? 'start-0' : (align === 'center' ? 'start-1/2 -translate-x-1/2' : 'end-0'),
-          menuClass
+          align === 'start' ? 'start-0' : align === 'center' ? 'start-1/2 -translate-x-1/2' : 'end-0',
+          menuClass,
         ]"
       >
         <!-- Slot for Custom Dropdown Items -->
@@ -46,12 +46,15 @@
               item.danger
                 ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                 : 'text-slate-700 dark:text-slate-300 hover:text-theme-primary hover:bg-slate-50 dark:hover:bg-slate-900',
-              item.customClass || ''
+              item.customClass || '',
             ]"
           >
             <component v-if="item.icon" :is="item.icon" class="w-4 h-4 shrink-0" :class="item.iconColor || ''" />
             <span class="flex-1 truncate">{{ item.label }}</span>
-            <span v-if="item.badge" class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-theme-light text-theme-primary">
+            <span
+              v-if="item.badge"
+              class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-theme-light text-theme-primary"
+            >
               {{ item.badge }}
             </span>
           </button>

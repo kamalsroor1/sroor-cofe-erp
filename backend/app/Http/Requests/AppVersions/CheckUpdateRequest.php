@@ -16,9 +16,9 @@ final class CheckUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'platform'        => ['sometimes', 'string', 'in:android,ios,windows'],
-            'version_code'    => ['sometimes', 'integer', 'min:1'],
-            'version_name'    => ['sometimes', 'string', 'max:50'],
+            'platform' => ['sometimes', 'string', 'in:android,ios,windows'],
+            'version_code' => ['sometimes', 'integer', 'min:1'],
+            'version_name' => ['sometimes', 'string', 'max:50'],
             'current_version' => ['sometimes', 'string', 'max:50'],
         ];
     }

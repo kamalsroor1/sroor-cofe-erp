@@ -15,7 +15,7 @@ final class CancelTransferDTO
     {
         return new self(
             transfer_id: $transferId,
-            reason: (string)($data['reason'] ?? 'إلغاء من النظام'),
+            reason: (string) ($data['reason'] ?? 'إلغاء من النظام'),
         );
     }
 }

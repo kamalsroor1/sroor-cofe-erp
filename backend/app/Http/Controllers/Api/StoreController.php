@@ -47,16 +47,16 @@ final class StoreController extends Controller
             || $user->hasRole('admin')
             || $user->can('stores.manage');
 
-        $query = Store::with(['users' => fn($q) => $q->select('users.id', 'users.name', 'users.email')])
+        $query = Store::with(['users' => fn ($q) => $q->select('users.id', 'users.name', 'users.email')])
             ->withCount(['stocks', 'invoices', 'purchases'])
             ->orderBy('is_main', 'desc')
             ->orderBy('id', 'asc');
 
-        if (!$isGlobalAdmin) {
+        if (! $isGlobalAdmin) {
             $query->where('is_active', true)
                 ->where(function ($q) use ($user) {
-                    $q->whereHas('users', fn($uq) => $uq->where('users.id', $user->id))
-                      ->orWhere('id', $user->default_store_id);
+                    $q->whereHas('users', fn ($uq) => $uq->where('users.id', $user->id))
+                        ->orWhere('id', $user->default_store_id);
                 });
         }
 
@@ -71,7 +71,7 @@ final class StoreController extends Controller
         }
 
         $activeStoreId = $request->header('X-Store-Id') ?: session('current_store_id') ?: $user->default_store_id ?: ($stores->first()?->id);
-        $activeStore = $stores->firstWhere('id', (int)$activeStoreId) ?: $stores->first();
+        $activeStore = $stores->firstWhere('id', (int) $activeStoreId) ?: $stores->first();
 
         $allUsers = [];
         if ($isGlobalAdmin) {
@@ -79,10 +79,10 @@ final class StoreController extends Controller
         }
 
         return response()->json([
-            'success'      => true,
+            'success' => true,
             'active_store' => $activeStore ? (new StoreResource($activeStore))->resolve() : null,
-            'stores'       => StoreResource::collection($stores)->resolve(),
-            'all_users'    => $allUsers,
+            'stores' => StoreResource::collection($stores)->resolve(),
+            'all_users' => $allUsers,
         ], 200);
     }
 
@@ -97,7 +97,7 @@ final class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.store_added') ?: 'تم إضافة الفرع / المخزن بنجاح',
-            'data'    => (new StoreResource($store))->resolve(),
+            'data' => (new StoreResource($store))->resolve(),
         ], 201);
     }
 
@@ -106,13 +106,13 @@ final class StoreController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $store = Store::with(['users' => fn($q) => $q->select('users.id', 'users.name', 'users.email')])
+        $store = Store::with(['users' => fn ($q) => $q->select('users.id', 'users.name', 'users.email')])
             ->withCount(['stocks', 'invoices', 'purchases'])
             ->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'data'    => (new StoreResource($store))->resolve(),
+            'data' => (new StoreResource($store))->resolve(),
         ], 200);
     }
 
@@ -128,7 +128,7 @@ final class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.store_updated') ?: 'تم تعديل بيانات الفرع بنجاح',
-            'data'    => (new StoreResource($updatedStore))->resolve(),
+            'data' => (new StoreResource($updatedStore))->resolve(),
         ], 200);
     }
 
@@ -138,7 +138,7 @@ final class StoreController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('stores.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -148,7 +148,7 @@ final class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.store_status_updated') ?: "تم تحديث حالة الفرع ({$store->name}) بنجاح",
-            'data'    => (new StoreResource($toggledStore))->resolve(),
+            'data' => (new StoreResource($toggledStore))->resolve(),
         ], 200);
     }
 
@@ -164,7 +164,7 @@ final class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.store_users_updated') ?: "تم تحديث تعيينات الموظفين لفرع ({$store->name}) بنجاح",
-            'data'    => (new StoreResource($updatedStore))->resolve(),
+            'data' => (new StoreResource($updatedStore))->resolve(),
         ], 200);
     }
 
@@ -174,7 +174,7 @@ final class StoreController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('stores.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -192,21 +192,21 @@ final class StoreController extends Controller
      */
     public function stocks(Request $request): JsonResponse
     {
-        $storeId = (int)($request->input('store_id') ?: $request->header('X-Store-Id') ?: 1);
-        $search = trim((string)$request->input('search', ''));
-        $stockStatus = (string)$request->input('stock_status', 'all');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
+        $storeId = (int) ($request->input('store_id') ?: $request->header('X-Store-Id') ?: 1);
+        $search = trim((string) $request->input('search', ''));
+        $stockStatus = (string) $request->input('stock_status', 'all');
+        $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
         $stocksPaginator = $this->getStoreStocksAction->execute($storeId, $search, $stockStatus, $perPage);
 
         return response()->json([
             'success' => true,
-            'data'    => StoreStockResource::collection($stocksPaginator->items())->resolve(),
-            'meta'    => [
+            'data' => StoreStockResource::collection($stocksPaginator->items())->resolve(),
+            'meta' => [
                 'current_page' => $stocksPaginator->currentPage(),
-                'last_page'    => $stocksPaginator->lastPage(),
-                'per_page'     => $stocksPaginator->perPage(),
-                'total'        => $stocksPaginator->total(),
+                'last_page' => $stocksPaginator->lastPage(),
+                'per_page' => $stocksPaginator->perPage(),
+                'total' => $stocksPaginator->total(),
             ],
         ], 200);
     }
@@ -220,7 +220,7 @@ final class StoreController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $targetStoreId = (int)$validated['store_id'];
+        $targetStoreId = (int) $validated['store_id'];
 
         $isGlobalAdmin = $user->id === 1
             || $user->hasRole('super-admin')
@@ -230,7 +230,7 @@ final class StoreController extends Controller
         $isAssigned = $user->stores()->where('stores.id', $targetStoreId)->exists()
             || $user->default_store_id === $targetStoreId;
 
-        if (!$isGlobalAdmin && !$isAssigned) {
+        if (! $isGlobalAdmin && ! $isAssigned) {
             return response()->json([
                 'success' => false,
                 'message' => __('inventory.unauthorized_store_access') ?: 'عفواً، ليس لديك صلاحية للوصول إلى هذا الفرع.',
@@ -243,8 +243,8 @@ final class StoreController extends Controller
         $user->update(['default_store_id' => $store->id]);
 
         return response()->json([
-            'success'      => true,
-            'message'      => __('inventory.switched_to_store', ['store' => $store->name]) ?: 'تم التبديل إلى فرع: ' . $store->name,
+            'success' => true,
+            'message' => __('inventory.switched_to_store', ['store' => $store->name]) ?: 'تم التبديل إلى فرع: '.$store->name,
             'active_store' => (new StoreResource($store))->resolve(),
         ], 200);
     }

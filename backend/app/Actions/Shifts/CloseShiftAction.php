@@ -7,7 +7,6 @@ namespace App\Actions\Shifts;
 use App\DTOs\Shifts\CloseShiftDTO;
 use App\Models\CashShift;
 use App\Services\ShiftService;
-use Illuminate\Validation\ValidationException;
 
 final class CloseShiftAction
 {

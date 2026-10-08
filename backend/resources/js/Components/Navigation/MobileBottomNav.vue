@@ -10,14 +10,21 @@
       <router-link
         to="/super-admin/dashboard"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isSuperDashboardActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isSuperDashboardActive
+            ? 'text-purple-400 font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isSuperDashboardActive"
             class="absolute -top-1 w-6 h-0.5 rounded-full bg-purple-400 animate-pulse"
           />
-          <Crown class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isSuperDashboardActive ? 'scale-110' : 'group-hover:scale-105'" />
+          <Crown
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isSuperDashboardActive ? 'scale-110' : 'group-hover:scale-105'"
+          />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('super.dashboard') }}</span>
       </router-link>
@@ -26,14 +33,18 @@
       <router-link
         to="/super-admin/tenants"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isTenantsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isTenantsActive
+            ? 'text-purple-400 font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
-          <span
-            v-if="isTenantsActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-purple-400 animate-pulse"
+          <span v-if="isTenantsActive" class="absolute -top-1 w-6 h-0.5 rounded-full bg-purple-400 animate-pulse" />
+          <Building2
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isTenantsActive ? 'scale-110' : 'group-hover:scale-105'"
           />
-          <Building2 class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isTenantsActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('super.tenants') }}</span>
       </router-link>
@@ -54,14 +65,18 @@
       <router-link
         to="/super-admin/app-versions"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isAppVersionsActive ? 'text-purple-400 font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isAppVersionsActive
+            ? 'text-purple-400 font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
-          <span
-            v-if="isAppVersionsActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-purple-400 animate-pulse"
+          <span v-if="isAppVersionsActive" class="absolute -top-1 w-6 h-0.5 rounded-full bg-purple-400 animate-pulse" />
+          <Rocket
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isAppVersionsActive ? 'scale-110' : 'group-hover:scale-105'"
           />
-          <Rocket class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isAppVersionsActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('super.app_versions') }}</span>
       </router-link>
@@ -86,14 +101,21 @@
       <router-link
         to="/"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isDashboardActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isDashboardActive
+            ? 'text-theme-primary font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isDashboardActive"
             class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
-          <LayoutDashboard class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isDashboardActive ? 'scale-110' : 'group-hover:scale-105'" />
+          <LayoutDashboard
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isDashboardActive ? 'scale-110' : 'group-hover:scale-105'"
+          />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.dashboard_short') }}</span>
       </router-link>
@@ -103,14 +125,18 @@
         v-if="isModuleEnabled('pos_and_sales')"
         to="/invoices"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isInvoicesActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isInvoicesActive
+            ? 'text-theme-primary font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
-          <span
-            v-if="isInvoicesActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
+          <span v-if="isInvoicesActive" class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse" />
+          <FileText
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isInvoicesActive ? 'scale-110' : 'group-hover:scale-105'"
           />
-          <FileText class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isInvoicesActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.invoices_short') }}</span>
       </router-link>
@@ -123,7 +149,9 @@
           :class="isPosActive ? 'scale-110 ring-theme-primary' : ''"
           :title="$t('nav.pos_fast')"
         >
-          <ShoppingCart class="w-6 h-6 text-white fill-current transition-transform group-hover:rotate-12 duration-300" />
+          <ShoppingCart
+            class="w-6 h-6 text-white fill-current transition-transform group-hover:rotate-12 duration-300"
+          />
         </router-link>
       </div>
 
@@ -132,14 +160,18 @@
         v-if="isModuleEnabled('inventory_and_stores')"
         to="/items"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isItemsActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isItemsActive
+            ? 'text-theme-primary font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
-          <span
-            v-if="isItemsActive"
-            class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
+          <span v-if="isItemsActive" class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse" />
+          <Package
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isItemsActive ? 'scale-110' : 'group-hover:scale-105'"
           />
-          <Package class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isItemsActive ? 'scale-110' : 'group-hover:scale-105'" />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.items_short') }}</span>
       </router-link>
@@ -149,14 +181,21 @@
         v-if="isModuleEnabled('customers')"
         to="/customers"
         class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
-        :class="isCustomersActive ? 'text-theme-primary font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+        :class="
+          isCustomersActive
+            ? 'text-theme-primary font-black'
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+        "
       >
         <div class="relative flex items-center justify-center">
           <span
             v-if="isCustomersActive"
             class="absolute -top-1 w-6 h-0.5 rounded-full bg-theme-primary animate-pulse"
           />
-          <Users class="w-5 h-5 mb-0.5 transition-transform duration-200" :class="isCustomersActive ? 'scale-110' : 'group-hover:scale-105'" />
+          <Users
+            class="w-5 h-5 mb-0.5 transition-transform duration-200"
+            :class="isCustomersActive ? 'scale-110' : 'group-hover:scale-105'"
+          />
         </div>
         <span class="text-[10px] tracking-tight truncate">{{ $t('nav.customers') }}</span>
       </router-link>
@@ -194,7 +233,7 @@ import {
   Crown,
   Building2,
   Layers,
-  Rocket
+  Rocket,
 } from 'lucide-vue-next';
 
 defineEmits(['open-drawer']);
@@ -205,7 +244,11 @@ const appConfigStore = useAppConfigStore();
 const { isModuleEnabled } = useModules();
 
 const isSuperAdminPanel = computed(() => {
-  return route.path.startsWith('/super-admin') || route.name?.startsWith('super_admin') || (authStore.isSuperAdmin && !appConfigStore.tenant);
+  return (
+    route.path.startsWith('/super-admin') ||
+    route.name?.startsWith('super_admin') ||
+    (authStore.isSuperAdmin && !appConfigStore.tenant)
+  );
 });
 
 const currentPath = computed(() => route.path || '');
@@ -222,6 +265,8 @@ const isInvoicesActive = computed(() => currentPath.value.startsWith('/invoices'
 const isPosActive = computed(() => currentPath.value.startsWith('/pos'));
 const isItemsActive = computed(() => currentPath.value.startsWith('/items'));
 const isCustomersActive = computed(() => currentPath.value.startsWith('/customers'));
-const isShiftActive = computed(() => currentPath.value.startsWith('/daily-journal') || currentPath.value.startsWith('/shifts'));
+const isShiftActive = computed(
+  () => currentPath.value.startsWith('/daily-journal') || currentPath.value.startsWith('/shifts')
+);
 const hasOpenShift = computed(() => appConfigStore.hasOpenShift);
 </script>

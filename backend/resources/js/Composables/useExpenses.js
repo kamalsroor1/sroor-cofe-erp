@@ -48,11 +48,11 @@ export function useExpenses() {
 
     const costCenterFilterOptions = computed(() => [
         { value: 'all', label: t('expenses.all_cost_centers') },
-        ...Object.entries(costCenters.value).map(([k, v]) => ({ value: k, label: v }))
+        ...Object.entries(costCenters.value).map(([k, v]) => ({ value: k, label: v })),
     ]);
 
     const costCenterModalOptions = computed(() => [
-        ...Object.entries(costCenters.value).map(([k, v]) => ({ value: k, label: v }))
+        ...Object.entries(costCenters.value).map(([k, v]) => ({ value: k, label: v })),
     ]);
 
     const fetchExpenses = async (page = 1) => {

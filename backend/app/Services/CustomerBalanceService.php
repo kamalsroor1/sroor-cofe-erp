@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\ReturnDocument;
-use Illuminate\Support\Facades\DB;
 
 class CustomerBalanceService
 {
@@ -33,7 +32,7 @@ class CustomerBalanceService
 
         $invoicesStr = (string) ($totalInvoices ?: '0.000');
         $paymentsStr = (string) ($totalPayments ?: '0.000');
-        $returnsStr  = (string) ($totalReturns ?: '0.000');
+        $returnsStr = (string) ($totalReturns ?: '0.000');
 
         $balance = bcsub(bcsub($invoicesStr, $paymentsStr, 3), $returnsStr, 3);
 
@@ -53,56 +52,56 @@ class CustomerBalanceService
         // Invoices
         $invoices = Invoice::where('customer_id', $customer->id)
             ->where('status', 'confirmed')
-            ->when($fromDate, fn($q) => $q->whereDate('invoice_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('invoice_date', '<=', $toDate))
+            ->when($fromDate, fn ($q) => $q->whereDate('invoice_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('invoice_date', '<=', $toDate))
             ->get();
 
         foreach ($invoices as $inv) {
             $entries->push([
-                'date'        => $inv->invoice_date->format('Y-m-d'),
-                'type'        => 'فاتورة مبيعات',
-                'ref_number'  => $inv->invoice_number,
-                'debit'       => $inv->net_total,    // مدين (على العميل)
-                'credit'      => '0.000',
-                'notes'       => $inv->notes,
-                'timestamp'   => $inv->created_at->timestamp,
+                'date' => $inv->invoice_date->format('Y-m-d'),
+                'type' => 'فاتورة مبيعات',
+                'ref_number' => $inv->invoice_number,
+                'debit' => $inv->net_total,    // مدين (على العميل)
+                'credit' => '0.000',
+                'notes' => $inv->notes,
+                'timestamp' => $inv->created_at->timestamp,
             ]);
         }
 
         // Payments
         $payments = Payment::where('customer_id', $customer->id)
-            ->when($fromDate, fn($q) => $q->whereDate('payment_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('payment_date', '<=', $toDate))
+            ->when($fromDate, fn ($q) => $q->whereDate('payment_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('payment_date', '<=', $toDate))
             ->get();
 
         foreach ($payments as $pay) {
             $entries->push([
-                'date'        => $pay->payment_date->format('Y-m-d'),
-                'type'        => 'سند قبض نقدي',
-                'ref_number'  => $pay->payment_number,
-                'debit'       => '0.000',
-                'credit'      => $pay->amount,       // دائن (سداد من العميل)
-                'notes'       => $pay->notes,
-                'timestamp'   => $pay->created_at->timestamp,
+                'date' => $pay->payment_date->format('Y-m-d'),
+                'type' => 'سند قبض نقدي',
+                'ref_number' => $pay->payment_number,
+                'debit' => '0.000',
+                'credit' => $pay->amount,       // دائن (سداد من العميل)
+                'notes' => $pay->notes,
+                'timestamp' => $pay->created_at->timestamp,
             ]);
         }
 
         // Returns
         $returns = ReturnDocument::where('customer_id', $customer->id)
             ->where('return_type', 'sales_return')
-            ->when($fromDate, fn($q) => $q->whereDate('return_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('return_date', '<=', $toDate))
+            ->when($fromDate, fn ($q) => $q->whereDate('return_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('return_date', '<=', $toDate))
             ->get();
 
         foreach ($returns as $ret) {
             $entries->push([
-                'date'        => $ret->return_date->format('Y-m-d'),
-                'type'        => 'مرتجع مبيعات',
-                'ref_number'  => $ret->return_number,
-                'debit'       => '0.000',
-                'credit'      => $ret->total_amount, // دائن (تخفيض دين)
-                'notes'       => $ret->reason,
-                'timestamp'   => $ret->created_at->timestamp,
+                'date' => $ret->return_date->format('Y-m-d'),
+                'type' => 'مرتجع مبيعات',
+                'ref_number' => $ret->return_number,
+                'debit' => '0.000',
+                'credit' => $ret->total_amount, // دائن (تخفيض دين)
+                'notes' => $ret->reason,
+                'timestamp' => $ret->created_at->timestamp,
             ]);
         }
 
@@ -120,8 +119,8 @@ class CustomerBalanceService
         }
 
         return [
-            'customer'        => $customer,
-            'entries'         => $ledger,
+            'customer' => $customer,
+            'entries' => $ledger,
             'current_balance' => $customer->current_balance,
         ];
     }

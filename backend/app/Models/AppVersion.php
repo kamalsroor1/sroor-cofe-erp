@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Storage;
 
 class AppVersion extends Model
 {
@@ -68,11 +67,12 @@ class AppVersion extends Model
     {
         $bytes = $this->apk_size_bytes;
         if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 1) . ' MB';
+            return number_format($bytes / 1048576, 1).' MB';
         } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 1) . ' KB';
+            return number_format($bytes / 1024, 1).' KB';
         }
-        return $bytes . ' B';
+
+        return $bytes.' B';
     }
 
     /**
@@ -80,6 +80,6 @@ class AppVersion extends Model
      */
     public function getDownloadUrlAttribute(): string
     {
-        return url('/api/v1/app/download-latest-apk?platform=' . $this->platform);
+        return url('/api/v1/app/download-latest-apk?platform='.$this->platform);
     }
 }

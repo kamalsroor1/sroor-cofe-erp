@@ -2,15 +2,15 @@
 
 namespace App\Actions\Tenants;
 
-use Illuminate\Http\Request;
-use Illuminate\Pipeline\Pipeline;
-use App\Models\Tenant;
-use App\Models\Plan;
-use App\Http\Resources\TenantResource;
-use App\Http\Resources\PlanResource;
+use App\Filters\Tenants\PlanFilter;
 use App\Filters\Tenants\SearchFilter;
 use App\Filters\Tenants\StatusFilter;
-use App\Filters\Tenants\PlanFilter;
+use App\Http\Resources\PlanResource;
+use App\Http\Resources\TenantResource;
+use App\Models\Plan;
+use App\Models\Tenant;
+use Illuminate\Http\Request;
+use Illuminate\Pipeline\Pipeline;
 
 class GetTenantsIndexDataAction
 {
@@ -20,7 +20,7 @@ class GetTenantsIndexDataAction
     public function execute(Request $request): array
     {
         $tenantsQuery = app(Pipeline::class)
-            ->send(Tenant::query()->with(['plan', 'domains', 'subscriptions' => fn($q) => $q->latest()->take(1)]))
+            ->send(Tenant::query()->with(['plan', 'domains', 'subscriptions' => fn ($q) => $q->latest()->take(1)]))
             ->through([
                 SearchFilter::class,
                 StatusFilter::class,
@@ -28,7 +28,7 @@ class GetTenantsIndexDataAction
             ])
             ->thenReturn();
 
-        $tenants = $tenantsQuery->latest()->paginate(15)->withQueryString()->through(fn($t) => (new TenantResource($t))->resolve());
+        $tenants = $tenantsQuery->latest()->paginate(15)->withQueryString()->through(fn ($t) => (new TenantResource($t))->resolve());
 
         $plans = PlanResource::collection(Plan::select('id', 'name', 'slug')->get())->resolve();
 

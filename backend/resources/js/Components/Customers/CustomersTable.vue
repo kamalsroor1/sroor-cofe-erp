@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+  >
     <!-- Loading State -->
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="7" />
@@ -11,7 +13,9 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="py-3 px-4 text-start font-bold">#</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.customer_name') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('contacts.phone') }}</th>
@@ -46,18 +50,35 @@
               <td class="py-3.5 px-4 text-end">
                 <div
                   class="font-mono font-black text-sm"
-                  :class="customer.current_balance > 0 ? 'text-rose-500 dark:text-rose-400' : (customer.current_balance < 0 ? 'text-cyan-500 dark:text-cyan-400' : 'text-emerald-500 dark:text-emerald-400')"
+                  :class="
+                    customer.current_balance > 0
+                      ? 'text-rose-500 dark:text-rose-400'
+                      : customer.current_balance < 0
+                        ? 'text-cyan-500 dark:text-cyan-400'
+                        : 'text-emerald-500 dark:text-emerald-400'
+                  "
                 >
-                  {{ formatMoney(customer.current_balance) }} <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
+                  {{ formatMoney(customer.current_balance) }}
+                  <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
                 </div>
                 <div class="text-[10px] font-tajawal text-slate-500 dark:text-slate-400 mt-0.5">
-                  {{ customer.current_balance > 0 ? $t('contacts.debt_due') : (customer.current_balance < 0 ? $t('contacts.credit_balance') : $t('contacts.settled')) }}
+                  {{
+                    customer.current_balance > 0
+                      ? $t('contacts.debt_due')
+                      : customer.current_balance < 0
+                        ? $t('contacts.credit_balance')
+                        : $t('contacts.settled')
+                  }}
                 </div>
               </td>
               <td class="py-3.5 px-4 text-center">
                 <span
                   class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal border"
-                  :class="customer.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500'"
+                  :class="
+                    customer.is_active
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500'
+                  "
                 >
                   {{ customer.is_active ? $t('common.active') : $t('common.inactive') }}
                 </span>
@@ -124,23 +145,46 @@
                 <h4 class="text-sm font-black text-slate-900 dark:text-white">{{ customer.name }}</h4>
                 <span
                   class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-                  :class="customer.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-slate-800 text-slate-500 border-slate-700'"
+                  :class="
+                    customer.is_active
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                      : 'bg-slate-800 text-slate-500 border-slate-700'
+                  "
                 >
                   {{ customer.is_active ? $t('common.active') : $t('common.inactive') }}
                 </span>
               </div>
-              <p v-if="customer.phone" class="text-[11px] text-slate-400 font-mono mt-0.5" dir="ltr">📞 {{ customer.phone }}</p>
-              <p v-if="customer.address" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-tajawal">{{ customer.address }}</p>
+              <p v-if="customer.phone" class="text-[11px] text-slate-400 font-mono mt-0.5" dir="ltr">
+                📞 {{ customer.phone }}
+              </p>
+              <p v-if="customer.address" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-tajawal">
+                {{ customer.address }}
+              </p>
             </div>
 
             <div class="text-end shrink-0">
               <div
                 class="text-sm font-black font-mono"
-                :class="customer.current_balance > 0 ? 'text-rose-500' : (customer.current_balance < 0 ? 'text-cyan-500' : 'text-emerald-500')"
+                :class="
+                  customer.current_balance > 0
+                    ? 'text-rose-500'
+                    : customer.current_balance < 0
+                      ? 'text-cyan-500'
+                      : 'text-emerald-500'
+                "
               >
-                {{ formatMoney(customer.current_balance) }} <span class="text-[10px] font-sans text-slate-400">{{ $t('common.currency') }}</span>
+                {{ formatMoney(customer.current_balance) }}
+                <span class="text-[10px] font-sans text-slate-400">{{ $t('common.currency') }}</span>
               </div>
-              <p class="text-[10px] text-slate-400">{{ customer.current_balance > 0 ? $t('contacts.debt_due') : (customer.current_balance < 0 ? $t('contacts.credit_balance') : $t('contacts.settled')) }}</p>
+              <p class="text-[10px] text-slate-400">
+                {{
+                  customer.current_balance > 0
+                    ? $t('contacts.debt_due')
+                    : customer.current_balance < 0
+                      ? $t('contacts.credit_balance')
+                      : $t('contacts.settled')
+                }}
+              </p>
             </div>
           </div>
 
@@ -201,9 +245,14 @@
     </EmptyState>
 
     <!-- Pagination Bar -->
-    <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <div
+      v-if="pagination.last_page > 1"
+      class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between"
+    >
       <div class="text-xs text-slate-500 dark:text-slate-400">
-        {{ $t('activity.total_records') }} <span class="font-mono text-theme-primary font-bold">{{ pagination.total }}</span> {{ $t('contacts.customer_unit') }}
+        {{ $t('activity.total_records') }}
+        <span class="font-mono text-theme-primary font-bold">{{ pagination.total }}</span>
+        {{ $t('contacts.customer_unit') }}
       </div>
       <div class="flex items-center gap-1">
         <button

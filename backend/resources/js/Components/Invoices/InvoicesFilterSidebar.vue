@@ -16,7 +16,10 @@
         :model-value="storeId"
         :options="storeOptions"
         :searchable="false"
-        @update:model-value="$emit('update:storeId', $event); $emit('apply')"
+        @update:model-value="
+          $emit('update:storeId', $event);
+          $emit('apply');
+        "
       />
     </div>
 
@@ -30,7 +33,10 @@
         :model-value="paymentType"
         :options="paymentTypeOptions"
         :searchable="false"
-        @update:model-value="$emit('update:paymentType', $event); $emit('apply')"
+        @update:model-value="
+          $emit('update:paymentType', $event);
+          $emit('apply');
+        "
       />
     </div>
 
@@ -44,7 +50,10 @@
         :model-value="status"
         :options="statusOptions"
         :searchable="false"
-        @update:model-value="$emit('update:status', $event); $emit('apply')"
+        @update:model-value="
+          $emit('update:status', $event);
+          $emit('apply');
+        "
       />
     </div>
 
@@ -59,13 +68,19 @@
           :model-value="dateFrom"
           :label="$t('invoices.from_date')"
           placeholder="YYYY-MM-DD"
-          @update:model-value="$emit('update:dateFrom', $event); $emit('apply')"
+          @update:model-value="
+            $emit('update:dateFrom', $event);
+            $emit('apply');
+          "
         />
         <BaseDatePicker
           :model-value="dateTo"
           :label="$t('invoices.to_date')"
           placeholder="YYYY-MM-DD"
-          @update:model-value="$emit('update:dateTo', $event); $emit('apply')"
+          @update:model-value="
+            $emit('update:dateTo', $event);
+            $emit('apply');
+          "
         />
       </div>
     </div>

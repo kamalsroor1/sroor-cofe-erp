@@ -2,7 +2,9 @@
   <div class="space-y-6 font-sans" dir="rtl">
     <!-- Header / Brand Icon -->
     <div class="text-center space-y-3">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-theme-border text-theme-primary shadow-2xl shadow-amber-500/10">
+      <div
+        class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-theme-border text-theme-primary shadow-2xl shadow-amber-500/10"
+      >
         <Store class="w-10 h-10" />
       </div>
       <div>
@@ -16,7 +18,10 @@
     </div>
 
     <!-- Error Alert -->
-    <div v-if="errorMessage" class="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-500 dark:text-rose-400 font-bold flex items-center gap-2">
+    <div
+      v-if="errorMessage"
+      class="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-500 dark:text-rose-400 font-bold flex items-center gap-2"
+    >
       <AlertTriangle class="w-4 h-4 shrink-0" />
       <span>{{ errorMessage }}</span>
     </div>
@@ -24,7 +29,10 @@
     <!-- Input Form -->
     <form @submit.prevent="$emit('submit')" class="space-y-4">
       <div class="space-y-1.5">
-        <label for="workspaceCode" class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal text-right">
+        <label
+          for="workspaceCode"
+          class="block text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal text-right"
+        >
           {{ $t('auth.workspace_code') }}
         </label>
         <div class="relative">
@@ -76,31 +84,25 @@
         </template>
       </button>
     </form>
-
   </div>
 </template>
 
 <script setup>
-import {
-    Store,
-    Building,
-    AlertTriangle,
-    ArrowLeft,
-} from 'lucide-vue-next';
+import { Store, Building, AlertTriangle, ArrowLeft } from 'lucide-vue-next';
 
 defineProps({
-    modelValue: {
-        type: String,
-        default: '',
-    },
-    isLoading: {
-        type: Boolean,
-        default: false,
-    },
-    errorMessage: {
-        type: String,
-        default: '',
-    },
+  modelValue: {
+    type: String,
+    default: '',
+  },
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  errorMessage: {
+    type: String,
+    default: '',
+  },
 });
 
 defineEmits(['update:modelValue', 'submit', 'centralLogin']);

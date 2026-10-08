@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print font-tajawal">
+  <div
+    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 no-print font-tajawal"
+  >
     <!-- Date Inputs -->
     <div class="flex items-center gap-2 flex-wrap">
       <div class="w-36">
@@ -29,12 +31,18 @@
     </div>
 
     <!-- Quick Date Range Pills -->
-    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+    <div
+      class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto"
+    >
       <button
         type="button"
         @click="$emit('apply-preset', 'today')"
         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[32px]"
-        :class="activePreset === 'today' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+        :class="
+          activePreset === 'today'
+            ? 'bg-theme-primary text-white shadow-sm font-black'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+        "
       >
         {{ $t('common.today') }}
       </button>
@@ -43,7 +51,11 @@
         type="button"
         @click="$emit('apply-preset', 'this_month')"
         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[32px]"
-        :class="activePreset === 'this_month' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+        :class="
+          activePreset === 'this_month'
+            ? 'bg-theme-primary text-white shadow-sm font-black'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+        "
       >
         {{ $t('common.this_month') }}
       </button>
@@ -52,7 +64,11 @@
         type="button"
         @click="$emit('apply-preset', 'all')"
         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[32px]"
-        :class="activePreset === 'all' ? 'bg-theme-primary text-white shadow-sm font-black' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+        :class="
+          activePreset === 'all'
+            ? 'bg-theme-primary text-white shadow-sm font-black'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+        "
       >
         {{ $t('common.all') }}
       </button>

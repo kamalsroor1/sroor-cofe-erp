@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('super.plans_page_title')"
-      :subtitle="$t('super.plans_page_subtitle')"
-      icon="💼"
-    >
+    <PageHeader :title="$t('super.plans_page_title')" :subtitle="$t('super.plans_page_subtitle')" icon="💼">
       <template #actions>
         <div class="flex items-center gap-3">
           <router-link
@@ -28,11 +24,7 @@
     </PageHeader>
 
     <!-- Plans Cards Grid -->
-    <PlansGrid
-      :plans="plans"
-      :loading="isLoading"
-      @edit="openEditModal"
-    />
+    <PlansGrid :plans="plans" :loading="isLoading" @edit="openEditModal" />
 
     <!-- Edit Plan Modal -->
     <EditPlanModal
@@ -53,14 +45,6 @@ import PlansGrid from '../../Components/SuperAdmin/PlansGrid.vue';
 import EditPlanModal from '../../Components/SuperAdmin/EditPlanModal.vue';
 import { useSuperAdminPlans } from '../../Composables/useSuperAdminPlans';
 
-const {
-  plans,
-  isLoading,
-  isSubmitting,
-  showEditModal,
-  editForm,
-  openEditModal,
-  updateEditField,
-  submitEditPlan,
-} = useSuperAdminPlans();
+const { plans, isLoading, isSubmitting, showEditModal, editForm, openEditModal, updateEditField, submitEditPlan } =
+  useSuperAdminPlans();
 </script>

@@ -14,7 +14,7 @@ return new class extends Migration
         $tables = ['invoices', 'purchases', 'expenses', 'returns', 'cash_shifts', 'stock_movements'];
 
         foreach ($tables as $table) {
-            if (Schema::hasTable($table) && !Schema::hasColumn($table, 'store_id')) {
+            if (Schema::hasTable($table) && ! Schema::hasColumn($table, 'store_id')) {
                 Schema::table($table, function (Blueprint $t) {
                     $t->unsignedBigInteger('store_id')->nullable()->index();
                 });
@@ -22,7 +22,7 @@ return new class extends Migration
         }
 
         // Users default_store_id
-        if (Schema::hasTable('users') && !Schema::hasColumn('users', 'default_store_id')) {
+        if (Schema::hasTable('users') && ! Schema::hasColumn('users', 'default_store_id')) {
             Schema::table('users', function (Blueprint $t) {
                 $t->unsignedBigInteger('default_store_id')->nullable()->index();
             });

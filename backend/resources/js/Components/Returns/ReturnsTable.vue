@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl font-tajawal"
+  >
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="6" />
     </div>
@@ -9,7 +11,9 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="py-3 px-4 text-start font-bold">#</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('returns.doc_number') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('returns.return_type') }}</th>
@@ -35,9 +39,17 @@
               <td class="py-3.5 px-4">
                 <span
                   class="px-2.5 py-1 rounded-full text-[10px] font-bold border font-tajawal"
-                  :class="ret.return_type === 'sales_return' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400' : 'bg-theme-light border-theme-border text-theme-primary'"
+                  :class="
+                    ret.return_type === 'sales_return'
+                      ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400'
+                      : 'bg-theme-light border-theme-border text-theme-primary'
+                  "
                 >
-                  {{ ret.return_type === 'sales_return' ? $t('returns.sales_return_option') : $t('returns.purchase_return_option') }}
+                  {{
+                    ret.return_type === 'sales_return'
+                      ? $t('returns.sales_return_option')
+                      : $t('returns.purchase_return_option')
+                  }}
                 </span>
               </td>
               <td class="py-3.5 px-4">
@@ -97,9 +109,17 @@
             </div>
             <span
               class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-              :class="ret.return_type === 'sales_return' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400' : 'bg-theme-light border-theme-border text-theme-primary'"
+              :class="
+                ret.return_type === 'sales_return'
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-600 dark:text-cyan-400'
+                  : 'bg-theme-light border-theme-border text-theme-primary'
+              "
             >
-              {{ ret.return_type === 'sales_return' ? $t('returns.sales_return_option') : $t('returns.purchase_return_option') }}
+              {{
+                ret.return_type === 'sales_return'
+                  ? $t('returns.sales_return_option')
+                  : $t('returns.purchase_return_option')
+              }}
             </span>
           </div>
 
@@ -133,7 +153,10 @@
       </div>
 
       <!-- Pagination Bar -->
-      <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div
+        v-if="pagination.last_page > 1"
+        class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between"
+      >
         <div class="text-xs text-slate-500 dark:text-slate-400">
           {{ $t('returns.total_results_returns', { count: pagination.total }) }}
         </div>
@@ -193,7 +216,7 @@ defineProps({
 defineEmits(['open-details', 'delete-return', 'page-change']);
 
 const formatMoney = (val) => {
-    const num = parseFloat(val) || 0;
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = parseFloat(val) || 0;
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 </script>

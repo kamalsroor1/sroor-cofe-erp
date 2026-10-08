@@ -29,7 +29,7 @@ final class CategoryApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -48,11 +48,11 @@ final class CategoryApiController extends Controller
                 $cat = Category::firstOrCreate(
                     ['name' => $cName],
                     [
-                        'icon'        => $icons[$i % count($icons)],
-                        'color'       => $colors[$i % count($colors)],
-                        'color_light' => $colors[$i % count($colors)] . '20',
-                        'sort_order'  => $i + 1,
-                        'is_active'   => true,
+                        'icon' => $icons[$i % count($icons)],
+                        'color' => $colors[$i % count($colors)],
+                        'color_light' => $colors[$i % count($colors)].'20',
+                        'sort_order' => $i + 1,
+                        'is_active' => true,
                     ]
                 );
                 Item::where('category', $cName)->whereNull('category_id')->update(['category_id' => $cat->id]);
@@ -73,8 +73,8 @@ final class CategoryApiController extends Controller
         $totalItemsCount = Item::count();
 
         return response()->json([
-            'success'           => true,
-            'data'              => $categories,
+            'success' => true,
+            'data' => $categories,
             'total_items_count' => $totalItemsCount,
         ], 200);
     }
@@ -89,7 +89,7 @@ final class CategoryApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.category_created_success') ?: 'تم إنشاء الفئة بنجاح ✓',
-            'data'    => $category->loadCount('items'),
+            'data' => $category->loadCount('items'),
         ], 201);
     }
 
@@ -104,7 +104,7 @@ final class CategoryApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.category_updated_success') ?: 'تم تعديل الفئة بنجاح ✓',
-            'data'    => $updated->loadCount('items'),
+            'data' => $updated->loadCount('items'),
         ], 200);
     }
 
@@ -116,7 +116,7 @@ final class CategoryApiController extends Controller
         $category = Category::findOrFail($id);
 
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.delete')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.delete')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

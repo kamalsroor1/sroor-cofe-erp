@@ -22,7 +22,7 @@ export function useRoles() {
             permissionModules.value = data.permission_modules || {};
 
             if (roleId) {
-                selectedRole.value = roles.value.find(r => r.id === roleId) || roles.value[0];
+                selectedRole.value = roles.value.find((r) => r.id === roleId) || roles.value[0];
             } else {
                 selectedRole.value = data.selected_role || roles.value[0];
             }
@@ -46,20 +46,20 @@ export function useRoles() {
                 activePermissions.value.push(permKey);
             }
         } else {
-            activePermissions.value = activePermissions.value.filter(k => k !== permKey);
+            activePermissions.value = activePermissions.value.filter((k) => k !== permKey);
         }
     };
 
     const toggleModule = (permissionsObj, selectAll) => {
         const keys = Object.keys(permissionsObj);
         if (selectAll) {
-            keys.forEach(k => {
+            keys.forEach((k) => {
                 if (!activePermissions.value.includes(k)) {
                     activePermissions.value.push(k);
                 }
             });
         } else {
-            activePermissions.value = activePermissions.value.filter(k => !keys.includes(k));
+            activePermissions.value = activePermissions.value.filter((k) => !keys.includes(k));
         }
     };
 

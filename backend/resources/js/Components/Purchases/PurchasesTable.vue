@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+  >
     <!-- Loading State -->
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="8" />
@@ -11,7 +13,9 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="py-3 px-4 text-start font-bold">#</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('purchases.supplier') }}</th>
@@ -38,7 +42,10 @@
               </td>
               <td class="py-3.5 px-4">
                 <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ p.supplier_name }}</div>
-                <div v-if="p.supplier_company" class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5">
+                <div
+                  v-if="p.supplier_company"
+                  class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5"
+                >
                   {{ p.supplier_company }}
                 </div>
               </td>
@@ -51,13 +58,20 @@
               <td class="py-3.5 px-4 text-end font-mono font-bold text-emerald-500 dark:text-emerald-400">
                 {{ formatMoney(p.paid_amount) }} {{ $t('common.currency') }}
               </td>
-              <td class="py-3.5 px-4 text-end font-mono font-bold" :class="p.remaining_amount > 0 ? 'text-rose-500' : 'text-slate-400'">
+              <td
+                class="py-3.5 px-4 text-end font-mono font-bold"
+                :class="p.remaining_amount > 0 ? 'text-rose-500' : 'text-slate-400'"
+              >
                 {{ formatMoney(p.remaining_amount) }} {{ $t('common.currency') }}
               </td>
               <td class="py-3.5 px-4 text-center font-tajawal">
                 <span
                   class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
-                  :class="p.status === 'confirmed' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400'"
+                  :class="
+                    p.status === 'confirmed'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400'
+                  "
                 >
                   {{ p.status === 'confirmed' ? $t('invoices.confirmed_badge') : $t('invoices.cancelled_badge') }}
                 </span>
@@ -105,7 +119,11 @@
                 <span class="font-mono font-bold text-theme-primary text-sm">{{ p.purchase_number }}</span>
                 <span
                   class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-                  :class="p.status === 'confirmed' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'"
+                  :class="
+                    p.status === 'confirmed'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                  "
                 >
                   {{ p.status === 'confirmed' ? $t('invoices.confirmed_badge') : $t('invoices.cancelled_badge') }}
                 </span>
@@ -144,7 +162,9 @@
             </div>
             <div>
               <span class="text-[10px] text-slate-400 font-sans block">{{ $t('invoices.remaining_due') }}:</span>
-              <span class="font-bold" :class="p.remaining_amount > 0 ? 'text-rose-500' : 'text-slate-400'">{{ formatMoney(p.remaining_amount) }}</span>
+              <span class="font-bold" :class="p.remaining_amount > 0 ? 'text-rose-500' : 'text-slate-400'">{{
+                formatMoney(p.remaining_amount)
+              }}</span>
             </div>
           </div>
         </div>
@@ -169,7 +189,10 @@
     </EmptyState>
 
     <!-- Pagination Bar -->
-    <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <div
+      v-if="pagination.last_page > 1"
+      class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between"
+    >
       <div class="text-xs text-slate-500 dark:text-slate-400">
         {{ $t('purchases.total_results_purchases', { count: pagination.total }) }}
       </div>

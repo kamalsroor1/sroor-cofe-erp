@@ -26,21 +26,21 @@ final class TrashController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('trash.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('trash.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $tab = (string)$request->input('tab', 'items');
-        $search = trim((string)$request->input('search', ''));
-        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
+        $tab = (string) $request->input('tab', 'items');
+        $search = trim((string) $request->input('search', ''));
+        $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
         $result = $this->getTrashRecordsAction->execute($tab, $search, $perPage);
 
         return response()->json([
-            'success'    => true,
-            'tab'        => $result['tab'],
-            'data'       => $result['records'],
-            'counts'     => $result['counts'],
+            'success' => true,
+            'tab' => $result['tab'],
+            'data' => $result['records'],
+            'counts' => $result['counts'],
             'pagination' => $result['pagination'],
         ], 200);
     }
@@ -51,7 +51,7 @@ final class TrashController extends Controller
     public function restore(Request $request, string $type, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('trash.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('trash.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -76,7 +76,7 @@ final class TrashController extends Controller
     public function forceDelete(Request $request, string $type, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('trash.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('trash.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

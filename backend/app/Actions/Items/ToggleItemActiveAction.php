@@ -13,7 +13,7 @@ final class ToggleItemActiveAction
      */
     public function execute(Item $item): Item
     {
-        $item->update(['is_active' => !$item->is_active]);
+        $item->update(['is_active' => ! $item->is_active]);
 
         return $item->fresh(['storeStocks.store']);
     }

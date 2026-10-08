@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md flex flex-col md:flex-row items-center justify-between gap-4 font-tajawal">
+  <div
+    class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-md flex flex-col md:flex-row items-center justify-between gap-4 font-tajawal"
+  >
     <div class="flex-1 w-full">
       <BaseSearchInput
         :model-value="filters.search"

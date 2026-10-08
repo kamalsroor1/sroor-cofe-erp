@@ -11,12 +11,7 @@
     </label>
 
     <!-- Options List (Grid or Column) -->
-    <div
-      class="grid gap-2"
-      :class="[
-        columns ? `grid-cols-${columns}` : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-      ]"
-    >
+    <div class="grid gap-2" :class="[columns ? `grid-cols-${columns}` : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3']">
       <label
         v-for="opt in options"
         :key="getOptionValue(opt)"
@@ -25,7 +20,7 @@
           isSelected(opt)
             ? 'bg-theme-light border-theme-primary ring-1 ring-theme-primary/30 text-slate-900 dark:text-white'
             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300',
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
+          disabled ? 'opacity-50 cursor-not-allowed' : '',
         ]"
       >
         <input
@@ -43,7 +38,7 @@
           :class="[
             isSelected(opt)
               ? 'border-theme-primary bg-theme-primary'
-              : 'border-slate-400 dark:border-slate-500 bg-transparent'
+              : 'border-slate-400 dark:border-slate-500 bg-transparent',
           ]"
         >
           <div v-if="isSelected(opt)" class="w-1.5 h-1.5 rounded-full bg-white"></div>
@@ -62,10 +57,7 @@
     </div>
 
     <!-- Error Message -->
-    <p
-      v-if="hasError"
-      class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5"
-    >
+    <p v-if="hasError" class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5">
       <AlertCircle class="w-3.5 h-3.5 shrink-0" />
       <span>{{ errorMessage }}</span>
     </p>
@@ -86,12 +78,12 @@ const props = defineProps({
   error: { type: [String, Array], default: null },
   disabled: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
-  wrapperClass: { type: String, default: '' }
+  wrapperClass: { type: String, default: '' },
 });
 
 const model = defineModel({
   type: [String, Number, Boolean],
-  default: null
+  default: null,
 });
 
 const groupName = 'radio-grp-' + Math.random().toString(36).substring(2, 9);

@@ -17,9 +17,11 @@ export function useBiometricAuth() {
                 const result = await NativeBiometric.isAvailable();
                 isAvailable.value = !!result?.isAvailable;
                 biometryType.value = result?.biometryType;
-                
-                const saved = localStorage.getItem('erp_biometric_enabled') || localStorage.getItem('sroor_biometric_enabled');
-                const savedUser = localStorage.getItem('erp_biometric_user') || localStorage.getItem('sroor_biometric_user');
+
+                const saved =
+                    localStorage.getItem('erp_biometric_enabled') || localStorage.getItem('sroor_biometric_enabled');
+                const savedUser =
+                    localStorage.getItem('erp_biometric_user') || localStorage.getItem('sroor_biometric_user');
                 if (saved === '1' && savedUser) {
                     isBiometricEnabled.value = true;
                     biometricUser.value = savedUser;

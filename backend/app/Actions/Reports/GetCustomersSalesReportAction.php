@@ -18,7 +18,7 @@ final class GetCustomersSalesReportAction
         $customerSales = Invoice::where('status', 'confirmed')
             ->whereDate('invoice_date', '>=', $dto->from_date)
             ->whereDate('invoice_date', '<=', $dto->to_date)
-            ->when($dto->store_id, fn($q) => $q->where('store_id', $dto->store_id))
+            ->when($dto->store_id, fn ($q) => $q->where('store_id', $dto->store_id))
             ->select(
                 'customer_id',
                 DB::raw('COUNT(*) as total_invoices'),
@@ -31,15 +31,15 @@ final class GetCustomersSalesReportAction
             ->orderByDesc('total_bought')
             ->take(50)
             ->get()
-            ->map(fn($c) => [
-                'customer_id'          => $c->customer_id,
-                'name'                 => $c->customer?->name ?? 'عميل محذوف',
-                'phone'                => $c->customer?->phone,
-                'current_balance'      => (float)($c->customer?->current_balance ?? 0),
-                'total_invoices'       => (int)$c->total_invoices,
-                'total_bought'         => (float)$c->total_bought,
-                'total_paid'           => (float)$c->total_paid,
-                'total_debt_in_period' => (float)$c->total_debt_in_period,
+            ->map(fn ($c) => [
+                'customer_id' => $c->customer_id,
+                'name' => $c->customer?->name ?? 'عميل محذوف',
+                'phone' => $c->customer?->phone,
+                'current_balance' => (float) ($c->customer?->current_balance ?? 0),
+                'total_invoices' => (int) $c->total_invoices,
+                'total_bought' => (float) $c->total_bought,
+                'total_paid' => (float) $c->total_paid,
+                'total_debt_in_period' => (float) $c->total_debt_in_period,
             ])
             ->values()
             ->all();

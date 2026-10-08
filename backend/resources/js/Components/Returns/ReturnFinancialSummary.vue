@@ -1,7 +1,11 @@
 <template>
   <div class="space-y-4 font-tajawal">
-    <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg space-y-4">
-      <h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
+    <div
+      class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg space-y-4"
+    >
+      <h2
+        class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
+      >
         <span>📊</span>
         <span>{{ $t('returns.document_financial_summary') }}</span>
       </h2>
@@ -12,9 +16,13 @@
           <span class="font-mono text-slate-900 dark:text-white font-bold">{{ itemsCount }}</span>
         </div>
 
-        <div class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal">
+        <div
+          class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal"
+        >
           <span>{{ $t('returns.total_returns_val') }}:</span>
-          <span class="font-mono text-rose-600 dark:text-rose-400">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono text-rose-600 dark:text-rose-400"
+            >{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span
+          >
         </div>
 
         <!-- Refund cash from drawer -->

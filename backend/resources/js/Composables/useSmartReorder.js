@@ -43,7 +43,7 @@ export function useSmartReorder() {
         { value: 'safe', label: t('purchases.urgency_safe_only') },
     ]);
 
-    const selectedIds = computed(() => selectedItems.value.map(it => it.id));
+    const selectedIds = computed(() => selectedItems.value.map((it) => it.id));
 
     const isAllSelected = computed(() => {
         return suggestions.value.length > 0 && selectedItems.value.length === suggestions.value.length;
@@ -58,7 +58,7 @@ export function useSmartReorder() {
     };
 
     const toggleItem = (item) => {
-        const idx = selectedItems.value.findIndex(it => it.id === item.id);
+        const idx = selectedItems.value.findIndex((it) => it.id === item.id);
         if (idx > -1) {
             selectedItems.value.splice(idx, 1);
         } else {
@@ -101,11 +101,13 @@ export function useSmartReorder() {
 
     const exportToPurchaseOrder = () => {
         if (selectedItems.value.length === 0) return;
-        const prefill = JSON.stringify(selectedItems.value.map(it => ({
-            item_id: it.id,
-            quantity: it.suggested_reorder_qty,
-            cost_price: it.cost_price,
-        })));
+        const prefill = JSON.stringify(
+            selectedItems.value.map((it) => ({
+                item_id: it.id,
+                quantity: it.suggested_reorder_qty,
+                cost_price: it.cost_price,
+            }))
+        );
         router.push({
             path: '/purchases/create',
             query: { prefill },

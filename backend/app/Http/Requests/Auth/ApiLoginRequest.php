@@ -19,19 +19,19 @@ class ApiLoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'login'       => ['nullable', 'string'],
-            'phone'       => ['nullable', 'string'],
-            'email'       => ['nullable', 'string'],
-            'password'    => ['required', 'string'],
+            'login' => ['nullable', 'string'],
+            'phone' => ['nullable', 'string'],
+            'email' => ['nullable', 'string'],
+            'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:100'],
-            'tenant'      => ['nullable', 'string', 'max:100'],
+            'tenant' => ['nullable', 'string', 'max:100'],
         ];
     }
 
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if (!$this->filled('login') && !$this->filled('phone') && !$this->filled('email')) {
+            if (! $this->filled('login') && ! $this->filled('phone') && ! $this->filled('email')) {
                 $validator->errors()->add('login', __('auth.failed'));
             }
         });
@@ -46,7 +46,7 @@ class ApiLoginRequest extends FormRequest
 
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 6)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 6)) {
             return;
         }
 
@@ -73,6 +73,7 @@ class ApiLoginRequest extends FormRequest
     public function throttleKey(): string
     {
         $identifier = $this->input('login') ?? $this->input('phone') ?? $this->input('email') ?? '';
-        return Str::transliterate(Str::lower((string)$identifier) . '|' . $this->ip());
+
+        return Str::transliterate(Str::lower((string) $identifier).'|'.$this->ip());
     }
 }

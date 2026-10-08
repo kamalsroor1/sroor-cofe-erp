@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('super.tenants_page_title')"
-      :subtitle="$t('super.tenants_page_subtitle')"
-      icon="🏢"
-    >
+    <PageHeader :title="$t('super.tenants_page_title')" :subtitle="$t('super.tenants_page_subtitle')" icon="🏢">
       <template #actions>
         <div class="flex items-center gap-3">
           <router-link

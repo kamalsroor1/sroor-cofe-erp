@@ -1,9 +1,5 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="$t('super.create_tenant_modal_title')"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="$t('super.create_tenant_modal_title')" @close="$emit('close')">
     <form @submit.prevent="$emit('submit')" class="space-y-3.5 text-xs font-tajawal">
       <div>
         <BaseInput
@@ -98,10 +94,15 @@
           @click="showCustomDb = !showCustomDb"
           class="text-[11px] text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer"
         >
-          <span>{{ showCustomDb ? '▼ ' + $t('super.hide_custom_db_settings') : '▶ ' + $t('super.show_custom_db_settings') }}</span>
+          <span>{{
+            showCustomDb ? '▼ ' + $t('super.hide_custom_db_settings') : '▶ ' + $t('super.show_custom_db_settings')
+          }}</span>
         </button>
 
-        <div v-if="showCustomDb" class="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+        <div
+          v-if="showCustomDb"
+          class="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3"
+        >
           <div class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
             {{ $t('super.custom_db_warning') }}
           </div>
@@ -152,12 +153,7 @@
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

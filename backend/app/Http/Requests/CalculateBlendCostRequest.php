@@ -16,10 +16,10 @@ final class CalculateBlendCostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'target_weight_grams'     => ['nullable', 'numeric', 'min:1'],
-            'cardamom_grams'          => ['nullable', 'numeric', 'min:0'],
-            'components'              => ['required', 'array', 'min:1'],
-            'components.*.item_id'    => ['required', 'integer', 'exists:items,id'],
+            'target_weight_grams' => ['nullable', 'numeric', 'min:1'],
+            'cardamom_grams' => ['nullable', 'numeric', 'min:0'],
+            'components' => ['required', 'array', 'min:1'],
+            'components.*.item_id' => ['required', 'integer', 'exists:items,id'],
             'components.*.percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'components.*.unit_price' => ['nullable', 'numeric', 'min:0'],
         ];

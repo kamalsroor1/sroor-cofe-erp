@@ -29,12 +29,7 @@
     />
 
     <!-- Stocks Table & Mobile Cards -->
-    <StoreStocksTable
-      :stocks="stocks"
-      :pagination="pagination"
-      :loading="isLoading"
-      @page-change="fetchStocks"
-    />
+    <StoreStocksTable :stocks="stocks" :pagination="pagination" :loading="isLoading" @page-change="fetchStocks" />
   </div>
 </template>
 

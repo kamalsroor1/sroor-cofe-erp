@@ -16,11 +16,11 @@ class AdjustStockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'store_id'      => ['required', 'integer', 'exists:stores,id'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'movement_type' => ['required', 'string', 'in:stock_adjustment_in,stock_adjustment_out,stock_deposit_in,waste_out'],
-            'quantity'      => ['required', 'numeric', 'min:0.001'],
-            'unit_cost'     => ['nullable', 'numeric', 'min:0'],
-            'notes'         => ['nullable', 'string', 'max:500'],
+            'quantity' => ['required', 'numeric', 'min:0.001'],
+            'unit_cost' => ['nullable', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

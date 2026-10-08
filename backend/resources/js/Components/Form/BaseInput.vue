@@ -40,7 +40,7 @@
         :maxlength="maxlength"
         :minlength="minlength"
         :aria-invalid="hasError ? 'true' : 'false'"
-        :aria-describedby="hasError ? `${inputId}-error` : (hint ? `${inputId}-hint` : undefined)"
+        :aria-describedby="hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined"
         class="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
         :class="[
           hasError
@@ -48,7 +48,7 @@
             : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20',
           $slots.leading || leadingIcon ? 'pr-10' : '',
           $slots.trailing || trailingIcon || type === 'password' || isClearable ? 'pl-10' : '',
-          inputClass
+          inputClass,
         ]"
         v-bind="$attrs"
         @focus="$emit('focus', $event)"
@@ -116,7 +116,7 @@ import { ref, computed } from 'vue';
 import { Eye, EyeOff, AlertCircle, X } from 'lucide-vue-next';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps({
@@ -138,14 +138,14 @@ const props = defineProps({
   leadingIcon: { type: [Object, Function, String], default: null },
   trailingIcon: { type: [Object, Function, String], default: null },
   wrapperClass: { type: String, default: '' },
-  inputClass: { type: String, default: '' }
+  inputClass: { type: String, default: '' },
 });
 
 defineEmits(['focus', 'blur', 'keydown']);
 
 const model = defineModel({
   type: [String, Number],
-  default: ''
+  default: '',
 });
 
 const inputRef = ref(null);
@@ -175,6 +175,6 @@ const resolvedType = computed(() => {
 defineExpose({
   inputRef,
   focus: () => inputRef.value?.focus(),
-  select: () => inputRef.value?.select()
+  select: () => inputRef.value?.select(),
 });
 </script>

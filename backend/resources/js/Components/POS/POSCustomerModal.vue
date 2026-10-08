@@ -1,12 +1,6 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="$t('pos.select_customer')"
-    max-width="lg"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="$t('pos.select_customer')" max-width="lg" @close="$emit('close')">
     <div class="space-y-4 font-tajawal select-none">
-      
       <!-- 🔍 Search & Toggle Form Bar -->
       <div class="flex items-center justify-between gap-2">
         <div class="relative flex-1">
@@ -20,7 +14,9 @@
           />
           <Search class="w-4 h-4 text-slate-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <span v-if="isSearching" class="absolute end-3 top-1/2 -translate-y-1/2">
-            <span class="inline-block w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></span>
+            <span
+              class="inline-block w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"
+            ></span>
           </span>
         </div>
 
@@ -34,7 +30,10 @@
       </div>
 
       <!-- ➕ Quick Add Customer Form -->
-      <div v-if="isAddingNewCustomer" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
+      <div
+        v-if="isAddingNewCustomer"
+        class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200"
+      >
         <div class="flex items-center justify-between">
           <div class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
             <Sparkles class="w-4 h-4 text-amber-500" />
@@ -69,7 +68,10 @@
           :disabled="!quickCustomerName.trim() || isSubmitting"
           class="min-h-[44px] w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition disabled:opacity-50 cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-2"
         >
-          <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span
+            v-if="isSubmitting"
+            class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+          ></span>
           <span>{{ $t('pos.save_and_pick_customer') }}</span>
         </button>
       </div>
@@ -114,13 +116,20 @@
       </div>
 
       <!-- 📋 Customers List -->
-      <div v-else class="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 custom-scrollbar">
+      <div
+        v-else
+        class="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 custom-scrollbar"
+      >
         <!-- Default General Cash Customer Option -->
         <button
           type="button"
           @click="$emit('select-customer', { id: null, name: $t('pos.general_cash_customer'), phone: '' })"
           class="min-h-[52px] w-full p-3 flex items-center justify-between text-start hover:bg-slate-50 dark:hover:bg-slate-800/80 transition cursor-pointer border-b border-slate-200 dark:border-slate-800"
-          :class="!selectedCustomerId ? 'bg-theme-light dark:bg-slate-800 text-theme-primary font-black' : 'text-slate-700 dark:text-slate-300'"
+          :class="
+            !selectedCustomerId
+              ? 'bg-theme-light dark:bg-slate-800 text-theme-primary font-black'
+              : 'text-slate-700 dark:text-slate-300'
+          "
         >
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
@@ -144,20 +153,26 @@
           type="button"
           @click="$emit('select-customer', cust)"
           class="min-h-[52px] w-full p-3 flex items-center justify-between text-start hover:bg-slate-50 dark:hover:bg-slate-800/80 transition cursor-pointer"
-          :class="selectedCustomerId === cust.id ? 'bg-theme-light dark:bg-slate-800 text-theme-primary font-black' : 'text-slate-700 dark:text-slate-300'"
+          :class="
+            selectedCustomerId === cust.id
+              ? 'bg-theme-light dark:bg-slate-800 text-theme-primary font-black'
+              : 'text-slate-700 dark:text-slate-300'
+          "
         >
           <div class="min-w-0 pr-2">
             <div class="font-bold text-xs text-slate-900 dark:text-white truncate">{{ cust.name }}</div>
             <div class="text-[10px] text-slate-500 font-mono mt-0.5">{{ cust.phone || $t('pos.no_phone') }}</div>
           </div>
           <div class="text-end shrink-0">
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold" :class="cust.current_balance > 0 ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'">
+            <span
+              class="px-2 py-0.5 rounded text-[10px] font-mono font-bold"
+              :class="cust.current_balance > 0 ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'"
+            >
               {{ $t('pos.balance_label') }} {{ formatMoney(cust.current_balance || 0) }} {{ $t('common.currency') }}
             </span>
           </div>
         </button>
       </div>
-
     </div>
   </AppModal>
 </template>
@@ -235,13 +250,16 @@ const submitQuickCustomer = () => {
   isAddingNewCustomer.value = false;
 };
 
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    nextTick(() => searchInputRef.value?.focus());
-  } else {
-    isAddingNewCustomer.value = false;
-    quickCustomerName.value = '';
-    quickCustomerPhone.value = '';
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal) {
+      nextTick(() => searchInputRef.value?.focus());
+    } else {
+      isAddingNewCustomer.value = false;
+      quickCustomerName.value = '';
+      quickCustomerPhone.value = '';
+    }
   }
-});
+);
 </script>

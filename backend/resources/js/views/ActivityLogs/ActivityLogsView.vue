@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Action Controls -->
-    <PageHeader
-      :title="$t('activity.title')"
-      :subtitle="$t('activity.subtitle')"
-      icon="📜"
-    >
+    <PageHeader :title="$t('activity.title')" :subtitle="$t('activity.subtitle')" icon="📜">
       <template #actions>
         <BaseButton
           type="button"
@@ -22,10 +18,7 @@
     </PageHeader>
 
     <!-- Activity Stats KPI Grid -->
-    <ActivityLogsMetricsGrid
-      :stats="stats"
-      :loading="isLoading && !logs.length"
-    />
+    <ActivityLogsMetricsGrid :stats="stats" :loading="isLoading && !logs.length" />
 
     <!-- Filter Controls Bar -->
     <ActivityLogsFilterBar
@@ -52,10 +45,7 @@
     />
 
     <!-- Payload Details Modal -->
-    <ActivityLogDetailsModal
-      :selected-log="selectedLog"
-      @close="closeDetails"
-    />
+    <ActivityLogDetailsModal :selected-log="selectedLog" @close="closeDetails" />
   </div>
 </template>
 

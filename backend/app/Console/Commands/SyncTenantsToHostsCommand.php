@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Domain;
+use Illuminate\Console\Command;
 
 class SyncTenantsToHostsCommand extends Command
 {
@@ -16,7 +16,7 @@ class SyncTenantsToHostsCommand extends Command
         $ip = $this->option('ip');
         $hostsPath = 'C:\\Windows\\System32\\drivers\\etc\\hosts';
 
-        $this->info("🔍 جاري فحص نطاقات المستأجرين في قاعدة البيانات...");
+        $this->info('🔍 جاري فحص نطاقات المستأجرين في قاعدة البيانات...');
 
         $domains = Domain::pluck('domain')->unique()->filter()->values()->all();
 
@@ -28,8 +28,9 @@ class SyncTenantsToHostsCommand extends Command
 
         $allDomains = array_unique(array_merge($defaultDomains, $domains));
 
-        if (!file_exists($hostsPath)) {
+        if (! file_exists($hostsPath)) {
             $this->error("❌ لم يتم العثور على ملف hosts في المسار: {$hostsPath}");
+
             return self::FAILURE;
         }
 
@@ -37,17 +38,18 @@ class SyncTenantsToHostsCommand extends Command
         $missingDomains = [];
 
         foreach ($allDomains as $domain) {
-            if (!str_contains($hostsContent, $domain)) {
+            if (! str_contains($hostsContent, $domain)) {
                 $missingDomains[] = $domain;
             }
         }
 
         if (empty($missingDomains)) {
-            $this->info("✅ كافة النطاقات مسجلة بالفعل في ملف hosts!");
+            $this->info('✅ كافة النطاقات مسجلة بالفعل في ملف hosts!');
+
             return self::SUCCESS;
         }
 
-        $this->warn("⚠️ تم العثور على " . count($missingDomains) . " نطاق غير مسجل في ملف hosts:");
+        $this->warn('⚠️ تم العثور على '.count($missingDomains).' نطاق غير مسجل في ملف hosts:');
         foreach ($missingDomains as $missing) {
             $this->line("   - {$missing}");
         }
@@ -58,17 +60,18 @@ class SyncTenantsToHostsCommand extends Command
             $appendData .= "{$ip}    {$missing}\n";
         }
 
-        $result = @file_put_contents($hostsPath, $hostsContent . $appendData);
+        $result = @file_put_contents($hostsPath, $hostsContent.$appendData);
 
         if ($result !== false) {
-            $this->info("✅ تم تحديث ملف hosts بنجاح!");
+            $this->info('✅ تم تحديث ملف hosts بنجاح!');
             @shell_exec('ipconfig /flushdns');
+
             return self::SUCCESS;
         }
 
         $this->warn("\n💡 يتطلب تعديل ملف hosts صلاحيات مسؤول (Administrator).");
-        $this->info("يمكنك تشغيل السكربت الجاهز بضغطة زر واحدة:");
-        $this->line("👉 backend\\scripts\\setup-hosts.bat");
+        $this->info('يمكنك تشغيل السكربت الجاهز بضغطة زر واحدة:');
+        $this->line('👉 backend\\scripts\\setup-hosts.bat');
 
         return self::SUCCESS;
     }

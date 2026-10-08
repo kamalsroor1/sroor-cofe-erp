@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('super.super_admin_title')"
-      :subtitle="$t('super.super_admin_subtitle')"
-      :icon="Crown"
-    >
+    <PageHeader :title="$t('super.super_admin_title')" :subtitle="$t('super.super_admin_subtitle')" :icon="Crown">
       <template #actions>
         <div class="flex items-center gap-3">
           <router-link
@@ -28,21 +24,14 @@
     </PageHeader>
 
     <!-- 5 Platform Metric Cards -->
-    <SuperAdminMetricsGrid
-      :metrics="metrics"
-      :loading="isLoading"
-    />
+    <SuperAdminMetricsGrid :metrics="metrics" :loading="isLoading" />
 
     <!-- Plans Distribution & Recent Tenants (2 Cols) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <SuperAdminPlansDistribution
-        :plan-stats="planStats"
-      />
+      <SuperAdminPlansDistribution :plan-stats="planStats" />
 
       <div class="lg:col-span-2">
-        <SuperAdminRecentTenants
-          :recent-tenants="recentTenants"
-        />
+        <SuperAdminRecentTenants :recent-tenants="recentTenants" />
       </div>
     </div>
 
@@ -56,9 +45,7 @@
     />
 
     <!-- Central Server & System Information Section -->
-    <SuperAdminServerSpecsCard
-      :system-info="systemInfo"
-    />
+    <SuperAdminServerSpecsCard :system-info="systemInfo" />
   </div>
 </template>
 

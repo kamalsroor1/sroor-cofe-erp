@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal"
+  >
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="6" />
     </div>
@@ -8,7 +10,9 @@
       <!-- Desktop Table -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs">
-          <thead class="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold">
+          <thead
+            class="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold"
+          >
             <tr>
               <th class="p-4 text-start font-tajawal">{{ $t('super.tenant_org_col') }}</th>
               <th class="p-4 text-start font-tajawal">{{ $t('super.domain_path_col') }}</th>
@@ -21,7 +25,10 @@
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
             <tr v-for="t in tenants" :key="t.id" class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition">
               <td class="p-4 font-sans font-bold text-slate-900 dark:text-white font-tajawal">
-                <router-link :to="`/super-admin/tenants/${t.id}`" class="text-sm hover:text-purple-500 hover:underline flex items-center gap-1.5 font-black">
+                <router-link
+                  :to="`/super-admin/tenants/${t.id}`"
+                  class="text-sm hover:text-purple-500 hover:underline flex items-center gap-1.5 font-black"
+                >
                   <span>{{ t.name }}</span>
                   <span class="text-xs text-purple-400">↗</span>
                 </router-link>
@@ -29,14 +36,20 @@
               </td>
 
               <td class="p-4 text-cyan-600 dark:text-cyan-400 font-mono">
-                <a :href="`http://${t.domain}`" target="_blank" class="hover:underline flex items-center gap-1 font-bold">
+                <a
+                  :href="`http://${t.domain}`"
+                  target="_blank"
+                  class="hover:underline flex items-center gap-1 font-bold"
+                >
                   <span>{{ t.domain }}</span>
                   <ExternalLink class="w-3 h-3" />
                 </a>
               </td>
 
               <td class="p-4 font-sans">
-                <span class="px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-full font-bold">
+                <span
+                  class="px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-full font-bold"
+                >
                   {{ t.plan_name }}
                 </span>
               </td>
@@ -100,7 +113,10 @@
         >
           <div class="flex items-start justify-between gap-2">
             <div>
-              <router-link :to="`/super-admin/tenants/${t.id}`" class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
+              <router-link
+                :to="`/super-admin/tenants/${t.id}`"
+                class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1"
+              >
                 <span>{{ t.name }}</span>
                 <span class="text-xs text-purple-400">↗</span>
               </router-link>
@@ -117,7 +133,9 @@
           </div>
 
           <div class="flex items-center justify-between text-xs pt-1">
-            <span class="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-full font-bold text-[10px]">
+            <span
+              class="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-full font-bold text-[10px]"
+            >
               {{ t.plan_name }}
             </span>
             <span class="text-slate-500 font-mono text-[11px]">{{ t.email }}</span>
@@ -189,21 +207,30 @@ defineProps({
 defineEmits(['open-status', 'open-create', 'delete-tenant']);
 
 const getStatusBadgeClass = (status) => {
-    switch (status) {
-        case 'active': return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-        case 'trial': return 'bg-theme-light border-theme-border text-theme-primary';
-        case 'suspended': return 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400';
-        default: return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
-    }
+  switch (status) {
+    case 'active':
+      return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+    case 'trial':
+      return 'bg-theme-light border-theme-border text-theme-primary';
+    case 'suspended':
+      return 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400';
+    default:
+      return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
+  }
 };
 
 const getStatusLabel = (status) => {
-    switch (status) {
-        case 'active': return t('super.status_active_badge');
-        case 'trial': return t('super.status_trial_badge');
-        case 'suspended': return t('super.status_suspended_badge');
-        case 'expired': return t('super.status_expired_badge');
-        default: return status;
-    }
+  switch (status) {
+    case 'active':
+      return t('super.status_active_badge');
+    case 'trial':
+      return t('super.status_trial_badge');
+    case 'suspended':
+      return t('super.status_suspended_badge');
+    case 'expired':
+      return t('super.status_expired_badge');
+    default:
+      return status;
+  }
 };
 </script>

@@ -12,30 +12,30 @@ enum UserRole: string
     public function label(): string
     {
         return match ($this) {
-            self::ADMIN       => 'مدير عام (كامل الصلاحيات)',
-            self::CASHIER     => 'كاشير مبيعات (POS وفواتير)',
+            self::ADMIN => 'مدير عام (كامل الصلاحيات)',
+            self::CASHIER => 'كاشير مبيعات (POS وفواتير)',
             self::STOREKEEPER => 'أمين مخزن (أصناف وتوريدات)',
-            self::ACCOUNTANT  => 'محاسب مالي (تقارير وكشوفات)',
+            self::ACCOUNTANT => 'محاسب مالي (تقارير وكشوفات)',
         };
     }
 
     public function icon(): string
     {
         return match ($this) {
-            self::ADMIN       => '👑',
-            self::CASHIER     => '☕',
+            self::ADMIN => '👑',
+            self::CASHIER => '☕',
             self::STOREKEEPER => '📦',
-            self::ACCOUNTANT  => '📊',
+            self::ACCOUNTANT => '📊',
         };
     }
 
     public function badgeClass(): string
     {
         return match ($this) {
-            self::ADMIN       => 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-            self::CASHIER     => 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+            self::ADMIN => 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+            self::CASHIER => 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
             self::STOREKEEPER => 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-            self::ACCOUNTANT  => 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+            self::ACCOUNTANT => 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
         };
     }
 
@@ -50,6 +50,7 @@ enum UserRole: string
     public static function getFormatted(string $roleName): string
     {
         $role = self::tryFrom($roleName);
+
         return $role ? $role->formattedName() : "🛡️ دور: {$roleName}";
     }
 
@@ -59,6 +60,7 @@ enum UserRole: string
     public static function getBadgeClass(string $roleName): string
     {
         $role = self::tryFrom($roleName);
+
         return $role ? $role->badgeClass() : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
     }
 }

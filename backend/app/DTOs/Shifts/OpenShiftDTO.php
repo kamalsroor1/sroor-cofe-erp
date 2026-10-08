@@ -15,9 +15,9 @@ final class OpenShiftDTO
     public static function fromArray(array $data, ?int $storeId = null): self
     {
         return new self(
-            opening_cash_balance: (string)($data['opening_cash_balance'] ?? '0.000'),
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
-            store_id: isset($data['store_id']) ? (int)$data['store_id'] : $storeId,
+            opening_cash_balance: (string) ($data['opening_cash_balance'] ?? '0.000'),
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
+            store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
         );
     }
 }

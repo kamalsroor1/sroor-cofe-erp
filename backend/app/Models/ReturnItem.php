@@ -21,8 +21,8 @@ class ReturnItem extends Model
     protected function casts(): array
     {
         return [
-            'quantity'    => 'decimal:3',
-            'unit_price'  => 'decimal:3',
+            'quantity' => 'decimal:3',
+            'unit_price' => 'decimal:3',
             'total_price' => 'decimal:3',
         ];
     }

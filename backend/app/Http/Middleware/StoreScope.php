@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Store;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Store;
 use Symfony\Component\HttpFoundation\Response;
 
 class StoreScope
@@ -25,7 +25,7 @@ class StoreScope
                 $validStore = Store::where('id', $currentStoreId)->where('is_active', true)->first();
             }
 
-            if (!$validStore) {
+            if (! $validStore) {
                 $defaultStore = $user->getCurrentStore();
                 if ($defaultStore) {
                     session(['current_store_id' => $defaultStore->id]);

@@ -3,13 +3,13 @@
     :is="to ? 'router-link' : 'button'"
     :to="to"
     :type="to ? undefined : type"
-    :disabled="to ? undefined : (disabled || loading)"
+    :disabled="to ? undefined : disabled || loading"
     class="font-tajawal font-bold inline-flex items-center justify-center gap-2 transition-all duration-150 select-none cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
     :class="[
       sizeClasses[size] || sizeClasses.md,
-      active ? activeClasses : (variantClasses[variant] || variantClasses.default),
+      active ? activeClasses : variantClasses[variant] || variantClasses.default,
       fullWidth ? 'w-full' : '',
-      customClass
+      customClass,
     ]"
     @click="$emit('click', $event)"
   >
@@ -17,12 +17,7 @@
       v-if="loading"
       class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0"
     ></span>
-    <component
-      v-else-if="icon"
-      :is="icon"
-      class="w-4 h-4 shrink-0"
-      :class="iconClass"
-    />
+    <component v-else-if="icon" :is="icon" class="w-4 h-4 shrink-0" :class="iconClass" />
 
     <span v-if="$slots.default || label" class="truncate">
       <slot>{{ label }}</slot>
@@ -83,8 +78,10 @@ const activeClasses = 'bg-theme-primary/10 border border-theme-primary text-them
 const variantClasses = {
   primary: 'bg-theme-primary hover:opacity-95 text-slate-950 shadow-md shadow-theme-primary/20 font-black',
   gradient: 'bg-theme-gradient text-white shadow-lg shadow-theme-primary font-black',
-  secondary: 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
-  default: 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 shadow-xs',
+  secondary:
+    'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
+  default:
+    'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 shadow-xs',
   danger: 'bg-rose-500 hover:bg-rose-600 text-white shadow-md shadow-rose-500/20 font-black',
   success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 font-black',
   outline: 'bg-transparent hover:bg-theme-primary/10 text-theme-primary border border-theme-primary font-black',

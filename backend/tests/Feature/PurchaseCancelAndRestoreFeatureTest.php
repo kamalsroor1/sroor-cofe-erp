@@ -2,23 +2,21 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Item;
-use App\Models\Supplier;
 use App\Models\Purchase;
-use App\Models\StockMovement;
-use App\Models\Payment;
+use App\Models\Supplier;
+use App\Models\User;
 use App\Services\PurchaseService;
 use App\Services\StockService;
-use App\Services\SupplierBalanceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PurchaseCancelAndRestoreFeatureTest extends TestCase
 {
     use RefreshDatabase;
 
     protected PurchaseService $purchaseService;
+
     protected User $user;
 
     protected function setUp(): void
@@ -32,16 +30,16 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
     public function test_canceling_purchase_reverses_stock_and_creates_movement(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-CANCEL-TEST',
-            'name'          => 'بن برازيلي فاخر',
+            'code' => 'ITM-CANCEL-TEST',
+            'name' => 'بن برازيلي فاخر',
             'current_stock' => '0.000',
-            'cost_price'    => '100.000',
+            'cost_price' => '100.000',
             'selling_price' => '150.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'name'      => 'شركة البن العالمية',
+            'name' => 'شركة البن العالمية',
             'is_active' => true,
         ]);
 
@@ -49,12 +47,12 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
         $purchase = $this->purchaseService->createPurchase([
             'supplier_id' => $supplier->id,
             'paid_amount' => '2000.000',
-            'items'       => [
+            'items' => [
                 [
-                    'item_id'    => $item->id,
-                    'quantity'   => '50.000',
+                    'item_id' => $item->id,
+                    'quantity' => '50.000',
                     'cost_price' => '100.000',
-                ]
+                ],
             ],
         ]);
 
@@ -77,26 +75,26 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
 
         // Movement record created
         $this->assertDatabaseHas('stock_movements', [
-            'item_id'       => $item->id,
+            'item_id' => $item->id,
             'movement_type' => 'purchase_cancel_out',
-            'quantity'      => '50.000',
-            'stock_after'   => '0.000',
+            'quantity' => '50.000',
+            'stock_after' => '0.000',
         ]);
     }
 
     public function test_canceling_purchase_fails_if_stock_was_already_sold(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-CANCEL-FAIL',
-            'name'          => 'بن كولومبي مميز',
+            'code' => 'ITM-CANCEL-FAIL',
+            'name' => 'بن كولومبي مميز',
             'current_stock' => '0.000',
-            'cost_price'    => '120.000',
+            'cost_price' => '120.000',
             'selling_price' => '180.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'name'      => 'مورد كولومبيا',
+            'name' => 'مورد كولومبيا',
             'is_active' => true,
         ]);
 
@@ -104,12 +102,12 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
         $purchase = $this->purchaseService->createPurchase([
             'supplier_id' => $supplier->id,
             'paid_amount' => '0.000',
-            'items'       => [
+            'items' => [
                 [
-                    'item_id'    => $item->id,
-                    'quantity'   => '20.000',
+                    'item_id' => $item->id,
+                    'quantity' => '20.000',
                     'cost_price' => '120.000',
-                ]
+                ],
             ],
         ]);
 
@@ -129,16 +127,16 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
     public function test_restoring_cancelled_purchase_re_adds_stock_and_restores_balance(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-RESTORE-TEST',
-            'name'          => 'بن يمني مطري',
+            'code' => 'ITM-RESTORE-TEST',
+            'name' => 'بن يمني مطري',
             'current_stock' => '0.000',
-            'cost_price'    => '300.000',
+            'cost_price' => '300.000',
             'selling_price' => '400.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'name'      => 'مورد اليمن السعيد',
+            'name' => 'مورد اليمن السعيد',
             'is_active' => true,
         ]);
 
@@ -146,12 +144,12 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
         $purchase = $this->purchaseService->createPurchase([
             'supplier_id' => $supplier->id,
             'paid_amount' => '1000.000',
-            'items'       => [
+            'items' => [
                 [
-                    'item_id'    => $item->id,
-                    'quantity'   => '10.000',
+                    'item_id' => $item->id,
+                    'quantity' => '10.000',
                     'cost_price' => '300.000',
-                ]
+                ],
             ],
         ]);
 
@@ -171,10 +169,10 @@ class PurchaseCancelAndRestoreFeatureTest extends TestCase
         $this->assertEquals('2000.000', $supplier->current_balance); // (3000 total - 1000 paid = 2000 remaining)
 
         $this->assertDatabaseHas('stock_movements', [
-            'item_id'       => $item->id,
+            'item_id' => $item->id,
             'movement_type' => 'purchase_restore_in',
-            'quantity'      => '10.000',
-            'stock_after'   => '10.000',
+            'quantity' => '10.000',
+            'stock_after' => '10.000',
         ]);
     }
 }

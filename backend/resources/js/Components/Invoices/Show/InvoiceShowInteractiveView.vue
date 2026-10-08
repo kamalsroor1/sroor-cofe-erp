@@ -14,10 +14,7 @@
 
     <InvoiceShowItemsTable :items="invoiceItems" />
 
-    <InvoiceShowPaymentsTimeline
-      :invoice="invoice"
-      :payments="invoicePayments"
-    />
+    <InvoiceShowPaymentsTimeline :invoice="invoice" :payments="invoicePayments" />
   </div>
 </template>
 

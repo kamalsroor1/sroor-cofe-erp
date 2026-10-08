@@ -17,7 +17,7 @@ class CloseShiftRequest extends FormRequest
     {
         return [
             'actual_cash_balance' => ['required', 'numeric', 'min:0'],
-            'notes'               => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

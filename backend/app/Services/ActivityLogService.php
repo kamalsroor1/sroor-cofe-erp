@@ -3,13 +3,13 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
+use App\Models\CashShift;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Purchase;
-use App\Models\Expense;
-use App\Models\CashShift;
-use App\Models\User;
 use App\Models\Store;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
@@ -29,14 +29,14 @@ class ActivityLogService
         ?int $storeId = null
     ): ActivityLog {
         $resolvedUserId = $userId ?: Auth::id();
-        if ($resolvedUserId && !User::where('id', $resolvedUserId)->exists()) {
+        if ($resolvedUserId && ! User::where('id', $resolvedUserId)->exists()) {
             $resolvedUserId = null;
         }
-        
-        $resolvedStoreId = $storeId 
-            ?: session('current_store_id') 
+
+        $resolvedStoreId = $storeId
+            ?: session('current_store_id')
             ?: ((function_exists('tenant') && tenant()) ? (
-                Auth::user()?->getCurrentStore()?->id 
+                Auth::user()?->getCurrentStore()?->id
                 ?: ($subject instanceof Invoice ? $subject->store_id : null)
                 ?: ($subject instanceof CashShift ? $subject->store_id : null)
                 ?: ($subject instanceof Purchase ? $subject->store_id : null)
@@ -44,21 +44,21 @@ class ActivityLogService
                 ?: (class_exists(Store::class) ? Store::getMainStore()?->id : null)
             ) : null);
 
-        if ($resolvedStoreId && (!function_exists('tenant') || !tenant() || !Store::where('id', $resolvedStoreId)->exists())) {
+        if ($resolvedStoreId && (! function_exists('tenant') || ! tenant() || ! Store::where('id', $resolvedStoreId)->exists())) {
             $resolvedStoreId = null;
         }
 
         return ActivityLog::create([
-            'user_id'      => $resolvedUserId,
-            'store_id'     => $resolvedStoreId,
-            'module'       => $module,
-            'action'       => $action,
+            'user_id' => $resolvedUserId,
+            'store_id' => $resolvedStoreId,
+            'module' => $module,
+            'action' => $action,
             'subject_type' => $subject ? get_class($subject) : null,
-            'subject_id'   => $subject ? $subject->getKey() : null,
-            'description'  => $description,
-            'properties'   => $properties,
-            'ip_address'   => Request::ip(),
-            'user_agent'   => Request::userAgent(),
+            'subject_id' => $subject ? $subject->getKey() : null,
+            'description' => $description,
+            'properties' => $properties,
+            'ip_address' => Request::ip(),
+            'user_agent' => Request::userAgent(),
         ]);
     }
 
@@ -68,11 +68,11 @@ class ActivityLogService
     public function logSales(string $action, Invoice $invoice, string $description, ?array $properties = null): ActivityLog
     {
         $defaultProps = [
-            'invoice_number'  => $invoice->invoice_number,
-            'customer_name'   => $invoice->customer?->name ?? 'عميل نقدي',
-            'net_total'       => (string) $invoice->net_total,
+            'invoice_number' => $invoice->invoice_number,
+            'customer_name' => $invoice->customer?->name ?? 'عميل نقدي',
+            'net_total' => (string) $invoice->net_total,
             'discount_amount' => (string) $invoice->discount_amount,
-            'status'          => $invoice->status,
+            'status' => $invoice->status,
         ];
 
         return $this->log(
@@ -91,11 +91,11 @@ class ActivityLogService
     public function logShift(string $action, CashShift $shift, string $description, ?array $properties = null): ActivityLog
     {
         $defaultProps = [
-            'shift_number'         => $shift->shift_number,
+            'shift_number' => $shift->shift_number,
             'opening_cash_balance' => (string) $shift->opening_cash_balance,
-            'actual_cash_balance'  => (string) $shift->actual_cash_balance,
-            'difference'           => (string) $shift->difference,
-            'status'               => $shift->status,
+            'actual_cash_balance' => (string) $shift->actual_cash_balance,
+            'difference' => (string) $shift->difference,
+            'status' => $shift->status,
         ];
 
         return $this->log(
@@ -129,9 +129,9 @@ class ActivityLogService
     {
         $defaultProps = [
             'purchase_number' => $purchase->purchase_number,
-            'supplier_name'   => $purchase->supplier?->name ?? '-',
-            'net_total'       => (string) $purchase->net_total,
-            'paid_amount'     => (string) $purchase->paid_amount,
+            'supplier_name' => $purchase->supplier?->name ?? '-',
+            'net_total' => (string) $purchase->net_total,
+            'paid_amount' => (string) $purchase->paid_amount,
         ];
 
         return $this->log(
@@ -151,8 +151,8 @@ class ActivityLogService
     {
         $defaultProps = [
             'expense_category' => $expense->category,
-            'amount'           => (string) $expense->amount,
-            'notes'            => $expense->notes,
+            'amount' => (string) $expense->amount,
+            'notes' => $expense->notes,
         ];
 
         return $this->log(

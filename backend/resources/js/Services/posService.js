@@ -15,7 +15,7 @@ export const posService = {
                     customer_id: customerId,
                     item_id: itemId,
                     store_id: storeId,
-                }
+                },
             });
             return response.data?.last_price || null;
         } catch (error) {
@@ -29,8 +29,8 @@ export const posService = {
      */
     async processCheckout(payload) {
         const response = await axios.post('/pos/invoices', payload, {
-            headers: { 'Accept': 'application/json' }
+            headers: { Accept: 'application/json' },
         });
         return response.data;
-    }
+    },
 };

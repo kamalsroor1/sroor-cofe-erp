@@ -1,10 +1,10 @@
 <template>
-  <div class="h-screen max-h-screen w-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col" dir="rtl">
+  <div
+    class="h-screen max-h-screen w-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col"
+    dir="rtl"
+  >
     <!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->
-    <DesktopTitlebar
-      @open-hardware="isDesktopHardwareOpen = true"
-      @open-shortcuts="isDesktopShortcutsOpen = true"
-    />
+    <DesktopTitlebar @open-hardware="isDesktopHardwareOpen = true" @open-shortcuts="isDesktopShortcutsOpen = true" />
 
     <!-- 0. ☕ Global System Initial Boot Splash Screen (Facebook/Native-App Shimmer Loader) -->
     <SystemBootSplash :show="isBooting" />
@@ -43,14 +43,8 @@
 
     <!-- 5. 🖨️ Desktop Hardware & Shortcuts Modals (Desktop Only) -->
     <template v-if="isDesktop">
-      <DesktopPrinterSettingsModal
-        :show="isDesktopHardwareOpen"
-        @close="isDesktopHardwareOpen = false"
-      />
-      <DesktopShortcutsModal
-        :show="isDesktopShortcutsOpen"
-        @close="isDesktopShortcutsOpen = false"
-      />
+      <DesktopPrinterSettingsModal :show="isDesktopHardwareOpen" @close="isDesktopHardwareOpen = false" />
+      <DesktopShortcutsModal :show="isDesktopShortcutsOpen" @close="isDesktopShortcutsOpen = false" />
     </template>
   </div>
 </template>
@@ -84,71 +78,76 @@ const isDesktopShortcutsOpen = ref(false);
 const isBooting = ref(true);
 
 const isStandaloneRoute = computed(() => {
-    const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
-    const meta = route.meta || {};
-    return meta.guestOnly || 
-           meta.layout === 'blank' ||
-           meta.isPrintView ||
-           route.name === 'login' || 
-           route.name === 'marketing.brochure' ||
-           route.name === 'invoices.print' ||
-           path.includes('/print') ||
-           path === '/login' ||
-           (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname.includes('/print')));
+  const path = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const meta = route.meta || {};
+  return (
+    meta.guestOnly ||
+    meta.layout === 'blank' ||
+    meta.isPrintView ||
+    route.name === 'login' ||
+    route.name === 'marketing.brochure' ||
+    route.name === 'invoices.print' ||
+    path.includes('/print') ||
+    path === '/login' ||
+    (typeof window !== 'undefined' &&
+      (window.location.pathname === '/login' || window.location.pathname.includes('/print')))
+  );
 });
 
 const isSuperAdminRoute = computed(() => {
-    const currentPath = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
-    const currentMeta = route.meta || {};
-    return currentPath.startsWith('/super-admin') || 
-           (typeof window !== 'undefined' && window.location.pathname.startsWith('/super-admin')) ||
-           currentMeta.isSuperAdmin;
+  const currentPath = route.path || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const currentMeta = route.meta || {};
+  return (
+    currentPath.startsWith('/super-admin') ||
+    (typeof window !== 'undefined' && window.location.pathname.startsWith('/super-admin')) ||
+    currentMeta.isSuperAdmin
+  );
 });
 
 onMounted(async () => {
-    try {
-        // 1. Initialize Theme from storage or preference
-        const savedTheme = localStorage.getItem('theme_preference') || 'dark';
-        appConfigStore.setTheme(savedTheme);
+  try {
+    // 1. Initialize Theme from storage or preference
+    const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+    appConfigStore.setTheme(savedTheme);
 
-        // 2. Fetch translations if guest or bootstrap context if authenticated
-        if (authStore.isAuthenticated) {
-            await appConfigStore.fetchBootstrapContext();
-        } else {
-            await appConfigStore.fetchTranslations();
-        }
-    } catch (error) {
-        console.error('Failed to initialize bootstrap context:', error);
-    } finally {
-        // Smooth transition out of boot splash
-        setTimeout(() => {
-            isBooting.value = false;
-        }, 350);
+    // 2. Fetch translations if guest or bootstrap context if authenticated
+    if (authStore.isAuthenticated) {
+      await appConfigStore.fetchBootstrapContext();
+    } else {
+      await appConfigStore.fetchTranslations();
     }
+  } catch (error) {
+    console.error('Failed to initialize bootstrap context:', error);
+  } finally {
+    // Smooth transition out of boot splash
+    setTimeout(() => {
+      isBooting.value = false;
+    }, 350);
+  }
 
-    // 3. Native App APK Update Check
-    checkForUpdates();
+  // 3. Native App APK Update Check
+  checkForUpdates();
 
-    // 4. Global Desktop Hotkeys Listener
-    if (isDesktop.value) {
-        window.addEventListener('keydown', handleDesktopGlobalKeydown);
-    }
+  // 4. Global Desktop Hotkeys Listener
+  if (isDesktop.value) {
+    window.addEventListener('keydown', handleDesktopGlobalKeydown);
+  }
 });
 
 const handleDesktopGlobalKeydown = (e) => {
-    if (e.key === 'F1') {
-        e.preventDefault();
-        isDesktopShortcutsOpen.value = true;
-    } else if (e.key === 'F12') {
-        e.preventDefault();
-        openCashDrawer();
-    }
+  if (e.key === 'F1') {
+    e.preventDefault();
+    isDesktopShortcutsOpen.value = true;
+  } else if (e.key === 'F12') {
+    e.preventDefault();
+    openCashDrawer();
+  }
 };
 
 onUnmounted(() => {
-    if (typeof window !== 'undefined') {
-        window.removeEventListener('keydown', handleDesktopGlobalKeydown);
-    }
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleDesktopGlobalKeydown);
+  }
 });
 </script>
 
@@ -156,7 +155,9 @@ onUnmounted(() => {
 /* Page Transition Animations */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 .page-enter-from {
   opacity: 0;

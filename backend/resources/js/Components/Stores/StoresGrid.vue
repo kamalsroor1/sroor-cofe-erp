@@ -15,23 +15,31 @@
           store.is_main
             ? 'border-theme-primary shadow-theme-primary/10 ring-1 ring-theme-primary/30'
             : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
-          !store.is_active ? 'opacity-65 grayscale-[40%]' : ''
+          !store.is_active ? 'opacity-65 grayscale-[40%]' : '',
         ]"
       >
         <!-- Main Branch Ambient Glow -->
-        <div v-if="store.is_main" class="absolute -top-12 -right-12 w-32 h-32 bg-theme-light rounded-full blur-2xl pointer-events-none"></div>
+        <div
+          v-if="store.is_main"
+          class="absolute -top-12 -right-12 w-32 h-32 bg-theme-light rounded-full blur-2xl pointer-events-none"
+        ></div>
 
         <div>
           <!-- Header Row: Type, Code & Status -->
           <div class="flex items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="text-xl">
-                {{ store.type === 'van' ? '🚚' : (store.type === 'warehouse' ? '🏭' : '🏬') }}
+                {{ store.type === 'van' ? '🚚' : store.type === 'warehouse' ? '🏭' : '🏬' }}
               </span>
-              <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+              <span
+                class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400"
+              >
                 {{ store.code }}
               </span>
-              <span v-if="store.is_main" class="text-[10px] font-black px-2.5 py-0.5 rounded-lg bg-theme-light text-theme-primary border border-theme-border font-tajawal">
+              <span
+                v-if="store.is_main"
+                class="text-[10px] font-black px-2.5 py-0.5 rounded-lg bg-theme-light text-theme-primary border border-theme-border font-tajawal"
+              >
                 {{ $t('inventory.main_store') }}
               </span>
             </div>
@@ -42,16 +50,33 @@
               @click="$emit('toggle-active', store)"
               :disabled="store.is_main && store.is_active"
               class="text-[10px] font-bold px-3 py-1 rounded-full border transition-all cursor-pointer font-tajawal flex items-center gap-1.5 min-h-[30px] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-              :class="store.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400'"
-              :title="store.is_main ? $t('inventory.cannot_disable_main_store') : (store.is_active ? $t('common.active') : $t('common.inactive'))"
+              :class="
+                store.is_active
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400'
+              "
+              :title="
+                store.is_main
+                  ? $t('inventory.cannot_disable_main_store')
+                  : store.is_active
+                    ? $t('common.active')
+                    : $t('common.inactive')
+              "
             >
-              <span class="w-1.5 h-1.5 rounded-full" :class="store.is_active ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-rose-500 dark:bg-rose-400'"></span>
+              <span
+                class="w-1.5 h-1.5 rounded-full"
+                :class="
+                  store.is_active ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-rose-500 dark:bg-rose-400'
+                "
+              ></span>
               <span>{{ store.is_active ? $t('common.active') : $t('common.inactive') }}</span>
             </button>
           </div>
 
           <!-- Store Title & Info -->
-          <h3 class="text-base font-black text-slate-900 dark:text-white font-tajawal group-hover:text-theme-primary transition-colors">
+          <h3
+            class="text-base font-black text-slate-900 dark:text-white font-tajawal group-hover:text-theme-primary transition-colors"
+          >
             {{ store.name }}
           </h3>
 
@@ -68,24 +93,36 @@
 
           <!-- Statistics Counters Grid -->
           <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
-            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/60">
+            <div
+              class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/60"
+            >
               <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.items_count') }}</div>
               <div class="text-sm font-black text-theme-primary font-mono mt-0.5">{{ store.stocks_count || 0 }}</div>
             </div>
-            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/60">
+            <div
+              class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/60"
+            >
               <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.invoices_count') }}</div>
-              <div class="text-sm font-black text-emerald-500 dark:text-emerald-400 font-mono mt-0.5">{{ store.invoices_count || 0 }}</div>
+              <div class="text-sm font-black text-emerald-500 dark:text-emerald-400 font-mono mt-0.5">
+                {{ store.invoices_count || 0 }}
+              </div>
             </div>
-            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/60">
+            <div
+              class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/60"
+            >
               <div class="text-[10px] text-slate-400 font-tajawal">{{ $t('inventory.purchases_count') }}</div>
-              <div class="text-sm font-black text-cyan-500 dark:text-cyan-400 font-mono mt-0.5">{{ store.purchases_count || 0 }}</div>
+              <div class="text-sm font-black text-cyan-500 dark:text-cyan-400 font-mono mt-0.5">
+                {{ store.purchases_count || 0 }}
+              </div>
             </div>
           </div>
 
           <!-- Assigned Staff Section -->
           <div class="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('inventory.assigned_staff') }}:</span>
+              <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 font-tajawal"
+                >{{ $t('inventory.assigned_staff') }}:</span
+              >
               <button
                 type="button"
                 @click="$emit('manage-staff', store)"

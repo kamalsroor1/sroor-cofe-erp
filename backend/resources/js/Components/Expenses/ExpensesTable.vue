@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal"
+  >
     <!-- Loading State -->
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="8" />
@@ -11,7 +13,9 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 font-tajawal border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="py-3 px-4 text-start font-bold">#</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('invoices.invoice_number') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('expenses.expense_item') }}</th>
@@ -36,22 +40,32 @@
               </td>
               <td class="py-3.5 px-4">
                 <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ expense.title }}</div>
-                <div v-if="expense.notes" class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5 max-w-xs truncate">
+                <div
+                  v-if="expense.notes"
+                  class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5 max-w-xs truncate"
+                >
                   {{ expense.notes }}
                 </div>
               </td>
               <td class="py-3.5 px-4">
-                <div class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">{{ expense.cost_center_label || expense.cost_center }}</div>
-                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5">{{ expense.category }}</div>
+                <div class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal">
+                  {{ expense.cost_center_label || expense.cost_center }}
+                </div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-tajawal mt-0.5">
+                  {{ expense.category }}
+                </div>
               </td>
               <td class="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                 {{ expense.expense_date }}
               </td>
               <td class="py-3.5 px-4 text-end font-mono font-black text-sm text-rose-500 dark:text-rose-400">
-                {{ formatMoney(expense.amount) }} <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
+                {{ formatMoney(expense.amount) }}
+                <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
               </td>
               <td class="py-3.5 px-4 text-center">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-tajawal bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                >
                   {{ formatPaymentMethod(expense.payment_method) }}
                 </span>
               </td>
@@ -94,17 +108,22 @@
             <div>
               <div class="flex items-center gap-2">
                 <h4 class="text-sm font-black text-slate-900 dark:text-white">{{ expense.title }}</h4>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                >
                   {{ expense.category }}
                 </span>
               </div>
               <p class="text-[11px] text-theme-primary font-mono mt-0.5">#{{ expense.expense_number }}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ expense.cost_center_label || expense.cost_center }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {{ expense.cost_center_label || expense.cost_center }}
+              </p>
             </div>
 
             <div class="text-end shrink-0">
               <div class="text-base font-black font-mono text-rose-500 dark:text-rose-400">
-                {{ formatMoney(expense.amount) }} <span class="text-[10px] font-sans text-slate-400">{{ $t('common.currency') }}</span>
+                {{ formatMoney(expense.amount) }}
+                <span class="text-[10px] font-sans text-slate-400">{{ $t('common.currency') }}</span>
               </div>
               <p class="text-[10px] text-slate-400 font-mono">{{ expense.expense_date }}</p>
             </div>
@@ -157,7 +176,10 @@
     </EmptyState>
 
     <!-- Pagination Bar -->
-    <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <div
+      v-if="pagination.last_page > 1"
+      class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between"
+    >
       <div class="text-xs text-slate-500 dark:text-slate-400">
         {{ $t('expenses.total_results_count', { count: pagination.total }) }}
       </div>

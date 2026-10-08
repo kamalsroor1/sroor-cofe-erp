@@ -6,7 +6,9 @@
   >
     <form @submit.prevent="$emit('save')" class="space-y-4 font-tajawal">
       <!-- Current Debt Alert -->
-      <div class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
+      <div
+        class="p-3.5 bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between"
+      >
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('contacts.current_balance') }}:</span>
         <span
           class="text-base font-black font-mono"
@@ -56,12 +58,7 @@
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

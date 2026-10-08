@@ -1,12 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\LoginAction;
+use App\DTOs\Auth\LoginDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\DTOs\Auth\LoginDTO;
-use App\Actions\Auth\LoginAction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +39,7 @@ final class AuthenticatedSessionController extends Controller
 
         $authenticated = $this->loginAction->execute($dto);
 
-        if (!$authenticated) {
+        if (! $authenticated) {
             $request->hitRateLimit();
 
             throw ValidationException::withMessages([

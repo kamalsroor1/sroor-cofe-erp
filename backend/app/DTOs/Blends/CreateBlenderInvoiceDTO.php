@@ -21,15 +21,15 @@ final class CreateBlenderInvoiceDTO
     public static function fromArray(array $data, ?int $storeId = null): self
     {
         return new self(
-            blend_name: (string)$data['blend_name'],
-            customer_id: (int)$data['customer_id'],
-            components: (array)($data['components'] ?? []),
-            target_weight_grams: (int)($data['target_weight_grams'] ?? 250),
-            roast_type: (string)($data['roast_type'] ?? 'وسط'),
-            grind_level: (string)($data['grind_level'] ?? 'تركي ناعم'),
-            cardamom_grams: (float)($data['cardamom_grams'] ?? 0),
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
-            store_id: isset($data['store_id']) ? (int)$data['store_id'] : $storeId,
+            blend_name: (string) $data['blend_name'],
+            customer_id: (int) $data['customer_id'],
+            components: (array) ($data['components'] ?? []),
+            target_weight_grams: (int) ($data['target_weight_grams'] ?? 250),
+            roast_type: (string) ($data['roast_type'] ?? 'وسط'),
+            grind_level: (string) ($data['grind_level'] ?? 'تركي ناعم'),
+            cardamom_grams: (float) ($data['cardamom_grams'] ?? 0),
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
+            store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
         );
     }
 }

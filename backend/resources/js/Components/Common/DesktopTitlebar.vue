@@ -53,7 +53,10 @@
       </button>
 
       <!-- Network Ping -->
-      <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800" :title="isOnline ? 'الاتصال بالسيرفر سليم ومستقر' : 'تعذر الاتصال بالسيرفر'">
+      <div
+        class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800"
+        :title="isOnline ? 'الاتصال بالسيرفر سليم ومستقر' : 'تعذر الاتصال بالسيرفر'"
+      >
         <span class="w-2 h-2 rounded-full" :class="isOnline ? 'bg-emerald-500' : 'bg-rose-500 animate-ping'"></span>
         <span :class="isOnline ? 'text-slate-300 font-bold' : 'text-rose-400 font-bold'">
           {{ isOnline ? (serverPingMs ? `${serverPingMs}ms` : 'سحابي') : 'غير متصل' }}
@@ -205,7 +208,7 @@ const appConfigStore = useAppConfigStore();
 const isReloading = ref(false);
 
 const handleStoreSwitch = (storeId) => {
-  const store = authStore.stores?.find(s => String(s.id) === String(storeId));
+  const store = authStore.stores?.find((s) => String(s.id) === String(storeId));
   if (store) {
     authStore.switchStore(store);
   }
@@ -219,7 +222,7 @@ const {
   minimizeWindow,
   maximizeWindow,
   closeWindow,
-  toggleFullscreen
+  toggleFullscreen,
 } = useDesktopHardware();
 
 const { hasUpdate, latestVersionData, checkForUpdates } = useAppUpdate();

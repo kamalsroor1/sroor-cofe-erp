@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Tenant;
 use App\Models\Domain;
+use App\Models\Tenant;
+use Illuminate\Database\Seeder;
 
 class EnsureTenantDomainsSeeder extends Seeder
 {
@@ -26,7 +26,7 @@ class EnsureTenantDomainsSeeder extends Seeder
                 ]);
             }
 
-            $this->command->info("Registered domains for tenant_sroor: " . $tenant->domains()->pluck('domain')->implode(', '));
+            $this->command->info('Registered domains for tenant_sroor: '.$tenant->domains()->pluck('domain')->implode(', '));
         }
     }
 }

@@ -2,11 +2,19 @@
 
 namespace App\Actions\Tenants;
 
-use App\Models\Tenant;
+use App\Http\Resources\PlanResource;
+use App\Http\Resources\TenantResource;
+use App\Models\Invoice;
+use App\Models\Item;
 use App\Models\Plan;
 use App\Models\PlanFeature;
-use App\Http\Resources\TenantResource;
-use App\Http\Resources\PlanResource;
+use App\Models\Setting;
+use App\Models\Store;
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Stancl\Tenancy\Facades\Tenancy;
 
 class GetTenantDetailsAction
 {
@@ -15,56 +23,56 @@ class GetTenantDetailsAction
      */
     public function execute(string $id): array
     {
-        $tenant = Tenant::with(['plan', 'domains', 'subscriptions' => fn($q) => $q->latest()])->findOrFail($id);
+        $tenant = Tenant::with(['plan', 'domains', 'subscriptions' => fn ($q) => $q->latest()])->findOrFail($id);
         $allFeatures = PlanFeature::orderBy('sort_order')->get();
         $groupedFeatures = PlanFeature::groupedByModule();
         $plans = PlanResource::collection(Plan::where('is_active', true)->orderBy('sort_order')->get())->resolve();
 
         $stats = [
-            'users_count'    => 0,
-            'stores_count'   => 0,
-            'items_count'    => 0,
+            'users_count' => 0,
+            'stores_count' => 0,
+            'items_count' => 0,
             'invoices_count' => 0,
-            'total_sales'    => '0.00',
+            'total_sales' => '0.00',
         ];
 
         $allowedUnits = $tenant->data['allowed_units'] ?? ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر'];
 
         try {
-            \Stancl\Tenancy\Facades\Tenancy::initialize($tenant);
-            if (\Illuminate\Support\Facades\Schema::hasTable('users')) {
-                $stats['users_count'] = \App\Models\User::count();
+            Tenancy::initialize($tenant);
+            if (Schema::hasTable('users')) {
+                $stats['users_count'] = User::count();
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('stores')) {
-                $stats['stores_count'] = \App\Models\Store::count();
+            if (Schema::hasTable('stores')) {
+                $stats['stores_count'] = Store::count();
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('items')) {
-                $stats['items_count'] = \App\Models\Item::count();
+            if (Schema::hasTable('items')) {
+                $stats['items_count'] = Item::count();
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('invoices')) {
-                $stats['invoices_count'] = \App\Models\Invoice::count();
-                $stats['total_sales'] = number_format((float)\App\Models\Invoice::sum('total_amount'), 2, '.', '');
+            if (Schema::hasTable('invoices')) {
+                $stats['invoices_count'] = Invoice::count();
+                $stats['total_sales'] = number_format((float) Invoice::sum('total_amount'), 2, '.', '');
             }
-            $tenantUnits = \App\Models\Setting::get('inventory_units');
+            $tenantUnits = Setting::get('inventory_units');
             if ($tenantUnits) {
                 $allowedUnits = array_values(array_filter(array_map('trim', explode(',', $tenantUnits))));
             }
-            \Stancl\Tenancy\Facades\Tenancy::end();
+            Tenancy::end();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Tenant stats query failed for {$tenant->id}: " . $e->getMessage());
+            Log::warning("Tenant stats query failed for {$tenant->id}: ".$e->getMessage());
         }
 
-        $globalUnitsStr = \App\Models\Setting::get('global_system_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,باكت,حبة,لتر,مل,متر,طقم,زوج,باليتة');
+        $globalUnitsStr = Setting::get('global_system_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,باكت,حبة,لتر,مل,متر,طقم,زوج,باليتة');
         $globalUnits = array_values(array_filter(array_map('trim', explode(',', $globalUnitsStr))));
 
         return [
-            'tenant'           => (new TenantResource($tenant))->resolve(),
-            'stats'            => $stats,
-            'allowed_units'    => $allowedUnits,
-            'global_units'     => $globalUnits,
-            'features'         => $allFeatures,
+            'tenant' => (new TenantResource($tenant))->resolve(),
+            'stats' => $stats,
+            'allowed_units' => $allowedUnits,
+            'global_units' => $globalUnits,
+            'features' => $allFeatures,
             'grouped_features' => $groupedFeatures,
-            'plans'            => $plans,
+            'plans' => $plans,
         ];
     }
 }

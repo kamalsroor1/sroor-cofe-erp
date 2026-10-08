@@ -38,23 +38,23 @@ final class SupplierController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage') && !$user->can('suppliers.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $debtStatus = (string)$request->input('debt_status', 'all');
-        $status = (string)$request->input('status', 'all');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
+        $search = trim((string) $request->input('search', ''));
+        $debtStatus = (string) $request->input('debt_status', 'all');
+        $status = (string) $request->input('status', 'all');
+        $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
         $query = Supplier::withCount(['purchases', 'payments']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('company_name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                    ->orWhere('company_name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
@@ -72,23 +72,23 @@ final class SupplierController extends Controller
 
         $suppliers = $query->latest('id')->paginate($perPage);
 
-        $totalPayable = (float)Supplier::where('current_balance', '>', 0)->sum('current_balance');
+        $totalPayable = (float) Supplier::where('current_balance', '>', 0)->sum('current_balance');
         $creditorsCount = Supplier::where('current_balance', '>', 0)->count();
         $totalSuppliersCount = Supplier::count();
 
         return response()->json([
             'success' => true,
-            'data'    => SupplierResource::collection($suppliers->items())->resolve(),
-            'meta'    => [
+            'data' => SupplierResource::collection($suppliers->items())->resolve(),
+            'meta' => [
                 'current_page' => $suppliers->currentPage(),
-                'last_page'    => $suppliers->lastPage(),
-                'per_page'     => $suppliers->perPage(),
-                'total'        => $suppliers->total(),
+                'last_page' => $suppliers->lastPage(),
+                'per_page' => $suppliers->perPage(),
+                'total' => $suppliers->total(),
             ],
             'summary' => [
-                'total_payable'       => $totalPayable,
-                'creditors_count'     => $creditorsCount,
-                'total_suppliers'     => $totalSuppliersCount,
+                'total_payable' => $totalPayable,
+                'creditors_count' => $creditorsCount,
+                'total_suppliers' => $totalSuppliersCount,
             ],
         ], 200);
     }
@@ -104,7 +104,7 @@ final class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.supplier_added') ?: 'تم إضافة المورد بنجاح',
-            'data'    => (new SupplierResource($supplier))->resolve(),
+            'data' => (new SupplierResource($supplier))->resolve(),
         ], 201);
     }
 
@@ -114,7 +114,7 @@ final class SupplierController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage') && !$user->can('suppliers.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -122,7 +122,7 @@ final class SupplierController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new SupplierResource($supplier))->resolve(),
+            'data' => (new SupplierResource($supplier))->resolve(),
         ], 200);
     }
 
@@ -138,7 +138,7 @@ final class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.supplier_updated') ?: 'تم تعديل بيانات المورد بنجاح',
-            'data'    => (new SupplierResource($updatedSupplier))->resolve(),
+            'data' => (new SupplierResource($updatedSupplier))->resolve(),
         ], 200);
     }
 
@@ -153,9 +153,9 @@ final class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.supplier_payment_recorded') ?: 'تم تسجيل سند الصرف بنجاح',
-            'data'    => [
+            'data' => [
                 'supplier' => (new SupplierResource($result['supplier']))->resolve(),
-                'payment'  => $result['payment'],
+                'payment' => $result['payment'],
             ],
         ], 200);
     }
@@ -166,7 +166,7 @@ final class SupplierController extends Controller
     public function statement(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage') && !$user->can('suppliers.view') && !$user->can('suppliers.statement')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.view') && ! $user->can('suppliers.statement')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -178,7 +178,7 @@ final class SupplierController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ], 200);
     }
 
@@ -188,7 +188,7 @@ final class SupplierController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -198,7 +198,7 @@ final class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.supplier_status_updated') ?: 'تم تحديث حالة المورد بنجاح',
-            'data'    => (new SupplierResource($toggled))->resolve(),
+            'data' => (new SupplierResource($toggled))->resolve(),
         ], 200);
     }
 
@@ -208,7 +208,7 @@ final class SupplierController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('suppliers.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

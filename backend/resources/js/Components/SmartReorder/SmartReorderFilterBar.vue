@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+  <div
+    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3"
+  >
     <!-- Search Input -->
     <div class="flex-1">
       <BaseSearchInput
@@ -14,7 +16,10 @@
     <div class="w-full md:w-48">
       <BaseSelect
         :model-value="analysisDays"
-        @update:model-value="$emit('update:analysisDays', Number($event)); $emit('refresh')"
+        @update:model-value="
+          $emit('update:analysisDays', Number($event));
+          $emit('refresh');
+        "
         :options="analysisDaysOptions"
       />
     </div>
@@ -23,7 +28,10 @@
     <div class="w-full md:w-48">
       <BaseSelect
         :model-value="targetCoverDays"
-        @update:model-value="$emit('update:targetCoverDays', Number($event)); $emit('refresh')"
+        @update:model-value="
+          $emit('update:targetCoverDays', Number($event));
+          $emit('refresh');
+        "
         :options="targetCoverOptions"
       />
     </div>
@@ -32,7 +40,10 @@
     <div class="w-full md:w-40">
       <BaseSelect
         :model-value="selectedUrgency"
-        @update:model-value="$emit('update:selectedUrgency', $event); $emit('refresh')"
+        @update:model-value="
+          $emit('update:selectedUrgency', $event);
+          $emit('refresh');
+        "
         :options="urgencyOptions"
       />
     </div>

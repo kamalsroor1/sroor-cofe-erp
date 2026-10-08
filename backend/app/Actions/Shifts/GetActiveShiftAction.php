@@ -20,19 +20,19 @@ final class GetActiveShiftAction
     {
         $shift = CashShift::with(['user', 'store'])
             ->where('status', 'open')
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
-            ->when($userId, fn($q) => $q->where('user_id', $userId))
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+            ->when($userId, fn ($q) => $q->where('user_id', $userId))
             ->latest('id')
             ->first();
 
-        if (!$shift) {
+        if (! $shift) {
             return null;
         }
 
         $metrics = $this->shiftService->calculateShiftTotals($shift);
 
         return [
-            'shift'   => $shift,
+            'shift' => $shift,
             'metrics' => $metrics,
         ];
     }

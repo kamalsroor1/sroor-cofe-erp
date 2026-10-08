@@ -5,7 +5,9 @@
       class="p-3 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl border border-emerald-500/40 shadow-2xl flex flex-wrap items-center justify-between gap-3 animate-pulse-subtle"
     >
       <div class="flex items-center gap-2.5">
-        <span class="w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0">
+        <span
+          class="w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0"
+        >
           {{ selectedCount }}
         </span>
         <span class="text-xs font-bold text-slate-200">
@@ -70,7 +72,9 @@ defineEmits(['bulk-print', 'bulk-export', 'bulk-cancel', 'deselect-all']);
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .fade-enter-from,
 .fade-leave-to {

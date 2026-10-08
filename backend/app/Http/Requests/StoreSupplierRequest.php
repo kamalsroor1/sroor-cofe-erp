@@ -16,12 +16,12 @@ class StoreSupplierRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'            => ['required', 'string', 'max:255'],
-            'company_name'    => ['nullable', 'string', 'max:255'],
-            'phone'           => ['nullable', 'string', 'max:50'],
-            'address'         => ['nullable', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:255'],
             'opening_balance' => ['nullable', 'numeric'],
-            'notes'           => ['nullable', 'string', 'max:1000'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

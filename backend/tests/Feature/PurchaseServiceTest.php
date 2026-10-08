@@ -2,20 +2,20 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Item;
-use App\Models\Supplier;
 use App\Models\Purchase;
-use App\Models\StockMovement;
+use App\Models\Supplier;
+use App\Models\User;
 use App\Services\PurchaseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PurchaseServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected PurchaseService $purchaseService;
+
     protected User $user;
 
     protected function setUp(): void
@@ -31,17 +31,17 @@ class PurchaseServiceTest extends TestCase
     {
         // Initial state: 10 units @ 100.000 cost
         $item = Item::create([
-            'code'              => 'ITM-WAC',
-            'name'              => 'قرص صلب SSD 1TB',
-            'current_stock'     => '10.000',
-            'cost_price'        => '100.000',
+            'code' => 'ITM-WAC',
+            'name' => 'قرص صلب SSD 1TB',
+            'current_stock' => '10.000',
+            'cost_price' => '100.000',
             'weighted_avg_cost' => '100.000',
-            'selling_price'     => '150.000',
-            'is_active'         => true,
+            'selling_price' => '150.000',
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'name'      => 'مورد التكنولوجيا الحديثة',
+            'name' => 'مورد التكنولوجيا الحديثة',
             'is_active' => true,
         ]);
 
@@ -50,12 +50,12 @@ class PurchaseServiceTest extends TestCase
         $purchase = $this->purchaseService->createPurchase([
             'supplier_id' => $supplier->id,
             'paid_amount' => '1000.000',
-            'items'       => [
+            'items' => [
                 [
-                    'item_id'    => $item->id,
-                    'quantity'   => '10.000',
+                    'item_id' => $item->id,
+                    'quantity' => '10.000',
                     'cost_price' => '200.000',
-                ]
+                ],
             ],
         ]);
 
@@ -73,23 +73,23 @@ class PurchaseServiceTest extends TestCase
     public function test_generate_unique_number_prevents_duplicate_after_soft_delete(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-PUR-UNIQ',
-            'name'          => 'صنف اختبار توريد فريد',
+            'code' => 'ITM-PUR-UNIQ',
+            'name' => 'صنف اختبار توريد فريد',
             'current_stock' => '0.000',
-            'cost_price'    => '100.000',
+            'cost_price' => '100.000',
             'selling_price' => '150.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create(['name' => 'مورد اختبار فريد', 'is_active' => true]);
-        $todayPrefix = 'PUR-' . date('Ymd');
+        $todayPrefix = 'PUR-'.date('Ymd');
 
         // 1. Create first purchase
         $pur1 = $this->purchaseService->createPurchase([
             'supplier_id' => $supplier->id,
-            'items'       => [['item_id' => $item->id, 'quantity' => '5.000', 'cost_price' => '100.000']],
+            'items' => [['item_id' => $item->id, 'quantity' => '5.000', 'cost_price' => '100.000']],
         ]);
-        $this->assertEquals($todayPrefix . '-0001', $pur1->purchase_number);
+        $this->assertEquals($todayPrefix.'-0001', $pur1->purchase_number);
 
         // 2. Soft-delete purchase
         $pur1->delete();
@@ -98,8 +98,8 @@ class PurchaseServiceTest extends TestCase
         // 3. Create second purchase - must be PUR-YYYYMMDD-0002 without collision
         $pur2 = $this->purchaseService->createPurchase([
             'supplier_id' => $supplier->id,
-            'items'       => [['item_id' => $item->id, 'quantity' => '5.000', 'cost_price' => '100.000']],
+            'items' => [['item_id' => $item->id, 'quantity' => '5.000', 'cost_price' => '100.000']],
         ]);
-        $this->assertEquals($todayPrefix . '-0002', $pur2->purchase_number);
+        $this->assertEquals($todayPrefix.'-0002', $pur2->purchase_number);
     }
 }

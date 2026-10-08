@@ -22,12 +22,12 @@ final class CreateBlenderInvoiceAction
         $itemsForInvoice = [];
 
         foreach ($dto->components as $comp) {
-            $kg = bcdiv((string)$comp['grams'], '1000', 4);
+            $kg = bcdiv((string) $comp['grams'], '1000', 4);
             if (bccomp($kg, '0.000', 4) > 0) {
                 $itemsForInvoice[] = [
-                    'item_id'         => (int)$comp['item_id'],
-                    'quantity'        => $kg,
-                    'unit_price'      => (string)$comp['unit_price'],
+                    'item_id' => (int) $comp['item_id'],
+                    'quantity' => $kg,
+                    'unit_price' => (string) $comp['unit_price'],
                     'discount_amount' => '0.000',
                 ];
             }
@@ -44,16 +44,16 @@ final class CreateBlenderInvoiceAction
         $notesStr = "خلطة وتوليفة مخصوصة: {$dto->blend_name} ({$extraDetails})";
 
         return $this->invoiceService->confirmInvoice([
-            'customer_id'    => $dto->customer_id,
-            'store_id'       => $dto->store_id,
-            'invoice_date'   => now()->toDateString(),
-            'items'          => $itemsForInvoice,
-            'payment_type'   => 'cash',
+            'customer_id' => $dto->customer_id,
+            'store_id' => $dto->store_id,
+            'invoice_date' => now()->toDateString(),
+            'items' => $itemsForInvoice,
+            'payment_type' => 'cash',
             'payment_method' => 'cash',
-            'paid_amount'    => '0.000',
-            'discount_type'  => 'fixed',
+            'paid_amount' => '0.000',
+            'discount_type' => 'fixed',
             'discount_value' => '0.000',
-            'notes'          => $notesStr,
+            'notes' => $notesStr,
         ]);
     }
 }

@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class SendTelegramDatabaseBackupJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public ?string $chatId;
 

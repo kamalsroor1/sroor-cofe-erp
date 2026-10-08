@@ -2,26 +2,29 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\Item;
-use App\Models\Customer;
-use App\Models\CashShift;
-use App\Actions\POS\GetPOSBootstrapDataAction;
-use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\Actions\Dashboard\GetTenantDashboardAnalyticsAction;
+use App\Actions\Invoices\ProcessPOSInvoiceAction;
+use App\Actions\POS\GetPOSBootstrapDataAction;
 use App\DTOs\POSInvoiceDTO;
+use App\Models\CashShift;
+use App\Models\Customer;
+use App\Models\Item;
+use App\Models\Store;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class POSSolidArchitectureTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $user;
+
     protected Store $store;
+
     protected Item $item;
+
     protected Customer $customer;
 
     protected function setUp(): void
@@ -112,7 +115,7 @@ class POSSolidArchitectureTest extends TestCase
                     'item_id' => $this->item->id,
                     'quantity' => 1.000,
                     'unit_price' => 300.000,
-                ]
+                ],
             ],
             'additional_expenses' => [],
         ]);
@@ -122,13 +125,13 @@ class POSSolidArchitectureTest extends TestCase
 
         $this->assertNotNull($invoice);
         $this->assertEquals('confirmed', $invoice->status);
-        $this->assertEquals('300.000', (string)$invoice->subtotal);
-        $this->assertEquals('280.000', (string)$invoice->net_total);
-        $this->assertEquals('280.000', (string)$invoice->paid_amount);
+        $this->assertEquals('300.000', (string) $invoice->subtotal);
+        $this->assertEquals('280.000', (string) $invoice->net_total);
+        $this->assertEquals('280.000', (string) $invoice->paid_amount);
 
         // Verify stock deducted accurately with bcmath (50.000 - 1.000 = 49.000)
         $this->item->refresh();
-        $this->assertEquals('49.000', (string)$this->item->current_stock);
+        $this->assertEquals('49.000', (string) $this->item->current_stock);
     }
 
     public function test_process_pos_credit_invoice_updates_customer_balance(): void
@@ -149,7 +152,7 @@ class POSSolidArchitectureTest extends TestCase
                     'item_id' => $this->item->id,
                     'quantity' => 0.500, // Fractional 500g
                     'unit_price' => 300.000,
-                ]
+                ],
             ],
             'additional_expenses' => [],
         ]);
@@ -158,16 +161,16 @@ class POSSolidArchitectureTest extends TestCase
         $invoice = $action->execute($dto);
 
         $this->assertNotNull($invoice);
-        $this->assertEquals('150.000', (string)$invoice->net_total);
-        $this->assertEquals('150.000', (string)$invoice->remaining_amount);
+        $this->assertEquals('150.000', (string) $invoice->net_total);
+        $this->assertEquals('150.000', (string) $invoice->remaining_amount);
 
         // Customer balance should be updated with remaining amount (150.000)
         $this->customer->refresh();
-        $this->assertEquals('150.000', (string)$this->customer->current_balance);
+        $this->assertEquals('150.000', (string) $this->customer->current_balance);
 
         // Stock should be exactly (50.000 - 0.500 = 49.500)
         $this->item->refresh();
-        $this->assertEquals('49.500', (string)$this->item->current_stock);
+        $this->assertEquals('49.500', (string) $this->item->current_stock);
     }
 
     public function test_dashboard_analytics_action_returns_correct_kpis(): void

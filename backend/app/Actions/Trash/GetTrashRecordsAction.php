@@ -28,65 +28,65 @@ final class GetTrashRecordsAction
         $records = [];
         $pagination = [
             'current_page' => 1,
-            'last_page'    => 1,
-            'per_page'     => $perPage,
-            'total'        => 0,
+            'last_page' => 1,
+            'per_page' => $perPage,
+            'total' => 0,
         ];
 
         if ($tab === 'items') {
             $q = Item::onlyTrashed();
             if ($search !== '') {
-                $q->where(fn($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"));
+                $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"));
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
-            $records = collect($paged->items())->map(fn($i) => [
-                'id'         => $i->id,
-                'title'      => $i->name,
-                'subtitle'   => $i->code ?? '—',
-                'category'   => $i->category,
+            $records = collect($paged->items())->map(fn ($i) => [
+                'id' => $i->id,
+                'title' => $i->name,
+                'subtitle' => $i->code ?? '—',
+                'category' => $i->category,
                 'deleted_at' => $i->deleted_at?->diffForHumans(),
             ]);
             $pagination = [
                 'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
+                'last_page' => $paged->lastPage(),
+                'per_page' => $paged->perPage(),
+                'total' => $paged->total(),
             ];
         } elseif ($tab === 'customers') {
             $q = Customer::onlyTrashed();
             if ($search !== '') {
-                $q->where(fn($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"));
+                $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"));
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
-            $records = collect($paged->items())->map(fn($c) => [
-                'id'         => $c->id,
-                'title'      => $c->name,
-                'subtitle'   => $c->phone ?? '—',
+            $records = collect($paged->items())->map(fn ($c) => [
+                'id' => $c->id,
+                'title' => $c->name,
+                'subtitle' => $c->phone ?? '—',
                 'deleted_at' => $c->deleted_at?->diffForHumans(),
             ]);
             $pagination = [
                 'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
+                'last_page' => $paged->lastPage(),
+                'per_page' => $paged->perPage(),
+                'total' => $paged->total(),
             ];
         } elseif ($tab === 'suppliers') {
             $q = Supplier::onlyTrashed();
             if ($search !== '') {
-                $q->where(fn($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
+                $q->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
-            $records = collect($paged->items())->map(fn($s) => [
-                'id'         => $s->id,
-                'title'      => $s->name,
-                'subtitle'   => $s->company_name ?? '—',
+            $records = collect($paged->items())->map(fn ($s) => [
+                'id' => $s->id,
+                'title' => $s->name,
+                'subtitle' => $s->company_name ?? '—',
                 'deleted_at' => $s->deleted_at?->diffForHumans(),
             ]);
             $pagination = [
                 'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
+                'last_page' => $paged->lastPage(),
+                'per_page' => $paged->perPage(),
+                'total' => $paged->total(),
             ];
         } elseif ($tab === 'stores') {
             $q = Store::onlyTrashed();
@@ -94,18 +94,18 @@ final class GetTrashRecordsAction
                 $q->where('name', 'like', "%{$search}%");
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
-            $records = collect($paged->items())->map(fn($st) => [
-                'id'         => $st->id,
-                'title'      => $st->name,
-                'subtitle'   => $st->code ?? '—',
-                'category'   => $st->type,
+            $records = collect($paged->items())->map(fn ($st) => [
+                'id' => $st->id,
+                'title' => $st->name,
+                'subtitle' => $st->code ?? '—',
+                'category' => $st->type,
                 'deleted_at' => $st->deleted_at?->diffForHumans(),
             ]);
             $pagination = [
                 'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
+                'last_page' => $paged->lastPage(),
+                'per_page' => $paged->perPage(),
+                'total' => $paged->total(),
             ];
         } elseif ($tab === 'expenses') {
             $q = Expense::onlyTrashed();
@@ -113,18 +113,18 @@ final class GetTrashRecordsAction
                 $q->where('title', 'like', "%{$search}%");
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
-            $records = collect($paged->items())->map(fn($e) => [
-                'id'         => $e->id,
-                'title'      => $e->title ?? 'مصروف',
-                'subtitle'   => (string)$e->amount . ' ج.م',
-                'category'   => $e->category,
+            $records = collect($paged->items())->map(fn ($e) => [
+                'id' => $e->id,
+                'title' => $e->title ?? 'مصروف',
+                'subtitle' => (string) $e->amount.' ج.م',
+                'category' => $e->category,
                 'deleted_at' => $e->deleted_at?->diffForHumans(),
             ]);
             $pagination = [
                 'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
+                'last_page' => $paged->lastPage(),
+                'per_page' => $paged->perPage(),
+                'total' => $paged->total(),
             ];
         } elseif ($tab === 'returns') {
             $q = ReturnDocument::onlyTrashed();
@@ -132,30 +132,30 @@ final class GetTrashRecordsAction
                 $q->where('return_number', 'like', "%{$search}%");
             }
             $paged = $q->latest('deleted_at')->paginate($perPage);
-            $records = collect($paged->items())->map(fn($r) => [
-                'id'         => $r->id,
-                'title'      => $r->return_number,
-                'subtitle'   => (string)$r->net_total . ' ج.م',
+            $records = collect($paged->items())->map(fn ($r) => [
+                'id' => $r->id,
+                'title' => $r->return_number,
+                'subtitle' => (string) $r->net_total.' ج.م',
                 'deleted_at' => $r->deleted_at?->diffForHumans(),
             ]);
             $pagination = [
                 'current_page' => $paged->currentPage(),
-                'last_page'    => $paged->lastPage(),
-                'per_page'     => $paged->perPage(),
-                'total'        => $paged->total(),
+                'last_page' => $paged->lastPage(),
+                'per_page' => $paged->perPage(),
+                'total' => $paged->total(),
             ];
         }
 
         return [
-            'tab'        => $tab,
-            'records'    => $records,
-            'counts'     => [
-                'items'     => $itemsCount,
+            'tab' => $tab,
+            'records' => $records,
+            'counts' => [
+                'items' => $itemsCount,
                 'customers' => $customersCount,
                 'suppliers' => $suppliersCount,
-                'stores'    => $storesCount,
-                'expenses'  => $expensesCount,
-                'returns'   => $returnsCount,
+                'stores' => $storesCount,
+                'expenses' => $expensesCount,
+                'returns' => $returnsCount,
             ],
             'pagination' => $pagination,
         ];

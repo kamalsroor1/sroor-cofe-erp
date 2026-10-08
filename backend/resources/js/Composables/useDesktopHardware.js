@@ -137,6 +137,6 @@ export function useDesktopHardware() {
         closeWindow,
         toggleFullscreen,
         toggleKiosk,
-        checkServerPing
+        checkServerPing,
     };
 }

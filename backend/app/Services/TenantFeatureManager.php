@@ -20,11 +20,11 @@ class TenantFeatureManager implements TenantFeatureManagerInterface
 
         // 2. فحص الباقة
         $plan = $tenant->plan;
-        if (!$plan) {
+        if (! $plan) {
             return false;
         }
 
-        return (bool)($plan->features[$featureKey] ?? false);
+        return (bool) ($plan->features[$featureKey] ?? false);
     }
 
     /**
@@ -35,7 +35,7 @@ class TenantFeatureManager implements TenantFeatureManagerInterface
         $enabledFeatures = $tenant->enabled_features ?? [];
 
         if (in_array($featureKey, $enabledFeatures, true)) {
-            $enabledFeatures = array_values(array_filter($enabledFeatures, fn($f) => $f !== $featureKey));
+            $enabledFeatures = array_values(array_filter($enabledFeatures, fn ($f) => $f !== $featureKey));
         } else {
             $enabledFeatures[] = $featureKey;
         }

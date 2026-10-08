@@ -2,9 +2,9 @@
 
 namespace App\Actions\Plans;
 
+use App\Http\Resources\PlanResource;
 use App\Models\Plan;
 use App\Models\PlanFeature;
-use App\Http\Resources\PlanResource;
 
 class GetSuperAdminPlansDataAction
 {

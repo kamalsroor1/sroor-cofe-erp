@@ -1,5 +1,7 @@
 <template>
-  <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 font-tajawal">
+  <div
+    class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 font-tajawal"
+  >
     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
       {{ $t('super.add_custom_unit_title') }}
     </label>

@@ -29,7 +29,7 @@
           :class="[
             modelValue ? 'font-bold text-theme-primary' : '',
             hasError ? 'border-rose-500 dark:border-rose-500 focus:ring-rose-500/20' : '',
-            inputClass
+            inputClass,
           ]"
         />
 
@@ -56,10 +56,7 @@
     </p>
 
     <!-- Helper / Hint Text -->
-    <p
-      v-else-if="hint"
-      class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5"
-    >
+    <p v-else-if="hint" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
       {{ hint }}
     </p>
   </div>
@@ -111,11 +108,14 @@ onMounted(() => {
   }
 });
 
-watch(() => props.modelValue, (newVal) => {
-  if (fpInstance && newVal !== fpInstance.input.value) {
-    fpInstance.setDate(newVal || '', false);
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (fpInstance && newVal !== fpInstance.input.value) {
+      fpInstance.setDate(newVal || '', false);
+    }
   }
-});
+);
 
 onUnmounted(() => {
   if (fpInstance) {
@@ -150,7 +150,9 @@ const errorMessage = computed(() => {
   font-family: 'Tajawal', 'Cairo', sans-serif !important;
   border-radius: 1.25rem !important;
   padding: 12px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.15),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
   border: 1px solid #e2e8f0 !important;
   background: #ffffff !important;
   color: #0f172a !important;

@@ -26,7 +26,7 @@ export function useSuperAdminTenants() {
 
     const planOptions = computed(() => [
         { value: 'all', label: t('super.all_plans') },
-        ...plansList.value.map(p => ({ value: p.id, label: p.name })),
+        ...plansList.value.map((p) => ({ value: p.id, label: p.name })),
     ]);
 
     const showCreateModal = ref(false);

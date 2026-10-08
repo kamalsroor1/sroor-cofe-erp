@@ -13,7 +13,7 @@ final class ToggleSupplierActiveAction
      */
     public function execute(Supplier $supplier): Supplier
     {
-        $supplier->update(['is_active' => !$supplier->is_active]);
+        $supplier->update(['is_active' => ! $supplier->is_active]);
 
         return $supplier->fresh();
     }

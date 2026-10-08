@@ -27,16 +27,16 @@ final class PaymentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('daily_journal.view') && !$user->can('customers.manage') && !$user->can('suppliers.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('customers.manage') && ! $user->can('suppliers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $type       = (string)$request->input('type', 'all'); // customer, supplier, all
+        $type = (string) $request->input('type', 'all'); // customer, supplier, all
         $customerId = $request->input('customer_id');
         $supplierId = $request->input('supplier_id');
-        $fromDate   = $request->input('from_date') ?: $request->input('from');
-        $toDate     = $request->input('to_date') ?: $request->input('to');
-        $perPage    = max(1, min(200, (int)$request->input('per_page', 20)));
+        $fromDate = $request->input('from_date') ?: $request->input('from');
+        $toDate = $request->input('to_date') ?: $request->input('to');
+        $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
         $query = Payment::query()->with(['customer:id,name,phone', 'supplier:id,name,phone', 'user:id,name']);
 
@@ -47,10 +47,10 @@ final class PaymentController extends Controller
         }
 
         if ($customerId && $customerId !== 'all') {
-            $query->where('customer_id', (int)$customerId);
+            $query->where('customer_id', (int) $customerId);
         }
         if ($supplierId && $supplierId !== 'all') {
-            $query->where('supplier_id', (int)$supplierId);
+            $query->where('supplier_id', (int) $supplierId);
         }
 
         if ($fromDate) {
@@ -62,21 +62,21 @@ final class PaymentController extends Controller
 
         $payments = $query->latest('id')->paginate($perPage);
 
-        $totalCollections = (string)(Payment::whereNotNull('customer_id')->sum('amount') ?: '0.000');
-        $totalDisbursements = (string)(Payment::whereNotNull('supplier_id')->sum('amount') ?: '0.000');
+        $totalCollections = (string) (Payment::whereNotNull('customer_id')->sum('amount') ?: '0.000');
+        $totalDisbursements = (string) (Payment::whereNotNull('supplier_id')->sum('amount') ?: '0.000');
 
         return response()->json([
             'success' => true,
             'summary' => [
-                'total_collections'   => (float)$totalCollections,
-                'total_disbursements' => (float)$totalDisbursements,
+                'total_collections' => (float) $totalCollections,
+                'total_disbursements' => (float) $totalDisbursements,
             ],
             'data' => $payments->items(),
             'pagination' => [
                 'current_page' => $payments->currentPage(),
-                'last_page'    => $payments->lastPage(),
-                'per_page'     => $payments->perPage(),
-                'total'        => $payments->total(),
+                'last_page' => $payments->lastPage(),
+                'per_page' => $payments->perPage(),
+                'total' => $payments->total(),
             ],
         ], 200);
     }
@@ -94,14 +94,14 @@ final class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تسجيل سند القبض وتحصيل مبلغ ' . number_format((float)$validated['amount'], 2) . ' ج.م بنجاح',
-                'data'    => $payment,
-                'customer_current_balance' => (float)($customer?->current_balance ?? 0),
+                'message' => 'تم تسجيل سند القبض وتحصيل مبلغ '.number_format((float) $validated['amount'], 2).' ج.م بنجاح',
+                'data' => $payment,
+                'customer_current_balance' => (float) ($customer?->current_balance ?? 0),
             ], 201);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'فشل تسجيل سند القبض: ' . $e->getMessage(),
+                'message' => 'فشل تسجيل سند القبض: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -119,14 +119,14 @@ final class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تسجيل سند الصرف وسداد مبلغ ' . number_format((float)$validated['amount'], 2) . ' ج.م للمورد بنجاح',
-                'data'    => $payment,
-                'supplier_current_balance' => (float)($supplier?->current_balance ?? 0),
+                'message' => 'تم تسجيل سند الصرف وسداد مبلغ '.number_format((float) $validated['amount'], 2).' ج.م للمورد بنجاح',
+                'data' => $payment,
+                'supplier_current_balance' => (float) ($supplier?->current_balance ?? 0),
             ], 201);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'فشل تسجيل سند الصرف: ' . $e->getMessage(),
+                'message' => 'فشل تسجيل سند الصرف: '.$e->getMessage(),
             ], 422);
         }
     }

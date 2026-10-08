@@ -20,7 +20,7 @@ final class StorePolicy
             return true;
         }
 
-        return (int)$user->default_store_id === $store->id
+        return (int) $user->default_store_id === $store->id
             || $user->stores()->where('stores.id', $store->id)->exists();
     }
 
@@ -54,7 +54,7 @@ final class StorePolicy
             return true;
         }
 
-        return (int)$user->default_store_id === $store->id
+        return (int) $user->default_store_id === $store->id
             || $user->stores()->where('stores.id', $store->id)->exists();
     }
 }

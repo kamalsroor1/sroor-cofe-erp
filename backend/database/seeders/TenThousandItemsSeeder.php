@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Store;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class TenThousandItemsSeeder extends Seeder
@@ -84,7 +84,9 @@ class TenThousandItemsSeeder extends Seeder
         // Loop until we reach 10,000 items
         while ($itemIndex <= $targetTotal) {
             foreach ($productTemplates as $tmpl) {
-                if ($itemIndex > $targetTotal) break;
+                if ($itemIndex > $targetTotal) {
+                    break;
+                }
 
                 $catName = $tmpl['cat'];
                 $catId = $categoryIds[$catName] ?? null;
@@ -92,7 +94,9 @@ class TenThousandItemsSeeder extends Seeder
                 $unit = $tmpl['unit'];
 
                 foreach ($tmpl['names'] as $baseName) {
-                    if ($itemIndex > $targetTotal) break;
+                    if ($itemIndex > $targetTotal) {
+                        break;
+                    }
 
                     $color = $colors[($itemIndex * 3 + 7) % count($colors)];
                     $capacity = $capacities[($itemIndex * 5 + 11) % count($capacities)];
@@ -108,7 +112,7 @@ class TenThousandItemsSeeder extends Seeder
                         $itemName = "{$brand} {$baseName} - {$capacity} [{$color}]";
                     }
 
-                    $code = sprintf("%s-%05d", $prefix, $itemIndex);
+                    $code = sprintf('%s-%05d', $prefix, $itemIndex);
 
                     // Financial Logic: Clean integer prices without fractions
                     $costBase = ($tmpl['cost_min'] + (($itemIndex * 137) % ($tmpl['cost_max'] - $tmpl['cost_min'] + 1)));
@@ -147,7 +151,7 @@ class TenThousandItemsSeeder extends Seeder
             }
         }
 
-        if (!empty($itemsToInsert)) {
+        if (! empty($itemsToInsert)) {
             $this->flushChunk($itemsToInsert, $mainStore->id);
         }
 

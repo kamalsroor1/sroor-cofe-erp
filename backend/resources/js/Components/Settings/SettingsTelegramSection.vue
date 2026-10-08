@@ -1,12 +1,18 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6 font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm dark:shadow-xl space-y-6 font-tajawal"
+  >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center">
+        <div
+          class="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center"
+        >
           <Bot class="w-5 h-5" />
         </div>
         <div>
-          <h2 class="text-base font-black text-slate-900 dark:text-white">{{ $t('settings.telegram_section_title') }}</h2>
+          <h2 class="text-base font-black text-slate-900 dark:text-white">
+            {{ $t('settings.telegram_section_title') }}
+          </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('settings.telegram_section_sub') }}</p>
         </div>
       </div>
@@ -18,8 +24,12 @@
       class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer transition select-none"
     >
       <div>
-        <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{{ $t('settings.telegram_enable_toggle') }}</div>
-        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ $t('settings.telegram_enable_desc') }}</div>
+        <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+          {{ $t('settings.telegram_enable_toggle') }}
+        </div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+          {{ $t('settings.telegram_enable_desc') }}
+        </div>
       </div>
       <div
         class="w-12 h-6 rounded-full transition-colors relative p-0.5 shrink-0"

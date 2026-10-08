@@ -2,22 +2,25 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Item;
 use App\Models\Customer;
+use App\Models\Item;
+use App\Models\User;
+use App\Services\CustomerBalanceService;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
-use App\Services\CustomerBalanceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class CustomerBalanceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected InvoiceService $invoiceService;
+
     protected PaymentService $paymentService;
+
     protected CustomerBalanceService $balanceService;
+
     protected User $user;
 
     protected function setUp(): void
@@ -34,26 +37,26 @@ class CustomerBalanceTest extends TestCase
     public function test_customer_balance_calculation_with_invoices_and_payments(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-BAL',
-            'name'          => 'طابعة حرارية 80مم',
+            'code' => 'ITM-BAL',
+            'name' => 'طابعة حرارية 80مم',
             'current_stock' => '20.000',
-            'cost_price'    => '1000.000',
+            'cost_price' => '1000.000',
             'selling_price' => '1500.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $customer = Customer::create([
-            'name'            => 'هايبر ماركت السلام',
+            'name' => 'هايبر ماركت السلام',
             'current_balance' => '0.000',
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         // Credit Invoice: 2 * 1500 = 3000.000 (Customer owes 3000)
         $this->invoiceService->confirmInvoice([
-            'customer_id'  => $customer->id,
+            'customer_id' => $customer->id,
             'payment_type' => 'credit',
-            'items'        => [
-                ['item_id' => $item->id, 'quantity' => '2.000', 'unit_price' => '1500.000']
+            'items' => [
+                ['item_id' => $item->id, 'quantity' => '2.000', 'unit_price' => '1500.000'],
             ],
         ]);
 
@@ -63,7 +66,7 @@ class CustomerBalanceTest extends TestCase
         // Payment: 1000.000
         $this->paymentService->recordCustomerPayment([
             'customer_id' => $customer->id,
-            'amount'      => '1000.000',
+            'amount' => '1000.000',
         ]);
 
         $customer->refresh();

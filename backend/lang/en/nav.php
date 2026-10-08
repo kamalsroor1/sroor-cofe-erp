@@ -15,7 +15,7 @@ return [
     'more_short' => 'More',
     'more_menu' => 'More Menus',
     'returns_adjustments' => 'Returns Registry',
-    
+
     'group_inventory' => 'Inventory & Branches',
     'items_catalog' => 'Items & Prices',
     'store_stocks' => 'Store Stocks & Matrix',
@@ -25,13 +25,13 @@ return [
     'smart_reorder' => 'Smart Reorder',
     'coffee_blender' => 'Product Blender & Assembly',
     'suppliers' => 'Suppliers',
-    
+
     'group_financials' => 'Financials & Reports',
     'customers' => 'Customers',
     'daily_journal' => 'Daily Journal & Cash',
     'expenses' => 'Expenses',
     'reports' => 'Financial Reports',
-    
+
     'group_management' => 'System & Management',
     'users' => 'Users & Cashiers',
     'roles' => 'Roles & Permissions',

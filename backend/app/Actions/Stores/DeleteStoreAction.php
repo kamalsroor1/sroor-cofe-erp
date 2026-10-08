@@ -14,13 +14,13 @@ final class DeleteStoreAction
      */
     public function execute(Store $store): bool
     {
-        if (!$store->canBeDeleted()) {
+        if (! $store->canBeDeleted()) {
             $blockers = implode(', ', $store->getDeletionBlockers());
             throw ValidationException::withMessages([
                 'store' => ["لا يمكن حذف الفرع ({$store->name}) لوجود ارتباطات: {$blockers}"],
             ]);
         }
 
-        return (bool)$store->delete();
+        return (bool) $store->delete();
     }
 }

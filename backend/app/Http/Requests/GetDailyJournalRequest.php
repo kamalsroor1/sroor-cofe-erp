@@ -16,7 +16,7 @@ final class GetDailyJournalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date'     => ['sometimes', 'date'],
+            'date' => ['sometimes', 'date'],
             'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
         ];
     }

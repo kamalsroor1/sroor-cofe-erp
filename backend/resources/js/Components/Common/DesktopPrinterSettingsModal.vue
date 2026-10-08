@@ -1,13 +1,10 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="$t('settings.desktop_hardware_title')"
-    max-width="max-w-lg"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="$t('settings.desktop_hardware_title')" max-width="max-w-lg" @close="$emit('close')">
     <div class="space-y-5 font-tajawal text-slate-800 dark:text-slate-100 p-1">
       <!-- 🖥️ Desktop App Header Banner -->
-      <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div
+        class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+      >
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-theme-primary/10 text-theme-primary flex items-center justify-center">
             <Printer class="w-5 h-5 stroke-[2.2]" />
@@ -56,9 +53,11 @@
             type="button"
             @click="setPaperWidth('80mm')"
             class="p-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
-            :class="paperWidth === '80mm'
-              ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
-              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'"
+            :class="
+              paperWidth === '80mm'
+                ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
+                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'
+            "
           >
             <FileText class="w-4 h-4" />
             <span>{{ $t('settings.paper_80mm') }}</span>
@@ -67,9 +66,11 @@
             type="button"
             @click="setPaperWidth('58mm')"
             class="p-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
-            :class="paperWidth === '58mm'
-              ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
-              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'"
+            :class="
+              paperWidth === '58mm'
+                ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
+                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'
+            "
           >
             <Receipt class="w-4 h-4" />
             <span>{{ $t('settings.paper_58mm') }}</span>
@@ -120,9 +121,11 @@
           type="button"
           @click="toggleKiosk"
           class="px-3.5 py-1.5 rounded-xl text-xs font-black transition border active:scale-95 cursor-pointer"
-          :class="isKioskMode
-            ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-500/20'
-            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'"
+          :class="
+            isKioskMode
+              ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-500/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+          "
         >
           {{ isKioskMode ? $t('settings.kiosk_active') : $t('settings.kiosk_enable') }}
         </button>
@@ -139,10 +142,7 @@
           <RefreshCw class="w-4 h-4" />
           <span>{{ $t('settings.refresh_printers_list') }}</span>
         </button>
-        <BaseButton
-          variant="primary"
-          @click="$emit('close')"
-        >
+        <BaseButton variant="primary" @click="$emit('close')">
           {{ $t('common.done') }}
         </BaseButton>
       </div>
@@ -163,20 +163,13 @@ import { trans } from '../../helpers/trans';
 const appConfigStore = useAppConfigStore();
 
 defineProps({
-  show: { type: Boolean, default: false }
+  show: { type: Boolean, default: false },
 });
 
 defineEmits(['close']);
 
-const {
-  availablePrinters,
-  isPrinting,
-  isKioskMode,
-  loadPrinters,
-  printThermalReceipt,
-  openCashDrawer,
-  toggleKiosk
-} = useDesktopHardware();
+const { availablePrinters, isPrinting, isKioskMode, loadPrinters, printThermalReceipt, openCashDrawer, toggleKiosk } =
+  useDesktopHardware();
 
 const selectedPrinter = ref(localStorage.getItem('desktop_thermal_printer') || '');
 const paperWidth = ref(localStorage.getItem('desktop_paper_width') || '80mm');
@@ -208,7 +201,7 @@ const handleTestPrint = async () => {
 
   const res = await printThermalReceipt(testSlipHtml, {
     printerName: selectedPrinter.value,
-    paperWidth: paperWidth.value
+    paperWidth: paperWidth.value,
   });
 
   if (res && res.success) {
@@ -216,7 +209,7 @@ const handleTestPrint = async () => {
       icon: 'success',
       title: trans('settings.test_print_success'),
       timer: 2000,
-      showConfirmButton: false
+      showConfirmButton: false,
     });
   }
 };
@@ -227,7 +220,7 @@ const handleTestDrawer = async () => {
     icon: 'info',
     title: trans('settings.drawer_signal_sent'),
     timer: 1500,
-    showConfirmButton: false
+    showConfirmButton: false,
   });
 };
 

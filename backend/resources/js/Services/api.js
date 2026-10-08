@@ -6,7 +6,7 @@ import { trans } from '../helpers/trans';
 const apiClient = axios.create({
     baseURL: '/api/v1',
     headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
     },
     timeout: 30000,
@@ -65,7 +65,10 @@ apiClient.interceptors.response.use(
             const currentPath = window.location.pathname;
             if (!currentPath.includes('/login')) {
                 if (window.spaRouter) {
-                    window.spaRouter.replace({ name: 'login', query: { redirect: currentPath !== '/' ? currentPath : undefined } });
+                    window.spaRouter.replace({
+                        name: 'login',
+                        query: { redirect: currentPath !== '/' ? currentPath : undefined },
+                    });
                 } else {
                     window.location.href = '/login';
                 }

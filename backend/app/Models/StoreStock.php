@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StoreStock extends Model
 {
@@ -20,8 +20,8 @@ class StoreStock extends Model
     ];
 
     protected $casts = [
-        'quantity'             => 'decimal:3',
-        'min_stock'            => 'decimal:3',
+        'quantity' => 'decimal:3',
+        'min_stock' => 'decimal:3',
         'custom_selling_price' => 'decimal:3',
     ];
 
@@ -41,11 +41,11 @@ class StoreStock extends Model
      */
     public function getEffectiveSellingPriceAttribute(): string
     {
-        if ($this->custom_selling_price !== null && bccomp((string)$this->custom_selling_price, '0.000', 3) > 0) {
-            return (string)$this->custom_selling_price;
+        if ($this->custom_selling_price !== null && bccomp((string) $this->custom_selling_price, '0.000', 3) > 0) {
+            return (string) $this->custom_selling_price;
         }
 
-        return (string)($this->item?->selling_price ?? '0.000');
+        return (string) ($this->item?->selling_price ?? '0.000');
     }
 
     /**
@@ -61,6 +61,6 @@ class StoreStock extends Model
      */
     public function isLowStock(): bool
     {
-        return bccomp((string)$this->quantity, (string)$this->min_stock, 3) <= 0;
+        return bccomp((string) $this->quantity, (string) $this->min_stock, 3) <= 0;
     }
 }

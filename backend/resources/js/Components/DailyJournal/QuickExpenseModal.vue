@@ -1,9 +1,5 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="$t('treasury.record_journal_expense_title')"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="$t('treasury.record_journal_expense_title')" @close="$emit('close')">
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <div>
         <BaseInput
@@ -70,12 +66,7 @@
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

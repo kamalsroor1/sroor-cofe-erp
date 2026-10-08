@@ -5,7 +5,6 @@ namespace App\Actions\AppVersions;
 use App\DTOs\AppVersions\StoreAppVersionDTO;
 use App\Models\AppVersion;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CreateAppVersionAction
@@ -26,9 +25,9 @@ class CreateAppVersionAction
                     default => $dto->apkFile->getClientOriginalExtension() ?: 'bin',
                 };
                 $appNameSlug = Str::slug(config('app.name', 'erp-pos')) ?: 'erp-pos';
-                $prefix = $dto->platform === 'windows' ? $appNameSlug . '-Setup-v' : $appNameSlug . '-v';
-                $apkFilename = $prefix . Str::slug($dto->versionName) . '.' . $ext;
-                $apkPath = $dto->apkFile->storeAs('apks/' . $dto->platform, $apkFilename, 'public');
+                $prefix = $dto->platform === 'windows' ? $appNameSlug.'-Setup-v' : $appNameSlug.'-v';
+                $apkFilename = $prefix.Str::slug($dto->versionName).'.'.$ext;
+                $apkPath = $dto->apkFile->storeAs('apks/'.$dto->platform, $apkFilename, 'public');
                 $apkSizeBytes = $dto->apkFile->getSize();
                 $apkChecksum = hash_file('sha256', $dto->apkFile->getRealPath());
             }

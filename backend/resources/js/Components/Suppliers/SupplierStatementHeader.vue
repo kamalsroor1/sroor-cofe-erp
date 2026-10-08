@@ -10,7 +10,9 @@
           <ArrowRight class="w-5 h-5" />
         </router-link>
         <div>
-          <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 font-tajawal">
+          <h1
+            class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 font-tajawal"
+          >
             <span>{{ $t('contacts.supplier_ledger_title') }}:</span>
             <span class="text-theme-primary">{{ supplierName || '—' }}</span>
           </h1>

@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl font-tajawal"
+  >
     <!-- 🔄 Skeleton Loading State (Facebook-Style Shimmer) -->
     <TableSkeleton v-if="isLoading" :columns-count="7" :rows-count="5" />
 
@@ -9,7 +11,9 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="py-3 px-4 text-start font-bold">#</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.transfer_number') }}</th>
               <th class="py-3 px-4 text-start font-bold">{{ $t('inventory.from_store') }}</th>
@@ -33,11 +37,7 @@
 
               <!-- Transfer Number -->
               <td class="py-3.5 px-4 font-mono font-bold text-theme-primary">
-                <button
-                  type="button"
-                  @click="$emit('preview', trf)"
-                  class="hover:underline cursor-pointer font-bold"
-                >
+                <button type="button" @click="$emit('preview', trf)" class="hover:underline cursor-pointer font-bold">
                   {{ trf.transfer_number }}
                 </button>
               </td>
@@ -59,7 +59,9 @@
 
               <!-- Items Count -->
               <td class="py-3.5 px-4 text-center font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                <span class="px-2 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs">
+                <span
+                  class="px-2 py-0.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs"
+                >
                   {{ trf.items_count }} {{ $t('inventory.item_unit') }}
                 </span>
               </td>
@@ -68,9 +70,15 @@
               <td class="py-3.5 px-4 text-center font-tajawal">
                 <span
                   class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block"
-                  :class="!trf.is_cancelled ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
+                  :class="
+                    !trf.is_cancelled
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                  "
                 >
-                  {{ !trf.is_cancelled ? $t('inventory.transfer_status_done') : $t('inventory.transfer_status_cancelled') }}
+                  {{
+                    !trf.is_cancelled ? $t('inventory.transfer_status_done') : $t('inventory.transfer_status_cancelled')
+                  }}
                 </span>
               </td>
 
@@ -109,21 +117,29 @@
           <!-- Top Row: Transfer Number + Status -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-              <span class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-theme-primary/10 text-theme-primary text-sm font-black">
+              <span
+                class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-theme-primary/10 text-theme-primary text-sm font-black"
+              >
                 🚚
               </span>
               <span class="font-mono font-black text-theme-primary text-xs">{{ trf.transfer_number }}</span>
             </div>
             <span
               class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0"
-              :class="!trf.is_cancelled ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
+              :class="
+                !trf.is_cancelled
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+              "
             >
               {{ !trf.is_cancelled ? $t('inventory.transfer_status_done') : $t('inventory.transfer_status_cancelled') }}
             </span>
           </div>
 
           <!-- Transfer Route Grid -->
-          <div class="grid grid-cols-2 gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
+          <div
+            class="grid grid-cols-2 gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-xs"
+          >
             <div>
               <span class="text-[10px] text-slate-400 block">{{ $t('inventory.from_store') }}:</span>
               <span class="font-bold text-slate-800 dark:text-slate-200">{{ trf.from_store_name }}</span>
@@ -163,7 +179,10 @@
       </div>
 
       <!-- 📄 Pagination Bar -->
-      <div v-if="pagination.last_page > 1" class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 font-tajawal">
+      <div
+        v-if="pagination.last_page > 1"
+        class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 font-tajawal"
+      >
         <div class="text-xs text-slate-500 dark:text-slate-400">
           {{ $t('inventory.total_results_transfers', { count: pagination.total }) }}
         </div>
@@ -176,7 +195,9 @@
             :label="$t('common.previous')"
             @click="$emit('page-change', pagination.current_page - 1)"
           />
-          <span class="px-3 py-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 rounded-xl">
+          <span
+            class="px-3 py-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 rounded-xl"
+          >
             {{ pagination.current_page }} / {{ pagination.last_page }}
           </span>
           <BaseButton

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Tenant;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Tenant;
 
 class ResolveApiTenancy
 {
@@ -52,14 +52,14 @@ class ResolveApiTenancy
             'www.baraa-solutions.com',
         ]);
 
-        if (!in_array($host, $centralDomains, true)) {
+        if (! in_array($host, $centralDomains, true)) {
             // A. Search by domain record
             $tenant = Tenant::whereHas('domains', fn ($q) => $q->where('domain', $host))->first();
 
             // B. Search by slug if host is a subdomain like 2m.baraa-solutions.com
-            if (!$tenant) {
+            if (! $tenant) {
                 $subdomain = explode('.', $host)[0] ?? null;
-                if ($subdomain && !in_array($subdomain, ['www', 'mail', 'cpanel', 'webmail'], true)) {
+                if ($subdomain && ! in_array($subdomain, ['www', 'mail', 'cpanel', 'webmail'], true)) {
                     $tenant = Tenant::find($subdomain) ?? Tenant::where('slug', $subdomain)->first();
                 }
             }

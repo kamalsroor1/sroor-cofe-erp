@@ -22,16 +22,16 @@ final class PaySupplierAction
         $supplier = Supplier::findOrFail($dto->supplier_id);
 
         $payment = $this->paymentService->recordSupplierPayment([
-            'supplier_id'    => $supplier->id,
-            'amount'         => $dto->amount,
+            'supplier_id' => $supplier->id,
+            'amount' => $dto->amount,
             'payment_method' => $dto->payment_method,
-            'payment_date'   => $dto->payment_date,
-            'notes'          => $dto->notes ?? __('contacts.payment_voucher'),
+            'payment_date' => $dto->payment_date,
+            'notes' => $dto->notes ?? __('contacts.payment_voucher'),
         ]);
 
         return [
             'supplier' => $supplier->fresh(),
-            'payment'  => $payment,
+            'payment' => $payment,
         ];
     }
 }

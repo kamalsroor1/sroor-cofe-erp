@@ -1,6 +1,8 @@
 <template>
   <div class="space-y-3 font-tajawal">
-    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+    <div
+      class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3"
+    >
       <!-- Search Input -->
       <div class="flex-1">
         <BaseSearchInput
@@ -45,14 +47,20 @@
 
     <!-- Quick Category Chips -->
     <div v-if="quickCategories.length > 0" class="flex items-center gap-2 overflow-x-auto pb-1">
-      <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 font-tajawal">{{ $t('expenses.quick_categories_label') }}</span>
+      <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0 font-tajawal">{{
+        $t('expenses.quick_categories_label')
+      }}</span>
       <button
         v-for="cat in quickCategories"
         :key="cat"
         type="button"
         @click="$emit('filter-category', cat)"
         class="min-h-[32px] px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border"
-        :class="selectedCategory === cat ? 'bg-theme-primary text-white font-bold border-theme-primary shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+        :class="
+          selectedCategory === cat
+            ? 'bg-theme-primary text-white font-bold border-theme-primary shadow-sm'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+        "
       >
         {{ cat }}
       </button>

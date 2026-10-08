@@ -10,7 +10,7 @@ return new class extends Migration
     {
         // 1. Add payment_method to invoices table
         Schema::table('invoices', function (Blueprint $table) {
-            if (!Schema::hasColumn('invoices', 'payment_method')) {
+            if (! Schema::hasColumn('invoices', 'payment_method')) {
                 $table->string('payment_method', 50)->default('cash')->after('payment_type')->index();
             }
         });

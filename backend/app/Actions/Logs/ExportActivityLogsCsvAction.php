@@ -14,9 +14,9 @@ final class ExportActivityLogsCsvAction
      */
     public function execute(array $filters): StreamedResponse
     {
-        $search = trim((string)($filters['search'] ?? ''));
-        $module = (string)($filters['module'] ?? 'all');
-        $action = (string)($filters['action'] ?? 'all');
+        $search = trim((string) ($filters['search'] ?? ''));
+        $module = (string) ($filters['module'] ?? 'all');
+        $action = (string) ($filters['action'] ?? 'all');
         $userId = $filters['user_id'] ?? 'all';
         $storeId = $filters['store_id'] ?? 'all';
         $fromDate = $filters['from_date'] ?? $filters['from'] ?? null;
@@ -27,9 +27,9 @@ final class ExportActivityLogsCsvAction
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
-                  ->orWhereHas('store', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
+                    ->orWhereHas('store', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -42,11 +42,11 @@ final class ExportActivityLogsCsvAction
         }
 
         if ($userId !== 'all' && $userId !== null && $userId !== '') {
-            $query->where('user_id', (int)$userId);
+            $query->where('user_id', (int) $userId);
         }
 
         if ($storeId !== 'all' && $storeId !== null && $storeId !== '') {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', (int) $storeId);
         }
 
         if ($fromDate) {
@@ -57,7 +57,7 @@ final class ExportActivityLogsCsvAction
             $query->whereDate('created_at', '<=', $toDate);
         }
 
-        $filename = 'activity_logs_' . date('Y-m-d_His') . '.csv';
+        $filename = 'activity_logs_'.date('Y-m-d_His').'.csv';
 
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');

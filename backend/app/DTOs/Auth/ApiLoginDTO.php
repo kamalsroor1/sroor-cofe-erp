@@ -18,15 +18,15 @@ final class ApiLoginDTO
 
     public static function fromRequest(ApiLoginRequest $request): self
     {
-        $loginInput = $request->validated('login') 
-            ?? $request->validated('phone') 
-            ?? $request->validated('email') 
+        $loginInput = $request->validated('login')
+            ?? $request->validated('phone')
+            ?? $request->validated('email')
             ?? '';
 
         return new self(
-            login: trim((string)$loginInput),
-            password: (string)$request->validated('password'),
-            deviceName: (string)($request->validated('device_name') ?? $request->header('X-Device-Name') ?? 'web-spa'),
+            login: trim((string) $loginInput),
+            password: (string) $request->validated('password'),
+            deviceName: (string) ($request->validated('device_name') ?? $request->header('X-Device-Name') ?? 'web-spa'),
             tenantId: $request->validated('tenant') ?? $request->header('X-Tenant') ?? null,
             deviceIp: $request->ip(),
         );

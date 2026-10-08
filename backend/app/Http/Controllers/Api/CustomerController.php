@@ -38,23 +38,23 @@ final class CustomerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $debtStatus = (string)$request->input('debt_status', 'all');
-        $status = (string)$request->input('status', 'all');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
+        $search = trim((string) $request->input('search', ''));
+        $debtStatus = (string) $request->input('debt_status', 'all');
+        $status = (string) $request->input('status', 'all');
+        $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
         $query = Customer::withCount(['invoices', 'payments']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('tax_number', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('tax_number', 'like', "%{$search}%");
             });
         }
 
@@ -74,23 +74,23 @@ final class CustomerController extends Controller
 
         $customers = $query->latest('id')->paginate($perPage);
 
-        $totalDebt = (float)Customer::where('current_balance', '>', 0)->sum('current_balance');
+        $totalDebt = (float) Customer::where('current_balance', '>', 0)->sum('current_balance');
         $debtorsCount = Customer::where('current_balance', '>', 0)->count();
         $totalCustomersCount = Customer::count();
 
         return response()->json([
             'success' => true,
-            'data'    => CustomerResource::collection($customers->items())->resolve(),
-            'meta'    => [
+            'data' => CustomerResource::collection($customers->items())->resolve(),
+            'meta' => [
                 'current_page' => $customers->currentPage(),
-                'last_page'    => $customers->lastPage(),
-                'per_page'     => $customers->perPage(),
-                'total'        => $customers->total(),
+                'last_page' => $customers->lastPage(),
+                'per_page' => $customers->perPage(),
+                'total' => $customers->total(),
             ],
             'summary' => [
-                'total_debt'          => $totalDebt,
-                'debtors_count'       => $debtorsCount,
-                'total_customers'     => $totalCustomersCount,
+                'total_debt' => $totalDebt,
+                'debtors_count' => $debtorsCount,
+                'total_customers' => $totalCustomersCount,
             ],
         ], 200);
     }
@@ -106,7 +106,7 @@ final class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.customer_added') ?: 'تم إضافة العميل بنجاح',
-            'data'    => (new CustomerResource($customer))->resolve(),
+            'data' => (new CustomerResource($customer))->resolve(),
         ], 201);
     }
 
@@ -116,7 +116,7 @@ final class CustomerController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage') && !$user->can('pos.access') && !$user->can('invoices.create')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -124,7 +124,7 @@ final class CustomerController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new CustomerResource($customer))->resolve(),
+            'data' => (new CustomerResource($customer))->resolve(),
         ], 200);
     }
 
@@ -140,7 +140,7 @@ final class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.customer_updated') ?: 'تم تعديل بيانات العميل بنجاح',
-            'data'    => (new CustomerResource($updatedCustomer))->resolve(),
+            'data' => (new CustomerResource($updatedCustomer))->resolve(),
         ], 200);
     }
 
@@ -155,9 +155,9 @@ final class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.payment_recorded') ?: 'تم تسجيل سند التحصيل بنجاح',
-            'data'    => [
+            'data' => [
                 'customer' => (new CustomerResource($result['customer']))->resolve(),
-                'payment'  => $result['payment'],
+                'payment' => $result['payment'],
             ],
         ], 200);
     }
@@ -168,7 +168,7 @@ final class CustomerController extends Controller
     public function statement(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('customers.statement') && !$user->can('customers.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.statement') && ! $user->can('customers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -180,7 +180,7 @@ final class CustomerController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ], 200);
     }
 
@@ -190,7 +190,7 @@ final class CustomerController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -200,7 +200,7 @@ final class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('contacts.customer_status_updated') ?: 'تم تحديث حالة العميل بنجاح',
-            'data'    => (new CustomerResource($toggled))->resolve(),
+            'data' => (new CustomerResource($toggled))->resolve(),
         ], 200);
     }
 
@@ -210,7 +210,7 @@ final class CustomerController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('customers.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('customers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

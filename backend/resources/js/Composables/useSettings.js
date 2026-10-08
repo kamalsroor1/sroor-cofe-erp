@@ -3,13 +3,7 @@ import api from '../services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useAppConfigStore } from '../stores/appConfig';
-import {
-    Building2,
-    Palette,
-    Printer,
-    Bot,
-    Package
-} from 'lucide-vue-next';
+import { Building2, Palette, Printer, Bot, Package } from 'lucide-vue-next';
 
 export function useSettings() {
     const { t } = useTrans();
@@ -43,7 +37,7 @@ export function useSettings() {
             icon: Building2,
             iconBg: 'bg-theme-light border border-theme-border',
             iconColor: 'text-theme-primary',
-            badge: t('settings.sec_branding_badge')
+            badge: t('settings.sec_branding_badge'),
         },
         {
             id: 'appearance',
@@ -53,7 +47,7 @@ export function useSettings() {
             icon: Palette,
             iconBg: 'bg-purple-500/10 border border-purple-500/20',
             iconColor: 'text-purple-500 dark:text-purple-400',
-            badge: t('settings.sec_appearance_badge')
+            badge: t('settings.sec_appearance_badge'),
         },
         {
             id: 'printing',
@@ -63,7 +57,7 @@ export function useSettings() {
             icon: Printer,
             iconBg: 'bg-blue-500/10 border border-blue-500/20',
             iconColor: 'text-blue-500 dark:text-blue-400',
-            badge: t('settings.sec_printing_badge')
+            badge: t('settings.sec_printing_badge'),
         },
         {
             id: 'telegram',
@@ -73,7 +67,7 @@ export function useSettings() {
             icon: Bot,
             iconBg: 'bg-cyan-500/10 border border-cyan-500/20',
             iconColor: 'text-cyan-500 dark:text-cyan-400',
-            badge: t('settings.sec_telegram_badge')
+            badge: t('settings.sec_telegram_badge'),
         },
         {
             id: 'units',
@@ -83,7 +77,7 @@ export function useSettings() {
             icon: Package,
             iconBg: 'bg-emerald-500/10 border border-emerald-500/20',
             iconColor: 'text-emerald-500 dark:text-emerald-400',
-            badge: t('settings.sec_units_badge')
+            badge: t('settings.sec_units_badge'),
         },
     ]);
 
@@ -118,11 +112,31 @@ export function useSettings() {
     });
 
     const newUnitInput = ref('');
-    const defaultPresets = ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'باكت', 'حبة', 'لتر', 'مل', 'متر', 'طقم', 'زوج', 'باليتة'];
+    const defaultPresets = [
+        'قطعة',
+        'علبة',
+        'كرتونة',
+        'كجم',
+        'جرام',
+        'شيكارة',
+        'طرد',
+        'دستة',
+        'باكت',
+        'حبة',
+        'لتر',
+        'مل',
+        'متر',
+        'طقم',
+        'زوج',
+        'باليتة',
+    ];
 
     const activeUnitsList = computed(() => {
         if (!form.value.inventory_units) return [];
-        return form.value.inventory_units.split(',').map(u => u.trim()).filter(Boolean);
+        return form.value.inventory_units
+            .split(',')
+            .map((u) => u.trim())
+            .filter(Boolean);
     });
 
     const addCustomUnit = () => {
@@ -271,7 +285,11 @@ export function useSettings() {
                 Swal.fire({ icon: 'error', title: t('settings.test_send_failed'), text: res.data.message });
             }
         } catch (e) {
-            Swal.fire({ icon: 'error', title: t('common.error'), text: e.response?.data?.message || t('settings.test_send_failed') });
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: e.response?.data?.message || t('settings.test_send_failed'),
+            });
         } finally {
             isTestingTelegram.value = false;
         }

@@ -1,5 +1,7 @@
 <template>
-  <div class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 font-tajawal">
+  <div
+    class="p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 font-tajawal"
+  >
     <!-- Search Input -->
     <div class="flex-1 w-full">
       <BaseSearchInput
@@ -17,9 +19,11 @@
         :key="preset.id"
         @click="$emit('select-preset', preset.id)"
         class="min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95 flex items-center justify-center"
-        :class="activePreset === preset.id
-          ? 'bg-theme-primary text-white shadow-xs font-black'
-          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+        :class="
+          activePreset === preset.id
+            ? 'bg-theme-primary text-white shadow-xs font-black'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+        "
       >
         {{ preset.label }}
       </button>

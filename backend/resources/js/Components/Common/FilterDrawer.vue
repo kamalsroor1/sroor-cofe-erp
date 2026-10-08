@@ -14,10 +14,7 @@
         :dir="$i18n?.locale === 'en' ? 'ltr' : 'rtl'"
       >
         <!-- Backdrop -->
-        <div
-          class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
-          @click="close"
-        />
+        <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" @click="close" />
 
         <!-- Drawer Panel -->
         <div class="fixed inset-y-0 start-0 max-w-full flex pointer-events-none">
@@ -34,9 +31,13 @@
               class="w-screen max-w-sm sm:max-w-md bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between pointer-events-auto"
             >
               <!-- Drawer Header -->
-              <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center justify-between shrink-0">
+              <div
+                class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center justify-between shrink-0"
+              >
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center font-bold text-lg shadow-xs">
+                  <div
+                    class="w-10 h-10 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center font-bold text-lg shadow-xs"
+                  >
                     <SlidersHorizontal class="w-5 h-5 text-theme-primary" />
                   </div>
                   <div>
@@ -72,7 +73,9 @@
               </div>
 
               <!-- Drawer Footer (Sticky Actions) -->
-              <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center justify-between gap-2.5 shrink-0">
+              <div
+                class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center justify-between gap-2.5 shrink-0"
+              >
                 <BaseButton
                   type="button"
                   variant="secondary"
@@ -83,13 +86,7 @@
                 />
 
                 <div class="flex items-center gap-2">
-                  <BaseButton
-                    type="button"
-                    variant="ghost"
-                    size="md"
-                    :label="$t('common.cancel')"
-                    @click="close"
-                  />
+                  <BaseButton type="button" variant="ghost" size="md" :label="$t('common.cancel')" @click="close" />
                   <BaseButton
                     type="button"
                     variant="primary"

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('users') && !Schema::hasColumn('users', 'show_print_subtitle')) {
+        if (Schema::hasTable('users') && ! Schema::hasColumn('users', 'show_print_subtitle')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->boolean('show_print_subtitle')->default(true)->after('theme_preference');
             });

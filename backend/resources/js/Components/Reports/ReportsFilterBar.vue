@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-3 font-tajawal">
+  <div
+    class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-3 font-tajawal"
+  >
     <!-- Preset Periods & Store Selector -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex flex-wrap items-center gap-1.5">
@@ -9,7 +11,11 @@
           type="button"
           @click="$emit('set-period', p.key)"
           class="min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
-          :class="period === p.key ? 'bg-theme-primary text-white font-black shadow-sm' : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'"
+          :class="
+            period === p.key
+              ? 'bg-theme-primary text-white font-black shadow-sm'
+              : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+          "
         >
           {{ p.label }}
         </button>
@@ -27,12 +33,17 @@
     </div>
 
     <!-- Custom Dates & Stock Filter Row -->
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-200 dark:border-slate-800/80">
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-200 dark:border-slate-800/80"
+    >
       <div class="flex flex-wrap items-center gap-2">
         <div class="w-36">
           <BaseDatePicker
             :model-value="from"
-            @update:model-value="$emit('update:from', $event); $emit('date-change')"
+            @update:model-value="
+              $emit('update:from', $event);
+              $emit('date-change');
+            "
             :placeholder="$t('common.from')"
           />
         </div>
@@ -40,7 +51,10 @@
         <div class="w-36">
           <BaseDatePicker
             :model-value="to"
-            @update:model-value="$emit('update:to', $event); $emit('date-change')"
+            @update:model-value="
+              $emit('update:to', $event);
+              $emit('date-change');
+            "
             :placeholder="$t('common.to')"
           />
         </div>
@@ -82,7 +96,7 @@ defineEmits(['set-period', 'update:from', 'update:to', 'update:storeId', 'update
 
 const storeOptions = computed(() => [
   { value: 'all', label: t('reports.all_stores_branches') },
-  ...props.stores.map(s => ({ value: s.id, label: s.name }))
+  ...props.stores.map((s) => ({ value: s.id, label: s.name })),
 ]);
 
 const stockOptions = computed(() => [

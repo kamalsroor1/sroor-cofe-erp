@@ -2,18 +2,18 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Item;
-use App\Models\StockMovement;
+use App\Models\User;
 use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class StockAdjustmentFeatureTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $user;
+
     protected StockService $stockService;
 
     protected function setUp(): void
@@ -27,12 +27,12 @@ class StockAdjustmentFeatureTest extends TestCase
     public function test_adjust_stock_with_surplus_increases_stock_and_logs_inbound_movement(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-ADJ-PLUS',
-            'name'          => 'شاي أسود كيني فاخر',
+            'code' => 'ITM-ADJ-PLUS',
+            'name' => 'شاي أسود كيني فاخر',
             'current_stock' => '20.000',
-            'cost_price'    => '50.000',
+            'cost_price' => '50.000',
             'selling_price' => '80.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         // Physical count shows 25 kg (+5 kg difference)
@@ -53,12 +53,12 @@ class StockAdjustmentFeatureTest extends TestCase
     public function test_adjust_stock_with_deficit_decreases_stock_and_logs_outbound_movement(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-ADJ-MINUS',
-            'name'          => 'بن محوج خاص',
+            'code' => 'ITM-ADJ-MINUS',
+            'name' => 'بن محوج خاص',
             'current_stock' => '50.000',
-            'cost_price'    => '150.000',
+            'cost_price' => '150.000',
             'selling_price' => '220.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         // Physical count shows 47.5 kg (-2.5 kg deficit)
@@ -79,12 +79,12 @@ class StockAdjustmentFeatureTest extends TestCase
     public function test_adjust_stock_with_identical_quantity_throws_exception(): void
     {
         $item = Item::create([
-            'code'          => 'ITM-ADJ-SAME',
-            'name'          => 'أكواب ورقية 8 أونص',
+            'code' => 'ITM-ADJ-SAME',
+            'name' => 'أكواب ورقية 8 أونص',
             'current_stock' => '100.000',
-            'cost_price'    => '1.000',
+            'cost_price' => '1.000',
             'selling_price' => '2.000',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $this->expectException(\Exception::class);

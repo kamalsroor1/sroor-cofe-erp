@@ -1,5 +1,7 @@
 <template>
-  <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6 font-tajawal">
+  <div
+    class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 gap-6 font-tajawal"
+  >
     <div class="space-y-3">
       <div>
         <BaseTextarea
@@ -35,7 +37,9 @@
     </div>
 
     <!-- Total Calculation Ledger -->
-    <div class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2.5 font-mono text-xs self-center">
+    <div
+      class="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2.5 font-mono text-xs self-center"
+    >
       <div class="flex justify-between text-slate-600 dark:text-slate-300 font-sans font-tajawal">
         <span>{{ $t('purchases.items_total_value') }}</span>
         <span class="font-mono font-bold">{{ formatMoney(subtotal) }} {{ $t('common.currency') }}</span>
@@ -44,7 +48,9 @@
         <span>{{ $t('purchases.discount_earned') }}</span>
         <span class="font-mono font-bold">-{{ formatMoney(discount) }} {{ $t('common.currency') }}</span>
       </div>
-      <div class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal">
+      <div
+        class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal"
+      >
         <span>{{ $t('purchases.final_net_total') }}</span>
         <span class="font-mono text-theme-primary">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
       </div>

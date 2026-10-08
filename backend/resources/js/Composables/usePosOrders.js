@@ -48,9 +48,8 @@ export function usePosOrders() {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     orders.value = parsed;
-                    activeOrderId.value = (savedActiveId && parsed.some(o => o.id === savedActiveId))
-                        ? savedActiveId
-                        : parsed[0].id;
+                    activeOrderId.value =
+                        savedActiveId && parsed.some((o) => o.id === savedActiveId) ? savedActiveId : parsed[0].id;
                     return;
                 }
             }
@@ -70,9 +69,7 @@ export function usePosOrders() {
     });
 
     const createNewOrder = () => {
-        const nextNum = orders.value.length > 0
-            ? Math.max(...orders.value.map(o => o.number || 1)) + 1
-            : 1;
+        const nextNum = orders.value.length > 0 ? Math.max(...orders.value.map((o) => o.number || 1)) + 1 : 1;
 
         const newOrder = makeNewOrderObject(nextNum);
         orders.value.push(newOrder);
@@ -82,14 +79,14 @@ export function usePosOrders() {
     };
 
     const switchOrder = (orderId) => {
-        if (orders.value.some(o => o.id === orderId)) {
+        if (orders.value.some((o) => o.id === orderId)) {
             activeOrderId.value = orderId;
             saveOrders();
         }
     };
 
     const closeOrder = (orderId) => {
-        const idx = orders.value.findIndex(o => o.id === orderId);
+        const idx = orders.value.findIndex((o) => o.id === orderId);
         if (idx === -1) return;
 
         orders.value.splice(idx, 1);

@@ -31,26 +31,26 @@ final class ActivityLogController extends Controller
         $stores = Store::where('is_active', true)->select(['id', 'name'])->get();
 
         $modulesList = [
-            'sales'     => __('dashboard.modules_sales') ?: 'المبيعات و POS 🛒',
+            'sales' => __('dashboard.modules_sales') ?: 'المبيعات و POS 🛒',
             'inventory' => __('dashboard.modules_inventory') ?: 'الأصناف والمخزون 📦',
-            'shifts'    => __('dashboard.modules_shifts') ?: 'الخزينة والورديات 💵',
+            'shifts' => __('dashboard.modules_shifts') ?: 'الخزينة والورديات 💵',
             'purchases' => __('dashboard.modules_purchases') ?: 'المشتريات والتوريد 🚚',
-            'expenses'  => __('dashboard.modules_expenses') ?: 'المصروفات 💸',
-            'contacts'  => __('dashboard.modules_contacts') ?: 'العملاء والموردين 👥',
-            'auth'      => __('dashboard.modules_auth') ?: 'الأمان والدخول 🔐',
-            'settings'  => __('dashboard.modules_settings') ?: 'إدارة النظام والإعدادات ⚙️',
+            'expenses' => __('dashboard.modules_expenses') ?: 'المصروفات 💸',
+            'contacts' => __('dashboard.modules_contacts') ?: 'العملاء والموردين 👥',
+            'auth' => __('dashboard.modules_auth') ?: 'الأمان والدخول 🔐',
+            'settings' => __('dashboard.modules_settings') ?: 'إدارة النظام والإعدادات ⚙️',
             'transfers' => __('dashboard.modules_transfers') ?: 'التحويلات المخزنية 🔄',
-            'blends'    => __('dashboard.modules_blends') ?: 'تجميع وتوليف الأصناف 🔄',
+            'blends' => __('dashboard.modules_blends') ?: 'تجميع وتوليف الأصناف 🔄',
         ];
 
         return response()->json([
-            'success'      => true,
-            'data'         => $result['logs'],
-            'stats'        => $result['stats'],
-            'total_count'  => $result['total_count'],
-            'pagination'   => $result['pagination'],
-            'users'        => $users,
-            'stores'       => $stores,
+            'success' => true,
+            'data' => $result['logs'],
+            'stats' => $result['stats'],
+            'total_count' => $result['total_count'],
+            'pagination' => $result['pagination'],
+            'users' => $users,
+            'stores' => $stores,
             'modules_list' => $modulesList,
         ]);
     }

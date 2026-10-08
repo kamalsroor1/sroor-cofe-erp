@@ -3,13 +3,8 @@
 namespace App\Services;
 
 use App\Models\Invoice;
-use App\Models\InvoiceItem;
-use App\Models\Customer;
 use App\Models\Payment;
-use App\Models\Expense;
-use App\Models\Store;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class DashboardAnalyticsService
 {
@@ -30,11 +25,11 @@ class DashboardAnalyticsService
         }
 
         $todayInvoices = $todayInvoicesQuery->get();
-        $todaySales = (string)($todayInvoices->sum('net_total') ?: '0.000');
+        $todaySales = (string) ($todayInvoices->sum('net_total') ?: '0.000');
         $todayInvoicesCount = $todayInvoices->count();
 
         $todayBasketSize = $todayInvoicesCount > 0
-            ? bcdiv($todaySales, (string)$todayInvoicesCount, 2)
+            ? bcdiv($todaySales, (string) $todayInvoicesCount, 2)
             : '0.00';
 
         // 2. Period Invoices (Last N days)
@@ -47,11 +42,11 @@ class DashboardAnalyticsService
         }
 
         $periodInvoices = $periodInvoicesQuery->get();
-        $periodSales = (string)($periodInvoices->sum('net_total') ?: '0.000');
+        $periodSales = (string) ($periodInvoices->sum('net_total') ?: '0.000');
         $periodInvoicesCount = $periodInvoices->count();
 
         $periodBasketSize = $periodInvoicesCount > 0
-            ? bcdiv($periodSales, (string)$periodInvoicesCount, 2)
+            ? bcdiv($periodSales, (string) $periodInvoicesCount, 2)
             : '0.00';
 
         // 3. Daily Sales Trend (Last N days)
@@ -59,15 +54,15 @@ class DashboardAnalyticsService
         for ($i = $trendDays - 1; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
             $dayName = now()->subDays($i)->locale('ar')->isoFormat('dddd D/M');
-            $dayInvoices = $periodInvoices->filter(fn($inv) => Carbon::parse($inv->invoice_date)->toDateString() === $date);
-            $daySales = (string)($dayInvoices->sum('net_total') ?: '0.000');
+            $dayInvoices = $periodInvoices->filter(fn ($inv) => Carbon::parse($inv->invoice_date)->toDateString() === $date);
+            $daySales = (string) ($dayInvoices->sum('net_total') ?: '0.000');
             $dayCount = $dayInvoices->count();
 
             $dailyTrend[] = [
-                'date'     => $date,
-                'label'    => $dayName,
-                'sales'    => (float)$daySales,
-                'sales_formatted' => number_format((float)$daySales, 2) . ' ' . __('common.currency'),
+                'date' => $date,
+                'label' => $dayName,
+                'sales' => (float) $daySales,
+                'sales_formatted' => number_format((float) $daySales, 2).' '.__('common.currency'),
                 'invoices' => $dayCount,
             ];
         }
@@ -76,42 +71,42 @@ class DashboardAnalyticsService
         $hourlySales = [];
         for ($h = 0; $h < 24; $h++) {
             $hourLabel = Carbon::createFromTime($h, 0)->format('g A');
-            $arabicHour = $h === 0 ? '12 ص' : ($h < 12 ? "{$h} ص" : ($h === 12 ? '12 م' : ($h - 12) . ' م'));
+            $arabicHour = $h === 0 ? '12 ص' : ($h < 12 ? "{$h} ص" : ($h === 12 ? '12 م' : ($h - 12).' م'));
             $hourlySales[$h] = [
-                'hour'         => $h,
-                'label'        => $arabicHour,
-                'sales'        => '0.000',
-                'invoices'     => 0,
+                'hour' => $h,
+                'label' => $arabicHour,
+                'sales' => '0.000',
+                'invoices' => 0,
             ];
         }
 
         foreach ($periodInvoices as $inv) {
-            $hour = (int)$inv->created_at->format('G');
+            $hour = (int) $inv->created_at->format('G');
             if (isset($hourlySales[$hour])) {
-                $hourlySales[$hour]['sales'] = bcadd((string)$hourlySales[$hour]['sales'], (string)$inv->net_total, 3);
+                $hourlySales[$hour]['sales'] = bcadd((string) $hourlySales[$hour]['sales'], (string) $inv->net_total, 3);
                 $hourlySales[$hour]['invoices']++;
             }
         }
 
         // Find peak hour & compute formatting
-        $peakSales = collect($hourlySales)->max(fn($item) => (float)$item['sales']) ?: 1.0;
+        $peakSales = collect($hourlySales)->max(fn ($item) => (float) $item['sales']) ?: 1.0;
 
         foreach ($hourlySales as &$hRow) {
-            $hSalesFloat = (float)$hRow['sales'];
+            $hSalesFloat = (float) $hRow['sales'];
             $hRow['intensity'] = $peakSales > 0 ? min(100, max(0, round(($hSalesFloat / $peakSales) * 100))) : 0;
-            $hRow['sales_formatted'] = number_format($hSalesFloat, 2) . ' ' . __('common.currency');
+            $hRow['sales_formatted'] = number_format($hSalesFloat, 2).' '.__('common.currency');
         }
         unset($hRow);
 
-        $peakHourData = collect($hourlySales)->sortByDesc(fn($item) => (float)$item['sales'])->first();
+        $peakHourData = collect($hourlySales)->sortByDesc(fn ($item) => (float) $item['sales'])->first();
 
         // 5. Payment Methods Distribution (Period)
         $paymentMethods = [
-            'cash'          => (string)($periodInvoices->where('payment_method', 'cash')->sum('paid_amount') ?: '0.000'),
-            'instapay'      => (string)($periodInvoices->where('payment_method', 'instapay')->sum('paid_amount') ?: '0.000'),
-            'e_wallet'      => (string)($periodInvoices->where('payment_method', 'e_wallet')->sum('paid_amount') ?: '0.000'),
-            'visa'          => (string)($periodInvoices->where('payment_method', 'visa')->sum('paid_amount') ?: '0.000'),
-            'bank_transfer' => (string)($periodInvoices->where('payment_method', 'bank_transfer')->sum('paid_amount') ?: '0.000'),
+            'cash' => (string) ($periodInvoices->where('payment_method', 'cash')->sum('paid_amount') ?: '0.000'),
+            'instapay' => (string) ($periodInvoices->where('payment_method', 'instapay')->sum('paid_amount') ?: '0.000'),
+            'e_wallet' => (string) ($periodInvoices->where('payment_method', 'e_wallet')->sum('paid_amount') ?: '0.000'),
+            'visa' => (string) ($periodInvoices->where('payment_method', 'visa')->sum('paid_amount') ?: '0.000'),
+            'bank_transfer' => (string) ($periodInvoices->where('payment_method', 'bank_transfer')->sum('paid_amount') ?: '0.000'),
         ];
 
         $totalPaidMethods = '0.000';
@@ -121,10 +116,10 @@ class DashboardAnalyticsService
 
         $paymentDistribution = [];
         $methodLabels = [
-            'cash'          => __('pos.cash_drawer'),
-            'instapay'      => __('pos.instapay'),
-            'e_wallet'      => __('pos.e_wallet'),
-            'visa'          => __('pos.visa_card'),
+            'cash' => __('pos.cash_drawer'),
+            'instapay' => __('pos.instapay'),
+            'e_wallet' => __('pos.e_wallet'),
+            'visa' => __('pos.visa_card'),
             'bank_transfer' => __('pos.bank_transfer'),
         ];
 
@@ -134,28 +129,28 @@ class DashboardAnalyticsService
                 : '0.0';
 
             $paymentDistribution[] = [
-                'key'        => $mKey,
-                'label'      => $methodLabels[$mKey] ?? $mKey,
-                'amount'     => $mAmount,
-                'percentage' => (float)$pct,
+                'key' => $mKey,
+                'label' => $methodLabels[$mKey] ?? $mKey,
+                'amount' => $mAmount,
+                'percentage' => (float) $pct,
             ];
         }
 
         return [
             'today' => [
-                'sales'          => $todaySales,
+                'sales' => $todaySales,
                 'invoices_count' => $todayInvoicesCount,
-                'basket_size'    => $todayBasketSize,
+                'basket_size' => $todayBasketSize,
             ],
             'period' => [
-                'days'           => $trendDays,
-                'sales'          => $periodSales,
+                'days' => $trendDays,
+                'sales' => $periodSales,
                 'invoices_count' => $periodInvoicesCount,
-                'basket_size'    => $periodBasketSize,
+                'basket_size' => $periodBasketSize,
             ],
-            'daily_trend'          => $dailyTrend,
-            'hourly_sales'         => array_values($hourlySales),
-            'peak_hour'            => $peakHourData,
+            'daily_trend' => $dailyTrend,
+            'hourly_sales' => array_values($hourlySales),
+            'peak_hour' => $peakHourData,
             'payment_distribution' => $paymentDistribution,
         ];
     }

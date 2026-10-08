@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6 font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6 font-tajawal"
+  >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl">
@@ -48,7 +50,9 @@
     </div>
 
     <!-- Quick Add from System Presets -->
-    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+    <div
+      class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3"
+    >
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $t('super.add_from_system_presets') }}</div>
       <div class="flex flex-wrap gap-1.5">
         <button
@@ -58,7 +62,11 @@
           @click="$emit('add-unit', gu)"
           :disabled="tenantAllowedUnits.includes(gu)"
           class="px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-          :class="tenantAllowedUnits.includes(gu) ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-500'"
+          :class="
+            tenantAllowedUnits.includes(gu)
+              ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400'
+              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-500'
+          "
         >
           + {{ gu }}
         </button>
@@ -74,12 +82,7 @@
         :placeholder="$t('super.custom_unit_placeholder')"
         class="flex-1"
       />
-      <BaseButton
-        type="button"
-        variant="secondary"
-        size="md"
-        @click="$emit('add-custom-unit')"
-      >
+      <BaseButton type="button" variant="secondary" size="md" @click="$emit('add-custom-unit')">
         {{ $t('super.add_unit_btn') }}
       </BaseButton>
     </div>

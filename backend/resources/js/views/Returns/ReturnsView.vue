@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('returns.title')"
-      :subtitle="$t('returns.subtitle')"
-      icon="🔄"
-    >
+    <PageHeader :title="$t('returns.title')" :subtitle="$t('returns.subtitle')" icon="🔄">
       <template #actions>
         <router-link
           to="/returns/create"
@@ -18,10 +14,7 @@
     </PageHeader>
 
     <!-- Financial Metrics Grid -->
-    <ReturnsMetricsGrid
-      :summary="summary"
-      :loading="isLoading"
-    />
+    <ReturnsMetricsGrid :summary="summary" :loading="isLoading" />
 
     <!-- Filters & Search Bar -->
     <ReturnsFilterBar

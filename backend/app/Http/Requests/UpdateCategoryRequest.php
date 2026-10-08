@@ -12,7 +12,7 @@ final class UpdateCategoryRequest extends FormRequest
     public function authorize(): bool
     {
         $id = $this->route('id') ?? $this->route('category');
-        $category = is_numeric($id) ? Category::find((int)$id) : null;
+        $category = is_numeric($id) ? Category::find((int) $id) : null;
 
         return $category
             ? ($this->user()?->can('update', $category) ?? false)
@@ -22,10 +22,10 @@ final class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => ['sometimes', 'required', 'string', 'max:100'],
-            'icon'       => ['nullable', 'string', 'max:50'],
+            'name' => ['sometimes', 'required', 'string', 'max:100'],
+            'icon' => ['nullable', 'string', 'max:50'],
             'sort_order' => ['nullable', 'integer'],
-            'is_active'  => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 }

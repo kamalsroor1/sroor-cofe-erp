@@ -23,11 +23,11 @@ class PurchaseItem extends Model
     protected function casts(): array
     {
         return [
-            'quantity'          => 'decimal:3',
-            'base_cost_price'   => 'decimal:3',
+            'quantity' => 'decimal:3',
+            'base_cost_price' => 'decimal:3',
             'allocated_expense' => 'decimal:3',
-            'cost_price'        => 'decimal:3',
-            'total_price'       => 'decimal:3',
+            'cost_price' => 'decimal:3',
+            'total_price' => 'decimal:3',
         ];
     }
 

@@ -14,6 +14,7 @@ final class DeleteReturnAction
     public function execute(int $returnId): bool
     {
         $returnDoc = ReturnDocument::findOrFail($returnId);
-        return (bool)$returnDoc->delete();
+
+        return (bool) $returnDoc->delete();
     }
 }

@@ -16,7 +16,7 @@ class TenantScope implements Scope
         $tenantId = static::getTenantId();
 
         if ($tenantId !== null) {
-            $builder->where($model->getTable() . '.tenant_id', $tenantId);
+            $builder->where($model->getTable().'.tenant_id', $tenantId);
         }
     }
 
@@ -39,7 +39,7 @@ class TenantScope implements Scope
         }
 
         // 3. من خلال المستخدم المسجل
-        if (auth()->check() && !empty(auth()->user()->tenant_id)) {
+        if (auth()->check() && ! empty(auth()->user()->tenant_id)) {
             return (string) auth()->user()->tenant_id;
         }
 

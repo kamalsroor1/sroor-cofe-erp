@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'api_token')) {
+            if (! Schema::hasColumn('users', 'api_token')) {
                 $table->string('api_token', 80)->unique()->nullable()->after('password');
             }
-            if (!Schema::hasColumn('users', 'last_login_at')) {
+            if (! Schema::hasColumn('users', 'last_login_at')) {
                 $table->timestamp('last_login_at')->nullable()->after('api_token');
             }
         });

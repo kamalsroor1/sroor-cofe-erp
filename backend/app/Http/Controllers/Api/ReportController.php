@@ -40,7 +40,7 @@ final class ReportController extends Controller
 
         return ReportFilterDTO::fromArray(
             $request->all(),
-            $headerStoreId ? (int)$headerStoreId : null
+            $headerStoreId ? (int) $headerStoreId : null
         );
     }
 
@@ -54,7 +54,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'period'  => $result['period'],
+            'period' => $result['period'],
             'metrics' => $result['summary'],
             'summary' => $result['summary'],
         ], 200);
@@ -70,7 +70,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $items,
+            'data' => $items,
         ], 200);
     }
 
@@ -84,7 +84,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $stores,
+            'data' => $stores,
         ], 200);
     }
 
@@ -98,7 +98,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $customers,
+            'data' => $customers,
         ], 200);
     }
 
@@ -112,7 +112,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $expenses,
+            'data' => $expenses,
         ], 200);
     }
 
@@ -126,7 +126,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $inventory,
+            'data' => $inventory,
         ], 200);
     }
 
@@ -140,7 +140,7 @@ final class ReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $treasury,
+            'data' => $treasury,
         ], 200);
     }
 
@@ -160,15 +160,15 @@ final class ReportController extends Controller
         $treasury = $this->getTreasuryReportAction->execute($dto);
 
         return response()->json([
-            'success'            => true,
-            'period'             => $summary['period'],
-            'summary'            => $summary['summary'],
-            'item_profits'       => $items,
-            'store_breakdown'    => $stores,
-            'customer_sales'     => $customers,
+            'success' => true,
+            'period' => $summary['period'],
+            'summary' => $summary['summary'],
+            'item_profits' => $items,
+            'store_breakdown' => $stores,
+            'customer_sales' => $customers,
             'expenses_breakdown' => $expenses,
-            'inventory_data'     => $inventory,
-            'treasury_data'      => $treasury,
+            'inventory_data' => $inventory,
+            'treasury_data' => $treasury,
         ], 200);
     }
 
@@ -178,7 +178,7 @@ final class ReportController extends Controller
     public function topItems(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('reports.view') && !$user->can('reports.advanced')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view') && ! $user->can('reports.advanced')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -186,7 +186,7 @@ final class ReportController extends Controller
         $items = $this->getItemsProfitabilityReportAction->execute($dto);
 
         return response()->json([
-            'success'   => true,
+            'success' => true,
             'top_items' => array_slice($items, 0, 20),
         ], 200);
     }
@@ -197,25 +197,25 @@ final class ReportController extends Controller
     public function itemCard(Request $request, int|string $itemId): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('reports.view') && !$user->can('reports.advanced')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view') && ! $user->can('reports.advanced')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $item = Item::findOrFail((int)$itemId);
-        $storeId = $request->input('store_id') 
+        $item = Item::findOrFail((int) $itemId);
+        $storeId = $request->input('store_id')
             ?: $request->header('X-Store-Id')
-            ?: $user?->getCurrentStore()?->id 
+            ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $movements = StockMovement::where('item_id', $itemId)
-            ->when($storeId && $storeId !== 'all', fn($q) => $q->where('store_id', (int)$storeId))
+            ->when($storeId && $storeId !== 'all', fn ($q) => $q->where('store_id', (int) $storeId))
             ->latest('id')
             ->limit(50)
             ->get();
 
         return response()->json([
-            'success'   => true,
-            'item'      => $item,
+            'success' => true,
+            'item' => $item,
             'movements' => $movements,
         ], 200);
     }

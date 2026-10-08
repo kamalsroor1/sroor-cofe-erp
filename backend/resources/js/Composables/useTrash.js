@@ -89,10 +89,19 @@ export function useTrash() {
         if (result.isConfirmed) {
             try {
                 await api.post(`/trash/${currentTab.value}/${item.id}/restore`);
-                Swal.fire({ icon: 'success', title: t('trash.restore_success'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('trash.restore_success'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 fetchRecords();
             } catch (e) {
-                Swal.fire({ icon: 'error', title: t('common.error'), text: e.response?.data?.message || t('trash.restore_failed') });
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: e.response?.data?.message || t('trash.restore_failed'),
+                });
             }
         }
     };
@@ -112,10 +121,19 @@ export function useTrash() {
         if (result.isConfirmed) {
             try {
                 await api.delete(`/trash/${currentTab.value}/${item.id}/force`);
-                Swal.fire({ icon: 'success', title: t('trash.force_delete_success'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('trash.force_delete_success'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 fetchRecords();
             } catch (e) {
-                Swal.fire({ icon: 'error', title: t('common.error'), text: e.response?.data?.message || t('trash.force_delete_failed') });
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: e.response?.data?.message || t('trash.force_delete_failed'),
+                });
             }
         }
     };

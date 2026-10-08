@@ -94,12 +94,7 @@
 
       <!-- Modal Actions -->
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

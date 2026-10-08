@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 font-tajawal">
+  <div
+    class="p-4 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 font-tajawal"
+  >
     <!-- Search Bar -->
     <div class="flex-1 min-w-[200px]">
       <BaseSearchInput
@@ -62,13 +64,7 @@ const props = defineProps({
   stores: { type: Array, default: () => [] },
 });
 
-defineEmits([
-  'update:search',
-  'update:fromStoreId',
-  'update:toStoreId',
-  'update:dateFrom',
-  'update:dateTo',
-]);
+defineEmits(['update:search', 'update:fromStoreId', 'update:toStoreId', 'update:dateFrom', 'update:dateTo']);
 
 const fromStoreOptions = computed(() => [
   { value: 'all', label: trans('inventory.all_from_stores') },

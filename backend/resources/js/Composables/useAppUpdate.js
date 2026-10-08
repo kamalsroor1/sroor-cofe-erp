@@ -25,7 +25,10 @@ const isNativePlatform = () => {
 
 // Detect if running inside Electron Desktop App
 const isDesktopPlatform = () => {
-    return typeof window !== 'undefined' && (!!window.electronAPI?.isElectron || window.navigator.userAgent.includes('Electron'));
+    return (
+        typeof window !== 'undefined' &&
+        (!!window.electronAPI?.isElectron || window.navigator.userAgent.includes('Electron'))
+    );
 };
 
 // Determine active client platform
@@ -93,7 +96,12 @@ export function useAppUpdate() {
         }
 
         if (isChecking.value) return;
-        if (!isManual && (hasCheckedThisSession.value || sessionStorage.getItem('app_update_dismissed') || localStorage.getItem('app_update_dismissed_code') === String(currentVersionCode.value))) {
+        if (
+            !isManual &&
+            (hasCheckedThisSession.value ||
+                sessionStorage.getItem('app_update_dismissed') ||
+                localStorage.getItem('app_update_dismissed_code') === String(currentVersionCode.value))
+        ) {
             return;
         }
 
@@ -110,7 +118,7 @@ export function useAppUpdate() {
                     platform: clientPlatform,
                     version_code: currentVersionCode.value,
                     version_name: currentVersionName.value,
-                }
+                },
             });
 
             const data = res.data || {};
@@ -187,10 +195,11 @@ export function useAppUpdate() {
                     isDownloaded.value = false;
                 });
 
-                const downloadUrl = latestVersionData.value?.download_url || 'https://2m.baraa-solutions.com/Sroor-ERP-POS-Setup.exe';
+                const downloadUrl =
+                    latestVersionData.value?.download_url || 'https://2m.baraa-solutions.com/Sroor-ERP-POS-Setup.exe';
                 await window.electronAPI.updater.downloadAndInstall({
                     downloadUrl,
-                    version: latestVersionData.value?.latest_version || '1.1.0'
+                    version: latestVersionData.value?.latest_version || '1.1.0',
                 });
                 return;
             } catch (err) {
@@ -207,7 +216,7 @@ export function useAppUpdate() {
         }, 120);
 
         try {
-            await new Promise(r => setTimeout(r, 1800));
+            await new Promise((r) => setTimeout(r, 1800));
 
             clearInterval(progressTimer);
             downloadProgress.value = 100;
@@ -240,7 +249,6 @@ export function useAppUpdate() {
                     window.location.reload();
                 }
             }, 1200);
-
         } catch (e) {
             clearInterval(progressTimer);
             isDownloading.value = false;

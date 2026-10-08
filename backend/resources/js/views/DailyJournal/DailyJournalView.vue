@@ -1,22 +1,20 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Action Controls -->
-    <PageHeader
-      :title="$t('treasury.journal_title')"
-      :subtitle="$t('treasury.journal_subtitle')"
-      icon="📖"
-    >
+    <PageHeader :title="$t('treasury.journal_title')" :subtitle="$t('treasury.journal_subtitle')" icon="📖">
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
           <!-- Date Filter Picker -->
-          <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
+          <div
+            class="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm"
+          >
             <Calendar class="w-4 h-4 text-theme-primary" />
             <input
               v-model="selectedDate"
               @change="fetchDailyJournal"
               type="date"
               class="bg-transparent border-0 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-0 cursor-pointer"
-            >
+            />
           </div>
 
           <!-- Quick Add Expense in Journal Button -->
@@ -65,18 +63,10 @@
     />
 
     <!-- Financial Metrics Grid -->
-    <DailyJournalMetricsGrid
-      :summary="summary"
-      :loading="isLoading"
-    />
+    <DailyJournalMetricsGrid :summary="summary" :loading="isLoading" />
 
     <!-- Journal Tabs (Invoices vs Expenses) -->
-    <DailyJournalTabs
-      v-model:active-tab="activeTab"
-      :invoices="invoices"
-      :expenses="expenses"
-      :loading="isLoading"
-    />
+    <DailyJournalTabs v-model:active-tab="activeTab" :invoices="invoices" :expenses="expenses" :loading="isLoading" />
 
     <!-- Open Shift Modal -->
     <OpenShiftModal

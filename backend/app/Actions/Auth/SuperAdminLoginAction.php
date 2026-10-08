@@ -23,10 +23,10 @@ final class SuperAdminLoginAction
 
         $user = User::where(function ($q) use ($phoneOrEmail) {
             $q->where('phone', $phoneOrEmail)
-              ->orWhere('email', $phoneOrEmail);
+                ->orWhere('email', $phoneOrEmail);
         })->where('is_active', true)->first();
 
-        if (!$user || !Hash::check($dto->password, $user->password)) {
+        if (! $user || ! Hash::check($dto->password, $user->password)) {
             $this->activityLogService->log(
                 module: 'super_admin_auth',
                 action: 'login_failed',
@@ -40,7 +40,7 @@ final class SuperAdminLoginAction
         }
 
         // Strict Check: User MUST have admin role or be authorized for Super Admin
-        if (!$user->hasRole('admin') && !$user->can('super_admin.access')) {
+        if (! $user->hasRole('admin') && ! $user->can('super_admin.access')) {
             $this->activityLogService->log(
                 module: 'super_admin_auth',
                 action: 'unauthorized_attempt',

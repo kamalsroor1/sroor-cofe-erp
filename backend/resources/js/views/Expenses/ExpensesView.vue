@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('expenses.title')"
-      :subtitle="$t('expenses.subtitle')"
-      icon="💸"
-    >
+    <PageHeader :title="$t('expenses.title')" :subtitle="$t('expenses.subtitle')" icon="💸">
       <template #actions>
         <BaseButton
           type="button"
@@ -21,10 +17,7 @@
     </PageHeader>
 
     <!-- Summary Metrics Grid -->
-    <ExpensesMetricsGrid
-      :metrics="metrics"
-      :loading="isLoading"
-    />
+    <ExpensesMetricsGrid :metrics="metrics" :loading="isLoading" />
 
     <!-- Filters & Search Bar -->
     <ExpensesFilterBar

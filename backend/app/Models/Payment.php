@@ -27,7 +27,7 @@ class Payment extends Model
     {
         return [
             'payment_date' => 'date',
-            'amount'       => 'decimal:3',
+            'amount' => 'decimal:3',
         ];
     }
 

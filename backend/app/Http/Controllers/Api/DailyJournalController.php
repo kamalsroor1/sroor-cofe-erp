@@ -21,17 +21,17 @@ final class DailyJournalController extends Controller
      */
     public function index(GetDailyJournalRequest $request): JsonResponse
     {
-        $date = (string)$request->input('date', now()->toDateString());
+        $date = (string) $request->input('date', now()->toDateString());
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $journal = $this->getDailyJournalAction->execute($date, $storeId ? (int)$storeId : null);
+        $journal = $this->getDailyJournalAction->execute($date, $storeId ? (int) $storeId : null);
 
         return response()->json([
             'success' => true,
-            'data'    => $journal,
+            'data' => $journal,
         ], 200);
     }
 }

@@ -18,7 +18,7 @@ class CashDrawer {
                 printerName: printerName,
                 paperWidth: '80mm',
                 silent: true,
-                copies: 1
+                copies: 1,
             });
         } catch (error) {
             console.error('[CashDrawer] Failed to kick drawer:', error);

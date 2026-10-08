@@ -36,21 +36,21 @@ final class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('users.manage') && !$user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('users.manage') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $role = (string)$request->input('role', 'all');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
+        $search = trim((string) $request->input('search', ''));
+        $role = (string) $request->input('role', 'all');
+        $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
         $query = User::with(['roles', 'defaultStore']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -59,7 +59,7 @@ final class UserController extends Controller
         }
 
         $isTenant = function_exists('tenant') && tenant();
-        $roles = Role::when($isTenant, fn($q) => $q->where('name', '!=', 'super_admin'))
+        $roles = Role::when($isTenant, fn ($q) => $q->where('name', '!=', 'super_admin'))
             ->select('id', 'name')
             ->get();
         $stores = Store::where('is_active', true)->select('id', 'name', 'code')->get();
@@ -68,38 +68,38 @@ final class UserController extends Controller
 
         $formattedUsers = collect($users->items())->map(function ($u) {
             return [
-                'id'                 => $u->id,
-                'name'               => $u->name,
-                'phone'              => $u->phone,
-                'email'              => $u->email,
-                'is_active'          => (bool)$u->is_active,
-                'default_store_id'   => $u->default_store_id,
+                'id' => $u->id,
+                'name' => $u->name,
+                'phone' => $u->phone,
+                'email' => $u->email,
+                'is_active' => (bool) $u->is_active,
+                'default_store_id' => $u->default_store_id,
                 'default_store_name' => $u->defaultStore?->name ?? 'غير محدد',
-                'roles'              => $u->roles->pluck('name')->toArray(),
-                'primary_role'       => $u->roles->first()?->name ?: 'cashier',
-                'created_at'         => $u->created_at ? $u->created_at->toDateString() : '',
+                'roles' => $u->roles->pluck('name')->toArray(),
+                'primary_role' => $u->roles->first()?->name ?: 'cashier',
+                'created_at' => $u->created_at ? $u->created_at->toDateString() : '',
             ];
         });
 
         return response()->json([
             'success' => true,
-            'data'    => $formattedUsers,
-            'roles'   => $roles->map(fn($r) => [
-                'id'   => $r->name,
+            'data' => $formattedUsers,
+            'roles' => $roles->map(fn ($r) => [
+                'id' => $r->name,
                 'name' => match ($r->name) {
-                    'admin'       => 'مدير النظام (كامل الصلاحيات) 👑',
-                    'cashier'     => 'كاشير مبيعات ونقطة بيع 🛒',
+                    'admin' => 'مدير النظام (كامل الصلاحيات) 👑',
+                    'cashier' => 'كاشير مبيعات ونقطة بيع 🛒',
                     'storekeeper' => 'أمين مخزن وتوريدات 📦',
-                    'accountant'  => 'محاسب ومدقق مالي 💼',
-                    default       => $r->name,
+                    'accountant' => 'محاسب ومدقق مالي 💼',
+                    default => $r->name,
                 },
             ]),
-            'stores'  => $stores,
+            'stores' => $stores,
             'pagination' => [
                 'current_page' => $users->currentPage(),
-                'last_page'    => $users->lastPage(),
-                'per_page'     => $users->perPage(),
-                'total'        => $users->total(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
             ],
         ], 200);
     }
@@ -110,7 +110,7 @@ final class UserController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $authUser = $request->user();
-        if ($authUser && !$authUser->hasRole('admin') && !$authUser->can('users.manage') && !$authUser->can('roles.manage')) {
+        if ($authUser && ! $authUser->hasRole('admin') && ! $authUser->can('users.manage') && ! $authUser->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -118,7 +118,7 @@ final class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new UserResource($user))->resolve(),
+            'data' => (new UserResource($user))->resolve(),
         ], 200);
     }
 
@@ -133,7 +133,7 @@ final class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.user_created_success') ?: 'تم إنشاء حساب المستخدم بنجاح',
-            'data'    => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
+            'data' => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
         ], 201);
     }
 
@@ -148,7 +148,7 @@ final class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.user_updated_success') ?: 'تم تحديث بيانات المستخدم بنجاح',
-            'data'    => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
+            'data' => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
         ], 200);
     }
 
@@ -158,7 +158,7 @@ final class UserController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('users.manage') && !$user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('users.manage') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -183,7 +183,7 @@ final class UserController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('users.manage') && !$user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('users.manage') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -191,9 +191,9 @@ final class UserController extends Controller
             $toggledUser = $this->toggleUserActiveAction->execute($id, $request->user()?->id);
 
             return response()->json([
-                'success'   => true,
-                'is_active' => (bool)$toggledUser->is_active,
-                'message'   => __('auth.user_status_updated') ?: 'تم تحديث حالة نشاط الحساب بنجاح',
+                'success' => true,
+                'is_active' => (bool) $toggledUser->is_active,
+                'message' => __('auth.user_status_updated') ?: 'تم تحديث حالة نشاط الحساب بنجاح',
             ], 200);
         } catch (Throwable $e) {
             return response()->json([

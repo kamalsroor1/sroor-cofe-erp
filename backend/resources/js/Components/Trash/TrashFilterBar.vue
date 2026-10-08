@@ -1,5 +1,7 @@
 <template>
-  <div class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg font-tajawal">
+  <div
+    class="p-4 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg font-tajawal"
+  >
     <BaseSearchInput
       :model-value="search"
       @update:model-value="$emit('update:search', $event)"

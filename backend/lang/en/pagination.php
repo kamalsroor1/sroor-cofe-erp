@@ -16,6 +16,5 @@ return [
     'previous' => '&laquo; Previous',
     'next' => 'Next &raquo;',
 
-
     'page_of' => 'Page :current of :total',
 ];

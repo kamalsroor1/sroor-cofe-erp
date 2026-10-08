@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
-use App\Models\Purchase;
 use App\Models\Item;
 use App\Models\Payment;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Purchase;
+use App\Models\StockMovement;
+use App\Models\Store;
+use App\Models\StoreStock;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseService
 {
@@ -27,24 +30,24 @@ class PurchaseService
     {
         return DB::transaction(function () use ($data) {
             $baseSubtotal = '0.000';
-            $storeId = $data['store_id'] ?? Auth::user()?->getCurrentStore()?->id ?? \App\Models\Store::getMainStore()?->id;
+            $storeId = $data['store_id'] ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             $purchase = Purchase::create([
-                'purchase_number'           => $data['purchase_number'] ?? $this->generateUniqueNumber(),
-                'supplier_id'               => $data['supplier_id'],
-                'user_id'                   => Auth::id() ?? 1,
-                'store_id'                  => $storeId,
-                'purchase_date'             => $data['purchase_date'] ?? now()->toDateString(),
-                'status'                    => 'confirmed',
-                'payment_status'            => 'unpaid',
-                'subtotal'                  => '0.000',
-                'discount_amount'           => $data['discount_amount'] ?? '0.000',
+                'purchase_number' => $data['purchase_number'] ?? $this->generateUniqueNumber(),
+                'supplier_id' => $data['supplier_id'],
+                'user_id' => Auth::id() ?? 1,
+                'store_id' => $storeId,
+                'purchase_date' => $data['purchase_date'] ?? now()->toDateString(),
+                'status' => 'confirmed',
+                'payment_status' => 'unpaid',
+                'subtotal' => '0.000',
+                'discount_amount' => $data['discount_amount'] ?? '0.000',
                 'additional_expenses_total' => '0.000',
-                'net_total'                 => '0.000',
-                'paid_amount'               => '0.000',
-                'remaining_amount'          => '0.000',
-                'supplier_invoice_ref'      => $data['supplier_invoice_ref'] ?? null,
-                'notes'                     => $data['notes'] ?? null,
+                'net_total' => '0.000',
+                'paid_amount' => '0.000',
+                'remaining_amount' => '0.000',
+                'supplier_invoice_ref' => $data['supplier_invoice_ref'] ?? null,
+                'notes' => $data['notes'] ?? null,
             ]);
 
             $rawExpenses = $data['additional_expenses'] ?? [];
@@ -57,8 +60,8 @@ class PurchaseService
             $itemsCount = count($data['items']);
 
             foreach ($data['items'] as $line) {
-                $qty = (string)($line['quantity'] ?? '0.000');
-                $baseCost = (string)($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
+                $qty = (string) ($line['quantity'] ?? '0.000');
+                $baseCost = (string) ($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
                 $totalQuantity = bcadd($totalQuantity, $qty, 3);
                 $totalBaseValuation = bcadd($totalBaseValuation, bcmul($qty, $baseCost, 3), 3);
             }
@@ -67,15 +70,15 @@ class PurchaseService
             foreach ($data['items'] as $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
 
-                $quantity = (string)$line['quantity'];
-                $baseCostPrice = (string)($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
+                $quantity = (string) $line['quantity'];
+                $baseCostPrice = (string) ($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
                 $lineBaseTotal = bcmul($quantity, $baseCostPrice, 3);
                 $baseSubtotal = bcadd($baseSubtotal, $lineBaseTotal, 3);
 
                 // Allocate expenses to this line
                 $lineAllocatedExpense = '0.000';
                 foreach ($rawExpenses as $exp) {
-                    $expAmount = (string)($exp['amount'] ?? '0.000');
+                    $expAmount = (string) ($exp['amount'] ?? '0.000');
                     if (bccomp($expAmount, '0.000', 3) <= 0) {
                         continue;
                     }
@@ -92,7 +95,7 @@ class PurchaseService
                         $ratio = bcdiv($lineBaseTotal, $totalBaseValuation, 6);
                         $allocated = bcmul($expAmount, $ratio, 3);
                     } elseif ($method === 'equal' && $itemsCount > 0) {
-                        $allocated = bcdiv($expAmount, (string)$itemsCount, 3);
+                        $allocated = bcdiv($expAmount, (string) $itemsCount, 3);
                     }
 
                     $lineAllocatedExpense = bcadd($lineAllocatedExpense, $allocated, 3);
@@ -106,18 +109,18 @@ class PurchaseService
 
                 // Create PurchaseItem
                 $purchase->items()->create([
-                    'item_id'           => $item->id,
-                    'quantity'          => $quantity,
-                    'base_cost_price'   => $baseCostPrice,
+                    'item_id' => $item->id,
+                    'quantity' => $quantity,
+                    'base_cost_price' => $baseCostPrice,
                     'allocated_expense' => $lineAllocatedExpense,
-                    'cost_price'        => $landedUnitCost, // Landed unit cost
-                    'total_price'       => $lineBaseTotal,
+                    'cost_price' => $landedUnitCost, // Landed unit cost
+                    'total_price' => $lineBaseTotal,
                 ]);
 
                 // Calculate weighted average cost with Landed Unit Cost
                 $newWac = $this->calculateWeightedAverageCost(
-                    currentStock: (string)$item->current_stock,
-                    currentWac: (string)($item->weighted_avg_cost ?: $item->cost_price),
+                    currentStock: (string) $item->current_stock,
+                    currentWac: (string) ($item->weighted_avg_cost ?: $item->cost_price),
                     newQuantity: $quantity,
                     newCost: $landedUnitCost
                 );
@@ -134,14 +137,14 @@ class PurchaseService
                     source: $purchase,
                     documentNumber: $purchase->purchase_number,
                     movementType: 'purchase_in',
-                    notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}" . (bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} ج.م/وحدة)" : ''),
+                    notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}".(bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} ج.م/وحدة)" : ''),
                     storeId: $storeId
                 );
             }
 
             // 3. Process and Save Additional Expenses & Generate Treasury Vouchers
             foreach ($rawExpenses as $exp) {
-                $expAmount = (string)($exp['amount'] ?? '0.000');
+                $expAmount = (string) ($exp['amount'] ?? '0.000');
                 if (bccomp($expAmount, '0.000', 3) <= 0) {
                     continue;
                 }
@@ -154,11 +157,11 @@ class PurchaseService
                 $additionalExpensesTotal = bcadd($additionalExpensesTotal, $expAmount, 3);
 
                 $expenseRecord = $purchase->additionalExpenses()->create([
-                    'title'             => $title,
-                    'amount'            => $expAmount,
+                    'title' => $title,
+                    'amount' => $expAmount,
                     'allocation_method' => $method,
-                    'paid_by'           => $paidBy,
-                    'notes'             => $expNotes,
+                    'paid_by' => $paidBy,
+                    'notes' => $expNotes,
                 ]);
 
                 if ($paidBy === 'supplier_account') {
@@ -168,27 +171,27 @@ class PurchaseService
                     // Paid from treasury (Cash, Instapay, E-wallet)
                     $paymentMethod = str_replace('treasury_', '', $paidBy);
                     $payment = Payment::create([
-                        'payment_number' => 'PAY-EXP-' . strtoupper(uniqid()),
-                        'supplier_id'    => $purchase->supplier_id,
-                        'purchase_id'    => $purchase->id,
-                        'user_id'        => Auth::id() ?? 1,
-                        'amount'         => $expAmount,
-                        'payment_date'   => $purchase->purchase_date,
+                        'payment_number' => 'PAY-EXP-'.strtoupper(uniqid()),
+                        'supplier_id' => $purchase->supplier_id,
+                        'purchase_id' => $purchase->id,
+                        'user_id' => Auth::id() ?? 1,
+                        'amount' => $expAmount,
+                        'payment_date' => $purchase->purchase_date,
                         'payment_method' => $paymentMethod,
-                        'notes'          => "سداد مصروف ملحق [{$title}] لفاتورة مشتريات [{$purchase->purchase_number}]",
+                        'notes' => "سداد مصروف ملحق [{$title}] لفاتورة مشتريات [{$purchase->purchase_number}]",
                     ]);
                     $expenseRecord->update(['payment_id' => $payment->id]);
                 }
             }
 
             // 4. Calculate Net Total
-            $discountAmount = (string)($data['discount_amount'] ?? '0.000');
+            $discountAmount = (string) ($data['discount_amount'] ?? '0.000');
             $netTotal = bcsub($baseSubtotal, $discountAmount, 3);
             if (bccomp($supplierExpensesTotal, '0.000', 3) > 0) {
                 $netTotal = bcadd($netTotal, $supplierExpensesTotal, 3);
             }
 
-            $paidAmount = (string)($data['paid_amount'] ?? '0.000');
+            $paidAmount = (string) ($data['paid_amount'] ?? '0.000');
             $remainingAmount = bcsub($netTotal, $paidAmount, 3);
 
             $paymentStatus = 'unpaid';
@@ -197,26 +200,26 @@ class PurchaseService
             }
 
             $purchase->update([
-                'subtotal'                  => $baseSubtotal,
-                'discount_amount'           => $discountAmount,
+                'subtotal' => $baseSubtotal,
+                'discount_amount' => $discountAmount,
                 'additional_expenses_total' => $additionalExpensesTotal,
-                'net_total'                 => $netTotal,
-                'paid_amount'               => $paidAmount,
-                'remaining_amount'          => $remainingAmount,
-                'payment_status'            => $paymentStatus,
+                'net_total' => $netTotal,
+                'paid_amount' => $paidAmount,
+                'remaining_amount' => $remainingAmount,
+                'payment_status' => $paymentStatus,
             ]);
 
             // 5. Record direct supplier payment voucher if paid amount exists
             if (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
-                    'payment_number' => 'PAY-PUR-' . strtoupper(uniqid()),
-                    'supplier_id'    => $purchase->supplier_id,
-                    'purchase_id'    => $purchase->id,
-                    'user_id'        => Auth::id() ?? 1,
-                    'amount'         => $paidAmount,
-                    'payment_date'   => $purchase->purchase_date,
+                    'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                    'supplier_id' => $purchase->supplier_id,
+                    'purchase_id' => $purchase->id,
+                    'user_id' => Auth::id() ?? 1,
+                    'amount' => $paidAmount,
+                    'payment_date' => $purchase->purchase_date,
                     'payment_method' => $data['payment_method'] ?? 'cash',
-                    'notes'          => "سداد دفعة توريد للفاتورة رقم {$purchase->purchase_number}",
+                    'notes' => "سداد دفعة توريد للفاتورة رقم {$purchase->purchase_number}",
                 ]);
             }
 
@@ -233,7 +236,7 @@ class PurchaseService
             $this->activityLogService->logPurchase(
                 action: 'created',
                 purchase: $purchase,
-                description: "تم إنشاء فاتورة مشتريات وتوريد بضاعة رقم [{$purchase->purchase_number}] من المورد ({$purchase->supplier?->name}) بإجمالي " . number_format((float)$purchase->net_total, 2) . " ج.م" . (bccomp($additionalExpensesTotal, '0.000', 3) > 0 ? " (شامل مصاريف ملحقة " . number_format((float)$additionalExpensesTotal, 2) . " ج.م)" : '')
+                description: "تم إنشاء فاتورة مشتريات وتوريد بضاعة رقم [{$purchase->purchase_number}] من المورد ({$purchase->supplier?->name}) بإجمالي ".number_format((float) $purchase->net_total, 2).' ج.م'.(bccomp($additionalExpensesTotal, '0.000', 3) > 0 ? ' (شامل مصاريف ملحقة '.number_format((float) $additionalExpensesTotal, 2).' ج.م)' : '')
             );
 
             return $purchase;
@@ -257,21 +260,21 @@ class PurchaseService
             // 1. Verify stock sufficiency for every item before reversing to prevent negative stock
             foreach ($lockedPurchase->items as $itemLine) {
                 $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
-                $qty = (string)$itemLine->quantity;
+                $qty = (string) $itemLine->quantity;
 
                 // Check master stock
-                if (bccomp((string)$item->current_stock, $qty, 3) < 0) {
+                if (bccomp((string) $item->current_stock, $qty, 3) < 0) {
                     throw new Exception("تعذر إلغاء الفاتورة: رصيد الصنف [{$item->name}] الحالي ({$item->current_stock} {$item->unit}) أقل من الكمية المطلوب عكسها ({$qty} {$item->unit})، لوجود مبيعات تمت من هذه الشحنة.");
                 }
 
                 // Check store stock if assigned to a specific store
                 if ($storeId) {
-                    $storeStock = \App\Models\StoreStock::where('store_id', $storeId)
+                    $storeStock = StoreStock::where('store_id', $storeId)
                         ->where('item_id', $item->id)
                         ->lockForUpdate()
                         ->first();
 
-                    if ($storeStock && bccomp((string)$storeStock->quantity, $qty, 3) < 0) {
+                    if ($storeStock && bccomp((string) $storeStock->quantity, $qty, 3) < 0) {
                         $storeName = $lockedPurchase->store?->name ?? "الفرع #{$storeId}";
                         throw new Exception("تعذر إلغاء الفاتورة: رصيد الصنف [{$item->name}] في [{$storeName}] ({$storeStock->quantity} {$item->unit}) غير كافٍ لخصم الكمية ({$qty} {$item->unit}).");
                     }
@@ -281,7 +284,7 @@ class PurchaseService
             // 2. Reverse stock deductions safely
             foreach ($lockedPurchase->items as $itemLine) {
                 $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
-                $qty = (string)$itemLine->quantity;
+                $qty = (string) $itemLine->quantity;
 
                 $this->stockService->deductStock(
                     item: $item,
@@ -289,7 +292,7 @@ class PurchaseService
                     source: $lockedPurchase,
                     documentNumber: $lockedPurchase->purchase_number,
                     movementType: 'purchase_cancel_out',
-                    notes: "إلغاء فاتورة مشتريات وتوريد رقم {$lockedPurchase->purchase_number}" . ($reason ? " - سبب: {$reason}" : ''),
+                    notes: "إلغاء فاتورة مشتريات وتوريد رقم {$lockedPurchase->purchase_number}".($reason ? " - سبب: {$reason}" : ''),
                     storeId: $storeId
                 );
             }
@@ -300,11 +303,11 @@ class PurchaseService
             Payment::where('purchase_id', $lockedPurchase->id)->delete();
 
             // 4. Update purchase status
-            $cancelNote = "تم إلغاء الفاتورة وعكس المخزون" . ($reason ? " (السبب: {$reason})" : "");
+            $cancelNote = 'تم إلغاء الفاتورة وعكس المخزون'.($reason ? " (السبب: {$reason})" : '');
             $lockedPurchase->update([
-                'status'           => 'cancelled',
+                'status' => 'cancelled',
                 'remaining_amount' => '0.000',
-                'notes'            => $lockedPurchase->notes ? ($lockedPurchase->notes . "\n" . $cancelNote) : $cancelNote,
+                'notes' => $lockedPurchase->notes ? ($lockedPurchase->notes."\n".$cancelNote) : $cancelNote,
             ]);
 
             // 5. Recalculate supplier balance
@@ -321,7 +324,7 @@ class PurchaseService
             $this->activityLogService->logPurchase(
                 action: 'cancelled',
                 purchase: $lockedPurchase,
-                description: "تم إلغاء فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] وعكس الكميات من المخزون" . ($reason ? " (السبب: {$reason})" : '')
+                description: "تم إلغاء فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] وعكس الكميات من المخزون".($reason ? " (السبب: {$reason})" : '')
             );
 
             return $lockedPurchase;
@@ -345,12 +348,12 @@ class PurchaseService
             // 1. Re-add stock for each line item and recalculate WAC
             foreach ($lockedPurchase->items as $itemLine) {
                 $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
-                $qty = (string)$itemLine->quantity;
-                $cost = (string)$itemLine->cost_price;
+                $qty = (string) $itemLine->quantity;
+                $cost = (string) $itemLine->cost_price;
 
                 $newWac = $this->calculateWeightedAverageCost(
-                    currentStock: (string)$item->current_stock,
-                    currentWac: (string)($item->weighted_avg_cost ?: $item->cost_price),
+                    currentStock: (string) $item->current_stock,
+                    currentWac: (string) ($item->weighted_avg_cost ?: $item->cost_price),
                     newQuantity: $qty,
                     newCost: $cost
                 );
@@ -372,31 +375,31 @@ class PurchaseService
             }
 
             // 2. Restore or re-create payment vouchers if there was a paid amount
-            if (bccomp((string)$lockedPurchase->paid_amount, '0.000', 3) > 0) {
+            if (bccomp((string) $lockedPurchase->paid_amount, '0.000', 3) > 0) {
                 Payment::withTrashed()
                     ->where('purchase_id', $lockedPurchase->id)
                     ->restore();
 
                 // If no trashed payment existed, create a new one
                 $hasPayment = Payment::where('purchase_id', $lockedPurchase->id)->exists();
-                if (!$hasPayment) {
+                if (! $hasPayment) {
                     Payment::create([
-                        'payment_number' => 'PAY-PUR-' . strtoupper(uniqid()),
-                        'supplier_id'    => $lockedPurchase->supplier_id,
-                        'purchase_id'    => $lockedPurchase->id,
-                        'user_id'        => Auth::id() ?? 1,
-                        'amount'         => $lockedPurchase->paid_amount,
-                        'payment_date'   => $lockedPurchase->purchase_date,
+                        'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                        'supplier_id' => $lockedPurchase->supplier_id,
+                        'purchase_id' => $lockedPurchase->id,
+                        'user_id' => Auth::id() ?? 1,
+                        'amount' => $lockedPurchase->paid_amount,
+                        'payment_date' => $lockedPurchase->purchase_date,
                         'payment_method' => 'cash',
-                        'notes'          => "سداد دفعة توريد عند استعادة الفاتورة رقم {$lockedPurchase->purchase_number}",
+                        'notes' => "سداد دفعة توريد عند استعادة الفاتورة رقم {$lockedPurchase->purchase_number}",
                     ]);
                 }
             }
 
             // 3. Recompute remaining amount and update status
-            $remaining = bcsub((string)$lockedPurchase->net_total, (string)$lockedPurchase->paid_amount, 3);
+            $remaining = bcsub((string) $lockedPurchase->net_total, (string) $lockedPurchase->paid_amount, 3);
             $lockedPurchase->update([
-                'status'           => 'confirmed',
+                'status' => 'confirmed',
                 'remaining_amount' => $remaining,
             ]);
 
@@ -434,7 +437,7 @@ class PurchaseService
             }
 
             // Delete stock movements linked to this purchase
-            \App\Models\StockMovement::where('source_type', Purchase::class)
+            StockMovement::where('source_type', Purchase::class)
                 ->where('source_id', $lockedPurchase->id)
                 ->delete();
 
@@ -472,10 +475,10 @@ class PurchaseService
 
     public function generateUniqueNumber(): string
     {
-        $prefix = 'PUR-' . date('Ymd');
-        
+        $prefix = 'PUR-'.date('Ymd');
+
         $lastPurchase = Purchase::withTrashed()
-            ->where('purchase_number', 'LIKE', $prefix . '-%')
+            ->where('purchase_number', 'LIKE', $prefix.'-%')
             ->orderBy('purchase_number', 'desc')
             ->first();
 
@@ -488,7 +491,7 @@ class PurchaseService
         }
 
         do {
-            $candidate = $prefix . '-' . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $candidate = $prefix.'-'.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
             $exists = Purchase::withTrashed()->where('purchase_number', $candidate)->exists();
             if ($exists) {
                 $nextSequence++;

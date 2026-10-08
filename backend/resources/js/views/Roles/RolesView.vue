@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Action Controls -->
-    <PageHeader
-      :title="$t('roles.title')"
-      :subtitle="$t('roles.subtitle')"
-      icon="🛡️"
-    >
+    <PageHeader :title="$t('roles.title')" :subtitle="$t('roles.subtitle')" icon="🛡️">
       <template #actions>
         <div class="flex items-center gap-3">
           <router-link

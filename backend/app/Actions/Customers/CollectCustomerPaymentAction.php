@@ -23,16 +23,16 @@ final class CollectCustomerPaymentAction
         $customer = Customer::findOrFail($dto->customer_id);
 
         $payment = $this->paymentService->recordCustomerPayment([
-            'customer_id'    => $customer->id,
-            'amount'         => $dto->amount,
+            'customer_id' => $customer->id,
+            'amount' => $dto->amount,
             'payment_method' => $dto->payment_method,
-            'payment_date'   => $dto->payment_date,
-            'notes'          => $dto->notes ?? __('contacts.receipt_voucher'),
+            'payment_date' => $dto->payment_date,
+            'notes' => $dto->notes ?? __('contacts.receipt_voucher'),
         ]);
 
         return [
             'customer' => $customer->fresh(),
-            'payment'  => $payment,
+            'payment' => $payment,
         ];
     }
 }

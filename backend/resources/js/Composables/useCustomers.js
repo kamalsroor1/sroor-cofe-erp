@@ -131,10 +131,22 @@ export function useCustomers() {
         try {
             if (editingCustomer.value) {
                 await api.put(`/customers/${editingCustomer.value.id}`, form);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('contacts.customer_updated'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('contacts.customer_updated'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             } else {
                 await api.post('/customers', form);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('contacts.customer_added'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('contacts.customer_added'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
             showCustomerModal.value = false;
             await fetchCustomers(pagination.value.current_page);
@@ -194,10 +206,20 @@ export function useCustomers() {
         if (result.isConfirmed) {
             try {
                 await api.delete(`/customers/${customer.id}`);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('contacts.customer_deleted'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('contacts.customer_deleted'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 await fetchCustomers(pagination.value.current_page);
             } catch (error) {
-                Swal.fire({ icon: 'error', title: t('common.error'), text: error.userMessage || t('contacts.cannot_delete_has_balance') });
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: error.userMessage || t('contacts.cannot_delete_has_balance'),
+                });
             }
         }
     };

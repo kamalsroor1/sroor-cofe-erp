@@ -1,6 +1,10 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-    <h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4"
+  >
+    <h2
+      class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
+    >
       <span>🏢</span>
       <span>{{ $t('inventory.branches_and_date_section') }}</span>
     </h2>
@@ -32,12 +36,7 @@
 
       <!-- Transfer Date -->
       <div>
-        <BaseInput
-          v-model="form.transfer_date"
-          type="date"
-          :label="$t('inventory.transfer_date_label')"
-          required
-        />
+        <BaseInput v-model="form.transfer_date" type="date" :label="$t('inventory.transfer_date_label')" required />
       </div>
 
       <!-- Notes -->

@@ -24,16 +24,16 @@ final class RoleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $roleId = $request->input('role_id') ? (int)$request->input('role_id') : null;
+        $roleId = $request->input('role_id') ? (int) $request->input('role_id') : null;
         $matrix = $this->getRolesMatrixAction->execute($roleId);
 
         return response()->json([
             'success' => true,
-            'data'    => $matrix,
+            'data' => $matrix,
         ], 200);
     }
 
@@ -50,9 +50,9 @@ final class RoleController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.role_permissions_updated') ?: 'تم تحديث مصفوفة صلاحيات الدور بنجاح',
-            'data'    => [
-                'id'          => $role->id,
-                'name'        => $role->name,
+            'data' => [
+                'id' => $role->id,
+                'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name')->toArray(),
             ],
         ], 200);

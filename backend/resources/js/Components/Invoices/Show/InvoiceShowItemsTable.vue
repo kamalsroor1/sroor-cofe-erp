@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4 font-tajawal no-print">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4 font-tajawal no-print"
+  >
     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
       <div class="flex items-center gap-2">
         <span class="text-base">📦</span>
@@ -11,7 +13,9 @@
 
     <div class="overflow-x-auto">
       <table class="w-full text-start text-xs border-collapse">
-        <thead class="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800">
+        <thead
+          class="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800"
+        >
           <tr>
             <th class="py-3 px-3 text-start w-12">#</th>
             <th class="py-3 px-3 text-start">{{ $t('invoices.item_code_col') }}</th>
@@ -31,7 +35,9 @@
           >
             <td class="py-3 px-3 text-slate-400 font-bold text-[11px]">{{ idx + 1 }}</td>
             <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold">
+              <span
+                class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold"
+              >
                 {{ item.item_code || `ITM-${item.item_id || item.id}` }}
               </span>
             </td>

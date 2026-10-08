@@ -1,7 +1,9 @@
 <template>
   <div class="relative w-full flex items-center" :class="wrapperClass">
     <!-- Leading Search Icon -->
-    <Search class="w-4 h-4 absolute right-3.5 text-slate-400 dark:text-slate-500 pointer-events-none transition-colors" />
+    <Search
+      class="w-4 h-4 absolute right-3.5 text-slate-400 dark:text-slate-500 pointer-events-none transition-colors"
+    />
 
     <!-- Native Search Input -->
     <input
@@ -38,7 +40,7 @@ import { ref } from 'vue';
 import { Search, X, Loader2 } from 'lucide-vue-next';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps({
@@ -47,14 +49,14 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   debounce: { type: Number, default: 0 },
   wrapperClass: { type: String, default: '' },
-  inputClass: { type: String, default: '' }
+  inputClass: { type: String, default: '' },
 });
 
 const emit = defineEmits(['search', 'clear']);
 
 const model = defineModel({
   type: String,
-  default: ''
+  default: '',
 });
 
 const inputRef = ref(null);
@@ -80,6 +82,6 @@ const clear = () => {
 
 defineExpose({
   inputRef,
-  focus: () => inputRef.value?.focus()
+  focus: () => inputRef.value?.focus(),
 });
 </script>

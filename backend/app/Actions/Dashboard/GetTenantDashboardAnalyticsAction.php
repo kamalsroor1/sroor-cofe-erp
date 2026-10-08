@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
+use App\Http\Resources\Api\CashShiftResource;
+use App\Http\Resources\InvoiceSummaryResource;
+use App\Http\Resources\POSItemResource;
+use App\Http\Resources\StoreResource;
+use App\Models\CashShift;
+use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Payment;
-use App\Models\Expense;
-use App\Models\Customer;
-use App\Models\CashShift;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\DashboardAnalyticsService;
@@ -35,7 +39,7 @@ class GetTenantDashboardAnalyticsAction
     public function execute(?User $user): array
     {
         $storeId = session('current_store_id');
-        $cacheKey = ($user?->id ?? 0) . ':' . ($storeId ?? 'all');
+        $cacheKey = ($user?->id ?? 0).':'.($storeId ?? 'all');
 
         if (isset($this->memoized[$cacheKey])) {
             return $this->memoized[$cacheKey];
@@ -48,7 +52,7 @@ class GetTenantDashboardAnalyticsAction
         if ($storeId) {
             $activeStore = Store::where('id', $storeId)->where('is_active', true)->first();
         }
-        if (!$activeStore && $user) {
+        if (! $activeStore && $user) {
             $activeStore = $user->getCurrentStore();
             if ($activeStore) {
                 $storeId = $activeStore->id;
@@ -56,7 +60,7 @@ class GetTenantDashboardAnalyticsAction
         }
 
         // Store filter for non-admin or scoped store
-        $storeFilter = $storeId ? (int)$storeId : null;
+        $storeFilter = $storeId ? (int) $storeId : null;
 
         // 2. Analytics Service (7-Day trend, Peak hours, Payment distribution)
         $analytics = $this->analyticsService->getAnalytics(storeId: $storeFilter, trendDays: 7);
@@ -71,16 +75,16 @@ class GetTenantDashboardAnalyticsAction
         }
 
         $todayInvoices = (clone $todayInvoicesQuery)->latest('id')->get();
-        $totalSales = (string)($todayInvoices->sum('net_total') ?: '0.000');
+        $totalSales = (string) ($todayInvoices->sum('net_total') ?: '0.000');
         $invoicesCount = $todayInvoices->count();
 
-        $cashSales = (string)($todayInvoices->where('payment_type', 'cash')->sum('net_total') ?: '0.000');
-        $creditSales = (string)($todayInvoices->where('payment_type', 'credit')->sum('net_total') ?: '0.000');
-        $partialSales = (string)($todayInvoices->where('payment_type', 'partial')->sum('net_total') ?: '0.000');
-        $partialPaid = (string)($todayInvoices->where('payment_type', 'partial')->sum('paid_amount') ?: '0.000');
+        $cashSales = (string) ($todayInvoices->where('payment_type', 'cash')->sum('net_total') ?: '0.000');
+        $creditSales = (string) ($todayInvoices->where('payment_type', 'credit')->sum('net_total') ?: '0.000');
+        $partialSales = (string) ($todayInvoices->where('payment_type', 'partial')->sum('net_total') ?: '0.000');
+        $partialPaid = (string) ($todayInvoices->where('payment_type', 'partial')->sum('paid_amount') ?: '0.000');
 
         // 4. Cash Collected from Customer Vouchers
-        $customerPayments = (string)(Payment::whereDate('payment_date', $today)
+        $customerPayments = (string) (Payment::whereDate('payment_date', $today)
             ->whereNotNull('customer_id')
             ->sum('amount') ?: '0.000');
 
@@ -91,10 +95,10 @@ class GetTenantDashboardAnalyticsAction
         if ($storeFilter) {
             $expensesQuery->where('store_id', $storeFilter);
         }
-        $totalExpenses = (string)($expensesQuery->sum('amount') ?: '0.000');
+        $totalExpenses = (string) ($expensesQuery->sum('amount') ?: '0.000');
 
         // 6. Supplier Payments Today
-        $supplierPaid = (string)(Payment::whereDate('payment_date', $today)
+        $supplierPaid = (string) (Payment::whereDate('payment_date', $today)
             ->whereNotNull('supplier_id')
             ->sum('amount') ?: '0.000');
 
@@ -102,7 +106,7 @@ class GetTenantDashboardAnalyticsAction
         $netCashToday = bcsub($totalCashCollected, $totalOutflows, 3);
 
         // 7. Customer Debts Total
-        $totalCustomersDebt = (float)Customer::where('is_active', true)->sum('current_balance');
+        $totalCustomersDebt = (float) Customer::where('is_active', true)->sum('current_balance');
 
         // 8. Low Stock Radar
         $lowStockQuery = Item::where('is_active', true)
@@ -120,11 +124,11 @@ class GetTenantDashboardAnalyticsAction
 
         // 10. Top Selling Coffee & Products this Month
         $topSellingItems = InvoiceItem::select(
-                'items.id as item_id',
-                'items.name as item_name',
-                DB::raw('SUM(invoice_items.quantity) as total_qty'),
-                DB::raw('SUM(invoice_items.total_price) as total_revenue')
-            )
+            'items.id as item_id',
+            'items.name as item_name',
+            DB::raw('SUM(invoice_items.quantity) as total_qty'),
+            DB::raw('SUM(invoice_items.total_price) as total_revenue')
+        )
             ->join('items', 'items.id', '=', 'invoice_items.item_id')
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->where('invoices.status', 'confirmed')
@@ -145,31 +149,31 @@ class GetTenantDashboardAnalyticsAction
 
         $result = [
             'metrics' => [
-                'total_sales' => (float)$totalSales,
+                'total_sales' => (float) $totalSales,
                 'invoices_count' => $invoicesCount,
-                'cash_sales' => (float)$cashSales,
-                'credit_sales' => (float)$creditSales,
-                'partial_sales' => (float)$partialSales,
-                'total_cash_collected' => (float)$totalCashCollected,
-                'total_expenses' => (float)$totalExpenses,
-                'supplier_payments' => (float)$supplierPaid,
-                'net_cash_today' => (float)$netCashToday,
+                'cash_sales' => (float) $cashSales,
+                'credit_sales' => (float) $creditSales,
+                'partial_sales' => (float) $partialSales,
+                'total_cash_collected' => (float) $totalCashCollected,
+                'total_expenses' => (float) $totalExpenses,
+                'supplier_payments' => (float) $supplierPaid,
+                'net_cash_today' => (float) $netCashToday,
                 'total_customers_debt' => $totalCustomersDebt,
-                'monthly_sales' => (float)$periodic['total_sales'],
-                'monthly_gross_profit' => (float)$periodic['gross_profit'],
+                'monthly_sales' => (float) $periodic['total_sales'],
+                'monthly_gross_profit' => (float) $periodic['gross_profit'],
                 'monthly_margin' => $periodic['margin_percentage'],
             ],
             'analytics' => $analytics,
-            'recent_invoices' => \App\Http\Resources\InvoiceSummaryResource::collection($todayInvoices->take(6))->resolve(),
-            'low_stock_items' => \App\Http\Resources\POSItemResource::collection($lowStockItems)->resolve(),
-            'top_selling_items' => $topSellingItems->map(fn($t) => [
+            'recent_invoices' => InvoiceSummaryResource::collection($todayInvoices->take(6))->resolve(),
+            'low_stock_items' => POSItemResource::collection($lowStockItems)->resolve(),
+            'top_selling_items' => $topSellingItems->map(fn ($t) => [
                 'item_id' => $t->item_id,
                 'name' => $t->item_name,
-                'total_qty' => (float)$t->total_qty,
-                'total_revenue' => (float)$t->total_revenue,
+                'total_qty' => (float) $t->total_qty,
+                'total_revenue' => (float) $t->total_revenue,
             ]),
-            'active_shift' => $activeShift ? (new \App\Http\Resources\Api\CashShiftResource($activeShift))->resolve() : null,
-            'active_store' => $activeStore ? (new \App\Http\Resources\StoreResource($activeStore))->resolve() : null,
+            'active_shift' => $activeShift ? (new CashShiftResource($activeShift))->resolve() : null,
+            'active_store' => $activeStore ? (new StoreResource($activeStore))->resolve() : null,
         ];
 
         $this->memoized[$cacheKey] = $result;

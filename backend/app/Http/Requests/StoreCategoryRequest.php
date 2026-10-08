@@ -17,10 +17,10 @@ final class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => ['required', 'string', 'max:100'],
-            'icon'       => ['nullable', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:100'],
+            'icon' => ['nullable', 'string', 'max:50'],
             'sort_order' => ['nullable', 'integer'],
-            'is_active'  => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 }

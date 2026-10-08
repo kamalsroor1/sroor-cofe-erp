@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4 font-tajawal no-print">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4 font-tajawal no-print"
+  >
     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
       <div class="flex items-center gap-2">
         <span class="text-base">👤</span>
@@ -28,10 +30,7 @@
 
       <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
         <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('invoices.current_balance_after') }}</span>
-        <span
-          class="font-mono font-black text-sm"
-          :class="customerBalance > 0 ? 'text-rose-500' : 'text-emerald-500'"
-        >
+        <span class="font-mono font-black text-sm" :class="customerBalance > 0 ? 'text-rose-500' : 'text-emerald-500'">
           {{ formatMoney(customerBalance) }} {{ $t('common.currency') }}
         </span>
       </div>

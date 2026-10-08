@@ -1,11 +1,7 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-6 font-tajawal">
     <!-- Page Header -->
-    <PageHeader
-      :title="$t('returns.create_title')"
-      :subtitle="$t('returns.create_subtitle')"
-      icon="🔄"
-    >
+    <PageHeader :title="$t('returns.create_title')" :subtitle="$t('returns.create_subtitle')" icon="🔄">
       <template #actions>
         <router-link
           to="/returns"

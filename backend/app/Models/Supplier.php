@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 
 class Supplier extends Model
 {
@@ -25,7 +25,7 @@ class Supplier extends Model
     {
         return [
             'current_balance' => 'decimal:3',
-            'is_active'       => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -59,8 +59,8 @@ class Supplier extends Model
     {
         $blockers = [];
 
-        if (bccomp((string)$this->current_balance, '0.000', 3) != 0) {
-            $blockers[] = "يوجد رصيد مستحق للمورد (" . number_format((float)$this->current_balance, 2) . " ج.م)";
+        if (bccomp((string) $this->current_balance, '0.000', 3) != 0) {
+            $blockers[] = 'يوجد رصيد مستحق للمورد ('.number_format((float) $this->current_balance, 2).' ج.م)';
         }
 
         $purchasesCount = $this->purchases()->count();

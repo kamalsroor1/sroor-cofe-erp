@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 
 class Item extends Model
 {
@@ -38,27 +38,27 @@ class Item extends Model
 
     public function getPriceRetailAttribute(): string
     {
-        return (string)($this->selling_price ?? '0.000');
+        return (string) ($this->selling_price ?? '0.000');
     }
 
     public function getPriceWholesaleAttribute(): string
     {
-        return (string)($this->min_selling_price ?? $this->selling_price ?? '0.000');
+        return (string) ($this->min_selling_price ?? $this->selling_price ?? '0.000');
     }
 
     protected function casts(): array
     {
         return [
-            'current_stock'     => 'decimal:3',
-            'cost_price'        => 'decimal:3',
+            'current_stock' => 'decimal:3',
+            'cost_price' => 'decimal:3',
             'min_selling_price' => 'decimal:3',
             'weighted_avg_cost' => 'decimal:3',
-            'selling_price'     => 'decimal:3',
-            'min_stock_level'   => 'decimal:3',
-            'is_active'         => 'boolean',
-            'pos_sort_order'    => 'integer',
-            'is_pos_pinned'     => 'boolean',
-            'pos_sales_count'   => 'integer',
+            'selling_price' => 'decimal:3',
+            'min_stock_level' => 'decimal:3',
+            'is_active' => 'boolean',
+            'pos_sort_order' => 'integer',
+            'is_pos_pinned' => 'boolean',
+            'pos_sales_count' => 'integer',
         ];
     }
 
@@ -99,32 +99,32 @@ class Item extends Model
 
     public function getStockInStore(?int $storeId): string
     {
-        if (!$storeId) {
-            return (string)$this->current_stock;
+        if (! $storeId) {
+            return (string) $this->current_stock;
         }
 
         $stock = $this->relationLoaded('storeStocks')
             ? $this->storeStocks->firstWhere('store_id', $storeId)
             : $this->storeStocks()->where('store_id', $storeId)->first();
 
-        return $stock ? (string)$stock->quantity : '0.000';
+        return $stock ? (string) $stock->quantity : '0.000';
     }
 
     public function getEffectivePriceForStore(?int $storeId): string
     {
-        if (!$storeId) {
-            return (string)$this->selling_price;
+        if (! $storeId) {
+            return (string) $this->selling_price;
         }
 
         $stock = $this->relationLoaded('storeStocks')
             ? $this->storeStocks->firstWhere('store_id', $storeId)
             : $this->storeStocks()->where('store_id', $storeId)->first();
 
-        if ($stock && $stock->custom_selling_price !== null && bccomp((string)$stock->custom_selling_price, '0.000', 3) > 0) {
-            return (string)$stock->custom_selling_price;
+        if ($stock && $stock->custom_selling_price !== null && bccomp((string) $stock->custom_selling_price, '0.000', 3) > 0) {
+            return (string) $stock->custom_selling_price;
         }
 
-        return (string)$this->selling_price;
+        return (string) $this->selling_price;
     }
 
     public function scopeActive(Builder $query): Builder
@@ -135,7 +135,7 @@ class Item extends Model
     public function scopeLowStock(Builder $query): Builder
     {
         return $query->whereColumn('current_stock', '<=', 'min_stock_level')
-                     ->where('is_active', true);
+            ->where('is_active', true);
     }
 
     public function isLowStock(): bool
@@ -158,13 +158,13 @@ class Item extends Model
     {
         $blockers = [];
 
-        if (bccomp((string)$this->current_stock, '0.000', 3) > 0) {
-            $blockers[] = "يوجد رصيد بضاعة متبقي بالمخزن (" . number_format((float)$this->current_stock, 3) . " {$this->unit})";
+        if (bccomp((string) $this->current_stock, '0.000', 3) > 0) {
+            $blockers[] = 'يوجد رصيد بضاعة متبقي بالمخزن ('.number_format((float) $this->current_stock, 3)." {$this->unit})";
         }
 
         $hasStoreStock = $this->storeStocks()->where('quantity', '>', 0)->exists();
         if ($hasStoreStock) {
-            $blockers[] = "يوجد رصيد متوفر في أحد الفروع أو عربات التوزيع";
+            $blockers[] = 'يوجد رصيد متوفر في أحد الفروع أو عربات التوزيع';
         }
 
         $invoicesCount = $this->invoiceItems()->count();
@@ -187,7 +187,7 @@ class Item extends Model
             $blockers[] = "مرتبط بـ {$returnsCount} حركة مرتجعات";
         }
 
-        $transfersCount = \App\Models\StockTransferItem::where('item_id', $this->id)->count();
+        $transfersCount = StockTransferItem::where('item_id', $this->id)->count();
         if ($transfersCount > 0) {
             $blockers[] = "مرتبط بـ {$transfersCount} إذن تحويل بين الفروع";
         }

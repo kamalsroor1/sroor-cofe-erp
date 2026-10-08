@@ -17,7 +17,7 @@ export function useSuperAdminDashboard() {
         platform_name: '',
         platform_subtitle: '',
         support_email: '',
-        support_phone: ''
+        support_phone: '',
     });
     const isSavingSettings = ref(false);
     const saveSuccessMessage = ref('');
@@ -45,7 +45,7 @@ export function useSuperAdminDashboard() {
                     platform_name: res.data.data.platform_name || '',
                     platform_subtitle: res.data.data.platform_subtitle || '',
                     support_email: res.data.data.support_email || '',
-                    support_phone: res.data.data.support_phone || ''
+                    support_phone: res.data.data.support_phone || '',
                 };
             }
         } catch (e) {

@@ -2,7 +2,10 @@ export function hexToRgb(hex) {
     if (!hex) return '245, 158, 11';
     hex = hex.replace('#', '').trim();
     if (hex.length === 3) {
-        hex = hex.split('').map(c => c + c).join('');
+        hex = hex
+            .split('')
+            .map((c) => c + c)
+            .join('');
     }
     if (hex.length !== 6) return '245, 158, 11';
     const num = parseInt(hex, 16);
@@ -16,13 +19,16 @@ export function adjustColorBrightness(hex, percent) {
     if (!hex) return '#d97706';
     hex = hex.replace('#', '').trim();
     if (hex.length === 3) {
-        hex = hex.split('').map(c => c + c).join('');
+        hex = hex
+            .split('')
+            .map((c) => c + c)
+            .join('');
     }
     if (hex.length !== 6) return '#d97706';
     let num = parseInt(hex, 16);
     let r = (num >> 16) + Math.round(255 * (percent / 100));
-    let g = ((num >> 8) & 0x00FF) + Math.round(255 * (percent / 100));
-    let b = (num & 0x0000FF) + Math.round(255 * (percent / 100));
+    let g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
+    let b = (num & 0x0000ff) + Math.round(255 * (percent / 100));
     r = Math.min(255, Math.max(0, r));
     g = Math.min(255, Math.max(0, g));
     b = Math.min(255, Math.max(0, b));

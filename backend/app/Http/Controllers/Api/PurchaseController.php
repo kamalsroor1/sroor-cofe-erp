@@ -31,16 +31,16 @@ final class PurchaseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('purchases.view') && !$user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view') && ! $user->can('purchases.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $status = (string)$request->input('status', 'all');
+        $search = trim((string) $request->input('search', ''));
+        $status = (string) $request->input('status', 'all');
         $supplierId = $request->input('supplier_id');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
+        $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
@@ -50,15 +50,15 @@ final class PurchaseController extends Controller
         $query = Purchase::with(['supplier', 'user', 'store', 'items.item']);
 
         if ($storeId && $storeId !== 'all') {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', (int) $storeId);
         }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('purchase_number', 'like', "%{$search}%")
-                  ->orWhere('supplier_invoice_ref', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
+                    ->orWhere('supplier_invoice_ref', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%")->orWhere('company_name', 'like', "%{$search}%"));
             });
         }
 
@@ -67,7 +67,7 @@ final class PurchaseController extends Controller
         }
 
         if ($supplierId && $supplierId !== 'all') {
-            $query->where('supplier_id', (int)$supplierId);
+            $query->where('supplier_id', (int) $supplierId);
         }
 
         if ($fromDate) {
@@ -78,24 +78,24 @@ final class PurchaseController extends Controller
             $query->whereDate('purchase_date', '<=', $toDate);
         }
 
-        $totalPurchases = (float)(clone $query)->where('status', 'confirmed')->sum('net_total');
-        $unpaidTotal = (float)(clone $query)->where('status', 'confirmed')->sum('remaining_amount');
-        $confirmedCount = (int)(clone $query)->where('status', 'confirmed')->count();
+        $totalPurchases = (float) (clone $query)->where('status', 'confirmed')->sum('net_total');
+        $unpaidTotal = (float) (clone $query)->where('status', 'confirmed')->sum('remaining_amount');
+        $confirmedCount = (int) (clone $query)->where('status', 'confirmed')->count();
 
         $purchases = $query->latest('purchase_date')->latest('id')->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'data'    => PurchaseResource::collection($purchases->items())->resolve(),
-            'meta'    => [
+            'data' => PurchaseResource::collection($purchases->items())->resolve(),
+            'meta' => [
                 'current_page' => $purchases->currentPage(),
-                'last_page'    => $purchases->lastPage(),
-                'per_page'     => $purchases->perPage(),
-                'total'        => $purchases->total(),
+                'last_page' => $purchases->lastPage(),
+                'per_page' => $purchases->perPage(),
+                'total' => $purchases->total(),
             ],
             'summary' => [
                 'total_purchases' => $totalPurchases,
-                'unpaid_total'    => $unpaidTotal,
+                'unpaid_total' => $unpaidTotal,
                 'confirmed_count' => $confirmedCount,
             ],
         ], 200);
@@ -107,7 +107,7 @@ final class PurchaseController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('purchases.view') && !$user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view') && ! $user->can('purchases.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -115,7 +115,7 @@ final class PurchaseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new PurchaseResource($purchase))->resolve(),
+            'data' => (new PurchaseResource($purchase))->resolve(),
         ], 200);
     }
 
@@ -129,13 +129,13 @@ final class PurchaseController extends Controller
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $dto = PurchaseDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $dto = PurchaseDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
         $purchase = $this->createPurchaseAction->execute($dto);
 
         return response()->json([
             'success' => true,
             'message' => __('purchases.created_success', ['number' => $purchase->purchase_number]) ?: "تم تسجيل وتأكيد فاتورة المشتريات رقم {$purchase->purchase_number} وتوريد الخامات للمخزن بنجاح ✓",
-            'data'    => (new PurchaseResource($purchase))->resolve(),
+            'data' => (new PurchaseResource($purchase))->resolve(),
         ], 201);
     }
 
@@ -145,7 +145,7 @@ final class PurchaseController extends Controller
     public function cancel(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('purchases.delete') && !$user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.delete') && ! $user->can('purchases.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -158,7 +158,7 @@ final class PurchaseController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('purchases.cancelled_success', ['number' => $purchase->purchase_number]) ?: "تم إلغاء فاتورة المشتريات رقم {$purchase->purchase_number} وعكس المخزن والمديونية بنجاح ✓",
-            'data'    => (new PurchaseResource($purchase))->resolve(),
+            'data' => (new PurchaseResource($purchase))->resolve(),
         ], 200);
     }
 
@@ -168,18 +168,18 @@ final class PurchaseController extends Controller
     public function smartReorder(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('purchases.view') && !$user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view') && ! $user->can('purchases.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id');
-        $storeFilter = ($storeId && $storeId !== 'all') ? (int)$storeId : null;
+        $storeFilter = ($storeId && $storeId !== 'all') ? (int) $storeId : null;
 
-        $analysisDays = (int)$request->input('analysis_days', 14);
-        $targetCoverDays = (int)$request->input('target_cover_days', 15);
-        $urgency = (string)$request->input('urgency', 'all');
-        $search = trim((string)$request->input('search', ''));
+        $analysisDays = (int) $request->input('analysis_days', 14);
+        $targetCoverDays = (int) $request->input('target_cover_days', 15);
+        $urgency = (string) $request->input('urgency', 'all');
+        $search = trim((string) $request->input('search', ''));
 
         $result = $this->getSmartReorderSuggestionsAction->execute(
             storeId: $storeFilter,
@@ -191,7 +191,7 @@ final class PurchaseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $result,
+            'data' => $result,
         ], 200);
     }
 }

@@ -21,16 +21,16 @@ final class CreateStoreAction
                 Store::where('is_main', true)->update(['is_main' => false]);
             }
 
-            $generatedCode = $dto->code ?? (strtoupper(substr($dto->type, 0, 3)) . '-' . rand(100, 999));
+            $generatedCode = $dto->code ?? (strtoupper(substr($dto->type, 0, 3)).'-'.rand(100, 999));
 
             $store = Store::create([
-                'name'      => $dto->name,
-                'code'      => $generatedCode,
-                'type'      => $dto->type,
-                'address'   => $dto->address,
-                'phone'     => $dto->phone,
+                'name' => $dto->name,
+                'code' => $generatedCode,
+                'type' => $dto->type,
+                'address' => $dto->address,
+                'phone' => $dto->phone,
                 'is_active' => $dto->is_active,
-                'is_main'   => $dto->is_main,
+                'is_main' => $dto->is_main,
             ]);
 
             if ($creator) {

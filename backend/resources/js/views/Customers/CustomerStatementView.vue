@@ -1,10 +1,7 @@
 <template>
   <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
     <!-- Header & Print Action -->
-    <CustomerStatementHeader
-      :customer-name="customer?.name"
-      @print="printStatement"
-    />
+    <CustomerStatementHeader :customer-name="customer?.name" @print="printStatement" />
 
     <!-- Summary KPI Profile Cards -->
     <CustomerStatementSummaryCards
@@ -23,10 +20,7 @@
     />
 
     <!-- Ledger Table & Mobile Cards -->
-    <CustomerStatementTable
-      :ledger="ledger"
-      :loading="isLoading"
-    />
+    <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
   </div>
 </template>
 

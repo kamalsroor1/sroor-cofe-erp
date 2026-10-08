@@ -10,7 +10,7 @@ export function useMoney() {
                 maximumFractionDigits: decimals,
             });
         }
-        const hasFraction = (num % 1 !== 0);
+        const hasFraction = num % 1 !== 0;
         return num.toLocaleString('en-US', {
             minimumFractionDigits: hasFraction ? 2 : 0,
             maximumFractionDigits: hasFraction ? 2 : 0,
@@ -25,7 +25,7 @@ export function useMoney() {
                 maximumFractionDigits: decimals,
             });
         }
-        const hasFraction = (num % 1 !== 0);
+        const hasFraction = num % 1 !== 0;
         return num.toLocaleString('en-US', {
             minimumFractionDigits: hasFraction ? 2 : 0,
             maximumFractionDigits: hasFraction ? 2 : 0,

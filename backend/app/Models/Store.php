@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Store extends Model
 {
@@ -24,7 +24,7 @@ class Store extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'is_main'   => 'boolean',
+        'is_main' => 'boolean',
     ];
 
     /**
@@ -139,12 +139,12 @@ class Store extends Model
         $blockers = [];
 
         if ($this->is_main) {
-            $blockers[] = "هو الفرع والمخزن الرئيسي للمنشأة";
+            $blockers[] = 'هو الفرع والمخزن الرئيسي للمنشأة';
         }
 
         $hasStock = $this->stocks()->where('quantity', '>', 0)->exists();
         if ($hasStock) {
-            $blockers[] = "يوجد رصيد بضاعة مخزني حالي داخل هذا الفرع";
+            $blockers[] = 'يوجد رصيد بضاعة مخزني حالي داخل هذا الفرع';
         }
 
         $invoicesCount = $this->invoices()->count();

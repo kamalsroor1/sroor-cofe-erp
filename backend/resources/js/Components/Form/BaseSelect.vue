@@ -26,7 +26,7 @@
           hasError
             ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'
             : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20',
-          selectClass
+          selectClass,
         ]"
       >
         <span class="truncate" :class="{ 'text-slate-400 dark:text-slate-500 font-medium': !selectedLabel }">
@@ -50,7 +50,10 @@
           class="absolute top-full mt-1.5 inset-x-0 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-64 font-tajawal animate-in fade-in zoom-in-95 duration-150"
         >
           <!-- Search Input inside Dropdown -->
-          <div v-if="searchable" class="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 shrink-0">
+          <div
+            v-if="searchable"
+            class="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 shrink-0"
+          >
             <div class="relative flex items-center">
               <Search class="w-3.5 h-3.5 absolute right-3 text-slate-400" />
               <input
@@ -75,13 +78,19 @@
           <!-- Options List -->
           <div class="flex-1 overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
             <!-- Loading Indicator -->
-            <div v-if="isLoading" class="py-4 text-center text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
+            <div
+              v-if="isLoading"
+              class="py-4 text-center text-xs font-bold text-slate-400 flex items-center justify-center gap-2"
+            >
               <Loader2 class="w-4 h-4 animate-spin text-theme-primary" />
               <span>جاري التحميل...</span>
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="filteredOptions.length === 0" class="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500">
+            <div
+              v-else-if="filteredOptions.length === 0"
+              class="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500"
+            >
               {{ emptyText || 'لا توجد نتائج مطابقة' }}
             </div>
 
@@ -95,7 +104,7 @@
               :class="[
                 isSelected(opt)
                   ? 'bg-theme-light text-theme-primary font-black'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800',
               ]"
             >
               <div class="flex items-center gap-2 truncate">
@@ -136,7 +145,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { ChevronDown, Check, Search, X, Loader2, AlertCircle } from 'lucide-vue-next';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps({
@@ -155,14 +164,14 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
   wrapperClass: { type: String, default: '' },
-  selectClass: { type: String, default: '' }
+  selectClass: { type: String, default: '' },
 });
 
 const emit = defineEmits(['change', 'select']);
 
 const model = defineModel({
   type: [String, Number, Object, Boolean],
-  default: null
+  default: null,
 });
 
 const isOpen = ref(false);
@@ -186,7 +195,7 @@ const getOptionValue = (opt) => {
 
 const getOptionLabel = (opt) => {
   if (typeof opt === 'object' && opt !== null) {
-    return opt[props.labelKey] !== undefined ? opt[props.labelKey] : (opt.name || opt.title || opt.id);
+    return opt[props.labelKey] !== undefined ? opt[props.labelKey] : opt.name || opt.title || opt.id;
   }
   return opt;
 };
@@ -199,7 +208,7 @@ const isSelected = (opt) => {
 const selectedLabel = computed(() => {
   if (model.value === null || model.value === undefined || model.value === '') return '';
   const allOpts = props.searchFn ? dynamicOptions.value : props.options;
-  const found = allOpts.find(o => getOptionValue(o) === model.value);
+  const found = allOpts.find((o) => getOptionValue(o) === model.value);
   if (found) return getOptionLabel(found);
   return model.value;
 });
@@ -208,7 +217,7 @@ const filteredOptions = computed(() => {
   if (props.searchFn) return dynamicOptions.value;
   if (!searchQuery.value) return props.options;
   const q = searchQuery.value.toLowerCase().trim();
-  return props.options.filter(opt => {
+  return props.options.filter((opt) => {
     const lbl = String(getOptionLabel(opt)).toLowerCase();
     const sub = opt.subtext ? String(opt.subtext).toLowerCase() : '';
     return lbl.includes(q) || sub.includes(q);
@@ -263,7 +272,7 @@ const executeRemoteSearch = async (query) => {
   isLoading.value = true;
   try {
     const res = await props.searchFn(query, { signal: abortController.signal });
-    dynamicOptions.value = Array.isArray(res) ? res : (res?.data || []);
+    dynamicOptions.value = Array.isArray(res) ? res : res?.data || [];
   } catch (err) {
     if (err.name !== 'AbortError') {
       console.error('Remote search error:', err);

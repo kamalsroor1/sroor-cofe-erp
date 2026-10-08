@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4"
+  >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 flex items-center gap-2">
         <span>🫘</span>
@@ -7,7 +9,11 @@
       </h2>
       <span
         class="px-2.5 py-0.5 rounded-full text-xs font-mono font-black border"
-        :class="totalPercentage === 100 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'"
+        :class="
+          totalPercentage === 100
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+            : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+        "
       >
         {{ $t('inventory.total_ratio_badge', { pct: totalPercentage }) }}
       </span>
@@ -45,8 +51,9 @@
         <div class="sm:w-1/3 min-w-0">
           <div class="font-bold text-slate-900 dark:text-white truncate">{{ comp.name }}</div>
           <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-            {{ formatMoney(comp.selling_price) }} {{ $t('common.currency') }} / {{ $t('inventory.unit_weight_short') }}
-            ({{ $t('inventory.current_stock') }}: {{ comp.current_stock }} {{ $t('inventory.unit_weight_short') }})
+            {{ formatMoney(comp.selling_price) }} {{ $t('common.currency') }} /
+            {{ $t('inventory.unit_weight_short') }} ({{ $t('inventory.current_stock') }}: {{ comp.current_stock }}
+            {{ $t('inventory.unit_weight_short') }})
           </div>
         </div>
 
@@ -60,7 +67,7 @@
             max="100"
             step="5"
             class="flex-1 h-2 bg-slate-200 dark:bg-slate-800 accent-theme-primary cursor-pointer rounded-lg"
-          >
+          />
           <div class="flex items-center gap-1 shrink-0">
             <input
               :value="components[idx].percentage"
@@ -69,7 +76,7 @@
               min="0"
               max="100"
               class="w-12 h-7 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-theme-primary focus:outline-none"
-            >
+            />
             <span class="text-slate-500 dark:text-slate-400 text-[10px]">%</span>
           </div>
         </div>
@@ -78,7 +85,9 @@
         <div class="sm:w-1/3 flex items-center justify-between sm:justify-end gap-3 font-mono">
           <div class="text-end">
             <div class="font-black text-theme-primary text-xs">{{ comp.grams }} {{ $t('inventory.unit_gram') }}</div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400">{{ formatMoney(comp.price) }} {{ $t('common.currency') }}</div>
+            <div class="text-[10px] text-slate-500 dark:text-slate-400">
+              {{ formatMoney(comp.price) }} {{ $t('common.currency') }}
+            </div>
           </div>
 
           <button

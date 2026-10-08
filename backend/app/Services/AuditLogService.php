@@ -16,14 +16,14 @@ class AuditLogService
         ?array $newValues = null
     ): AuditLog {
         return AuditLog::create([
-            'user_id'        => Auth::id() ?? 1,
-            'action_type'    => $action,
+            'user_id' => Auth::id() ?? 1,
+            'action_type' => $action,
             'auditable_type' => get_class($auditable),
-            'auditable_id'   => $auditable->getKey(),
-            'old_values'     => $oldValues,
-            'new_values'     => $newValues,
-            'ip_address'     => Request::ip() ?? '127.0.0.1',
-            'user_agent'     => Request::userAgent() ?? 'System / CLI',
+            'auditable_id' => $auditable->getKey(),
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+            'ip_address' => Request::ip() ?? '127.0.0.1',
+            'user_agent' => Request::userAgent() ?? 'System / CLI',
         ]);
     }
 }

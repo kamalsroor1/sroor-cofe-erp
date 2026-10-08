@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+  >
     <!-- Loading State -->
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="6" :cols="7" />
@@ -11,14 +13,16 @@
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="p-3.5 text-center w-12">
                 <input
                   type="checkbox"
                   @change="$emit('toggle-select-all')"
                   :checked="isAllSelected"
                   class="rounded border-slate-300 dark:border-slate-700 text-theme-primary focus:ring-0 cursor-pointer w-4 h-4"
-                >
+                />
               </th>
               <th class="py-3.5 px-4 text-start font-bold">{{ $t('purchases.item_and_code') }}</th>
               <th class="py-3.5 px-4 text-end font-bold">{{ $t('inventory.current_stock') }}</th>
@@ -42,20 +46,32 @@
                   :checked="selectedIds.includes(it.id)"
                   @change="$emit('toggle-item', it)"
                   class="rounded border-slate-300 dark:border-slate-700 text-theme-primary focus:ring-0 cursor-pointer w-4 h-4"
-                >
+                />
               </td>
               <td class="py-3.5 px-4">
                 <div class="font-bold text-slate-900 dark:text-white font-tajawal text-sm">{{ it.name }}</div>
-                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ it.code || '—' }} ({{ it.unit }})</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                  {{ it.code || '—' }} ({{ it.unit }})
+                </div>
               </td>
-              <td class="py-3.5 px-4 text-end font-mono font-black text-sm" :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-900 dark:text-slate-200'">
+              <td
+                class="py-3.5 px-4 text-end font-mono font-black text-sm"
+                :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-900 dark:text-slate-200'"
+              >
                 {{ it.current_stock }}
               </td>
               <td class="py-3.5 px-4 text-end font-mono text-slate-500 dark:text-slate-400">
                 {{ it.avg_daily_consumption || '0.00' }} {{ $t('purchases.per_day') }}
               </td>
-              <td class="py-3.5 px-4 text-center font-mono font-bold" :class="it.days_remaining <= 3 ? 'text-rose-500' : 'text-theme-primary'">
-                {{ it.days_remaining !== null ? $t('purchases.days_count', { count: it.days_remaining }) : $t('purchases.not_specified') }}
+              <td
+                class="py-3.5 px-4 text-center font-mono font-bold"
+                :class="it.days_remaining <= 3 ? 'text-rose-500' : 'text-theme-primary'"
+              >
+                {{
+                  it.days_remaining !== null
+                    ? $t('purchases.days_count', { count: it.days_remaining })
+                    : $t('purchases.not_specified')
+                }}
               </td>
               <td class="py-3.5 px-4 text-end font-mono font-black text-theme-primary text-sm">
                 {{ it.suggested_reorder_qty }} {{ it.unit }}
@@ -83,8 +99,10 @@
           :key="it.id"
           class="p-4 rounded-xl border transition-all"
           :class="[
-            selectedIds.includes(it.id) ? 'border-theme-primary bg-theme-light/30 dark:bg-slate-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60',
-            it.urgency === 'critical' ? 'bg-rose-500/5 border-rose-300 dark:border-rose-500/30' : ''
+            selectedIds.includes(it.id)
+              ? 'border-theme-primary bg-theme-light/30 dark:bg-slate-800'
+              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60',
+            it.urgency === 'critical' ? 'bg-rose-500/5 border-rose-300 dark:border-rose-500/30' : '',
           ]"
         >
           <div class="flex items-start justify-between gap-3">
@@ -94,10 +112,12 @@
                 :checked="selectedIds.includes(it.id)"
                 @change="$emit('toggle-item', it)"
                 class="rounded border-slate-300 dark:border-slate-700 text-theme-primary focus:ring-0 cursor-pointer w-5 h-5 min-w-[20px]"
-              >
+              />
               <div>
                 <h4 class="text-sm font-black text-slate-900 dark:text-white">{{ it.name }}</h4>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{{ it.code || '—' }} • {{ it.unit }}</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                  {{ it.code || '—' }} • {{ it.unit }}
+                </p>
               </div>
             </div>
 
@@ -109,17 +129,26 @@
             </span>
           </div>
 
-          <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs font-mono">
+          <div
+            class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs font-mono"
+          >
             <div>
               <span class="text-[10px] text-slate-400 font-sans block">{{ $t('inventory.current_stock') }}:</span>
-              <span class="font-black" :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-800 dark:text-slate-200'">
+              <span
+                class="font-black"
+                :class="it.current_stock <= 0 ? 'text-rose-500' : 'text-slate-800 dark:text-slate-200'"
+              >
                 {{ it.current_stock }} {{ it.unit }}
               </span>
             </div>
             <div>
               <span class="text-[10px] text-slate-400 font-sans block">{{ $t('purchases.stock_lasts_for') }}:</span>
               <span class="font-bold" :class="it.days_remaining <= 3 ? 'text-rose-500' : 'text-theme-primary'">
-                {{ it.days_remaining !== null ? $t('purchases.days_count', { count: it.days_remaining }) : $t('purchases.not_specified') }}
+                {{
+                  it.days_remaining !== null
+                    ? $t('purchases.days_count', { count: it.days_remaining })
+                    : $t('purchases.not_specified')
+                }}
               </span>
             </div>
             <div>
@@ -128,7 +157,9 @@
             </div>
             <div>
               <span class="text-[10px] text-slate-400 font-sans block">{{ $t('purchases.estimated_cost') }}:</span>
-              <span class="font-black text-emerald-500">{{ formatMoney(it.estimated_cost || 0) }} {{ $t('common.currency') }}</span>
+              <span class="font-black text-emerald-500"
+                >{{ formatMoney(it.estimated_cost || 0) }} {{ $t('common.currency') }}</span
+              >
             </div>
           </div>
         </div>

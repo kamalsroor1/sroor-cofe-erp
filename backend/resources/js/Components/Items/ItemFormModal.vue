@@ -94,21 +94,9 @@
 
       <!-- Modal Footer Actions -->
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="ghost"
-          size="md"
-          :label="$t('common.cancel')"
-          @click="$emit('close')"
-        />
+        <BaseButton type="button" variant="ghost" size="md" :label="$t('common.cancel')" @click="$emit('close')" />
 
-        <BaseButton
-          type="submit"
-          variant="gradient"
-          size="md"
-          :loading="isSubmitting"
-          :label="$t('common.save')"
-        />
+        <BaseButton type="submit" variant="gradient" size="md" :loading="isSubmitting" :label="$t('common.save')" />
       </div>
     </form>
   </AppModal>

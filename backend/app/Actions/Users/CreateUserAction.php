@@ -18,12 +18,12 @@ final class CreateUserAction
     {
         return DB::transaction(function () use ($dto) {
             $user = User::create([
-                'name'             => $dto->name,
-                'phone'            => $dto->phone,
-                'email'            => $dto->email,
-                'password'         => Hash::make($dto->password),
+                'name' => $dto->name,
+                'phone' => $dto->phone,
+                'email' => $dto->email,
+                'password' => Hash::make($dto->password),
                 'default_store_id' => $dto->default_store_id,
-                'is_active'        => $dto->is_active,
+                'is_active' => $dto->is_active,
             ]);
 
             $user->syncRoles([$dto->role]);

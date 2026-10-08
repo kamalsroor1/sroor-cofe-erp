@@ -17,13 +17,13 @@ final class CreateSupplierAction
     {
         return DB::transaction(function () use ($dto) {
             return Supplier::create([
-                'name'            => $dto->name,
-                'company_name'    => $dto->company_name,
-                'phone'           => $dto->phone,
-                'address'         => $dto->address,
+                'name' => $dto->name,
+                'company_name' => $dto->company_name,
+                'phone' => $dto->phone,
+                'address' => $dto->address,
                 'current_balance' => $dto->opening_balance,
-                'is_active'       => $dto->is_active,
-                'notes'           => $dto->notes,
+                'is_active' => $dto->is_active,
+                'notes' => $dto->notes,
             ]);
         });
     }

@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
@@ -24,7 +24,7 @@ class Expense extends Model
     ];
 
     protected $casts = [
-        'amount'       => 'decimal:3',
+        'amount' => 'decimal:3',
         'expense_date' => 'date',
     ];
 
@@ -41,16 +41,16 @@ class Expense extends Model
     public function getCostCenterLabelAttribute(): string
     {
         return match ($this->cost_center) {
-            'rent'        => 'إيجارات مقرات وفروع',
-            'utilities'   => 'كهرباء ومياه وغاز ومرافق',
-            'salaries'    => 'رواتب وعمالة وإكراميات',
-            'vehicles'    => 'وقود وزيوت وصيانة سيارات',
+            'rent' => 'إيجارات مقرات وفروع',
+            'utilities' => 'كهرباء ومياه وغاز ومرافق',
+            'salaries' => 'رواتب وعمالة وإكراميات',
+            'vehicles' => 'وقود وزيوت وصيانة سيارات',
             'maintenance' => 'صيانة معدات وديكورات',
-            'packaging'   => 'مطبوعات وكراتين وتعبئة',
+            'packaging' => 'مطبوعات وكراتين وتعبئة',
             'hospitality' => 'ضيافة ونظافة وبوفيه',
-            'marketing'   => 'تسويق وإعلانات ودعاية',
-            'shipping'    => 'شحن ونولون وتوصيل خارجي',
-            default       => 'مصاريف تشغيلية ونثريات عامة',
+            'marketing' => 'تسويق وإعلانات ودعاية',
+            'shipping' => 'شحن ونولون وتوصيل خارجي',
+            default => 'مصاريف تشغيلية ونثريات عامة',
         };
     }
 }

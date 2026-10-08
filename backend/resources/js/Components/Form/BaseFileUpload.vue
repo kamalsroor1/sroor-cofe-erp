@@ -19,7 +19,7 @@
           : hasError
             ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/20'
             : 'border-slate-300 dark:border-slate-700 hover:border-theme-primary bg-slate-50 dark:bg-slate-800/50',
-        disabled ? 'opacity-50 cursor-not-allowed' : ''
+        disabled ? 'opacity-50 cursor-not-allowed' : '',
       ]"
       @dragover.prevent="isDragging = true"
       @dragleave.prevent="isDragging = false"
@@ -55,7 +55,9 @@
 
       <!-- Upload Prompt Mode -->
       <div v-else class="flex flex-col items-center gap-2">
-        <div class="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400">
+        <div
+          class="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400"
+        >
           <UploadCloud class="w-5 h-5" />
         </div>
         <div class="text-xs font-black text-slate-700 dark:text-slate-200">
@@ -68,10 +70,7 @@
     </div>
 
     <!-- Error Message -->
-    <p
-      v-if="hasError"
-      class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5"
-    >
+    <p v-if="hasError" class="text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1 mt-0.5">
       <AlertCircle class="w-3.5 h-3.5 shrink-0" />
       <span>{{ errorMessage }}</span>
     </p>
@@ -91,14 +90,14 @@ const props = defineProps({
   error: { type: [String, Array], default: null },
   disabled: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
-  wrapperClass: { type: String, default: '' }
+  wrapperClass: { type: String, default: '' },
 });
 
 const emit = defineEmits(['change', 'clear']);
 
 const model = defineModel({
   type: [Object, File, String, Array],
-  default: null
+  default: null,
 });
 
 const fileInputRef = ref(null);

@@ -1,9 +1,5 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="`${$t('inventory.assign_staff_to')} (${targetStore?.name})`"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="`${$t('inventory.assign_staff_to')} (${targetStore?.name})`" @close="$emit('close')">
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <p class="text-xs text-slate-500 dark:text-slate-400 font-tajawal">
         {{ $t('inventory.assign_staff_description') }}
@@ -11,10 +7,7 @@
 
       <!-- Users Search Box -->
       <div v-if="allUsers.length > 5">
-        <BaseSearchInput
-          v-model="userSearchQuery"
-          :placeholder="$t('common.search')"
-        />
+        <BaseSearchInput v-model="userSearchQuery" :placeholder="$t('common.search')" />
       </div>
 
       <!-- Users Checkbox List -->
@@ -46,12 +39,7 @@
 
       <!-- Form Actions Footer -->
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 
@@ -92,9 +80,8 @@ const userSearchQuery = ref('');
 const filteredUsers = computed(() => {
   if (!userSearchQuery.value) return props.allUsers;
   const q = userSearchQuery.value.toLowerCase();
-  return props.allUsers.filter(u =>
-    (u.name && u.name.toLowerCase().includes(q)) ||
-    (u.email && u.email.toLowerCase().includes(q))
+  return props.allUsers.filter(
+    (u) => (u.name && u.name.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q))
   );
 });
 

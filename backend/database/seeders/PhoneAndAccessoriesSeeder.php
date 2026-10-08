@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Seeder;
 
 class PhoneAndAccessoriesSeeder extends Seeder
 {
@@ -47,7 +46,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Apple iPhone 12 128GB Black', 'IPH-12-128-BK', 20500, 22500, 21800, 15],
                     ['Apple iPhone 11 128GB Black (Refurbished)', 'IPH-11-128-BK', 14500, 16200, 15500, 20],
                     ['Apple iPhone 11 64GB White (Refurbished)', 'IPH-11-64-WH', 12500, 14000, 13400, 15],
-                ]
+                ],
             ],
             [
                 'name' => 'هواتف سامسونج (Samsung Galaxy)',
@@ -71,7 +70,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Samsung Galaxy A15 128GB 4GB RAM Black', 'SAM-A15-128-4', 6100, 6850, 6500, 45],
                     ['Samsung Galaxy A05s 128GB Black', 'SAM-A05S-128', 5100, 5750, 5450, 40],
                     ['Samsung Galaxy A05 64GB Silver', 'SAM-A05-64', 4100, 4650, 4400, 50],
-                ]
+                ],
             ],
             [
                 'name' => 'هواتف شاومي وريلمي (Xiaomi & Realme)',
@@ -94,7 +93,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Honor Magic 6 Pro 512GB Epi Green', 'HON-M6P-512', 43000, 47000, 45500, 8],
                     ['Honor 200 Pro 512GB Ocean Cyan', 'HON-200P-512', 26000, 28500, 27400, 15],
                     ['Honor X9b 5G 256GB Sunrise Orange', 'HON-X9B-256', 13800, 15200, 14600, 28],
-                ]
+                ],
             ],
             [
                 'name' => 'سماعات وإيربودز لاسلكية (Earbuds & AirPods)',
@@ -123,7 +122,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Redmi Buds 5 46dB Hybrid ANC White', 'AUD-RED-B5-WH', 1300, 1600, 1480, 40],
                     ['Realme Buds Air 5 Pro 50dB Active Noise Cancellation', 'AUD-RLM-BA5P', 2700, 3200, 2980, 20],
                     ['Realme Buds T110 AI ENC 38H Playback', 'AUD-RLM-T110', 690, 890, 800, 55],
-                ]
+                ],
             ],
             [
                 'name' => 'سماعات رأس وسبيكرات (Headphones & Speakers)',
@@ -145,7 +144,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Oraimo SoundView Bluetooth Speaker with LED Clock', 'SPK-ORA-SNDV', 850, 1100, 990, 30],
                     ['Joyroom JR-MS01 RGB Bluetooth Speaker 15W', 'SPK-JOY-MS01', 650, 850, 770, 35],
                     ['Redragon H510 Zeus X RGB 7.1 Gaming Headset', 'HDP-RED-H510X', 1750, 2150, 1980, 25],
-                ]
+                ],
             ],
             [
                 'name' => 'شواحن ورؤوس شحن سريعة (Wall Chargers)',
@@ -172,7 +171,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Xiaomi 33W Fast Charger Type-A + Type-C Dual Port', 'CHG-MI-33W', 420, 560, 500, 60],
                     ['LDNIO A2318M 20W PD+QC3.0 LED Display Charger', 'CHG-LDN-20W', 190, 280, 240, 110],
                     ['LDNIO 65W Multi-Port Desktop Charging Station 6-Ports', 'CHG-LDN-65W6P', 680, 890, 800, 40],
-                ]
+                ],
             ],
             [
                 'name' => 'كابلات ووصلات شحن (Cables & Adapters)',
@@ -199,7 +198,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Hoco X14 Braided USB to Micro-USB Cable (1m)', 'CBL-HOC-MIC1M', 35, 65, 52, 180],
                     ['Hoco X88 Type-C 3A Fast Silicone Cable 1m', 'CBL-HOC-TC1M', 45, 75, 60, 200],
                     ['Samsung Type-C to Type-C 5A 100W Cable (1m)', 'CBL-SAM-5ACC', 190, 280, 245, 90],
-                ]
+                ],
             ],
             [
                 'name' => 'باور بنك وبطاريات متنقلة (Power Banks)',
@@ -221,7 +220,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Baseus Blade 100W Ultra Thin HD Display Power Bank 20000mAh', 'PB-BAS-BLD100W', 2900, 3450, 3250, 15],
                     ['Baseus Magnetic Mini 20W 6000mAh Wireless Power Bank', 'PB-BAS-MAG6K', 890, 1150, 1040, 45],
                     ['LDNIO 20000mAh 22.5W Fast Charging Power Bank LED Screen', 'PB-LDN-20K22W', 590, 780, 690, 55],
-                ]
+                ],
             ],
             [
                 'name' => 'ساعات وسوارات ذكية (Smartwatches & Bands)',
@@ -243,7 +242,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Joyroom JR-FT5 Smart Watch HD 1.83-inch Bluetooth Call', 'WAT-JOY-FT5', 850, 1100, 990, 55],
                     ['Oraimo Watch 4 Plus 2.01-inch HD Screen Wireless Call', 'WAT-ORA-W4P', 1050, 1350, 1220, 40],
                     ['Oraimo Smart Clipper Multi-Functional Trimmer', 'ACC-ORA-CLIP', 680, 890, 800, 30],
-                ]
+                ],
             ],
             [
                 'name' => 'جرابات وكفرات حماية (Cases & Covers)',
@@ -270,7 +269,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['AirPods Pro 2 Armor Protective Case with Keychain Clip', 'COV-APP2-ARM', 95, 150, 125, 90],
                     ['AirPods 3 Cute Cartoon Silicone Shockproof Case', 'COV-AP3-CRT', 65, 110, 90, 100],
                     ['AirPods 2 Carbon Fiber Pattern Hard Protective Case', 'COV-AP2-CRB', 75, 120, 100, 80],
-                ]
+                ],
             ],
             [
                 'name' => 'اسكرينات وشاشات حماية (Screen Protectors)',
@@ -292,7 +291,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['Samsung A35 5G High Definition Clear Screen Protector', 'SCR-A35-9D', 45, 80, 68, 200],
                     ['Samsung A15 Privacy Anti-Peep Tempered Glass Screen', 'SCR-A15-PRV', 65, 110, 90, 180],
                     ['Redmi Note 13 Pro 9D Tempered Glass with Installation Tray', 'SCR-RN13P-TRY', 60, 105, 85, 190],
-                ]
+                ],
             ],
             [
                 'name' => 'حوامل وإكسسوارات سيارات (Car Holders & Extras)',
@@ -314,7 +313,7 @@ class PhoneAndAccessoriesSeeder extends Seeder
                     ['SanDisk Ultra Dual Drive Luxe 128GB All-Metal Type-C OTG', 'MEM-SND-128GC', 440, 580, 515, 60],
                     ['MicroSDXC SanDisk Extreme 128GB 190MB/s 4K Ultra HD A2', 'MEM-SND-128SD', 380, 510, 450, 50],
                     ['Joyroom Stylus Touch Pen for iPad & Capacitive Touchscreens', 'ACC-JOY-STYL', 290, 410, 360, 45],
-                ]
+                ],
             ],
         ];
 
@@ -365,6 +364,6 @@ class PhoneAndAccessoriesSeeder extends Seeder
             }
         }
 
-        echo "Seeded {$totalItemsCount} phone & accessory items across " . count($categoriesData) . " categories successfully!\n";
+        echo "Seeded {$totalItemsCount} phone & accessory items across ".count($categoriesData)." categories successfully!\n";
     }
 }

@@ -29,7 +29,7 @@
         :required="required"
         inputmode="decimal"
         :aria-invalid="hasError ? 'true' : 'false'"
-        :aria-describedby="hasError ? `${inputId}-error` : (hint ? `${inputId}-hint` : undefined)"
+        :aria-describedby="hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined"
         class="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold font-mono rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
         :class="[
           hasError
@@ -37,7 +37,7 @@
             : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20',
           prefix ? 'pr-12' : '',
           suffix || showStepper ? 'pl-16' : '',
-          inputClass
+          inputClass,
         ]"
         v-bind="$attrs"
         @focus="$emit('focus', $event)"
@@ -60,7 +60,10 @@
         </span>
 
         <!-- Quick Stepper Buttons -->
-        <div v-if="showStepper && !disabled && !readonly" class="flex items-center gap-0.5 bg-slate-200 dark:bg-slate-700 p-0.5 rounded-lg">
+        <div
+          v-if="showStepper && !disabled && !readonly"
+          class="flex items-center gap-0.5 bg-slate-200 dark:bg-slate-700 p-0.5 rounded-lg"
+        >
           <button
             type="button"
             tabindex="-1"
@@ -109,7 +112,7 @@ import { ref, computed } from 'vue';
 import { AlertCircle } from 'lucide-vue-next';
 
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
 const props = defineProps({
@@ -129,14 +132,14 @@ const props = defineProps({
   readonly: { type: Boolean, default: false },
   required: { type: Boolean, default: false },
   wrapperClass: { type: String, default: '' },
-  inputClass: { type: String, default: '' }
+  inputClass: { type: String, default: '' },
 });
 
 defineEmits(['focus', 'blur', 'keydown']);
 
 const model = defineModel({
   type: [Number, String],
-  default: ''
+  default: '',
 });
 
 const inputRef = ref(null);
@@ -172,6 +175,6 @@ const decrement = () => {
 defineExpose({
   inputRef,
   focus: () => inputRef.value?.focus(),
-  select: () => inputRef.value?.select()
+  select: () => inputRef.value?.select(),
 });
 </script>

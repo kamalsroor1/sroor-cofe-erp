@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use App\Actions\Invoices\ProcessPOSInvoiceAction;
-use App\Actions\Customers\QuickCreateCustomerAction;
 use App\Actions\Customers\GetCustomerLastSoldPriceAction;
+use App\Actions\Customers\QuickCreateCustomerAction;
+use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\DTOs\POSInvoiceDTO;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class POSController extends Controller
 {
@@ -46,13 +46,13 @@ class POSController extends Controller
                     'invoice' => [
                         'id' => $invoice->id,
                         'invoice_number' => $invoice->invoice_number,
-                        'total_amount' => (float)$invoice->total_amount,
-                        'net_total' => (float)$invoice->net_total,
-                        'paid_amount' => (float)$invoice->paid_amount,
-                        'remaining_amount' => (float)$invoice->remaining_amount,
+                        'total_amount' => (float) $invoice->total_amount,
+                        'net_total' => (float) $invoice->net_total,
+                        'paid_amount' => (float) $invoice->paid_amount,
+                        'remaining_amount' => (float) $invoice->remaining_amount,
                         'print_thermal_url' => route('invoices.print.thermal', $invoice->id),
                         'print_a4_url' => route('invoices.print.a4', $invoice->id),
-                    ]
+                    ],
                 ]);
             }
 
@@ -63,7 +63,7 @@ class POSController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 422);
             }
 
@@ -86,7 +86,7 @@ class POSController extends Controller
                 'phone' => $customer->phone,
                 'price_tier' => $customer->price_tier,
                 'current_balance' => 0,
-            ]
+            ],
         ]);
     }
 
@@ -96,13 +96,13 @@ class POSController extends Controller
     public function getCustomerLastPrice(Request $request)
     {
         $lastPrice = $this->getCustomerLastPriceAction->execute(
-            customerId: (int)$request->query('customer_id'),
-            itemId: (int)$request->query('item_id'),
-            storeId: $request->query('store_id') ? (int)$request->query('store_id') : null
+            customerId: (int) $request->query('customer_id'),
+            itemId: (int) $request->query('item_id'),
+            storeId: $request->query('store_id') ? (int) $request->query('store_id') : null
         );
 
         return response()->json([
-            'last_price' => $lastPrice
+            'last_price' => $lastPrice,
         ]);
     }
 }

@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\Payment;
-use App\Models\Invoice;
-use App\Models\Purchase;
 use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\Purchase;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Exception;
+use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
@@ -42,23 +41,23 @@ class PaymentService
                 }
 
                 $invoice->update([
-                    'paid_amount'      => $newPaid,
+                    'paid_amount' => $newPaid,
                     'remaining_amount' => $newRemaining,
-                    'payment_status'   => $newStatus,
+                    'payment_status' => $newStatus,
                 ]);
             }
 
             $payment = Payment::create([
-                'payment_number' => $data['payment_number'] ?? 'PAY-CUST-' . strtoupper(uniqid()),
-                'customer_id'    => $customer->id,
-                'supplier_id'    => null,
-                'invoice_id'     => $invoiceId,
-                'purchase_id'    => null,
-                'user_id'        => Auth::id() ?? 1,
-                'amount'         => $amount,
-                'payment_date'   => $data['payment_date'] ?? now()->toDateString(),
+                'payment_number' => $data['payment_number'] ?? 'PAY-CUST-'.strtoupper(uniqid()),
+                'customer_id' => $customer->id,
+                'supplier_id' => null,
+                'invoice_id' => $invoiceId,
+                'purchase_id' => null,
+                'user_id' => Auth::id() ?? 1,
+                'amount' => $amount,
+                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
                 'payment_method' => $data['payment_method'] ?? 'cash',
-                'notes'          => $data['notes'] ?? 'سند قبض نقدي من العميل',
+                'notes' => $data['notes'] ?? 'سند قبض نقدي من العميل',
             ]);
 
             $this->customerBalanceService->updateBalance($customer->id);
@@ -97,23 +96,23 @@ class PaymentService
                 }
 
                 $purchase->update([
-                    'paid_amount'      => $newPaid,
+                    'paid_amount' => $newPaid,
                     'remaining_amount' => $newRemaining,
-                    'payment_status'   => $newStatus,
+                    'payment_status' => $newStatus,
                 ]);
             }
 
             $payment = Payment::create([
-                'payment_number' => $data['payment_number'] ?? 'PAY-SUPP-' . strtoupper(uniqid()),
-                'customer_id'    => null,
-                'supplier_id'    => $supplier->id,
-                'invoice_id'     => null,
-                'purchase_id'    => $purchaseId,
-                'user_id'        => Auth::id() ?? 1,
-                'amount'         => $amount,
-                'payment_date'   => $data['payment_date'] ?? now()->toDateString(),
+                'payment_number' => $data['payment_number'] ?? 'PAY-SUPP-'.strtoupper(uniqid()),
+                'customer_id' => null,
+                'supplier_id' => $supplier->id,
+                'invoice_id' => null,
+                'purchase_id' => $purchaseId,
+                'user_id' => Auth::id() ?? 1,
+                'amount' => $amount,
+                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
                 'payment_method' => $data['payment_method'] ?? 'cash',
-                'notes'          => $data['notes'] ?? 'سند صرف نقدي للمورد',
+                'notes' => $data['notes'] ?? 'سند صرف نقدي للمورد',
             ]);
 
             // Update supplier balance atomically

@@ -20,15 +20,15 @@ final class RestoreTrashRecordAction
     public function execute(string $type, int $id): bool
     {
         $model = match ($type) {
-            'items'     => Item::onlyTrashed()->findOrFail($id),
+            'items' => Item::onlyTrashed()->findOrFail($id),
             'customers' => Customer::onlyTrashed()->findOrFail($id),
             'suppliers' => Supplier::onlyTrashed()->findOrFail($id),
-            'stores'    => Store::onlyTrashed()->findOrFail($id),
-            'expenses'  => Expense::onlyTrashed()->findOrFail($id),
-            'returns'   => ReturnDocument::onlyTrashed()->findOrFail($id),
-            default     => throw new Exception('نوع السجل غير صالح للاسترجاع'),
+            'stores' => Store::onlyTrashed()->findOrFail($id),
+            'expenses' => Expense::onlyTrashed()->findOrFail($id),
+            'returns' => ReturnDocument::onlyTrashed()->findOrFail($id),
+            default => throw new Exception('نوع السجل غير صالح للاسترجاع'),
         };
 
-        return (bool)$model->restore();
+        return (bool) $model->restore();
     }
 }

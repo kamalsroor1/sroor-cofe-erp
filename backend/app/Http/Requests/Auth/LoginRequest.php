@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
@@ -18,7 +19,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone'    => ['required', 'string'],
+            'phone' => ['required', 'string'],
             'password' => ['required', 'string'],
             'remember' => ['sometimes', 'boolean'],
         ];
@@ -27,14 +28,14 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.required'    => __('auth.failed'),
+            'phone.required' => __('auth.failed'),
             'password.required' => __('auth.failed'),
         ];
     }
 
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -60,6 +61,6 @@ class LoginRequest extends FormRequest
 
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower((string)$this->input('phone')).'|'.$this->ip());
+        return Str::transliterate(Str::lower((string) $this->input('phone')).'|'.$this->ip());
     }
 }

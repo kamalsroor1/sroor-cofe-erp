@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class FilterActivityLogsRequest extends FormRequest
@@ -14,7 +15,7 @@ final class FilterActivityLogsRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -24,22 +25,22 @@ final class FilterActivityLogsRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
-            'search'    => ['nullable', 'string', 'max:100'],
-            'module'    => ['nullable', 'string', 'max:50'],
-            'action'    => ['nullable', 'string', 'max:50'],
-            'user_id'   => ['nullable'],
-            'store_id'  => ['nullable'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'module' => ['nullable', 'string', 'max:50'],
+            'action' => ['nullable', 'string', 'max:50'],
+            'user_id' => ['nullable'],
+            'store_id' => ['nullable'],
             'from_date' => ['nullable', 'date_format:Y-m-d'],
-            'to_date'   => ['nullable', 'date_format:Y-m-d'],
-            'from'      => ['nullable', 'date_format:Y-m-d'],
-            'to'        => ['nullable', 'date_format:Y-m-d'],
-            'per_page'  => ['nullable', 'integer', 'min:1', 'max:200'],
-            'page'      => ['nullable', 'integer', 'min:1'],
+            'to_date' => ['nullable', 'date_format:Y-m-d'],
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'page' => ['nullable', 'integer', 'min:1'],
         ];
     }
 }

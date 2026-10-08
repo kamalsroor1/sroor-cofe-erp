@@ -5,9 +5,11 @@
       v-for="order in orders"
       :key="order.id"
       class="group relative flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shrink-0"
-      :class="order.id === activeOrderId
-        ? 'bg-white dark:bg-slate-900 border-theme-primary text-theme-primary shadow-xs ring-1 ring-theme-primary/30'
-        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-400'"
+      :class="
+        order.id === activeOrderId
+          ? 'bg-white dark:bg-slate-900 border-theme-primary text-theme-primary shadow-xs ring-1 ring-theme-primary/30'
+          : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-400'
+      "
       @click="$emit('switch-order', order.id)"
     >
       <!-- Icon Indicator -->
@@ -75,7 +77,7 @@ const getOrderSubtotal = (order) => {
   return order.cart.reduce((sum, item) => {
     const qty = parseFloat(item.quantity) || 0;
     const price = parseFloat(item.unit_price) || 0;
-    return sum + (qty * price);
+    return sum + qty * price;
   }, 0);
 };
 </script>

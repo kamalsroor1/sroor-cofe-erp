@@ -20,15 +20,15 @@ final class ForceDeleteTrashRecordAction
     public function execute(string $type, int $id): bool
     {
         $model = match ($type) {
-            'items'     => Item::onlyTrashed()->findOrFail($id),
+            'items' => Item::onlyTrashed()->findOrFail($id),
             'customers' => Customer::onlyTrashed()->findOrFail($id),
             'suppliers' => Supplier::onlyTrashed()->findOrFail($id),
-            'stores'    => Store::onlyTrashed()->findOrFail($id),
-            'expenses'  => Expense::onlyTrashed()->findOrFail($id),
-            'returns'   => ReturnDocument::onlyTrashed()->findOrFail($id),
-            default     => throw new Exception('نوع السجل غير صالح للحذف النهائي'),
+            'stores' => Store::onlyTrashed()->findOrFail($id),
+            'expenses' => Expense::onlyTrashed()->findOrFail($id),
+            'returns' => ReturnDocument::onlyTrashed()->findOrFail($id),
+            default => throw new Exception('نوع السجل غير صالح للحذف النهائي'),
         };
 
-        return (bool)$model->forceDelete();
+        return (bool) $model->forceDelete();
     }
 }

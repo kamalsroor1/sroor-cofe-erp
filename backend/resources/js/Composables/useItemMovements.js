@@ -40,7 +40,14 @@ export function useItemMovements() {
     };
 
     const isPositiveMovement = (type) => {
-        const positive = ['purchase_in', 'stock_deposit_in', 'stock_adjustment_in', 'cancellation_in', 'transfer_in', 'sales_return_in'];
+        const positive = [
+            'purchase_in',
+            'stock_deposit_in',
+            'stock_adjustment_in',
+            'cancellation_in',
+            'transfer_in',
+            'sales_return_in',
+        ];
         return positive.includes(type);
     };
 

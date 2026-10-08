@@ -8,7 +8,9 @@
   >
     <form @submit.prevent="$emit('submit')" class="space-y-4 font-tajawal">
       <!-- Current Stock Live Info Tile -->
-      <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between">
+      <div
+        class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between"
+      >
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('inventory.current_stock') }}:</span>
         <span class="text-base font-black text-theme-primary font-mono">
           {{ formatQty(targetItem?.current_stock || 0) }} {{ targetItem?.unit || '' }}
@@ -43,13 +45,7 @@
 
       <!-- Modal Footer Actions -->
       <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="ghost"
-          size="md"
-          :label="$t('common.cancel')"
-          @click="$emit('close')"
-        />
+        <BaseButton type="button" variant="ghost" size="md" :label="$t('common.cancel')" @click="$emit('close')" />
 
         <BaseButton
           type="submit"

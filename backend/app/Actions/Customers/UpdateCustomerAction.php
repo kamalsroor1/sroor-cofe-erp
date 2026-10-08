@@ -17,12 +17,12 @@ final class UpdateCustomerAction
     {
         return DB::transaction(function () use ($customer, $dto) {
             $customer->update([
-                'name'       => $dto->name,
-                'phone'      => $dto->phone,
-                'address'    => $dto->address,
+                'name' => $dto->name,
+                'phone' => $dto->phone,
+                'address' => $dto->address,
                 'tax_number' => $dto->tax_number,
-                'notes'      => $dto->notes,
-                'is_active'  => $dto->is_active,
+                'notes' => $dto->notes,
+                'is_active' => $dto->is_active,
             ]);
 
             return $customer->fresh();

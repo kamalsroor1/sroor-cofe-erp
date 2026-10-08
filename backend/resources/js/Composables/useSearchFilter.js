@@ -2,7 +2,7 @@ import { ref } from 'vue';
 
 /**
  * useSearchFilter - Reusable Composable for managing search queries and filters in Pure Vue 3 SPA.
- * 
+ *
  * @param {Function} fetchCallback - Async function to call when filters change
  * @param {Object} initialFilters - Initial filter values
  * @param {Object} options - Configuration options (debounceMs)
@@ -42,6 +42,6 @@ export function useSearchFilter(fetchCallback, initialFilters = {}, options = {}
         isFiltering,
         applyFilters,
         debouncedApply,
-        resetFilters
+        resetFilters,
     };
 }

@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Loading State Skeleton -->
-    <div v-if="isLoading" class="p-20 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
-      <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <div
+      v-if="isLoading"
+      class="p-20 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl"
+    >
+      <div
+        class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+      ></div>
       <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $t('super.loading_tenant_details') }}</p>
     </div>
 

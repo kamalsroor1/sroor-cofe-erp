@@ -10,9 +10,6 @@ class ResolveTenantWorkspaceAction
 {
     /**
      * Resolve a tenant workspace by code, slug, id, or domain
-     *
-     * @param string $rawCode
-     * @return array
      */
     public function execute(string $rawCode): array
     {
@@ -21,7 +18,7 @@ class ResolveTenantWorkspaceAction
         if ($code === '') {
             return [
                 'success' => false,
-                'status'  => 422,
+                'status' => 422,
                 'message' => __('auth.workspace_not_found'),
             ];
         }
@@ -32,14 +29,14 @@ class ResolveTenantWorkspaceAction
             ->orWhere('slug', $code)
             ->orWhereHas('domains', function ($q) use ($code) {
                 $q->where('domain', $code)
-                  ->orWhere('domain', 'like', "{$code}.%");
+                    ->orWhere('domain', 'like', "{$code}.%");
             })
             ->first();
 
-        if (!$tenant) {
+        if (! $tenant) {
             return [
                 'success' => false,
-                'status'  => 404,
+                'status' => 404,
                 'message' => __('auth.workspace_not_found'),
             ];
         }
@@ -48,19 +45,19 @@ class ResolveTenantWorkspaceAction
         if ($tenant->status === 'suspended' || (method_exists($tenant, 'isSuspended') && $tenant->isSuspended())) {
             return [
                 'success' => false,
-                'status'  => 403,
+                'status' => 403,
                 'message' => __('auth.workspace_suspended'),
-                'tenant'  => [
+                'tenant' => [
                     'tenant_id' => $tenant->id,
-                    'name'      => $tenant->name,
-                    'status'    => 'suspended',
+                    'name' => $tenant->name,
+                    'status' => 'suspended',
                 ],
             ];
         }
 
         // Resolve primary domain
         $primaryDomain = $tenant->domains->first()?->domain;
-        if (!$primaryDomain) {
+        if (! $primaryDomain) {
             $centralDomain = config('tenancy.central_domains.2', 'baraa-solutions.com');
             $primaryDomain = "{$tenant->id}.{$centralDomain}";
         }
@@ -75,15 +72,15 @@ class ResolveTenantWorkspaceAction
 
         return [
             'success' => true,
-            'status'  => 200,
-            'data'    => [
-                'tenant_id'        => $tenant->id,
-                'name'             => $tenant->name,
-                'slug'             => $tenant->slug ?? $tenant->id,
-                'domain'           => $primaryDomain,
-                'server_url'       => $serverUrl,
-                'status'           => $tenant->status ?? 'active',
-                'logo_url'         => $logoUrl,
+            'status' => 200,
+            'data' => [
+                'tenant_id' => $tenant->id,
+                'name' => $tenant->name,
+                'slug' => $tenant->slug ?? $tenant->id,
+                'domain' => $primaryDomain,
+                'server_url' => $serverUrl,
+                'status' => $tenant->status ?? 'active',
+                'logo_url' => $logoUrl,
                 'company_subtitle' => $subtitle,
             ],
         ];

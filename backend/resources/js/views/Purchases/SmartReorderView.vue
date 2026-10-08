@@ -31,10 +31,7 @@
     </PageHeader>
 
     <!-- Urgency & Financial Radar Metrics -->
-    <SmartReorderMetricsGrid
-      :metrics="metrics"
-      :loading="isLoading"
-    />
+    <SmartReorderMetricsGrid :metrics="metrics" :loading="isLoading" />
 
     <!-- Filter Controls Bar -->
     <SmartReorderFilterBar

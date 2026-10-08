@@ -15,7 +15,7 @@ final class DeleteExpenseAction
     public function execute(Expense $expense): bool
     {
         return DB::transaction(function () use ($expense) {
-            return (bool)$expense->delete();
+            return (bool) $expense->delete();
         });
     }
 }

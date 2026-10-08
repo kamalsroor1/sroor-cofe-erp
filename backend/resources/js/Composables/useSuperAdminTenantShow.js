@@ -38,8 +38,28 @@ export function useSuperAdminTenantShow() {
                 tenant.value = data.tenant;
                 stats.value = data.stats || {};
                 allFeatures.value = data.features || [];
-                globalUnitsList.value = data.global_units || ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر'];
-                tenantAllowedUnits.value = data.allowed_units || ['قطعة', 'علبة', 'كرتونة', 'كجم', 'جرام', 'شيكارة', 'طرد', 'دستة', 'لتر'];
+                globalUnitsList.value = data.global_units || [
+                    'قطعة',
+                    'علبة',
+                    'كرتونة',
+                    'كجم',
+                    'جرام',
+                    'شيكارة',
+                    'طرد',
+                    'دستة',
+                    'لتر',
+                ];
+                tenantAllowedUnits.value = data.allowed_units || [
+                    'قطعة',
+                    'علبة',
+                    'كرتونة',
+                    'كجم',
+                    'جرام',
+                    'شيكارة',
+                    'طرد',
+                    'دستة',
+                    'لتر',
+                ];
                 statusForm.value.status = data.tenant.status;
             }
         } catch (e) {
@@ -61,7 +81,7 @@ export function useSuperAdminTenantShow() {
             });
             const current = tenant.value.enabled_features || [];
             if (current.includes(featureKey)) {
-                tenant.value.enabled_features = current.filter(f => f !== featureKey);
+                tenant.value.enabled_features = current.filter((f) => f !== featureKey);
             } else {
                 tenant.value.enabled_features = [...current, featureKey];
             }

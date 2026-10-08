@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Action Controls -->
-    <PageHeader
-      :title="$t('trash.trash_title')"
-      :subtitle="$t('trash.trash_subtitle')"
-      icon="🗑️"
-    >
+    <PageHeader :title="$t('trash.trash_title')" :subtitle="$t('trash.trash_subtitle')" icon="🗑️">
       <template #actions>
         <BaseButton
           type="button"
@@ -22,18 +18,10 @@
     </PageHeader>
 
     <!-- Module Tabs with Live Badges -->
-    <TrashModuleTabs
-      :current-tab="currentTab"
-      :tabs-list="tabsList"
-      :counts="counts"
-      @change-tab="changeTab"
-    />
+    <TrashModuleTabs :current-tab="currentTab" :tabs-list="tabsList" :counts="counts" @change-tab="changeTab" />
 
     <!-- Search Input -->
-    <TrashFilterBar
-      :search="search"
-      @update:search="updateSearch"
-    />
+    <TrashFilterBar :search="search" @update:search="updateSearch" />
 
     <!-- Records Table & Mobile Cards -->
     <TrashTable

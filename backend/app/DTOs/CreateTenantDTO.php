@@ -25,13 +25,13 @@ class CreateTenantDTO
             slug: $data['slug'],
             email: $data['email'],
             phone: $data['phone'] ?? null,
-            planId: (int)$data['plan_id'],
+            planId: (int) $data['plan_id'],
             password: $data['password'],
             customDomain: $data['custom_domain'] ?? null,
-            trialDays: isset($data['trial_days']) ? (int)$data['trial_days'] : 14,
-            tenancyDbName: !empty($data['tenancy_db_name']) ? trim((string)$data['tenancy_db_name']) : null,
-            tenancyDbUsername: !empty($data['tenancy_db_username']) ? trim((string)$data['tenancy_db_username']) : null,
-            tenancyDbPassword: !empty($data['tenancy_db_password']) ? trim((string)$data['tenancy_db_password']) : null,
+            trialDays: isset($data['trial_days']) ? (int) $data['trial_days'] : 14,
+            tenancyDbName: ! empty($data['tenancy_db_name']) ? trim((string) $data['tenancy_db_name']) : null,
+            tenancyDbUsername: ! empty($data['tenancy_db_username']) ? trim((string) $data['tenancy_db_username']) : null,
+            tenancyDbPassword: ! empty($data['tenancy_db_password']) ? trim((string) $data['tenancy_db_password']) : null,
         );
     }
 }

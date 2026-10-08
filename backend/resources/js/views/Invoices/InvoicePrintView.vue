@@ -1,8 +1,12 @@
 <template>
-  <div class="print-wrapper min-h-screen bg-slate-200 dark:bg-slate-950 py-6 px-2 font-tajawal text-slate-900 select-none flex flex-col items-center justify-start print:bg-white print:p-0 print:m-0 print:min-h-0" dir="rtl">
-    
+  <div
+    class="print-wrapper min-h-screen bg-slate-200 dark:bg-slate-950 py-6 px-2 font-tajawal text-slate-900 select-none flex flex-col items-center justify-start print:bg-white print:p-0 print:m-0 print:min-h-0"
+    dir="rtl"
+  >
     <!-- Action Bar (Hidden on Print) -->
-    <div class="no-print w-full max-w-[80mm] mb-4 flex items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 p-2.5 rounded-2xl shadow-lg">
+    <div
+      class="no-print w-full max-w-[80mm] mb-4 flex items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 p-2.5 rounded-2xl shadow-lg"
+    >
       <button
         type="button"
         @click="triggerPrint"
@@ -24,7 +28,9 @@
 
     <!-- Loading State -->
     <div v-if="isLoading" class="no-print p-8 text-center text-slate-600 dark:text-slate-300 font-bold">
-      <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+      <div
+        class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"
+      ></div>
       <p class="text-xs font-bold">{{ $t('invoices.preparing_receipt') }}</p>
     </div>
 
@@ -50,8 +56,12 @@
           <span class="font-black text-xs">{{ invoice.invoice_number }}</span>
         </div>
         <div class="flex justify-between items-center">
-          <span><strong>{{ $t('common.date') }}:</strong> {{ invoice.invoice_date }}</span>
-          <span><strong>{{ $t('invoices.invoice_time') }}</strong> {{ invoiceTime }}</span>
+          <span
+            ><strong>{{ $t('common.date') }}:</strong> {{ invoice.invoice_date }}</span
+          >
+          <span
+            ><strong>{{ $t('invoices.invoice_time') }}</strong> {{ invoiceTime }}</span
+          >
         </div>
         <div class="flex justify-between items-center font-tajawal">
           <span class="font-bold">{{ $t('invoices.customer') }}:</span>
@@ -111,7 +121,9 @@
         <!-- GIANT NET TOTAL -->
         <div class="flex justify-between items-center text-sm font-black pt-1.5 border-t-2 border-black">
           <span class="text-sm font-black">{{ $t('invoices.net_total') }}:</span>
-          <span class="font-mono text-base font-black">{{ formatMoney(calculatedNetTotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono text-base font-black"
+            >{{ formatMoney(calculatedNetTotal) }} {{ $t('common.currency') }}</span
+          >
         </div>
 
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
@@ -124,9 +136,14 @@
           <span class="font-mono font-black">{{ formatMoney(invoice.paid_amount) }} {{ $t('common.currency') }}</span>
         </div>
 
-        <div v-if="parseFloat(invoice.remaining_amount) > 0" class="flex justify-between items-center text-xs font-bold">
+        <div
+          v-if="parseFloat(invoice.remaining_amount) > 0"
+          class="flex justify-between items-center text-xs font-bold"
+        >
           <span>{{ $t('invoices.amount_remaining_label') }}</span>
-          <span class="font-mono font-black">{{ formatMoney(invoice.remaining_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-black"
+            >{{ formatMoney(invoice.remaining_amount) }} {{ $t('common.currency') }}</span
+          >
         </div>
       </div>
 
@@ -134,9 +151,10 @@
       <div class="pt-2 text-center text-xs space-y-1 font-bold text-black">
         <p class="text-xs font-black">{{ $t('invoices.thank_you_note') }}</p>
         <p class="text-[9px]">{{ $t('invoices.return_policy_note') }}</p>
-        <div class="pt-0.5 text-[8px] font-mono text-slate-800">{{ $t('invoices.printed_by_system', { system: appConfigStore.platformName || 'ERP' }) }}</div>
+        <div class="pt-0.5 text-[8px] font-mono text-slate-800">
+          {{ $t('invoices.printed_by_system', { system: appConfigStore.platformName || 'ERP' }) }}
+        </div>
       </div>
-
     </div>
 
     <!-- Error State -->
@@ -146,7 +164,6 @@
         {{ $t('common.back') }}
       </button>
     </div>
-
   </div>
 </template>
 
@@ -262,7 +279,8 @@ onMounted(async () => {
 
 <style scoped>
 @media print {
-  body, html {
+  body,
+  html {
     background-color: white !important;
     margin: 0 !important;
     padding: 0 !important;

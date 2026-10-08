@@ -1,5 +1,7 @@
 <template>
-  <div class="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs space-y-3 font-tajawal">
+  <div
+    class="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs space-y-3 font-tajawal"
+  >
     <div class="flex flex-col sm:flex-row items-center gap-3">
       <!-- Search Input -->
       <div class="flex-1 w-full">

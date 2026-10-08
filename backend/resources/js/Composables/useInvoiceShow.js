@@ -17,7 +17,7 @@ export function useInvoiceShow() {
     const isLoading = ref(true);
     const error = ref(null);
     const activeMode = ref(route.query.mode || (route.name === 'invoices.print' ? 'thermal' : 'interactive'));
-    
+
     // Cancellation state
     const showCancelModal = ref(false);
     const cancelReason = ref('');
@@ -116,7 +116,7 @@ export function useInvoiceShow() {
 💰 الصافي المطلوب: ${formatMoney(invoice.value.net_total)} ${t('common.currency')}
 💵 المدفوع: ${formatMoney(invoice.value.paid_amount)} ${t('common.currency')}
 📝 المتبقي: ${formatMoney(invoice.value.remaining_amount)} ${t('common.currency')}`;
-        
+
         try {
             await navigator.clipboard.writeText(text);
             DarkSwal.fire({

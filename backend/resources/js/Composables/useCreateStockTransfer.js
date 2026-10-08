@@ -22,14 +22,14 @@ export function useCreateStockTransfer() {
     });
 
     const fromStoreOptions = computed(() => {
-        return stores.value.map(s => ({
+        return stores.value.map((s) => ({
             value: s.id,
             label: `${s.name} (${s.type === 'warehouse' ? t('inventory.store_type_warehouse_short') : t('inventory.store_type_branch_short')})`,
         }));
     });
 
     const toStoreOptions = computed(() => {
-        return stores.value.map(s => ({
+        return stores.value.map((s) => ({
             value: s.id,
             label: `${s.name} (${s.type === 'warehouse' ? t('inventory.store_type_warehouse_short') : t('inventory.store_type_branch_short')})`,
             disabled: s.id === form.from_store_id,
@@ -37,7 +37,7 @@ export function useCreateStockTransfer() {
     });
 
     const itemOptions = computed(() => {
-        return items.value.map(it => ({
+        return items.value.map((it) => ({
             value: it.id,
             label: `${it.name} (${it.code || '—'}) — ${t('inventory.current_stock')}: ${it.current_stock} ${it.unit || ''}`,
         }));
@@ -45,10 +45,7 @@ export function useCreateStockTransfer() {
 
     const loadDependencies = async () => {
         try {
-            const [storesRes, itemsRes] = await Promise.all([
-                api.get('/stores'),
-                api.get('/items?per_page=100'),
-            ]);
+            const [storesRes, itemsRes] = await Promise.all([api.get('/stores'), api.get('/items?per_page=100')]);
 
             stores.value = storesRes.data?.data || storesRes.data?.stores || [];
             items.value = itemsRes.data?.data || [];
@@ -66,10 +63,10 @@ export function useCreateStockTransfer() {
 
     const addItemRow = () => {
         if (!selectedItemId.value) return;
-        const it = items.value.find(i => i.id === Number(selectedItemId.value));
+        const it = items.value.find((i) => i.id === Number(selectedItemId.value));
         if (!it) return;
 
-        if (form.items.some(i => i.item_id === it.id)) {
+        if (form.items.some((i) => i.item_id === it.id)) {
             Swal.fire({ icon: 'info', title: t('common.warning'), text: t('inventory.item_already_in_transfer') });
             return;
         }
@@ -99,7 +96,11 @@ export function useCreateStockTransfer() {
             return;
         }
         if (form.items.length === 0) {
-            Swal.fire({ icon: 'warning', title: t('common.warning'), text: t('inventory.add_at_least_one_item_transfer') });
+            Swal.fire({
+                icon: 'warning',
+                title: t('common.warning'),
+                text: t('inventory.add_at_least_one_item_transfer'),
+            });
             return;
         }
 
@@ -110,7 +111,7 @@ export function useCreateStockTransfer() {
                 to_store_id: form.to_store_id,
                 transfer_date: form.transfer_date,
                 notes: form.notes || null,
-                items: form.items.map(it => ({
+                items: form.items.map((it) => ({
                     item_id: it.item_id,
                     quantity: parseFloat(it.quantity),
                 })),

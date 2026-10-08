@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class CheckLowStockAlertJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public function handle(TelegramService $telegramService): void
     {

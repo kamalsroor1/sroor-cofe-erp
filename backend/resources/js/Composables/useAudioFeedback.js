@@ -139,6 +139,6 @@ export function useAudioFeedback() {
         playScanBeep,
         playSuccessChime,
         playDrawerSound,
-        playErrorTone
+        playErrorTone,
     };
 }

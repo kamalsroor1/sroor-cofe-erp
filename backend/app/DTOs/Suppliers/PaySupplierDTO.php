@@ -18,10 +18,10 @@ final class PaySupplierDTO
     {
         return new self(
             supplier_id: $supplierId,
-            amount: (string)$data['amount'],
-            payment_method: (string)$data['payment_method'],
-            payment_date: (string)$data['payment_date'],
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
+            amount: (string) $data['amount'],
+            payment_method: (string) $data['payment_method'],
+            payment_date: (string) $data['payment_date'],
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
         );
     }
 }

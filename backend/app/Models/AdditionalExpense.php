@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AdditionalExpense extends Model
 {
@@ -47,9 +47,9 @@ class AdditionalExpense extends Model
     {
         return match ($this->allocation_method) {
             'by_quantity' => 'حسب الوزن / الكمية',
-            'by_value'    => 'حسب قيمة الصنف',
-            'equal'       => 'بالتساوي على البنود',
-            default       => 'حسب الكمية',
+            'by_value' => 'حسب قيمة الصنف',
+            'equal' => 'بالتساوي على البنود',
+            default => 'حسب الكمية',
         };
     }
 
@@ -59,12 +59,12 @@ class AdditionalExpense extends Model
     public function getPaidByLabelAttribute(): string
     {
         return match ($this->paid_by) {
-            'customer_account'   => 'مضاف على حساب العميل بالفاتورة',
-            'supplier_account'   => 'مضاف لحساب المورد بالفاتورة',
-            'treasury_cash'      => 'مدفوع كاش نقدًا من الخزينة',
-            'treasury_instapay'  => 'مدفوع عبر إنستاباي (سند صرف)',
-            'treasury_e_wallet'  => 'مدفوع من المحفظة الذكية (سند صرف)',
-            default              => 'مضاف لحساب الفاتورة',
+            'customer_account' => 'مضاف على حساب العميل بالفاتورة',
+            'supplier_account' => 'مضاف لحساب المورد بالفاتورة',
+            'treasury_cash' => 'مدفوع كاش نقدًا من الخزينة',
+            'treasury_instapay' => 'مدفوع عبر إنستاباي (سند صرف)',
+            'treasury_e_wallet' => 'مدفوع من المحفظة الذكية (سند صرف)',
+            default => 'مضاف لحساب الفاتورة',
         };
     }
 }

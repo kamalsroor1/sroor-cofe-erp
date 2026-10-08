@@ -35,7 +35,7 @@ final class ExportTranslationsCommand extends Command
         $result = [];
 
         foreach ($locales as $locale) {
-            $localePath = $langPath . DIRECTORY_SEPARATOR . $locale;
+            $localePath = $langPath.DIRECTORY_SEPARATOR.$locale;
             $result[$locale] = [];
 
             if (File::isDirectory($localePath)) {
@@ -52,7 +52,7 @@ final class ExportTranslationsCommand extends Command
             }
 
             // Also load JSON lang file if exists (e.g. lang/ar.json)
-            $jsonFile = $langPath . DIRECTORY_SEPARATOR . "{$locale}.json";
+            $jsonFile = $langPath.DIRECTORY_SEPARATOR."{$locale}.json";
             if (File::exists($jsonFile)) {
                 $jsonData = json_decode(File::get($jsonFile), true);
                 if (is_array($jsonData)) {
@@ -90,7 +90,7 @@ JS;
         $arGroups = count($result['ar'] ?? []);
         $enGroups = count($result['en'] ?? []);
 
-        $this->info("✅ Successfully exported translations:");
+        $this->info('✅ Successfully exported translations:');
         $this->line("   - Arabic (ar): {$arGroups} groups");
         $this->line("   - English (en): {$enGroups} groups");
         $this->line("   - Generated: {$jsonTarget}");

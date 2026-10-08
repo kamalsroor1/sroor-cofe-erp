@@ -3,18 +3,29 @@
     <Transition name="fade">
       <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" dir="rtl">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs dark:bg-slate-950/80 transition-opacity" @click="$emit('close')"></div>
+        <div
+          class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs dark:bg-slate-950/80 transition-opacity"
+          @click="$emit('close')"
+        ></div>
 
         <!-- Modal Card -->
-        <div class="relative w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl shadow-2xl overflow-hidden flex flex-col font-tajawal border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+        <div
+          class="relative w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl shadow-2xl overflow-hidden flex flex-col font-tajawal border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200"
+        >
           <!-- Header -->
-          <div class="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/60">
+          <div
+            class="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/60"
+          >
             <div class="flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
-              <div class="w-9 h-9 rounded-xl bg-theme-primary/10 text-theme-primary flex items-center justify-center shrink-0">
+              <div
+                class="w-9 h-9 rounded-xl bg-theme-primary/10 text-theme-primary flex items-center justify-center shrink-0"
+              >
                 <Truck class="w-5 h-5" />
               </div>
               <div>
-                <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">{{ $t('pos.expenses_modal_title') }}</h2>
+                <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                  {{ $t('pos.expenses_modal_title') }}
+                </h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ $t('pos.expense_subtitle') }}</p>
               </div>
             </div>
@@ -69,7 +80,9 @@
             </div>
 
             <!-- Custom Add Form with Standard Components -->
-            <div class="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-3">
+            <div
+              class="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-3"
+            >
               <h3 class="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Plus class="w-4 h-4 text-theme-primary" />
                 {{ $t('pos.expense_add_custom') }}
@@ -117,9 +130,14 @@
             </div>
 
             <!-- Expenses List Table -->
-            <div v-if="localExpenses.length > 0" class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs">
+            <div
+              v-if="localExpenses.length > 0"
+              class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs"
+            >
               <table class="w-full text-xs text-right">
-                <thead class="bg-slate-100/80 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[11px] font-black uppercase border-b border-slate-200 dark:border-slate-800">
+                <thead
+                  class="bg-slate-100/80 dark:bg-slate-900 text-slate-600 dark:text-slate-300 text-[11px] font-black uppercase border-b border-slate-200 dark:border-slate-800"
+                >
                   <tr>
                     <th class="px-3 py-2.5 w-10 text-center">#</th>
                     <th class="px-3 py-2.5">{{ $t('pos.expense_title') }}</th>
@@ -129,7 +147,11 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-950 font-bold">
-                  <tr v-for="(expense, index) in localExpenses" :key="index" class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors">
+                  <tr
+                    v-for="(expense, index) in localExpenses"
+                    :key="index"
+                    class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors"
+                  >
                     <td class="px-3 py-2.5 text-center text-slate-400 font-mono text-[11px]">{{ index + 1 }}</td>
                     <td class="px-3 py-2.5">
                       <input
@@ -148,11 +170,7 @@
                       />
                     </td>
                     <td class="px-3 py-2.5">
-                      <BaseSelect
-                        v-model="expense.paid_by"
-                        :options="paidByOptions"
-                        :searchable="false"
-                      />
+                      <BaseSelect v-model="expense.paid_by" :options="paidByOptions" :searchable="false" />
                     </td>
                     <td class="px-3 py-2.5 text-center">
                       <button
@@ -170,22 +188,39 @@
             </div>
 
             <!-- Empty State -->
-            <div v-else class="text-center py-8 text-slate-400 dark:text-slate-500 space-y-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+            <div
+              v-else
+              class="text-center py-8 text-slate-400 dark:text-slate-500 space-y-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl"
+            >
               <Truck class="w-8 h-8 mx-auto opacity-40 text-slate-400" />
               <p class="text-xs font-bold">{{ $t('pos.no_expenses_added') }}</p>
             </div>
           </div>
 
           <!-- Footer Summary & Actions -->
-          <div class="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/60 space-y-3">
+          <div
+            class="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/60 space-y-3"
+          >
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div class="flex items-center justify-between px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
-                <span class="text-slate-600 dark:text-slate-400 font-bold">{{ $t('pos.expense_total_customer') }}:</span>
-                <span class="font-black text-emerald-600 dark:text-emerald-400 font-mono text-sm">{{ formatMoney(totalCustomer) }} {{ $t('common.currency') }}</span>
+              <div
+                class="flex items-center justify-between px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs"
+              >
+                <span class="text-slate-600 dark:text-slate-400 font-bold"
+                  >{{ $t('pos.expense_total_customer') }}:</span
+                >
+                <span class="font-black text-emerald-600 dark:text-emerald-400 font-mono text-sm"
+                  >{{ formatMoney(totalCustomer) }} {{ $t('common.currency') }}</span
+                >
               </div>
-              <div class="flex items-center justify-between px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
-                <span class="text-slate-600 dark:text-slate-400 font-bold">{{ $t('pos.expense_total_treasury') }}:</span>
-                <span class="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{{ formatMoney(totalTreasury) }} {{ $t('common.currency') }}</span>
+              <div
+                class="flex items-center justify-between px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs"
+              >
+                <span class="text-slate-600 dark:text-slate-400 font-bold"
+                  >{{ $t('pos.expense_total_treasury') }}:</span
+                >
+                <span class="font-black text-blue-600 dark:text-blue-400 font-mono text-sm"
+                  >{{ formatMoney(totalTreasury) }} {{ $t('common.currency') }}</span
+                >
               </div>
             </div>
 
@@ -223,7 +258,7 @@ import { useTrans } from '../../Composables/useTrans';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
-  expenses: { type: Array, default: () => [] }
+  expenses: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['close', 'update:expenses']);
@@ -239,17 +274,20 @@ const paidByOptions = computed(() => [
   { value: 'treasury_cash', label: t('pos.expense_treasury') },
 ]);
 
-watch(() => props.show, (val) => {
-  if (val) {
-    localExpenses.value = JSON.parse(JSON.stringify(props.expenses));
+watch(
+  () => props.show,
+  (val) => {
+    if (val) {
+      localExpenses.value = JSON.parse(JSON.stringify(props.expenses));
+    }
   }
-});
+);
 
 const addPreset = (title, amount) => {
   localExpenses.value.push({
     title,
     amount: Number(amount),
-    paid_by: 'customer_account'
+    paid_by: 'customer_account',
   });
 };
 
@@ -259,7 +297,7 @@ const addCustomExpense = () => {
   localExpenses.value.push({
     title: newExpense.value.title,
     amount: Number(newExpense.value.amount),
-    paid_by: newExpense.value.paid_by
+    paid_by: newExpense.value.paid_by,
   });
 
   newExpense.value = { title: '', amount: '', paid_by: 'customer_account' };
@@ -271,13 +309,13 @@ const removeExpense = (index) => {
 
 const totalCustomer = computed(() => {
   return localExpenses.value
-    .filter(e => e.paid_by === 'customer_account')
+    .filter((e) => e.paid_by === 'customer_account')
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 });
 
 const totalTreasury = computed(() => {
   return localExpenses.value
-    .filter(e => (e.paid_by || '').startsWith('treasury_'))
+    .filter((e) => (e.paid_by || '').startsWith('treasury_'))
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 });
 

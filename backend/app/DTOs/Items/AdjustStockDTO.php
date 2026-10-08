@@ -19,11 +19,11 @@ final class AdjustStockDTO
     {
         return new self(
             item_id: $itemId,
-            store_id: (int)$data['store_id'],
-            quantity: (string)$data['quantity'],
-            movement_type: (string)$data['movement_type'],
-            unit_cost: isset($data['unit_cost']) && $data['unit_cost'] !== '' ? (string)$data['unit_cost'] : null,
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
+            store_id: (int) $data['store_id'],
+            quantity: (string) $data['quantity'],
+            movement_type: (string) $data['movement_type'],
+            unit_cost: isset($data['unit_cost']) && $data['unit_cost'] !== '' ? (string) $data['unit_cost'] : null,
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
         );
     }
 }

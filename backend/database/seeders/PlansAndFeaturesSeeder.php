@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Plan;
 use App\Models\PlanFeature;
+use Illuminate\Database\Seeder;
 
 class PlansAndFeaturesSeeder extends Seeder
 {
@@ -44,7 +44,7 @@ class PlansAndFeaturesSeeder extends Seeder
             // === التكاملات والطباعة ===
             ['key' => 'printing.thermal',      'name' => 'الطباعة الحرارية السريعة (80mm)', 'description' => 'طباعة الإيصالات والفواتير وبون الكاشير مباشرة', 'module' => 'system', 'type' => 'boolean', 'default_value' => 'true', 'icon' => '🖨️', 'sort_order' => 20],
             ['key' => 'printing.a4',           'name' => 'طباعة الفواتير الرسمية A4',   'description' => 'فواتير ضريبية A4 مع الشعار والختم', 'module' => 'system', 'type' => 'boolean', 'default_value' => 'false', 'icon' => '📄', 'sort_order' => 21],
-            ['key' => 'telegram.notifications','name' => 'إشعارات تيليجرام التلقائية',   'description' => 'إرسال ملخص الوردية والمبيعات تلقائياً على بوت تيليجرام', 'module' => 'system', 'type' => 'boolean', 'default_value' => 'false', 'icon' => '🤖', 'sort_order' => 22],
+            ['key' => 'telegram.notifications', 'name' => 'إشعارات تيليجرام التلقائية',   'description' => 'إرسال ملخص الوردية والمبيعات تلقائياً على بوت تيليجرام', 'module' => 'system', 'type' => 'boolean', 'default_value' => 'false', 'icon' => '🤖', 'sort_order' => 22],
             ['key' => 'api.access',            'name' => 'تطبيق الموبايل وواجهة API',    'description' => 'ربط تطبيق الموبايل (NativePHP / Flutter) بحساب المستأجر', 'module' => 'system', 'type' => 'boolean', 'default_value' => 'false', 'icon' => '📱', 'sort_order' => 23],
             ['key' => 'custom.domain',         'name' => 'النطاق المخصص (Custom Domain)', 'description' => 'تشغيل لوحة التحكم على رابط المحل الخاص (مثلاً: shop.com)', 'module' => 'system', 'type' => 'boolean', 'default_value' => 'false', 'icon' => '🌐', 'sort_order' => 24],
         ];

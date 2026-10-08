@@ -26,7 +26,7 @@ final class GetStoresComparativeReportAction
 
         $overallSales = '0.000';
         foreach ($allInvoices as $ai) {
-            $overallSales = bcadd($overallSales, (string)$ai->net_total, 3);
+            $overallSales = bcadd($overallSales, (string) $ai->net_total, 3);
         }
 
         foreach ($stores as $st) {
@@ -42,10 +42,10 @@ final class GetStoresComparativeReportAction
             $stCost = '0.000';
 
             foreach ($stInvoices as $si) {
-                $stSales = bcadd($stSales, (string)$si->net_total, 3);
-                $stPaid = bcadd($stPaid, (string)$si->paid_amount, 3);
-                $stRemaining = bcadd($stRemaining, (string)$si->remaining_amount, 3);
-                $stCost = bcadd($stCost, (string)$si->total_cost, 3);
+                $stSales = bcadd($stSales, (string) $si->net_total, 3);
+                $stPaid = bcadd($stPaid, (string) $si->paid_amount, 3);
+                $stRemaining = bcadd($stRemaining, (string) $si->remaining_amount, 3);
+                $stCost = bcadd($stCost, (string) $si->total_cost, 3);
             }
 
             $stProfit = bcsub($stSales, $stCost, 3);
@@ -60,15 +60,15 @@ final class GetStoresComparativeReportAction
             }
 
             $storeBreakdown[] = [
-                'id'              => $st->id,
-                'name'            => $st->name,
-                'invoice_count'   => $stInvoices->count(),
-                'total_sales'     => (float)$stSales,
-                'total_paid'      => (float)$stPaid,
-                'total_remaining' => (float)$stRemaining,
-                'gross_profit'    => (float)$stProfit,
-                'margin'          => (float)$stMargin,
-                'share_pct'       => (float)$sharePct,
+                'id' => $st->id,
+                'name' => $st->name,
+                'invoice_count' => $stInvoices->count(),
+                'total_sales' => (float) $stSales,
+                'total_paid' => (float) $stPaid,
+                'total_remaining' => (float) $stRemaining,
+                'gross_profit' => (float) $stProfit,
+                'margin' => (float) $stMargin,
+                'share_pct' => (float) $sharePct,
             ];
         }
 

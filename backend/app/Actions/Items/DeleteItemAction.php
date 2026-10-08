@@ -14,13 +14,13 @@ final class DeleteItemAction
      */
     public function execute(Item $item): bool
     {
-        if (!$item->canBeDeleted()) {
+        if (! $item->canBeDeleted()) {
             $blockers = implode(', ', $item->getDeletionBlockers());
             throw ValidationException::withMessages([
                 'item' => [__('inventory.cannot_delete_has_movements') ?: "لا يمكن حذف الصنف ({$item->name}) لوجود موانع: {$blockers}"],
             ]);
         }
 
-        return (bool)$item->delete();
+        return (bool) $item->delete();
     }
 }

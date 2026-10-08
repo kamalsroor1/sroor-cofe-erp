@@ -2,16 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\ReturnDocument;
-use App\Models\ReturnItem;
-use App\Models\Invoice;
-use App\Models\Purchase;
-use App\Models\Item;
 use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Item;
+use App\Models\Payment;
+use App\Models\Purchase;
+use App\Models\ReturnDocument;
+use App\Models\Store;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Exception;
+use Illuminate\Support\Facades\DB;
 
 class ReturnService
 {
@@ -29,6 +29,7 @@ class ReturnService
         if (($data['return_type'] ?? '') === 'purchase_return') {
             return $this->createPurchaseReturn($data);
         }
+
         return $this->createSalesReturn($data);
     }
 
@@ -44,32 +45,32 @@ class ReturnService
 
             $totalAmount = '0.000';
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
-            $storeId = $data['store_id'] ?? ($invoice?->store_id ?? Auth::user()?->getCurrentStore()?->id ?? \App\Models\Store::getMainStore()?->id);
+            $storeId = $data['store_id'] ?? ($invoice?->store_id ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id);
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
-                'return_type'   => 'sales_return',
-                'invoice_id'    => $invoiceId,
-                'purchase_id'   => null,
-                'customer_id'   => $customer->id,
-                'supplier_id'   => null,
-                'user_id'       => Auth::id() ?? 1,
-                'store_id'      => $storeId,
-                'total_amount'  => '0.000',
-                'return_date'   => $data['return_date'] ?? now()->toDateString(),
-                'reason'        => $data['reason'] ?? 'مرتجع مبيعات',
+                'return_type' => 'sales_return',
+                'invoice_id' => $invoiceId,
+                'purchase_id' => null,
+                'customer_id' => $customer->id,
+                'supplier_id' => null,
+                'user_id' => Auth::id() ?? 1,
+                'store_id' => $storeId,
+                'total_amount' => '0.000',
+                'return_date' => $data['return_date'] ?? now()->toDateString(),
+                'reason' => $data['reason'] ?? 'مرتجع مبيعات',
             ]);
 
             foreach ($data['items'] as $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
-                $qty = (string)$line['quantity'];
-                $unitPrice = (string)$line['unit_price'];
+                $qty = (string) $line['quantity'];
+                $unitPrice = (string) $line['unit_price'];
                 $lineTotal = bcmul($qty, $unitPrice, 3);
 
                 $returnDoc->items()->create([
-                    'item_id'     => $item->id,
-                    'quantity'    => $qty,
-                    'unit_price'  => $unitPrice,
+                    'item_id' => $item->id,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
                     'total_price' => $lineTotal,
                 ]);
 
@@ -115,32 +116,32 @@ class ReturnService
 
             $totalAmount = '0.000';
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
-            $storeId = $data['store_id'] ?? ($purchase?->store_id ?? Auth::user()?->getCurrentStore()?->id ?? \App\Models\Store::getMainStore()?->id);
+            $storeId = $data['store_id'] ?? ($purchase?->store_id ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id);
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
-                'return_type'   => 'purchase_return',
-                'invoice_id'    => null,
-                'purchase_id'   => $purchaseId,
-                'customer_id'   => null,
-                'supplier_id'   => $supplier->id,
-                'user_id'       => Auth::id() ?? 1,
-                'store_id'      => $storeId,
-                'total_amount'  => '0.000',
-                'return_date'   => $data['return_date'] ?? now()->toDateString(),
-                'reason'        => $data['reason'] ?? 'مرتجع مشتريات للمورد',
+                'return_type' => 'purchase_return',
+                'invoice_id' => null,
+                'purchase_id' => $purchaseId,
+                'customer_id' => null,
+                'supplier_id' => $supplier->id,
+                'user_id' => Auth::id() ?? 1,
+                'store_id' => $storeId,
+                'total_amount' => '0.000',
+                'return_date' => $data['return_date'] ?? now()->toDateString(),
+                'reason' => $data['reason'] ?? 'مرتجع مشتريات للمورد',
             ]);
 
             foreach ($data['items'] as $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
-                $qty = (string)$line['quantity'];
-                $unitPrice = (string)($line['unit_price'] ?? $item->cost_price);
+                $qty = (string) $line['quantity'];
+                $unitPrice = (string) ($line['unit_price'] ?? $item->cost_price);
                 $lineTotal = bcmul($qty, $unitPrice, 3);
 
                 $returnDoc->items()->create([
-                    'item_id'     => $item->id,
-                    'quantity'    => $qty,
-                    'unit_price'  => $unitPrice,
+                    'item_id' => $item->id,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
                     'total_price' => $lineTotal,
                 ]);
 
@@ -162,10 +163,10 @@ class ReturnService
 
             // Adjust supplier balance: purchases - payments - returns
             $totalPurchases = Purchase::where('supplier_id', $supplier->id)->where('status', 'confirmed')->sum('net_total');
-            $totalPayments = \App\Models\Payment::where('supplier_id', $supplier->id)->sum('amount');
+            $totalPayments = Payment::where('supplier_id', $supplier->id)->sum('amount');
             $totalReturns = ReturnDocument::where('supplier_id', $supplier->id)->where('return_type', 'purchase_return')->sum('total_amount');
 
-            $bal = bcsub(bcsub((string)$totalPurchases, (string)$totalPayments, 3), (string)$totalReturns, 3);
+            $bal = bcsub(bcsub((string) $totalPurchases, (string) $totalPayments, 3), (string) $totalReturns, 3);
             $supplier->current_balance = $bal;
             $supplier->save();
 
@@ -182,10 +183,10 @@ class ReturnService
 
     public function generateUniqueNumber(string $prefix): string
     {
-        $datePrefix = $prefix . '-' . date('Ymd');
-        
+        $datePrefix = $prefix.'-'.date('Ymd');
+
         $lastReturn = ReturnDocument::withTrashed()
-            ->where('return_number', 'LIKE', $datePrefix . '-%')
+            ->where('return_number', 'LIKE', $datePrefix.'-%')
             ->orderBy('return_number', 'desc')
             ->first();
 
@@ -198,7 +199,7 @@ class ReturnService
         }
 
         do {
-            $candidate = $datePrefix . '-' . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $candidate = $datePrefix.'-'.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
             $exists = ReturnDocument::withTrashed()->where('return_number', $candidate)->exists();
             if ($exists) {
                 $nextSequence++;

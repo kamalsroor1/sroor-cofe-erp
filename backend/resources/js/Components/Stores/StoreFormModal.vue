@@ -49,26 +49,14 @@
 
       <!-- Checkboxes (Is Main / Is Active) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-        <BaseCheckbox
-          v-model="form.is_main"
-          :label="$t('inventory.is_main_branch')"
-        />
+        <BaseCheckbox v-model="form.is_main" :label="$t('inventory.is_main_branch')" />
 
-        <BaseCheckbox
-          v-if="editingStore"
-          v-model="form.is_active"
-          :label="$t('inventory.is_active_branch')"
-        />
+        <BaseCheckbox v-if="editingStore" v-model="form.is_active" :label="$t('inventory.is_active_branch')" />
       </div>
 
       <!-- Form Actions Footer -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

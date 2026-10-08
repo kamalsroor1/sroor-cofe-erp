@@ -44,7 +44,7 @@ export function useCoffeeBlender() {
     ]);
 
     const itemOptions = computed(() => {
-        return items.value.map(it => ({
+        return items.value.map((it) => ({
             value: it.id,
             label: `${it.name} (${it.code || '—'}) — ${t('inventory.retail_price')}: ${it.price_retail || it.selling_price} ${t('common.currency')} | ${t('inventory.current_stock')}: ${it.current_stock} ${it.unit}`,
             raw: it,
@@ -52,7 +52,7 @@ export function useCoffeeBlender() {
     });
 
     const customerOptions = computed(() => {
-        return customers.value.map(c => ({
+        return customers.value.map((c) => ({
             value: c.id,
             label: `${c.name} ${c.phone ? `(${c.phone})` : ''}`,
         }));
@@ -64,7 +64,7 @@ export function useCoffeeBlender() {
 
     const calculatedComponents = computed(() => {
         const target = Number(targetWeightGrams.value) || 0;
-        return components.value.map(c => {
+        return components.value.map((c) => {
             const pct = Number(c.percentage) || 0;
             const grams = (target * pct) / 100;
             const kg = grams / 1000;
@@ -88,7 +88,7 @@ export function useCoffeeBlender() {
     const totalCalculatedCost = computed(() => {
         let cost = calculatedComponents.value.reduce((sum, c) => sum + c.cost, 0);
         if (cardamomGrams.value > 0) {
-            cost += (Number(cardamomGrams.value) * 1.5);
+            cost += Number(cardamomGrams.value) * 1.5;
         }
         return Number(cost.toFixed(2));
     });
@@ -96,7 +96,7 @@ export function useCoffeeBlender() {
     const totalCalculatedPrice = computed(() => {
         let price = calculatedComponents.value.reduce((sum, c) => sum + c.price, 0);
         if (cardamomGrams.value > 0) {
-            price += (Number(cardamomGrams.value) * 2.5);
+            price += Number(cardamomGrams.value) * 2.5;
         }
         return Number(price.toFixed(2));
     });
@@ -149,10 +149,10 @@ export function useCoffeeBlender() {
 
     const addComponentRow = () => {
         if (!selectedItemIdToAdd.value) return;
-        const item = items.value.find(it => it.id === selectedItemIdToAdd.value);
+        const item = items.value.find((it) => it.id === selectedItemIdToAdd.value);
         if (!item) return;
 
-        if (components.value.some(c => c.item_id === item.id)) {
+        if (components.value.some((c) => c.item_id === item.id)) {
             Swal.fire({ icon: 'info', title: t('common.warning'), text: t('inventory.item_already_added') });
             return;
         }
@@ -207,7 +207,7 @@ export function useCoffeeBlender() {
                 grind_level: grindLevel.value,
                 cardamom_grams: cardamomGrams.value,
                 notes: notes.value || null,
-                components: calculatedComponents.value.map(c => ({
+                components: calculatedComponents.value.map((c) => ({
                     item_id: c.item_id,
                     grams: c.grams,
                     unit_price: c.selling_price,

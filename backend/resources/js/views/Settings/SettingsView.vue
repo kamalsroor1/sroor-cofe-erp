@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6 max-w-6xl mx-auto font-tajawal pb-12">
     <!-- Page Header (Master Level) -->
-    <PageHeader
-      :title="currentSectionTitle"
-      :subtitle="currentSectionSubtitle"
-      icon="⚙️"
-    >
+    <PageHeader :title="currentSectionTitle" :subtitle="currentSectionSubtitle" icon="⚙️">
       <template #actions>
         <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
@@ -55,11 +51,7 @@
 
         <!-- Settings Sub-Page Content Area -->
         <div class="lg:col-span-8">
-          <SettingsBrandingSection
-            v-if="selectedSection === 'branding'"
-            :form="form"
-            @update:field="updateFormField"
-          />
+          <SettingsBrandingSection v-if="selectedSection === 'branding'" :form="form" @update:field="updateFormField" />
 
           <SettingsAppearanceSection
             v-else-if="selectedSection === 'appearance'"

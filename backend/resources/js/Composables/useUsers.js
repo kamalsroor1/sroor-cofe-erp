@@ -118,15 +118,31 @@ export function useUsers() {
         try {
             if (isEditing.value) {
                 await api.put(`/users/${editingId.value}`, form);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('users.user_updated_success'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('users.user_updated_success'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             } else {
                 await api.post('/users', form);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('users.user_created_success'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('users.user_created_success'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
             showModal.value = false;
             fetchUsers();
         } catch (e) {
-            Swal.fire({ icon: 'error', title: t('common.error'), text: e.response?.data?.message || t('users.user_save_failed') });
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: e.response?.data?.message || t('users.user_save_failed'),
+            });
         } finally {
             isSubmitting.value = false;
         }
@@ -137,7 +153,11 @@ export function useUsers() {
             const res = await api.patch(`/users/${u.id}/toggle-active`);
             u.is_active = res.data?.is_active;
         } catch (e) {
-            Swal.fire({ icon: 'error', title: t('common.error'), text: e.response?.data?.message || t('users.user_toggle_active_failed') });
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: e.response?.data?.message || t('users.user_toggle_active_failed'),
+            });
         }
     };
 
@@ -156,10 +176,20 @@ export function useUsers() {
         if (result.isConfirmed) {
             try {
                 await api.delete(`/users/${u.id}`);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('users.user_deleted_success'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('users.user_deleted_success'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 fetchUsers();
             } catch (e) {
-                Swal.fire({ icon: 'error', title: t('common.error'), text: e.response?.data?.message || t('users.user_delete_failed') });
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: e.response?.data?.message || t('users.user_delete_failed'),
+                });
             }
         }
     };

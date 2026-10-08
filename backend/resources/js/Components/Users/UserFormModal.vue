@@ -76,12 +76,7 @@
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 
@@ -123,6 +118,6 @@ defineEmits(['close', 'submit', 'update:field']);
 
 const formattedStores = computed(() => [
   { value: null, label: t('users.no_store_assigned') },
-  ...props.storesList.map(st => ({ value: st.id, label: st.name }))
+  ...props.storesList.map((st) => ({ value: st.id, label: st.name })),
 ]);
 </script>

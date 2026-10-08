@@ -18,10 +18,10 @@ final class StoreQuickCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => ['required', 'string', 'max:255'],
-            'phone'      => ['nullable', 'string', 'max:20'],
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'price_tier' => ['nullable', 'in:retail,wholesale'],
-            'address'    => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

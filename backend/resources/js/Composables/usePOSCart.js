@@ -13,7 +13,7 @@ export function usePOSCart(selectedCustomerRef) {
 
     // Calculations
     const subtotal = computed(() => {
-        return cart.value.reduce((sum, item) => sum + (Number(item.unit_price) * Number(item.quantity)), 0);
+        return cart.value.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
     });
 
     const discountAmount = computed(() => {
@@ -54,7 +54,7 @@ export function usePOSCart(selectedCustomerRef) {
         const isWholesale = selectedCustomerRef.value?.price_tier === 'wholesale';
         const price = isWholesale ? item.price_wholesale : item.price_retail;
 
-        const existingIndex = cart.value.findIndex(ci => ci.item_id === item.id);
+        const existingIndex = cart.value.findIndex((ci) => ci.item_id === item.id);
         if (existingIndex > -1) {
             cart.value[existingIndex].quantity = Number((cart.value[existingIndex].quantity + qty).toFixed(3));
         } else {

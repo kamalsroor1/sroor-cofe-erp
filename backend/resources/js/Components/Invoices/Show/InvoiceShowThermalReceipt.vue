@@ -17,8 +17,12 @@
           <span class="font-black text-xs">#{{ invoice?.invoice_number }}</span>
         </div>
         <div class="flex justify-between items-center">
-          <span><strong>{{ $t('common.date') }}:</strong> {{ invoice?.invoice_date }}</span>
-          <span><strong>{{ $t('invoices.invoice_time') }}</strong> {{ invoiceTime }}</span>
+          <span
+            ><strong>{{ $t('common.date') }}:</strong> {{ invoice?.invoice_date }}</span
+          >
+          <span
+            ><strong>{{ $t('invoices.invoice_time') }}</strong> {{ invoiceTime }}</span
+          >
         </div>
         <div class="flex justify-between items-center font-tajawal">
           <span class="font-bold">{{ $t('invoices.customer') }}:</span>
@@ -62,15 +66,21 @@
         </div>
         <div v-if="parseFloat(invoice?.discount_amount || 0) > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.discount') }}:</span>
-          <span class="font-mono font-bold">- {{ formatMoney(invoice?.discount_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold"
+            >- {{ formatMoney(invoice?.discount_amount) }} {{ $t('common.currency') }}</span
+          >
         </div>
         <div v-if="parseFloat(invoice?.shipping_cost || 0) > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.extra_fees_shipping') }}</span>
-          <span class="font-mono font-bold">+ {{ formatMoney(invoice?.shipping_cost) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold"
+            >+ {{ formatMoney(invoice?.shipping_cost) }} {{ $t('common.currency') }}</span
+          >
         </div>
         <div class="flex justify-between items-center text-sm font-black pt-1.5 border-t-2 border-black">
           <span class="text-sm font-black">{{ $t('invoices.net_total') }}:</span>
-          <span class="font-mono text-base font-black">{{ formatMoney(invoice?.net_total) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono text-base font-black"
+            >{{ formatMoney(invoice?.net_total) }} {{ $t('common.currency') }}</span
+          >
         </div>
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
           <span class="font-bold">{{ $t('invoices.payment_method') }}:</span>
@@ -80,16 +90,23 @@
           <span>{{ $t('invoices.amount_paid_label') }}</span>
           <span class="font-mono font-black">{{ formatMoney(invoice?.paid_amount) }} {{ $t('common.currency') }}</span>
         </div>
-        <div v-if="parseFloat(invoice?.remaining_amount || 0) > 0" class="flex justify-between items-center text-xs font-bold">
+        <div
+          v-if="parseFloat(invoice?.remaining_amount || 0) > 0"
+          class="flex justify-between items-center text-xs font-bold"
+        >
           <span>{{ $t('invoices.amount_remaining_label') }}</span>
-          <span class="font-mono font-black">{{ formatMoney(invoice?.remaining_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-black"
+            >{{ formatMoney(invoice?.remaining_amount) }} {{ $t('common.currency') }}</span
+          >
         </div>
       </div>
 
       <div class="pt-2 text-center text-xs space-y-1 font-bold text-black">
         <p class="text-xs font-black">{{ $t('invoices.thank_you_note') }}</p>
         <p class="text-[9px]">{{ $t('invoices.return_policy_note') }}</p>
-        <div class="pt-0.5 text-[8px] font-mono text-slate-800">{{ $t('invoices.printed_by_system', { system: companyInfo?.name }) }}</div>
+        <div class="pt-0.5 text-[8px] font-mono text-slate-800">
+          {{ $t('invoices.printed_by_system', { system: companyInfo?.name }) }}
+        </div>
       </div>
     </div>
   </div>

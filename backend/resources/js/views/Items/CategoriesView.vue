@@ -114,8 +114,8 @@ const saveCategory = async () => {
       position: 'top-end',
       icon: 'success',
       title: editingCategory.value
-        ? (trans('inventory.category_updated_success'))
-        : (trans('inventory.category_created_success')),
+        ? trans('inventory.category_updated_success')
+        : trans('inventory.category_created_success'),
       showConfirmButton: false,
       timer: 2500,
     });

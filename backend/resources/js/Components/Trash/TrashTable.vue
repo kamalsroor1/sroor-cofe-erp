@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl overflow-hidden font-tajawal"
+  >
     <div v-if="loading" class="p-6">
       <TableSkeleton :rows="8" :cols="4" />
     </div>
@@ -8,7 +10,9 @@
       <!-- Desktop Table -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-start text-xs">
-          <thead class="bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 font-bold font-tajawal">
+          <thead
+            class="bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 font-bold font-tajawal"
+          >
             <tr>
               <th class="p-4 text-start">{{ $t('trash.item_name_col') }}</th>
               <th class="p-4 text-start">{{ $t('trash.description_code_col') }}</th>
@@ -17,7 +21,11 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
-            <tr v-for="item in records" :key="item.id" class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+            <tr
+              v-for="item in records"
+              :key="item.id"
+              class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors"
+            >
               <td class="p-4 font-sans font-bold text-slate-900 dark:text-white font-tajawal">{{ item.title }}</td>
               <td class="p-4 text-slate-500 dark:text-slate-400 font-sans font-tajawal">{{ item.subtitle }}</td>
               <td class="p-4 text-slate-500 dark:text-slate-400 font-sans">{{ item.deleted_at }}</td>
@@ -84,7 +92,10 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.total > pagination.per_page" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
+      <div
+        v-if="pagination.total > pagination.per_page"
+        class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono"
+      >
         <span class="font-tajawal">{{ $t('trash.total_deleted_items', { count: pagination.total }) }}</span>
         <div class="flex items-center gap-2 font-sans font-tajawal">
           <button
@@ -108,12 +119,7 @@
       </div>
     </div>
 
-    <EmptyState
-      v-else
-      :title="$t('trash.empty_trash_title')"
-      :description="$t('trash.empty_trash_desc')"
-      icon="🗑️"
-    />
+    <EmptyState v-else :title="$t('trash.empty_trash_title')" :description="$t('trash.empty_trash_desc')" icon="🗑️" />
   </div>
 </template>
 

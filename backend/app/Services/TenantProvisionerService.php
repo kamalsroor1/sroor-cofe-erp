@@ -6,12 +6,15 @@ namespace App\Services;
 
 use App\Contracts\TenantProvisionerInterface;
 use App\DTOs\CreateTenantDTO;
-use App\Models\Tenant;
 use App\Models\Plan;
-use App\Models\Subscription;
+use App\Models\Setting;
 use App\Models\Store;
+use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class TenantProvisionerService implements TenantProvisionerInterface
 {
@@ -40,15 +43,15 @@ class TenantProvisionerService implements TenantProvisionerInterface
             'enabled_features' => [],
         ];
 
-        if (!empty($dto->tenancyDbName)) {
+        if (! empty($dto->tenancyDbName)) {
             $tenantData['tenancy_db_name'] = $dto->tenancyDbName;
         }
 
-        if (!empty($dto->tenancyDbUsername)) {
+        if (! empty($dto->tenancyDbUsername)) {
             $tenantData['tenancy_db_username'] = $dto->tenancyDbUsername;
         }
 
-        if (!empty($dto->tenancyDbPassword)) {
+        if (! empty($dto->tenancyDbPassword)) {
             $tenantData['tenancy_db_password'] = $dto->tenancyDbPassword;
         }
 
@@ -56,13 +59,13 @@ class TenantProvisionerService implements TenantProvisionerInterface
 
         // 2. Provision Primary Subdomain
         $centralDomain = env('CENTRAL_DOMAIN', 'baraa-solutions.com');
-        $primarySubdomain = $dto->slug . '.' . $centralDomain;
+        $primarySubdomain = $dto->slug.'.'.$centralDomain;
         $tenant->domains()->create([
             'domain' => $primarySubdomain,
         ]);
 
         // 3. Provision Custom Domain if requested
-        if (!empty($dto->customDomain)) {
+        if (! empty($dto->customDomain)) {
             $tenant->domains()->create([
                 'domain' => $dto->customDomain,
             ]);
@@ -84,7 +87,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
         // 5. Initialize tenant isolated database seed data
         $tenant->run(function () use ($dto) {
             // Seed permissions matrix in tenant DB
-            (new \Database\Seeders\PermissionsSeeder)->run();
+            (new PermissionsSeeder)->run();
 
             $mainStore = Store::firstOrCreate(
                 ['is_main' => true],
@@ -100,11 +103,11 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 ->orWhere('phone', $dto->phone ?: '01000000000')
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 $user = User::create([
                     'name' => $dto->name,
                     'email' => $dto->email,
-                    'phone' => $dto->phone ?: ($dto->slug . '_admin'),
+                    'phone' => $dto->phone ?: ($dto->slug.'_admin'),
                     'password' => Hash::make($dto->password),
                     'is_active' => true,
                     'default_store_id' => $mainStore->id,
@@ -120,14 +123,14 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 ]);
             }
 
-            $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+            $adminRole = Role::firstOrCreate(['name' => 'admin']);
             $user->syncRoles([$adminRole]);
 
             // Automatically set tenant company branding from creation DTO
-            \App\Models\Setting::set('company_name', $dto->name);
-            \App\Models\Setting::set('company_subtitle', 'لإدارة المبيعات والمخزون والفروع');
+            Setting::set('company_name', $dto->name);
+            Setting::set('company_subtitle', 'لإدارة المبيعات والمخزون والفروع');
             if ($dto->phone) {
-                \App\Models\Setting::set('company_phone', $dto->phone);
+                Setting::set('company_phone', $dto->phone);
             }
         });
 

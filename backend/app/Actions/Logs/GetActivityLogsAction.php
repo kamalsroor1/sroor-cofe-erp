@@ -13,14 +13,14 @@ final class GetActivityLogsAction
      */
     public function execute(array $filters): array
     {
-        $search   = trim((string)($filters['search'] ?? ''));
-        $module   = (string)($filters['module'] ?? 'all');
-        $action   = (string)($filters['action'] ?? 'all');
-        $userId   = $filters['user_id'] ?? 'all';
-        $storeId  = $filters['store_id'] ?? 'all';
+        $search = trim((string) ($filters['search'] ?? ''));
+        $module = (string) ($filters['module'] ?? 'all');
+        $action = (string) ($filters['action'] ?? 'all');
+        $userId = $filters['user_id'] ?? 'all';
+        $storeId = $filters['store_id'] ?? 'all';
         $fromDate = $filters['from_date'] ?? $filters['from'] ?? null;
-        $toDate   = $filters['to_date'] ?? $filters['to'] ?? null;
-        $perPage  = max(1, min(200, (int)($filters['per_page'] ?? 25)));
+        $toDate = $filters['to_date'] ?? $filters['to'] ?? null;
+        $perPage = max(1, min(200, (int) ($filters['per_page'] ?? 25)));
 
         $query = ActivityLog::select([
             'id',
@@ -42,9 +42,9 @@ final class GetActivityLogsAction
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
-                  ->orWhereHas('store', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%"))
+                    ->orWhereHas('store', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -57,11 +57,11 @@ final class GetActivityLogsAction
         }
 
         if ($userId !== 'all' && $userId !== null && $userId !== '') {
-            $query->where('user_id', (int)$userId);
+            $query->where('user_id', (int) $userId);
         }
 
         if ($storeId !== 'all' && $storeId !== null && $storeId !== '') {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', (int) $storeId);
         }
 
         if ($fromDate) {
@@ -72,49 +72,50 @@ final class GetActivityLogsAction
             $query->whereDate('created_at', '<=', $toDate);
         }
 
-        $totalCount = (int)(clone $query)->count();
+        $totalCount = (int) (clone $query)->count();
         $logs = $query->latest('id')->paginate($perPage);
 
         // Optimized Stats
         $todayLogs = ActivityLog::whereDate('created_at', now()->toDateString());
         $stats = [
-            'today_total'    => (int)(clone $todayLogs)->count(),
-            'today_critical' => (int)(clone $todayLogs)->whereIn('action', ['cancelled', 'deleted', 'login_failed'])->count(),
-            'today_users'    => (int)(clone $todayLogs)->distinct('user_id')->count('user_id'),
-            'today_stores'   => (int)(clone $todayLogs)->distinct('store_id')->count('store_id'),
+            'today_total' => (int) (clone $todayLogs)->count(),
+            'today_critical' => (int) (clone $todayLogs)->whereIn('action', ['cancelled', 'deleted', 'login_failed'])->count(),
+            'today_users' => (int) (clone $todayLogs)->distinct('user_id')->count('user_id'),
+            'today_stores' => (int) (clone $todayLogs)->distinct('store_id')->count('store_id'),
         ];
 
         $formattedLogs = collect($logs->items())->map(function (ActivityLog $log) {
             $badge = $log->module_badge;
+
             return [
-                'id'           => $log->id,
-                'module'       => $log->module,
+                'id' => $log->id,
+                'module' => $log->module,
                 'module_label' => $badge['label'] ?? $log->module,
                 'module_color' => $badge['color'] ?? 'slate',
-                'module_icon'  => $badge['icon'] ?? '⚙️',
-                'action'       => $log->action,
-                'description'  => $log->description,
-                'properties'   => $log->properties,
-                'user_name'    => $log->user?->name ?? __('common.system'),
-                'user_phone'   => $log->user?->phone,
-                'store_name'   => $log->store?->name ?? __('common.main_store_default'),
-                'ip_address'   => $log->ip_address,
-                'user_agent'   => $log->user_agent,
-                'payload'      => $log->payload,
-                'created_at'   => $log->created_at?->format('Y-m-d H:i:s'),
-                'time_ago'     => $log->created_at?->diffForHumans(),
+                'module_icon' => $badge['icon'] ?? '⚙️',
+                'action' => $log->action,
+                'description' => $log->description,
+                'properties' => $log->properties,
+                'user_name' => $log->user?->name ?? __('common.system'),
+                'user_phone' => $log->user?->phone,
+                'store_name' => $log->store?->name ?? __('common.main_store_default'),
+                'ip_address' => $log->ip_address,
+                'user_agent' => $log->user_agent,
+                'payload' => $log->payload,
+                'created_at' => $log->created_at?->format('Y-m-d H:i:s'),
+                'time_ago' => $log->created_at?->diffForHumans(),
             ];
         });
 
         return [
-            'logs'        => $formattedLogs,
-            'stats'       => $stats,
+            'logs' => $formattedLogs,
+            'stats' => $stats,
             'total_count' => $totalCount,
-            'pagination'  => [
+            'pagination' => [
                 'current_page' => $logs->currentPage(),
-                'last_page'    => $logs->lastPage(),
-                'per_page'     => $logs->perPage(),
-                'total'        => $logs->total(),
+                'last_page' => $logs->lastPage(),
+                'per_page' => $logs->perPage(),
+                'total' => $logs->total(),
             ],
         ];
     }

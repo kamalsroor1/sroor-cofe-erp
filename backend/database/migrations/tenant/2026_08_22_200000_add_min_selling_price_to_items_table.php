@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('items') && !Schema::hasColumn('items', 'min_selling_price')) {
+        if (Schema::hasTable('items') && ! Schema::hasColumn('items', 'min_selling_price')) {
             Schema::table('items', function (Blueprint $table) {
                 $table->decimal('min_selling_price', 12, 3)->default(0.000)->after('cost_price');
             });

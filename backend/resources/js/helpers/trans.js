@@ -29,9 +29,11 @@ export function trans(key, replace = {}) {
 
     // 2. Fallback to bundled static auto-generated default translations (Arabic or English)
     if (value === undefined) {
-        const isEnglish = (typeof localStorage !== 'undefined' && (localStorage.getItem('app_locale') === 'en' || localStorage.getItem('locale') === 'en')) ||
-                          (typeof document !== 'undefined' && document.documentElement.lang === 'en');
-        
+        const isEnglish =
+            (typeof localStorage !== 'undefined' &&
+                (localStorage.getItem('app_locale') === 'en' || localStorage.getItem('locale') === 'en')) ||
+            (typeof document !== 'undefined' && document.documentElement.lang === 'en');
+
         let fallbackVal = isEnglish ? defaultEnglishTranslations : defaultArabicTranslations;
 
         for (const part of parts) {

@@ -29,7 +29,7 @@ class ReturnDocument extends Model
     protected function casts(): array
     {
         return [
-            'return_date'  => 'date',
+            'return_date' => 'date',
             'total_amount' => 'decimal:3',
         ];
     }

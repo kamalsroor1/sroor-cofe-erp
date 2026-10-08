@@ -15,17 +15,17 @@ final class UpdateProfileAction
      */
     public function execute(User $user, array $validated): User
     {
-        if (!empty($validated['new_password'])) {
-            if (!Hash::check((string)$validated['current_password'], $user->password)) {
+        if (! empty($validated['new_password'])) {
+            if (! Hash::check((string) $validated['current_password'], $user->password)) {
                 throw new Exception(__('auth.current_password_incorrect') ?: 'كلمة المرور الحالية غير صحيحة');
             }
-            $user->password = Hash::make((string)$validated['new_password']);
+            $user->password = Hash::make((string) $validated['new_password']);
         }
 
-        $user->name = (string)$validated['name'];
-        $user->phone = (string)$validated['phone'];
-        $user->email = isset($validated['email']) && $validated['email'] !== '' ? (string)$validated['email'] : null;
-        $user->theme_preference = (string)($validated['theme_preference'] ?? 'dark');
+        $user->name = (string) $validated['name'];
+        $user->phone = (string) $validated['phone'];
+        $user->email = isset($validated['email']) && $validated['email'] !== '' ? (string) $validated['email'] : null;
+        $user->theme_preference = (string) ($validated['theme_preference'] ?? 'dark');
         $user->save();
 
         return $user;

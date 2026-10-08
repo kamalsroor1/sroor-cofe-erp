@@ -14,7 +14,7 @@ class CheckAppUpdateAction
             ->orderByDesc('version_code')
             ->first();
 
-        if (!$latest) {
+        if (! $latest) {
             return [
                 'has_update' => false,
                 'is_force_update' => false,

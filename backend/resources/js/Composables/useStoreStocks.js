@@ -24,7 +24,7 @@ export function useStoreStocks() {
     let debounceTimeout = null;
 
     const storeOptions = computed(() => {
-        return stores.value.map(s => ({
+        return stores.value.map((s) => ({
             value: s.id,
             label: `${s.name} ${s.is_main ? `(${t('inventory.main_store')})` : ''}`,
         }));

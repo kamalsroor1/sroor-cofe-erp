@@ -15,7 +15,7 @@ class TenantResource extends JsonResource
             'slug' => $this->slug,
             'email' => $this->email,
             'phone' => $this->phone,
-            'domain' => $this->domains->first()?->domain ?? ($this->slug . '.' . env('CENTRAL_DOMAIN', 'localhost')),
+            'domain' => $this->domains->first()?->domain ?? ($this->slug.'.'.env('CENTRAL_DOMAIN', 'localhost')),
             'plan' => $this->plan ? new PlanResource($this->plan) : null,
             'status' => $this->status,
             'trial_ends_at' => $this->trial_ends_at?->toDateString(),

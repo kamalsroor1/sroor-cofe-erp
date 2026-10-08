@@ -18,13 +18,13 @@ class UpdateStoreRequest extends FormRequest
         $storeId = $this->route('id') ?? $this->route('store');
 
         return [
-            'name'      => ['required', 'string', 'max:255'],
-            'code'      => ['nullable', 'string', 'max:50', 'unique:stores,code,' . $storeId],
-            'type'      => ['required', 'string'],
-            'address'   => ['nullable', 'string', 'max:255'],
-            'phone'     => ['nullable', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:stores,code,'.$storeId],
+            'type' => ['required', 'string'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
             'is_active' => ['nullable', 'boolean'],
-            'is_main'   => ['nullable', 'boolean'],
+            'is_main' => ['nullable', 'boolean'],
         ];
     }
 }

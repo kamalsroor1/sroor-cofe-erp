@@ -3,8 +3,8 @@
 namespace App\Filters\Tenants;
 
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class StatusFilter
 {

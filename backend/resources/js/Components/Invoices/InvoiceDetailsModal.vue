@@ -6,7 +6,9 @@
   >
     <div v-if="invoice" class="space-y-4 font-tajawal text-xs">
       <!-- Top Info Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
+      <div
+        class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl"
+      >
         <div>
           <span class="text-slate-400 block font-bold">{{ $t('invoices.customer') }}:</span>
           <span class="text-slate-900 dark:text-white font-bold">{{ invoice.customer_name }}</span>
@@ -29,7 +31,9 @@
       <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <table class="w-full text-start text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr
+              class="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"
+            >
               <th class="p-2.5 text-start font-bold">{{ $t('invoices.item') }}</th>
               <th class="p-2.5 text-end font-bold">{{ $t('invoices.quantity') }}</th>
               <th class="p-2.5 text-end font-bold">{{ $t('invoices.sale_price') }}</th>
@@ -38,28 +42,44 @@
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-sans">
             <tr v-for="item in invoice.items" :key="item.id">
-              <td class="p-2.5 font-bold font-tajawal text-slate-900 dark:text-white">{{ item.item_name || item.name }}</td>
-              <td class="p-2.5 text-end font-mono text-slate-700 dark:text-slate-300">{{ formatMoney(item.quantity) }} {{ item.unit }}</td>
-              <td class="p-2.5 text-end font-mono text-slate-700 dark:text-slate-300">{{ formatMoney(item.unit_price) }}</td>
-              <td class="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-white">{{ formatMoney(item.total_price) }}</td>
+              <td class="p-2.5 font-bold font-tajawal text-slate-900 dark:text-white">
+                {{ item.item_name || item.name }}
+              </td>
+              <td class="p-2.5 text-end font-mono text-slate-700 dark:text-slate-300">
+                {{ formatMoney(item.quantity) }} {{ item.unit }}
+              </td>
+              <td class="p-2.5 text-end font-mono text-slate-700 dark:text-slate-300">
+                {{ formatMoney(item.unit_price) }}
+              </td>
+              <td class="p-2.5 text-end font-mono font-bold text-slate-900 dark:text-white">
+                {{ formatMoney(item.total_price) }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Financial Breakdown -->
-      <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5 font-mono">
+      <div
+        class="p-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5 font-mono"
+      >
         <div class="flex justify-between text-slate-600 dark:text-slate-400 font-tajawal">
           <span>{{ $t('invoices.subtotal') }}:</span>
           <span class="font-bold font-mono">{{ formatMoney(invoice.subtotal) }} {{ $t('common.currency') }}</span>
         </div>
         <div v-if="invoice.discount_amount > 0" class="flex justify-between text-rose-500 font-tajawal">
           <span>{{ $t('invoices.discount') }}:</span>
-          <span class="font-bold font-mono">- {{ formatMoney(invoice.discount_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-bold font-mono"
+            >- {{ formatMoney(invoice.discount_amount) }} {{ $t('common.currency') }}</span
+          >
         </div>
-        <div class="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-tajawal">
+        <div
+          class="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-tajawal"
+        >
           <span>{{ $t('invoices.net_total') }}:</span>
-          <span class="text-emerald-500 text-base font-mono">{{ formatMoney(invoice.net_total) }} {{ $t('common.currency') }}</span>
+          <span class="text-emerald-500 text-base font-mono"
+            >{{ formatMoney(invoice.net_total) }} {{ $t('common.currency') }}</span
+          >
         </div>
       </div>
 

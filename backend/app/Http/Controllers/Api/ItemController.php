@@ -39,16 +39,16 @@ final class ItemController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage') && !$user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $category = (string)$request->input('category', 'all');
+        $search = trim((string) $request->input('search', ''));
+        $category = (string) $request->input('category', 'all');
         $categoryId = $request->input('category_id');
-        $stockStatus = (string)$request->input('stock_status', 'all');
-        $status = (string)$request->input('status', 'all');
-        $perPage = max(1, min(500, (int)$request->input('per_page', 20)));
+        $stockStatus = (string) $request->input('stock_status', 'all');
+        $status = (string) $request->input('status', 'all');
+        $perPage = max(1, min(500, (int) $request->input('per_page', 20)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
@@ -60,8 +60,8 @@ final class ItemController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%");
             });
         }
 
@@ -69,7 +69,7 @@ final class ItemController extends Controller
             $query->where('category', $category);
         }
 
-        if (!empty($categoryId) && $categoryId !== 'null') {
+        if (! empty($categoryId) && $categoryId !== 'null') {
             if ($categoryId === 'low_stock') {
                 $query->whereColumn('current_stock', '<=', 'min_stock_level')->where('current_stock', '>', 0);
             } elseif ($categoryId === 'in_stock') {
@@ -79,7 +79,7 @@ final class ItemController extends Controller
             } elseif ($categoryId === 'newest') {
                 $query->latest('id');
             } elseif (is_numeric($categoryId)) {
-                $query->where('category_id', (int)$categoryId);
+                $query->where('category_id', (int) $categoryId);
             }
         }
 
@@ -103,24 +103,24 @@ final class ItemController extends Controller
 
         $totalItemsCount = Item::count();
         $lowStockCount = Item::whereColumn('current_stock', '<=', 'min_stock_level')->where('is_active', true)->count();
-        $totalStockValue = (float)Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val');
+        $totalStockValue = (float) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val');
 
         return response()->json([
-            'success'    => true,
-            'data'       => ItemResource::collection($items->items())->resolve(),
-            'meta'       => [
+            'success' => true,
+            'data' => ItemResource::collection($items->items())->resolve(),
+            'meta' => [
                 'current_page' => $items->currentPage(),
-                'last_page'    => $items->lastPage(),
-                'per_page'     => $items->perPage(),
-                'total'        => $items->total(),
+                'last_page' => $items->lastPage(),
+                'per_page' => $items->perPage(),
+                'total' => $items->total(),
             ],
-            'summary'    => [
-                'total_items'       => $totalItemsCount,
-                'low_stock_count'   => $lowStockCount,
+            'summary' => [
+                'total_items' => $totalItemsCount,
+                'low_stock_count' => $lowStockCount,
                 'total_stock_value' => $totalStockValue,
             ],
             'categories' => $categories,
-            'store_id'   => $storeId,
+            'store_id' => $storeId,
         ], 200);
     }
 
@@ -135,7 +135,7 @@ final class ItemController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.item_added') ?: 'تم إضافة الصنف بنجاح',
-            'data'    => (new ItemResource($item))->resolve(),
+            'data' => (new ItemResource($item))->resolve(),
         ], 201);
     }
 
@@ -145,7 +145,7 @@ final class ItemController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage') && !$user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -153,7 +153,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new ItemResource($item))->resolve(),
+            'data' => (new ItemResource($item))->resolve(),
         ], 200);
     }
 
@@ -169,7 +169,7 @@ final class ItemController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.item_updated') ?: 'تم تعديل بيانات الصنف بنجاح',
-            'data'    => (new ItemResource($updated))->resolve(),
+            'data' => (new ItemResource($updated))->resolve(),
         ], 200);
     }
 
@@ -179,7 +179,7 @@ final class ItemController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -198,7 +198,7 @@ final class ItemController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -208,7 +208,7 @@ final class ItemController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('inventory.status_updated') ?: 'تم تحديث حالة الصنف بنجاح',
-            'data'    => (new ItemResource($toggled))->resolve(),
+            'data' => (new ItemResource($toggled))->resolve(),
         ], 200);
     }
 
@@ -218,13 +218,13 @@ final class ItemController extends Controller
     public function adjustStock(AdjustStockRequest $request, int $id): JsonResponse
     {
         $dto = AdjustStockDTO::fromArray($id, $request->validated());
-        $userId = (int)auth()->id();
+        $userId = (int) auth()->id();
 
         $movement = $this->adjustItemStockAction->execute($dto, $userId);
 
         return response()->json([
-            'success'  => true,
-            'message'  => __('inventory.stock_adjusted') ?: 'تم تسجيل تسوية المخزون بنجاح',
+            'success' => true,
+            'message' => __('inventory.stock_adjusted') ?: 'تم تسجيل تسوية المخزون بنجاح',
             'movement' => $movement,
         ], 200);
     }
@@ -235,29 +235,29 @@ final class ItemController extends Controller
     public function movements(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $item = Item::withTrashed()->findOrFail($id);
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $storeId = $request->input('store_id') && $request->input('store_id') !== 'all' ? (int)$request->input('store_id') : null;
+        $storeId = $request->input('store_id') && $request->input('store_id') !== 'all' ? (int) $request->input('store_id') : null;
         $type = $request->input('type');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
+        $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
         $result = $this->getItemMovementsAction->execute(
             $item,
-            $fromDate ? (string)$fromDate : null,
-            $toDate ? (string)$toDate : null,
+            $fromDate ? (string) $fromDate : null,
+            $toDate ? (string) $toDate : null,
             $storeId,
-            $type ? (string)$type : null,
+            $type ? (string) $type : null,
             $perPage
         );
 
         return response()->json([
             'success' => true,
-            'data'    => $result,
+            'data' => $result,
         ], 200);
     }
 
@@ -267,11 +267,11 @@ final class ItemController extends Controller
     public function lowStock(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('items.view') && !$user->can('items.manage') && !$user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = (int)($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
+        $storeId = (int) ($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
 
         $items = Item::query()
             ->active()
@@ -279,31 +279,31 @@ final class ItemController extends Controller
             ->orderBy('current_stock', 'asc')
             ->get()
             ->map(function (Item $item) use ($storeId) {
-                $stock = (string)$item->getStockInStore($storeId);
-                $min = (string)$item->min_stock_level;
+                $stock = (string) $item->getStockInStore($storeId);
+                $min = (string) $item->min_stock_level;
                 $deficit = bcsub($min, $stock, 3);
                 if (bccomp($deficit, '0.000', 3) < 0) {
                     $deficit = '0.000';
                 }
 
                 return [
-                    'id'                    => $item->id,
-                    'code'                  => $item->code,
-                    'name'                  => $item->name,
-                    'category'              => $item->category,
-                    'unit'                  => $item->unit,
-                    'cost_price'            => (string)$item->cost_price,
-                    'selling_price'         => (string)$item->selling_price,
-                    'current_stock'         => $stock,
-                    'min_stock_level'       => $min,
-                    'deficit'               => $deficit,
+                    'id' => $item->id,
+                    'code' => $item->code,
+                    'name' => $item->name,
+                    'category' => $item->category,
+                    'unit' => $item->unit,
+                    'cost_price' => (string) $item->cost_price,
+                    'selling_price' => (string) $item->selling_price,
+                    'current_stock' => $stock,
+                    'min_stock_level' => $min,
+                    'deficit' => $deficit,
                     'suggested_reorder_qty' => bccomp($deficit, '0.000', 3) > 0 ? $deficit : '10.000',
                 ];
             });
 
         return response()->json([
-            'success'   => true,
-            'count'     => $items->count(),
+            'success' => true,
+            'count' => $items->count(),
             'low_items' => $items,
         ], 200);
     }

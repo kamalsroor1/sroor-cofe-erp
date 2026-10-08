@@ -10,11 +10,15 @@
           class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 relative overflow-hidden animate-in fade-in zoom-in duration-200"
         >
           <!-- Top Ambient Glow -->
-          <div class="absolute -top-10 -right-10 w-32 h-32 bg-theme-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div
+            class="absolute -top-10 -right-10 w-32 h-32 bg-theme-primary/20 rounded-full blur-3xl pointer-events-none"
+          ></div>
 
           <!-- Header Icon & Title -->
           <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center shrink-0">
+            <div
+              class="w-12 h-12 rounded-2xl bg-theme-primary/10 text-theme-primary flex items-center justify-center shrink-0"
+            >
               <Sparkles class="w-6 h-6 stroke-[2.2]" />
             </div>
             <div class="min-w-0 flex-1">
@@ -26,17 +30,20 @@
                 <span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-500 font-mono font-bold text-xs">
                   v{{ updateData?.latest_version }}
                 </span>
-                <span class="text-xs font-mono text-slate-400">
-                  ({{ updateData?.file_size || '8.6 MB' }})
-                </span>
+                <span class="text-xs font-mono text-slate-400"> ({{ updateData?.file_size || '8.6 MB' }}) </span>
               </div>
             </div>
           </div>
 
           <!-- Release Notes -->
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <div
+            class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800/80 space-y-2"
+          >
             <div class="text-xs font-bold text-slate-700 dark:text-slate-300">المميزات والتحديثات الجديدة:</div>
-            <div v-if="updateData?.release_notes && updateData.release_notes.length > 0" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <div
+              v-if="updateData?.release_notes && updateData.release_notes.length > 0"
+              class="space-y-1.5 max-h-36 overflow-y-auto pr-1"
+            >
               <div
                 v-for="(note, idx) in updateData.release_notes"
                 :key="idx"
@@ -52,7 +59,10 @@
           </div>
 
           <!-- Mandatory Alert (If Force Update) -->
-          <div v-if="isForceUpdate" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2">
+          <div
+            v-if="isForceUpdate"
+            class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2"
+          >
             <AlertTriangle class="w-4 h-4 text-amber-500 shrink-0" />
             <span>هذا التحديث إلزامي لمواصلة استخدام المنظومة بأمان.</span>
           </div>
@@ -86,11 +96,5 @@
 import { Sparkles, AlertTriangle } from 'lucide-vue-next';
 import { useAppUpdater } from '../../Composables/useAppUpdater';
 
-const {
-  showUpdateModal,
-  isForceUpdate,
-  updateData,
-  downloadAndInstall,
-  dismissUpdate,
-} = useAppUpdater();
+const { showUpdateModal, isForceUpdate, updateData, downloadAndInstall, dismissUpdate } = useAppUpdater();
 </script>

@@ -19,26 +19,26 @@ final class CustomerDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            name: (string)$data['name'],
-            phone: isset($data['phone']) && $data['phone'] !== '' ? (string)$data['phone'] : null,
-            address: isset($data['address']) && $data['address'] !== '' ? (string)$data['address'] : null,
-            tax_number: isset($data['tax_number']) && $data['tax_number'] !== '' ? (string)$data['tax_number'] : null,
-            opening_balance: isset($data['opening_balance']) && is_numeric($data['opening_balance']) ? (string)$data['opening_balance'] : '0.000',
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
-            is_active: !isset($data['is_active']) || (bool)$data['is_active'],
+            name: (string) $data['name'],
+            phone: isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null,
+            address: isset($data['address']) && $data['address'] !== '' ? (string) $data['address'] : null,
+            tax_number: isset($data['tax_number']) && $data['tax_number'] !== '' ? (string) $data['tax_number'] : null,
+            opening_balance: isset($data['opening_balance']) && is_numeric($data['opening_balance']) ? (string) $data['opening_balance'] : '0.000',
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
+            is_active: ! isset($data['is_active']) || (bool) $data['is_active'],
         );
     }
 
     public function toArray(): array
     {
         return [
-            'name'            => $this->name,
-            'phone'           => $this->phone,
-            'address'         => $this->address,
-            'tax_number'      => $this->tax_number,
+            'name' => $this->name,
+            'phone' => $this->phone,
+            'address' => $this->address,
+            'tax_number' => $this->tax_number,
             'opening_balance' => $this->opening_balance,
-            'notes'           => $this->notes,
-            'is_active'       => $this->is_active,
+            'notes' => $this->notes,
+            'is_active' => $this->is_active,
         ];
     }
 }

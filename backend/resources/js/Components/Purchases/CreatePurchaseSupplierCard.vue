@@ -1,5 +1,7 @@
 <template>
-  <div class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4 font-tajawal">
+  <div
+    class="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg space-y-4 font-tajawal"
+  >
     <h2 class="text-xs font-black text-theme-primary flex items-center gap-2">
       <Factory class="w-4 h-4" />
       <span>{{ $t('purchases.supplier_po_section') }}</span>

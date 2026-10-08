@@ -26,8 +26,7 @@ final class GetSmartReorderSuggestionsAction
         $suggestions = collect($data['suggestions'] ?? []);
 
         if ($search !== '') {
-            $suggestions = $suggestions->filter(fn($it) => 
-                str_contains(mb_strtolower($it['name'] ?? ''), mb_strtolower($search)) ||
+            $suggestions = $suggestions->filter(fn ($it) => str_contains(mb_strtolower($it['name'] ?? ''), mb_strtolower($search)) ||
                 str_contains(mb_strtolower($it['code'] ?? ''), mb_strtolower($search))
             );
         }
@@ -37,11 +36,11 @@ final class GetSmartReorderSuggestionsAction
         }
 
         return [
-            'critical_count'       => $data['critical_count'] ?? 0,
-            'warning_count'        => $data['warning_count'] ?? 0,
-            'safe_count'           => $data['safe_count'] ?? 0,
-            'total_estimated_cost' => (float)($data['total_estimated_cost'] ?? 0),
-            'suggestions'          => $suggestions->values()->all(),
+            'critical_count' => $data['critical_count'] ?? 0,
+            'warning_count' => $data['warning_count'] ?? 0,
+            'safe_count' => $data['safe_count'] ?? 0,
+            'total_estimated_cost' => (float) ($data['total_estimated_cost'] ?? 0),
+            'suggestions' => $suggestions->values()->all(),
         ];
     }
 }

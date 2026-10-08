@@ -9,7 +9,9 @@
         <span class="text-sm font-black">{{ u }}</span>
         <span
           class="px-1.5 py-0.5 rounded text-[10px] font-bold"
-          :class="isDiscrete(u) ? 'bg-theme-light text-theme-primary' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300'"
+          :class="
+            isDiscrete(u) ? 'bg-theme-light text-theme-primary' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
+          "
         >
           {{ isDiscrete(u) ? $t('super.discrete_unit_badge') : $t('super.continuous_unit_badge') }}
         </span>
@@ -34,9 +36,32 @@ defineProps({
 defineEmits(['remove']);
 
 const isDiscrete = (unit) => {
-    if (!unit) return true;
-    const u = unit.toString().trim().toLowerCase();
-    const discrete = ['قطعة', 'حبة', 'علبة', 'باكت', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'جوال', 'طقم', 'زوج', 'باليتة', 'صندوق', 'برميل', 'شريحة', 'piece', 'pcs', 'box', 'carton', 'pack', 'unit', 'item'];
-    return discrete.includes(u);
+  if (!unit) return true;
+  const u = unit.toString().trim().toLowerCase();
+  const discrete = [
+    'قطعة',
+    'حبة',
+    'علبة',
+    'باكت',
+    'كرتونة',
+    'شيكارة',
+    'طرد',
+    'دستة',
+    'جوال',
+    'طقم',
+    'زوج',
+    'باليتة',
+    'صندوق',
+    'برميل',
+    'شريحة',
+    'piece',
+    'pcs',
+    'box',
+    'carton',
+    'pack',
+    'unit',
+    'item',
+  ];
+  return discrete.includes(u);
 };
 </script>

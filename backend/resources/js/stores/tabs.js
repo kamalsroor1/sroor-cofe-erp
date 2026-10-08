@@ -21,9 +21,7 @@ export const useTabsStore = defineStore('tabs', () => {
 
     // Array of component names to be cached in <KeepAlive>
     const cachedViews = computed(() => {
-        return tabs.value
-            .map((t) => t.name)
-            .filter(Boolean);
+        return tabs.value.map((t) => t.name).filter(Boolean);
     });
 
     /**

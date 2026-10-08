@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Stores & Wholesale Vans Table
-        if (!Schema::hasTable('stores')) {
+        if (! Schema::hasTable('stores')) {
             Schema::create('stores', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
@@ -27,7 +27,7 @@ return new class extends Migration
         }
 
         // 2. Store Stocks Table (Per Store/Van inventory and custom selling price)
-        if (!Schema::hasTable('store_stocks')) {
+        if (! Schema::hasTable('store_stocks')) {
             Schema::create('store_stocks', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('store_id')->constrained('stores')->cascadeOnDelete();
@@ -42,7 +42,7 @@ return new class extends Migration
         }
 
         // 3. Store User Assignment (Pivot)
-        if (!Schema::hasTable('store_user')) {
+        if (! Schema::hasTable('store_user')) {
             Schema::create('store_user', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('store_id')->constrained('stores')->cascadeOnDelete();

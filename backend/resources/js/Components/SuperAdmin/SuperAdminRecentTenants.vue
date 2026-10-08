@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg space-y-4 font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg space-y-4 font-tajawal"
+  >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
         <Building2 class="w-4 h-4 text-purple-500" />
@@ -27,10 +29,7 @@
         </div>
 
         <div class="flex items-center gap-3 self-end sm:self-center">
-          <span
-            class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-            :class="getStatusBadgeClass(t.status)"
-          >
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" :class="getStatusBadgeClass(t.status)">
             {{ getStatusLabel(t.status) }}
           </span>
           <span class="text-[10px] text-slate-500 font-mono">{{ t.created_at }}</span>
@@ -55,21 +54,30 @@ defineProps({
 });
 
 const getStatusBadgeClass = (status) => {
-    switch (status) {
-        case 'active': return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-        case 'trial': return 'bg-theme-light border-theme-border text-theme-primary';
-        case 'suspended': return 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400';
-        default: return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
-    }
+  switch (status) {
+    case 'active':
+      return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+    case 'trial':
+      return 'bg-theme-light border-theme-border text-theme-primary';
+    case 'suspended':
+      return 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400';
+    default:
+      return 'bg-slate-500/10 border-slate-500/30 text-slate-400';
+  }
 };
 
 const getStatusLabel = (status) => {
-    switch (status) {
-        case 'active': return t('super.status_active_badge');
-        case 'trial': return t('super.status_trial_badge');
-        case 'suspended': return t('super.status_suspended_badge');
-        case 'expired': return t('super.status_expired_badge');
-        default: return status;
-    }
+  switch (status) {
+    case 'active':
+      return t('super.status_active_badge');
+    case 'trial':
+      return t('super.status_trial_badge');
+    case 'suspended':
+      return t('super.status_suspended_badge');
+    case 'expired':
+      return t('super.status_expired_badge');
+    default:
+      return status;
+  }
 };
 </script>

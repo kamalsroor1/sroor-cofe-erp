@@ -8,9 +8,12 @@
 # enable in branch protection for feature/multi-tenant. Renaming a job breaks
 # that protection rule - update the rule at the same time.
 #
-# Legacy debt handling (temporary, until the one-time formatting passes land):
-#   - Pint runs only on PHP files changed by the push / PR.
-#   - Prettier runs only on .js/.vue/.css files changed by the push / PR.
+# The one-time full format pass has landed, so formatting is checked on the
+# whole codebase:
+#   - Pint checks every PHP file (scope set by backend/pint.json).
+#   - Prettier checks everything covered by `npm run format:check` (backend + desktop).
+# Remaining legacy debt:
+#   - ESLint (frontend job) runs only on .js/.vue files changed by the push / PR.
 #   - Larastan runs on everything, against phpstan-baseline.neon.
 
 name: CI
@@ -47,8 +50,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed to diff against the base commit
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -77,31 +78,8 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
-      - name: Determine changed PHP files
-        id: changed
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE="${{ github.event.pull_request.base.sha }}"
-            RANGE="$BASE...HEAD"
-          else
-            BASE="${{ github.event.before }}"
-            RANGE="$BASE HEAD"
-          fi
-          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "Base commit not available, falling back to HEAD~1"
-            RANGE="HEAD~1 HEAD"
-          fi
-          # Paths relative to backend/, only files that still exist.
-          git diff -z --name-only --diff-filter=ACMR $RANGE -- '*.php' \
-            | tr '\0' '\n' | grep '^backend/' | sed 's#^backend/##' \
-            | grep -v '^vendor/' > "$RUNNER_TEMP/changed-php.txt" || true
-          echo "count=$(wc -l < "$RUNNER_TEMP/changed-php.txt")" >> "$GITHUB_OUTPUT"
-          cat "$RUNNER_TEMP/changed-php.txt"
-
-      - name: Pint (changed files only)
-        if: steps.changed.outputs.count != '0'
-        run: tr '\n' '\0' < "$RUNNER_TEMP/changed-php.txt" | xargs -0 ./vendor/bin/pint --test
+      - name: Pint (whole codebase, scope in pint.json)
+        run: ./vendor/bin/pint --test
 
       - name: Cache PHPStan result cache
         uses: actions/cache@v4
@@ -198,13 +176,8 @@ jobs:
         if: steps.changed.outputs.count != '0'
         run: grep -E '\.(js|vue)$' "$RUNNER_TEMP/changed-fe.txt" | tr '\n' '\0' | xargs -0 -r npx --no-install eslint --no-warn-ignored
 
-      # Same check as `npm run format:check`, but restricted to the changed files.
-      # Prettier is called directly because the npm script carries its own glob,
-      # and appending file arguments to it would still check the whole legacy tree.
-      # Switch this step to `npm run format:check` after the one-time full format pass.
-      - name: Prettier format:check (changed files only)
-        if: steps.changed.outputs.count != '0'
-        run: tr '\n' '\0' < "$RUNNER_TEMP/changed-fe.txt" | xargs -0 npx --no-install prettier --check --ignore-unknown
+      - name: Prettier format:check (whole codebase)
+        run: npm run format:check
 
       - name: Build (runs lang:export via prebuild)
         run: npm run build
@@ -235,3 +208,6 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+
+      - name: Prettier format:check
+        run: npm run format:check

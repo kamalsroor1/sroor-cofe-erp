@@ -10,7 +10,10 @@
         <div class="text-slate-900 dark:text-white font-bold">{{ selectedLog.description }}</div>
       </div>
 
-      <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] overflow-x-auto max-h-60" dir="ltr">
+      <div
+        class="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] overflow-x-auto max-h-60"
+        dir="ltr"
+      >
         <pre class="text-emerald-400">{{ payloadText }}</pre>
       </div>
 

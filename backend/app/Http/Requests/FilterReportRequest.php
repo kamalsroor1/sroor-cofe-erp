@@ -16,16 +16,16 @@ class FilterReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tab'             => ['nullable', 'string'],
-            'period'          => ['nullable', 'string'],
-            'preset'          => ['nullable', 'string'],
-            'from'            => ['nullable', 'date'],
-            'to'              => ['nullable', 'date'],
-            'from_date'       => ['nullable', 'date'],
-            'to_date'         => ['nullable', 'date'],
-            'store_id'        => ['nullable'],
+            'tab' => ['nullable', 'string'],
+            'period' => ['nullable', 'string'],
+            'preset' => ['nullable', 'string'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'from_date' => ['nullable', 'date'],
+            'to_date' => ['nullable', 'date'],
+            'store_id' => ['nullable'],
             'treasury_method' => ['nullable', 'string'],
-            'stock_filter'    => ['nullable', 'string'],
+            'stock_filter' => ['nullable', 'string'],
         ];
     }
 }

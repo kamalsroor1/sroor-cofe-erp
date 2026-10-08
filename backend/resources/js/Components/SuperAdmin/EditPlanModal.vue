@@ -1,9 +1,5 @@
 <template>
-  <AppModal
-    :show="show"
-    :title="$t('super.edit_plan_modal_title', { name: form.name })"
-    @close="$emit('close')"
-  >
+  <AppModal :show="show" :title="$t('super.edit_plan_modal_title', { name: form.name })" @close="$emit('close')">
     <form @submit.prevent="$emit('submit')" class="space-y-3.5 text-xs font-tajawal">
       <div>
         <BaseInput
@@ -103,12 +99,7 @@
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="md"
-          @click="$emit('close')"
-        >
+        <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
           {{ $t('common.cancel') }}
         </BaseButton>
 

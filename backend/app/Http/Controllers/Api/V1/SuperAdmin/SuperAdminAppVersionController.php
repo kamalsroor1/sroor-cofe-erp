@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AppVersions\StoreAppVersionRequest;
 use App\Models\AppVersion;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class SuperAdminAppVersionController extends Controller
@@ -53,7 +52,7 @@ class SuperAdminAppVersionController extends Controller
      */
     public function toggleActive(AppVersion $appVersion): JsonResponse
     {
-        $appVersion->update(['is_active' => !$appVersion->is_active]);
+        $appVersion->update(['is_active' => ! $appVersion->is_active]);
 
         return response()->json([
             'message' => 'تم تغيير حالة الإصدار بنجاح',

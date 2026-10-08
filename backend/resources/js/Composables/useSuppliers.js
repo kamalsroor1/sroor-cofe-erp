@@ -131,10 +131,22 @@ export function useSuppliers() {
         try {
             if (editingSupplier.value) {
                 await api.put(`/suppliers/${editingSupplier.value.id}`, form);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('contacts.supplier_updated'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('contacts.supplier_updated'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             } else {
                 await api.post('/suppliers', form);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('contacts.supplier_added'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('contacts.supplier_added'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
             }
             showSupplierModal.value = false;
             await fetchSuppliers(pagination.value.current_page);
@@ -194,10 +206,20 @@ export function useSuppliers() {
         if (result.isConfirmed) {
             try {
                 await api.delete(`/suppliers/${supplier.id}`);
-                Swal.fire({ icon: 'success', title: t('common.success'), text: t('contacts.supplier_deleted'), timer: 1500, showConfirmButton: false });
+                Swal.fire({
+                    icon: 'success',
+                    title: t('common.success'),
+                    text: t('contacts.supplier_deleted'),
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
                 await fetchSuppliers(pagination.value.current_page);
             } catch (error) {
-                Swal.fire({ icon: 'error', title: t('common.error'), text: error.userMessage || t('contacts.cannot_delete_has_balance') });
+                Swal.fire({
+                    icon: 'error',
+                    title: t('common.error'),
+                    text: error.userMessage || t('contacts.cannot_delete_has_balance'),
+                });
             }
         }
     };

@@ -19,24 +19,24 @@ final class CreateItemAction
     {
         return DB::transaction(function () use ($dto) {
             $code = $dto->code;
-            if (!$code) {
+            if (! $code) {
                 $count = Item::count() + 1;
-                $code = 'ITM-' . str_pad((string)$count, 4, '0', STR_PAD_LEFT);
+                $code = 'ITM-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
             }
 
             $item = Item::create([
-                'name'              => $dto->name,
-                'code'              => $code,
-                'category'          => $dto->category,
-                'unit'              => $dto->unit,
-                'cost_price'        => $dto->cost_price,
+                'name' => $dto->name,
+                'code' => $code,
+                'category' => $dto->category,
+                'unit' => $dto->unit,
+                'cost_price' => $dto->cost_price,
                 'min_selling_price' => $dto->min_selling_price,
                 'weighted_avg_cost' => $dto->cost_price,
-                'selling_price'     => $dto->selling_price,
-                'min_stock_level'   => $dto->min_stock_level,
-                'current_stock'     => '0.000',
-                'is_active'         => $dto->is_active,
-                'notes'             => $dto->notes,
+                'selling_price' => $dto->selling_price,
+                'min_stock_level' => $dto->min_stock_level,
+                'current_stock' => '0.000',
+                'is_active' => $dto->is_active,
+                'notes' => $dto->notes,
             ]);
 
             // Auto-initialize StoreStock for existing stores

@@ -31,17 +31,17 @@ export function useActivityLogs() {
 
     const moduleOptions = computed(() => [
         { value: 'all', label: t('activity.all_modules') },
-        ...Object.entries(modulesList.value).map(([k, v]) => ({ value: k, label: v }))
+        ...Object.entries(modulesList.value).map(([k, v]) => ({ value: k, label: v })),
     ]);
 
     const userOptions = computed(() => [
         { value: 'all', label: t('activity.all_users') },
-        ...usersList.value.map(u => ({ value: u.id, label: u.name }))
+        ...usersList.value.map((u) => ({ value: u.id, label: u.name })),
     ]);
 
     const storeOptions = computed(() => [
         { value: 'all', label: t('activity.all_stores') },
-        ...storesList.value.map(s => ({ value: s.id, label: s.name }))
+        ...storesList.value.map((s) => ({ value: s.id, label: s.name })),
     ]);
 
     let debounceTimer = null;

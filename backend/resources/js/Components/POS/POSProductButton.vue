@@ -7,7 +7,9 @@
   >
     <!-- Top Row: Code Badge & Live Stock Indicator -->
     <div class="flex items-center justify-between gap-1.5 w-full">
-      <span class="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded truncate max-w-[80px]">
+      <span
+        class="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded truncate max-w-[80px]"
+      >
         #{{ item.code || `ITM-${item.id}` }}
       </span>
 
@@ -19,16 +21,20 @@
         <span>{{ formatStock(item.current_stock) }}</span>
       </span>
     </div>
-    
+
     <!-- Middle: Product Name (Bold, Clear, 2 lines max) -->
     <div class="my-1 min-h-[34px] flex items-center">
-      <span class="text-xs font-black text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-theme-primary transition-colors">
+      <span
+        class="text-xs font-black text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-theme-primary transition-colors"
+      >
         {{ item.name }}
       </span>
     </div>
-    
+
     <!-- Bottom Row: Price & Quick Add Button -->
-    <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 w-full mt-auto">
+    <div
+      class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 w-full mt-auto"
+    >
       <div class="flex items-baseline gap-1">
         <span class="text-xs sm:text-sm font-black font-mono tracking-tight" :style="{ color: categoryColor }">
           {{ formatPrice(item) }}
@@ -36,7 +42,9 @@
         <span class="text-[9px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
       </div>
 
-      <span class="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-theme-primary text-slate-500 group-hover:text-slate-950 flex items-center justify-center text-xs font-black transition-all shadow-2xs">
+      <span
+        class="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-theme-primary text-slate-500 group-hover:text-slate-950 flex items-center justify-center text-xs font-black transition-all shadow-2xs"
+      >
         +
       </span>
     </div>
@@ -62,9 +70,8 @@ const formatPrice = (item) => {
   if (!item) return '0.00';
   const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
   const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
-  const price = props.activePriceTier === 'wholesale'
-    ? (wholesale > 0 ? wholesale : retail)
-    : (retail > 0 ? retail : wholesale);
+  const price =
+    props.activePriceTier === 'wholesale' ? (wholesale > 0 ? wholesale : retail) : retail > 0 ? retail : wholesale;
   return formatMoney(price);
 };
 

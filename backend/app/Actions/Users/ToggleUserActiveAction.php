@@ -20,7 +20,7 @@ final class ToggleUserActiveAction
             throw new Exception(__('auth.cannot_disable_own_account') ?: 'لا يمكنك تعطيل حسابك الشخصي الحالي');
         }
 
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
 
         return $user;
     }

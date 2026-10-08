@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm dark:shadow-lg space-y-4 font-tajawal">
+  <div
+    class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm dark:shadow-lg space-y-4 font-tajawal"
+  >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-theme-light text-theme-primary flex items-center justify-center">
@@ -7,7 +9,9 @@
         </div>
         <div>
           <h2 class="text-sm font-black text-slate-900 dark:text-white">{{ $t('super.platform_settings_title') }}</h2>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ $t('super.platform_settings_subtitle') }}</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            {{ $t('super.platform_settings_subtitle') }}
+          </p>
         </div>
       </div>
     </div>
@@ -62,7 +66,10 @@
 
       <!-- Submit Button -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800/80">
-        <span v-if="saveSuccessMessage" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+        <span
+          v-if="saveSuccessMessage"
+          class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"
+        >
           <span>✓</span> {{ saveSuccessMessage }}
         </span>
         <span v-else></span>

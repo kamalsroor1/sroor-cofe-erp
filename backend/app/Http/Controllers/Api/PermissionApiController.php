@@ -22,7 +22,7 @@ final class PermissionApiController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => __('auth.unauthorized'),
@@ -33,7 +33,7 @@ final class PermissionApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ], 200);
     }
 }

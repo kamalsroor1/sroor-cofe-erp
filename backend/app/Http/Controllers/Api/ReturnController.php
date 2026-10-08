@@ -28,15 +28,15 @@ final class ReturnController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('returns.view') && !$user->can('returns.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.view') && ! $user->can('returns.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $type = (string)$request->input('type', 'all');
+        $search = trim((string) $request->input('search', ''));
+        $type = (string) $request->input('type', 'all');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 15)));
+        $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
@@ -46,7 +46,7 @@ final class ReturnController extends Controller
         $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item']);
 
         if ($storeId && $storeId !== 'all') {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', (int) $storeId);
         }
 
         if ($type !== 'all' && $type !== '') {
@@ -64,32 +64,32 @@ final class ReturnController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('return_number', 'like', "%{$search}%")
-                  ->orWhere('reason', 'like', "%{$search}%")
-                  ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
+                    ->orWhere('reason', 'like', "%{$search}%")
+                    ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
             });
         }
 
-        $totalReturnsValue = (float)(clone $query)->sum('total_amount');
-        $salesReturnsCount = (int)(clone $query)->where('return_type', 'sales_return')->count();
-        $purchaseReturnsCount = (int)(clone $query)->where('return_type', 'purchase_return')->count();
+        $totalReturnsValue = (float) (clone $query)->sum('total_amount');
+        $salesReturnsCount = (int) (clone $query)->where('return_type', 'sales_return')->count();
+        $purchaseReturnsCount = (int) (clone $query)->where('return_type', 'purchase_return')->count();
 
         $returns = $query->latest('return_date')->latest('id')->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'data'    => ReturnResource::collection($returns->items())->resolve(),
-            'meta'    => [
+            'data' => ReturnResource::collection($returns->items())->resolve(),
+            'meta' => [
                 'current_page' => $returns->currentPage(),
-                'last_page'    => $returns->lastPage(),
-                'per_page'     => $returns->perPage(),
-                'total'        => $returns->total(),
+                'last_page' => $returns->lastPage(),
+                'per_page' => $returns->perPage(),
+                'total' => $returns->total(),
             ],
             'summary' => [
-                'total_value'    => $totalReturnsValue,
-                'sales_count'    => $salesReturnsCount,
+                'total_value' => $totalReturnsValue,
+                'sales_count' => $salesReturnsCount,
                 'purchase_count' => $purchaseReturnsCount,
-                'total_count'    => $salesReturnsCount + $purchaseReturnsCount,
+                'total_count' => $salesReturnsCount + $purchaseReturnsCount,
             ],
         ], 200);
     }
@@ -100,7 +100,7 @@ final class ReturnController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('returns.view') && !$user->can('returns.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.view') && ! $user->can('returns.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -108,7 +108,7 @@ final class ReturnController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new ReturnResource($returnDoc))->resolve(),
+            'data' => (new ReturnResource($returnDoc))->resolve(),
         ], 200);
     }
 
@@ -122,13 +122,13 @@ final class ReturnController extends Controller
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $dto = ReturnDocumentDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
+        $dto = ReturnDocumentDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
         $returnDoc = $this->createReturnAction->execute($dto);
 
         return response()->json([
             'success' => true,
             'message' => __('returns.created_success', ['number' => $returnDoc->return_number]) ?: "تم تسجيل مستند المرتجع رقم {$returnDoc->return_number} بنجاح ✓",
-            'data'    => (new ReturnResource($returnDoc))->resolve(),
+            'data' => (new ReturnResource($returnDoc))->resolve(),
         ], 201);
     }
 
@@ -138,7 +138,7 @@ final class ReturnController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('returns.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

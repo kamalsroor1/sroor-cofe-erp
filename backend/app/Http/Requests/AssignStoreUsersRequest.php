@@ -16,7 +16,7 @@ class AssignStoreUsersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_ids'   => ['nullable', 'array'],
+            'user_ids' => ['nullable', 'array'],
             'user_ids.*' => ['exists:users,id'],
         ];
     }

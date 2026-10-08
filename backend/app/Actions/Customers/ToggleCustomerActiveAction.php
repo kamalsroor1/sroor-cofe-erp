@@ -13,7 +13,7 @@ final class ToggleCustomerActiveAction
      */
     public function execute(Customer $customer): Customer
     {
-        $customer->update(['is_active' => !$customer->is_active]);
+        $customer->update(['is_active' => ! $customer->is_active]);
 
         return $customer->fresh();
     }

@@ -1,10 +1,5 @@
 <template>
-  <component
-    v-if="resolvedIcon"
-    :is="resolvedIcon"
-    :class="iconClass"
-    :style="customStyle"
-  />
+  <component v-if="resolvedIcon" :is="resolvedIcon" :class="iconClass" :style="customStyle" />
   <span v-else :class="iconClass">{{ fallbackText }}</span>
 </template>
 
@@ -54,26 +49,26 @@ import {
   Lock,
   Calendar,
   AlertTriangle,
-  HelpCircle
+  HelpCircle,
 } from 'lucide-vue-next';
 
 const props = defineProps({
   name: {
     type: [String, Object, Function],
-    default: null
+    default: null,
   },
   class: {
     type: String,
-    default: 'w-4 h-4'
+    default: 'w-4 h-4',
   },
   customStyle: {
     type: Object,
-    default: () => ({})
+    default: () => ({}),
   },
   fallback: {
     type: [Object, Function],
-    default: () => Folder
-  }
+    default: () => Folder,
+  },
 });
 
 const emojiMap = {
@@ -122,42 +117,42 @@ const emojiMap = {
 };
 
 const stringNameMap = {
-  'coffee': Coffee,
-  'leaf': Leaf,
-  'sprout': Leaf,
-  'sparkles': Sparkles,
-  'zap': Zap,
-  'crown': Crown,
-  'flame': Flame,
-  'package': Package,
-  'boxes': Boxes,
-  'layers': Layers,
-  'star': Star,
-  'store': Store,
-  'banknote': Banknote,
+  coffee: Coffee,
+  leaf: Leaf,
+  sprout: Leaf,
+  sparkles: Sparkles,
+  zap: Zap,
+  crown: Crown,
+  flame: Flame,
+  package: Package,
+  boxes: Boxes,
+  layers: Layers,
+  star: Star,
+  store: Store,
+  banknote: Banknote,
   'credit-card': CreditCard,
-  'smartphone': Smartphone,
-  'building2': Building2,
-  'tag': Tag,
-  'tags': Tag,
+  smartphone: Smartphone,
+  building2: Building2,
+  tag: Tag,
+  tags: Tag,
   'shopping-bag': ShoppingBag,
   'shopping-cart': ShoppingCart,
-  'users': Users,
+  users: Users,
   'bar-chart3': BarChart3,
-  'sliders': Sliders,
-  'truck': Truck,
+  sliders: Sliders,
+  truck: Truck,
   'rotate-ccw': RotateCcw,
   'file-text': FileText,
-  'receipt': Receipt,
-  'trash2': Trash2,
+  receipt: Receipt,
+  trash2: Trash2,
   'shield-check': ShieldCheck,
-  'lock': Lock,
-  'scale': Scale,
-  'printer': Printer,
-  'search': Search,
-  'monitor': Monitor,
-  'server': Server,
-  'calendar': Calendar,
+  lock: Lock,
+  scale: Scale,
+  printer: Printer,
+  search: Search,
+  monitor: Monitor,
+  server: Server,
+  calendar: Calendar,
 };
 
 const resolvedIcon = computed(() => {

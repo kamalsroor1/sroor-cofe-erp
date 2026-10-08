@@ -10,9 +10,13 @@
       header-class="flex-col sm:flex-row"
     >
       <template #action>
-        <div class="flex items-center gap-2 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div
+          class="flex items-center gap-2 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800"
+        >
           <span>{{ $t('dashboard.weekly_total') }}:</span>
-          <span class="text-emerald-500 font-black">{{ formatMoney(period.sales || 0) }} {{ $t('common.currency') }}</span>
+          <span class="text-emerald-500 font-black"
+            >{{ formatMoney(period.sales || 0) }} {{ $t('common.currency') }}</span
+          >
         </div>
       </template>
       <SimpleBarChart
@@ -29,13 +33,24 @@
         bar-gap="0.5rem"
       >
         <template #footer>
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 font-bold">
+          <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 font-bold"
+          >
             <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-md bg-theme-primary shrink-0"></span>{{ $t('dashboard.current_day') }}</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-md bg-sky-500 shrink-0"></span>{{ $t('dashboard.previous_days') }}</span>
+              <span class="flex items-center gap-1.5"
+                ><span class="w-2.5 h-2.5 rounded-md bg-theme-primary shrink-0"></span
+                >{{ $t('dashboard.current_day') }}</span
+              >
+              <span class="flex items-center gap-1.5"
+                ><span class="w-2.5 h-2.5 rounded-md bg-sky-500 shrink-0"></span
+                >{{ $t('dashboard.previous_days') }}</span
+              >
             </div>
             <div class="font-mono text-slate-600 dark:text-slate-300">
-              {{ $t('dashboard.avg_basket') }}: <span class="font-black text-emerald-500">{{ formatMoney(period.basket_size || 0) }} {{ $t('common.currency') }}</span>
+              {{ $t('dashboard.avg_basket') }}:
+              <span class="font-black text-emerald-500"
+                >{{ formatMoney(period.basket_size || 0) }} {{ $t('common.currency') }}</span
+              >
             </div>
           </div>
         </template>
@@ -57,12 +72,19 @@
         :format-fn="formatMoney"
         :empty-message="$t('dashboard.no_payments')"
       />
-      <div v-if="activeShift" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs mt-2">
+      <div
+        v-if="activeShift"
+        class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs mt-2"
+      >
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span class="font-bold text-slate-700 dark:text-slate-300">{{ $t('dashboard.active_shift') }} (#{{ activeShift.shift_number }}):</span>
+          <span class="font-bold text-slate-700 dark:text-slate-300"
+            >{{ $t('dashboard.active_shift') }} (#{{ activeShift.shift_number }}):</span
+          >
         </div>
-        <div class="font-mono font-black text-emerald-500">{{ formatMoney(activeShift.current_cash || activeShift.starting_cash) }} {{ $t('common.currency') }}</div>
+        <div class="font-mono font-black text-emerald-500">
+          {{ formatMoney(activeShift.current_cash || activeShift.starting_cash) }} {{ $t('common.currency') }}
+        </div>
       </div>
     </DashboardSectionCard>
   </div>
@@ -81,6 +103,14 @@ defineProps({
   activeShift: { type: Object, default: null },
 });
 const isToday = (day) => day?.date === new Date().toISOString().split('T')[0];
-const getPaymentMethodIcon = (key) => ({ cash: Banknote, instapay: Zap, visa: CreditCard, e_wallet: Smartphone, bank_transfer: Building2 }[key] || Wallet);
-const getPaymentMethodColor = (key) => ({ cash: 'bg-emerald-500', instapay: 'bg-indigo-500', visa: 'bg-sky-500', e_wallet: 'bg-theme-primary', bank_transfer: 'bg-teal-500' }[key] || 'bg-emerald-500');
+const getPaymentMethodIcon = (key) =>
+  ({ cash: Banknote, instapay: Zap, visa: CreditCard, e_wallet: Smartphone, bank_transfer: Building2 })[key] || Wallet;
+const getPaymentMethodColor = (key) =>
+  ({
+    cash: 'bg-emerald-500',
+    instapay: 'bg-indigo-500',
+    visa: 'bg-sky-500',
+    e_wallet: 'bg-theme-primary',
+    bank_transfer: 'bg-teal-500',
+  })[key] || 'bg-emerald-500';
 </script>

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Stock Transfers (Between Warehouses, Branches, and Vans)
-        if (!Schema::hasTable('stock_transfers')) {
+        if (! Schema::hasTable('stock_transfers')) {
             Schema::create('stock_transfers', function (Blueprint $table) {
                 $table->id();
                 $table->string('transfer_number', 50)->unique()->index();
@@ -31,7 +31,7 @@ return new class extends Migration
         }
 
         // 2. Stock Transfer Items
-        if (!Schema::hasTable('stock_transfer_items')) {
+        if (! Schema::hasTable('stock_transfer_items')) {
             Schema::create('stock_transfer_items', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('stock_transfer_id')->index();

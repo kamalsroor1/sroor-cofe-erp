@@ -27,8 +27,8 @@ final class AdjustItemStockAction
             // Lock store stock record
             $storeStock = StoreStock::where('id', $storeStock->id)->lockForUpdate()->first();
 
-            $currentStoreQty = (string)$storeStock->quantity;
-            $adjustQty = (string)$dto->quantity;
+            $currentStoreQty = (string) $storeStock->quantity;
+            $adjustQty = (string) $dto->quantity;
 
             $isIn = in_array($dto->movement_type, ['stock_adjustment_in', 'stock_deposit_in'], true);
 
@@ -38,23 +38,23 @@ final class AdjustItemStockAction
                 $newStoreQty = bcsub($currentStoreQty, $adjustQty, 3);
             }
 
-            $prefix = 'ADJ-' . date('ymd');
+            $prefix = 'ADJ-'.date('ymd');
             $count = StockMovement::whereDate('created_at', now()->toDateString())->count() + 1;
-            $docNumber = $prefix . '-' . str_pad((string)$count, 4, '0', STR_PAD_LEFT);
+            $docNumber = $prefix.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
 
             $movement = StockMovement::create([
-                'item_id'         => $item->id,
-                'store_id'        => $dto->store_id,
-                'user_id'         => $userId,
-                'movement_type'   => $dto->movement_type,
-                'quantity'        => $adjustQty,
-                'stock_before'    => $currentStoreQty,
-                'stock_after'     => $newStoreQty,
-                'unit_cost'       => $dto->unit_cost ?: $item->cost_price,
-                'source_type'     => Item::class,
-                'source_id'       => $item->id,
+                'item_id' => $item->id,
+                'store_id' => $dto->store_id,
+                'user_id' => $userId,
+                'movement_type' => $dto->movement_type,
+                'quantity' => $adjustQty,
+                'stock_before' => $currentStoreQty,
+                'stock_after' => $newStoreQty,
+                'unit_cost' => $dto->unit_cost ?: $item->cost_price,
+                'source_type' => Item::class,
+                'source_id' => $item->id,
                 'document_number' => $docNumber,
-                'notes'           => $dto->notes,
+                'notes' => $dto->notes,
             ]);
 
             // Update StoreStock
@@ -63,7 +63,7 @@ final class AdjustItemStockAction
 
             // Recalculate total item current_stock
             $totalStock = StoreStock::where('item_id', $item->id)->sum('quantity');
-            $item->current_stock = (string)($totalStock ?: '0.000');
+            $item->current_stock = (string) ($totalStock ?: '0.000');
             $item->save();
 
             return $movement->load(['item', 'store', 'user']);

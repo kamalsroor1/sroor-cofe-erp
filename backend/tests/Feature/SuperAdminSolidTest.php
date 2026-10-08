@@ -2,38 +2,42 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
+use App\Actions\Plans\UpdatePlanAction;
+use App\Actions\Tenants\GetTenantsIndexDataAction;
+use App\Actions\Tenants\OverrideTenantFeatureAction;
+use App\Actions\Tenants\ToggleTenantStatusAction;
+use App\Models\Plan;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Tenant;
-use App\Models\Plan;
-use App\Models\PlanFeature;
-use App\Actions\Tenants\GetTenantsIndexDataAction;
-use App\Actions\Tenants\ProvisionTenantAction;
-use App\Actions\Tenants\ToggleTenantStatusAction;
-use App\Actions\Tenants\OverrideTenantFeatureAction;
-use App\Actions\Plans\UpdatePlanAction;
-use App\DTOs\CreateTenantDTO;
+use Illuminate\Support\Facades\Event;
 use Spatie\Permission\Models\Role;
+use Stancl\Tenancy\Events\CreatingDatabase;
+use Stancl\Tenancy\Events\DatabaseCreated;
+use Stancl\Tenancy\Events\DatabaseMigrated;
+use Stancl\Tenancy\Events\MigratingDatabase;
+use Stancl\Tenancy\Events\TenantCreated;
+use Tests\TestCase;
 
 class SuperAdminSolidTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $superAdmin;
+
     protected Plan $basicPlan;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        \Illuminate\Support\Facades\Event::fake([
-            \Stancl\Tenancy\Events\TenantCreated::class,
-            \Stancl\Tenancy\Events\CreatingDatabase::class,
-            \Stancl\Tenancy\Events\DatabaseCreated::class,
-            \Stancl\Tenancy\Events\MigratingDatabase::class,
-            \Stancl\Tenancy\Events\DatabaseMigrated::class,
+        Event::fake([
+            TenantCreated::class,
+            CreatingDatabase::class,
+            DatabaseCreated::class,
+            MigratingDatabase::class,
+            DatabaseMigrated::class,
         ]);
 
         $role = Role::firstOrCreate(['name' => 'admin']);
@@ -159,7 +163,7 @@ class SuperAdminSolidTest extends TestCase
 
         $this->basicPlan->refresh();
         $this->assertEquals('الباقة الأساسية بلس', $this->basicPlan->name);
-        $this->assertEquals(599.0, (float)$this->basicPlan->price_monthly);
+        $this->assertEquals(599.0, (float) $this->basicPlan->price_monthly);
         $this->assertTrue($this->basicPlan->is_popular);
         $this->assertTrue($this->basicPlan->features['blender.access']);
     }

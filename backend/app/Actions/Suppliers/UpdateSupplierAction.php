@@ -17,12 +17,12 @@ final class UpdateSupplierAction
     {
         return DB::transaction(function () use ($supplier, $dto) {
             $supplier->update([
-                'name'         => $dto->name,
+                'name' => $dto->name,
                 'company_name' => $dto->company_name,
-                'phone'        => $dto->phone,
-                'address'      => $dto->address,
-                'notes'        => $dto->notes,
-                'is_active'    => $dto->is_active,
+                'phone' => $dto->phone,
+                'address' => $dto->address,
+                'notes' => $dto->notes,
+                'is_active' => $dto->is_active,
             ]);
 
             return $supplier->fresh();

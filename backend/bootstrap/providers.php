@@ -1,9 +1,13 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use Laravel\Telescope\TelescopeServiceProvider;
+use Stancl\Tenancy\TenancyServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    Stancl\Tenancy\TenancyServiceProvider::class,
+    AppServiceProvider::class,
+    TenancyServiceProvider::class,
     App\Providers\TenancyServiceProvider::class,
-    Laravel\Telescope\TelescopeServiceProvider::class,
+    TelescopeServiceProvider::class,
     App\Providers\TelescopeServiceProvider::class,
 ];

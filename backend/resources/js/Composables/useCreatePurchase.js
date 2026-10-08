@@ -21,13 +21,11 @@ export function useCreatePurchase() {
         discount_amount: '0.000',
         payment_method: 'cash',
         notes: '',
-        items: [
-            { item_id: '', quantity: '1.000', cost_price: '0.000' }
-        ],
+        items: [{ item_id: '', quantity: '1.000', cost_price: '0.000' }],
     });
 
     const supplierOptions = computed(() => {
-        return suppliers.value.map(s => ({
+        return suppliers.value.map((s) => ({
             value: s.id,
             label: s.company_name ? `${s.name} (${s.company_name})` : s.name,
         }));
@@ -37,7 +35,7 @@ export function useCreatePurchase() {
         return form.items.reduce((sum, item) => {
             const q = parseFloat(item.quantity) || 0;
             const c = parseFloat(item.cost_price) || 0;
-            return sum + (q * c);
+            return sum + q * c;
         }, 0);
     });
 
@@ -57,7 +55,7 @@ export function useCreatePurchase() {
     };
 
     const onItemSelect = (line) => {
-        const item = availableItems.value.find(it => it.id === parseInt(line.item_id, 10));
+        const item = availableItems.value.find((it) => it.id === parseInt(line.item_id, 10));
         if (item) {
             line.cost_price = item.cost_price?.toString() || '0.000';
         }
@@ -78,7 +76,7 @@ export function useCreatePurchase() {
                 try {
                     const prefilled = JSON.parse(route.query.prefill);
                     if (Array.isArray(prefilled) && prefilled.length > 0) {
-                        form.items = prefilled.map(p => ({
+                        form.items = prefilled.map((p) => ({
                             item_id: p.item_id || p.id,
                             quantity: (p.quantity || p.suggested_reorder_qty || 10).toString(),
                             cost_price: (p.cost_price || 0).toString(),
@@ -99,7 +97,7 @@ export function useCreatePurchase() {
             return;
         }
 
-        const invalidLine = form.items.find(it => !it.item_id || parseFloat(it.quantity) <= 0);
+        const invalidLine = form.items.find((it) => !it.item_id || parseFloat(it.quantity) <= 0);
         if (invalidLine) {
             Swal.fire({ icon: 'warning', title: t('common.warning'), text: t('purchases.invalid_line_warning') });
             return;
@@ -109,7 +107,7 @@ export function useCreatePurchase() {
         try {
             const payload = {
                 ...form,
-                items: form.items.map(it => ({
+                items: form.items.map((it) => ({
                     item_id: parseInt(it.item_id, 10),
                     quantity: parseFloat(it.quantity),
                     unit_cost: parseFloat(it.cost_price),

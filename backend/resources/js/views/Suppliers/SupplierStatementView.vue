@@ -1,10 +1,7 @@
 <template>
   <div class="space-y-6 max-w-5xl mx-auto font-tajawal">
     <!-- Header & Print Action -->
-    <SupplierStatementHeader
-      :supplier-name="supplier?.name"
-      @print="printStatement"
-    />
+    <SupplierStatementHeader :supplier-name="supplier?.name" @print="printStatement" />
 
     <!-- Summary KPI Profile Cards -->
     <SupplierStatementSummaryCards
@@ -23,10 +20,7 @@
     />
 
     <!-- Ledger Table & Mobile Cards -->
-    <SupplierStatementTable
-      :ledger="ledger"
-      :loading="isLoading"
-    />
+    <SupplierStatementTable :ledger="ledger" :loading="isLoading" />
   </div>
 </template>
 

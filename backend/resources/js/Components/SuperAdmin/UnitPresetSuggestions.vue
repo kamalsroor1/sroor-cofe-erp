@@ -11,7 +11,11 @@
         @click="$emit('add-preset', preset)"
         :disabled="units.includes(preset)"
         class="px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-        :class="units.includes(preset) ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-500'"
+        :class="
+          units.includes(preset)
+            ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400'
+            : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-500'
+        "
       >
         + {{ preset }}
       </button>

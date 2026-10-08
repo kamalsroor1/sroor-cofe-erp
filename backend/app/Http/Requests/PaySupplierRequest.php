@@ -16,10 +16,10 @@ class PaySupplierRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount'         => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['required', 'string', 'in:cash,instapay,wallet,bank,visa,e_wallet,bank_transfer'],
-            'payment_date'   => ['required', 'date'],
-            'notes'          => ['nullable', 'string', 'max:500'],
+            'payment_date' => ['required', 'date'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

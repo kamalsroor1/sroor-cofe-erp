@@ -33,17 +33,17 @@ final class ExpenseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('expenses.manage') && !$user->can('expenses.view') && !$user->can('daily_journal.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('expenses.view') && ! $user->can('daily_journal.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $search = trim((string)$request->input('search', ''));
-        $category = (string)$request->input('category', 'all');
-        $costCenter = (string)$request->input('cost_center', 'all');
-        $paymentMethod = (string)$request->input('payment_method', 'all');
+        $search = trim((string) $request->input('search', ''));
+        $category = (string) $request->input('category', 'all');
+        $costCenter = (string) $request->input('cost_center', 'all');
+        $paymentMethod = (string) $request->input('payment_method', 'all');
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $perPage = max(1, min(200, (int)$request->input('per_page', 20)));
+        $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
@@ -53,15 +53,15 @@ final class ExpenseController extends Controller
         $query = Expense::with(['user', 'store']);
 
         if ($storeId) {
-            $query->where('store_id', (int)$storeId);
+            $query->where('store_id', (int) $storeId);
         }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('expense_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%");
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%");
             });
         }
 
@@ -88,22 +88,22 @@ final class ExpenseController extends Controller
         $expenses = $query->latest('expense_date')->latest('id')->paginate($perPage);
 
         $summary = $this->getExpensesSummaryAction->execute(
-            $storeId ? (int)$storeId : null,
-            $fromDate ? (string)$fromDate : null,
-            $toDate ? (string)$toDate : null
+            $storeId ? (int) $storeId : null,
+            $fromDate ? (string) $fromDate : null,
+            $toDate ? (string) $toDate : null
         );
 
         $costCentersList = [
             'operational' => 'مصاريف تشغيلية ونثريات',
-            'rent'        => 'إيجارات مقرات وفروع',
-            'utilities'   => 'كهرباء ومياه وغاز ومرافق',
-            'salaries'    => 'رواتب وعمالة وإكراميات',
-            'vehicles'    => 'وقود وزيوت وصيانة سيارات',
+            'rent' => 'إيجارات مقرات وفروع',
+            'utilities' => 'كهرباء ومياه وغاز ومرافق',
+            'salaries' => 'رواتب وعمالة وإكراميات',
+            'vehicles' => 'وقود وزيوت وصيانة سيارات',
             'maintenance' => 'صيانة معدات وديكورات',
-            'packaging'   => 'مطبوعات وكراتين وتعبئة',
+            'packaging' => 'مطبوعات وكراتين وتعبئة',
             'hospitality' => 'ضيافة ونظافة وبوفيه',
-            'marketing'   => 'تسويق وإعلانات ودعاية',
-            'shipping'    => 'شحن ونولون وتوصيل خارجي',
+            'marketing' => 'تسويق وإعلانات ودعاية',
+            'shipping' => 'شحن ونولون وتوصيل خارجي',
         ];
 
         $quickCategories = [
@@ -117,16 +117,16 @@ final class ExpenseController extends Controller
         ];
 
         return response()->json([
-            'success'          => true,
-            'data'             => ExpenseResource::collection($expenses->items())->resolve(),
-            'meta'             => [
+            'success' => true,
+            'data' => ExpenseResource::collection($expenses->items())->resolve(),
+            'meta' => [
                 'current_page' => $expenses->currentPage(),
-                'last_page'    => $expenses->lastPage(),
-                'per_page'     => $expenses->perPage(),
-                'total'        => $expenses->total(),
+                'last_page' => $expenses->lastPage(),
+                'per_page' => $expenses->perPage(),
+                'total' => $expenses->total(),
             ],
-            'summary'          => $summary,
-            'cost_centers'     => $costCentersList,
+            'summary' => $summary,
+            'cost_centers' => $costCentersList,
             'quick_categories' => $quickCategories,
         ], 200);
     }
@@ -141,15 +141,15 @@ final class ExpenseController extends Controller
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $dto = ExpenseDTO::fromArray($request->validated(), $storeId ? (int)$storeId : null);
-        $userId = (int)auth()->id();
+        $dto = ExpenseDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
+        $userId = (int) auth()->id();
 
         $expense = $this->createExpenseAction->execute($dto, $userId);
 
         return response()->json([
             'success' => true,
             'message' => __('expenses.recorded_success') ?: "تم تسجيل المصروف رقم {$expense->expense_number} بنجاح",
-            'data'    => (new ExpenseResource($expense))->resolve(),
+            'data' => (new ExpenseResource($expense))->resolve(),
         ], 201);
     }
 
@@ -159,7 +159,7 @@ final class ExpenseController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('expenses.manage') && !$user->can('expenses.view') && !$user->can('daily_journal.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('expenses.view') && ! $user->can('daily_journal.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -167,7 +167,7 @@ final class ExpenseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => (new ExpenseResource($expense))->resolve(),
+            'data' => (new ExpenseResource($expense))->resolve(),
         ], 200);
     }
 
@@ -184,7 +184,7 @@ final class ExpenseController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('expenses.updated_success') ?: "تم تعديل المصروف [{$updated->title}] بنجاح",
-            'data'    => (new ExpenseResource($updated))->resolve(),
+            'data' => (new ExpenseResource($updated))->resolve(),
         ], 200);
     }
 
@@ -194,7 +194,7 @@ final class ExpenseController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->hasRole('admin') && !$user->can('expenses.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

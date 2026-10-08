@@ -27,24 +27,24 @@ return new class extends Migration
 
         // 2. Add columns to purchases table
         Schema::table('purchases', function (Blueprint $table) {
-            if (!Schema::hasColumn('purchases', 'additional_expenses_total')) {
+            if (! Schema::hasColumn('purchases', 'additional_expenses_total')) {
                 $table->decimal('additional_expenses_total', 12, 3)->default(0.000)->after('discount_amount');
             }
         });
 
         // 3. Add columns to purchase_items table
         Schema::table('purchase_items', function (Blueprint $table) {
-            if (!Schema::hasColumn('purchase_items', 'base_cost_price')) {
+            if (! Schema::hasColumn('purchase_items', 'base_cost_price')) {
                 $table->decimal('base_cost_price', 12, 3)->nullable()->after('quantity');
             }
-            if (!Schema::hasColumn('purchase_items', 'allocated_expense')) {
+            if (! Schema::hasColumn('purchase_items', 'allocated_expense')) {
                 $table->decimal('allocated_expense', 12, 3)->default(0.000)->after('base_cost_price');
             }
         });
 
         // 4. Add columns to invoices table
         Schema::table('invoices', function (Blueprint $table) {
-            if (!Schema::hasColumn('invoices', 'shipping_cost')) {
+            if (! Schema::hasColumn('invoices', 'shipping_cost')) {
                 $table->decimal('shipping_cost', 12, 3)->default(0.000)->after('discount_amount');
             }
         });

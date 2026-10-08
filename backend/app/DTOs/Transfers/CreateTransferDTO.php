@@ -18,12 +18,12 @@ final class CreateTransferDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            from_store_id: (int)$data['from_store_id'],
-            to_store_id: (int)$data['to_store_id'],
-            items: (array)($data['items'] ?? []),
-            transfer_date: (string)($data['transfer_date'] ?? now()->toDateString()),
-            status: (string)($data['status'] ?? 'confirmed'),
-            notes: isset($data['notes']) && $data['notes'] !== '' ? (string)$data['notes'] : null,
+            from_store_id: (int) $data['from_store_id'],
+            to_store_id: (int) $data['to_store_id'],
+            items: (array) ($data['items'] ?? []),
+            transfer_date: (string) ($data['transfer_date'] ?? now()->toDateString()),
+            status: (string) ($data['status'] ?? 'confirmed'),
+            notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
         );
     }
 
@@ -31,11 +31,11 @@ final class CreateTransferDTO
     {
         return [
             'from_store_id' => $this->from_store_id,
-            'to_store_id'   => $this->to_store_id,
-            'items'         => $this->items,
+            'to_store_id' => $this->to_store_id,
+            'items' => $this->items,
             'transfer_date' => $this->transfer_date,
-            'status'        => $this->status,
-            'notes'         => $this->notes,
+            'status' => $this->status,
+            'notes' => $this->notes,
         ];
     }
 }

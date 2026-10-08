@@ -9,8 +9,8 @@ export const customerService = {
      */
     async quickCreate(data) {
         const response = await axios.post('/pos/customers', data, {
-            headers: { 'Accept': 'application/json' }
+            headers: { Accept: 'application/json' },
         });
         return response.data;
-    }
+    },
 };
