@@ -14,7 +14,8 @@ class SettingsStore {
             autoOpenDrawerOnCash: true,
             kioskMode: false,
             windowBounds: { width: 1400, height: 900, isMaximized: true },
-            theme: 'dark'
+            theme: 'dark',
+            supportWhatsapp: '',
         };
         this.settings = null;
     }

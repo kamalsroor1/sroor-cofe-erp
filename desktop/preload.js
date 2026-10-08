@@ -21,7 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 🖨️ Hardware: Direct Thermal Printing & Cash Drawer
     getPrinters: () => ipcRenderer.invoke('hardware:get-printers'),
     printThermal: (data) => ipcRenderer.invoke('hardware:print-thermal', data),
-    printPdf: (pdfUrl) => ipcRenderer.invoke('hardware:print-pdf', pdfUrl),
     kickDrawer: (printerName) => ipcRenderer.invoke('hardware:kick-drawer', printerName),
 
     // 📶 Network & Latency Ping
@@ -37,7 +36,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 🚀 Native In-App Auto-Updater
     updater: {
-        downloadAndInstall: (data) => ipcRenderer.invoke('updater:download-and-install', data),
+        downloadAndInstall: () => ipcRenderer.invoke('updater:download-and-install'),
         onProgress: (callback) => {
             const listener = (event, progress) => callback(progress);
             ipcRenderer.on('updater:progress', listener);
@@ -52,6 +51,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
             const listener = (event, err) => callback(err);
             ipcRenderer.on('updater:error', listener);
             return () => ipcRenderer.removeListener('updater:error', listener);
-        }
-    }
+        },
+    },
 });

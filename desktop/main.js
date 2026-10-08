@@ -7,6 +7,10 @@ const printerManager = require('./src/hardware/printerManager');
 const cashDrawer = require('./src/hardware/cashDrawer');
 const { createApplicationMenu } = require('./src/menu/appMenu');
 const { downloadAndApplyUpdate } = require('./src/updater/nativeUpdater');
+const urlPolicy = require('./src/security/urlPolicy');
+const { sanitizeSettings } = require('./src/security/settingsSanitizer');
+
+const urlPolicyOptions = { allowDev: !app.isPackaged && process.argv.includes('--dev') };
 
 let mainWindow = null;
 let splashWindow = null;
@@ -23,23 +27,9 @@ if (process.defaultApp) {
     app.setAsDefaultProtocolClient('sroor');
 }
 
-function parseTenantFromDeepLink(urlStr) {
-    try {
-        if (!urlStr || typeof urlStr !== 'string') return null;
-        if (!urlStr.startsWith('sroor://')) return null;
-
-        const parsed = new URL(urlStr);
-        const tenant = parsed.searchParams.get('tenant') || parsed.searchParams.get('code');
-        return tenant ? tenant.trim().toLowerCase() : null;
-    } catch (e) {
-        console.error('[Electron] Error parsing deep link URL:', e);
-        return null;
-    }
-}
-
 function applyDeepLinkTenant(tenantCode) {
-    if (!tenantCode) return;
-    const serverUrl = `https://${tenantCode}.baraa-solutions.com`;
+    const serverUrl = urlPolicy.buildTenantOrigin(tenantCode);
+    if (!serverUrl) return;
     console.log(`[Electron] Applying deep link workspace: ${tenantCode} -> ${serverUrl}`);
     settingsStore.set('tenantId', tenantCode);
     settingsStore.set('serverUrl', serverUrl);
@@ -55,7 +45,7 @@ function extractDeepLinkFromArgs(argv) {
     if (!Array.isArray(argv)) return null;
     for (const arg of argv) {
         if (arg && typeof arg === 'string' && arg.startsWith('sroor://')) {
-            return parseTenantFromDeepLink(arg);
+            return urlPolicy.parseDeepLink(arg);
         }
     }
     return null;
@@ -63,25 +53,54 @@ function extractDeepLinkFromArgs(argv) {
 
 function getTargetAppUrl() {
     const coldTenant = extractDeepLinkFromArgs(process.argv);
-    if (coldTenant) {
-        const serverUrl = `https://${coldTenant}.baraa-solutions.com`;
+    const coldOrigin = coldTenant ? urlPolicy.buildTenantOrigin(coldTenant) : null;
+    if (coldOrigin) {
         settingsStore.set('tenantId', coldTenant);
-        settingsStore.set('serverUrl', serverUrl);
-        return `${serverUrl}/login`;
+        settingsStore.set('serverUrl', coldOrigin);
+        return `${coldOrigin}/login`;
     }
 
-    const savedUrl = settingsStore.get('serverUrl');
-    const savedTenant = settingsStore.get('tenantId');
+    const rawUrl = settingsStore.get('serverUrl');
+    const rawTenant = settingsStore.get('tenantId');
+    const savedUrl = rawUrl ? urlPolicy.sanitizeServerUrl(rawUrl, urlPolicyOptions) : null;
+    const savedTenant = rawTenant ? urlPolicy.normalizeTenantSlug(rawTenant) : null;
 
-    if (savedUrl && savedUrl.trim() && savedUrl !== 'https://baraa-solutions.com') {
+    // Self-heal a poisoned config: anything outside the origin policy is wiped.
+    if ((rawUrl && !savedUrl) || (rawTenant && !savedTenant)) {
+        console.warn('[Electron] Saved server settings failed the URL policy; resetting.');
+        settingsStore.set('serverUrl', '');
+        settingsStore.set('tenantId', '');
+        return urlPolicy.CONNECT_URL;
+    }
+
+    if (savedUrl && savedUrl !== urlPolicy.CENTRAL_ORIGIN) {
         return savedUrl;
     }
 
-    if (savedTenant && savedTenant.trim()) {
-        return `https://${savedTenant.trim()}.baraa-solutions.com/login`;
+    const tenantOrigin = savedTenant ? urlPolicy.buildTenantOrigin(savedTenant) : null;
+    if (tenantOrigin) {
+        return `${tenantOrigin}/login`;
     }
 
-    return 'https://baraa-solutions.com/connect';
+    return urlPolicy.CONNECT_URL;
+}
+
+function escapeHtml(value) {
+    return String(value).replace(
+        /[&<>"']/g,
+        (ch) =>
+            ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[ch]
+    );
+}
+
+function getSafeServerOrigin() {
+    return urlPolicy.getSafeServerOrigin(settingsStore.get('serverUrl'), urlPolicyOptions);
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -116,8 +135,9 @@ function createSplashWindow() {
         icon: path.join(__dirname, 'build', 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true
-        }
+            contextIsolation: true,
+            sandbox: true,
+        },
     });
 
     splashWindow.loadFile(path.join(__dirname, 'src', 'splash.html'));
@@ -149,9 +169,10 @@ function createMainWindow() {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
+            sandbox: true,
             spellcheck: false,
-            webSecurity: true
-        }
+            webSecurity: true,
+        },
     });
 
     if (savedBounds.isMaximized) {
@@ -192,38 +213,37 @@ function createMainWindow() {
             {
                 label: 'نقطة البيع السريعة (POS)',
                 click: () => {
-                    const url = settingsStore.get('serverUrl') || 'https://2m.baraa-solutions.com';
-                    mainWindow.loadURL(`${url}/pos`);
-                }
+                    mainWindow.loadURL(`${getSafeServerOrigin()}/pos`);
+                },
             },
             {
                 label: 'فتح درج النقدية (F12)',
                 click: async () => {
                     const defaultPrinter = settingsStore.get('thermalPrinterName');
                     await cashDrawer.kickDrawer(defaultPrinter);
-                }
+                },
             },
             { type: 'separator' },
             {
                 label: 'إعادة تحميل وتحديث الكاش الفوري (Hard Reload)',
                 accelerator: 'CmdOrCtrl+Shift+R',
-                click: () => mainWindow.webContents.reloadIgnoringCache()
+                click: () => mainWindow.webContents.reloadIgnoringCache(),
             },
             {
                 label: 'إعادة تحميل الصفحة (Reload)',
                 accelerator: 'CmdOrCtrl+R',
-                click: () => mainWindow.webContents.reload()
+                click: () => mainWindow.webContents.reload(),
             },
             {
                 label: 'الشاشة الكاملة (Fullscreen)',
                 accelerator: 'F11',
-                click: () => mainWindow.setFullScreen(!mainWindow.isFullScreen())
+                click: () => mainWindow.setFullScreen(!mainWindow.isFullScreen()),
             },
             { type: 'separator' },
             {
                 label: 'أدوات المطورين (DevTools)',
-                click: () => mainWindow.webContents.toggleDevTools()
-            }
+                click: () => mainWindow.webContents.toggleDevTools(),
+            },
         ]);
         contextMenu.popup();
     });
@@ -233,11 +253,6 @@ function createMainWindow() {
 
     // Setup System Tray
     createSystemTray();
-
-    // Prevent drag-and-drop navigation
-    mainWindow.webContents.on('will-navigate', (event) => {
-        // Allow internal navigation
-    });
 
     // Target URL (Remote cloud tenant or universal workspace connect)
     const targetUrl = getTargetAppUrl();
@@ -262,6 +277,8 @@ function createMainWindow() {
 
     // Handle connection failures with clean retry page
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        // -3 = ERR_ABORTED: produced by our own navigation guard; keep the current page.
+        if (errorCode === -3) return;
         console.error('[Electron] Failed to load:', errorCode, errorDescription);
         const retryHtml = `
             <!DOCTYPE html>
@@ -309,7 +326,7 @@ function createMainWindow() {
                 <div class="card">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">📡</div>
                     <h1>تعذر الاتصال بالخادم</h1>
-                    <p>يرجى التأكد من اتصال الإنترنت أو صحة رابط الخادم: <br><b style="color:#38bdf8;">${targetUrl}</b></p>
+                    <p>يرجى التأكد من اتصال الإنترنت أو صحة رابط الخادم: <br><b style="color:#38bdf8;">${escapeHtml(targetUrl)}</b></p>
                     <button class="btn" onclick="window.location.reload()">🔄 إعادة المحاولة</button>
                 </div>
             </body>
@@ -340,31 +357,30 @@ function createSystemTray() {
                         mainWindow.show();
                         mainWindow.focus();
                     }
-                }
+                },
             },
             {
                 label: 'نقطة البيع (POS)',
                 click: () => {
                     if (mainWindow) {
-                        const url = settingsStore.get('serverUrl') || 'https://2m.baraa-solutions.com';
-                        mainWindow.loadURL(`${url}/pos`);
+                        mainWindow.loadURL(`${getSafeServerOrigin()}/pos`);
                         mainWindow.show();
                         mainWindow.focus();
                     }
-                }
+                },
             },
             {
                 label: 'فتح درج النقدية',
                 click: async () => {
                     const defaultPrinter = settingsStore.get('thermalPrinterName');
                     await cashDrawer.kickDrawer(defaultPrinter);
-                }
+                },
             },
             { type: 'separator' },
             {
                 label: 'إغلاق التطبيق نهائياً',
-                click: () => app.quit()
-            }
+                click: () => app.quit(),
+            },
         ]);
 
         appTray.setContextMenu(contextMenu);
@@ -384,12 +400,31 @@ function createSystemTray() {
 // 📡 IPC HANDLERS (Hardware, Display, Window Controls, Network Ping)
 // ══════════════════════════════════════════════════════════════════════════
 
+// Only the top frame of the main window, on an allowed app origin, may call IPC.
+function isTrustedSender(event) {
+    if (!mainWindow || mainWindow.isDestroyed()) return false;
+    if (!event || event.sender !== mainWindow.webContents) return false;
+    const frame = event.senderFrame;
+    if (!frame || frame !== event.sender.mainFrame) return false;
+    return urlPolicy.isAllowedAppUrl(frame.url, urlPolicyOptions);
+}
+
+function handleTrusted(channel, fn) {
+    ipcMain.handle(channel, (event, ...args) => {
+        if (!isTrustedSender(event)) {
+            console.warn('[Electron] Rejected IPC from untrusted sender on', channel);
+            return Promise.reject(new Error('Untrusted IPC sender'));
+        }
+        return fn(event, ...args);
+    });
+}
+
 // 1. Window Controls for Custom Frameless Titlebar
-ipcMain.handle('window:minimize', () => {
+handleTrusted('window:minimize', () => {
     if (mainWindow) mainWindow.minimize();
 });
 
-ipcMain.handle('window:maximize', () => {
+handleTrusted('window:maximize', () => {
     if (mainWindow) {
         if (mainWindow.isMaximized()) {
             mainWindow.unmaximize();
@@ -402,15 +437,15 @@ ipcMain.handle('window:maximize', () => {
     return false;
 });
 
-ipcMain.handle('window:is-maximized', () => {
+handleTrusted('window:is-maximized', () => {
     return mainWindow ? mainWindow.isMaximized() : false;
 });
 
-ipcMain.handle('window:close', () => {
+handleTrusted('window:close', () => {
     if (mainWindow) mainWindow.close();
 });
 
-ipcMain.handle('window:toggle-fullscreen', () => {
+handleTrusted('window:toggle-fullscreen', () => {
     if (mainWindow) {
         const nextState = !mainWindow.isFullScreen();
         mainWindow.setFullScreen(nextState);
@@ -419,7 +454,7 @@ ipcMain.handle('window:toggle-fullscreen', () => {
     return false;
 });
 
-ipcMain.handle('window:toggle-kiosk', () => {
+handleTrusted('window:toggle-kiosk', () => {
     if (mainWindow) {
         const nextKiosk = !mainWindow.isKiosk();
         mainWindow.setKiosk(nextKiosk);
@@ -429,20 +464,20 @@ ipcMain.handle('window:toggle-kiosk', () => {
     return false;
 });
 
-ipcMain.handle('window:reload', () => {
+handleTrusted('window:reload', () => {
     if (mainWindow) mainWindow.webContents.reload();
 });
 
-ipcMain.handle('window:hard-reload', () => {
+handleTrusted('window:hard-reload', () => {
     if (mainWindow) mainWindow.webContents.reloadIgnoringCache();
 });
 
-ipcMain.handle('window:clear-cache', async () => {
+handleTrusted('window:clear-cache', async () => {
     if (mainWindow) {
         try {
             await mainWindow.webContents.session.clearCache();
             await mainWindow.webContents.session.clearStorageData({
-                storages: ['cachestorage', 'serviceworkers']
+                storages: ['cachestorage', 'serviceworkers'],
             });
             mainWindow.webContents.reloadIgnoringCache();
             return true;
@@ -454,38 +489,51 @@ ipcMain.handle('window:clear-cache', async () => {
 });
 
 // 2. Hardware: Printers
-ipcMain.handle('hardware:get-printers', async () => {
+handleTrusted('hardware:get-printers', async () => {
     return await printerManager.getPrinters(mainWindow);
 });
 
-ipcMain.handle('hardware:print-thermal', async (event, data) => {
-    const { html, printerName, paperWidth, copies } = data;
-    const targetPrinter = printerName || settingsStore.get('thermalPrinterName');
-    const targetWidth = paperWidth || settingsStore.get('paperWidth') || '80mm';
+const MAX_PRINT_HTML_LENGTH = 1024 * 1024;
+const MAX_PRINT_COPIES = 5;
+
+handleTrusted('hardware:print-thermal', async (event, data) => {
+    if (
+        !data ||
+        typeof data !== 'object' ||
+        Array.isArray(data) ||
+        typeof data.html !== 'string' ||
+        data.html.length > MAX_PRINT_HTML_LENGTH
+    ) {
+        return { success: false, error: 'invalid_print_job' };
+    }
+    const { html, printerName, paperWidth } = data;
+    const requestedCopies = Math.trunc(Number(data.copies));
+    const copies = Number.isFinite(requestedCopies) ? Math.min(MAX_PRINT_COPIES, Math.max(1, requestedCopies)) : 1;
+    const targetPrinter = (typeof printerName === 'string' && printerName) || settingsStore.get('thermalPrinterName');
+    const targetWidth = (typeof paperWidth === 'string' && paperWidth) || settingsStore.get('paperWidth') || '80mm';
     return await printerManager.printThermalSilent(html, {
         printerName: targetPrinter,
         paperWidth: targetWidth,
-        copies: copies || 1
+        copies,
     });
 });
 
 // 3. Hardware: Cash Drawer Kick
-ipcMain.handle('hardware:kick-drawer', async (event, printerName) => {
+handleTrusted('hardware:kick-drawer', async (event, printerName) => {
     const targetPrinter = printerName || settingsStore.get('thermalPrinterName');
     return await cashDrawer.kickDrawer(targetPrinter);
 });
 
 // 4. Network Ping (Latency Check)
-ipcMain.handle('network:ping', async () => {
+handleTrusted('network:ping', async () => {
     const startTime = Date.now();
-    const serverUrl = settingsStore.get('serverUrl') || 'https://2m.baraa-solutions.com';
+    const serverUrl = getSafeServerOrigin();
+    const client = serverUrl.startsWith('http:') ? http : https;
     return new Promise((resolve) => {
         try {
-            const urlObj = new URL(serverUrl);
-            const client = urlObj.protocol === 'https:' ? https : http;
             const req = client.get(`${serverUrl}/api/v1/ping`, { timeout: 3000 }, (res) => {
-                const latency = Date.now() - startTime;
-                resolve({ online: true, latency: latency });
+                res.resume();
+                resolve({ online: true, latency: Date.now() - startTime });
             });
             req.on('error', () => {
                 resolve({ online: false, latency: 0 });
@@ -494,56 +542,101 @@ ipcMain.handle('network:ping', async () => {
                 req.destroy();
                 resolve({ online: false, latency: 0 });
             });
-        } catch (e) {
+        } catch {
             resolve({ online: false, latency: 0 });
         }
     });
 });
 
 // 5. Configuration
-ipcMain.handle('config:get-settings', () => {
+handleTrusted('config:get-settings', () => {
     return settingsStore.loadSettings();
 });
 
-ipcMain.handle('config:save-settings', (event, newSettings) => {
+handleTrusted('config:save-settings', (event, newSettings) => {
+    const sanitized = sanitizeSettings(newSettings, urlPolicyOptions);
+    if (!sanitized.ok) {
+        console.warn('[Electron] Rejected invalid settings from renderer.');
+        return { success: false, error: 'invalid_settings' };
+    }
+    const safeSettings = sanitized.settings;
     const oldUrl = settingsStore.get('serverUrl');
-    const res = settingsStore.saveSettings(newSettings);
-    if (newSettings.serverUrl && newSettings.serverUrl !== oldUrl) {
-        if (mainWindow) {
-            const dest = (newSettings.serverUrl.endsWith('/login') || newSettings.serverUrl.includes('/connect') || newSettings.serverUrl.includes('/workspace'))
-                ? newSettings.serverUrl
-                : `${newSettings.serverUrl}/login`;
-            mainWindow.loadURL(dest);
-        }
+    const res = settingsStore.saveSettings(safeSettings);
+    const safeUrl = safeSettings.serverUrl;
+    if (res.success && safeUrl && safeUrl !== oldUrl && mainWindow) {
+        const keepPath = new URL(safeUrl).pathname !== '/';
+        mainWindow.loadURL(keepPath ? safeUrl : `${safeUrl}/login`);
     }
     return res;
 });
 
 // 6. App Info
-ipcMain.handle('app:get-version', () => {
+handleTrusted('app:get-version', () => {
     return app.getVersion();
 });
 
-ipcMain.handle('app:get-system-info', () => {
+handleTrusted('app:get-system-info', () => {
     return {
         version: app.getVersion(),
         electronVersion: process.versions.electron,
         chromeVersion: process.versions.chrome,
         nodeVersion: process.versions.node,
         platform: process.platform,
-        arch: process.arch
+        arch: process.arch,
     };
 });
 
 // 7. In-App Native Electron OTA Auto-Updater
-ipcMain.handle('updater:download-and-install', async (event, data) => {
-    const downloadUrl = data?.downloadUrl || data?.download_url || 'https://2m.baraa-solutions.com/Sroor-ERP-POS-Setup.exe';
-    return await downloadAndApplyUpdate(downloadUrl, mainWindow);
+// Renderer arguments are ignored: the manifest (URL + SHA-256) is fetched by the main process.
+handleTrusted('updater:download-and-install', async () => {
+    return await downloadAndApplyUpdate(mainWindow);
 });
 
 // ══════════════════════════════════════════════════════════════════════════
 // 🚀 APP LIFECYCLE
 // ══════════════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════════
+// 🛡️ NAVIGATION / POPUP / WEBVIEW LOCKDOWN (applies to every webContents)
+// ══════════════════════════════════════════════════════════════════════════
+app.on('web-contents-created', (_event, contents) => {
+    const blockForeignNavigation = (event, url) => {
+        if (!urlPolicy.isAllowedAppUrl(url, urlPolicyOptions)) {
+            console.warn('[Electron] Blocked navigation to disallowed URL:', url);
+            event.preventDefault();
+        }
+    };
+    contents.on('will-navigate', blockForeignNavigation);
+    contents.on('will-redirect', blockForeignNavigation);
+    contents.on('will-attach-webview', (event) => event.preventDefault());
+
+    contents.setWindowOpenHandler(({ url }) => {
+        if (urlPolicy.isAllowedAppUrl(url, urlPolicyOptions)) {
+            // Same-origin popups (invoice print). No preload bridge in popups.
+            return {
+                action: 'allow',
+                overrideBrowserWindowOptions: {
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        preload: undefined,
+                        sandbox: true,
+                        contextIsolation: true,
+                        nodeIntegration: false,
+                    },
+                },
+            };
+        }
+        try {
+            const { protocol } = new URL(url);
+            if (protocol === 'https:' || protocol === 'http:') {
+                shell.openExternal(url);
+            }
+        } catch {
+            // Unparseable URL: deny silently.
+        }
+        return { action: 'deny' };
+    });
+});
 
 app.whenReady().then(() => {
     createSplashWindow();

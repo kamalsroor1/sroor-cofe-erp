@@ -8,12 +8,12 @@ class PrinterManager {
         try {
             if (!mainWindow || !mainWindow.webContents) return [];
             const printers = await mainWindow.webContents.getPrintersAsync();
-            return printers.map(p => ({
+            return printers.map((p) => ({
                 name: p.name,
                 displayName: p.displayName || p.name,
                 description: p.description || '',
                 isDefault: p.isDefault,
-                status: p.status
+                status: p.status,
             }));
         } catch (error) {
             console.error('[PrinterManager] Error getting printers:', error);
@@ -39,8 +39,9 @@ class PrinterManager {
                 height: 800,
                 webPreferences: {
                     nodeIntegration: false,
-                    contextIsolation: true
-                }
+                    contextIsolation: true,
+                    sandbox: true,
+                },
             });
 
             // Wrap receipt with optimal thermal CSS
@@ -96,7 +97,7 @@ class PrinterManager {
                     silent: true,
                     printBackground: true,
                     copies: copies,
-                    margins: { marginType: 'none' }
+                    margins: { marginType: 'none' },
                 };
 
                 if (printerName && printerName.trim() !== '') {

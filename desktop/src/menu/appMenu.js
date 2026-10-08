@@ -1,25 +1,44 @@
 const { Menu, app, shell } = require('electron');
 const settingsStore = require('../config/settingsStore');
+const urlPolicy = require('../security/urlPolicy');
+const supportContact = require('../config/supportContact');
+
+function getSafeServerOrigin() {
+    const allowDev = !app.isPackaged && process.argv.includes('--dev');
+    return urlPolicy.getSafeServerOrigin(settingsStore.get('serverUrl'), { allowDev });
+}
+
+function getSupportWhatsappUrl() {
+    return supportContact.getSupportWhatsappUrl(
+        process.env.SROOR_SUPPORT_WHATSAPP,
+        settingsStore.get('supportWhatsapp')
+    );
+}
 
 function createApplicationMenu(mainWindow) {
+    const supportWhatsappUrl = getSupportWhatsappUrl();
     const isMac = process.platform === 'darwin';
 
     const template = [
         // { role: 'appMenu' } on Mac
-        ...(isMac ? [{
-            label: 'ERP & POS',
-            submenu: [
-                { role: 'about', label: 'حول المنظومة' },
-                { type: 'separator' },
-                { role: 'services', label: 'الخدمات' },
-                { type: 'separator' },
-                { role: 'hide', label: 'إخفاء' },
-                { role: 'hideOthers', label: 'إخفاء الآخرين' },
-                { role: 'unhide', label: 'إظهار الكل' },
-                { type: 'separator' },
-                { role: 'quit', label: 'إنهاء التطبيق' }
-            ]
-        }] : []),
+        ...(isMac
+            ? [
+                  {
+                      label: 'ERP & POS',
+                      submenu: [
+                          { role: 'about', label: 'حول المنظومة' },
+                          { type: 'separator' },
+                          { role: 'services', label: 'الخدمات' },
+                          { type: 'separator' },
+                          { role: 'hide', label: 'إخفاء' },
+                          { role: 'hideOthers', label: 'إخفاء الآخرين' },
+                          { role: 'unhide', label: 'إظهار الكل' },
+                          { type: 'separator' },
+                          { role: 'quit', label: 'إنهاء التطبيق' },
+                      ],
+                  },
+              ]
+            : []),
 
         // File Menu
         {
@@ -28,23 +47,22 @@ function createApplicationMenu(mainWindow) {
                 {
                     label: 'إعادة تحميل الصفحة (Reload)',
                     accelerator: 'CmdOrCtrl+R',
-                    click: () => mainWindow.webContents.reload()
+                    click: () => mainWindow.webContents.reload(),
                 },
                 {
                     label: 'العودة للرئيسية (Home)',
                     accelerator: 'CmdOrCtrl+H',
                     click: () => {
-                        const url = settingsStore.get('serverUrl') || 'https://2m.baraa-solutions.com';
-                        mainWindow.loadURL(url);
-                    }
+                        mainWindow.loadURL(getSafeServerOrigin());
+                    },
                 },
                 { type: 'separator' },
                 {
                     label: 'إغلاق التطبيق (Exit)',
                     accelerator: isMac ? 'Cmd+Q' : 'Alt+F4',
-                    click: () => app.quit()
-                }
-            ]
+                    click: () => app.quit(),
+                },
+            ],
         },
 
         // POS & Fast Actions
@@ -55,9 +73,8 @@ function createApplicationMenu(mainWindow) {
                     label: 'نقطة البيع السريعة (POS)',
                     accelerator: 'F2',
                     click: () => {
-                        const url = settingsStore.get('serverUrl') || 'https://2m.baraa-solutions.com';
-                        mainWindow.loadURL(`${url}/pos`);
-                    }
+                        mainWindow.loadURL(`${getSafeServerOrigin()}/pos`);
+                    },
                 },
                 {
                     label: 'فتح درج النقدية يدويًا (Open Drawer)',
@@ -66,9 +83,9 @@ function createApplicationMenu(mainWindow) {
                         const cashDrawer = require('../hardware/cashDrawer');
                         const defaultPrinter = settingsStore.get('thermalPrinterName');
                         await cashDrawer.kickDrawer(defaultPrinter);
-                    }
-                }
-            ]
+                    },
+                },
+            ],
         },
 
         // View Menu
@@ -80,7 +97,7 @@ function createApplicationMenu(mainWindow) {
                     accelerator: 'F11',
                     click: () => {
                         mainWindow.setFullScreen(!mainWindow.isFullScreen());
-                    }
+                    },
                 },
                 {
                     label: 'وضع الكاشير المحكم (Kiosk Mode)',
@@ -89,7 +106,7 @@ function createApplicationMenu(mainWindow) {
                         const currentKiosk = mainWindow.isKiosk();
                         mainWindow.setKiosk(!currentKiosk);
                         settingsStore.set('kioskMode', !currentKiosk);
-                    }
+                    },
                 },
                 { type: 'separator' },
                 { role: 'resetZoom', label: 'الحجم الطبيعي' },
@@ -99,9 +116,9 @@ function createApplicationMenu(mainWindow) {
                 {
                     label: 'أدوات المطورين (DevTools)',
                     accelerator: 'Ctrl+Shift+I',
-                    click: () => mainWindow.webContents.toggleDevTools()
-                }
-            ]
+                    click: () => mainWindow.webContents.toggleDevTools(),
+                },
+            ],
         },
 
         // Help Menu
@@ -112,16 +129,19 @@ function createApplicationMenu(mainWindow) {
                     label: 'موقع المنظومة',
                     click: async () => {
                         await shell.openExternal('https://baraa-solutions.com');
-                    }
+                    },
                 },
                 {
                     label: 'الدعم الفني والواتساب',
+                    visible: Boolean(supportWhatsappUrl),
                     click: async () => {
-                        await shell.openExternal('https://wa.me/201012316954');
-                    }
-                }
-            ]
-        }
+                        if (supportWhatsappUrl) {
+                            await shell.openExternal(supportWhatsappUrl);
+                        }
+                    },
+                },
+            ],
+        },
     ];
 
     const menu = Menu.buildFromTemplate(template);
