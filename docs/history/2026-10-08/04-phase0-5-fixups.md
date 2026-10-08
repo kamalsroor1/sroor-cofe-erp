@@ -102,3 +102,8 @@
 * **ديون قديمة اتلاحظت:** float في عرض الـ POS (`POSCartTable`، `POSCheckoutPanel`، `addToCart`)، `fmod((float))`/`number_format((float))` وعربي hardcoded في `InvoiceService`، قفل الأصناف بترتيب الطلب مش بالـ id (خطر deadlock)، `store_id` في طلبات POS متحقق بـ `exists` بس، `items.*.quantity` بـ `numeric` (‏`1e3` ← 500)، `InvoiceResource` لسه بيرجع الفلوس float، `updateInvoice` مش بيطبّق عقد الـ split، مفيش throttle على تحميل الـ APK، `decimal.js` بيقبل exponent بلا حد، receipt الطباعة الـ desktop من غير escaping (أثر محدود). `PosView.vue` (949 سطر) و`LoginView.vue` (407) لسه أكبر من اللازم.
 * **إجراءات المالك (ماتغيرتش من Phase 0):** تدوير الأسرار، `deploy.yml:49` (فيه token قديم، (redacted)) لازم يبعت POST موقّع وإلا الـ auto-deploy هيفشل بـ 405، تنضيف `76f32ce0`، وTrustProxies على السيرفر عشان الـ rate limiters متبقاش bucket واحد، وexpiry لـ Sanctum في الإنتاج، والـ seeders بتطبع باسوردات مولّدة فلازم تبعد عن logs الـ CI.
 * `phpstan.neon` و`phpstan-baseline.neon` لسه untracked.
+
+## تصحيح 2026-10-09
+* بند **ESLint** في القسم 3 (`backend 0 أخطاء`) مش دقيق: تشغيل ESLint على كل `backend/resources/js` في الـ HEAD وقتها كان بيطلع **91 خطأ**. الأرجح إن الرقم المذكور كان على الملفات المتغيرة بس.
+* بعد `eb645d5c` (اللي خلّى الـ CI يعمل lint للـ frontend كله)، `npx eslint resources/js` على HEAD بتاريخ 2026-10-09 بيطلع 0 أخطاء و11 تحذير.
+* باقي السجل ماتعدلش؛ التصحيح ده بس.
