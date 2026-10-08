@@ -1,1 +1,0 @@
-import{ct as e}from"./app-Dd19T0VB.js";var t=e(`arrow-right`,[[`path`,{d:`M5 12h14`,key:`1ays0h`}],[`path`,{d:`m12 5 7 7-7 7`,key:`xquz4c`}]]);export{t};

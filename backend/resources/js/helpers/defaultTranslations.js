@@ -88,7 +88,28 @@ export const defaultArabicTranslations = {
         "checking_updates": "جاري الفحص...",
         "up_to_date_title": "التطبيق محدث بالكامل 🚀",
         "up_to_date_desc": "أنت تستخدم أحدث إصدار متوفر حالياً (v:version)",
-        "file_not_available": "ملف التحديث غير متوفر حالياً على السيرفر."
+        "file_not_available": "ملف التحديث غير متوفر حالياً على السيرفر.",
+        "installer_opened_title": "تم التحقق من التحديث وفتح شاشة التثبيت",
+        "installer_opened_desc": "اضغط «تثبيت» في رسالة النظام لإكمال التحديث، وسيُعاد فتح التطبيق بالإصدار الجديد.",
+        "open_installer_again": "فتح شاشة التثبيت مرة أخرى",
+        "new_version": "الإصدار الجديد v:version",
+        "downloaded_of": "تم تنزيل :done من :total ميجابايت",
+        "retry_update": "إعادة المحاولة",
+        "web_auto_updated": "أنت تستخدم نسخة الويب (v:version) وهي تتحدث تلقائيًا من السيرفر، والتحديثات اليدوية خاصة بتطبيق الموبايل وبرنامج الكمبيوتر.",
+        "check_failed": "تعذر الاتصال بسيرفر التحديثات، تأكد من اتصالك بالإنترنت وحاول مرة أخرى.",
+        "error_checksum_mismatch": "تم رفض التثبيت: ملف التحديث لا يطابق البصمة المنشورة (SHA-256). قد يكون الملف تالفًا أو معدّلًا، أعد المحاولة.",
+        "error_signature_mismatch": "تم رفض التثبيت: ملف التحديث غير موقّع بنفس شهادة التطبيق المثبّت.",
+        "error_package_mismatch": "تم رفض التثبيت: ملف التحديث يخص تطبيقًا آخر.",
+        "error_install_permission": "اسمح للتطبيق بتثبيت التحديثات من شاشة الإعدادات التي فُتحت، ثم ارجع واضغط «إعادة المحاولة».",
+        "error_install_failed": "تعذر فتح شاشة التثبيت، حاول مرة أخرى.",
+        "error_download_failed": "تعذر تنزيل ملف التحديث، تأكد من اتصالك بالإنترنت وحاول مرة أخرى.",
+        "error_missing_checksum": "لا يمكن تثبيت هذا التحديث لأن بصمة التحقق (SHA-256) غير منشورة له. تواصل مع الدعم الفني.",
+        "error_missing_url": "رابط تنزيل التحديث غير متاح حاليًا. تواصل مع الدعم الفني.",
+        "error_updater_unavailable": "التحديث داخل التطبيق غير متاح في هذا الإصدار. نزّل أحدث نسخة يدويًا.",
+        "stage_downloading": "جاري تنزيل التحديث...",
+        "stage_verifying": "جاري التحقق من سلامة الملف وتوقيعه...",
+        "stage_installer_opened": "تم فتح شاشة التثبيت",
+        "stage_error": "فشل التحديث"
     },
     "auth": {
         "failed": "بيانات الاعتماد المدخلة غير صحيحة.",
@@ -175,7 +196,120 @@ export const defaultArabicTranslations = {
         "activity_web_login": "تسجيل دخول ناجح للمستخدم [:name] برقم (:phone)",
         "activity_web_login_failed": "محاولة تسجيل دخول غير ناجحة برقم [:phone]",
         "cannot_disable_own_account": "لا يمكنك تعطيل حسابك الشخصي الحالي",
-        "user_status_updated": "تم تحديث حالة نشاط الحساب بنجاح"
+        "user_status_updated": "تم تحديث حالة نشاط الحساب بنجاح",
+        "biometric_prompt_enable_title": "أكّد بصمتك لتفعيل الدخول السريع",
+        "biometric_prompt_login_reason": "أكّد هويتك لتسجيل الدخول",
+        "biometric_prompt_login_title": "تسجيل الدخول بالبصمة",
+        "biometric_prompt_login_subtitle": "امسح بصمتك للمتابعة",
+        "biometric_prompt_cancel": "إلغاء",
+        "biometric_enabled_success": "تم تفعيل الدخول بالبصمة على هذا الجهاز",
+        "biometric_disabled": "تم إيقاف الدخول بالبصمة ومسح بياناته من هذا الجهاز"
+    },
+    "billing": {
+        "subscription_status": {
+            "trialing": "فترة تجريبية",
+            "active": "نشط",
+            "past_due": "متأخر السداد",
+            "pending_payment": "في انتظار الدفع",
+            "cancelled": "ملغي",
+            "expired": "منتهي"
+        },
+        "subscription_addon_status": {
+            "active": "نشطة",
+            "pending_payment": "في انتظار الدفع",
+            "cancelled": "ملغاة",
+            "expired": "منتهية"
+        },
+        "billing_cycle": {
+            "monthly": "شهري",
+            "yearly": "سنوي",
+            "biennial": "كل سنتين"
+        },
+        "addon_type": {
+            "recurring": "إضافة متكررة",
+            "service": "خدمة"
+        },
+        "billing_invoice_status": {
+            "draft": "مسودة",
+            "pending": "في انتظار الدفع",
+            "paid": "مدفوعة",
+            "void": "ملغاة",
+            "refunded": "مستردة"
+        },
+        "billing_invoice_type": {
+            "plan": "اشتراك جديد",
+            "renewal": "تجديد",
+            "upgrade": "ترقية الباقة",
+            "addon": "إضافة",
+            "service": "خدمة"
+        },
+        "billing_payment_status": {
+            "pending": "قيد المراجعة",
+            "verified": "تم التحقق",
+            "rejected": "مرفوض",
+            "failed": "فشل",
+            "refunded": "مسترد"
+        },
+        "billing_payment_method": {
+            "instapay": "إنستاباي",
+            "vodafone_cash": "فودافون كاش",
+            "bank_transfer": "تحويل بنكي",
+            "cash": "نقدًا",
+            "paymob_card": "بطاقة بنكية (Paymob)",
+            "paymob_wallet": "محفظة إلكترونية (Paymob)",
+            "fawry_reference": "كود فوري"
+        },
+        "billing_gateway": {
+            "manual": "مراجعة يدوية",
+            "paymob": "Paymob",
+            "fawry": "فوري"
+        },
+        "addon_pricing": {
+            "cycle_not_sellable": "دورة الفوترة «:cycle» غير متاحة للشراء.",
+            "yearly_price_missing": "لا يوجد سعر سنوي محدد للإضافة :addon.",
+            "invalid_quantity": "كمية الإضافة غير صحيحة (:quantity)، ويجب ألا تقل عن 1.",
+            "invalid_price_tiers": "شرائح أسعار الكمية للإضافة :addon غير صحيحة.",
+            "invalid_price": "السعر المسجل للإضافة :addon غير صحيح."
+        },
+        "sequence": {
+            "transaction_required": "لا يمكن إصدار رقم فاتورة اشتراك إلا داخل معاملة قاعدة بيانات.",
+            "invalid_key": "تسلسل ترقيم الفواتير غير صحيح.",
+            "invalid_configuration": "إعداد ترقيم الفواتير :key غير صحيح."
+        },
+        "founder_pricing": {
+            "transaction_required": "لا يمكن حجز مقعد سعر المؤسسين إلا داخل معاملة قاعدة بيانات.",
+            "payment_not_verified": "لا يمكن حجز مقعد سعر المؤسسين إلا لدفعة تم التحقق منها.",
+            "payment_tenant_mismatch": "الدفعة لا تخص حساب هذا الاشتراك.",
+            "cycle_not_sellable": "دورة الفوترة «:cycle» غير متاحة للشراء.",
+            "invalid_configuration": "إعداد سعر المؤسسين :key غير صحيح."
+        }
+    },
+    "central_audit": {
+        "immutable": "سجل مراجعة المنصة للإضافة فقط، ولا يمكن تعديل أو حذف أي قيد فيه.",
+        "events": {
+            "login_succeeded": "دخول مشغّل",
+            "login_failed": "محاولة دخول مشغّل فاشلة",
+            "logout": "خروج مشغّل",
+            "two_factor_enabled": "تفعيل التحقق بخطوتين",
+            "two_factor_disabled": "إيقاف التحقق بخطوتين",
+            "password_changed": "تغيير كلمة سر المشغّل",
+            "central_user_created": "إنشاء حساب مشغّل",
+            "central_user_updated": "تعديل حساب مشغّل",
+            "central_user_deactivated": "تعطيل حساب مشغّل",
+            "central_user_deleted": "حذف حساب مشغّل",
+            "impersonation_started": "بدء جلسة دعم",
+            "impersonation_exchanged": "فتح جلسة الدعم داخل المحل",
+            "impersonation_ended": "إنهاء جلسة دعم",
+            "impersonation_destructive_used": "تنفيذ عملية مقيدة أثناء جلسة دعم",
+            "tenant_created": "إنشاء محل",
+            "tenant_updated": "تعديل محل",
+            "tenant_suspended": "إيقاف محل",
+            "tenant_reactivated": "إعادة تفعيل محل",
+            "tenant_trial_extended": "تمديد الفترة التجريبية لمحل",
+            "tenant_deleted": "حذف محل",
+            "subscription_activated": "تفعيل اشتراك",
+            "plan_updated": "تعديل باقة"
+        }
     },
     "common": {
         "app_name": "نظام إدارة المبيعات والمخزون والحسابات",
@@ -292,6 +426,16 @@ export const defaultArabicTranslations = {
         "store_access_denied": "غير مصرح لك بالوصول لبيانات هذا الفرع",
         "platform_name": "منظومة ERP السحابية",
         "default_company_subtitle": "لإدارة المبيعات والمخزون والفروع"
+    },
+    "connectivity": {
+        "offline_title": "لا يوجد اتصال بالإنترنت",
+        "server_unreachable_title": "تعذّر الوصول إلى الخادم",
+        "offline_desc": "البيع وحفظ البيانات متوقفان مؤقتًا لحين عودة الاتصال.",
+        "retry": "إعادة المحاولة",
+        "checking": "جارٍ التحقق...",
+        "checkout_blocked": "لا يمكن إتمام البيع بدون اتصال",
+        "checkout_blocked_desc": "انتظر حتى يعود الاتصال ثم أكمل الفاتورة. السلة محفوظة على هذا الجهاز.",
+        "network_error": "تعذّر الاتصال بالخادم. تأكد من الإنترنت وحاول مرة أخرى."
     },
     "console": {
         "populate_realistic_data": {
@@ -1570,7 +1714,10 @@ export const defaultArabicTranslations = {
         "bank_transfer": "تحويل بنكي",
         "partial_amount_invalid": "المبلغ المدفوع لازم يكون أكبر من صفر وأقل من صافي الفاتورة",
         "split_total_mismatch": "مجموع طرق الدفع لا يساوي صافي الفاتورة",
-        "cash_received_placeholder": "المدفوع نقداً..."
+        "cash_received_placeholder": "المدفوع نقداً...",
+        "pos_settings_saved": "تم حفظ إعدادات نقطة البيع للفرع",
+        "scale_barcode_invalid_check_digit": "باركود الميزان غير صحيح (رقم التحقق لا يطابق). أعد طباعة الملصق أو امسحه مرة أخرى",
+        "store_not_found": "الفرع غير موجود"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -2197,7 +2344,51 @@ export const defaultArabicTranslations = {
         "drawer_signal_sent": "تم إرسال نبضة فتح درج النقدية",
         "desktop_badge": "تطبيق ديسكتوب",
         "app_up_to_date": "أحدث إصدار",
-        "you_are_using_latest_version": "أنت تستخدم أحدث إصدار بالفعل"
+        "you_are_using_latest_version": "أنت تستخدم أحدث إصدار بالفعل",
+        "currency": "العملة",
+        "timezone": "المنطقة الزمنية",
+        "default_locale": "اللغة الافتراضية",
+        "number_digits": "شكل الأرقام",
+        "attr_telegram_bot_token": "توكن البوت",
+        "attr_telegram_chat_id": "معرف المحادثة",
+        "telegram_connection_failed": "تعذر الاتصال بخدمة تيليجرام. راجع التوكن ومعرف المحادثة والاتصال بالإنترنت.",
+        "commercial_register": "السجل التجاري",
+        "tax_registration_no": "رقم التسجيل الضريبي"
+    },
+    "subscription": {
+        "statuses": {
+            "trial": "فترة تجريبية",
+            "active": "نشط",
+            "past_due": "متأخر السداد",
+            "read_only": "للعرض فقط",
+            "suspended": "موقوف",
+            "cancelled": "ملغي",
+            "archived": "مؤرشف"
+        },
+        "actors": {
+            "system": "النظام",
+            "super_admin": "إدارة المنصة",
+            "billing": "الفوترة"
+        },
+        "access_levels": {
+            "full": "وصول كامل",
+            "read_only": "عرض وتصدير فقط",
+            "blocked": "الوصول موقوف"
+        },
+        "state_messages": {
+            "trial": "أنت في الفترة التجريبية. الأيام المتبقية: :days",
+            "active": "اشتراكك نشط.",
+            "past_due": "انتهت مدة اشتراكك. جدّد الاشتراك قبل تحويل الحساب للعرض فقط. الأيام المتبقية: :days",
+            "read_only": "الحساب للعرض فقط: تقدر تشوف بياناتك وتصدّرها، لكن مش هتقدر تضيف أو تعدّل. جدّد الاشتراك قبل إيقاف الحساب. الأيام المتبقية: :days",
+            "suspended": "تم إيقاف الحساب. تواصل مع إدارة المنصة أو جدّد الاشتراك لإعادة التفعيل.",
+            "cancelled": "تم إلغاء الاشتراك. تواصل مع إدارة المنصة لإعادة التفعيل.",
+            "archived": "تمت أرشفة الحساب. تواصل مع إدارة المنصة."
+        },
+        "trial_extension": {
+            "already_used": "تم تمديد الفترة التجريبية لهذا الحساب من قبل، والتمديد مسموح مرة واحدة فقط.",
+            "already_paid": "لا يمكن تمديد الفترة التجريبية لحساب سبق له الدفع.",
+            "not_eligible": "لا يمكن تمديد الفترة التجريبية في حالة الحساب الحالية."
+        }
     },
     "super": {
         "platform_title": "منصة مخزني SaaS Super Admin",
@@ -3057,7 +3248,28 @@ export const defaultEnglishTranslations = {
         "checking_updates": "Checking...",
         "up_to_date_title": "App is fully up to date 🚀",
         "up_to_date_desc": "You are already running the latest release (v:version)",
-        "file_not_available": "The update file is not currently available on the server."
+        "file_not_available": "The update file is not currently available on the server.",
+        "installer_opened_title": "Update verified, installer opened",
+        "installer_opened_desc": "Tap Install in the system prompt to finish. The app will reopen on the new version.",
+        "open_installer_again": "Open installer again",
+        "new_version": "New version v:version",
+        "downloaded_of": ":done of :total MB downloaded",
+        "retry_update": "Try again",
+        "web_auto_updated": "You are using the web version (v:version), which updates automatically from the server. Manual updates are for the mobile and desktop apps.",
+        "check_failed": "Could not reach the update server. Check your internet connection and try again.",
+        "error_checksum_mismatch": "Install refused: the update file does not match the published SHA-256 checksum. It may be corrupted or tampered with. Please try again.",
+        "error_signature_mismatch": "Install refused: the update is not signed with the same certificate as the installed app.",
+        "error_package_mismatch": "Install refused: the update file belongs to a different app.",
+        "error_install_permission": "Allow this app to install updates in the settings screen that just opened, then come back and tap Try again.",
+        "error_install_failed": "Could not open the installer. Please try again.",
+        "error_download_failed": "Could not download the update. Check your internet connection and try again.",
+        "error_missing_checksum": "This update cannot be installed because no SHA-256 checksum was published for it. Please contact support.",
+        "error_missing_url": "The update download link is not available right now. Please contact support.",
+        "error_updater_unavailable": "In-app update is not available in this version. Please download the latest version manually.",
+        "stage_downloading": "Downloading update...",
+        "stage_verifying": "Verifying file integrity and signature...",
+        "stage_installer_opened": "Installer opened",
+        "stage_error": "Update failed"
     },
     "auth": {
         "failed": "These credentials do not match our records.",
@@ -3144,7 +3356,120 @@ export const defaultEnglishTranslations = {
         "activity_web_login": "Successful sign-in for user [:name] with phone (:phone)",
         "activity_web_login_failed": "Failed sign-in attempt with phone [:phone]",
         "cannot_disable_own_account": "You cannot disable your own account",
-        "user_status_updated": "Account status updated successfully"
+        "user_status_updated": "Account status updated successfully",
+        "biometric_prompt_enable_title": "Confirm your fingerprint to enable quick sign-in",
+        "biometric_prompt_login_reason": "Confirm your identity to sign in",
+        "biometric_prompt_login_title": "Sign in with fingerprint",
+        "biometric_prompt_login_subtitle": "Scan your fingerprint to continue",
+        "biometric_prompt_cancel": "Cancel",
+        "biometric_enabled_success": "Fingerprint sign-in is enabled on this device",
+        "biometric_disabled": "Fingerprint sign-in is off and its data was removed from this device"
+    },
+    "billing": {
+        "subscription_status": {
+            "trialing": "Trial",
+            "active": "Active",
+            "past_due": "Past due",
+            "pending_payment": "Pending payment",
+            "cancelled": "Cancelled",
+            "expired": "Expired"
+        },
+        "subscription_addon_status": {
+            "active": "Active",
+            "pending_payment": "Pending payment",
+            "cancelled": "Cancelled",
+            "expired": "Expired"
+        },
+        "billing_cycle": {
+            "monthly": "Monthly",
+            "yearly": "Yearly",
+            "biennial": "Every two years"
+        },
+        "addon_type": {
+            "recurring": "Recurring add-on",
+            "service": "Service"
+        },
+        "billing_invoice_status": {
+            "draft": "Draft",
+            "pending": "Awaiting payment",
+            "paid": "Paid",
+            "void": "Void",
+            "refunded": "Refunded"
+        },
+        "billing_invoice_type": {
+            "plan": "New subscription",
+            "renewal": "Renewal",
+            "upgrade": "Plan upgrade",
+            "addon": "Add-on",
+            "service": "Service"
+        },
+        "billing_payment_status": {
+            "pending": "Under review",
+            "verified": "Verified",
+            "rejected": "Rejected",
+            "failed": "Failed",
+            "refunded": "Refunded"
+        },
+        "billing_payment_method": {
+            "instapay": "InstaPay",
+            "vodafone_cash": "Vodafone Cash",
+            "bank_transfer": "Bank transfer",
+            "cash": "Cash",
+            "paymob_card": "Card (Paymob)",
+            "paymob_wallet": "Mobile wallet (Paymob)",
+            "fawry_reference": "Fawry reference code"
+        },
+        "billing_gateway": {
+            "manual": "Manual review",
+            "paymob": "Paymob",
+            "fawry": "Fawry"
+        },
+        "addon_pricing": {
+            "cycle_not_sellable": "The :cycle billing cycle is not available for purchase.",
+            "yearly_price_missing": "No yearly price is set for add-on :addon.",
+            "invalid_quantity": "Invalid add-on quantity (:quantity). It must be at least 1.",
+            "invalid_price_tiers": "The volume price tiers of add-on :addon are invalid.",
+            "invalid_price": "The stored price of add-on :addon is invalid."
+        },
+        "sequence": {
+            "transaction_required": "A billing number can only be issued inside a database transaction.",
+            "invalid_key": "Invalid billing number sequence.",
+            "invalid_configuration": "The billing numbering setting :key is invalid."
+        },
+        "founder_pricing": {
+            "transaction_required": "A founder pricing slot can only be claimed inside a database transaction.",
+            "payment_not_verified": "A founder pricing slot can only be claimed for a verified payment.",
+            "payment_tenant_mismatch": "The payment does not belong to the subscription account.",
+            "cycle_not_sellable": "The :cycle billing cycle is not available for purchase.",
+            "invalid_configuration": "The founder pricing setting :key is invalid."
+        }
+    },
+    "central_audit": {
+        "immutable": "The platform audit log is append-only. Entries cannot be changed or deleted.",
+        "events": {
+            "login_succeeded": "Operator signed in",
+            "login_failed": "Failed operator sign-in",
+            "logout": "Operator signed out",
+            "two_factor_enabled": "Two-factor authentication enabled",
+            "two_factor_disabled": "Two-factor authentication disabled",
+            "password_changed": "Operator password changed",
+            "central_user_created": "Operator account created",
+            "central_user_updated": "Operator account updated",
+            "central_user_deactivated": "Operator account deactivated",
+            "central_user_deleted": "Operator account deleted",
+            "impersonation_started": "Support session started",
+            "impersonation_exchanged": "Support session opened in the shop",
+            "impersonation_ended": "Support session ended",
+            "impersonation_destructive_used": "Restricted action used during a support session",
+            "tenant_created": "Shop created",
+            "tenant_updated": "Shop updated",
+            "tenant_suspended": "Shop suspended",
+            "tenant_reactivated": "Shop reactivated",
+            "tenant_trial_extended": "Shop trial extended",
+            "tenant_deleted": "Shop deleted",
+            "subscription_activated": "Subscription activated",
+            "plan_updated": "Plan updated"
+        }
     },
     "common": {
         "app_name": "Sales, Inventory & Accounting ERP System",
@@ -3261,6 +3586,16 @@ export const defaultEnglishTranslations = {
         "store_access_denied": "You are not allowed to access this store's data",
         "platform_name": "Cloud ERP platform",
         "default_company_subtitle": "Sales, inventory and branch management"
+    },
+    "connectivity": {
+        "offline_title": "You are offline",
+        "server_unreachable_title": "Can't reach the server",
+        "offline_desc": "Sales and saving are paused until the connection is back.",
+        "retry": "Retry",
+        "checking": "Checking...",
+        "checkout_blocked": "Can't complete a sale while offline",
+        "checkout_blocked_desc": "Wait for the connection to return, then finish the invoice. The cart is kept on this device.",
+        "network_error": "Couldn't reach the server. Check your connection and try again."
     },
     "console": {
         "populate_realistic_data": {
@@ -4539,7 +4874,10 @@ export const defaultEnglishTranslations = {
         "bank_transfer": "Bank Transfer",
         "partial_amount_invalid": "Paid amount must be greater than zero and less than the invoice net",
         "split_total_mismatch": "Payment methods total does not equal the invoice net",
-        "cash_received_placeholder": "Cash received..."
+        "cash_received_placeholder": "Cash received...",
+        "pos_settings_saved": "Branch POS settings saved",
+        "scale_barcode_invalid_check_digit": "Invalid scale barcode (check digit mismatch). Reprint the label or scan it again",
+        "store_not_found": "Branch not found"
     },
     "profile": {
         "title": "User Profile & Account Settings",
@@ -5166,7 +5504,51 @@ export const defaultEnglishTranslations = {
         "drawer_signal_sent": "Cash drawer kick signal sent",
         "desktop_badge": "Desktop App",
         "app_up_to_date": "Latest Version",
-        "you_are_using_latest_version": "You are already using the latest version"
+        "you_are_using_latest_version": "You are already using the latest version",
+        "currency": "Currency",
+        "timezone": "Time zone",
+        "default_locale": "Default language",
+        "number_digits": "Number digits",
+        "attr_telegram_bot_token": "bot token",
+        "attr_telegram_chat_id": "chat ID",
+        "telegram_connection_failed": "Could not reach Telegram. Check the bot token, the chat ID and the internet connection.",
+        "commercial_register": "Commercial register",
+        "tax_registration_no": "Tax registration number"
+    },
+    "subscription": {
+        "statuses": {
+            "trial": "Trial",
+            "active": "Active",
+            "past_due": "Past due",
+            "read_only": "Read-only",
+            "suspended": "Suspended",
+            "cancelled": "Cancelled",
+            "archived": "Archived"
+        },
+        "actors": {
+            "system": "System",
+            "super_admin": "Platform admin",
+            "billing": "Billing"
+        },
+        "access_levels": {
+            "full": "Full access",
+            "read_only": "View and export only",
+            "blocked": "Access suspended"
+        },
+        "state_messages": {
+            "trial": "You are on a free trial. Days left: :days",
+            "active": "Your subscription is active.",
+            "past_due": "Your subscription period has ended. Renew before the account becomes read-only. Days left: :days",
+            "read_only": "Your account is read-only: you can view and export your data but cannot add or change anything. Renew before the account is suspended. Days left: :days",
+            "suspended": "Your account is suspended. Contact the platform team or renew your subscription to reactivate it.",
+            "cancelled": "Your subscription is cancelled. Contact the platform team to reactivate it.",
+            "archived": "Your account is archived. Contact the platform team."
+        },
+        "trial_extension": {
+            "already_used": "This account's trial was already extended. The extension can be used only once.",
+            "already_paid": "The trial cannot be extended for an account that has already paid.",
+            "not_eligible": "The trial cannot be extended in the account's current status."
+        }
     },
     "super": {
         "platform_title": "Makhzani SaaS Super Admin",
@@ -5856,7 +6238,67 @@ export const defaultEnglishTranslations = {
                 "rule-name": "custom-message"
             }
         },
-        "attributes": []
+        "attributes": {
+            "name": "name",
+            "email": "email",
+            "password": "password",
+            "password_confirmation": "password confirmation",
+            "role": "role",
+            "phone": "phone number",
+            "address": "address",
+            "tax_number": "tax number",
+            "company_name": "company name",
+            "notes": "notes",
+            "is_active": "active status",
+            "code": "item code",
+            "category": "category",
+            "unit": "unit",
+            "cost_price": "cost price",
+            "selling_price": "selling price",
+            "min_stock_level": "minimum stock level",
+            "current_stock": "current stock",
+            "opening_balance": "opening balance",
+            "quantity": "quantity",
+            "unit_price": "unit price",
+            "custom_selling_price": "custom selling price",
+            "min_stock": "minimum stock",
+            "customer_id": "customer",
+            "supplier_id": "supplier",
+            "store_id": "branch \/ warehouse",
+            "from_store_id": "source branch",
+            "to_store_id": "destination branch",
+            "invoice_date": "invoice date",
+            "purchase_date": "purchase date",
+            "transfer_date": "transfer date",
+            "return_date": "return date",
+            "expense_date": "expense date",
+            "payment_date": "payment date",
+            "payment_type": "payment type",
+            "payment_method": "payment method",
+            "paid_amount": "paid amount",
+            "discount_type": "discount type",
+            "discount_value": "discount value",
+            "discount_amount": "discount amount",
+            "supplier_invoice_ref": "supplier invoice number",
+            "reason": "reason",
+            "type": "type",
+            "amount": "amount",
+            "items": "items",
+            "items.*.item_id": "item",
+            "items.*.quantity": "item quantity",
+            "items.*.unit_price": "item unit price",
+            "items.*.cost_price": "item cost price",
+            "items.*.discount_amount": "line discount",
+            "transfer_items": "transfer items",
+            "transfer_items.*.item_id": "transferred item",
+            "transfer_items.*.quantity": "transferred quantity",
+            "opening_cash_balance": "opening drawer cash",
+            "actual_cash_balance": "counted drawer cash",
+            "target_weight_grams": "target weight (grams)",
+            "blend_name": "blend name",
+            "cardamom_grams": "cardamom (grams)",
+            "mastic_grams": "mastic (grams)"
+        }
     },
     "_json": {
         "Dashboard": "Dashboard",
