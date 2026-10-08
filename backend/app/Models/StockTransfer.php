@@ -7,7 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $transfer_number
+ * @property int $from_store_id
+ * @property int $to_store_id
+ * @property int $user_id
+ * @property Carbon|null $transfer_date
+ * @property string $status
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class StockTransfer extends Model
 {
     use HasFactory, SoftDeletes;
@@ -26,21 +40,33 @@ class StockTransfer extends Model
         'transfer_date' => 'date',
     ];
 
+    /**
+     * @return BelongsTo<Store, $this>
+     */
     public function fromStore(): BelongsTo
     {
         return $this->belongsTo(Store::class, 'from_store_id')->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<Store, $this>
+     */
     public function toStore(): BelongsTo
     {
         return $this->belongsTo(Store::class, 'to_store_id')->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    /**
+     * @return HasMany<StockTransferItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(StockTransferItem::class);

@@ -4,8 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $item_id
+ * @property int $user_id
+ * @property string $deposit_type
+ * @property string $quantity
+ * @property string $cost_price
+ * @property string|null $reason
+ * @property Carbon|null $deposit_date
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class StockDeposit extends Model
 {
     use HasFactory, SoftDeletes;
@@ -29,12 +44,18 @@ class StockDeposit extends Model
         ];
     }
 
-    public function item()
+    /**
+     * @return BelongsTo<Item, $this>
+     */
+    public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class)->withTrashed();
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }

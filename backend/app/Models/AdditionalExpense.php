@@ -7,7 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $document_type
+ * @property int $document_id
+ * @property string $title
+ * @property string $amount
+ * @property string $allocation_method
+ * @property string $paid_by
+ * @property int|null $payment_id
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class AdditionalExpense extends Model
 {
     use HasFactory, SoftDeletes;
@@ -30,11 +45,17 @@ class AdditionalExpense extends Model
         ];
     }
 
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function document(): MorphTo
     {
         return $this->morphTo();
     }
 
+    /**
+     * @return BelongsTo<Payment, $this>
+     */
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);

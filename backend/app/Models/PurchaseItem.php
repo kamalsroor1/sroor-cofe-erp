@@ -4,8 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $purchase_id
+ * @property int $item_id
+ * @property string $quantity
+ * @property string $cost_price
+ * @property string $total_price
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property string|null $base_cost_price
+ * @property string $allocated_expense
+ */
 class PurchaseItem extends Model
 {
     use HasFactory, SoftDeletes;
@@ -31,12 +46,18 @@ class PurchaseItem extends Model
         ];
     }
 
-    public function purchase()
+    /**
+     * @return BelongsTo<Purchase, $this>
+     */
+    public function purchase(): BelongsTo
     {
         return $this->belongsTo(Purchase::class)->withTrashed();
     }
 
-    public function item()
+    /**
+     * @return BelongsTo<Item, $this>
+     */
+    public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class)->withTrashed();
     }

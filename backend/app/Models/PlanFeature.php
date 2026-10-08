@@ -5,9 +5,22 @@ namespace App\Models;
 use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Central DB: registry of plan feature keys.
+ *
+ * @property int $id
+ * @property string $key
+ * @property string $name
+ * @property string|null $description
+ * @property string $module
+ * @property string $type
+ * @property string $default_value
+ * @property string|null $icon
+ * @property int $sort_order
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class PlanFeature extends Model
 {

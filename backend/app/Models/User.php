@@ -2,13 +2,39 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string|null $phone
+ * @property string|null $email
+ * @property Carbon|null $email_verified_at
+ * @property string $password
+ * @property bool $is_active
+ * @property string|null $remember_token
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property string $theme_preference
+ * @property bool $show_print_subtitle
+ * @property int|null $default_store_id
+ * @property Carbon|null $deleted_at
+ * @property string|null $api_token
+ * @property string|null $last_login_at
+ * @property string|null $locale
+ * @property-read Collection<int, Role> $roles
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
@@ -43,32 +69,50 @@ class User extends Authenticatable
         ];
     }
 
-    public function invoices()
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
     }
 
-    public function purchases()
+    /**
+     * @return HasMany<Purchase, $this>
+     */
+    public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }
 
-    public function payments()
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
 
-    public function stockMovements()
+    /**
+     * @return HasMany<StockMovement, $this>
+     */
+    public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
     }
 
-    public function stores()
+    /**
+     * @return BelongsToMany<Store, $this>
+     */
+    public function stores(): BelongsToMany
     {
         return $this->belongsToMany(Store::class, 'store_user')->withTimestamps();
     }
 
-    public function defaultStore()
+    /**
+     * @return BelongsTo<Store, $this>
+     */
+    public function defaultStore(): BelongsTo
     {
         return $this->belongsTo(Store::class, 'default_store_id');
     }

@@ -873,7 +873,7 @@ class InvoiceService
             if ($store && ! empty($store->code)) {
                 $storeCode = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($store->code));
             } elseif ($store) {
-                $storeCode = 'B'.str_pad($store->id, 2, '0', STR_PAD_LEFT);
+                $storeCode = 'B'.str_pad((string) $store->id, 2, '0', STR_PAD_LEFT);
             }
         }
 
@@ -900,7 +900,7 @@ class InvoiceService
         }
 
         do {
-            $candidate = $prefix.'-'.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
             $exists = Invoice::withTrashed()->where('invoice_number', $candidate)->exists();
             if ($exists) {
                 $nextSequence++;

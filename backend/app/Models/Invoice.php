@@ -34,6 +34,9 @@ use Illuminate\Support\Carbon;
  * @property string $change_amount
  * @property string $total_cost
  * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  */
 class Invoice extends Model
 {
@@ -111,7 +114,10 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
-    public function payments()
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
@@ -124,12 +130,18 @@ class Invoice extends Model
         return $this->morphMany(AdditionalExpense::class, 'document');
     }
 
-    public function returns()
+    /**
+     * @return HasMany<ReturnDocument, $this>
+     */
+    public function returns(): HasMany
     {
         return $this->hasMany(ReturnDocument::class, 'invoice_id');
     }
 
-    public function stockMovements()
+    /**
+     * @return MorphMany<StockMovement, $this>
+     */
+    public function stockMovements(): MorphMany
     {
         return $this->morphMany(StockMovement::class, 'source');
     }

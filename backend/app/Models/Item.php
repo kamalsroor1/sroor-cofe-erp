@@ -5,10 +5,34 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property bool $is_weighted POSB-2: sold by weight (scale labels, fractional qty); explicit, not inferred from the unit
+ * @property int $id
+ * @property string $code
+ * @property string $name
+ * @property string|null $category
+ * @property string $unit
+ * @property string $current_stock
+ * @property string $cost_price
+ * @property string $weighted_avg_cost
+ * @property string $selling_price
+ * @property string $min_stock_level
+ * @property bool $is_active
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property string $min_selling_price
+ * @property int|null $category_id
+ * @property string|null $image
+ * @property int $pos_sort_order
+ * @property bool $is_pos_pinned
+ * @property int $pos_sales_count
  */
 class Item extends Model
 {
@@ -67,37 +91,58 @@ class Item extends Model
         ];
     }
 
-    public function categoryRel()
+    /**
+     * @return BelongsTo<Category, $this>
+     */
+    public function categoryRel(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function invoiceItems()
+    /**
+     * @return HasMany<InvoiceItem, $this>
+     */
+    public function invoiceItems(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
     }
 
-    public function purchaseItems()
+    /**
+     * @return HasMany<PurchaseItem, $this>
+     */
+    public function purchaseItems(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
     }
 
-    public function stockMovements()
+    /**
+     * @return HasMany<StockMovement, $this>
+     */
+    public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class)->latest();
     }
 
-    public function stockDeposits()
+    /**
+     * @return HasMany<StockDeposit, $this>
+     */
+    public function stockDeposits(): HasMany
     {
         return $this->hasMany(StockDeposit::class);
     }
 
-    public function returnItems()
+    /**
+     * @return HasMany<ReturnItem, $this>
+     */
+    public function returnItems(): HasMany
     {
         return $this->hasMany(ReturnItem::class);
     }
 
-    public function storeStocks()
+    /**
+     * @return HasMany<StoreStock, $this>
+     */
+    public function storeStocks(): HasMany
     {
         return $this->hasMany(StoreStock::class);
     }

@@ -4,8 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $return_number
+ * @property string $return_type
+ * @property int|null $invoice_id
+ * @property int|null $purchase_id
+ * @property int|null $customer_id
+ * @property int|null $supplier_id
+ * @property int $user_id
+ * @property string $total_amount
+ * @property Carbon|null $return_date
+ * @property string|null $reason
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int|null $store_id
+ * @property Carbon|null $deleted_at
+ */
 class ReturnDocument extends Model
 {
     use HasFactory, SoftDeletes;
@@ -34,42 +55,66 @@ class ReturnDocument extends Model
         ];
     }
 
-    public function invoice()
+    /**
+     * @return BelongsTo<Invoice, $this>
+     */
+    public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class)->withTrashed();
     }
 
-    public function purchase()
+    /**
+     * @return BelongsTo<Purchase, $this>
+     */
+    public function purchase(): BelongsTo
     {
         return $this->belongsTo(Purchase::class)->withTrashed();
     }
 
-    public function customer()
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
-    public function supplier()
+    /**
+     * @return BelongsTo<Supplier, $this>
+     */
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class)->withTrashed();
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function store()
+    /**
+     * @return BelongsTo<Store, $this>
+     */
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class)->withTrashed();
     }
 
-    public function items()
+    /**
+     * @return HasMany<ReturnItem, $this>
+     */
+    public function items(): HasMany
     {
         return $this->hasMany(ReturnItem::class, 'return_id');
     }
 
-    public function stockMovements()
+    /**
+     * @return MorphMany<StockMovement, $this>
+     */
+    public function stockMovements(): MorphMany
     {
         return $this->morphMany(StockMovement::class, 'source');
     }

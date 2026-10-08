@@ -5,7 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $platform
+ * @property string $version_name
+ * @property int $version_code
+ * @property int $min_version_code
+ * @property bool $is_force_update
+ * @property string $release_notes_ar
+ * @property string|null $release_notes_en
+ * @property string|null $apk_path
+ * @property string|null $apk_filename
+ * @property int $apk_size_bytes
+ * @property string|null $apk_checksum
+ * @property int $download_count
+ * @property bool $is_active
+ * @property Carbon|null $published_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class AppVersion extends Model
 {
     use HasFactory;

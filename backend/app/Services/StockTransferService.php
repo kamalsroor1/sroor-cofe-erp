@@ -286,7 +286,7 @@ class StockTransferService
         }
 
         do {
-            $candidate = $prefix.'-'.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
             $exists = StockTransfer::withTrashed()->where('transfer_number', $candidate)->exists();
             if ($exists) {
                 $nextSequence++;

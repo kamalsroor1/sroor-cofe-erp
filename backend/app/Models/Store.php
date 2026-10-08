@@ -7,7 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $code
+ * @property string $type
+ * @property string|null $phone
+ * @property string|null $address
+ * @property bool $is_active
+ * @property bool $is_main
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Store extends Model
 {
     use HasFactory, SoftDeletes;
@@ -61,6 +75,8 @@ class Store extends Model
 
     /**
      * Store Inventory Stocks
+     *
+     * @return HasMany<StoreStock, $this>
      */
     public function stocks(): HasMany
     {
@@ -69,6 +85,8 @@ class Store extends Model
 
     /**
      * Assigned Users / Cashiers / Drivers
+     *
+     * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany
     {
@@ -77,6 +95,8 @@ class Store extends Model
 
     /**
      * Invoices issued from this store
+     *
+     * @return HasMany<Invoice, $this>
      */
     public function invoices(): HasMany
     {
@@ -85,6 +105,8 @@ class Store extends Model
 
     /**
      * Purchases received at this store
+     *
+     * @return HasMany<Purchase, $this>
      */
     public function purchases(): HasMany
     {
@@ -93,6 +115,8 @@ class Store extends Model
 
     /**
      * Expenses recorded in this store
+     *
+     * @return HasMany<Expense, $this>
      */
     public function expenses(): HasMany
     {
@@ -101,6 +125,8 @@ class Store extends Model
 
     /**
      * Cash shifts in this store
+     *
+     * @return HasMany<CashShift, $this>
      */
     public function cashShifts(): HasMany
     {
@@ -109,6 +135,8 @@ class Store extends Model
 
     /**
      * Transfers sent from this store
+     *
+     * @return HasMany<StockTransfer, $this>
      */
     public function outgoingTransfers(): HasMany
     {
@@ -117,6 +145,8 @@ class Store extends Model
 
     /**
      * Transfers received at this store
+     *
+     * @return HasMany<StockTransfer, $this>
      */
     public function incomingTransfers(): HasMany
     {

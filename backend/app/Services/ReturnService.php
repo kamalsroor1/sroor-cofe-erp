@@ -199,7 +199,7 @@ class ReturnService
         }
 
         do {
-            $candidate = $datePrefix.'-'.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $candidate = $datePrefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
             $exists = ReturnDocument::withTrashed()->where('return_number', $candidate)->exists();
             if ($exists) {
                 $nextSequence++;

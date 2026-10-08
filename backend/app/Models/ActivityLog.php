@@ -4,7 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $user_id
+ * @property int|null $store_id
+ * @property string $module
+ * @property string $action
+ * @property string|null $subject_type
+ * @property int|null $subject_id
+ * @property string $description
+ * @property array|null $properties
+ * @property string|null $ip_address
+ * @property string|null $user_agent
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class ActivityLog extends Model
 {
     use HasFactory;
@@ -29,17 +47,26 @@ class ActivityLog extends Model
         ];
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function store()
+    /**
+     * @return BelongsTo<Store, $this>
+     */
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class)->withTrashed();
     }
 
-    public function subject()
+    /**
+     * @return MorphTo<Model, $this>
+     */
+    public function subject(): MorphTo
     {
         return $this->morphTo();
     }

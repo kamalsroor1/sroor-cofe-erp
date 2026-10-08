@@ -491,7 +491,7 @@ class PurchaseService
         }
 
         do {
-            $candidate = $prefix.'-'.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
             $exists = Purchase::withTrashed()->where('purchase_number', $candidate)->exists();
             if ($exists) {
                 $nextSequence++;

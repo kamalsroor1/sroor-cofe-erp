@@ -5,8 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string|null $company_name
+ * @property string|null $phone
+ * @property string|null $address
+ * @property string $current_balance
+ * @property bool $is_active
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Supplier extends Model
 {
     use HasFactory, SoftDeletes;
@@ -29,12 +44,18 @@ class Supplier extends Model
         ];
     }
 
-    public function purchases()
+    /**
+     * @return HasMany<Purchase, $this>
+     */
+    public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class)->latest('purchase_date');
     }
 
-    public function payments()
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'supplier_id')->latest('payment_date');
     }

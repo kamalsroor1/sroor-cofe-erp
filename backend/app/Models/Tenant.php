@@ -2,7 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
@@ -14,6 +18,21 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * @property string|null $tenancy_db_name
  * @property string|null $tenancy_db_username
  * @property string|null $tenancy_db_password
+ *
+ * Custom columns (see getCustomColumns()):
+ * @property string $id
+ * @property string $name
+ * @property string $slug
+ * @property string $email
+ * @property string|null $phone
+ * @property int|null $plan_id
+ * @property string $status
+ * @property Carbon|null $trial_ends_at
+ * @property Carbon|null $subscription_ends_at
+ * @property array|null $enabled_features
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Domain> $domains
  */
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
@@ -58,17 +77,26 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->hasMany(Domain::class, 'tenant_id');
     }
 
-    public function plan()
+    /**
+     * @return BelongsTo<Plan, $this>
+     */
+    public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
 
-    public function subscriptions()
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
     }
 
-    public function activeSubscription()
+    /**
+     * @return HasOne<Subscription, $this>
+     */
+    public function activeSubscription(): HasOne
     {
         return $this->hasOne(Subscription::class)
             ->where('status', 'active')

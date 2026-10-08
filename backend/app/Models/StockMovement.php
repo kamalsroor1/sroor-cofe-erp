@@ -4,7 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $item_id
+ * @property string $movement_type
+ * @property string $quantity
+ * @property string $stock_before
+ * @property string $stock_after
+ * @property string $unit_cost
+ * @property string $source_type
+ * @property int $source_id
+ * @property string|null $document_number
+ * @property int $user_id
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int|null $store_id
+ */
 class StockMovement extends Model
 {
     use HasFactory;
@@ -34,22 +54,34 @@ class StockMovement extends Model
         ];
     }
 
-    public function item()
+    /**
+     * @return BelongsTo<Item, $this>
+     */
+    public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class)->withTrashed();
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    public function store()
+    /**
+     * @return BelongsTo<Store, $this>
+     */
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class)->withTrashed();
     }
 
-    public function source()
+    /**
+     * @return MorphTo<Model, $this>
+     */
+    public function source(): MorphTo
     {
         return $this->morphTo();
     }

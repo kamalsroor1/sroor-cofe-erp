@@ -4,8 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $payment_number
+ * @property int|null $customer_id
+ * @property int|null $supplier_id
+ * @property int|null $invoice_id
+ * @property int|null $purchase_id
+ * @property int $user_id
+ * @property string $amount
+ * @property Carbon|null $payment_date
+ * @property string $payment_method
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Payment extends Model
 {
     use HasFactory, SoftDeletes;
@@ -31,27 +49,42 @@ class Payment extends Model
         ];
     }
 
-    public function customer()
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
-    public function supplier()
+    /**
+     * @return BelongsTo<Supplier, $this>
+     */
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class)->withTrashed();
     }
 
-    public function invoice()
+    /**
+     * @return BelongsTo<Invoice, $this>
+     */
+    public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class)->withTrashed();
     }
 
-    public function purchase()
+    /**
+     * @return BelongsTo<Purchase, $this>
+     */
+    public function purchase(): BelongsTo
     {
         return $this->belongsTo(Purchase::class)->withTrashed();
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
     }

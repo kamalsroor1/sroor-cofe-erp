@@ -5,8 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string|null $phone
+ * @property string|null $address
+ * @property string|null $tax_number
+ * @property string $price_tier
+ * @property string $current_balance
+ * @property bool $is_active
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Customer extends Model
 {
     use HasFactory, SoftDeletes;
@@ -30,17 +46,26 @@ class Customer extends Model
         ];
     }
 
-    public function invoices()
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class)->latest('invoice_date');
     }
 
-    public function payments()
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)->latest('payment_date');
     }
 
-    public function returns()
+    /**
+     * @return HasMany<ReturnDocument, $this>
+     */
+    public function returns(): HasMany
     {
         return $this->hasMany(ReturnDocument::class, 'customer_id');
     }
