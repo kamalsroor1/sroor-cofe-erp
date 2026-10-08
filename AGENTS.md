@@ -5,9 +5,23 @@
 
 ---
 
+## 0. خريطة ملفات الذكاء الاصطناعي (AI Guidance Map)
+
+| الملف | الدور |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | نقطة الدخول: الـ Stack الفعلي، خريطة المشروع، الأوامر، القواعد الذهبية العشر، وجدول الـ Agents. |
+| [`.claude/rules/`](.claude/rules/) | **مصدر الحقيقة للقواعد التفصيلية** (تُحمَّل تلقائياً حسب مسار الملف): `backend-architecture` · `money-stock-integrity` · `multi-tenancy` · `frontend-vue` · `localization` · `testing` · `security-and-operations` · `docs-and-history`. |
+| [`.claude/agents/`](.claude/agents/) | الوكلاء المتخصصون: `backend-architect` · `frontend-vue` · `qa-tester` · `debugger` · `i18n-guardian` · `code-reviewer` · `security-auditor` · `docs-historian`. |
+| `AGENTS.md` (هذا الملف) | المرآة العربية لنفس القواعد للأدوات الأخرى (Codex / Cursor / Gemini). عند أي تعارض، `.claude/rules/` هي المرجع ثم يُصحَّح هذا الملف. |
+
+> **الـ Stack الحالي الفعلي:** Laravel 13 (PHP 8.3+) + Sanctum + spatie/permission + stancl/tenancy v3 · Pure Vue 3 SPA + Pinia + Vue Router + Tailwind v4 + Vite · **Capacitor 8** (Android) · **Electron** (Desktop) · PHPUnit 12 + Playwright.
+> **تم حذفها نهائياً وممنوع إعادتها:** Livewire · Inertia · Blade Pages · Alpine · NativePHP. أي ذكر لها داخل `docs/history/` هو تاريخ وليس توجيهاً.
+
+---
+
 ## 1. نبذة عن المشروع والمعايير غير القابلة للتفاوض (Non-Negotiable Rules)
 
-أنت تعمل على تطوير نظام الفواتير والمخزون وإدارة المؤسسات متعددة الفروع والمستأجرين **"سرور كوفي ERP"** وتطبيق الموبايل المصاحب **"NativePHP Mobile ERP"** المبني باستخدام **Laravel Multi-Tenancy (Stancl)**، مع واجهة أمامية **Pure Vue 3 SPA (Composition API) + Pinia + Vue Router + Tailwind CSS** و **NativePHP Mobile v4 Bridge**.
+أنت تعمل على تطوير نظام الفواتير والمخزون وإدارة المؤسسات متعددة الفروع والمستأجرين **"سرور كوفي ERP"** المبني باستخدام **Laravel Multi-Tenancy (Stancl)**، مع واجهة أمامية **Pure Vue 3 SPA (Composition API) + Pinia + Vue Router + Tailwind CSS**، ويُغلَّف نفس الـ SPA كتطبيق أندرويد عبر **Capacitor** وكتطبيق ديسكتوب عبر **Electron**.
 
 ### 🚫 المحظورات والقواعد المعمارية الصارمة (Strict Prohibitions & Architectural Rules):
 1. **ممنوع استخدام `FLOAT` أو `DOUBLE` نهائيًا:** كافة القيم المالية والكميات والأوزان والخصومات والأسعار يجب أن تكون **`DECIMAL(12,3)`** وتُعالج بدوال `bcmath` في PHP لضمان الدقة المالية بنسبة 100%.
@@ -40,10 +54,17 @@
       * في PHP: `__('file.key')` أو `trans('file.key')`.
       * في Vue 3 Template: `$t('file.key')` أو `trans('file.key')`.
       * في Vue 3 Script Setup: `const { t } = useTrans();` ثم `t('file.key')`.
-17. **بروتوكول النشر المركزي:**
-    * النشر يتم حصراً عبر اسكريبت النشر الآمن `python deploy_root_baraa.py` الموجه لخادم `baraa-solutions.com` ومستأجريه.
+17. **بروتوكول النشر المركزي وحماية الإنتاج:**
+    * النشر يتم حصراً عبر اسكريبت النشر `python deploy_root_baraa.py` الموجه لخادم `baraa-solutions.com` ومستأجريه، **ولا يُشغَّل إلا بطلب صريح من المستخدم في نفس الرسالة** (الاسكريبت ينفذ `git add .` + commit + push ثم SSH على الإنتاج).
+    * ممنوع على أي AI تشغيل اسكريبتات الجذر المتصلة بالسيرفر الحي أو قاعدة البيانات الحية (`deploy_*`, `check_*live*`, `fix_*`, `run_*`, `restore_*`, `seed_*`, `sync_*`) أو تنفيذ `git push` دون طلب صريح.
+    * ممنوع طباعة أو نسخ أو توثيق أي بيانات دخول/توكنات موجودة داخل تلك الاسكريبتات، وممنوع إضافة أسرار جديدة داخل ملفات متتبعة في git. التفاصيل: `.claude/rules/security-and-operations.md`.
+    * ممنوع `git add .` — يتم تحديد الملفات بالمسار، لأن جذر المشروع مليء بملفات مؤقتة ونسخ احتياطية غير متتبعة.
 18. **إلزامية هياكل التحميل التفاعلية بالوميض (Mandatory Facebook-Style Skeletons):**
     * ممنوع منعاً باتاً الشاشات البيضاء أو الاكتفاء بسبينر دائري صغير عند جلب البيانات. كل صفحة وكل جدول وكل شبكة بطاقات يجب أن توفر Skeleton Shimmer Loader يماثل الهيكل الحقيقي للمحتوى لضمان تجربة مستخدم سلسة وعصرية.
+19. **بوابات الجودة (Larastan + CI):**
+    * أي كود PHP جديد أو معدّل يجب أن يمر من **Larastan level 5** (`composer analyse` داخل `backend/`) **بدون إضافة أي سطر إلى `phpstan-baseline.neon`**. الـ baseline لتجميد الديون القديمة فقط؛ يُعاد توليده (`composer analyse:baseline`) لحذف أخطاء تم إصلاحها فقط.
+    * الـ CI (`.github/workflows/ci.yml`) يشغّل `pint --test` على كل ملف PHP تلمسه، فشغّل `./vendor/bin/pint --dirty` قبل الـ commit. التفاصيل: `.claude/rules/backend-architecture.md`.
+    * للفرونت إند (`backend/` و`desktop/`): `npm run lint` و`npm run format:check` للقراءة فقط؛ وقبل الـ commit شغّل `npm run format:dirty` لتنسيق الملفات التي عدّلتها فقط — ممنوع تنسيق الشجرة كلها.
 
 ---
 
@@ -186,6 +207,26 @@ resources/js/
 │    - الحظر: لا يغير المتطلبات الأساسية دون توضيح أنها اقتراح إضافي.         │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### التعريفات التنفيذية للأدوار (`.claude/agents/`)
+
+| الدور | الوكيل | يكتب كود؟ |
+|---|---|---|
+| Backend Architect | `backend-architect` | نعم |
+| Frontend / UI | `frontend-vue` | نعم |
+| QA & Testing | `qa-tester` | اختبارات فقط |
+| Debugging (تتبع السبب الجذري) | `debugger` | إصلاح بأقل تغيير |
+| Localization | `i18n-guardian` | ملفات الترجمة ومواضع الاستدعاء |
+| Code Review | `code-reviewer` | لا (قراءة فقط) |
+| Security Audit | `security-auditor` | لا (قراءة فقط) |
+| Docs & PM | `docs-historian` | التوثيق فقط |
+
+**خطوط العمل المعتمدة:**
+* ميزة جديدة: `backend-architect` ← `frontend-vue` (+ `i18n-guardian`) ← `qa-tester` ← `code-reviewer` ← `docs-historian`
+* خطأ/Bug: `debugger` ← `qa-tester` (اختبار Regression) ← `code-reviewer`
+* تدقيق Controller: `qa-tester` (الاختبارات أولاً) ← `backend-architect` ← `code-reviewer`
+* تدقيق صفحة: `frontend-vue` ← `i18n-guardian` ← `qa-tester` (E2E) ← `docs-historian`
+* أي تغيير يمس المصادقة/الصلاحيات/الـ Tenancy/الرفع: يضاف `security-auditor`.
 
 ---
 

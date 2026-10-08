@@ -1,121 +1,93 @@
 # أدوار ومسؤوليات الوكلاء الأذكياء (AI Collaboration Roles)
 
-دليل تنظيمي يحدد الأدوار الافتراضية لوكلاء الذكاء الاصطناعي (AI Agents / Sessions) عند التعاون في بناء وصيانة نظام الفواتير والمخزون، مع بيان مسؤوليات كل دور، الملفات الواقعة تحت نطاق عمله، والمحظورات الصارمة لتجنب التضارب وحماية سلامة النظام.
+دليل تنظيمي يحدد أدوار وكلاء الذكاء الاصطناعي عند بناء وصيانة **سرور كوفي ERP**، ونطاق ملفات كل دور، ومحظوراته، وخطوط العمل المعتمدة بينهم.
+
+> **التعريفات التنفيذية** (الـ System Prompts الفعلية) موجودة في [`.claude/agents/`](../../.claude/agents/)، والقواعد التفصيلية في [`.claude/rules/`](../../.claude/rules/). هذا الملف هو الشرح التنظيمي لها. عند أي تعارض، ملفات `.claude/` هي المرجع.
+>
+> **الـ Stack الحالي:** Laravel 13 + stancl/tenancy v3 + Sanctum + spatie/permission · Pure Vue 3 SPA (Pinia, Vue Router, Tailwind v4) · Capacitor (Android) · Electron (Desktop) · PHPUnit 12 + Playwright.
+> تم حذف Livewire و Inertia و Blade Pages و Alpine و NativePHP نهائياً.
 
 ---
 
-## 1. فلسفة توزيع الأدوار (AI Roles Matrix)
+## 1. مصفوفة الأدوار
 
-لضمان أعلى درجات الدقة والتركيز ومنع التعديلات العشوائية في المنظومة، يتم تقسيم العمل البرمجي بين 4 أدوار تخصصية واضحة:
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       AI Multi-Agent Collaboration                          │
-├──────────────────────────────┬──────────────────────────────────────────────┤
-│ 1. Backend Architect Agent   │ 2. Frontend / UI Agent                       │
-│    Business logic, Services, │    Livewire 4, Blade, Alpine.js,             │
-│    Locking, Transactions     │    Tailwind CSS, Flowbite, RTL, Print CSS    │
-├──────────────────────────────┼──────────────────────────────────────────────┤
-│ 3. QA & Testing Agent        │ 4. Docs & PM Agent                           │
-│    Unit/Feature tests,       │    Roadmaps, Tasks tracking,                 │
-│    Race condition simulations│    Technical documentation & Changelogs      │
-└──────────────────────────────┴──────────────────────────────────────────────┘
-```
+| # | الوكيل | التخصص | يكتب كود؟ |
+|---|---|---|---|
+| 1 | `backend-architect` | Migrations, Models, Actions, DTOs, Form Requests, Resources, Filters, Policies, Tenancy, المنطق المالي والمخزني | نعم |
+| 2 | `frontend-vue` | Views, Components, Composables, Pinia, Router, Tailwind, RTL, Dark/Light, Skeletons, Capacitor/Electron bridges | نعم |
+| 3 | `qa-tester` | PHPUnit Feature/Unit، اختبارات Rollback والتزامن والعزل، Playwright E2E | الاختبارات فقط |
+| 4 | `debugger` | إعادة إنتاج الخطأ ← السبب الجذري ← أصغر إصلاح صحيح | إصلاح بأقل تغيير |
+| 5 | `i18n-guardian` | اصطياد النصوص الثابتة، مفاتيح `lang/ar` + `lang/en`، تطابق المفاتيح، `lang:export` | ملفات الترجمة ومواضع الاستدعاء |
+| 6 | `code-reviewer` | مراجعة الـ diff مقابل كل القواعد | لا — قراءة فقط |
+| 7 | `security-auditor` | عزل المستأجرين والفروع، الصلاحيات، الحقن، الأسرار، الرفع | لا — قراءة فقط |
+| 8 | `docs-historian` | سجل `docs/history/`، توثيق الصفحات والموديولات والماستر | التوثيق فقط |
 
 ---
 
-## 2. تفاصيل الأدوار التخصصية
+## 2. نطاق الملفات والمحظورات
 
-### 2.1 وكيل المعالجة الخلفية وهندسة البيانات (Backend Architect Agent)
-* **المسمى والتخصص:** مهندس الباك إند وقواعد البيانات ومنطق الأعمال المالي.
-* **نطاق المسؤوليات:**
-  1. إنشاء وتعديل ملفات الـ Migrations ونماذج الـ Eloquent وضبط العلاقات والـ Casts.
-  2. كتابة وصيانة فئات الخدمات (Service Layer) مثل: `InvoiceService`, `StockService`, `PaymentService`, `ProfitService`.
-  3. تطبيق المعاملات البرمجية `DB::transaction()` والقفل السطري `lockForUpdate()` بدقة لمنع تضارب المخزون.
-  4. ضمان الدقة المالية الصارمة بالاعتماد على دوال `bcmath` والنوع `DECIMAL(12,3)`.
-* **الملفات الواقعة تحت نطاقه:**
-  * `database/migrations/*`
-  * `app/Models/*`
-  * `app/Services/*`
-  * `app/Exceptions/*`
-* **المحظورات الصارمة (Must NOT Do):**
-  * ❌ لا يُنشئ أو يعدل كود تصميم أو تنسيق CSS أو Blade Views مباشرة.
-  * ❌ لا يستخدم أنواع بيانات عائمة `FLOAT` أو `DOUBLE` نهائيًا للقيم المالية أو الكميات.
-  * ❌ لا ينفذ عمليات تعديل المخزون أو الحسابات خارج `DB::transaction()`.
+### 2.1 `backend-architect`
+* **النطاق:** `backend/app/**` · `backend/routes/**` · `backend/database/**` · `backend/config/**` · `backend/lang/**` (مفاتيح رسائل الـ API).
+* **يلتزم بـ:** مسار `Route → FormRequest → DTO → Action::execute() → Resource`، و `DECIMAL(12,3)` + `bcmath`، و `DB::transaction()` + `lockForUpdate()`، وتحديد Central/Tenant لكل جدول.
+* **محظور:** ❌ كتابة Vue/CSS · ❌ `FLOAT`/`DOUBLE` أو العمليات الحسابية العادية على المبالغ · ❌ تعديل Migration تم نشرها · ❌ إضعاف الاختبارات · ❌ تشغيل اسكريبتات النشر أو السيرفر الحي.
 
----
+### 2.2 `frontend-vue`
+* **النطاق:** `backend/resources/js/**` · `backend/resources/css/**` · `backend/vite.config.js` · مفاتيح الترجمة في `backend/lang/**`.
+* **يلتزم بـ:** الـ View منسق نحيف (50–80 سطر)، المكونات في `Components/<Feature>/`، المنطق في `Composables/`، و `Services/api.js` كعميل HTTP وحيد، RTL + Dark/Light + Skeleton + Touch.
+* **محظور:** ❌ منطق مالي معتمد داخل الواجهة (الخادم هو مصدر الإجماليات) · ❌ نص ثابت بأي لغة · ❌ Inertia/Livewire/Options API · ❌ تعديل منطق PHP.
 
-### 2.2 وكيل الواجهات وتجربة المستخدم (Frontend / UI Agent)
-* **المسمى والتخصص:** مهندس واجهات المستخدم، ومكونات Livewire، وتوافق اللغة العربية وتصميم الموبايل.
-* **نطاق المسؤوليات:**
-  1. بناء وصيانة مكونات Livewire 4 التفاعلية وقوالب Blade المقابلة لها.
-  2. تطبيق تنسيقات Tailwind CSS و Flowbite ودعم الوضع الليلي (Dark Mode) واتجاه اللغة العربية (RTL).
-  3. كتابة تفاعلات Alpine.js المحلية الخفيفة (النوافذ المنبثقة، القوائم المنسدلة، التبويبات).
-  4. تصميم وتنسيق قوالب الطباعة المزدوجة (A4 و Thermal 80mm).
-  5. إعداد ملفات تطبيق الويب التقدمي (PWA Manifest & Service Worker).
-* **الملفات الواقعة تحت نطاقه:**
-  * `app/Livewire/*`
-  * `resources/views/*`
-  * `public/manifest.json`, `public/sw.js`
-  * `tailwind.config.js`, `resources/css/*`
-* **المحظورات الصارمة (Must NOT Do):**
-  * ❌ لا يكتب استعلامات SQL معقدة أو معاملات مالية ومخزنية داخل مكونات Livewire (بل يستدعي الخدمات الجاهزة من `Services Layer`).
-  * ❌ لا يستخدم أطر عمل خارجية مثل React أو Vue.js.
-  * ❌ لا يكسر توافق الشاشات الصغيرة أو اتجاه النصوص العربية (RTL).
+### 2.3 `qa-tester`
+* **النطاق:** `backend/tests/**` · `e2e/**` · الـ Factories/Seeders الخاصة بالاختبار.
+* **يلتزم بـ:** تغطية 200 / 422 / 401 / 403 / العزل / الحالات الحدية، ومقارنة القيم العشرية كنصوص دقيقة (`'125.500'`)، واختبارات Rollback و Reversal و Concurrency للعمليات المالية.
+* **محظور:** ❌ تعديل `app/` لإنجاح اختبار · ❌ حذف/تخطي/إضعاف اختبار · ❌ تشغيل E2E على روابط الإنتاج.
+
+### 2.4 `debugger`
+* **المنهج:** تثبيت العَرَض ← إعادة الإنتاج (اختبار فاشل إن أمكن) ← تتبع المسار ← شرح السبب الجذري ← إصلاح بأقل تغيير ← إثبات ← البحث عن نفس الخطأ في أماكن أخرى.
+* **محظور:** ❌ إصلاح تخميني دون إعادة إنتاج · ❌ إخفاء الأخطاء بـ `try/catch` صامت · ❌ لمس بيانات الإنتاج دون خطة معتمدة من المستخدم ونسخة احتياطية.
+
+### 2.5 `i18n-guardian`
+* **النطاق:** `backend/lang/ar/**` · `backend/lang/en/**` · مواضع استدعاء `__()` / `$t()` / `t()`.
+* **محظور:** ❌ تعديل `defaultTranslations.*` يدوياً (مولَّدة) · ❌ نصوص بديلة داخل `$t()` · ❌ إضافة مفتاح في لغة واحدة فقط · ❌ تغيير التصميم أو المنطق.
+
+### 2.6 `code-reviewer` و `security-auditor`
+* قراءة فقط. يخرجان تقريراً مرتباً بالخطورة مع `path:line` وسيناريو الفشل واتجاه الحل.
+* يفصلان بين ما أدخله التغيير الحالي وما هو إرث قديم.
+* **محظور:** ❌ تعديل أي ملف · ❌ طباعة قيم أي أسرار يعثران عليها · ❌ إرسال طلبات لخوادم الإنتاج.
+
+### 2.7 `docs-historian`
+* **النطاق:** `docs/**` · `README.md` · `AGENTS.md` · `AI_START.md`.
+* **محظور:** ❌ تعديل كود تنفيذي · ❌ وضع علامة ✓ على فحص لم يُنفَّذ فعلاً · ❌ توثيق أسرار أو عناوين خوادم أو بيانات عملاء · ❌ إعادة كتابة ملفات `docs/history/` القديمة.
 
 ---
 
-### 2.3 وكيل الاختبارات وضمان الجودة (QA & Testing Agent)
-* **المسمى والتخصص:** مهندس اختبارات البرمجيات وحماية المعاملات ومحاكاة التزامن.
-* **نطاق المسؤوليات:**
-  1. كتابة وتحديث اختبارات الوحدة (Unit Tests) للعمليات الحسابية، الخصومات، وهوامش الأرباح.
-  2. كتابة اختبارات التكامل والميزات (Feature Tests) لمسارات البيع، الشراء، المرتجعات، والمدفوعات.
-  3. اختبار ومحاكاة حالات التزامن وحجز المخزون (Race Conditions & Deadlocks) على `lockForUpdate()`.
-  4. التأكد من حدوث التراجع الكامل (Rollback) عند فشل أي خطوة في الفاتورة.
-* **الملفات الواقعة تحت نطاقه:**
-  * `tests/Unit/*`
-  * `tests/Feature/*`
-  * `phpunit.xml`
-* **المحظورات الصارمة (Must NOT Do):**
-  * ❌ لا يعدل ملفات الـ Business Logic في الـ `app/` لتجاوز فشل الاختبارات دون مراجعة مهندس الباك إند.
-  * ❌ لا يكتب اختبارات وهمية تعتمد على بيانات سطحية دون فحص حالات الحدود (Edge Cases) مثل المخزون الصفري أو المبالغ الكسرية.
-
----
-
-### 2.4 وكيل التوثيق وإدارة المشروع (Docs & PM Agent)
-* **المسمى والتخصص:** الكاتب التقني ومدير خارطة الطريق ومتابعة الإنجاز.
-* **نطاق المسؤوليات:**
-  1. تحديث ومزامنة ملفات التوثيق داخل مجلد `docs/` بعد كل ميزة جديدة.
-  2. متابعة قائمة المهام في `tasks-breakdown.md` وتحديد المهام المنجزة `[x]`.
-  3. إعداد أدلة المستخدم وتوثيق سيناريوهات التشغيل وأدلة الطباعة والنسخ الاحتياطي.
-  4. توثيق سجل التغييرات والتحديثات (Changelog).
-* **الملفات الواقعة تحت نطاقه:**
-  * `docs/*`
-  * `README.md`
-* **المحظورات الصارمة (Must NOT Do):**
-  * ❌ لا يغير المتطلبات الوظيفية الأساسية أو يضيف شاشات غير متفق عليها دون توضيح أنها "اقتراح إضافي".
-  * ❌ لا يعدل ملفات الكود البرمجي التنفيذي.
-
----
-
-## 3. مصفوفة التعاون عند بناء ميزة جديدة (Feature Implementation Workflow)
+## 3. خطوط العمل المعتمدة (Pipelines)
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor User as المستخدم / المطور
-    participant PM as Docs & PM Agent
-    participant BE as Backend Architect
-    participant FE as Frontend UI Agent
-    participant QA as QA Testing Agent
-
-    User->>PM: طلب تنفيذ ميزة جديدة (مثال: المرتجع الجزئي)
-    PM->>BE: تحديد متطلبات الـ Migration والـ ReturnService
-    BE->>BE: إنشاء الـ Migration والـ Service مع DB Transaction
-    BE->>FE: توفير الدوال والواجهات البرمجية للـ Service
-    FE->>FE: بناء نافذة ReturnModal بـ Livewire و Flowbite RTL
-    FE->>QA: تسليم الميزة للاختبار والتأكيد
-    QA->>QA: كتابة واختبار حالات الرصيد والـ Rollback
-    QA-->>User: تقرير نجاح الاختبارات
-    PM->>PM: تحديث الـ Checklist وتوثيق الميزة في docs/
+flowchart LR
+    subgraph Feature[ميزة جديدة]
+        A1[backend-architect] --> A2[frontend-vue] --> A3[i18n-guardian] --> A4[qa-tester] --> A5[code-reviewer] --> A6[docs-historian]
+    end
+    subgraph Bug[إصلاح خطأ]
+        B1[debugger] --> B2[qa-tester<br/>Regression test] --> B3[code-reviewer]
+    end
+    subgraph Ctrl[تدقيق Controller]
+        C1[qa-tester<br/>الاختبارات أولاً] --> C2[backend-architect<br/>Refactor] --> C3[code-reviewer]
+    end
+    subgraph Page[تدقيق صفحة]
+        D1[frontend-vue] --> D2[i18n-guardian] --> D3[qa-tester<br/>E2E] --> D4[docs-historian]
+    end
 ```
+
+* أي تغيير يمس المصادقة أو الصلاحيات أو الـ Tenancy أو الـ Routes أو رفع الملفات ← يضاف `security-auditor` قبل الدمج.
+* المهام المستقلة عن بعضها تُشغَّل بالتوازي (مثال: `backend-architect` و `i18n-guardian` على ملفات مختلفة).
+* التعديلات البسيطة (سطر أو اثنان) لا تحتاج خط عمل كامل.
+
+---
+
+## 4. قواعد مشتركة لكل الأدوار
+
+1. قراءة الكود الموجود قبل الكتابة ومطابقة أسلوبه — مع عدم تقليد الكود القديم المخالف للقواعد، وعدم إعادة هيكلته دون طلب.
+2. الإبلاغ عن النتائج **الحقيقية** للأوامر (نجاح/فشل/ما لم يُختبر).
+3. لا نشر، ولا `git push`، ولا اسكريبتات سيرفر حي، ولا أوامر قاعدة بيانات مدمرة دون طلب صريح من المستخدم.
+4. لا `git add .` — تحديد الملفات بالمسار. لا Commit إلا بطلب.
+5. الرد على المستخدم بالعربية؛ الكود والـ Commits بالإنجليزية.
