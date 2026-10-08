@@ -12,13 +12,15 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Supplier;
 use App\Services\TreasuryService;
+use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class TreasuryController extends Controller
 {
     public function __construct(
-        private readonly TreasuryService $treasuryService
+        private readonly TreasuryService $treasuryService,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     /**
@@ -32,7 +34,8 @@ final class TreasuryController extends Controller
         }
 
         $storeId = (int) ($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
-        $today = now()->toDateString();
+        // The tenant's calendar day (SETG-2), not the server's.
+        $today = $this->tenantClock->today();
 
         // Today's Sales
         $todaySalesQuery = Invoice::query()->where('status', '!=', 'cancelled')->whereDate('invoice_date', $today);

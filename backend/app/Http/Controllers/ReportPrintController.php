@@ -12,17 +12,23 @@ use App\Services\InventoryAnalyticsService;
 use App\Services\ProfitLossService;
 use App\Services\ProfitService;
 use App\Services\TreasuryService;
+use App\Support\TenantClock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportPrintController extends Controller
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     public function printReport(Request $request, ProfitService $profitService)
     {
         $tab = $request->query('tab', 'sales');
         $storeId = ($request->query('store_id') && $request->query('store_id') !== 'all') ? (int) $request->query('store_id') : null;
-        $fromDate = $request->query('from') ?: now()->startOfMonth()->toDateString();
-        $toDate = $request->query('to') ?: now()->toDateString();
+        // Default period = the tenant's current month up to the tenant's today (SETG-2).
+        $fromDate = $request->query('from') ?: $this->tenantClock->now()->startOfMonth()->toDateString();
+        $toDate = $request->query('to') ?: $this->tenantClock->today();
 
         $storeName = 'كافة الفروع والمخازن';
         if ($storeId) {
@@ -415,7 +421,7 @@ class ReportPrintController extends Controller
         ];
 
         $fromDate = null;
-        $toDate = now()->toDateString();
+        $toDate = $this->tenantClock->today();
 
         return view('layouts.print-report-a4', compact(
             'reportTitle', 'storeName', 'fromDate', 'toDate', 'kpis', 'tableHeaders', 'tableRows', 'tableTotals'

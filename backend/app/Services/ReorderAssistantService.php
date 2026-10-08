@@ -4,17 +4,24 @@ namespace App\Services;
 
 use App\Models\InvoiceItem;
 use App\Models\Item;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
 class ReorderAssistantService
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Calculate smart reorder suggestions and stock depletion forecast
      */
     public function getReorderSuggestions(?int $storeId = null, int $analysisDays = 14, int $targetCoverDays = 15): array
     {
-        $startDate = now()->subDays($analysisDays)->toDateString();
-        $today = now()->toDateString();
+        // Analysis window in tenant calendar days (SETG-2); invoice_date is a business DATE.
+        $tenantNow = $this->tenantClock->now();
+        $startDate = $tenantNow->subDays($analysisDays)->toDateString();
+        $today = $tenantNow->toDateString();
 
         // 1. Get all active items
         $items = Item::active()->get();

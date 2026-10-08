@@ -8,11 +8,20 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TelegramService
 {
+    /**
+     * Dates and times in messages are on the tenant's clock (SETG-2). Instant comparisons
+     * against stored timestamps (overdue shifts) stay on now(), the storage timezone.
+     */
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Get the active bot token from DB settings or config.
      */
@@ -125,7 +134,7 @@ class TelegramService
     public function sendTestNotification(?string $chatId = null): array
     {
         $companyName = Setting::get('company_name', 'نظام إدارة الفواتير والمخزون');
-        $now = now()->format('Y-m-d h:i A');
+        $now = $this->tenantClock->now()->format('Y-m-d h:i A');
 
         $message = "🤖 <b>اختبار ربط إشعارات تيليجرام</b>\n\n";
         $message .= "🏢 <b>المنشأة:</b> {$companyName}\n";
@@ -141,7 +150,7 @@ class TelegramService
      */
     public function sendDailySummaryNotification(?string $date = null): array
     {
-        $targetDate = $date ?: now()->toDateString();
+        $targetDate = $date ?: $this->tenantClock->today();
         $companyName = Setting::get('company_name', 'المركز الرئيسي');
 
         // Confirmed Invoices for today
@@ -206,7 +215,7 @@ class TelegramService
             $msg .= "✅ <b>كافة ورديات وشفتات اليوم تم إغلاقها بنجاح.</b>\n\n";
         }
 
-        $msg .= '⏰ <i>تم الإنشاء تلقائياً: '.now()->format('h:i A').'</i>';
+        $msg .= '⏰ <i>تم الإنشاء تلقائياً: '.$this->tenantClock->now()->format('h:i A').'</i>';
 
         return $this->sendMessage($msg);
     }
@@ -225,7 +234,7 @@ class TelegramService
             if ($previewSample) {
                 // Send a formatted sample to demonstrate the layout
                 $msg = "⚠️ <b>[معاينة تجريبية] إنذار نواقص وقرب نفاد المخزون</b>\n";
-                $msg .= '📅 <b>التاريخ:</b> '.now()->format('Y-m-d h:i A')."\n";
+                $msg .= '📅 <b>التاريخ:</b> '.$this->tenantClock->now()->format('Y-m-d h:i A')."\n";
                 $msg .= "━━━━━━━━━━━━━━━━━━━━\n\n";
                 $msg .= "الأصناف التالية وصلت إلى أو أقل من حد الأمان:\n\n";
                 $msg .= "<b>1. بن برازيلي كولومبي وسط</b>\n";
@@ -243,7 +252,7 @@ class TelegramService
         }
 
         $msg = "⚠️ <b>إنذار نواقص وقرب نفاد المخزون</b>\n";
-        $msg .= '📅 <b>التاريخ:</b> '.now()->format('Y-m-d h:i A')."\n";
+        $msg .= '📅 <b>التاريخ:</b> '.$this->tenantClock->now()->format('Y-m-d h:i A')."\n";
         $msg .= "━━━━━━━━━━━━━━━━━━━━\n\n";
         $msg .= "الأصناف التالية وصلت إلى أو أقل من حد الأمان:\n\n";
 
@@ -276,6 +285,7 @@ class TelegramService
      */
     public function sendOverdueShiftNotification(bool $previewSample = false): array
     {
+        // Instant compared with a stored timestamp: storage timezone, not the tenant clock.
         $threshold = now()->subHours(24);
 
         $overdueShifts = CashShift::with(['user', 'store'])
@@ -287,12 +297,12 @@ class TelegramService
             if ($previewSample) {
                 // Send a formatted sample to demonstrate the layout
                 $msg = "🚨 <b>[معاينة تجريبية] تحذير عاجل: شفتات كاشير مفتوحة لأكثر من 24 ساعة!</b>\n";
-                $msg .= '📅 <b>التاريخ:</b> '.now()->format('Y-m-d h:i A')."\n";
+                $msg .= '📅 <b>التاريخ:</b> '.$this->tenantClock->now()->format('Y-m-d h:i A')."\n";
                 $msg .= "━━━━━━━━━━━━━━━━━━━━\n\n";
                 $msg .= "الورديات التالية لم يتم تقفيلها منذ أكثر من يوم:\n\n";
                 $msg .= "👤 <b>الكاشير:</b> كاشير الصباح\n";
                 $msg .= "🏢 <b>الفرع/الدرج:</b> المخزن الرئيسي\n";
-                $msg .= '⏱️ <b>وقت الفتح:</b> '.now()->subHours(26)->format('Y-m-d h:i A')." (مفتوح منذ 26 ساعة)\n";
+                $msg .= '⏱️ <b>وقت الفتح:</b> '.$this->tenantClock->now()->subHours(26)->format('Y-m-d h:i A')." (مفتوح منذ 26 ساعة)\n";
                 $msg .= "💰 <b>رصيد البداية:</b> 500.00 ج.م\n\n";
                 $msg .= '⚠️ <i>يُرجى التواصل مع الكاشير فوراً لتقفيل اليومية ومراجعة عهدة الدرج.</i>';
 
@@ -303,14 +313,14 @@ class TelegramService
         }
 
         $msg = "🚨 <b>تحذير عاجل: شفتات كاشير مفتوحة لأكثر من 24 ساعة!</b>\n";
-        $msg .= '📅 <b>التاريخ:</b> '.now()->format('Y-m-d h:i A')."\n";
+        $msg .= '📅 <b>التاريخ:</b> '.$this->tenantClock->now()->format('Y-m-d h:i A')."\n";
         $msg .= "━━━━━━━━━━━━━━━━━━━━\n\n";
         $msg .= "الورديات التالية لم يتم تقفيلها منذ أكثر من يوم:\n\n";
 
         foreach ($overdueShifts as $shift) {
             $cashierName = $shift->user?->name ?? 'غير محدد';
             $storeName = $shift->store?->name ?? 'المركز الرئيسي';
-            $openTime = $shift->opened_at ? $shift->opened_at->format('Y-m-d h:i A') : 'غير محدد';
+            $openTime = $shift->opened_at ? $this->tenantClock->toTenant($shift->opened_at)?->format('Y-m-d h:i A') : 'غير محدد';
             $hours = $shift->opened_at ? (int) $shift->opened_at->diffInHours(now()) : 24;
 
             $msg .= "👤 <b>الكاشير:</b> {$cashierName}\n";
@@ -392,7 +402,7 @@ class TelegramService
 
             $companyName = Setting::get('company_name', 'نظام إدارة الفواتير والمخزون');
             $fileSize = number_format(filesize($gzPath) / 1024, 1).' KB';
-            $now = now()->format('Y-m-d h:i A');
+            $now = $this->tenantClock->now()->format('Y-m-d h:i A');
 
             $caption = "💾 <b>النسخة الاحتياطية السحابية اليومية (Database Backup)</b>\n";
             $caption .= "🏢 <b>المنشأة:</b> {$companyName}\n";
@@ -446,7 +456,7 @@ class TelegramService
             $msg .= "📝 <b>ملاحظات الكاشير:</b> <i>{$shift->notes}</i>\n\n";
         }
 
-        $msg .= '⏰ <i>وقت الإغلاق: '.now()->format('Y-m-d h:i A').'</i>';
+        $msg .= '⏰ <i>وقت الإغلاق: '.$this->tenantClock->now()->format('Y-m-d h:i A').'</i>';
 
         return $this->sendMessage($msg);
     }
