@@ -1,0 +1,102 @@
+# gitleaks baseline (OPS-4): known LEGACY findings in git history, by
+# fingerprint = <commit>:<file>:<rule>:<line>. No secret values live here.
+#
+# Every credential behind these entries is considered LEAKED (the repo is
+# public) and must never be reused; rotation is tracked in
+# docs/07-operations/secrets.md section "Legacy findings and rotation".
+#
+# Rules for this file:
+#   - Only add an entry for a finding in a commit that already exists on a
+#     shared branch AND whose credential is listed for rotation in the doc.
+#   - Never add an entry to make a NEW commit pass: remove the secret instead.
+#   - Regenerate (redacted) with the command in docs/07-operations/secrets.md.
+5848806af3c2fd4d3fa521fe4f2790b498bf8823:.agents/skills/laravel-security/SKILL.md:sroor-dotenv-secret:834
+5848806af3c2fd4d3fa521fe4f2790b498bf8823:.agents/skills/laravel-security/SKILL.md:sroor-dotenv-secret:835
+b1e3deeee5b670d8ccd634658f78a79db216e66a:.env.e2e:sroor-dotenv-secret:3
+b1e3deeee5b670d8ccd634658f78a79db216e66a:.env.e2e:sroor-laravel-app-key:3
+e3fb9806067a8b99b706a1f63a7fbdb9cf4f4ae6:.github/workflows/deploy.yml:sroor-dotenv-secret:75
+e3fb9806067a8b99b706a1f63a7fbdb9cf4f4ae6:.github/workflows/deploy.yml:sroor-dotenv-secret:91
+e3fb9806067a8b99b706a1f63a7fbdb9cf4f4ae6:.github/workflows/deploy.yml:sroor-laravel-app-key:75
+26f47ec731be6f206177ba95e6031d3d1c8fbb89:.github/workflows/deploy.yml:sroor-url-token:49
+db2e4eca36c31dea0cabd8c1b80508809c008daf:backend/.agents/skills/laravel-security/SKILL.md:sroor-dotenv-secret:834
+db2e4eca36c31dea0cabd8c1b80508809c008daf:backend/.agents/skills/laravel-security/SKILL.md:sroor-dotenv-secret:835
+2fa2b76f1f9204cf1c076fbf87979a828c43a79a:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:114
+2fa2b76f1f9204cf1c076fbf87979a828c43a79a:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:135
+b8f79aee9ce4f6dadc5f5e5596b3302f90bb75c5:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:113
+b8f79aee9ce4f6dadc5f5e5596b3302f90bb75c5:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:134
+65ddb20fd6c7ff90d3685ed0d41b88a211dee4ea:backend/tests/Feature/Seeders/DatabaseSeederSecurityTest.php:generic-api-key:154
+65ddb20fd6c7ff90d3685ed0d41b88a211dee4ea:backend/tests/Feature/Seeders/DatabaseSeederSecurityTest.php:generic-api-key:216
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_git_log.py:sroor-hardcoded-password:5
+7b39c4784d6af2c097691ce080b665e69ab32705:check_live_db.py:sroor-hardcoded-password:5
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_live_tinker.py:sroor-hardcoded-password:5
+97c77b5b8145db14b90bd15163f6c7d6427e88df:check_logs.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:check_parent_htaccess.py:sroor-hardcoded-password:7
+97c77b5b8145db14b90bd15163f6c7d6427e88df:check_php.py:sroor-hardcoded-password:9
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_php_handlers.py:sroor-hardcoded-password:5
+e4c58abf1e7a227dcdcc5c447c37a2b41b5f3ed5:check_route_list.py:sroor-hardcoded-password:6
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_server_git.py:sroor-hardcoded-password:5
+97c77b5b8145db14b90bd15163f6c7d6427e88df:check_sroor_log.py:sroor-hardcoded-password:7
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_where.py:sroor-hardcoded-password:6
+926db776a1ffe51a89524fdd6e61e4bd3ece054d:clean_reset_server.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:clean_sub_htaccess.py:sroor-hardcoded-password:7
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:clear_views.py:sroor-hardcoded-password:5
+96fc248c1d2a2854fb361137caa3080d261e8c88:deploy_all_locations.py:sroor-hardcoded-password:9
+b1a928bc36ad6f562af941206ffb0992fd0d9271:deploy_all_safe.py:sroor-hardcoded-password:7
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_hostinger_php83.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_hostinger_php84.py:sroor-hardcoded-password:9
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:deploy_live_and_seed.py:sroor-hardcoded-password:11
+7b39c4784d6af2c097691ce080b665e69ab32705:deploy_live_safe.py:sroor-hardcoded-password:9
+5a2e28eb1d3ff661f39eda61fc7a4955a4fba312:deploy_local_to_server.py:sroor-hardcoded-password:19
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_remote.py:sroor-hardcoded-password:10
+2340148f14de5354c3e0bb1041953fe116981b61:deploy_root_baraa.py:sroor-dotenv-secret:63
+2340148f14de5354c3e0bb1041953fe116981b61:deploy_root_baraa.py:sroor-dotenv-secret:77
+606da74b2be9957ab5bbd8eb0a51eaadbe02575e:deploy_root_baraa.py:sroor-dotenv-secret:77
+a88db76c2ba81c6a502c794a6efe704f86de7555:deploy_root_baraa.py:sroor-dotenv-secret:78
+606da74b2be9957ab5bbd8eb0a51eaadbe02575e:deploy_root_baraa.py:sroor-hardcoded-password:77
+7319c791c9c51ed0793be73aea1fb0f38d002a67:deploy_root_baraa.py:sroor-hardcoded-password:9
+a88db76c2ba81c6a502c794a6efe704f86de7555:deploy_root_baraa.py:sroor-hardcoded-password:78
+2340148f14de5354c3e0bb1041953fe116981b61:deploy_root_baraa.py:sroor-laravel-app-key:63
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_sroor.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_subdomain.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_to_sroor_subdomain.py:sroor-dotenv-secret:54
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_to_sroor_subdomain.py:sroor-dotenv-secret:70
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_to_sroor_subdomain.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_to_sroor_subdomain.py:sroor-laravel-app-key:54
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_with_mysql.py:sroor-dotenv-secret:42
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_with_mysql.py:sroor-dotenv-secret:58
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_with_mysql.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:deploy_with_mysql.py:sroor-laravel-app-key:42
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:find_domain_root.py:sroor-hardcoded-password:5
+97c77b5b8145db14b90bd15163f6c7d6427e88df:finish_subdomain.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:fix_htaccess.py:sroor-hardcoded-password:7
+e4c58abf1e7a227dcdcc5c447c37a2b41b5f3ed5:fix_htaccess_pathinfo.py:sroor-hardcoded-password:6
+e4c58abf1e7a227dcdcc5c447c37a2b41b5f3ed5:fix_root_index.py:sroor-hardcoded-password:6
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:fix_server_timezone.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:fix_shipping_php83.py:sroor-dotenv-secret:28
+97c77b5b8145db14b90bd15163f6c7d6427e88df:fix_shipping_php83.py:sroor-dotenv-secret:44
+97c77b5b8145db14b90bd15163f6c7d6427e88df:fix_shipping_php83.py:sroor-hardcoded-password:9
+97c77b5b8145db14b90bd15163f6c7d6427e88df:fix_shipping_php83.py:sroor-laravel-app-key:28
+e4c58abf1e7a227dcdcc5c447c37a2b41b5f3ed5:fix_sub_htaccess.py:sroor-hardcoded-password:6
+928cc274a8120a60ba3058496275a9f4f91f3acf:phpunit.xml:sroor-laravel-app-key:22
+26f47ec731be6f206177ba95e6031d3d1c8fbb89:public/update_webhook.php:sroor-hardcoded-password:4
+16824088d8ccaa9f98eba5609a6cb5109258284a:publish_windows_version.py:sroor-hardcoded-password:6
+e4c58abf1e7a227dcdcc5c447c37a2b41b5f3ed5:rebuild_cache.py:sroor-hardcoded-password:6
+7c5feeda33d0ce02854504290ad65d0f1bf0fcc5:run_check.py:sroor-hardcoded-password:6
+926db776a1ffe51a89524fdd6e61e4bd3ece054d:scratch_check_users.py:sroor-hardcoded-password:6
+926db776a1ffe51a89524fdd6e61e4bd3ece054d:scratch_inspect_dbs.py:sroor-hardcoded-password:3
+a4086f3a88b7fe5a3b11dcbeee3c1de8fee82609:scratch_send_all_alerts.py:sroor-hardcoded-password:9
+7c5feeda33d0ce02854504290ad65d0f1bf0fcc5:seed_fresh_direct.py:sroor-hardcoded-password:14
+a6caa9e00dd9fd5df00863cc727f8379861ec7ec:seed_initial_data.py:sroor-hardcoded-password:15
+97c77b5b8145db14b90bd15163f6c7d6427e88df:sync_sroor.py:sroor-hardcoded-password:6
+11395cd0f43ffe9579daf76a9e60866abd2f08e5:test_all_live.py:sroor-hardcoded-password:8
+97c77b5b8145db14b90bd15163f6c7d6427e88df:test_info.py:sroor-hardcoded-password:7
+11395cd0f43ffe9579daf76a9e60866abd2f08e5:test_live_login.py:sroor-hardcoded-password:6
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:test_live_time.py:sroor-hardcoded-password:8
+97c77b5b8145db14b90bd15163f6c7d6427e88df:test_remote.py:sroor-hardcoded-password:7
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:test_val.php:sroor-hardcoded-password:15
+b1e3deeee5b670d8ccd634658f78a79db216e66a:tests_e2e/config.py:sroor-dotenv-secret:12
+b1e3deeee5b670d8ccd634658f78a79db216e66a:tests_e2e/config.py:sroor-dotenv-secret:8
+26f47ec731be6f206177ba95e6031d3d1c8fbb89:update_webhook.php:sroor-hardcoded-password:4
+8b3ab54e1d6b586351690fa3540866bc8a9c5915:verify_final_production.py:sroor-hardcoded-password:9
+7c5feeda33d0ce02854504290ad65d0f1bf0fcc5:verify_production_users.py:sroor-hardcoded-password:6
+a6caa9e00dd9fd5df00863cc727f8379861ec7ec:verify_seeded_data.py:sroor-hardcoded-password:14

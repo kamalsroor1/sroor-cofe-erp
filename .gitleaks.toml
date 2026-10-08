@@ -1,0 +1,121 @@
+# gitleaks configuration (OPS-4). Used by the `gitleaks` job in
+# .github/workflows/ci.yml and by scripts/ops/tests/gitleaks-selftest.sh.
+#
+# - Extends the upstream default rule set (cloud keys, Telegram bot tokens,
+#   private keys, JWTs, generic API keys ...).
+# - Adds rules for the leak shapes this repo actually had: hardcoded
+#   password=/PASSWORD= assignments in ops scripts, secrets in dotenv-style
+#   KEY=VALUE lines, credentials in JSON configs, tokens in URLs and Laravel
+#   APP_KEYs.
+# - Known legacy findings are NOT allowlisted here. They are listed by
+#   fingerprint (commit:file:rule:line, no secret value) in .gitleaksignore,
+#   which only matches those exact historical commits. Any new commit that
+#   adds a secret fails, even in a legacy file.
+#
+# Docs and rotation tracking: docs/07-operations/secrets.md
+
+title = "Sroor ERP gitleaks config"
+
+[extend]
+useDefault = true
+
+# Hardcoded credentials in scripts: password='...', PASS = "...",
+# ssh_password = "...", TOKEN='...' (Python, shell, PowerShell, batch, PHP, JS).
+[[rules]]
+id = "sroor-hardcoded-password"
+description = "Hardcoded credential assignment in a script"
+regex = '''(?i)\b[a-z0-9_]*(?:password|passwd|pwd|pass|secret|token)[ \t]*=[ \t]*["']([^"'\s$]{6,})["']'''
+secretGroup = 1
+keywords = ["pass", "pwd", "secret", "token"]
+path = '''(?i)\.(?:py|sh|bash|ps1|psm1|bat|cmd|php|js|cjs|mjs|ts|rb|yml|yaml)$'''
+
+  [[rules.allowlists]]
+  description = "Placeholders and references to the environment, not values"
+  regexTarget = "secret"
+  regexes = [
+    '''(?i)^(?:password|secret|changeme|change-me|example|placeholder|dummy|test|testing|null|none|empty|xxx+|\*+)$''',
+    '''^<[^>]*>$''',
+    '''^\{\{.*\}\}$''',
+  ]
+
+# KEY=VALUE secrets anywhere (dotenv files, shell exports, workflow env blocks,
+# docs with pasted .env content). ${VAR}, ${{ secrets.X }}, empty and null are
+# references or placeholders, not values.
+[[rules]]
+id = "sroor-dotenv-secret"
+description = "Secret value in a KEY=VALUE line"
+regex = '''(?m)^[ \t]*(?:export[ \t]+)?[A-Z0-9_]*(?:PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APP_KEY|ACCESS_KEY|PRIVATE_KEY|ENCRYPTION_KEY)[ \t]*[=:][ \t]*["']?([^\s"'#$]{8,})'''
+secretGroup = 1
+keywords = ["password", "passwd", "secret", "token", "api_key", "app_key", "access_key", "private_key", "encryption_key"]
+
+  [[rules.allowlists]]
+  description = "Placeholders, booleans, durations"
+  regexTarget = "secret"
+  regexes = [
+    '''(?i)^(?:null|none|empty|changeme|change-me|placeholder|example|dummy|true|false)$''',
+    '''^<[^>]*>$''',
+    '''^\d+$''',
+  ]
+
+# "SOME_TOKEN": "value" / "password": "value" in JSON / YAML configs
+# (e.g. MCP server configs with a personal access token).
+[[rules]]
+id = "sroor-json-credential"
+description = "Credential value in a JSON/YAML config"
+regex = '''(?i)["'][a-z0-9_.-]*(?:password|passwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)["'][ \t]*:[ \t]*["']([^"'\s$]{8,})["']'''
+secretGroup = 1
+keywords = ["password", "passwd", "secret", "token", "api_key", "apikey", "api-key", "access_key", "private_key"]
+path = '''(?i)\.(?:json|jsonc|ya?ml|toml)$'''
+
+  [[rules.allowlists]]
+  description = "Placeholders and env references"
+  regexTarget = "secret"
+  regexes = [
+    '''(?i)^(?:null|none|changeme|placeholder|example|dummy|password|secret)$''',
+    '''^<[^>]*>$''',
+  ]
+
+# Tokens in URLs: ...?token=abc..., &key=..., &secret=...
+[[rules]]
+id = "sroor-url-token"
+description = "Credential passed in a URL query string"
+regex = '''(?i)[?&](?:token|access_token|api_key|apikey|key|secret|password|pass)=([A-Za-z0-9._~%+/-]{16,})'''
+secretGroup = 1
+keywords = ["token=", "key=", "secret=", "password=", "pass="]
+
+# Laravel APP_KEY (base64 of 32 random bytes), anywhere.
+[[rules]]
+id = "sroor-laravel-app-key"
+description = "Laravel APP_KEY"
+regex = '''\bbase64:([A-Za-z0-9+/]{43}=)'''
+secretGroup = 1
+keywords = ["base64:"]
+
+# Google OAuth refresh tokens (Drive backups, OPS-5).
+[[rules]]
+id = "sroor-google-refresh-token"
+description = "Google OAuth refresh token"
+regex = '''\b(1//0[A-Za-z0-9_-]{30,})'''
+secretGroup = 1
+keywords = ["1//0"]
+
+# Test fixtures (all rules, upstream ones included): a value that starts with
+# "fixture" (case-insensitive) and is made only of letters, digits, '-' and '_'
+# is fake by convention. Use that prefix for fake credentials in tests.
+[[allowlists]]
+description = "Fixture-prefixed fake credentials in tests"
+regexTarget = "secret"
+regexes = ['''(?i)^fixture[a-z0-9_-]*$''']
+
+# Generated, vendored and binary content: scanned upstream or not ours.
+[[allowlists]]
+description = "Generated, vendored and lock files"
+paths = [
+  '''(?:^|/)vendor/''',
+  '''(?:^|/)node_modules/''',
+  '''(?:^|/)public/build/''',
+  '''(?:^|/)resources/js/helpers/defaultTranslations\.''',
+  '''(?:^|/)(?:package-lock\.json|composer\.lock)$''',
+  '''(?:^|/)\.gitleaksignore$''',
+  '''\.(?:png|jpe?g|gif|webp|ico|svg|woff2?|ttf|eot|apk|aab|zip|gz|7z|jar|keystore|sqlite)$''',
+]

@@ -4,9 +4,18 @@
 # `main` is a different (single-tenant) codebase handled by deploy.yml; it is
 # deliberately excluded here.
 #
-# Job names (php / frontend / desktop) are the "required status checks" to
-# enable in branch protection for feature/multi-tenant. Renaming a job breaks
-# that protection rule - update the rule at the same time.
+# Job names (php / mysql / frontend / desktop / gitleaks) are the "required status
+# checks" to enable in branch protection for feature/multi-tenant. Renaming a job
+# breaks that protection rule - update the rule at the same time.
+#
+# The `gitleaks` job (OPS-4) fails on any secret ADDED by the pushed / PR commits
+# (rules: .gitleaks.toml; known legacy findings: .gitleaksignore; docs:
+# docs/07-operations/secrets.md). It first self-tests the rules against planted
+# fake secrets, so a config that silently matches nothing cannot go green.
+#
+# The `mysql` job (QA-1) runs the `mysql` PHPUnit group (tenant harness smoke
+# test, concurrency / row-lock tests, DECIMAL round trips) on a throwaway MySQL 8.4
+# container, because sqlite cannot prove row locks (phase-1-plan R7).
 #
 # The one-time full format pass has landed, so formatting is checked on the
 # whole codebase:
@@ -93,6 +102,95 @@ jobs:
 
       - name: PHPUnit (sqlite :memory:)
         run: php artisan test
+
+  mysql:
+    name: mysql
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Throwaway container on the runner: empty root password, no secret involved.
+      # phpunit.mysql.xml pins DB_DATABASE=sroor_testing and the bootstrap refuses
+      # any database that is not a *_test / *_testing schema.
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USERNAME: root
+      DB_PASSWORD: ''
+      MYSQL_IMAGE: mysql:8.4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Started first so it initialises while Composer installs. A plain `docker run`
+      # instead of a service container, because services cannot pass mysqld flags.
+      # Data lives on tmpfs and durability is off: this server only exists for the job.
+      - name: Start MySQL 8.4 (ephemeral)
+        working-directory: .
+        run: |
+          docker run -d --name mysql -p 3306:3306 \
+            -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+            -e MYSQL_DATABASE=sroor_testing \
+            --tmpfs /var/lib/mysql:rw \
+            "$MYSQL_IMAGE" \
+            --character-set-server=utf8mb4 \
+            --collation-server=utf8mb4_unicode_ci \
+            --skip-log-bin \
+            --innodb-flush-log-at-trx-commit=0 \
+            --innodb-doublewrite=0 \
+            --innodb-file-per-table=0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+
+      - name: Composer install
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # Throwaway key generated per run; phpunit.mysql.xml commits no APP_KEY (gitleaks).
+      - name: Generate APP_KEY
+        run: echo "APP_KEY=$(php artisan key:generate --show --no-ansi)" >> "$GITHUB_ENV"
+
+      # The image's entrypoint first runs a socket-only bootstrap server, so wait until
+      # the final server answers over TCP and the test schema exists.
+      - name: Wait for MySQL
+        working-directory: .
+        run: |
+          for i in $(seq 1 60); do
+            if docker exec mysql mysql -h127.0.0.1 -uroot -N -e \
+                "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'sroor_testing'" 2>/dev/null | grep -q 1; then
+              docker exec mysql mysql -h127.0.0.1 -uroot -N -e "SELECT VERSION()"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL did not become ready in time" >&2
+          docker logs mysql | tail -50
+          exit 1
+
+      - name: PHPUnit (MySQL 8.4, group mysql)
+        run: php artisan test -c phpunit.mysql.xml
+
+      - name: MySQL server log (on failure)
+        if: failure()
+        working-directory: .
+        run: docker logs mysql 2>&1 | tail -100
 
   frontend:
     name: frontend
@@ -211,3 +309,66 @@ jobs:
 
       - name: Prettier format:check
         run: npm run format:check
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Pinned release + SHA-256 from gitleaks_8.30.1_checksums.txt. Bump both together.
+      GITLEAKS_VERSION: '8.30.1'
+      GITLEAKS_SHA256: '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb'
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks (pinned, checksum verified)
+        run: |
+          set -euo pipefail
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$archive"             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" gitleaks
+          sudo install -m 0755 "$RUNNER_TEMP/gitleaks" /usr/local/bin/gitleaks
+          gitleaks version
+
+      # Planted fake secrets in a throwaway repo must FAIL, placeholders must pass,
+      # and a .gitleaksignore fingerprint must not hide a new secret.
+      - name: Self-test the gitleaks rules
+        run: bash scripts/ops/tests/gitleaks-selftest.sh gitleaks
+
+      - name: Tests for scripts/ops/render-env.sh
+        run: bash scripts/ops/tests/render-env-test.sh
+
+      # push / PR: only the new commits are scanned, so legacy findings in old
+      # commits never block, but any secret a new commit adds does (even in a
+      # legacy file). Manual runs and new branches scan the whole HEAD history
+      # against the .gitleaksignore baseline.
+      - name: Determine scan range
+        id: range
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          range="HEAD"
+          if [ "$EVENT" = "pull_request" ]; then
+            range="$PR_BASE..$PR_HEAD"
+          elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ]               && [ "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]               && git cat-file -e "$PUSH_BEFORE^{commit}" 2>/dev/null; then
+            range="$PUSH_BEFORE..$PUSH_AFTER"
+          fi
+          echo "log-opts=$range" >> "$GITHUB_OUTPUT"
+          echo "Scanning: $range"
+
+      # --redact keeps values out of the log; --ignore-gitleaks-allow means an
+      # inline `gitleaks:allow` comment cannot bypass the gate.
+      - name: gitleaks scan
+        env:
+          LOG_OPTS: ${{ steps.range.outputs.log-opts }}
+        run: |
+          gitleaks git --config .gitleaks.toml --gitleaks-ignore-path .gitleaksignore             --redact --no-banner --no-color --ignore-gitleaks-allow --verbose             --log-opts="$LOG_OPTS" .

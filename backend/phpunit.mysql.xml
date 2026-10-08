@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    QA-1: MySQL 8 suite (CI job `mysql`).
+
+    Runs only tests in the `mysql` group (the IDEN-4.8 tenant harness smoke test,
+    the concurrency tests and anything else that must hold on a real InnoDB server)
+    with a MySQL central database and one MySQL schema per harness tenant.
+
+    Local run (throwaway server only, never the dev or a live database):
+        DB_HOST=127.0.0.1 DB_PORT=3306 DB_USERNAME=root DB_PASSWORD= \
+            php artisan test -c phpunit.mysql.xml
+
+    Connection settings are overridable from the environment; the database name is
+    pinned (force="true") and tests/mysql-bootstrap.php refuses anything that does
+    not end with _test / _testing. The user needs CREATE/DROP DATABASE rights
+    (the harness creates `tenant_qa*` schemas and drops them after every test).
+
+    APP_KEY is deliberately NOT set here (no key literals in tracked files, gitleaks
+    rule `sroor-laravel-app-key`). CI exports one generated at runtime with
+    `php artisan key:generate` in show mode (see the `Generate APP_KEY` step). Local
+    runs: export your own APP_KEY the same way, or leave it unset and
+    tests/mysql-bootstrap.php generates a random throwaway key for that run.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/mysql-bootstrap.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <groups>
+        <include>
+            <group>mysql</group>
+        </include>
+    </groups>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="mysql" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <env name="DB_DATABASE" value="sroor_testing" force="true"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_USERNAME" value="root"/>
+        <env name="DB_PASSWORD" value=""/>
+        <env name="TENANT_DB_PREFIX" value="tenant_" force="true"/>
+        <env name="TENANT_DB_SUFFIX" value="" force="true"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>
