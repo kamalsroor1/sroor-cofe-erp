@@ -149,7 +149,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
-     * الحصول على كافة حدود الاستخدام.
+     * الحصول على كافة حدود الاستخدام (null = غير محدود).
+     *
+     * @return array<string, int|null>
      */
     public function getAllLimits(): array
     {
@@ -161,6 +163,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return [
             'users' => $plan->max_users,
             'stores' => $plan->max_stores,
+            'warehouses' => $plan->max_warehouses,
+            'vans' => $plan->max_vans,
             'items' => $plan->max_items,
             'invoices_month' => $plan->max_invoices_per_month,
             'storage_mb' => $plan->max_storage_mb,

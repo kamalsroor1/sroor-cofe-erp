@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Contracts\TenantProvisionerInterface;
 use App\DTOs\CreateTenantDTO;
+use App\Enums\Billing\BillingCycle;
+use App\Enums\Billing\SubscriptionStatus;
 use App\Models\Plan;
 use App\Models\Setting;
 use App\Models\Store;
@@ -71,13 +73,20 @@ class TenantProvisionerService implements TenantProvisionerInterface
             ]);
         }
 
-        // 4. Record Initial Subscription
+        // 4. Record Initial Subscription (central billing log, ENTI-1.3).
+        // Founder slots / price locks are granted at first payment (ENTI-1.7, ENTI-3.4), never here.
+        // TODO(CTO): a tenant provisioned with trial_days = 0 is still recorded as `active` without a
+        // payment (legacy super-admin behaviour); `pending_payment` would be stricter once ENTI-3.x ships.
         Subscription::create([
             'tenant_id' => $tenant->id,
             'plan_id' => $plan->id,
-            'billing_cycle' => 'monthly',
-            'status' => $dto->trialDays > 0 ? 'trialing' : 'active',
+            'billing_cycle' => BillingCycle::Monthly,
+            'status' => $dto->trialDays > 0 ? SubscriptionStatus::Trialing : SubscriptionStatus::Active,
             'amount' => $plan->price_monthly,
+            'currency' => Subscription::DEFAULT_CURRENCY,
+            'price_locked' => false,
+            'is_founder' => false,
+            'founder_price_until' => null,
             'starts_at' => now(),
             'ends_at' => $dto->trialDays > 0 ? now()->addDays($dto->trialDays) : now()->addMonth(),
             'payment_method' => 'manual',

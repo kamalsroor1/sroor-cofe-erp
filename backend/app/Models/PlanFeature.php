@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Central DB: registry of plan feature keys.
+ */
 class PlanFeature extends Model
 {
     use HasFactory;
+    use UsesCentralConnection;
 
     protected $fillable = [
         'key',
