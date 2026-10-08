@@ -25,9 +25,20 @@ use Tests\TenantTestCase;
  */
 final class SettingsSecretsApiTest extends TenantTestCase
 {
-    private const TOKEN = '123456789:AAFakeTokenForTestsOnly_abcdefghijk';
+    // Fake Telegram bot tokens in the real <bot id>:<secret> shape, assembled from parts so
+    // no token literal is committed (gitleaks). The secret part uses the `fixture` prefix,
+    // which .gitleaks.toml treats as fake by convention.
+    private const FAKE_BOT_ID = '123456789';
 
-    private const OTHER_TOKEN = '987654321:AAAnotherFakeToken_zyxwvutsrqpon';
+    private const OTHER_FAKE_BOT_ID = '987654321';
+
+    private const FAKE_SECRET_PART = 'fixtureTelegramBotSecretA_abcdefghijk';
+
+    private const OTHER_FAKE_SECRET_PART = 'fixtureTelegramBotSecretB_zyxwvutsrq';
+
+    private const TOKEN = self::FAKE_BOT_ID.':'.self::FAKE_SECRET_PART;
+
+    private const OTHER_TOKEN = self::OTHER_FAKE_BOT_ID.':'.self::OTHER_FAKE_SECRET_PART;
 
     public function test_get_settings_never_returns_the_stored_bot_token(): void
     {
@@ -267,7 +278,7 @@ final class SettingsSecretsApiTest extends TenantTestCase
 
         $body = (string) $response->getContent();
         $this->assertStringNotContainsString(self::TOKEN, $body);
-        $this->assertStringNotContainsString('AAFakeTokenForTestsOnly', $body);
+        $this->assertStringNotContainsString(self::FAKE_SECRET_PART, $body);
         $this->assertStringNotContainsString('cURL', $body);
     }
 

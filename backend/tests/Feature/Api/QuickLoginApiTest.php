@@ -11,6 +11,7 @@ use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -48,6 +49,13 @@ class QuickLoginApiTest extends TestCase
 
     public function createApplication(): Application
     {
+        // Laravel's env repository is static and immutable: it never overwrites a variable
+        // set outside .env, EXCEPT one it loaded from .env itself in an earlier test. When
+        // .env defines QUICK_LOGIN_ENABLED (CI copies .env.example, which has it empty), a
+        // previous test already loaded that empty value and the next boot would overwrite
+        // `true` with it. Clearing through the repository forgets that ownership first.
+        Env::getRepository()->clear(self::ENV_KEY);
+
         putenv(self::ENV_KEY.'=true');
         $_ENV[self::ENV_KEY] = 'true';
         $_SERVER[self::ENV_KEY] = 'true';

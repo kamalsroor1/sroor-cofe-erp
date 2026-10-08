@@ -28,6 +28,9 @@ final class AddonModelTest extends TenantTestCase
 
     private const PLAN_ADDON_MIGRATION = 'migrations/2026_10_10_200310_create_plan_addon_table.php';
 
+    /** Holds an FK to addons, so a real rollback drops it before addons (MySQL error 3730 otherwise). */
+    private const SUBSCRIPTION_ADDONS_MIGRATION = 'migrations/2026_10_10_200320_create_subscription_addons_table.php';
+
     public function test_addons_and_plan_addon_tables_have_the_designed_columns(): void
     {
         $schema = Schema::connection($this->centralConnectionName());
@@ -99,7 +102,12 @@ final class AddonModelTest extends TenantTestCase
         ]);
         $addon = Addon::query()->findOrFail($addon->id);
 
-        $this->assertSame(['stores' => 1, 'users' => 1], $addon->bundled_limits);
+        // A JSON object is a map: MySQL's JSON type normalises key order (shorter keys
+        // first), sqlite keeps the inserted text. Compare keys and values, not order.
+        $limits = $addon->bundled_limits;
+        $this->assertIsArray($limits);
+        ksort($limits);
+        $this->assertSame(['stores' => 1, 'users' => 1], $limits);
         $this->assertSame('212.000', $addon->price_tiers[0]['unit_price'] ?? null);
         $this->assertSame('1870.000', $addon->price_tiers[1]['yearly_price'] ?? null);
         $this->assertSame('2490.000', $addon->yearly_price);
@@ -213,10 +221,13 @@ final class AddonModelTest extends TenantTestCase
 
     public function test_migrations_roll_back_and_reapply(): void
     {
+        // Same order as `migrate:rollback`: later migrations that reference addons first.
         try {
+            $this->runMigration(self::SUBSCRIPTION_ADDONS_MIGRATION, 'down');
             $this->runMigration(self::PLAN_ADDON_MIGRATION, 'down');
             $this->runMigration(self::ADDONS_MIGRATION, 'down');
 
+            $this->assertFalse(Schema::hasTable('subscription_addons'));
             $this->assertFalse(Schema::hasTable('plan_addon'));
             $this->assertFalse(Schema::hasTable('addons'));
 
@@ -226,7 +237,10 @@ final class AddonModelTest extends TenantTestCase
         } finally {
             $this->runMigration(self::ADDONS_MIGRATION, 'up');
             $this->runMigration(self::PLAN_ADDON_MIGRATION, 'up');
+            $this->runMigration(self::SUBSCRIPTION_ADDONS_MIGRATION, 'up');
         }
+
+        $this->assertTrue(Schema::hasTable('subscription_addons'));
 
         $this->assertTrue(Schema::hasTable('addons'));
         $this->assertTrue(Schema::hasTable('plan_addon'));

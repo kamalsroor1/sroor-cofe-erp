@@ -34,6 +34,19 @@ final class CentralUserModelTest extends TenantTestCase
 
     private const TOKENS_MIGRATION = 'database/migrations/2026_10_10_100010_create_central_personal_access_tokens_table.php';
 
+    /**
+     * Later central migrations whose tables hold an FK to central_users. `migrate:rollback`
+     * drops them before central_users (MySQL refuses otherwise, error 3730), so the
+     * round trip below does the same: down() newest first, up() oldest first.
+     *
+     * @var list<string>
+     */
+    private const DEPENDENT_MIGRATIONS = [
+        'database/migrations/2026_10_10_200510_create_billing_invoices_table.php',   // issued_by
+        'database/migrations/2026_10_10_200520_create_billing_payments_table.php',   // verified_by (+ FK to billing_invoices)
+        'database/migrations/2026_10_10_400000_create_platform_settings_table.php',  // updated_by
+    ];
+
     public function test_central_user_is_standalone_and_not_a_tenant_user(): void
     {
         $user = CentralUser::factory()->create();
@@ -202,7 +215,11 @@ final class CentralUserModelTest extends TenantTestCase
         $schema = Schema::connection($this->centralConnectionName());
         $users = require base_path(self::USERS_MIGRATION);
         $tokens = require base_path(self::TOKENS_MIGRATION);
+        $dependents = array_map(static fn (string $path): object => require base_path($path), self::DEPENDENT_MIGRATIONS);
 
+        foreach (array_reverse($dependents) as $dependent) {
+            $dependent->down();
+        }
         $tokens->down();
         $users->down();
 
@@ -213,8 +230,14 @@ final class CentralUserModelTest extends TenantTestCase
 
         $users->up();
         $tokens->up();
+        foreach ($dependents as $dependent) {
+            $dependent->up();
+        }
 
         $this->assertTrue($schema->hasTable('central_users'));
         $this->assertTrue($schema->hasTable('central_personal_access_tokens'));
+        $this->assertTrue($schema->hasTable('billing_invoices'));
+        $this->assertTrue($schema->hasTable('billing_payments'));
+        $this->assertTrue($schema->hasTable('platform_settings'));
     }
 }

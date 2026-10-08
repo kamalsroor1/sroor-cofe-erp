@@ -135,6 +135,14 @@ class SuperAdminApiTest extends TestCase
             ->assertJson(['success' => true])
             ->assertJsonStructure(['plans', 'tenants']);
 
+        // Tenant DB creation/migration events are faked, so no tenant database file exists.
+        // This suite keeps central and tenant tables in one sqlite :memory: database, so the
+        // provisioner's $tenant->run() seeding must stay on it instead of switching to a
+        // per-tenant file (the test used to pass only where a stale
+        // database/tenant_wadi-elbon.sqlite was lying around). Real per-tenant databases
+        // are covered by the Tests\TenantTestCase harness.
+        config(['tenancy.bootstrappers' => []]);
+
         $payload = [
             'name' => 'محمصة وادي البن',
             'slug' => 'wadi-elbon',
@@ -155,6 +163,12 @@ class SuperAdminApiTest extends TestCase
             'slug' => 'wadi-elbon',
             'email' => 'wadi@elbon.com',
         ]);
+
+        // The provisioner seeded the tenant side (first admin) and left tenant context.
+        $this->assertFalse(tenancy()->initialized);
+        $admin = User::query()->where('email', 'wadi@elbon.com')->first();
+        $this->assertNotNull($admin);
+        $this->assertTrue($admin->hasRole('admin'));
     }
 
     public function test_store_tenant_fails_validation_on_missing_fields(): void

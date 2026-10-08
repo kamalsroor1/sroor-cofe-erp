@@ -98,7 +98,7 @@ final class MediaConnectionRoutingTest extends TenantTestCase
         $tenant = $this->createTenant();
         $central = $this->centralConnectionName();
 
-        $owner = CentralMediaOwner::query()->create(['key' => 'pkg2_receipt_owner', 'value' => 'x', 'type' => 'string']);
+        $owner = CentralMediaOwner::query()->create(['key' => 'fixture_pkg2_receipt_owner', 'value' => 'x', 'type' => 'string']);
 
         $result = $this->inTenant($tenant, function () use ($owner): array {
             $media = $owner
@@ -163,7 +163,7 @@ final class MediaConnectionRoutingTest extends TenantTestCase
     public function test_central_media_refuses_a_tenancy_suffixed_disk(): void
     {
         $tenant = $this->createTenant();
-        $owner = CentralMediaOwner::query()->create(['key' => 'pkg2_wrong_disk', 'value' => 'x', 'type' => 'string']);
+        $owner = CentralMediaOwner::query()->create(['key' => 'fixture_pkg2_wrong_disk', 'value' => 'x', 'type' => 'string']);
 
         try {
             $this->inTenant($tenant, function () use ($owner): void {
@@ -193,7 +193,7 @@ final class MediaConnectionRoutingTest extends TenantTestCase
     public function test_deleting_central_media_removes_its_file(): void
     {
         $tenant = $this->createTenant();
-        $owner = CentralMediaOwner::query()->create(['key' => 'pkg2_delete', 'value' => 'x', 'type' => 'string']);
+        $owner = CentralMediaOwner::query()->create(['key' => 'fixture_pkg2_delete', 'value' => 'x', 'type' => 'string']);
 
         $path = $this->inTenant($tenant, function () use ($owner): string {
             $media = $owner
