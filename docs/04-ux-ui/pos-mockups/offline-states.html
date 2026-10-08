@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-shell="electron">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حالات الاتصال والأوفلاين · Sroor POS Mockup</title>
+<!-- Static design mockup for CTO approval. Not app code. Generated for docs/04-ux-ui/pos-mockups. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  --font-sans: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  --font-tajawal: 'Tajawal', 'Cairo', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+}
+@theme inline {
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-hover);
+  --color-brand-light: var(--color-primary-light);
+  --color-brand-border: var(--color-primary-border);
+}
+/* Numbers, money, barcodes: always LTR + tabular inside RTL (study §6.11). Layered so utilities (flex/block) still win. */
+@layer components {
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; display: inline-block; }
+  td.num, th.num { display: table-cell; direction: inherit; unicode-bidi: normal; }
+}
+</style>
+<style>
+  /* Same default brand tokens as backend/resources/css/app.css (amber theme). */
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: rgba(245, 158, 11, 0.15);
+    --color-primary-border: rgba(245, 158, 11, 0.35);
+  }
+  html, body { font-family: 'Cairo', 'Tajawal', system-ui, sans-serif; }
+  kbd, .kbd {
+    font-family: ui-monospace, 'Consolas', monospace; font-size: 11px; font-weight: 700; line-height: 1;
+    padding: 3px 6px; border-radius: 6px; border: 1px solid rgb(203 213 225); border-bottom-width: 2px;
+    background: rgb(241 245 249); color: rgb(51 65 85); direction: ltr; unicode-bidi: isolate; white-space: nowrap; display: inline-block;
+  }
+  .dark kbd, .dark .kbd { background: rgb(30 41 59); border-color: rgb(71 85 105); color: rgb(203 213 225); }
+  /* Electron vs browser shortcut variants (study §8 decision 5) */
+  html[data-shell="electron"] .k-br { display: none !important; }
+  html[data-shell="browser"] .k-el { display: none !important; }
+  /* Alt-hold key badges (study §6.3, Lightspeed pattern) */
+  .kbadge { display: none; }
+  html.show-keys .kbadge { display: inline-block; position: absolute; top: -8px; inset-inline-end: -6px; z-index: 5;
+    background: var(--color-primary); color: #0f172a; border-color: var(--color-primary-hover); }
+  .shimmer { background: linear-gradient(90deg, rgba(148,163,184,.15) 25%, rgba(148,163,184,.35) 50%, rgba(148,163,184,.15) 75%); background-size: 200% 100%; animation: sh 1.4s infinite; }
+  @keyframes sh { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+  .hatch { background-image: repeating-linear-gradient(135deg, rgba(148,163,184,.12) 0 8px, transparent 8px 16px); }
+  :focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+</style>
+<script>
+  (function () {
+    var t = localStorage.getItem('sroor-mock-theme');
+    var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', dark);
+    var s = localStorage.getItem('sroor-mock-shell');
+    if (s) document.documentElement.dataset.shell = s;
+  })();
+</script>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen">
+
+<!-- ===== Mockup toolbar (NOT part of the design) ===== -->
+<div class="h-10 flex items-center gap-2 px-3 text-xs whitespace-nowrap overflow-x-auto bg-slate-800 text-slate-100 border-b-2 border-dashed border-amber-400 sticky top-0 z-[60]">
+  <a href="index.html" class="px-2 py-1 rounded hover:bg-slate-700 font-bold">الفهرس</a>
+  <span class="text-slate-400">/</span>
+  <span class="font-bold truncate">حالات الاتصال والأوفلاين</span>
+  <span class="ms-2 px-2 py-0.5 rounded bg-amber-400 text-slate-900 font-bold hidden sm:inline">نموذج للمراجعة — مش كود</span>
+  <div class="ms-auto flex items-center gap-1">
+    <button type="button" onclick="mockToggleTheme()" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">فاتح/داكن</button>
+    <span class="hidden md:inline text-slate-400 ms-1">الاختصارات:</span>
+    <button type="button" data-shell-btn="electron" onclick="mockSetShell('electron')" class="hidden md:inline-block px-2 py-1 rounded bg-slate-700">Electron</button>
+    <button type="button" data-shell-btn="browser" onclick="mockSetShell('browser')" class="hidden md:inline-block px-2 py-1 rounded bg-slate-700">متصفح</button>
+    <button type="button" onclick="mockToggleNotes()" class="px-2 py-1 rounded bg-amber-400 text-slate-900 font-bold">ملاحظات</button>
+  </div>
+</div>
+
+<main class="p-4 sm:p-6 max-w-[1280px] mx-auto space-y-6">
+
+  <!-- ===== State 1: online ===== -->
+  <section aria-labelledby="s1">
+    <h2 id="s1" class="text-sm font-black text-slate-500 dark:text-slate-400 mb-2">1) متصل — الحالة العادية</h2>
+    <div class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div class="h-14 px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
+        <span class="font-black">نقطة البيع · فرع المعادي</span>
+        <span class="h-9 px-3 rounded-lg flex items-center gap-2 text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900" role="status"><i data-i="wifi" class="w-4 h-4"></i> متصل · آخر مزامنة من دقيقة</span>
+      </div>
+      <div class="p-4 grid sm:grid-cols-[1fr_320px] gap-4 items-center">
+        <div class="space-y-2"><div class="h-9 rounded-lg bg-slate-100 dark:bg-slate-800"></div><div class="h-9 rounded-lg bg-slate-100 dark:bg-slate-800"></div></div>
+        <div class="space-y-2">
+          <div class="flex justify-between items-end"><span class="text-sm text-slate-500 dark:text-slate-400">الصافي</span><span class="text-3xl font-black num">600.000</span></div>
+          <button type="button" class="w-full h-14 rounded-2xl bg-brand text-slate-950 font-black">ادفع <kbd>F9</kbd></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== State 2: weak ===== -->
+  <section aria-labelledby="s2">
+    <h2 id="s2" class="text-sm font-black text-slate-500 dark:text-slate-400 mb-2">2) اتصال ضعيف / بطيء</h2>
+    <div class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div class="h-14 px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
+        <span class="font-black">نقطة البيع · فرع المعادي</span>
+        <span class="h-9 px-3 rounded-lg flex items-center gap-2 text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" role="status"><i data-i="wifi" class="w-4 h-4"></i> اتصال بطيء · آخر مزامنة من <span class="num">4</span> دقايق</span>
+      </div>
+      <div class="p-4 grid sm:grid-cols-[1fr_320px] gap-4 items-center">
+        <p class="text-sm text-slate-600 dark:text-slate-300">البيع شغال عادي. الشارة بس بتنبّه الكاشير إن الإتمام ممكن ياخد وقت أطول. مفيش banner علشان ما نزعجش.</p>
+        <div class="space-y-2">
+          <div class="flex justify-between items-end"><span class="text-sm text-slate-500 dark:text-slate-400">الصافي</span><span class="text-3xl font-black num">600.000</span></div>
+          <button type="button" class="w-full h-14 rounded-2xl bg-brand text-slate-950 font-black">ادفع <kbd>F9</kbd></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== State 3: offline — checkout blocked ===== -->
+  <section aria-labelledby="s3">
+    <h2 id="s3" class="text-sm font-black text-slate-500 dark:text-slate-400 mb-2">3) غير متصل — الدفع متوقف (قرار v1)</h2>
+    <div class="rounded-2xl overflow-hidden border-2 border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-900">
+      <div class="h-14 px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
+        <span class="font-black">نقطة البيع · فرع المعادي</span>
+        <span class="h-9 px-3 rounded-lg flex items-center gap-2 text-xs font-bold bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800" role="status"><i data-i="wifioff" class="w-4 h-4"></i> غير متصل</span>
+      </div>
+      <!-- Sticky banner -->
+      <div class="px-4 py-3 bg-rose-600 text-white flex flex-wrap items-center gap-3" role="alert">
+        <i data-i="wifioff" class="w-6 h-6 shrink-0"></i>
+        <div class="flex-1 min-w-[220px]">
+          <div class="font-black">النت فاصل — الدفع متوقف لحد ما الاتصال يرجع</div>
+          <div class="text-sm text-rose-50">تقدر تكمل تضيف أصناف عادي، والسلة محفوظة على الجهاز. بنحاول نتصل تاني تلقائي كل <span class="num">10</span> ثواني.</div>
+        </div>
+        <button type="button" class="h-11 px-4 rounded-xl bg-white text-rose-700 font-black flex items-center gap-2"><i data-i="refresh" class="w-4 h-4"></i> جرّب دلوقتي</button>
+      </div>
+      <div class="p-4 grid sm:grid-cols-[1fr_320px] gap-4">
+        <div class="space-y-2 text-sm">
+          <div class="h-10 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 flex items-center justify-between"><span class="font-bold">أرز مصري فاخر 1 كجم <span class="num">×2</span></span><span class="num font-black">77.000</span></div>
+          <div class="h-10 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 flex items-center justify-between"><span class="font-bold">زيت عباد الشمس 1 لتر</span><span class="num font-black">85.000</span></div>
+          <div class="h-10 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-3 flex items-center gap-2 text-emerald-900 dark:text-emerald-200"><i data-i="check" class="w-4 h-4"></i> اتضاف من الكاش المحلي: ملح 1 كجم</div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">الأسعار من آخر مزامنة (<span class="num">10:41</span>). السيرفر هيعيد حساب الإجمالي وقت الإتمام.</p>
+        </div>
+        <div class="space-y-2">
+          <div class="flex justify-between items-end"><span class="text-sm text-slate-500 dark:text-slate-400">الصافي</span><span class="text-3xl font-black num">171.500</span></div>
+          <button type="button" disabled aria-disabled="true" class="w-full h-14 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-black flex items-center justify-center gap-2 cursor-not-allowed"><i data-i="lock" class="w-5 h-5"></i> الدفع متوقف — مفيش اتصال</button>
+          <button type="button" disabled aria-disabled="true" class="w-full h-11 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 text-sm font-bold cursor-not-allowed">التعليق على السيرفر متوقف · الفاتورة محفوظة محلياً</button>
+          <p class="text-xs text-slate-500 dark:text-slate-400">الضغط على <kbd>F9</kbd> أو <kbd class="k-el">F12</kbd><kbd class="k-br">Ctrl+Space</kbd> يهزّ الـ banner بدل ما يفتح الدفع.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== State 4: drop during submit (idempotent retry) ===== -->
+  <section aria-labelledby="s4">
+    <h2 id="s4" class="text-sm font-black text-slate-500 dark:text-slate-400 mb-2">4) الاتصال قطع وإحنا بنقفل البيعة</h2>
+    <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 p-4 flex flex-wrap items-center gap-4" role="alert">
+      <span class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 flex items-center justify-center shrink-0"><i data-i="refresh" class="w-6 h-6"></i></span>
+      <div class="flex-1 min-w-[240px]">
+        <div class="font-black">مش متأكدين إن الفاتورة وصلت — بنعيد المحاولة بنفس المفتاح</div>
+        <div class="text-sm text-slate-600 dark:text-slate-300">مفيش خطر تتسجل مرتين (نفس <code class="num">client_uuid</code> / <code class="num">Idempotency-Key</code>). ما تقفلش الشاشة وما تدفعش تاني.</div>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" class="h-11 px-4 rounded-xl bg-brand text-slate-950 font-black">إعادة المحاولة</button>
+        <button type="button" class="h-11 px-4 rounded-xl border border-slate-300 dark:border-slate-600 font-bold">رجوع للسلة</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== State 5: back online — syncing ===== -->
+  <section aria-labelledby="s5">
+    <h2 id="s5" class="text-sm font-black text-slate-500 dark:text-slate-400 mb-2">5) رجع الاتصال — بيزامن</h2>
+    <div class="rounded-2xl overflow-hidden border border-sky-300 dark:border-sky-800 bg-white dark:bg-slate-900">
+      <div class="h-14 px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
+        <span class="font-black">نقطة البيع · فرع المعادي</span>
+        <span class="h-9 px-3 rounded-lg flex items-center gap-2 text-xs font-bold bg-sky-50 text-sky-900 border border-sky-300 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800" role="status"><i data-i="refresh" class="w-4 h-4 animate-spin"></i> بيزامن <span class="num">2/3</span></span>
+      </div>
+      <div class="px-4 py-3 bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200 flex flex-wrap items-center gap-3" role="status" aria-live="polite">
+        <i data-i="wifi" class="w-5 h-5"></i><span class="font-black">رجع الاتصال — الدفع اشتغل تاني</span>
+        <div class="flex-1 min-w-[160px] h-2 rounded-full bg-sky-200 dark:bg-sky-900 overflow-hidden"><div class="h-full w-2/3 bg-sky-600"></div></div>
+      </div>
+      <ul class="p-4 grid sm:grid-cols-3 gap-2 text-sm">
+        <li class="h-12 rounded-xl border border-slate-200 dark:border-slate-700 px-3 flex items-center gap-2"><i data-i="check" class="w-4 h-4 text-emerald-600"></i> الأصناف والأسعار</li>
+        <li class="h-12 rounded-xl border border-slate-200 dark:border-slate-700 px-3 flex items-center gap-2"><i data-i="check" class="w-4 h-4 text-emerald-600"></i> العملاء والأرصدة</li>
+        <li class="h-12 rounded-xl border border-sky-300 dark:border-sky-800 px-3 flex items-center gap-2"><i data-i="refresh" class="w-4 h-4 text-sky-600 animate-spin"></i> الفواتير المعلقة على السيرفر</li>
+      </ul>
+      <p class="px-4 pb-4 text-xs text-slate-500 dark:text-slate-400">لو سعر صنف في السلة اتغير وإحنا فاصلين، بيظهر تنبيه على السطر قبل الدفع.</p>
+    </div>
+  </section>
+
+  <!-- ===== Phase 2 preview ===== -->
+  <section aria-labelledby="s6" class="opacity-90">
+    <h2 id="s6" class="text-sm font-black text-slate-500 dark:text-slate-400 mb-2">6) معاينة Phase 2 — بيع كاش أوفلاين (طابور idempotent) · <span class="text-rose-700 dark:text-rose-400">مش في v1</span></h2>
+    <div class="rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hatch p-4 grid md:grid-cols-2 gap-4">
+      <div class="rounded-xl bg-white dark:bg-slate-900 p-4 space-y-2">
+        <div class="font-black flex items-center gap-2"><i data-i="cloud" class="w-5 h-5"></i> <span class="num">3</span> فواتير كاش مستنية مزامنة</div>
+        <p class="text-sm text-slate-600 dark:text-slate-300">الإيصال يتطبع عليه "غير متزامن". تسجيل الخروج وقفل الوردية ممنوعين لحد ما الطابور يفضى.</p>
+      </div>
+      <table class="rounded-xl overflow-hidden bg-white dark:bg-slate-900 text-sm w-full">
+        <caption class="sr-only">المتاح أوفلاين</caption>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          <tr class="h-10"><td class="px-3">بيع كاش</td><td class="px-3 text-end text-emerald-700 dark:text-emerald-400 font-bold">متاح</td></tr>
+          <tr class="h-10"><td class="px-3">آجل</td><td class="px-3 text-end text-rose-700 dark:text-rose-400 font-bold">مش متاح</td></tr>
+          <tr class="h-10"><td class="px-3">مرتجع</td><td class="px-3 text-end text-rose-700 dark:text-rose-400 font-bold">مش متاح</td></tr>
+          <tr class="h-10"><td class="px-3">عميل جديد</td><td class="px-3 text-end text-rose-700 dark:text-rose-400 font-bold">مش متاح</td></tr>
+          <tr class="h-10"><td class="px-3">قفل الوردية</td><td class="px-3 text-end text-rose-700 dark:text-rose-400 font-bold">مش متاح</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<aside id="notes" class="fixed z-[55] top-12 bottom-2 end-2 w-[min(380px,calc(100vw-16px))] overflow-auto rounded-2xl border-2 border-dashed border-amber-400 bg-amber-50/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 shadow-2xl p-4 text-sm leading-7">
+  <div class="flex items-center justify-between mb-2"><h2 class="font-black">ملاحظات التصميم — الاتصال والأوفلاين</h2><button type="button" onclick="mockToggleNotes()" class="w-11 h-11 rounded-lg hover:bg-amber-100 dark:hover:bg-slate-800" aria-label="إغلاق"><i data-i="x" class="w-4 h-4 mx-auto"></i></button></div>
+  <ol class="list-decimal ps-5 space-y-2">
+    <li><b>3 حالات للشارة</b>: أخضر متصل + آخر مزامنة، كهرماني بطيء، أحمر غير متصل — كلها بنص وأيقونة مش لون بس (§6.10، §6.12).</li>
+    <li><b>قرار v1</b>: banner ثابت + <b>الدفع مقفول</b>، والإضافة للسلة شغالة من الكاش المحلي، والسلة محفوظة (قرار 1).</li>
+    <li>التعليق على السيرفر (قرار 7) بيتوقف هو كمان أوفلاين، فالفاتورة بتفضل محلية لحد ما النت يرجع.</li>
+    <li>انقطاع أثناء الإتمام: إعادة محاولة <b>بنفس المفتاح</b> (<code>client_uuid</code> + Idempotency الموجودين) بدل رسالة خطأ عامة (§5 ضعف 6).</li>
+    <li>بعد الرجوع: شريط مزامنة لكل نوع بيانات (نمط Qoyod) والدفع يرجع على طول.</li>
+    <li>الطابور الأوفلاين ومصفوفة المتاح معروضين كمعاينة بس — مكانهم آخر Phase 2 (قرار 1، §6.10 v2).</li>
+  </ol>
+</aside>
+
+<script>
+  /* Inline icon set (lucide-style strokes, 24x24). No external images. */
+  var MOCK_ICONS = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+    barcode: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M8 7v10M12 7v10M16 7v10"/>',
+    scale: '<path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1Z"/><path d="m2 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    wifi: '<path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0"/><circle cx="12" cy="20" r="1"/>',
+    wifioff: '<path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2-1.5M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8"/><circle cx="12" cy="20" r="1"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+    printer: '<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+    card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+    wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+    keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/>',
+    cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+    cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    star: '<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+    undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
+    back: '<path d="m9 18 6-6-6-6"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    store: '<path d="M3 9 5 3h14l2 6M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0V9ZM5 13v8h14v-8"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>',
+    zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9Z"/>'
+  };
+  document.querySelectorAll('[data-i]').forEach(function (el) {
+    var p = MOCK_ICONS[el.getAttribute('data-i')];
+    if (!p) return;
+    var cls = el.getAttribute('class') || 'w-5 h-5';
+    el.outerHTML = '<svg aria-hidden="true" class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  });
+
+  function mockToggleTheme() {
+    var d = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('sroor-mock-theme', d ? 'dark' : 'light');
+  }
+  function mockSetShell(s) {
+    document.documentElement.dataset.shell = s;
+    localStorage.setItem('sroor-mock-shell', s);
+    mockPaintShell();
+  }
+  function mockPaintShell() {
+    var s = document.documentElement.dataset.shell;
+    document.querySelectorAll('[data-shell-btn]').forEach(function (b) {
+      var on = b.getAttribute('data-shell-btn') === s;
+      b.style.background = on ? '#f59e0b' : '';
+      b.style.color = on ? '#0f172a' : '';
+      b.style.fontWeight = on ? '800' : '';
+    });
+  }
+  function mockToggleNotes() {
+    var n = document.getElementById('notes');
+    if (n) n.classList.toggle('hidden');
+  }
+  mockPaintShell();
+  /* Hold Alt to reveal key badges on buttons (study §6.3). */
+  window.addEventListener('keydown', function (e) { if (e.key === 'Alt') { e.preventDefault(); document.documentElement.classList.add('show-keys'); } });
+  window.addEventListener('keyup', function (e) { if (e.key === 'Alt') document.documentElement.classList.remove('show-keys'); });
+  window.addEventListener('blur', function () { document.documentElement.classList.remove('show-keys'); });
+</script>
+</body>
+</html>

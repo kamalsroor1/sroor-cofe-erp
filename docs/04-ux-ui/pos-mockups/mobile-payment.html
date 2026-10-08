@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-shell="electron">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>الدفع — موبايل · Sroor POS Mockup</title>
+<!-- Static design mockup for CTO approval. Not app code. Generated for docs/04-ux-ui/pos-mockups. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  --font-sans: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  --font-tajawal: 'Tajawal', 'Cairo', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+}
+@theme inline {
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-hover);
+  --color-brand-light: var(--color-primary-light);
+  --color-brand-border: var(--color-primary-border);
+}
+/* Numbers, money, barcodes: always LTR + tabular inside RTL (study §6.11). Layered so utilities (flex/block) still win. */
+@layer components {
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; display: inline-block; }
+  td.num, th.num { display: table-cell; direction: inherit; unicode-bidi: normal; }
+}
+</style>
+<style>
+  /* Same default brand tokens as backend/resources/css/app.css (amber theme). */
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: rgba(245, 158, 11, 0.15);
+    --color-primary-border: rgba(245, 158, 11, 0.35);
+  }
+  html, body { font-family: 'Cairo', 'Tajawal', system-ui, sans-serif; }
+  kbd, .kbd {
+    font-family: ui-monospace, 'Consolas', monospace; font-size: 11px; font-weight: 700; line-height: 1;
+    padding: 3px 6px; border-radius: 6px; border: 1px solid rgb(203 213 225); border-bottom-width: 2px;
+    background: rgb(241 245 249); color: rgb(51 65 85); direction: ltr; unicode-bidi: isolate; white-space: nowrap; display: inline-block;
+  }
+  .dark kbd, .dark .kbd { background: rgb(30 41 59); border-color: rgb(71 85 105); color: rgb(203 213 225); }
+  /* Electron vs browser shortcut variants (study §8 decision 5) */
+  html[data-shell="electron"] .k-br { display: none !important; }
+  html[data-shell="browser"] .k-el { display: none !important; }
+  /* Alt-hold key badges (study §6.3, Lightspeed pattern) */
+  .kbadge { display: none; }
+  html.show-keys .kbadge { display: inline-block; position: absolute; top: -8px; inset-inline-end: -6px; z-index: 5;
+    background: var(--color-primary); color: #0f172a; border-color: var(--color-primary-hover); }
+  .shimmer { background: linear-gradient(90deg, rgba(148,163,184,.15) 25%, rgba(148,163,184,.35) 50%, rgba(148,163,184,.15) 75%); background-size: 200% 100%; animation: sh 1.4s infinite; }
+  @keyframes sh { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+  .hatch { background-image: repeating-linear-gradient(135deg, rgba(148,163,184,.12) 0 8px, transparent 8px 16px); }
+  :focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+</style>
+<script>
+  (function () {
+    var t = localStorage.getItem('sroor-mock-theme');
+    var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', dark);
+    var s = localStorage.getItem('sroor-mock-shell');
+    if (s) document.documentElement.dataset.shell = s;
+  })();
+</script>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen">
+
+<!-- ===== Mockup toolbar (NOT part of the design) ===== -->
+<div class="h-10 flex items-center gap-2 px-3 text-xs whitespace-nowrap overflow-x-auto bg-slate-800 text-slate-100 border-b-2 border-dashed border-amber-400 sticky top-0 z-[60]">
+  <a href="index.html" class="px-2 py-1 rounded hover:bg-slate-700 font-bold">الفهرس</a>
+  <span class="text-slate-400">/</span>
+  <span class="font-bold truncate">الدفع — موبايل</span>
+  <span class="ms-2 px-2 py-0.5 rounded bg-amber-400 text-slate-900 font-bold hidden sm:inline">نموذج للمراجعة — مش كود</span>
+  <div class="ms-auto flex items-center gap-1">
+    <button type="button" onclick="mockToggleTheme()" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">فاتح/داكن</button>
+    <span class="hidden md:inline text-slate-400 ms-1">الاختصارات:</span>
+    <button type="button" data-shell-btn="electron" onclick="mockSetShell('electron')" class="hidden md:inline-block px-2 py-1 rounded bg-slate-700">Electron</button>
+    <button type="button" data-shell-btn="browser" onclick="mockSetShell('browser')" class="hidden md:inline-block px-2 py-1 rounded bg-slate-700">متصفح</button>
+    <button type="button" onclick="mockToggleNotes()" class="px-2 py-1 rounded bg-amber-400 text-slate-900 font-bold">ملاحظات</button>
+  </div>
+</div>
+
+<main class="p-4 sm:p-6 flex flex-wrap justify-center gap-8">
+
+  <!-- ================= Frame 1: cash with change + keypad ================= -->
+  <figure class="w-full max-w-[430px] sm:w-[390px]">
+    <figcaption class="mb-2 text-xs font-black text-slate-500 dark:text-slate-400 text-center">1) كاش بباقي — اختيار فئة مقترحة (ضغطتين)</figcaption>
+    <div class="relative h-[800px] max-h-[calc(100vh-7rem)] min-h-[680px] rounded-[2rem] sm:border-8 border-slate-800 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden flex flex-col" role="dialog" aria-modal="true" aria-labelledby="p1-title">
+      <div class="shrink-0 h-14 px-3 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+        <button type="button" class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center" aria-label="رجوع للسلة"><i data-i="back" class="w-5 h-5"></i></button>
+        <h2 id="p1-title" class="text-lg font-black">الدفع</h2>
+        <span class="ms-auto text-xs font-bold text-slate-500 dark:text-slate-400">نقدي (زائر)</span>
+      </div>
+      <div class="shrink-0 px-4 pt-3 grid grid-cols-2 gap-2">
+        <div class="rounded-2xl bg-slate-50 dark:bg-slate-800 p-3"><div class="text-[11px] font-bold text-slate-500 dark:text-slate-400">الصافي</div><div class="text-2xl font-black text-slate-950 dark:text-white num">479.250</div></div>
+        <div class="rounded-2xl p-3 border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 dark:border-emerald-700" aria-live="polite"><div class="text-[11px] font-bold text-emerald-900 dark:text-emerald-200">الباقي للعميل</div><div class="text-2xl font-black text-emerald-800 dark:text-emerald-300 num">20.750</div></div>
+      </div>
+      <!-- methods -->
+      <div class="shrink-0 px-4 pt-3 flex gap-2 overflow-x-auto" role="radiogroup" aria-label="طريقة الدفع">
+        <button type="button" role="radio" aria-checked="true" class="h-12 px-4 rounded-xl border-2 border-brand bg-brand-light font-black flex items-center gap-1 shrink-0"><i data-i="cash" class="w-5 h-5"></i> كاش</button>
+        <button type="button" role="radio" class="h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 font-bold flex items-center gap-1 shrink-0"><i data-i="card" class="w-5 h-5"></i> كارت</button>
+        <button type="button" role="radio" class="h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 font-bold flex items-center gap-1 shrink-0"><i data-i="zap" class="w-5 h-5"></i> InstaPay</button>
+        <button type="button" role="radio" class="h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 font-bold flex items-center gap-1 shrink-0"><i data-i="phone" class="w-5 h-5"></i> محفظة</button>
+        <button type="button" role="radio" aria-disabled="true" class="h-12 px-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 font-bold flex items-center gap-1 shrink-0"><i data-i="lock" class="w-4 h-4"></i> آجل</button>
+      </div>
+      <!-- amount -->
+      <div class="shrink-0 px-4 pt-3">
+        <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400">المستلم كاش</div>
+        <div class="h-16 rounded-2xl border-2 border-brand bg-slate-50 dark:bg-slate-950 px-4 flex items-center justify-end text-4xl font-black num">500.000</div>
+      </div>
+      <div class="shrink-0 px-4 pt-3 grid grid-cols-4 gap-2">
+        <button type="button" class="h-12 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black leading-tight">بالظبط<br><span class="num">479.250</span></button>
+        <button type="button" class="h-12 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200 font-black num">500</button>
+        <button type="button" class="h-12 rounded-xl border border-slate-200 dark:border-slate-700 font-black num">600</button>
+        <button type="button" class="h-12 rounded-xl border border-slate-200 dark:border-slate-700 font-black num">1000</button>
+      </div>
+      <!-- keypad -->
+      <div class="flex-1 min-h-0 px-4 pt-3 grid grid-cols-3 grid-rows-4 gap-2" dir="ltr">
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">1</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">2</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">3</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">4</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">5</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">6</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">7</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">8</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">9</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">.</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-2xl font-black">0</button>
+        <button type="button" class="min-h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-lg font-black" aria-label="مسح رقم">⌫</button>
+      </div>
+      <div class="shrink-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] grid grid-cols-[1fr_auto] gap-2">
+        <button type="button" class="h-14 rounded-2xl bg-emerald-600 text-white text-lg font-black flex items-center justify-center gap-2"><i data-i="printer" class="w-5 h-5"></i> إتمام وطباعة</button>
+        <button type="button" class="h-14 px-4 rounded-2xl border border-slate-300 dark:border-slate-600 text-sm font-bold">بدون طباعة</button>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ================= Frame 2: partial = cash + credit ================= -->
+  <figure class="w-full max-w-[430px] sm:w-[390px]">
+    <figcaption class="mb-2 text-xs font-black text-slate-500 dark:text-slate-400 text-center">2) جزئي = سطر كاش + سطر آجل على عميل</figcaption>
+    <div class="relative h-[800px] max-h-[calc(100vh-7rem)] min-h-[680px] rounded-[2rem] sm:border-8 border-slate-800 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden flex flex-col" role="dialog" aria-modal="true" aria-labelledby="p2-title">
+      <div class="shrink-0 h-14 px-3 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+        <button type="button" class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center" aria-label="رجوع للسلة"><i data-i="back" class="w-5 h-5"></i></button>
+        <h2 id="p2-title" class="text-lg font-black">الدفع</h2>
+      </div>
+      <div class="flex-1 overflow-auto px-4 py-3 space-y-3">
+        <!-- customer -->
+        <button type="button" class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 p-3 text-start">
+          <div class="flex items-center gap-2 font-black"><i data-i="user" class="w-5 h-5"></i> بقالة النور — محمد عبد الرحمن <i data-i="chevron" class="w-4 h-4 ms-auto"></i></div>
+          <div class="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="rounded-lg bg-slate-50 dark:bg-slate-800 p-2"><div class="text-slate-500 dark:text-slate-400">الرصيد</div><div class="font-black num">1,250.000</div></div>
+            <div class="rounded-lg bg-slate-50 dark:bg-slate-800 p-2"><div class="text-slate-500 dark:text-slate-400">الحد</div><div class="font-black num">2,000.000</div></div>
+            <div class="rounded-lg bg-amber-50 dark:bg-amber-950/40 p-2"><div class="text-amber-800 dark:text-amber-300">بعد البيعة</div><div class="font-black text-amber-800 dark:text-amber-300 num">1,529.250</div></div>
+          </div>
+        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-2xl bg-slate-50 dark:bg-slate-800 p-3"><div class="text-[11px] font-bold text-slate-500 dark:text-slate-400">الصافي</div><div class="text-2xl font-black text-slate-950 dark:text-white num">479.250</div></div>
+          <div class="rounded-2xl p-3 border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 dark:border-emerald-700" aria-live="polite"><div class="text-[11px] font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1"><i data-i="check" class="w-3.5 h-3.5"></i> المتبقي</div><div class="text-2xl font-black text-emerald-800 dark:text-emerald-300 num">0.000</div></div>
+        </div>
+        <!-- lines -->
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800">
+          <div class="h-14 px-3 flex items-center gap-2"><i data-i="cash" class="w-5 h-5"></i><span class="font-bold">كاش</span><span class="ms-auto text-lg font-black num">200.000</span><button type="button" class="w-11 h-11 rounded-xl text-rose-600 flex items-center justify-center" aria-label="حذف"><i data-i="x" class="w-4 h-4"></i></button></div>
+          <div class="h-14 px-3 flex items-center gap-2 bg-amber-50/60 dark:bg-amber-950/20"><i data-i="user" class="w-5 h-5 text-amber-800 dark:text-amber-300"></i><span class="font-bold text-amber-900 dark:text-amber-200">آجل على العميل</span><span class="ms-auto text-lg font-black text-amber-800 dark:text-amber-300 num">279.250</span><button type="button" class="w-11 h-11 rounded-xl text-rose-600 flex items-center justify-center" aria-label="حذف"><i data-i="x" class="w-4 h-4"></i></button></div>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-6">مفيش "فاتورة جزئي": الجزئي = كاش + آجل بالمتبقي. سطر الآجل اتعمل بضغطة "آجل" لأن المبلغ كان مملي بالمتبقي.</p>
+        <div>
+          <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">الإيصال</div>
+          <div class="grid grid-cols-3 gap-2 text-sm font-bold">
+            <button type="button" class="h-12 rounded-xl border-2 border-brand bg-brand-light">طباعة</button>
+            <button type="button" class="h-12 rounded-xl border border-slate-200 dark:border-slate-700">واتساب</button>
+            <button type="button" class="h-12 rounded-xl border border-slate-200 dark:border-slate-700">بدون</button>
+          </div>
+        </div>
+      </div>
+      <div class="shrink-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-slate-200 dark:border-slate-800">
+        <button type="button" class="w-full h-14 rounded-2xl bg-emerald-600 text-white text-lg font-black flex items-center justify-center gap-2"><i data-i="check" class="w-5 h-5"></i> إتمام البيعة</button>
+      </div>
+    </div>
+  </figure>
+</main>
+
+<aside id="notes" class="fixed z-[55] bottom-2 end-2 start-2 sm:start-auto max-h-[60vh] sm:max-h-none sm:top-12 sm:w-[380px] overflow-auto rounded-2xl border-2 border-dashed border-amber-400 bg-amber-50/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 shadow-2xl p-4 text-sm leading-7">
+  <div class="flex items-center justify-between mb-2"><h2 class="font-black">ملاحظات التصميم — دفع الموبايل</h2><button type="button" onclick="mockToggleNotes()" class="w-11 h-11 rounded-lg hover:bg-amber-100 dark:hover:bg-slate-800" aria-label="إغلاق"><i data-i="x" class="w-4 h-4 mx-auto"></i></button></div>
+  <ol class="list-decimal ps-5 space-y-2">
+    <li>الدفع على الموبايل <b>full-screen sheet</b> (§6.2)، بنفس منطق الديسكتوب: سطور لحد ما المتبقي = 0 (§6.5).</li>
+    <li><b>Keypad كبير</b> + فئات كاش مقترحة: كاش بباقي = ضغطة فئة + إتمام (§6.14: ≤ 5 ضغطات).</li>
+    <li><b>الباقي</b> بيظهر فوق جنب الصافي بالأخضر علشان الكاشير يشوفه قبل ما يقفل.</li>
+    <li>الطرق في شريط أفقي قابل للسحب، و<b>الآجل مقفول بأيقونة قفل</b> لحد ما يتختار عميل (§6.6).</li>
+    <li>الجزئي = سطر كاش + سطر آجل، مع رصيد العميل وحده والرصيد بعد البيعة (قرار 2).</li>
+    <li>زرار الإتمام تحت في منطقة الإبهام، وكل الأهداف ≥ <span class="num">44px</span> (§6.13).</li>
+  </ol>
+</aside>
+
+<script>
+  /* Inline icon set (lucide-style strokes, 24x24). No external images. */
+  var MOCK_ICONS = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+    barcode: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M8 7v10M12 7v10M16 7v10"/>',
+    scale: '<path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1Z"/><path d="m2 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    wifi: '<path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0"/><circle cx="12" cy="20" r="1"/>',
+    wifioff: '<path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2-1.5M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8"/><circle cx="12" cy="20" r="1"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+    printer: '<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+    card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+    wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+    keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/>',
+    cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+    cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    star: '<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+    undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
+    back: '<path d="m9 18 6-6-6-6"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    store: '<path d="M3 9 5 3h14l2 6M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0V9ZM5 13v8h14v-8"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>',
+    zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9Z"/>'
+  };
+  document.querySelectorAll('[data-i]').forEach(function (el) {
+    var p = MOCK_ICONS[el.getAttribute('data-i')];
+    if (!p) return;
+    var cls = el.getAttribute('class') || 'w-5 h-5';
+    el.outerHTML = '<svg aria-hidden="true" class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  });
+
+  function mockToggleTheme() {
+    var d = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('sroor-mock-theme', d ? 'dark' : 'light');
+  }
+  function mockSetShell(s) {
+    document.documentElement.dataset.shell = s;
+    localStorage.setItem('sroor-mock-shell', s);
+    mockPaintShell();
+  }
+  function mockPaintShell() {
+    var s = document.documentElement.dataset.shell;
+    document.querySelectorAll('[data-shell-btn]').forEach(function (b) {
+      var on = b.getAttribute('data-shell-btn') === s;
+      b.style.background = on ? '#f59e0b' : '';
+      b.style.color = on ? '#0f172a' : '';
+      b.style.fontWeight = on ? '800' : '';
+    });
+  }
+  function mockToggleNotes() {
+    var n = document.getElementById('notes');
+    if (n) n.classList.toggle('hidden');
+  }
+  mockPaintShell();
+  /* Hold Alt to reveal key badges on buttons (study §6.3). */
+  window.addEventListener('keydown', function (e) { if (e.key === 'Alt') { e.preventDefault(); document.documentElement.classList.add('show-keys'); } });
+  window.addEventListener('keyup', function (e) { if (e.key === 'Alt') document.documentElement.classList.remove('show-keys'); });
+  window.addEventListener('blur', function () { document.documentElement.classList.remove('show-keys'); });
+</script>
+</body>
+</html>

@@ -15,6 +15,8 @@
 
 ## 📁 01 - النظرة العامة والمفاهيم (Overview & Glossary)
 
+* 📄 [المنتج وقرارات الـ SaaS — أكتوبر 2026 (Product Overview)](01-overview/product-overview.md)
+  * **المرجع المعتمد الحالي:** تموضع المنتج، البيئات، معايير الـ production، الباقات والأسعار والـ Add-ons، الدفع، سياسات الإلغاء/اللغة/الضرائب، Offline POS، استراتيجية الفروع، وخارطة المراحل (قرارات 2026-10-08).
 * 📄 [نظرة عامة على المشروع (Project Overview)](file:///d:/projects/sroor/docs/01-overview/project-overview.md)
   * يوضح أهداف المشروع كـ MVP عملي وسريع، ملخص حزمة الـ Tech Stack، الهيكل المعماري للـ Monolith، ومسار العمل الأساسي والجمهور المستهدف.
 * 📄 [قاموس المصطلحات (Project Glossary)](file:///d:/projects/sroor/docs/01-overview/glossary.md)

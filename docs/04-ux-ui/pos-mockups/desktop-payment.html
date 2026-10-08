@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-shell="electron">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>الدفع الموحد — مكتب · Sroor POS Mockup</title>
+<!-- Static design mockup for CTO approval. Not app code. Generated for docs/04-ux-ui/pos-mockups. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@custom-variant dark (&:where(.dark, .dark *));
+@theme {
+  --font-sans: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  --font-tajawal: 'Tajawal', 'Cairo', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+}
+@theme inline {
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-hover);
+  --color-brand-light: var(--color-primary-light);
+  --color-brand-border: var(--color-primary-border);
+}
+/* Numbers, money, barcodes: always LTR + tabular inside RTL (study §6.11). Layered so utilities (flex/block) still win. */
+@layer components {
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; display: inline-block; }
+  td.num, th.num { display: table-cell; direction: inherit; unicode-bidi: normal; }
+}
+</style>
+<style>
+  /* Same default brand tokens as backend/resources/css/app.css (amber theme). */
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: rgba(245, 158, 11, 0.15);
+    --color-primary-border: rgba(245, 158, 11, 0.35);
+  }
+  html, body { font-family: 'Cairo', 'Tajawal', system-ui, sans-serif; }
+  kbd, .kbd {
+    font-family: ui-monospace, 'Consolas', monospace; font-size: 11px; font-weight: 700; line-height: 1;
+    padding: 3px 6px; border-radius: 6px; border: 1px solid rgb(203 213 225); border-bottom-width: 2px;
+    background: rgb(241 245 249); color: rgb(51 65 85); direction: ltr; unicode-bidi: isolate; white-space: nowrap; display: inline-block;
+  }
+  .dark kbd, .dark .kbd { background: rgb(30 41 59); border-color: rgb(71 85 105); color: rgb(203 213 225); }
+  /* Electron vs browser shortcut variants (study §8 decision 5) */
+  html[data-shell="electron"] .k-br { display: none !important; }
+  html[data-shell="browser"] .k-el { display: none !important; }
+  /* Alt-hold key badges (study §6.3, Lightspeed pattern) */
+  .kbadge { display: none; }
+  html.show-keys .kbadge { display: inline-block; position: absolute; top: -8px; inset-inline-end: -6px; z-index: 5;
+    background: var(--color-primary); color: #0f172a; border-color: var(--color-primary-hover); }
+  .shimmer { background: linear-gradient(90deg, rgba(148,163,184,.15) 25%, rgba(148,163,184,.35) 50%, rgba(148,163,184,.15) 75%); background-size: 200% 100%; animation: sh 1.4s infinite; }
+  @keyframes sh { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+  .hatch { background-image: repeating-linear-gradient(135deg, rgba(148,163,184,.12) 0 8px, transparent 8px 16px); }
+  :focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+</style>
+<script>
+  (function () {
+    var t = localStorage.getItem('sroor-mock-theme');
+    var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', dark);
+    var s = localStorage.getItem('sroor-mock-shell');
+    if (s) document.documentElement.dataset.shell = s;
+  })();
+</script>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen">
+
+<!-- ===== Mockup toolbar (NOT part of the design) ===== -->
+<div class="h-10 flex items-center gap-2 px-3 text-xs whitespace-nowrap overflow-x-auto bg-slate-800 text-slate-100 border-b-2 border-dashed border-amber-400 sticky top-0 z-[60]">
+  <a href="index.html" class="px-2 py-1 rounded hover:bg-slate-700 font-bold">الفهرس</a>
+  <span class="text-slate-400">/</span>
+  <span class="font-bold truncate">الدفع الموحد — مكتب</span>
+  <span class="ms-2 px-2 py-0.5 rounded bg-amber-400 text-slate-900 font-bold hidden sm:inline">نموذج للمراجعة — مش كود</span>
+  <div class="ms-auto flex items-center gap-1">
+    <button type="button" onclick="mockToggleTheme()" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">فاتح/داكن</button>
+    <span class="hidden md:inline text-slate-400 ms-1">الاختصارات:</span>
+    <button type="button" data-shell-btn="electron" onclick="mockSetShell('electron')" class="hidden md:inline-block px-2 py-1 rounded bg-slate-700">Electron</button>
+    <button type="button" data-shell-btn="browser" onclick="mockSetShell('browser')" class="hidden md:inline-block px-2 py-1 rounded bg-slate-700">متصفح</button>
+    <button type="button" onclick="mockToggleNotes()" class="px-2 py-1 rounded bg-amber-400 text-slate-900 font-bold">ملاحظات</button>
+  </div>
+</div>
+
+<!-- Mock-only state switcher (not part of the design) -->
+<div class="sticky top-10 z-[58] flex flex-wrap items-center gap-2 px-3 py-2 text-xs bg-slate-200/90 dark:bg-slate-800/90 border-b border-dashed border-amber-400">
+  <span class="font-bold">الحالة المعروضة:</span>
+  <button type="button" data-state-btn="split" onclick="setState('split')" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 font-bold">1) مقسم كارت + كاش + آجل</button>
+  <button type="button" data-state-btn="change" onclick="setState('change')" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 font-bold">2) كاش بباقي</button>
+  <button type="button" data-state-btn="pin" onclick="setState('pin')" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 font-bold">3) تجاوز حد الائتمان ← PIN مدير</button>
+</div>
+
+<div class="min-w-[1240px] relative h-[calc(100vh-5rem)] min-h-[760px] overflow-hidden">
+  <!-- Dimmed sell screen behind the dialog -->
+  <div class="absolute inset-0 p-4 grid grid-cols-[minmax(0,1fr)_340px] gap-3 opacity-60" aria-hidden="true">
+    <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 space-y-3">
+      <div class="h-14 rounded-2xl bg-slate-100 dark:bg-slate-800"></div>
+      <div class="h-10 rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+      <div class="h-10 rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+      <div class="h-10 rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+      <div class="h-10 rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+    </div>
+    <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"></div>
+  </div>
+  <div class="absolute inset-0 bg-slate-950/50"></div>
+
+  <!-- ===== Unified payment dialog (§6.5) ===== -->
+  <div class="absolute inset-0 flex items-center justify-center p-6">
+    <div id="pay" role="dialog" aria-modal="true" aria-labelledby="pay-title" class="relative w-[980px] max-w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden"></div>
+  </div>
+</div>
+
+<aside id="notes" class="fixed z-[55] top-12 bottom-2 end-2 w-[min(400px,calc(100vw-16px))] overflow-auto rounded-2xl border-2 border-dashed border-amber-400 bg-amber-50/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 shadow-2xl p-4 text-sm leading-7">
+  <div class="flex items-center justify-between mb-2"><h2 class="font-black">ملاحظات التصميم — شاشة الدفع الموحدة</h2><button type="button" onclick="mockToggleNotes()" class="w-9 h-9 rounded-lg hover:bg-amber-100 dark:hover:bg-slate-800" aria-label="إغلاق"><i data-i="x" class="w-4 h-4 mx-auto"></i></button></div>
+  <ol class="list-decimal ps-5 space-y-2">
+    <li><b>شاشة واحدة لكل أنواع الدفع:</b> سطور دفع لحد ما المتبقي = <span class="num">0.000</span>. مفيش "نوع فاتورة" (كاش/آجل/جزئي) قبل الدفع (§1 درس 3، §6.5، قرار 2).</li>
+    <li><b>المبلغ مملي بالمتبقي دايماً</b>: دفع كامل = <kbd>Enter</kbd> ثم <kbd>Enter</kbd>.</li>
+    <li><b>Chips كاش مقترحة</b>: بالظبط ثم أقرب فئات مصرية (50/100/200) ثم <span class="num">1000</span> (§1 درس 4).</li>
+    <li>الكاش بس يقدر يعدّي المتبقي، والزيادة تتعرض <b>كباقي بخط كبير أخضر</b>. باقي الطرق بتتقفل عند المتبقي.</li>
+    <li><b>الآجل = طريقة دفع</b> (<code>payments[].method = credit</code>): مقفول من غير عميل أو صلاحية <code>pos.credit_sale</code>، ويعرض الرصيد والحد والرصيد بعد البيعة (§6.6، قرار 2 و 6).</li>
+    <li>تجاوز حد الائتمان مش بيخفي الزرار: بيطلب <b>PIN مدير على نفس الجهاز</b> (حالة 3) (§1 درس 10، قرار 6).</li>
+    <li>اختيار الطريقة بـ <kbd>Alt+1..5</kbd> علشان الأرقام العادية تروح لخانة المبلغ. ده تعديل صغير على رسم §6.5 (اللي كان بيستخدم 1..5) ولازم يتحدث في §6.14.</li>
+    <li>"إتمام" مقفول لحد ما المتبقي = 0. بعده الباقي يفضل ظاهر في شاشة البيع، من غير modal نجاح (§6.5).</li>
+    <li>الأحمر للحذف، الأخضر للباقي، الكهرماني للمتبقي/الآجل، وكلها مع نص أو أيقونة (§6.12).</li>
+  </ol>
+  <p class="mt-3 text-xs text-slate-600 dark:text-slate-400">محتاج من backend: قبول <code>method: credit</code> جوه <code>payments[]</code>، ورصيد العميل وحد الائتمان في resource الـ POS، و endpoint تحقق PIN المدير.</p>
+</aside>
+
+<script>
+  var STATES = {
+    split: {
+      customer: { name: 'بقالة النور — محمد عبد الرحمن', phone: '01000000015', balance: '1,250.000', limit: '2,000.000', tier: 'جملة', after: '1,350.000', ok: true },
+      net: '600.000', paid: '500.000', remaining: '100.000', change: '0.000',
+      lines: [ ['card', 'كارت', '200.000', 'مرجع 4821'], ['cash', 'كاش', '300.000', ''] ],
+      method: 'credit', amount: '100.000', chips: ['100.000', '200', '500', '1000'], chipsOn: false,
+      canComplete: false, hint: 'اضغط Enter لإضافة سطر الآجل، وبعدها المتبقي يبقى 0.000'
+    },
+    change: {
+      customer: null,
+      net: '600.000', paid: '700.000', remaining: '0.000', change: '100.000',
+      lines: [ ['cash', 'كاش', '700.000', 'مستلم'] ],
+      method: 'cash', amount: '0.000', chips: ['600.000', '650', '700', '1000'], chipsOn: '700',
+      canComplete: true, hint: ''
+    },
+    pin: {
+      customer: { name: 'مطعم الهنا — حسن إبراهيم', phone: '01000000016', balance: '1,900.000', limit: '2,000.000', tier: 'جملة', after: '2,300.000', ok: false },
+      net: '600.000', paid: '200.000', remaining: '400.000', change: '0.000',
+      lines: [ ['cash', 'كاش', '200.000', ''] ],
+      method: 'credit', amount: '400.000', chips: ['400.000', '450', '500', '1000'], chipsOn: false,
+      canComplete: false, hint: '', pin: true
+    }
+  };
+  var METHODS = [ ['cash', 'كاش', 'cash'], ['card', 'كارت', 'card'], ['instapay', 'InstaPay', 'zap'], ['wallet', 'محفظة', 'phone'], ['credit', 'آجل', 'user'] ];
+  function ic(n, c) { return '<i data-i="' + n + '" class="' + (c || 'w-5 h-5') + '"></i>'; }
+  function money(v, cls) { return '<span class="num ' + (cls || '') + '">' + v + '</span>'; }
+
+  function render(key) {
+    var s = STATES[key];
+    var h = '';
+    h += '<div class="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-slate-800">';
+    h += '<h2 id="pay-title" class="text-xl font-black flex items-center gap-2">' + ic('cash', 'w-6 h-6') + ' الدفع — فاتورة <span class="num">1</span></h2>';
+    h += '<span class="text-xs text-slate-500 dark:text-slate-400">رجوع للسلة <kbd>Esc</kbd></span></div>';
+    h += '<div class="grid grid-cols-[1fr_360px]">';
+
+    // Start column: totals + lines + method + amount
+    h += '<div class="p-6 space-y-5">';
+    h += '<div class="grid grid-cols-3 gap-3">';
+    h += '<div class="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4"><div class="text-xs font-bold text-slate-500 dark:text-slate-400">الصافي</div><div class="text-3xl font-black text-slate-950 dark:text-white">' + money(s.net) + '</div></div>';
+    h += '<div class="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4"><div class="text-xs font-bold text-slate-500 dark:text-slate-400">المدفوع</div><div class="text-3xl font-black">' + money(s.paid) + '</div></div>';
+    var remZero = s.remaining === '0.000';
+    h += '<div class="rounded-2xl p-4 border-2 ' + (remZero ? 'bg-emerald-50 border-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-800' : 'bg-amber-50 border-amber-300 dark:bg-amber-950/40 dark:border-amber-700') + '" aria-live="polite"><div class="text-xs font-bold ' + (remZero ? 'text-emerald-800 dark:text-emerald-300' : 'text-amber-800 dark:text-amber-300') + ' flex items-center gap-1">' + (remZero ? ic('check', 'w-4 h-4') + ' المتبقي — مكتمل' : ic('alert', 'w-4 h-4') + ' المتبقي') + '</div><div class="text-3xl font-black ' + (remZero ? 'text-emerald-800 dark:text-emerald-300' : 'text-amber-800 dark:text-amber-300') + '">' + money(s.remaining) + '</div></div>';
+    h += '</div>';
+
+    // payment lines
+    h += '<div><div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">سطور الدفع</div><div class="rounded-2xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800">';
+    s.lines.forEach(function (l) {
+      h += '<div class="h-14 px-4 flex items-center gap-3"><span class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">' + ic(l[0] === 'card' ? 'card' : 'cash', 'w-4 h-4') + '</span><span class="font-bold">' + l[1] + '</span>' + (l[3] ? '<span class="text-xs text-slate-500">' + l[3] + '</span>' : '') + '<span class="ms-auto text-lg font-black">' + money(l[2]) + '</span><button type="button" class="w-10 h-10 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40" aria-label="حذف السطر">' + ic('x', 'w-4 h-4 mx-auto') + '</button></div>';
+    });
+    h += '</div></div>';
+
+    // methods
+    h += '<div><div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">الطريقة</div><div class="grid grid-cols-5 gap-2">';
+    METHODS.forEach(function (m, i) {
+      var on = s.method === m[0];
+      var disabled = m[0] === 'credit' && !s.customer;
+      var cls = disabled ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 border-dashed border-slate-300 dark:border-slate-700 cursor-not-allowed'
+        : on ? (m[0] === 'credit' ? 'bg-amber-100 dark:bg-amber-950/60 border-amber-500 text-amber-900 dark:text-amber-200' : 'bg-brand-light border-brand text-slate-900 dark:text-white')
+        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700';
+      h += '<button type="button" ' + (disabled ? 'disabled aria-disabled="true"' : '') + ' class="relative h-16 rounded-2xl border-2 font-black flex flex-col items-center justify-center ' + cls + '"><span class="flex items-center gap-2">' + ic(m[2], 'w-5 h-5') + m[1] + '</span><span class="text-[11px] font-bold opacity-80">' + (disabled ? 'اختار عميل الأول <kbd>F3</kbd>' : '<kbd>Alt+' + (i + 1) + '</kbd>') + '</span></button>';
+    });
+    h += '</div></div>';
+
+    // amount + chips
+    h += '<div class="grid grid-cols-[1fr_auto] gap-3 items-end">';
+    h += '<label class="block"><span class="text-xs font-bold text-slate-500 dark:text-slate-400">المبلغ ' + (s.method === 'credit' ? '(آجل على العميل)' : '') + ' — مملي بالمتبقي</span><input type="text" value="' + s.amount + '" dir="ltr" class="mt-1 w-full h-16 rounded-2xl border-2 border-brand ring-4 ring-brand-light bg-slate-50 dark:bg-slate-950 px-4 text-3xl font-black text-end outline-none" aria-label="المبلغ"></label>';
+    h += '<button type="button" class="h-16 px-6 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black flex items-center gap-2">' + ic('plus') + ' إضافة <kbd>Enter</kbd></button>';
+    h += '</div>';
+    h += '<div class="flex items-center gap-2"><span class="text-xs font-bold text-slate-500 dark:text-slate-400">كاش مقترح:</span>';
+    s.chips.forEach(function (c, i) {
+      var on = s.chipsOn === c;
+      h += '<button type="button" class="h-12 min-w-20 px-4 rounded-xl border-2 font-black ' + (on ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900') + '">' + (i === 0 ? 'بالظبط ' : '') + money(c) + '</button>';
+    });
+    h += '</div>';
+    if (s.hint) h += '<p class="text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">' + ic('alert', 'w-4 h-4') + s.hint + '</p>';
+    h += '</div>';
+
+    // End column: customer + change + complete
+    h += '<div class="p-6 bg-slate-50 dark:bg-slate-950/60 border-s border-slate-200 dark:border-slate-800 flex flex-col gap-4">';
+    if (s.customer) {
+      var c = s.customer;
+      h += '<div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4"><div class="flex items-center justify-between"><span class="text-xs font-bold text-slate-500 dark:text-slate-400">العميل</span><kbd>F3</kbd></div><div class="mt-1 font-black flex items-center gap-2">' + ic('user', 'w-4 h-4') + c.name + '</div><div class="text-xs text-slate-500 num">' + c.phone + '</div>';
+      h += '<dl class="mt-3 grid grid-cols-2 gap-2 text-sm"><dt class="text-slate-500 dark:text-slate-400">الرصيد الحالي</dt><dd class="text-end font-bold">' + money(c.balance) + '</dd><dt class="text-slate-500 dark:text-slate-400">حد الائتمان</dt><dd class="text-end font-bold">' + money(c.limit) + '</dd><dt class="text-slate-500 dark:text-slate-400">بعد البيعة</dt><dd class="text-end font-black ' + (c.ok ? 'text-amber-800 dark:text-amber-300' : 'text-rose-700 dark:text-rose-400') + '">' + money(c.after) + '</dd><dt class="text-slate-500 dark:text-slate-400">مستوى السعر</dt><dd class="text-end font-bold">' + c.tier + '</dd></dl>';
+      h += '<div class="mt-3 h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div class="h-full ' + (c.ok ? 'bg-amber-500' : 'bg-rose-600') + '" style="width:' + (c.ok ? '67' : '100') + '%"></div></div>';
+      h += '<div class="mt-1 text-[11px] font-bold ' + (c.ok ? 'text-slate-500 dark:text-slate-400' : 'text-rose-700 dark:text-rose-400') + '">' + (c.ok ? 'جوه الحد' : 'هيعدّي الحد بـ <span class="num">300.000</span>') + '</div></div>';
+    } else {
+      h += '<div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4"><div class="text-xs font-bold text-slate-500 dark:text-slate-400">العميل</div><div class="mt-1 font-black flex items-center gap-2">' + ic('user', 'w-4 h-4') + 'نقدي (زائر)</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">الآجل محتاج عميل — <kbd>F3</kbd></div></div>';
+    }
+    var hasChange = s.change !== '0.000';
+    h += '<div class="rounded-2xl p-4 border-2 ' + (hasChange ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 dark:border-emerald-700' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900') + '" aria-live="polite"><div class="text-sm font-bold ' + (hasChange ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-500 dark:text-slate-400') + '">الباقي للعميل</div><div class="text-5xl font-black ' + (hasChange ? 'text-emerald-800 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500') + '">' + money(s.change) + '</div></div>';
+    h += '<div class="text-xs font-bold text-slate-500 dark:text-slate-400">الإيصال</div><div class="grid grid-cols-3 gap-2 text-sm font-bold"><button type="button" class="h-11 rounded-xl border-2 border-brand bg-brand-light flex items-center justify-center gap-1">' + ic('printer', 'w-4 h-4') + ' <span class="num">80mm</span></button><button type="button" class="h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">واتساب</button><button type="button" class="h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">بدون</button></div>';
+    h += '<button type="button" ' + (s.canComplete ? '' : 'disabled aria-disabled="true"') + ' class="mt-auto h-16 rounded-2xl text-lg font-black flex items-center justify-center gap-2 ' + (s.canComplete ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed') + '">' + ic('printer') + ' إتمام وطباعة <kbd>F9</kbd></button>';
+    h += '<button type="button" ' + (s.canComplete ? '' : 'disabled') + ' class="h-12 rounded-2xl text-sm font-bold border ' + (s.canComplete ? 'border-slate-300 dark:border-slate-600' : 'border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed') + '">إتمام بدون طباعة</button>';
+    h += '</div></div>';
+
+    // Manager PIN overlay
+    if (s.pin) {
+      h += '<div class="absolute inset-0 bg-slate-950/60 flex items-center justify-center p-6" role="alertdialog" aria-modal="true" aria-labelledby="pin-title">';
+      h += '<div class="w-[440px] rounded-3xl bg-white dark:bg-slate-900 border-2 border-rose-300 dark:border-rose-800 shadow-2xl p-6">';
+      h += '<div class="flex items-center gap-3"><span class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 flex items-center justify-center">' + ic('shield', 'w-6 h-6') + '</span><div><h3 id="pin-title" class="text-lg font-black">محتاج موافقة مدير</h3><p class="text-xs text-slate-500 dark:text-slate-400">الصلاحية: <code class="num">pos.credit_sale</code> — تجاوز حد الائتمان</p></div></div>';
+      h += '<p class="mt-4 text-sm leading-7">الآجل <b>' + money('400.000') + '</b> هيخلّي رصيد <b>مطعم الهنا</b> ' + money('2,300.000') + ' وده فوق الحد ' + money('2,000.000') + ' بـ <b class="text-rose-700 dark:text-rose-400">' + money('300.000') + '</b>.</p>';
+      h += '<label class="block mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">المدير</label><button type="button" class="mt-1 w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 px-3 flex items-center justify-between font-bold">سارة مصطفى — مدير الفرع ' + ic('chevron', 'w-4 h-4') + '</button>';
+      h += '<label class="block mt-3 text-xs font-bold text-slate-500 dark:text-slate-400">PIN المدير</label><div class="mt-1 flex gap-2" dir="ltr">';
+      for (var i = 0; i < 6; i++) h += '<span class="w-12 h-14 rounded-xl border-2 ' + (i < 4 ? 'border-brand' : 'border-slate-200 dark:border-slate-700') + ' flex items-center justify-center text-2xl font-black">' + (i < 4 ? '•' : '') + '</span>';
+      h += '</div><p class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">الموافقة بتتسجل باسم المدير على الفاتورة. 3 محاولات غلط = قفل دقيقة.</p>';
+      h += '<div class="mt-5 grid grid-cols-2 gap-2"><button type="button" class="h-12 rounded-xl bg-brand text-slate-950 font-black">موافقة <kbd>Enter</kbd></button><button type="button" class="h-12 rounded-xl border border-slate-300 dark:border-slate-600 font-bold">إلغاء <kbd>Esc</kbd></button></div>';
+      h += '<button type="button" class="mt-3 w-full text-xs font-bold underline underline-offset-4 text-slate-600 dark:text-slate-300">أو حوّل الفرق <span class="num">300.000</span> لكاش</button>';
+      h += '</div></div>';
+    }
+
+    var el = document.getElementById('pay');
+    el.innerHTML = h;
+    el.querySelectorAll('[data-i]').forEach(function (n) {
+      var p = MOCK_ICONS[n.getAttribute('data-i')];
+      n.outerHTML = '<svg aria-hidden="true" class="' + n.getAttribute('class') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+    });
+    document.querySelectorAll('[data-state-btn]').forEach(function (b) {
+      var on = b.getAttribute('data-state-btn') === key;
+      b.style.outline = on ? '2px solid #f59e0b' : '';
+    });
+  }
+  function setState(k) { render(k); location.hash = k; }
+  window.addEventListener('DOMContentLoaded', function () { render(STATES[location.hash.slice(1)] ? location.hash.slice(1) : 'split'); });
+</script>
+
+<script>
+  /* Inline icon set (lucide-style strokes, 24x24). No external images. */
+  var MOCK_ICONS = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+    barcode: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M8 7v10M12 7v10M16 7v10"/>',
+    scale: '<path d="m16 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1Z"/><path d="m2 16 3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    wifi: '<path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0"/><circle cx="12" cy="20" r="1"/>',
+    wifioff: '<path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2-1.5M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8"/><circle cx="12" cy="20" r="1"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+    printer: '<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+    card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+    wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+    keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/>',
+    cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+    cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    star: '<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+    undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
+    back: '<path d="m9 18 6-6-6-6"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    store: '<path d="M3 9 5 3h14l2 6M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0V9ZM5 13v8h14v-8"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>',
+    zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9Z"/>'
+  };
+  document.querySelectorAll('[data-i]').forEach(function (el) {
+    var p = MOCK_ICONS[el.getAttribute('data-i')];
+    if (!p) return;
+    var cls = el.getAttribute('class') || 'w-5 h-5';
+    el.outerHTML = '<svg aria-hidden="true" class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  });
+
+  function mockToggleTheme() {
+    var d = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('sroor-mock-theme', d ? 'dark' : 'light');
+  }
+  function mockSetShell(s) {
+    document.documentElement.dataset.shell = s;
+    localStorage.setItem('sroor-mock-shell', s);
+    mockPaintShell();
+  }
+  function mockPaintShell() {
+    var s = document.documentElement.dataset.shell;
+    document.querySelectorAll('[data-shell-btn]').forEach(function (b) {
+      var on = b.getAttribute('data-shell-btn') === s;
+      b.style.background = on ? '#f59e0b' : '';
+      b.style.color = on ? '#0f172a' : '';
+      b.style.fontWeight = on ? '800' : '';
+    });
+  }
+  function mockToggleNotes() {
+    var n = document.getElementById('notes');
+    if (n) n.classList.toggle('hidden');
+  }
+  mockPaintShell();
+  /* Hold Alt to reveal key badges on buttons (study §6.3). */
+  window.addEventListener('keydown', function (e) { if (e.key === 'Alt') { e.preventDefault(); document.documentElement.classList.add('show-keys'); } });
+  window.addEventListener('keyup', function (e) { if (e.key === 'Alt') document.documentElement.classList.remove('show-keys'); });
+  window.addEventListener('blur', function () { document.documentElement.classList.remove('show-keys'); });
+</script>
+</body>
+</html>
