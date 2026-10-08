@@ -425,7 +425,12 @@ export const defaultArabicTranslations = {
         "all_items": "كل الأصناف",
         "store_access_denied": "غير مصرح لك بالوصول لبيانات هذا الفرع",
         "platform_name": "منظومة ERP السحابية",
-        "default_company_subtitle": "لإدارة المبيعات والمخزون والفروع"
+        "default_company_subtitle": "لإدارة المبيعات والمخزون والفروع",
+        "details": "التفاصيل",
+        "filter_search": "بحث وتصفية",
+        "save_changes": "حفظ التعديلات",
+        "saving": "جارٍ الحفظ...",
+        "server_error": "حدث خطأ في الخادم، حاول مرة أخرى"
     },
     "connectivity": {
         "offline_title": "لا يوجد اتصال بالإنترنت",
@@ -618,7 +623,13 @@ export const defaultArabicTranslations = {
         "total_purchases_label": "إجمالي المشتريات",
         "total_payments_label": "إجمالي المدفوعات",
         "total_results_suppliers": "إجمالي النتائج: :count مورد",
-        "name": "الاسم"
+        "name": "الاسم",
+        "customer_initial_balance_hint": "المبلغ المستحق على العميل قبل بدء العمل على النظام، اتركه صفرًا إن لم يوجد",
+        "initial_balance_hint": "المبلغ المستحق للمورد قبل بدء العمل على النظام، اتركه صفرًا إن لم يوجد",
+        "pay_to": "سداد للمورد",
+        "payment_notes_placeholder": "ملاحظات اختيارية (مثال: رقم الإيصال أو التحويل)",
+        "save_customer": "حفظ العميل",
+        "save_supplier": "حفظ المورد"
     },
     "customers": {
         "retail": "عميل قطاعي",
@@ -742,7 +753,8 @@ export const defaultArabicTranslations = {
         "menu_hub_title": "لوحة المستندات والعمليات السريعة (App Hub)",
         "menu_hub_subtitle": "الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة",
         "search_screens_placeholder": "🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...",
-        "no_screens_found": "لم يتم العثور على أي شاشة مطابقة لبحثك"
+        "no_screens_found": "لم يتم العثور على أي شاشة مطابقة لبحثك",
+        "company_title": "مؤسستي"
     },
     "expenses": {
         "title": "المصاريف والخدمات الإضافية",
@@ -1177,7 +1189,11 @@ export const defaultArabicTranslations = {
         "search_stores_placeholder": "البحث بالاسم، الكود، العنوان، أو الهاتف...",
         "all_store_types": "كافة أنواع الفروع والمخازن",
         "create_store": "حفظ وإنشاء الفرع",
-        "save_staff_assignments": "حفظ وتعيين الموظفين"
+        "save_staff_assignments": "حفظ وتعيين الموظفين",
+        "cancel_transfer": "إلغاء التحويل",
+        "min_selling_price": "أقل سعر بيع",
+        "quantity": "الكمية",
+        "view_transfer_details": "عرض تفاصيل التحويل"
     },
     "invoices": {
         "title": "فواتير المبيعات",
@@ -1395,7 +1411,9 @@ export const defaultArabicTranslations = {
         "payment_note_split": "سداد مجزأ عند إصدار الفاتورة رقم :number",
         "payment_note_on_issue": "سداد عند إصدار الفاتورة رقم :number",
         "credit_invoice_cannot_have_payments": "الفاتورة الآجلة لا يمكن تسجيل مدفوعات عليها",
-        "idempotency_key_conflict": "رقم العملية ده اتستخدم قبل كده مع فاتورة أو عميل أو فرع مختلف"
+        "idempotency_key_conflict": "رقم العملية ده اتستخدم قبل كده مع فاتورة أو عميل أو فرع مختلف",
+        "payment_ewallet": "محفظة إلكترونية",
+        "total_net": "الصافي"
     },
     "nav": {
         "group_sales": "المبيعات والفواتير",
@@ -1717,7 +1735,10 @@ export const defaultArabicTranslations = {
         "cash_received_placeholder": "المدفوع نقداً...",
         "pos_settings_saved": "تم حفظ إعدادات نقطة البيع للفرع",
         "scale_barcode_invalid_check_digit": "باركود الميزان غير صحيح (رقم التحقق لا يطابق). أعد طباعة الملصق أو امسحه مرة أخرى",
-        "store_not_found": "الفرع غير موجود"
+        "store_not_found": "الفرع غير موجود",
+        "decrease_qty": "إنقاص الكمية",
+        "increase_qty": "زيادة الكمية",
+        "one_kg_chip": "1 كجم"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -1908,7 +1929,9 @@ export const defaultArabicTranslations = {
         "urgency_warning_badge": "⚠️ تنبيه وشيك",
         "urgency_safe_badge": "✅ رصيد آمن",
         "no_shortages_found_title": "لا توجد نواقص في المخزون حالياً",
-        "no_shortages_found_desc": "كافة الأصناف والمخازن تتمتع بمستويات رصيد آمنة وفقاً لمعدل السحب الحالي."
+        "no_shortages_found_desc": "كافة الأصناف والمخازن تتمتع بمستويات رصيد آمنة وفقاً لمعدل السحب الحالي.",
+        "final_net_total": "صافي الفاتورة",
+        "remaining_debt": "المتبقي للمورد (آجل)"
     },
     "reports": {
         "title": "التقارير الشاملة والإحصائيات",
@@ -2043,7 +2066,12 @@ export const defaultArabicTranslations = {
         "cogs_egp": "تكلفة البضاعة المباعة",
         "gross_profit_egp": "مجمل الربح",
         "profit_margin_pct": "هامش الربح %",
-        "profit_contribution_pct": "نسبة المساهمة في الأرباح %"
+        "profit_contribution_pct": "نسبة المساهمة في الأرباح %",
+        "low_stock_only": "الأصناف تحت حد الطلب فقط",
+        "no_data_desc": "لا توجد بيانات للفترة أو الفلاتر المحددة، جرّب تغيير الفلاتر",
+        "no_data_title": "لا توجد بيانات",
+        "out_of_stock_only": "الأصناف النافدة فقط",
+        "total_sales": "إجمالي المبيعات"
     },
     "returns": {
         "title": "سجل المرتجعات وإشعارات الخصم والإرجاع",
@@ -2643,7 +2671,23 @@ export const defaultArabicTranslations = {
         "suggested_presets_title": "وحدات مقترحة شائعة (اضغط للإضافة الفورية):",
         "units_updated_success": "تم تحديث وحدات القياس للنظام بنجاح ✓",
         "units_save_error": "تعذر حفظ وحدات القياس",
-        "at_least_one_system_unit": "يجب الإبقاء على وحدة قياس واحدة على الأقل في النظام"
+        "at_least_one_system_unit": "يجب الإبقاء على وحدة قياس واحدة على الأقل في النظام",
+        "account_status_and_plan_modal_title": "حالة الحساب والباقة",
+        "creating_org_status": "جارٍ إنشاء المؤسسة وتجهيزها...",
+        "custom_db_warning": "اترك هذه الحقول فارغة لاستخدام الخادم الافتراضي، وعدّلها فقط إذا كانت قاعدة بيانات المؤسسة على خادم منفصل",
+        "db_host_label": "عنوان خادم قاعدة البيانات",
+        "db_name_label": "اسم قاعدة البيانات",
+        "db_pass_label": "كلمة مرور قاعدة البيانات",
+        "db_user_label": "مستخدم قاعدة البيانات",
+        "extend_days_placeholder": "مثال: 30",
+        "extend_subscription_label": "تمديد الاشتراك (بالأيام)",
+        "hide_custom_db_settings": "إخفاء إعدادات قاعدة البيانات المخصصة",
+        "initial_password_label": "كلمة مرور المدير المبدئية",
+        "initial_password_placeholder": "6 أحرف على الأقل",
+        "manage_tenant_status_modal_title": "إدارة حالة المستأجر",
+        "show_custom_db_settings": "إظهار إعدادات قاعدة البيانات المخصصة",
+        "status_cancelled": "ملغي",
+        "status_pending": "قيد الانتظار"
     },
     "trash": {
         "title": "سلة المحذوفات المركزية واسترجاع البيانات",
@@ -2849,7 +2893,10 @@ export const defaultArabicTranslations = {
         "cash_customer": "عميل نقدي",
         "treasurer_cashier_sig": "توقيع أمين الخزينة \/ الكاشير",
         "accountant_auditor_sig": "توقيع المحاسب \/ المراجع",
-        "management_stamp_approval": "اعتماد الإدارة والختم الرسمي"
+        "management_stamp_approval": "اعتماد الإدارة والختم الرسمي",
+        "drawer_balanced": "الدرج مطابق",
+        "drawer_surplus": "زيادة بالدرج",
+        "record_expense_btn": "تسجيل المصروف"
     },
     "users": {
         "title": "إدارة حسابات المستخدمين والكاشير",
@@ -3065,6 +3112,19 @@ export const defaultArabicTranslations = {
         "url": "يجب أن يكون الحقل :attribute رابطاً صحيحاً.",
         "ulid": "يجب أن يكون الحقل :attribute معرف ULID صحيحاً.",
         "uuid": "يجب أن يكون الحقل :attribute معرف UUID صحيحاً.",
+        "any_of": "الحقل :attribute غير صالح.",
+        "array_keys": "يجب أن يحتوي الحقل :attribute على المفاتيح التالية فقط: :values.",
+        "base64": "يجب أن يكون الحقل :attribute نصًا صالحًا بترميز Base64.",
+        "doesnt_contain": "يجب ألا يحتوي الحقل :attribute على أي من القيم التالية: :values.",
+        "encoding": "يجب أن يكون الحقل :attribute بترميز :encoding.",
+        "in_array_keys": "يجب أن يحتوي الحقل :attribute على مفتاح واحد على الأقل من التالي: :values.",
+        "prohibited_if_accepted": "الحقل :attribute غير مسموح به عند قبول :other.",
+        "prohibited_if_declined": "الحقل :attribute غير مسموح به عند رفض :other.",
+        "custom": {
+            "attribute-name": {
+                "rule-name": "custom-message"
+            }
+        },
         "attributes": {
             "name": "الاسم",
             "email": "البريد الإلكتروني",
@@ -3585,7 +3645,12 @@ export const defaultEnglishTranslations = {
         "all_items": "All Items",
         "store_access_denied": "You are not allowed to access this store's data",
         "platform_name": "Cloud ERP platform",
-        "default_company_subtitle": "Sales, inventory and branch management"
+        "default_company_subtitle": "Sales, inventory and branch management",
+        "details": "Details",
+        "filter_search": "Search and filter",
+        "save_changes": "Save changes",
+        "saving": "Saving...",
+        "server_error": "A server error occurred. Please try again."
     },
     "connectivity": {
         "offline_title": "You are offline",
@@ -3778,7 +3843,13 @@ export const defaultEnglishTranslations = {
         "total_purchases_label": "Total Purchases",
         "total_payments_label": "Total Payments",
         "total_results_suppliers": "Total results: :count suppliers",
-        "name": "Name"
+        "name": "Name",
+        "customer_initial_balance_hint": "Amount the customer owed before you started using the system. Leave 0 if none.",
+        "initial_balance_hint": "Amount owed to the supplier before you started using the system. Leave 0 if none.",
+        "pay_to": "Pay supplier",
+        "payment_notes_placeholder": "Optional notes (e.g. receipt or transfer number)",
+        "save_customer": "Save customer",
+        "save_supplier": "Save supplier"
     },
     "customers": {
         "retail": "Retail Customer",
@@ -3902,7 +3973,8 @@ export const defaultEnglishTranslations = {
         "menu_hub_title": "Quick Operations & Documents Hub (App Menu)",
         "menu_hub_subtitle": "Direct 1-touch visual access to all system screens and documents",
         "search_screens_placeholder": "🔍 Search any screen or document (e.g. sale, purchase, stock)...",
-        "no_screens_found": "No screens matching your search query"
+        "no_screens_found": "No screens matching your search query",
+        "company_title": "My business"
     },
     "expenses": {
         "title": "Operational Expenses & Cost Centers",
@@ -4337,7 +4409,11 @@ export const defaultEnglishTranslations = {
         "search_stores_placeholder": "Search by name, code, address, or phone...",
         "all_store_types": "All Store Types",
         "create_store": "Save & Create Store",
-        "save_staff_assignments": "Save Staff Assignments"
+        "save_staff_assignments": "Save Staff Assignments",
+        "cancel_transfer": "Cancel transfer",
+        "min_selling_price": "Minimum selling price",
+        "quantity": "Quantity",
+        "view_transfer_details": "View transfer details"
     },
     "invoices": {
         "title": "Sales Invoices",
@@ -4555,7 +4631,9 @@ export const defaultEnglishTranslations = {
         "payment_note_split": "Split payment on issuing invoice :number",
         "payment_note_on_issue": "Payment on issuing invoice :number",
         "credit_invoice_cannot_have_payments": "A credit invoice cannot have payments",
-        "idempotency_key_conflict": "This request key was already used for a different invoice, customer, or store"
+        "idempotency_key_conflict": "This request key was already used for a different invoice, customer, or store",
+        "payment_ewallet": "E-wallet",
+        "total_net": "Net total"
     },
     "nav": {
         "group_sales": "Sales & Invoices",
@@ -4877,7 +4955,10 @@ export const defaultEnglishTranslations = {
         "cash_received_placeholder": "Cash received...",
         "pos_settings_saved": "Branch POS settings saved",
         "scale_barcode_invalid_check_digit": "Invalid scale barcode (check digit mismatch). Reprint the label or scan it again",
-        "store_not_found": "Branch not found"
+        "store_not_found": "Branch not found",
+        "decrease_qty": "Decrease quantity",
+        "increase_qty": "Increase quantity",
+        "one_kg_chip": "1 kg"
     },
     "profile": {
         "title": "User Profile & Account Settings",
@@ -5068,7 +5149,9 @@ export const defaultEnglishTranslations = {
         "urgency_warning_badge": "⚠️ Imminent Alert",
         "urgency_safe_badge": "✅ Safe Stock",
         "no_shortages_found_title": "No Inventory Shortages Currently",
-        "no_shortages_found_desc": "All items and warehouses have safe stock levels based on current burn rate."
+        "no_shortages_found_desc": "All items and warehouses have safe stock levels based on current burn rate.",
+        "final_net_total": "Net total",
+        "remaining_debt": "Remaining owed to supplier"
     },
     "reports": {
         "title": "Financial Reports & Analytics",
@@ -5203,7 +5286,12 @@ export const defaultEnglishTranslations = {
         "cogs_egp": "COGS",
         "gross_profit_egp": "Gross Profit",
         "profit_margin_pct": "Profit Margin %",
-        "profit_contribution_pct": "Profit Share %"
+        "profit_contribution_pct": "Profit Share %",
+        "low_stock_only": "Low stock only",
+        "no_data_desc": "No data for the selected period or filters. Try changing the filters.",
+        "no_data_title": "No data",
+        "out_of_stock_only": "Out of stock only",
+        "total_sales": "Total sales"
     },
     "returns": {
         "title": "Returns, Credit Notes & Stock Adjustments",
@@ -5803,7 +5891,23 @@ export const defaultEnglishTranslations = {
         "suggested_presets_title": "Suggested Common Units (Click for Instant Add):",
         "units_updated_success": "System measurement units updated successfully ✓",
         "units_save_error": "Failed to save measurement units",
-        "at_least_one_system_unit": "At least one measurement unit must be retained in the system"
+        "at_least_one_system_unit": "At least one measurement unit must be retained in the system",
+        "account_status_and_plan_modal_title": "Account status and plan",
+        "creating_org_status": "Creating and provisioning the organization...",
+        "custom_db_warning": "Leave these fields empty to use the default server. Change them only if the organization database is on a separate server.",
+        "db_host_label": "Database host",
+        "db_name_label": "Database name",
+        "db_pass_label": "Database password",
+        "db_user_label": "Database username",
+        "extend_days_placeholder": "e.g. 30",
+        "extend_subscription_label": "Extend subscription (days)",
+        "hide_custom_db_settings": "Hide custom database settings",
+        "initial_password_label": "Initial admin password",
+        "initial_password_placeholder": "At least 6 characters",
+        "manage_tenant_status_modal_title": "Manage tenant status",
+        "show_custom_db_settings": "Show custom database settings",
+        "status_cancelled": "Cancelled",
+        "status_pending": "Pending"
     },
     "trash": {
         "title": "Central Trash & Data Recovery",
@@ -6009,7 +6113,10 @@ export const defaultEnglishTranslations = {
         "cash_customer": "Cash Customer",
         "treasurer_cashier_sig": "Treasurer \/ Cashier Signature",
         "accountant_auditor_sig": "Accountant \/ Auditor Signature",
-        "management_stamp_approval": "Management Approval & Official Stamp"
+        "management_stamp_approval": "Management Approval & Official Stamp",
+        "drawer_balanced": "Drawer balanced",
+        "drawer_surplus": "Drawer surplus",
+        "record_expense_btn": "Record expense"
     },
     "users": {
         "title": "User & Cashier Management",
