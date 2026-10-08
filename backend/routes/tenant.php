@@ -257,12 +257,6 @@ Route::middleware([
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index')->middleware('can:roles.manage');
         Route::post('/settings', [SettingController::class, 'update'])->name('settings.update')->middleware('can:roles.manage');
         Route::post('/settings/telegram/test', [SettingController::class, 'sendTestTelegram'])->name('settings.telegram.test')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/daily-summary', [SettingController::class, 'sendDailySummaryTelegram'])->name('settings.telegram.daily_summary')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/low-stock', [SettingController::class, 'sendLowStockTelegram'])->name('settings.telegram.low_stock')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/overdue-shifts', [SettingController::class, 'sendOverdueShiftTelegram'])->name('settings.telegram.overdue_shifts')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/backup', [SettingController::class, 'sendBackupTelegram'])->name('settings.telegram.backup')->middleware('can:roles.manage');
-        Route::get('/settings/backup/download', [SettingController::class, 'downloadBackup'])->name('settings.backup.download')->middleware('can:roles.manage');
-        Route::post('/settings/clear-cache', [SettingController::class, 'clearCache'])->name('settings.clear_cache')->middleware('can:roles.manage');
 
         Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('can:roles.manage');
         Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('can:roles.manage');

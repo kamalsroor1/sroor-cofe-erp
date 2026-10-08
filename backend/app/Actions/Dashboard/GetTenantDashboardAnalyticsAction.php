@@ -19,6 +19,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
 class GetTenantDashboardAnalyticsAction
@@ -30,7 +31,8 @@ class GetTenantDashboardAnalyticsAction
 
     public function __construct(
         protected DashboardAnalyticsService $analyticsService,
-        protected ProfitService $profitService
+        protected ProfitService $profitService,
+        protected TenantClock $tenantClock,
     ) {}
 
     /**
@@ -45,7 +47,8 @@ class GetTenantDashboardAnalyticsAction
             return $this->memoized[$cacheKey];
         }
 
-        $today = now()->toDateString();
+        // SETG-2: "today" is the tenant-local calendar day.
+        $today = $this->tenantClock->today();
 
         // 1. Resolve Active Store
         $activeStore = null;
@@ -119,7 +122,7 @@ class GetTenantDashboardAnalyticsAction
         $lowStockItems = $lowStockQuery->get(['id', 'name', 'code', 'current_stock', 'min_stock_level', 'unit']);
 
         // 9. Periodic Profits (Monthly Gross & Margin)
-        $startOfMonth = now()->startOfMonth()->toDateString();
+        $startOfMonth = $this->tenantClock->now()->startOfMonth()->toDateString();
         $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
 
         // 10. Top Selling Coffee & Products this Month

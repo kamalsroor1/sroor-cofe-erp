@@ -12,16 +12,21 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Supplier;
-use Carbon\Carbon;
+use App\Support\TenantClock;
 
 class GetDashboardApiOverviewAction
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * حساب وتجميع مؤشرات أداء لوحة التحكم لـ API الموبايل والويب
      */
     public function execute(?int $storeId = null): array
     {
-        $today = Carbon::today()->toDateString();
+        // SETG-2: "today" is the tenant-local calendar day.
+        $today = $this->tenantClock->today();
 
         // 1. Customers & Suppliers counts and debts
         $customersCount = Customer::count();

@@ -59,6 +59,10 @@ class PermissionsSeeder extends Seeder
             'trash.access' => 'الوصول لسلة المحذوفات المركزية واسترجاع البيانات',
             'roles.manage' => 'إدارة المستخدمين والأدوار والصلاحيات',
             'logs.view' => 'عرض وفحص سجل العمليات والرقابة الذاتية',
+
+            // SETG-7: used by the settings endpoints, SettingPolicy and store POS settings.
+            // Granted to admin through the "all non super_admin.*" sync below.
+            'settings.manage' => 'إدارة إعدادات المحل والطباعة والتكاملات',
         ];
 
         foreach ($permissions as $name => $description) {

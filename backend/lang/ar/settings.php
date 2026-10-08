@@ -204,4 +204,13 @@ return [
     'desktop_badge' => 'تطبيق ديسكتوب',
     'app_up_to_date' => 'أحدث إصدار',
     'you_are_using_latest_version' => 'أنت تستخدم أحدث إصدار بالفعل',
+    'currency' => 'العملة',
+    'timezone' => 'المنطقة الزمنية',
+    'default_locale' => 'اللغة الافتراضية',
+    'number_digits' => 'شكل الأرقام',
+    'attr_telegram_bot_token' => 'توكن البوت',
+    'attr_telegram_chat_id' => 'معرف المحادثة',
+    'telegram_connection_failed' => 'تعذر الاتصال بخدمة تيليجرام. راجع التوكن ومعرف المحادثة والاتصال بالإنترنت.',
+    'commercial_register' => 'السجل التجاري',
+    'tax_registration_no' => 'رقم التسجيل الضريبي',
 ];

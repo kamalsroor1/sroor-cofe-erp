@@ -27,13 +27,18 @@
             <div v-if="companyInfo?.phone" class="flex items-center gap-1.5">
               <Phone class="w-3.5 h-3.5 text-slate-700" /> <span dir="ltr">{{ companyInfo?.phone }}</span>
             </div>
-            <div class="font-mono text-slate-800 text-[11px] pt-1">
-              <span
+            <div
+              v-if="companyInfo?.commercialRegister || companyInfo?.taxNumber"
+              class="font-mono text-slate-800 text-[11px] pt-1"
+            >
+              <span v-if="companyInfo?.commercialRegister"
                 >{{ $t('invoices.commercial_register') }}
                 <strong class="text-slate-950">{{ companyInfo?.commercialRegister }}</strong></span
               >
-              <span class="mx-2 text-slate-400">|</span>
-              <span
+              <span v-if="companyInfo?.commercialRegister && companyInfo?.taxNumber" class="mx-2 text-slate-400"
+                >|</span
+              >
+              <span v-if="companyInfo?.taxNumber"
                 >{{ $t('invoices.tax_id_number') }}
                 <strong class="text-slate-950">{{ companyInfo?.taxNumber }}</strong></span
               >

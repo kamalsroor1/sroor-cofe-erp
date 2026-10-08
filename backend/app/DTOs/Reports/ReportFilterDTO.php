@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\DTOs\Reports;
 
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
+
 final class ReportFilterDTO
 {
     public function __construct(
@@ -16,28 +19,35 @@ final class ReportFilterDTO
         public readonly string $stock_filter = 'all',
     ) {}
 
-    public static function fromArray(array $data, ?int $headerStoreId = null): self
+    /**
+     * @param  CarbonInterface|null  $now  "now" on the tenant clock (SETG-2, TenantClock::now()). Presets such as
+     *                                     today / yesterday / this_month resolve against it. Defaults to the app clock.
+     */
+    public static function fromArray(array $data, ?int $headerStoreId = null, ?CarbonInterface $now = null): self
     {
+        $now = CarbonImmutable::instance($now ?? now());
+        $today = $now->toDateString();
+
         $period = (string) ($data['period'] ?? $data['preset'] ?? 'this_month');
         $fromDate = (string) ($data['from_date'] ?? $data['from'] ?? '');
-        $toDate = (string) ($data['to_date'] ?? $data['to'] ?? now()->toDateString());
+        $toDate = (string) ($data['to_date'] ?? $data['to'] ?? $today);
 
         if ($fromDate === '') {
             if ($period === 'today') {
-                $fromDate = now()->toDateString();
-                $toDate = now()->toDateString();
+                $fromDate = $today;
+                $toDate = $today;
             } elseif ($period === 'yesterday') {
-                $fromDate = now()->subDay()->toDateString();
-                $toDate = now()->subDay()->toDateString();
+                $fromDate = $now->subDay()->toDateString();
+                $toDate = $now->subDay()->toDateString();
             } elseif ($period === 'this_week') {
-                $fromDate = now()->startOfWeek()->toDateString();
-                $toDate = now()->toDateString();
+                $fromDate = $now->startOfWeek()->toDateString();
+                $toDate = $today;
             } elseif ($period === 'this_year') {
-                $fromDate = now()->startOfYear()->toDateString();
-                $toDate = now()->toDateString();
+                $fromDate = $now->startOfYear()->toDateString();
+                $toDate = $today;
             } else { // this_month
-                $fromDate = now()->startOfMonth()->toDateString();
-                $toDate = now()->toDateString();
+                $fromDate = $now->startOfMonth()->toDateString();
+                $toDate = $today;
             }
         }
 

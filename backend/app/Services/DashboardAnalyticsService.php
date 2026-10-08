@@ -4,17 +4,24 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Support\TenantClock;
 use Carbon\Carbon;
 
 class DashboardAnalyticsService
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Get Interactive Executive Dashboard Analytics
      */
     public function getAnalytics(?int $storeId = null, int $trendDays = 7): array
     {
-        $today = now()->toDateString();
-        $startDate = now()->subDays($trendDays - 1)->toDateString();
+        // SETG-2: day boundaries follow the tenant timezone; storage is unchanged.
+        $now = $this->tenantClock->now();
+        $today = $now->toDateString();
+        $startDate = $now->subDays($trendDays - 1)->toDateString();
 
         // 1. Today's Core Invoices
         $todayInvoicesQuery = Invoice::where('status', 'confirmed')
@@ -52,8 +59,8 @@ class DashboardAnalyticsService
         // 3. Daily Sales Trend (Last N days)
         $dailyTrend = [];
         for ($i = $trendDays - 1; $i >= 0; $i--) {
-            $date = now()->subDays($i)->toDateString();
-            $dayName = now()->subDays($i)->locale('ar')->isoFormat('dddd D/M');
+            $date = $now->subDays($i)->toDateString();
+            $dayName = $now->subDays($i)->locale('ar')->isoFormat('dddd D/M');
             $dayInvoices = $periodInvoices->filter(fn ($inv) => Carbon::parse($inv->invoice_date)->toDateString() === $date);
             $daySales = (string) ($dayInvoices->sum('net_total') ?: '0.000');
             $dayCount = $dayInvoices->count();
@@ -81,7 +88,7 @@ class DashboardAnalyticsService
         }
 
         foreach ($periodInvoices as $inv) {
-            $hour = (int) $inv->created_at->format('G');
+            $hour = (int) $this->tenantClock->toTenant($inv->created_at)?->format('G');
             if (isset($hourlySales[$hour])) {
                 $hourlySales[$hour]['sales'] = bcadd((string) $hourlySales[$hour]['sales'], (string) $inv->net_total, 3);
                 $hourlySales[$hour]['invoices']++;

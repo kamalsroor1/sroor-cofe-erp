@@ -204,4 +204,13 @@ return [
     'desktop_badge' => 'Desktop App',
     'app_up_to_date' => 'Latest Version',
     'you_are_using_latest_version' => 'You are already using the latest version',
+    'currency' => 'Currency',
+    'timezone' => 'Time zone',
+    'default_locale' => 'Default language',
+    'number_digits' => 'Number digits',
+    'attr_telegram_bot_token' => 'bot token',
+    'attr_telegram_chat_id' => 'chat ID',
+    'telegram_connection_failed' => 'Could not reach Telegram. Check the bot token, the chat ID and the internet connection.',
+    'commercial_register' => 'Commercial register',
+    'tax_registration_no' => 'Tax registration number',
 ];

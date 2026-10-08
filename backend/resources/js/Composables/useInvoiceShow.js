@@ -5,6 +5,7 @@ import { useAppConfigStore } from '../stores/appConfig';
 import { useFormatters } from './useFormatters';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
+import { buildCompanyInfo } from '../helpers/companyInfo';
 
 export function useInvoiceShow() {
     const route = useRoute();
@@ -23,15 +24,14 @@ export function useInvoiceShow() {
     const cancelReason = ref('');
     const isCancelling = ref(false);
 
-    // Company Information Group
-    const companyInfo = computed(() => ({
-        name: appConfigStore.companyName || appConfigStore.platformName || 'المؤسسة التجارية',
-        subtitle: appConfigStore.companySubtitle || 'مؤسسة تجارية متخصصة',
-        phone: appConfigStore.tenant?.phone || '01012345678',
-        address: appConfigStore.tenant?.address || 'الفرع الرئيسي',
-        commercialRegister: appConfigStore.tenant?.commercial_register || '123456',
-        taxNumber: appConfigStore.tenant?.tax_number || '987-654-321',
-    }));
+    // Company Information Group — SETG-7: real tenant settings only; empty values hide their line.
+    const companyInfo = computed(() =>
+        buildCompanyInfo({
+            name: appConfigStore.companyName || appConfigStore.platformName,
+            system: appConfigStore.system,
+            tenant: appConfigStore.tenant,
+        })
+    );
 
     const invoiceItems = computed(() => {
         if (!invoice.value) return [];

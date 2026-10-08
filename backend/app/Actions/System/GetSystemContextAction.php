@@ -129,6 +129,11 @@ final class GetSystemContextAction
                 'platform_name' => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', __('common.platform_name')),
                 'company_name' => Setting::get('company_name') ?: ($tenant?->name ?? __('auth.default_company_name')),
                 'company_subtitle' => Setting::get('company_subtitle') ?: '',
+                // SETG-7: real legal/contact info for the A4 invoice header ('' = hide the line).
+                'company_phone' => Setting::get('company_phone') ?: '',
+                'company_address' => Setting::get('company_address') ?: '',
+                'commercial_register' => Setting::get('commercial_register') ?: '',
+                'tax_registration_no' => Setting::get('tax_registration_no') ?: '',
                 'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
                 'server_time' => now()->toDateTimeString(),
             ],

@@ -8,12 +8,14 @@ use App\Actions\Shifts\GetDailyJournalAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GetDailyJournalRequest;
 use App\Models\Store;
+use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 
 final class DailyJournalController extends Controller
 {
     public function __construct(
-        private readonly GetDailyJournalAction $getDailyJournalAction
+        private readonly GetDailyJournalAction $getDailyJournalAction,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     /**
@@ -21,7 +23,7 @@ final class DailyJournalController extends Controller
      */
     public function index(GetDailyJournalRequest $request): JsonResponse
     {
-        $date = (string) $request->input('date', now()->toDateString());
+        $date = (string) $request->input('date', $this->tenantClock->today());
         $storeId = $request->header('X-Store-Id')
             ?: $request->input('store_id')
             ?: auth()->user()?->getCurrentStore()?->id

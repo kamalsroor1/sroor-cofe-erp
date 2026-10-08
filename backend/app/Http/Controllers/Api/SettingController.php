@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Settings\SendTestTelegramAction;
 use App\Actions\Settings\UpdateSettingsAction;
+use App\DTOs\Settings\TelegramTestDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\SendTestTelegramRequest;
 use App\Http\Requests\UpdateSettingsRequest;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
-use App\Services\TelegramService;
+use App\Services\Settings\SettingSecrets;
+use App\Services\Settings\TenantSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
@@ -18,7 +22,9 @@ use Throwable;
 final class SettingController extends Controller
 {
     public function __construct(
-        private readonly UpdateSettingsAction $updateSettingsAction
+        private readonly UpdateSettingsAction $updateSettingsAction,
+        private readonly TenantSettings $tenantSettings,
+        private readonly SendTestTelegramAction $sendTestTelegramAction,
     ) {}
 
     /**
@@ -50,8 +56,14 @@ final class SettingController extends Controller
             'inventory_units' => Setting::get('inventory_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر'),
             'telegram_bot_token' => Setting::get('telegram_bot_token', ''),
             'telegram_chat_id' => Setting::get('telegram_chat_id', ''),
+            'commercial_register' => Setting::get('commercial_register', ''),
+            'tax_registration_no' => Setting::get('tax_registration_no', ''),
             'telegram_notifications_enabled' => Setting::getBool('telegram_notifications_enabled', true),
+            ...$this->tenantSettings->toArray(),
         ];
+
+        // SETG-7: secrets are write-only — never echo them, only whether one is stored.
+        $settings = SettingSecrets::mask($settings);
 
         $stores = Store::where('is_active', true)->select('id', 'name', 'code')->get();
         $usersCount = User::count();
@@ -80,45 +92,30 @@ final class SettingController extends Controller
     {
         try {
             $updated = $this->updateSettingsAction->execute($request->validated());
+        } catch (Throwable $e) {
+            // SETG-7: log the cause server-side; never return the exception text (SQL, paths, secrets).
+            report($e);
 
             return response()->json([
-                'success' => true,
-                'message' => __('nav.settings_saved_success') ?: 'تم حفظ وتحديث إعدادات النظام بنجاح ✓',
-                'settings' => $updated,
-            ], 200);
-        } catch (Throwable $e) {
-            return response()->json([
                 'success' => false,
-                'message' => 'فشل حفظ الإعدادات: '.$e->getMessage(),
-            ], 422);
+                'message' => __('settings.settings_save_failed'),
+            ], 500);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('settings.settings_saved_success'),
+            'settings' => $updated,
+        ], 200);
     }
 
     /**
      * Send test telegram notification
      */
-    public function sendTestTelegram(Request $request, TelegramService $telegramService): JsonResponse
+    public function sendTestTelegram(SendTestTelegramRequest $request): JsonResponse
     {
-        $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage') && ! $user->can('settings.manage')) {
-            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
-        }
+        $result = $this->sendTestTelegramAction->execute(TelegramTestDTO::fromArray($request->validated()));
 
-        $token = $request->input('bot_token');
-        $chatId = $request->input('chat_id');
-
-        if ($token) {
-            Setting::set('telegram_bot_token', trim((string) $token));
-        }
-        if ($chatId) {
-            Setting::set('telegram_chat_id', trim((string) $chatId));
-        }
-
-        $res = $telegramService->sendTestNotification(trim((string) $chatId));
-
-        return response()->json([
-            'success' => (bool) $res['success'],
-            'message' => $res['message'],
-        ], 200);
+        return response()->json($result, 200);
     }
 }

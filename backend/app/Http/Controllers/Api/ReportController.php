@@ -17,6 +17,7 @@ use App\Http\Requests\FilterReportRequest;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,8 @@ final class ReportController extends Controller
         private readonly GetCustomersSalesReportAction $getCustomersSalesReportAction,
         private readonly GetExpensesBreakdownReportAction $getExpensesBreakdownReportAction,
         private readonly GetInventoryValuationReportAction $getInventoryValuationReportAction,
-        private readonly GetTreasuryReportAction $getTreasuryReportAction
+        private readonly GetTreasuryReportAction $getTreasuryReportAction,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     private function buildDTO(FilterReportRequest|Request $request): ReportFilterDTO
@@ -40,7 +42,8 @@ final class ReportController extends Controller
 
         return ReportFilterDTO::fromArray(
             $request->all(),
-            $headerStoreId ? (int) $headerStoreId : null
+            $headerStoreId ? (int) $headerStoreId : null,
+            $this->tenantClock->now(),
         );
     }
 

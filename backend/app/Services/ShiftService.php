@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\ReturnDocument;
 use App\Models\Store;
+use App\Support\TenantClock;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +17,11 @@ use Illuminate\Support\Facades\Log;
 class ShiftService
 {
     public function __construct(
-        protected ?ActivityLogService $activityLogService = null
+        protected ?ActivityLogService $activityLogService = null,
+        protected ?TenantClock $tenantClock = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
+        $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
     }
 
     /**
@@ -48,8 +51,7 @@ class ShiftService
             throw new Exception("يوجد وردية عمل مفتوحة بالفعل لهذا الفرع برقم {$existing->shift_number}. يجب إغلاقها أولاً.");
         }
 
-        $shiftCount = CashShift::whereDate('opened_at', now()->toDateString())->count() + 1;
-        $shiftNumber = 'SHIFT-'.date('Ymd').'-'.str_pad($shiftCount, 3, '0', STR_PAD_LEFT);
+        $shiftNumber = $this->nextShiftNumber();
 
         $shift = CashShift::create([
             'user_id' => Auth::id() ?? 1,
@@ -69,6 +71,26 @@ class ShiftService
         );
 
         return $shift;
+    }
+
+    /**
+     * SETG-2: the daily shift sequence restarts at midnight on the tenant clock, and the
+     * date in the number is the tenant-local date. The next sequence is derived from the
+     * numbers already issued for that date (not from opened_at), so it never collides
+     * with an existing number even if the tenant timezone changed earlier the same day.
+     */
+    private function nextShiftNumber(): string
+    {
+        $prefix = 'SHIFT-'.$this->tenantClock->now()->format('Ymd').'-';
+
+        $lastNumber = CashShift::query()
+            ->where('shift_number', 'like', $prefix.'%')
+            ->orderByDesc('shift_number')
+            ->value('shift_number');
+
+        $sequence = $lastNumber !== null ? ((int) substr((string) $lastNumber, strlen($prefix))) + 1 : 1;
+
+        return $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
     }
 
     /**

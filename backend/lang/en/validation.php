@@ -197,6 +197,75 @@ return [
     |
     */
 
-    'attributes' => [],
+    // SETG-3: same keys as lang/ar/validation.php. Without them English messages fell back
+    // to the Arabic attribute names (fallback_locale = ar), e.g. "The الاسم field is required.".
+    'attributes' => [
+        // System & Users
+        'name' => 'name',
+        'email' => 'email',
+        'password' => 'password',
+        'password_confirmation' => 'password confirmation',
+        'role' => 'role',
+        'phone' => 'phone number',
+        'address' => 'address',
+        'tax_number' => 'tax number',
+        'company_name' => 'company name',
+        'notes' => 'notes',
+        'is_active' => 'active status',
+
+        // Items & Stock
+        'code' => 'item code',
+        'category' => 'category',
+        'unit' => 'unit',
+        'cost_price' => 'cost price',
+        'selling_price' => 'selling price',
+        'min_stock_level' => 'minimum stock level',
+        'current_stock' => 'current stock',
+        'opening_balance' => 'opening balance',
+        'quantity' => 'quantity',
+        'unit_price' => 'unit price',
+        'custom_selling_price' => 'custom selling price',
+        'min_stock' => 'minimum stock',
+
+        // Invoices & Sales
+        'customer_id' => 'customer',
+        'supplier_id' => 'supplier',
+        'store_id' => 'branch / warehouse',
+        'from_store_id' => 'source branch',
+        'to_store_id' => 'destination branch',
+        'invoice_date' => 'invoice date',
+        'purchase_date' => 'purchase date',
+        'transfer_date' => 'transfer date',
+        'return_date' => 'return date',
+        'expense_date' => 'expense date',
+        'payment_date' => 'payment date',
+        'payment_type' => 'payment type',
+        'payment_method' => 'payment method',
+        'paid_amount' => 'paid amount',
+        'discount_type' => 'discount type',
+        'discount_value' => 'discount value',
+        'discount_amount' => 'discount amount',
+        'supplier_invoice_ref' => 'supplier invoice number',
+        'reason' => 'reason',
+        'type' => 'type',
+        'amount' => 'amount',
+        'items' => 'items',
+        'items.*.item_id' => 'item',
+        'items.*.quantity' => 'item quantity',
+        'items.*.unit_price' => 'item unit price',
+        'items.*.cost_price' => 'item cost price',
+        'items.*.discount_amount' => 'line discount',
+        'transfer_items' => 'transfer items',
+        'transfer_items.*.item_id' => 'transferred item',
+        'transfer_items.*.quantity' => 'transferred quantity',
+
+        // Cash Shifts & Drawer
+        'opening_cash_balance' => 'opening drawer cash',
+        'actual_cash_balance' => 'counted drawer cash',
+        'target_weight_grams' => 'target weight (grams)',
+        'blend_name' => 'blend name',
+        'cardamom_grams' => 'cardamom (grams)',
+        'mastic_grams' => 'mastic (grams)',
+    ],
 
 ];

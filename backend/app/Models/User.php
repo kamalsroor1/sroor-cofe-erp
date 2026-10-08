@@ -24,6 +24,7 @@ class User extends Authenticatable
         'default_store_id',
         'theme_preference',
         'show_print_subtitle',
+        'locale',
     ];
 
     protected $hidden = [

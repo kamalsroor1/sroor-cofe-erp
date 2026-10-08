@@ -16,13 +16,15 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
 final class GetDashboardOverviewAction
 {
     public function __construct(
         private readonly DashboardAnalyticsService $analyticsService,
-        private readonly ProfitService $profitService
+        private readonly ProfitService $profitService,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     /**
@@ -30,7 +32,8 @@ final class GetDashboardOverviewAction
      */
     public function execute(?User $user = null, ?int $storeId = null): array
     {
-        $today = now()->toDateString();
+        // SETG-2: "today" is the tenant-local calendar day.
+        $today = $this->tenantClock->today();
 
         // 1. Resolve Store
         $activeStore = null;
@@ -141,7 +144,7 @@ final class GetDashboardOverviewAction
             ->count();
 
         // 9. Monthly Profits & Margin
-        $startOfMonth = now()->startOfMonth()->toDateString();
+        $startOfMonth = $this->tenantClock->now()->startOfMonth()->toDateString();
         $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
 
         // 10. Top Selling Items this Month
@@ -163,13 +166,13 @@ final class GetDashboardOverviewAction
             ->take(6)
             ->get()
             ->map(fn ($t) => [
-            'item_id' => $t->item_id,
-            'name' => $t->item_name,
-            'code' => $t->item_code,
-            'unit' => $t->unit ?? 'كجم',
-            'total_qty' => (float) $t->total_qty,
-            'total_revenue' => (float) $t->total_revenue,
-        ]);
+                'item_id' => $t->item_id,
+                'name' => $t->item_name,
+                'code' => $t->item_code,
+                'unit' => $t->unit ?? 'كجم',
+                'total_qty' => (float) $t->total_qty,
+                'total_revenue' => (float) $t->total_revenue,
+            ]);
 
         // 11. Active Cash Shift
         $activeShift = null;

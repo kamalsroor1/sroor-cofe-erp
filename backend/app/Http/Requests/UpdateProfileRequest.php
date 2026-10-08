@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Services\Settings\TenantSettings;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,6 +26,8 @@ class UpdateProfileRequest extends FormRequest
             'current_password' => ['nullable', 'required_with:new_password', 'string'],
             'new_password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'theme_preference' => ['required', 'in:dark,light'],
+            // SETG-3: optional saved language; null clears it, absent keeps it.
+            'locale' => ['sometimes', 'nullable', 'string', Rule::in(TenantSettings::SUPPORTED_LOCALES)],
         ];
     }
 }

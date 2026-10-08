@@ -86,8 +86,10 @@ class TelegramService
                     Log::error("Telegram notification error for {$cid}: ".$response->body());
                 }
             } catch (\Throwable $e) {
-                $errors[] = "Chat {$cid}: ".$e->getMessage();
-                Log::error("Telegram exception for {$cid}: ".$e->getMessage());
+                // SETG-7: transport errors embed the request URL, which contains the bot token.
+                // The client only gets a generic message; the log gets the redacted cause.
+                $errors[] = "Chat {$cid}: ".__('settings.telegram_connection_failed');
+                Log::error("Telegram exception for {$cid}: ".$this->redactToken($e->getMessage(), (string) $token));
             }
         }
 
@@ -103,6 +105,18 @@ class TelegramService
             'success' => false,
             'message' => 'فشل الإرسال: '.implode(' | ', $errors),
         ];
+    }
+
+    /**
+     * Remove the bot token (and any `/bot<token>/` URL segment) from a diagnostic string.
+     */
+    private function redactToken(string $text, string $token): string
+    {
+        if ($token !== '') {
+            $text = str_replace($token, '[redacted]', $text);
+        }
+
+        return (string) preg_replace('#/bot[^/\s]+/#', '/bot[redacted]/', $text);
     }
 
     /**
@@ -355,8 +369,8 @@ class TelegramService
                     Log::error("Telegram sendDocument error for {$cid}: ".$response->body());
                 }
             } catch (\Throwable $e) {
-                $errors[] = "Chat {$cid}: ".$e->getMessage();
-                Log::error("Telegram sendDocument exception for {$cid}: ".$e->getMessage());
+                $errors[] = "Chat {$cid}: ".__('settings.telegram_connection_failed');
+                Log::error("Telegram sendDocument exception for {$cid}: ".$this->redactToken($e->getMessage(), (string) $token));
             }
         }
 

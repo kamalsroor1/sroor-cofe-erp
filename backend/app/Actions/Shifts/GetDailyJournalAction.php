@@ -9,11 +9,18 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Store;
+use App\Support\TenantClock;
 
 final class GetDailyJournalAction
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
-     * Get Daily Journal ledger and cash metrics for a specific date and store
+     * Get Daily Journal ledger and cash metrics for a specific date and store.
+     *
+     * $date is a tenant-local business date (SETG-2); displayed times are on the tenant clock.
      */
     public function execute(string $date, ?int $storeId = null): array
     {
@@ -75,7 +82,7 @@ final class GetDailyJournalAction
                 'id' => $activeShift->id,
                 'shift_number' => $activeShift->shift_number,
                 'status' => $activeShift->status,
-                'opened_at' => $activeShift->opened_at?->format('Y-m-d H:i'),
+                'opened_at' => $this->tenantClock->toTenant($activeShift->opened_at)?->format('Y-m-d H:i'),
                 'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
                 'user_name' => $activeShift->user?->name,
             ] : null,
@@ -102,7 +109,7 @@ final class GetDailyJournalAction
                 'remaining_amount' => (float) $inv->remaining_amount,
                 'payment_method' => $inv->payment_type ?? $inv->payment_method,
                 'status' => $inv->status,
-                'time' => $inv->created_at?->format('H:i A'),
+                'time' => $this->tenantClock->toTenant($inv->created_at)?->format('H:i A'),
             ]),
             'expenses' => $expenses->map(fn ($e) => [
                 'id' => $e->id,

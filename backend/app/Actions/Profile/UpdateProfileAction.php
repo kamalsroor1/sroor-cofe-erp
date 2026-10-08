@@ -26,6 +26,10 @@ final class UpdateProfileAction
         $user->phone = (string) $validated['phone'];
         $user->email = isset($validated['email']) && $validated['email'] !== '' ? (string) $validated['email'] : null;
         $user->theme_preference = (string) ($validated['theme_preference'] ?? 'dark');
+        // SETG-3: only touch the saved language when the client sent the key (null clears it).
+        if (array_key_exists('locale', $validated)) {
+            $user->locale = is_string($validated['locale']) ? $validated['locale'] : null;
+        }
         $user->save();
 
         return $user;
