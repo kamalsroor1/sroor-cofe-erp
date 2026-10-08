@@ -129,6 +129,7 @@ gitleaks git --config .gitleaks.toml --gitleaks-ignore-path /dev/null --redact -
 | `.env.e2e`, `backend/phpunit.xml` (commit قديم) | 2 | `sroor-laravel-app-key`, `sroor-dotenv-secret` | مفاتيح اختبار محلية؛ لا تُستخدم في أي بيئة حقيقية |
 | `.agents/skills/laravel-security/SKILL.md` (ونسخة `backend/`) | 2 | `sroor-dotenv-secret` | أمثلة توثيقية على الأرجح؛ تحقق مرة واحدة |
 | `backend/tests/Feature/Api/ProfileApiTest.php`, `backend/tests/Feature/Seeders/DatabaseSeederSecurityTest.php` | 2 | `generic-api-key` | لا شيء: قيم اختبار وهمية. عند لمس هذه الأسطر (QA-4) غيّرها لبادئة `Fixture` وإلا سيفشل الـ job |
+| `backend/tests/Feature/Api/SettingsSecretsApiTest.php` (commit `0127110`)، `backend/tests/Feature/Tenancy/MediaConnectionRoutingTest.php` (commit `97e0a28`) | 2 | `sroor-hardcoded-password`, `generic-api-key` | لا شيء: tokens بوت Telegram وهمية ومفاتيح إعدادات اختبار، أُضيفت للـ baseline بعد أول CI run (2026-10-08) لأنها دُفعت بالفعل. الملفات الحالية تُركّب الـ token من أجزاء وتستخدم بادئة `fixture`، فلا يعود أي منها للظهور |
 
 **تذكرة التدوير** — TODO(CTO): أنشئ تذكرة واحدة باسم «تدوير الأسرار القديمة قبل أول عميل» تحتوي هذا الجدول، وتُغلق بالشروط:
 1. خادم Hostinger: تغيير كلمة مرور SSH وتفعيل الدخول بالمفتاح فقط، تغيير كلمة مرور DB، `APP_KEY` جديد للمحل الحي (**تحذير:** تغيير `APP_KEY` يُبطل الجلسات وأي بيانات مشفرة بـ `encrypt()`؛ خطط له مع نافذة صيانة)، token/سر webhook جديد، وبوت Telegram جديد إن ظهر token البوت في أي مكان.

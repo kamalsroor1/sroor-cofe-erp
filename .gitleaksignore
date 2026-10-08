@@ -24,8 +24,12 @@ db2e4eca36c31dea0cabd8c1b80508809c008daf:backend/.agents/skills/laravel-security
 2fa2b76f1f9204cf1c076fbf87979a828c43a79a:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:135
 b8f79aee9ce4f6dadc5f5e5596b3302f90bb75c5:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:113
 b8f79aee9ce4f6dadc5f5e5596b3302f90bb75c5:backend/tests/Feature/Api/ProfileApiTest.php:generic-api-key:134
+012711008e2735a4affb9a8fa0b0e91413ea36bd:backend/tests/Feature/Api/SettingsSecretsApiTest.php:sroor-hardcoded-password:28
+012711008e2735a4affb9a8fa0b0e91413ea36bd:backend/tests/Feature/Api/SettingsSecretsApiTest.php:sroor-hardcoded-password:30
 65ddb20fd6c7ff90d3685ed0d41b88a211dee4ea:backend/tests/Feature/Seeders/DatabaseSeederSecurityTest.php:generic-api-key:154
 65ddb20fd6c7ff90d3685ed0d41b88a211dee4ea:backend/tests/Feature/Seeders/DatabaseSeederSecurityTest.php:generic-api-key:216
+97e0a2802463bd538c2e8b9ae8ffff332be78c68:backend/tests/Feature/Tenancy/MediaConnectionRoutingTest.php:generic-api-key:101
+97e0a2802463bd538c2e8b9ae8ffff332be78c68:backend/tests/Feature/Tenancy/MediaConnectionRoutingTest.php:generic-api-key:166
 8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_git_log.py:sroor-hardcoded-password:5
 7b39c4784d6af2c097691ce080b665e69ab32705:check_live_db.py:sroor-hardcoded-password:5
 8b3ab54e1d6b586351690fa3540866bc8a9c5915:check_live_tinker.py:sroor-hardcoded-password:5
