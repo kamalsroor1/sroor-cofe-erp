@@ -47,6 +47,35 @@ return [
             'report' => false,
         ],
 
+        /*
+         * PKG-2 central (platform) disks. They must NEVER be listed in
+         * tenancy.filesystem.disks: FilesystemTenancyBootstrapper re-roots the listed
+         * disks and suffixes storage_path() per tenant. The roots below are absolute
+         * and resolved when the config loads (central context), so files written from
+         * a tenant request still land outside every storage/tenant<id>/ directory.
+         * Used only through App\Models\CentralMedia.
+         */
+
+        // Payment receipts (ENTI-3.3). Never served directly: signed route only.
+        'central_private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/central/private'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Platform branding assets (BRND-2): logo, favicon, app icon.
+        'central_public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/central/public'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/central-assets',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -75,6 +104,7 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+        public_path('central-assets') => storage_path('app/central/public'),
     ],
 
 ];

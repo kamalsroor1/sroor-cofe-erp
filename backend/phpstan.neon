@@ -17,6 +17,10 @@ parameters:
         - app/
         - routes/
         - database/
+        # Test fixtures are analysed too: they are the only users (until ENTI-3.3 /
+        # BRND-2 land) of app traits such as InteractsWithCentralMedia, and PHPStan
+        # reports a trait with zero users as `trait.unused` instead of analysing it.
+        - tests/Fixtures/
 
     excludePaths:
         analyseAndScan:

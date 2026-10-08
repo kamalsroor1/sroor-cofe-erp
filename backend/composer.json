@@ -7,11 +7,19 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "laravel/fortify": "^1.41",
         "laravel/framework": "^13.8",
+        "laravel/horizon": "^5.50",
+        "laravel/pennant": "^1.26",
         "laravel/pulse": "^1.8",
         "laravel/sanctum": "*",
         "laravel/telescope": "*",
         "laravel/tinker": "^3.0",
+        "sentry/sentry-laravel": "^4.28",
+        "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-backup": "^10.3",
+        "spatie/laravel-health": "^1.40",
+        "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-permission": "^8.3",
         "stancl/tenancy": "^3.10"
     },
@@ -83,12 +91,17 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "laravel/fortify",
+                "laravel/passkeys"
+            ]
         }
     },
     "config": {
         "platform": {
-            "php": "8.3.30"
+            "php": "8.3.30",
+            "ext-pcntl": "8.3.30",
+            "ext-posix": "8.3.30"
         },
         "optimize-autoloader": true,
         "preferred-install": "dist",
