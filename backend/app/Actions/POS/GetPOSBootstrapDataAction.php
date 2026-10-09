@@ -3,6 +3,7 @@
 namespace App\Actions\POS;
 
 use App\Http\Resources\POSCustomerResource;
+use App\Http\Resources\PosQuickKeyResource;
 use App\Http\Resources\StorePosSettingResource;
 use App\Models\CashShift;
 use App\Models\Category;
@@ -16,6 +17,7 @@ class GetPOSBootstrapDataAction
 {
     public function __construct(
         private readonly GetStorePosSettingsAction $getStorePosSettingsAction,
+        private readonly GetPosQuickKeysAction $getPosQuickKeysAction,
     ) {}
 
     /**
@@ -178,6 +180,11 @@ class GetPOSBootstrapDataAction
             'pos_settings' => $activeStore
                 ? (new StorePosSettingResource($this->getStorePosSettingsAction->execute((int) $activeStore->id)))->resolve()
                 : null,
+            // POSB-6: quick keys of the active store, only when the user may access that store
+            // (X-Store-Id is not access-checked upstream). Constant query count (no N+1).
+            'quick_keys' => $activeStore && $user && $user->can('view', $activeStore)
+                ? PosQuickKeyResource::collection($this->getPosQuickKeysAction->execute((int) $activeStore->id))->resolve()
+                : [],
         ];
     }
 }

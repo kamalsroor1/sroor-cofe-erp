@@ -260,4 +260,10 @@ return [
     'decrease_qty' => 'Decrease quantity',
     'increase_qty' => 'Increase quantity',
     'one_kg_chip' => '1 kg',
+
+    // POSB-6: per-store POS quick keys
+    'quick_keys_saved' => 'Branch quick keys saved',
+    'quick_keys_duplicate_position' => 'Position :position on page :page is used by more than one key',
+    'quick_keys_item_unavailable' => 'Item not found or inactive',
+    'quick_keys_category_unavailable' => 'Category not found or inactive',
 ];

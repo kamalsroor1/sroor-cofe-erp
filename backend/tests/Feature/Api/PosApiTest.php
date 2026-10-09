@@ -125,6 +125,7 @@ class PosApiTest extends TestCase
                     'default_customer',
                     'active_store',
                     'active_shift',
+                    'quick_keys',
                 ],
             ])
             ->assertJson(['success' => true]);

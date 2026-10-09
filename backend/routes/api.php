@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionApiController;
 use App\Http\Controllers\Api\PosController;
+use App\Http\Controllers\Api\PosQuickKeyController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\ReportController;
@@ -96,6 +97,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::middleware(DenyQuickLoginToken::class)->group(function () {
             Route::get('/stores/{store}/pos-settings', [StorePosSettingsController::class, 'show'])->whereNumber('store')->name('api.stores.pos_settings.show');
             Route::put('/stores/{store}/pos-settings', [StorePosSettingsController::class, 'update'])->whereNumber('store')->name('api.stores.pos_settings.update');
+            // POSB-6: full replace of a store's POS quick keys. settings.manage + store access.
+            Route::put('/stores/{store}/pos/quick-keys', [PosQuickKeyController::class, 'replace'])->whereNumber('store')->name('api.stores.pos_quick_keys.replace');
         });
 
         // Customers & Statements
@@ -152,6 +155,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout');
         Route::post('/pos/quick-customer', [PosController::class, 'quickCustomer'])->name('api.pos.quick_customer');
         Route::get('/pos/last-price', [PosController::class, 'lastPrice'])->name('api.pos.last_price');
+        // POSB-6: quick keys of the active store (pos.access + store access).
+        Route::get('/pos/quick-keys', [PosQuickKeyController::class, 'index'])->name('api.pos.quick_keys.index');
 
         // Payments & Vouchers (Customer Receipts / Supplier Disbursements)
         Route::get('/payments', [PaymentController::class, 'index'])->name('api.payments.index');

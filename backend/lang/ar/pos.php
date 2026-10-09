@@ -260,4 +260,10 @@ return [
     'decrease_qty' => 'إنقاص الكمية',
     'increase_qty' => 'زيادة الكمية',
     'one_kg_chip' => '1 كجم',
+
+    // POSB-6: per-store POS quick keys
+    'quick_keys_saved' => 'تم حفظ الأصناف السريعة للفرع',
+    'quick_keys_duplicate_position' => 'الخانة :position في الصفحة :page مستخدمة لأكثر من مفتاح',
+    'quick_keys_item_unavailable' => 'الصنف غير موجود أو غير نشط',
+    'quick_keys_category_unavailable' => 'الفئة غير موجودة أو غير نشطة',
 ];
