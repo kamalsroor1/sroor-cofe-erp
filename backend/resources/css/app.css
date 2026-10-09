@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant coarse (@media (pointer: coarse));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -21,7 +22,8 @@ body {
     font-family: 'Cairo', 'Tajawal', sans-serif;
 }
 
-html.dark, html.dark body {
+html.dark,
+html.dark body {
     background-color: #020617;
     color: #f8fafc;
 }
@@ -42,7 +44,8 @@ html.dark, html.dark body {
     }
 }
 
-html, body {
+html,
+body {
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent !important;
@@ -50,29 +53,38 @@ html, body {
 }
 
 /* 🔒 Prevent Web-like accidental text selection on UI chrome and controls */
-body, button, nav, header, [role="button"], .select-none-mobile {
+body,
+button,
+nav,
+header,
+[role='button'],
+.select-none-mobile {
     -webkit-user-select: none;
     user-select: none;
 }
 
 /* Allow text selection specifically inside editable text controls */
-input, textarea, [contenteditable="true"] {
+input,
+textarea,
+[contenteditable='true'] {
     -webkit-user-select: text !important;
     user-select: text !important;
 }
 
 /* 🚀 Option 3: Seamless RTL Horizontal Swipe Page Transition Animation */
 .page-enter-active {
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     will-change: opacity, transform, filter;
 }
 
 .page-leave-active {
-    transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1),
-                transform 0.16s cubic-bezier(0.4, 0, 1, 1),
-                filter 0.16s cubic-bezier(0.4, 0, 1, 1) !important;
+    transition:
+        opacity 0.16s cubic-bezier(0.4, 0, 1, 1),
+        transform 0.16s cubic-bezier(0.4, 0, 1, 1),
+        filter 0.16s cubic-bezier(0.4, 0, 1, 1) !important;
     will-change: opacity, transform, filter;
 }
 
@@ -106,7 +118,9 @@ input, textarea, [contenteditable="true"] {
 /* 1. Sidebar Drawer Slide (RTL Right to Left) */
 .sidebar-drawer-enter-active,
 .sidebar-drawer-leave-active {
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+    transition:
+        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.25s ease !important;
     will-change: transform, opacity;
 }
 .sidebar-drawer-enter-from,
@@ -123,7 +137,9 @@ input, textarea, [contenteditable="true"] {
 /* 2. Dropdown Menu Spring Pop */
 .dropdown-pop-enter-active,
 .dropdown-pop-leave-active {
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
     transform-origin: top right !important;
 }
 .dropdown-pop-enter-from,
@@ -152,16 +168,18 @@ input, textarea, [contenteditable="true"] {
 
 /* ⚙️ Dedicated Fluid Settings Hub & Sub-Pages Navigation Transitions */
 .settings-slide-enter-active {
-    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
     will-change: opacity, transform, filter;
 }
 
 .settings-slide-leave-active {
-    transition: opacity 0.15s cubic-bezier(0.4, 0, 1, 1),
-                transform 0.15s cubic-bezier(0.4, 0, 1, 1),
-                filter 0.15s cubic-bezier(0.4, 0, 1, 1) !important;
+    transition:
+        opacity 0.15s cubic-bezier(0.4, 0, 1, 1),
+        transform 0.15s cubic-bezier(0.4, 0, 1, 1),
+        filter 0.15s cubic-bezier(0.4, 0, 1, 1) !important;
     will-change: opacity, transform, filter;
 }
 
@@ -178,14 +196,16 @@ input, textarea, [contenteditable="true"] {
 }
 
 .settings-crossfade-enter-active {
-    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .settings-crossfade-leave-active {
-    transition: opacity 0.14s ease,
-                transform 0.14s ease !important;
+    transition:
+        opacity 0.14s ease,
+        transform 0.14s ease !important;
 }
 
 .settings-crossfade-enter-from {
@@ -213,15 +233,15 @@ input, textarea, [contenteditable="true"] {
 /* 5. Modal Center Pop */
 .modal-zoom-enter-active,
 .modal-zoom-leave-active {
-    transition: opacity 0.22s ease, transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.22s ease,
+        transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 .modal-zoom-enter-from,
 .modal-zoom-leave-to {
     opacity: 0 !important;
     transform: scale(0.92) translateY(8px) !important;
 }
-
-
 
 /* 📐 Modern Mobile Safe Areas */
 .pb-safe {
@@ -257,7 +277,9 @@ input, textarea, [contenteditable="true"] {
 
 /* ⚡ Tactile Native Tap Micro-Interactions */
 .btn-native-tap {
-    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), filter 0.1s ease !important;
+    transition:
+        transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.1s ease !important;
 }
 .btn-native-tap:active {
     transform: scale(0.95) !important;
@@ -265,7 +287,9 @@ input, textarea, [contenteditable="true"] {
 }
 
 .card-native-tap {
-    transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s ease !important;
+    transition:
+        transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.12s ease !important;
 }
 .card-native-tap:active {
     transform: scale(0.98) !important;
@@ -298,7 +322,8 @@ input, textarea, [contenteditable="true"] {
 }
 
 /* 🎨 Dynamic Dashboard & System Color Customization Palettes */
-:root, [data-theme-color="amber"] {
+:root,
+[data-theme-color='amber'] {
     --color-primary: #f59e0b;
     --color-primary-hover: #d97706;
     --color-primary-rgb: 245, 158, 11;
@@ -306,7 +331,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(245, 158, 11, 0.35);
 }
 
-[data-theme-color="emerald"] {
+[data-theme-color='emerald'] {
     --color-primary: #10b981;
     --color-primary-hover: #059669;
     --color-primary-rgb: 16, 185, 129;
@@ -314,7 +339,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(16, 185, 129, 0.35);
 }
 
-[data-theme-color="blue"] {
+[data-theme-color='blue'] {
     --color-primary: #3b82f6;
     --color-primary-hover: #2563eb;
     --color-primary-rgb: 59, 130, 246;
@@ -322,7 +347,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(59, 130, 246, 0.35);
 }
 
-[data-theme-color="purple"] {
+[data-theme-color='purple'] {
     --color-primary: #a855f7;
     --color-primary-hover: #9333ea;
     --color-primary-rgb: 168, 85, 247;
@@ -330,7 +355,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(168, 85, 247, 0.35);
 }
 
-[data-theme-color="rose"] {
+[data-theme-color='rose'] {
     --color-primary: #f43f5e;
     --color-primary-hover: #e11d48;
     --color-primary-rgb: 244, 63, 94;
@@ -338,7 +363,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(244, 63, 94, 0.35);
 }
 
-[data-theme-color="orange"] {
+[data-theme-color='orange'] {
     --color-primary: #f97316;
     --color-primary-hover: #ea580c;
     --color-primary-rgb: 249, 115, 22;
@@ -346,7 +371,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(249, 115, 22, 0.35);
 }
 
-[data-theme-color="teal"] {
+[data-theme-color='teal'] {
     --color-primary: #14b8a6;
     --color-primary-hover: #0d9488;
     --color-primary-rgb: 20, 184, 166;
@@ -354,7 +379,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(20, 184, 166, 0.35);
 }
 
-[data-theme-color="indigo"] {
+[data-theme-color='indigo'] {
     --color-primary: #6366f1;
     --color-primary-hover: #4f46e5;
     --color-primary-rgb: 99, 102, 241;
@@ -367,7 +392,9 @@ input, textarea, [contenteditable="true"] {
     background-color: var(--color-primary) !important;
 }
 
-.hover\:bg-theme-hover:hover, .bg-theme-hover:hover, .hover\:bg-theme-primary:hover {
+.hover\:bg-theme-hover:hover,
+.bg-theme-hover:hover,
+.hover\:bg-theme-primary:hover {
     background-color: var(--color-primary-hover) !important;
 }
 
@@ -411,7 +438,8 @@ input, textarea, [contenteditable="true"] {
     border-color: var(--color-primary-border) !important;
 }
 
-.ring-theme-primary, .focus\:ring-theme-primary:focus {
+.ring-theme-primary,
+.focus\:ring-theme-primary:focus {
     --tw-ring-color: var(--color-primary) !important;
 }
 
@@ -423,14 +451,19 @@ input, textarea, [contenteditable="true"] {
     box-shadow: 0 10px 20px -3px rgba(var(--color-primary-rgb), 0.35) !important;
 }
 
-::selection, .selection\:bg-theme-primary::selection {
+::selection,
+.selection\:bg-theme-primary::selection {
     background-color: var(--color-primary) !important;
     color: #ffffff !important;
 }
 
 /* 🖨️ Comprehensive Global Print Engine Rules (Dual Mode: Thermal & A4) */
 @media print {
-    :root, html, body, #app, main {
+    :root,
+    html,
+    body,
+    #app,
+    main {
         background: #ffffff !important;
         background-color: #ffffff !important;
         color: #000000 !important;
@@ -446,8 +479,8 @@ input, textarea, [contenteditable="true"] {
     header,
     footer,
     .no-print,
-    [role="navigation"],
-    [role="complementary"],
+    [role='navigation'],
+    [role='complementary'],
     .spa-sidebar,
     .spa-navbar,
     .spa-bottom-nav,
@@ -522,7 +555,7 @@ input, textarea, [contenteditable="true"] {
 
 .electron-app input,
 .electron-app textarea,
-.electron-app [contenteditable="true"] {
+.electron-app [contenteditable='true'] {
     user-select: text !important;
     -webkit-user-select: text !important;
 }
@@ -552,4 +585,45 @@ input, textarea, [contenteditable="true"] {
 
 .electron-app ::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.45);
+}
+
+/* 📊 G7: 2-column KPI grid on mobile (<640px) when containing MetricCards */
+@media (max-width: 639px) {
+    .grid:has(> .metric-card),
+    .grid:has(> [data-metric-card]) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.625rem !important;
+    }
+    .grid:has(> .metric-card) > .metric-card:last-child:nth-child(odd),
+    .grid:has(> [data-metric-card]) > [data-metric-card]:last-child:nth-child(odd) {
+        grid-column: span 2 / span 2;
+    }
+}
+
+/* 🎯 G8: Minimum 44px touch targets on coarse pointer devices (touchscreens, tablets, phones) */
+@media (pointer: coarse) {
+    .base-btn,
+    .base-btn-sm,
+    .btn-touch-target,
+    .data-table-actions button,
+    .data-table-actions a,
+    .data-table-actions [role='button'],
+    table td button,
+    table td a:has(> svg:only-child),
+    table td button:has(> svg:only-child) {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Checkbox & radio interactive touch areas */
+    .checkbox-touch-target {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

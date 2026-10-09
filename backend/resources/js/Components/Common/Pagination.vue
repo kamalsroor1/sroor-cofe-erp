@@ -61,7 +61,7 @@ const handlePageClick = (link) => {
           v-if="link.url"
           type="button"
           @click="handlePageClick(link)"
-          class="h-9 min-w-[36px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-xs"
+          class="h-9 min-w-[36px] coarse:min-h-[44px] coarse:min-w-[44px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-xs"
           :class="[
             link.active
               ? 'bg-theme-primary text-white font-black font-black shadow-theme-sm'
@@ -71,7 +71,7 @@ const handlePageClick = (link) => {
         />
         <span
           v-else
-          class="h-9 min-w-[36px] px-3 rounded-xl text-xs text-slate-400 dark:text-slate-600 font-bold flex items-center justify-center opacity-60"
+          class="h-9 min-w-[36px] coarse:min-h-[44px] coarse:min-w-[44px] px-3 rounded-xl text-xs text-slate-400 dark:text-slate-600 font-bold flex items-center justify-center opacity-60"
           v-html="link.label"
         />
       </template>
