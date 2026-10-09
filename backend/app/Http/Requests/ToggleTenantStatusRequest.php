@@ -17,7 +17,7 @@ class ToggleTenantStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => 'required|string|in:active,trial,suspended,expired',
+            'status' => 'required|string|in:active,trial,suspended',
             'extend_days' => 'nullable|integer|min:0|max:3650',
         ];
     }

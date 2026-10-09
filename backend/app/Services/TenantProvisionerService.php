@@ -8,6 +8,7 @@ use App\Contracts\TenantProvisionerInterface;
 use App\DTOs\CreateTenantDTO;
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\SubscriptionStatus;
+use App\Enums\TenantStatus;
 use App\Models\Plan;
 use App\Models\Setting;
 use App\Models\Store;
@@ -28,6 +29,13 @@ class TenantProvisionerService implements TenantProvisionerInterface
         $plan = Plan::findOrFail($dto->planId);
         $tenantId = $dto->slug;
 
+        // Lifecycle at birth (IDEN-3.2, CTO W1 Q4): a trial has no paid period yet
+        // (subscription_ends_at = null). trial_days = 0 means "pending payment": the tenant
+        // starts read-only and its subscription pending_payment until a verified payment
+        // makes it active (ENTI-3.4, actor Billing; a super-admin activation goes through it too).
+        $startsAsTrial = $dto->trialDays > 0;
+        $now = now();
+
         $tenantData = [
             'id' => $tenantId,
             'name' => $dto->name,
@@ -35,9 +43,11 @@ class TenantProvisionerService implements TenantProvisionerInterface
             'email' => $dto->email,
             'phone' => $dto->phone,
             'plan_id' => $plan->id,
-            'status' => $dto->trialDays > 0 ? 'trial' : 'active',
-            'trial_ends_at' => $dto->trialDays > 0 ? now()->addDays($dto->trialDays) : null,
-            'subscription_ends_at' => $dto->trialDays > 0 ? now()->addDays($dto->trialDays) : now()->addMonth(),
+            'status' => $startsAsTrial ? TenantStatus::Trial->value : TenantStatus::ReadOnly->value,
+            'status_changed_at' => $now,
+            'read_only_since' => $startsAsTrial ? null : $now,
+            'trial_ends_at' => $startsAsTrial ? $now->copy()->addDays($dto->trialDays) : null,
+            'subscription_ends_at' => null,
             'settings' => [
                 'theme_preference' => 'dark',
                 'currency' => config('app.currency', 'EGP'),
@@ -75,13 +85,12 @@ class TenantProvisionerService implements TenantProvisionerInterface
 
         // 4. Record Initial Subscription (central billing log, ENTI-1.3).
         // Founder slots / price locks are granted at first payment (ENTI-1.7, ENTI-3.4), never here.
-        // TODO(CTO): a tenant provisioned with trial_days = 0 is still recorded as `active` without a
-        // payment (legacy super-admin behaviour); `pending_payment` would be stricter once ENTI-3.x ships.
+        // trial_days = 0 → pending_payment (CTO W1 Q4); its dates are reset by the activation.
         Subscription::create([
             'tenant_id' => $tenant->id,
             'plan_id' => $plan->id,
             'billing_cycle' => BillingCycle::Monthly,
-            'status' => $dto->trialDays > 0 ? SubscriptionStatus::Trialing : SubscriptionStatus::Active,
+            'status' => $startsAsTrial ? SubscriptionStatus::Trialing : SubscriptionStatus::PendingPayment,
             'amount' => $plan->price_monthly,
             'currency' => Subscription::DEFAULT_CURRENCY,
             'price_locked' => false,

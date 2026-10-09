@@ -10,8 +10,8 @@ use Carbon\CarbonImmutable;
 /**
  * The lifecycle facts of one tenant, as stored (IDEN-3.1). Input of TenantLifecyclePolicy.
  *
- * Built by the caller from the central `tenants` row (IDEN-3.2 adds the columns and a
- * mapper on the model). Keeping it a plain value object is what keeps the policy pure.
+ * Built by the caller from the central `tenants` row. Keeping it a plain value object is
+ * what keeps the policy pure.
  *
  *  - statusChangedAt: when the stored status was entered (`tenants.status_changed_at`).
  *    It anchors the read-only (30 days) and retention (90 days) clocks. When null, those
@@ -22,6 +22,10 @@ use Carbon\CarbonImmutable;
  *  - trialExtendedAt: set once the one-time +7-day extension was used (Q-L4).
  *  - hasEverPaid: true after the first verified payment; a paying tenant cannot get a
  *    trial extension.
+ *  - suspensionReason: why the tenant was suspended/cancelled (`tenants.suspension_reason`,
+ *    CTO W1 Q2). A `violation` suspension is never archived automatically.
+ *
+ * Build it from a central row with App\Models\Tenant::lifecycleSnapshot() (IDEN-3.2).
  */
 final readonly class TenantLifecycleSnapshot
 {
@@ -33,5 +37,6 @@ final readonly class TenantLifecycleSnapshot
         public ?CarbonImmutable $graceEndsAt = null,
         public ?CarbonImmutable $trialExtendedAt = null,
         public bool $hasEverPaid = false,
+        public ?TenantSuspensionReason $suspensionReason = null,
     ) {}
 }

@@ -18,6 +18,11 @@ namespace App\Enums;
  *   cancelled ─(90 days)─▶ archived
  * A verified payment (actor Billing) brings any non-archived tenant back to `active`.
  *
+ * CTO W1 Q2 (2026-10-09): `archived` is REVERSIBLE by a super-admin until an explicit
+ * purge (OPS-9): unarchive restores `tenants.status_before_archive` (suspended or
+ * cancelled). Archiving is allowed from `suspended` / `cancelled` only, and a
+ * `violation` suspension is never archived automatically (TenantLifecyclePolicy).
+ *
  * Never rename or remove a value: it is stored in `tenants.status` and in lifecycle events.
  */
 enum TenantStatus: string
@@ -34,9 +39,9 @@ enum TenantStatus: string
      * The state machine: from → to → actors allowed to make that move.
      * Anything not listed (including every self-transition) is invalid.
      *
-     * TODO(CTO): `archived` is terminal here (no restore path), super-admin may archive
-     * only an already suspended/cancelled tenant, and a manually suspended tenant is
-     * archived by the sweep after the same 90-day retention. Confirm before OPS-9/IDEN-3.6.
+     * Leaving `archived` is a super-admin unarchive only, and only back to the status the
+     * tenant had before it was archived (enforced by TransitionTenantStatusAction, which
+     * reads `status_before_archive` under a row lock).
      *
      * @return array<string, array<string, list<TenantLifecycleActor>>>
      */
@@ -83,7 +88,10 @@ enum TenantStatus: string
                 self::Active->value => [$billing],
                 self::Archived->value => [$system, $admin],
             ],
-            self::Archived->value => [],
+            self::Archived->value => [
+                self::Suspended->value => [$admin],
+                self::Cancelled->value => [$admin],
+            ],
         ];
     }
 
@@ -116,9 +124,19 @@ enum TenantStatus: string
         };
     }
 
+    /**
+     * End of the automatic lifecycle: nothing moves a tenant out of it except a manual
+     * super-admin unarchive (or the explicit purge, OPS-9).
+     */
     public function isTerminal(): bool
     {
         return $this === self::Archived;
+    }
+
+    /** Statuses a tenant may be archived from (CTO W1 Q2). */
+    public function canBeArchived(): bool
+    {
+        return $this === self::Suspended || $this === self::Cancelled;
     }
 
     public function translationKey(): string

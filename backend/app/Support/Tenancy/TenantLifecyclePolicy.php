@@ -23,8 +23,10 @@ use InvalidArgumentException;
  *   active     → past_due   at subscription_ends_at
  *   past_due   → read_only  at grace_ends_at, else past_due start + grace days (7)
  *   read_only  → suspended  at read_only start + read-only days (30)
- *   suspended  → archived   at suspension start + retention days (90)
+ *   suspended  → archived   at suspension start + retention days (90), never for a
+ *                           `violation` suspension (CTO W1 Q2)
  *   cancelled  → archived   at cancellation start + retention days (90)
+ * Leaving `archived` (unarchive) is a manual super-admin move only (TenantStatus).
  * A tenant that was never swept is caught up in at most MAX_CATCH_UP_STEPS moves, each
  * one starting when the previous deadline passed (not "now").
  */
@@ -152,9 +154,7 @@ final class TenantLifecyclePolicy
             TenantStatus::Active => $snapshot->subscriptionEndsAt,
             TenantStatus::PastDue => $this->graceDeadline($since, $snapshot->graceEndsAt),
             TenantStatus::ReadOnly => $since?->addDays($this->readOnlyDays),
-            TenantStatus::Suspended, TenantStatus::Cancelled => $this->retentionDays === null
-                ? null
-                : $since?->addDays($this->retentionDays),
+            TenantStatus::Suspended, TenantStatus::Cancelled => $this->retentionDeadline($status, $since, $snapshot),
             TenantStatus::Archived => null,
         };
 
@@ -170,6 +170,24 @@ final class TenantLifecyclePolicy
         };
 
         return [$target, $deadline];
+    }
+
+    /**
+     * suspended / cancelled → archived after the retention days. A tenant suspended for a
+     * `violation` is never archived automatically (CTO W1 Q2): only a super-admin does it.
+     * A cancelled tenant is archived after the same retention whatever its reason.
+     */
+    private function retentionDeadline(TenantStatus $status, ?CarbonImmutable $since, TenantLifecycleSnapshot $snapshot): ?CarbonImmutable
+    {
+        if ($this->retentionDays === null) {
+            return null;
+        }
+
+        if ($status === TenantStatus::Suspended && $snapshot->suspensionReason?->blocksAutomaticArchive() === true) {
+            return null;
+        }
+
+        return $since?->addDays($this->retentionDays);
     }
 
     private function graceDeadline(?CarbonImmutable $since, ?CarbonImmutable $graceEndsAt): ?CarbonImmutable

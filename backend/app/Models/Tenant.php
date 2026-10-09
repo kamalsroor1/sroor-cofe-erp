@@ -2,6 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\TenantAccessLevel;
+use App\Enums\TenantStatus;
+use App\Support\Tenancy\TenantLifecycleSnapshot;
+use App\Support\Tenancy\TenantSuspensionReason;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,13 +31,20 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * @property string $email
  * @property string|null $phone
  * @property int|null $plan_id
- * @property string $status
+ * @property string $status a App\Enums\TenantStatus value (string(20), IDEN-3.2); see lifecycleStatus()
+ * @property Carbon|null $status_changed_at when the stored status was entered (anchors the lifecycle clocks)
+ * @property Carbon|null $read_only_since when the tenant last became read-only
+ * @property TenantSuspensionReason|null $suspension_reason why it was suspended/cancelled (CTO W1 Q2)
+ * @property TenantStatus|null $status_before_archive restored by unarchive (CTO W1 Q2)
  * @property Carbon|null $trial_ends_at
- * @property Carbon|null $subscription_ends_at
+ * @property Carbon|null $trial_extended_at the one-time +7-day trial extension was used (Q-L4)
+ * @property Carbon|null $subscription_ends_at end of the PAID period; null for a trial (IDEN-3.2)
+ * @property Carbon|null $grace_ends_at explicit end of the past_due grace
  * @property array|null $enabled_features
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Domain> $domains
+ * @property-read Collection<int, TenantLifecycleEvent> $lifecycleEvents
  */
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
@@ -44,6 +56,12 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'features' => 'array',
         'trial_ends_at' => 'datetime',
         'subscription_ends_at' => 'datetime',
+        'status_changed_at' => 'datetime',
+        'read_only_since' => 'datetime',
+        'trial_extended_at' => 'datetime',
+        'grace_ends_at' => 'datetime',
+        'suspension_reason' => TenantSuspensionReason::class,
+        'status_before_archive' => TenantStatus::class,
     ];
 
     public static function getCustomColumns(): array
@@ -59,6 +77,13 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'trial_ends_at',
             'subscription_ends_at',
             'enabled_features',
+            // Lifecycle (IDEN-3.2): real columns, never inside `data`.
+            'status_changed_at',
+            'grace_ends_at',
+            'trial_extended_at',
+            'read_only_since',
+            'suspension_reason',
+            'status_before_archive',
         ];
     }
 
@@ -75,6 +100,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function domains(): HasMany
     {
         return $this->hasMany(Domain::class, 'tenant_id');
+    }
+
+    /**
+     * Status change history (central, append-only), IDEN-3.2.
+     *
+     * @return HasMany<TenantLifecycleEvent, $this>
+     */
+    public function lifecycleEvents(): HasMany
+    {
+        return $this->hasMany(TenantLifecycleEvent::class, 'tenant_id');
     }
 
     /**
@@ -200,6 +235,41 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     // ========================================================================
+    // دورة حياة المستأجر (Lifecycle, IDEN-3.2)
+    // ========================================================================
+
+    /** The stored status as an enum, or null for a value outside App\Enums\TenantStatus. */
+    public function lifecycleStatus(): ?TenantStatus
+    {
+        return TenantStatus::tryFrom((string) $this->status);
+    }
+
+    /**
+     * The stored lifecycle facts for App\Support\Tenancy\TenantLifecyclePolicy.
+     *
+     * An unknown stored status is read as `suspended` (never grants access by accident).
+     * $hasEverPaid is supplied by the caller (billing knows it, ENTI-3.x).
+     */
+    public function lifecycleSnapshot(bool $hasEverPaid = false): TenantLifecycleSnapshot
+    {
+        return new TenantLifecycleSnapshot(
+            status: $this->lifecycleStatus() ?? TenantStatus::Suspended,
+            statusChangedAt: self::immutable($this->status_changed_at),
+            trialEndsAt: self::immutable($this->trial_ends_at),
+            subscriptionEndsAt: self::immutable($this->subscription_ends_at),
+            graceEndsAt: self::immutable($this->grace_ends_at),
+            trialExtendedAt: self::immutable($this->trial_extended_at),
+            hasEverPaid: $hasEverPaid,
+            suspensionReason: $this->suspension_reason,
+        );
+    }
+
+    private static function immutable(?Carbon $value): ?CarbonImmutable
+    {
+        return $value === null ? null : CarbonImmutable::instance($value);
+    }
+
+    // ========================================================================
     // حالة الاشتراك (Subscription Status)
     // ========================================================================
 
@@ -225,11 +295,27 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     /**
      * هل المستأجر معلق أو منتهي الاشتراك؟
+     *
+     * Legacy gate of the workspace resolver until IDEN-3.5 (EnsureTenantActive) replaces it
+     * with the derived lifecycle status. IDEN-3.2 keeps it at least as strict as before:
+     *  - every blocked status (suspended / cancelled / archived) and any unknown value;
+     *  - a trial whose trial_ends_at passed (trials no longer carry subscription_ends_at);
+     *  - any tenant whose paid period ended (unchanged legacy rule).
+     * read_only is NOT blocked here: reads stay allowed, writes get 423 from IDEN-3.5.
      */
     public function isSuspended(): bool
     {
-        return $this->status === 'suspended'
-            || ($this->subscription_ends_at && $this->subscription_ends_at->isPast());
+        $status = $this->lifecycleStatus();
+
+        if ($status === null || $status->accessLevel() === TenantAccessLevel::Blocked) {
+            return true;
+        }
+
+        if ($status === TenantStatus::Trial && $this->trial_ends_at !== null && $this->trial_ends_at->isPast()) {
+            return true;
+        }
+
+        return $this->subscription_ends_at !== null && $this->subscription_ends_at->isPast();
     }
 
     /**

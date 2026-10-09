@@ -11,6 +11,7 @@ use App\Support\Tenancy\LifecycleDecision;
 use App\Support\Tenancy\LifecycleTransitionStep;
 use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
+use App\Support\Tenancy\TenantSuspensionReason;
 use Carbon\CarbonImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -83,7 +84,8 @@ class TenantLifecyclePolicyTest extends TestCase
             'read_only' => ['active' => [$billing], 'trial' => [$admin], 'suspended' => [$system, $admin], 'cancelled' => [$admin]],
             'suspended' => ['active' => [$billing], 'read_only' => [$admin], 'cancelled' => [$admin], 'archived' => [$system, $admin]],
             'cancelled' => ['active' => [$billing], 'archived' => [$system, $admin]],
-            'archived' => [],
+            // CTO W1 Q2: archive is reversible by a super-admin (back to status_before_archive).
+            'archived' => ['suspended' => [$admin], 'cancelled' => [$admin]],
         ];
     }
 
@@ -120,7 +122,7 @@ class TenantLifecyclePolicyTest extends TestCase
         }
     }
 
-    public function test_no_self_transitions_and_archived_is_terminal(): void
+    public function test_no_self_transitions_and_archived_is_terminal_for_automatic_moves(): void
     {
         foreach (TenantStatus::cases() as $status) {
             foreach (TenantLifecycleActor::cases() as $actor) {
@@ -129,7 +131,22 @@ class TenantLifecyclePolicyTest extends TestCase
         }
 
         $this->assertTrue(TenantStatus::Archived->isTerminal());
-        $this->assertSame([], TenantStatus::Archived->allowedTargets(TenantLifecycleActor::SuperAdmin));
+        $this->assertSame([], TenantStatus::Archived->allowedTargets(TenantLifecycleActor::System));
+        $this->assertSame([], TenantStatus::Archived->allowedTargets(TenantLifecycleActor::Billing));
+    }
+
+    public function test_archive_is_reversible_by_a_super_admin_only_and_only_from_suspended_or_cancelled(): void
+    {
+        $this->assertSame(
+            [TenantStatus::Suspended, TenantStatus::Cancelled],
+            TenantStatus::Archived->allowedTargets(TenantLifecycleActor::SuperAdmin),
+        );
+
+        foreach (TenantStatus::cases() as $status) {
+            $expected = in_array($status, [TenantStatus::Suspended, TenantStatus::Cancelled], true);
+            $this->assertSame($expected, $status->canBeArchived(), $status->value);
+            $this->assertSame($expected, $status->canTransitionTo(TenantStatus::Archived, TenantLifecycleActor::SuperAdmin), $status->value);
+        }
     }
 
     public function test_allowed_targets_lists_the_table_row_for_an_actor(): void
@@ -375,6 +392,55 @@ class TenantLifecyclePolicyTest extends TestCase
 
         $this->assertSame(TenantStatus::Suspended, $decision->effectiveStatus);
         $this->assertNull($decision->nextTransitionAt);
+    }
+
+    public function test_violation_suspension_is_never_archived_automatically(): void
+    {
+        $decision = $this->policy()->evaluate(new TenantLifecycleSnapshot(
+            status: TenantStatus::Suspended,
+            statusChangedAt: $this->at('2020-01-01 00:00:00'),
+            suspensionReason: TenantSuspensionReason::Violation,
+        ), $this->at('2030-01-01'));
+
+        $this->assertSame(TenantStatus::Suspended, $decision->effectiveStatus);
+        $this->assertSame([], $decision->pendingTransitions);
+        $this->assertNull($decision->nextTransitionAt);
+    }
+
+    /**
+     * @return iterable<string, array{0: TenantSuspensionReason}>
+     */
+    public static function archivableSuspensionReasons(): iterable
+    {
+        foreach (TenantSuspensionReason::cases() as $reason) {
+            if (! $reason->blocksAutomaticArchive()) {
+                yield $reason->value => [$reason];
+            }
+        }
+    }
+
+    #[DataProvider('archivableSuspensionReasons')]
+    public function test_other_suspension_reasons_are_archived_after_retention(TenantSuspensionReason $reason): void
+    {
+        $snapshot = new TenantLifecycleSnapshot(
+            status: TenantStatus::Suspended,
+            statusChangedAt: $this->at('2026-01-01 00:00:00'),
+            suspensionReason: $reason,
+        );
+
+        $this->assertSame(TenantStatus::Suspended, $this->policy()->evaluate($snapshot, $this->at('2026-03-31 23:59:59'))->effectiveStatus);
+        $this->assertSame(TenantStatus::Archived, $this->policy()->evaluate($snapshot, $this->at('2026-04-01 00:00:00'))->effectiveStatus);
+    }
+
+    public function test_cancelled_is_archived_after_retention_even_with_a_violation_reason(): void
+    {
+        $snapshot = new TenantLifecycleSnapshot(
+            status: TenantStatus::Cancelled,
+            statusChangedAt: $this->at('2026-01-01 00:00:00'),
+            suspensionReason: TenantSuspensionReason::Violation,
+        );
+
+        $this->assertSame(TenantStatus::Archived, $this->policy()->evaluate($snapshot, $this->at('2026-04-01 00:00:00'))->effectiveStatus);
     }
 
     public function test_archived_is_terminal_for_evaluation(): void
