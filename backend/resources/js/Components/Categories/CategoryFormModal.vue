@@ -19,22 +19,15 @@
 
       <!-- Lucide Icon Selector & Preset Palette -->
       <div class="space-y-2">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {{ $t('inventory.category_icon_emoji') }}
-        </label>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            {{ $t('inventory.category_icon_emoji') }}
+          </label>
           <div
-            class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-theme-primary shrink-0 shadow-2xs"
+            class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-theme-primary shadow-2xs"
           >
-            <DynamicIcon :name="form.icon || 'Folder'" fallback="Folder" class="w-6 h-6 text-theme-primary" />
+            <DynamicIcon :name="form.icon || 'Folder'" fallback="Folder" class="w-5 h-5 text-theme-primary" />
           </div>
-          <BaseInput
-            :model-value="form.icon || 'Folder'"
-            @update:model-value="updateForm('icon', $event)"
-            placeholder="Folder"
-            input-class="h-12 text-center text-sm font-mono"
-            wrapper-class="flex-1"
-          />
         </div>
 
         <!-- Curated Lucide Presets Palette -->
@@ -44,8 +37,6 @@
             :key="item.name"
             type="button"
             @click="updateForm('icon', item.name)"
-            :title="item.name"
-            :aria-label="item.name"
             class="min-h-[44px] rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 transition active:scale-90 cursor-pointer shadow-2xs"
             :class="
               isCurrentIcon(item.name)

@@ -35,10 +35,8 @@ const displayLabel = computed(() => {
   const text = props.label || '';
   if (!text) return '';
 
-  // Shorter labels normalization for known verbose phrases (G9)
-  if (props.short || text === 'نشط وفعال' || text === 'نقدي (كاش)') {
-    if (text === 'نشط وفعال') return 'نشط';
-    if (text === 'نقدي (كاش)') return 'نقدي';
+  // Shorter labels normalization (G9)
+  if (props.short) {
     return text.replace(/\s*\([^)]*\)/g, '').trim();
   }
   return text;

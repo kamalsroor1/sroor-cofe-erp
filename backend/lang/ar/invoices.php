@@ -23,7 +23,7 @@ return [
     'print_a4' => 'طباعة فاتورة رسمية A4',
     'status_confirmed' => 'معتمدة ومسجلة',
     'status_cancelled' => 'ملغاة ومعكوسة',
-    'payment_cash' => 'نقدي (كاش)',
+    'payment_cash' => 'نقدي',
     'payment_credit' => 'آجل (مديونية)',
     'payment_partial' => 'سداد جزئي',
     'cash' => 'نقدي',

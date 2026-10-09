@@ -88,7 +88,7 @@ return [
     'collect_payment' => 'تحصيل',
     'collect_payment_from' => 'تسجيل سند قبض وتحصيل من',
     'confirm_collection' => 'تأكيد السداد والتحصيل',
-    'cash' => 'نقدي (كاش)',
+    'cash' => 'نقدي',
     'instapay' => 'إنستاباي (InstaPay)',
     'wallet' => 'محفظة إلكترونية',
     'bank_transfer' => 'تحويل بنكي',
