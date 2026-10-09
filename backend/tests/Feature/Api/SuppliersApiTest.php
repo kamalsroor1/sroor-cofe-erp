@@ -4,93 +4,66 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\Payment;
 use App\Models\Purchase;
-use App\Models\Store;
 use App\Models\Supplier;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class SuppliersApiTest extends TestCase
+class SuppliersApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
-    protected string $adminToken;
+    /** @var array<string, string> */
+    protected array $adminHeaders;
 
     protected User $unauthorizedUser;
 
-    protected string $unauthorizedToken;
+    /** @var array<string, string> */
+    protected array $unauthorizedHeaders;
 
-    protected Store $store;
+    protected int $storeId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        $this->tenant = $this->createTenant();
+        $this->storeId = (int) $this->tenantStore($this->tenant)->id;
+        $this->adminUser = $this->tenantAdmin($this->tenant);
+        $this->adminHeaders = $this->tenantHeaders($this->tenant);
 
-        $this->store = Store::create([
-            'name' => 'المخزن الرئيسي',
-            'code' => 'MAIN-001',
-            'type' => 'warehouse',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        $adminRole = Role::findByName('admin');
-
-        $this->adminUser = User::factory()->create([
-            'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->adminUser->assignRole($adminRole);
-        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
-
-        $this->unauthorizedUser = User::factory()->create([
-            'name' => 'مستخدم بدون صلاحيات',
-            'phone' => '01000000000',
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
+        $this->unauthorizedUser = $this->createTenantUser($this->tenant, attributes: ['name' => 'مستخدم بدون صلاحيات']);
+        $this->unauthorizedHeaders = $this->tenantHeaders($this->tenant, $this->unauthorizedUser);
     }
 
     public function test_unauthenticated_request_is_rejected(): void
     {
-        $response = $this->getJson('/api/v1/suppliers');
+        $response = $this->getJson('/api/v1/suppliers', $this->tenantGuestHeaders($this->tenant));
         $response->assertStatus(401);
     }
 
     public function test_unauthorized_user_cannot_access_suppliers(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
-            ->getJson('/api/v1/suppliers');
+        $response = $this->getJson('/api/v1/suppliers', $this->unauthorizedHeaders);
 
         $response->assertStatus(403);
     }
 
     public function test_authenticated_user_can_list_suppliers_with_metrics(): void
     {
-        Supplier::create([
+        $this->inTenant($this->tenant, fn () => Supplier::create([
             'name' => 'شركة النيل للبن والمستلزمات',
             'company_name' => 'النيل للاستيراد',
             'phone' => '01000007042',
             'current_balance' => '5000.000',
             'is_active' => true,
-        ]);
+        ]));
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/suppliers');
+        $response = $this->getJson('/api/v1/suppliers', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -119,8 +92,7 @@ class SuppliersApiTest extends TestCase
             'notes' => 'مورد حبوب بن خضراء رئيسي',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/suppliers', $payload);
+        $response = $this->postJson('/api/v1/suppliers', $payload, $this->adminHeaders);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -132,18 +104,17 @@ class SuppliersApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('suppliers', [
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('suppliers', [
             'name' => 'مؤسسة البن البرازيلي',
             'company_name' => 'البن البرازيلي ش.م.م',
-        ]);
+        ]));
     }
 
     public function test_create_supplier_fails_validation_on_missing_name(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/suppliers', [
-                'company_name' => 'شركة بدون اسم',
-            ]);
+        $response = $this->postJson('/api/v1/suppliers', [
+            'company_name' => 'شركة بدون اسم',
+        ], $this->adminHeaders);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name']);
@@ -151,22 +122,21 @@ class SuppliersApiTest extends TestCase
 
     public function test_can_view_single_supplier_profile(): void
     {
-        $supplier = Supplier::create([
+        $supplierId = $this->inTenant($this->tenant, fn (): int => Supplier::create([
             'name' => 'مطاحن الشرق',
             'company_name' => 'الشرق لمعدات القهوة',
             'phone' => '01000007044',
             'current_balance' => '3200.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/suppliers/'.$supplier->id);
+        $response = $this->getJson('/api/v1/suppliers/'.$supplierId, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    'id' => $supplier->id,
+                    'id' => $supplierId,
                     'name' => 'مطاحن الشرق',
                     'current_balance' => 3200.000,
                 ],
@@ -175,13 +145,13 @@ class SuppliersApiTest extends TestCase
 
     public function test_can_update_supplier_details(): void
     {
-        $supplier = Supplier::create([
+        $supplierId = $this->inTenant($this->tenant, fn (): int => Supplier::create([
             'name' => 'شركة الأهرام',
             'company_name' => 'الأهرام للتوزيع',
             'phone' => '01000007017',
             'current_balance' => '0.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
         $payload = [
             'name' => 'شركة الأهرام للتجارة والتوزيع',
@@ -190,8 +160,7 @@ class SuppliersApiTest extends TestCase
             'address' => 'مدينة نصر، القاهرة',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->putJson('/api/v1/suppliers/'.$supplier->id, $payload);
+        $response = $this->putJson('/api/v1/suppliers/'.$supplierId, $payload, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -203,37 +172,27 @@ class SuppliersApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('suppliers', [
-            'id' => $supplier->id,
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('suppliers', [
+            'id' => $supplierId,
             'name' => 'شركة الأهرام للتجارة والتوزيع',
-        ]);
+        ]));
     }
 
     public function test_can_pay_supplier_and_decrease_balance(): void
     {
-        $supplier = Supplier::create([
-            'name' => 'مورد سداد دفعة',
-            'company_name' => 'الشركة الحديثة',
-            'phone' => '01000007045',
-            'current_balance' => '5000.000',
-            'is_active' => true,
-        ]);
+        $supplierId = $this->inTenant($this->tenant, function (): int {
+            $supplier = Supplier::create([
+                'name' => 'مورد سداد دفعة',
+                'company_name' => 'الشركة الحديثة',
+                'phone' => '01000007045',
+                'current_balance' => '5000.000',
+                'is_active' => true,
+            ]);
 
-        Purchase::create([
-            'store_id' => $this->store->id,
-            'supplier_id' => $supplier->id,
-            'user_id' => $this->adminUser->id,
-            'purchase_number' => 'PUR-1000',
-            'purchase_date' => now(),
-            'subtotal' => '5000.000',
-            'discount_amount' => '0.000',
-            'tax_amount' => '0.000',
-            'net_total' => '5000.000',
-            'paid_amount' => '0.000',
-            'remaining_amount' => '5000.000',
-            'payment_type' => 'credit',
-            'status' => 'confirmed',
-        ]);
+            $this->createCreditPurchase($supplier->id, 'PUR-1000', '5000.000');
+
+            return $supplier->id;
+        });
 
         $payload = [
             'amount' => '2000.000',
@@ -242,55 +201,45 @@ class SuppliersApiTest extends TestCase
             'notes' => 'سداد دفعة للمورد',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/suppliers/'.$supplier->id.'/pay', $payload);
+        $response = $this->postJson('/api/v1/suppliers/'.$supplierId.'/pay', $payload, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
                     'supplier' => [
-                        'id' => $supplier->id,
+                        'id' => $supplierId,
                         'current_balance' => 3000.000, // 5000 - 2000
                     ],
                 ],
             ]);
 
-        $this->assertEquals('3000.000', (string) $supplier->fresh()->current_balance);
-        $this->assertDatabaseHas('payments', [
-            'supplier_id' => $supplier->id,
-            'amount' => '2000.000',
-        ]);
+        $this->inTenant($this->tenant, function () use ($supplierId): void {
+            $this->assertEquals('3000.000', (string) Supplier::findOrFail($supplierId)->current_balance);
+            $this->assertDatabaseHas('payments', [
+                'supplier_id' => $supplierId,
+                'amount' => '2000.000',
+            ]);
+        });
     }
 
     public function test_can_generate_supplier_account_statement_ledger(): void
     {
-        $supplier = Supplier::create([
-            'name' => 'مورد كشف حساب',
-            'company_name' => 'المطاحن الكبرى',
-            'phone' => '01000007012',
-            'current_balance' => '4000.000',
-            'is_active' => true,
-        ]);
+        $supplierId = $this->inTenant($this->tenant, function (): int {
+            $supplier = Supplier::create([
+                'name' => 'مورد كشف حساب',
+                'company_name' => 'المطاحن الكبرى',
+                'phone' => '01000007012',
+                'current_balance' => '4000.000',
+                'is_active' => true,
+            ]);
 
-        Purchase::create([
-            'store_id' => $this->store->id,
-            'supplier_id' => $supplier->id,
-            'user_id' => $this->adminUser->id,
-            'purchase_number' => 'PUR-1001',
-            'purchase_date' => now(),
-            'subtotal' => '4000.000',
-            'discount_amount' => '0.000',
-            'tax_amount' => '0.000',
-            'net_total' => '4000.000',
-            'paid_amount' => '0.000',
-            'remaining_amount' => '4000.000',
-            'payment_type' => 'credit',
-            'status' => 'confirmed',
-        ]);
+            $this->createCreditPurchase($supplier->id, 'PUR-1001', '4000.000');
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/suppliers/'.$supplier->id.'/statement');
+            return $supplier->id;
+        });
+
+        $response = $this->getJson('/api/v1/suppliers/'.$supplierId.'/statement', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -316,16 +265,15 @@ class SuppliersApiTest extends TestCase
 
     public function test_can_toggle_supplier_active_status(): void
     {
-        $supplier = Supplier::create([
+        $supplierId = $this->inTenant($this->tenant, fn (): int => Supplier::create([
             'name' => 'مورد إيقاف',
             'company_name' => 'شركة التوقف',
             'phone' => '01000007046',
             'current_balance' => '0.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->patchJson('/api/v1/suppliers/'.$supplier->id.'/toggle-active');
+        $response = $this->patchJson('/api/v1/suppliers/'.$supplierId.'/toggle-active', [], $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -335,6 +283,58 @@ class SuppliersApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertFalse((bool) $supplier->fresh()->is_active);
+        $this->assertFalse($this->inTenant($this->tenant, fn (): bool => (bool) Supplier::findOrFail($supplierId)->is_active));
+    }
+
+    public function test_suppliers_of_another_tenant_are_invisible_and_immutable(): void
+    {
+        $other = $this->createTenant();
+        $foreignId = $this->inTenant($other, fn (): int => Supplier::create([
+            'name' => 'مورد مستأجر آخر',
+            'company_name' => 'شركة خارجية',
+            'phone' => '01000007047',
+            'current_balance' => '7000.000',
+            'is_active' => true,
+        ])->id);
+
+        $this->getJson('/api/v1/suppliers', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('summary.total_suppliers', 0)
+            ->assertJsonMissing(['name' => 'مورد مستأجر آخر']);
+
+        $this->getJson('/api/v1/suppliers/'.$foreignId, $this->adminHeaders)->assertNotFound();
+        $this->putJson('/api/v1/suppliers/'.$foreignId, ['name' => 'اختراق'], $this->adminHeaders)->assertNotFound();
+        $this->postJson('/api/v1/suppliers/'.$foreignId.'/pay', [
+            'amount' => '500.000',
+            'payment_method' => 'cash',
+            'payment_date' => now()->toDateString(),
+        ], $this->adminHeaders)->assertNotFound();
+
+        $this->inTenant($other, function () use ($foreignId): void {
+            $supplier = Supplier::findOrFail($foreignId);
+            $this->assertSame('مورد مستأجر آخر', $supplier->name);
+            $this->assertSame('7000.000', (string) $supplier->current_balance);
+            $this->assertSame(0, Payment::query()->count());
+        });
+    }
+
+    /** Runs inside the tenant. */
+    private function createCreditPurchase(int $supplierId, string $number, string $total): void
+    {
+        Purchase::create([
+            'store_id' => $this->storeId,
+            'supplier_id' => $supplierId,
+            'user_id' => $this->adminUser->id,
+            'purchase_number' => $number,
+            'purchase_date' => now(),
+            'subtotal' => $total,
+            'discount_amount' => '0.000',
+            'tax_amount' => '0.000',
+            'net_total' => $total,
+            'paid_amount' => '0.000',
+            'remaining_amount' => $total,
+            'payment_type' => 'credit',
+            'status' => 'confirmed',
+        ]);
     }
 }

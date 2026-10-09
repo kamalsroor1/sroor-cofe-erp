@@ -6,92 +6,66 @@ namespace Tests\Feature\Api;
 
 use App\Models\Customer;
 use App\Models\Invoice;
-use App\Models\Store;
+use App\Models\Payment;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class CustomersApiTest extends TestCase
+class CustomersApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
-    protected string $adminToken;
+    /** @var array<string, string> */
+    protected array $adminHeaders;
 
     protected User $unauthorizedUser;
 
-    protected string $unauthorizedToken;
+    /** @var array<string, string> */
+    protected array $unauthorizedHeaders;
 
-    protected Store $store;
+    protected int $storeId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        $this->tenant = $this->createTenant();
+        $this->storeId = (int) $this->tenantStore($this->tenant)->id;
+        $this->adminUser = $this->tenantAdmin($this->tenant);
+        $this->adminHeaders = $this->tenantHeaders($this->tenant);
 
-        $this->store = Store::create([
-            'name' => 'المخزن الرئيسي',
-            'code' => 'MAIN-001',
-            'type' => 'warehouse',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        $adminRole = Role::findByName('admin');
-
-        $this->adminUser = User::factory()->create([
-            'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->adminUser->assignRole($adminRole);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
-
-        $this->unauthorizedUser = User::factory()->create([
-            'name' => 'مستخدم بدون صلاحيات',
-            'phone' => '01000000000',
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
+        $this->unauthorizedUser = $this->createTenantUser($this->tenant, attributes: ['name' => 'مستخدم بدون صلاحيات']);
+        $this->unauthorizedHeaders = $this->tenantHeaders($this->tenant, $this->unauthorizedUser);
     }
 
     public function test_unauthenticated_request_is_rejected(): void
     {
-        $response = $this->getJson('/api/v1/customers');
+        $response = $this->getJson('/api/v1/customers', $this->tenantGuestHeaders($this->tenant));
         $response->assertStatus(401);
     }
 
     public function test_unauthorized_user_cannot_create_or_delete_customer(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
-            ->postJson('/api/v1/customers', [
-                'name' => 'عميل ممنوع',
-            ]);
+        $response = $this->postJson('/api/v1/customers', [
+            'name' => 'عميل ممنوع',
+        ], $this->unauthorizedHeaders);
 
         $response->assertStatus(403);
+        $this->assertSame(0, $this->inTenant($this->tenant, fn (): int => Customer::query()->count()));
     }
 
     public function test_authenticated_user_can_list_customers_with_metrics(): void
     {
-        Customer::create([
+        $this->inTenant($this->tenant, fn () => Customer::create([
             'name' => 'عميل تجريبي مدين',
             'phone' => '01000007002',
             'current_balance' => '1500.000',
             'is_active' => true,
-        ]);
+        ]));
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/customers');
+        $response = $this->getJson('/api/v1/customers', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -120,8 +94,7 @@ class CustomersApiTest extends TestCase
             'notes' => 'عميل جملة',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/customers', $payload);
+        $response = $this->postJson('/api/v1/customers', $payload, $this->adminHeaders);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -133,18 +106,17 @@ class CustomersApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('customers', [
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('customers', [
             'name' => 'مطحن الأمل للبن',
             'phone' => '01000007003',
-        ]);
+        ]));
     }
 
     public function test_create_customer_fails_validation_on_missing_name(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/customers', [
-                'phone' => '01000007002',
-            ]);
+        $response = $this->postJson('/api/v1/customers', [
+            'phone' => '01000007002',
+        ], $this->adminHeaders);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name']);
@@ -152,21 +124,20 @@ class CustomersApiTest extends TestCase
 
     public function test_can_view_single_customer_profile(): void
     {
-        $customer = Customer::create([
+        $customerId = $this->inTenant($this->tenant, fn (): int => Customer::create([
             'name' => 'كافيه السلام',
             'phone' => '01000007018',
             'current_balance' => '750.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/customers/'.$customer->id);
+        $response = $this->getJson('/api/v1/customers/'.$customerId, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    'id' => $customer->id,
+                    'id' => $customerId,
                     'name' => 'كافيه السلام',
                     'current_balance' => 750.000,
                 ],
@@ -175,12 +146,12 @@ class CustomersApiTest extends TestCase
 
     public function test_can_update_customer_details(): void
     {
-        $customer = Customer::create([
+        $customerId = $this->inTenant($this->tenant, fn (): int => Customer::create([
             'name' => 'محل النور',
             'phone' => '01000007004',
             'current_balance' => '0.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
         $payload = [
             'name' => 'محل النور للقهوة الفاخرة',
@@ -188,8 +159,7 @@ class CustomersApiTest extends TestCase
             'address' => 'ميدان التحرير',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->putJson('/api/v1/customers/'.$customer->id, $payload);
+        $response = $this->putJson('/api/v1/customers/'.$customerId, $payload, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -200,36 +170,26 @@ class CustomersApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('customers', [
-            'id' => $customer->id,
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('customers', [
+            'id' => $customerId,
             'name' => 'محل النور للقهوة الفاخرة',
-        ]);
+        ]));
     }
 
     public function test_can_collect_customer_payment_and_decrease_balance(): void
     {
-        $customer = Customer::create([
-            'name' => 'عميل سداد مديونية',
-            'phone' => '01000007009',
-            'current_balance' => '1000.000',
-            'is_active' => true,
-        ]);
+        $customerId = $this->inTenant($this->tenant, function (): int {
+            $customer = Customer::create([
+                'name' => 'عميل سداد مديونية',
+                'phone' => '01000007009',
+                'current_balance' => '1000.000',
+                'is_active' => true,
+            ]);
 
-        Invoice::create([
-            'store_id' => $this->store->id,
-            'customer_id' => $customer->id,
-            'user_id' => $this->adminUser->id,
-            'invoice_number' => 'INV-1000',
-            'invoice_date' => now(),
-            'subtotal' => 1000.000,
-            'discount_amount' => 0.000,
-            'tax_amount' => 0.000,
-            'net_total' => 1000.000,
-            'paid_amount' => 0.000,
-            'remaining_amount' => 1000.000,
-            'payment_type' => 'credit',
-            'status' => 'confirmed',
-        ]);
+            $this->createCreditInvoice($customer->id, 'INV-1000', '1000.000');
+
+            return $customer->id;
+        });
 
         $payload = [
             'amount' => 400.000,
@@ -238,54 +198,44 @@ class CustomersApiTest extends TestCase
             'notes' => 'سداد دفعة نقدية',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/customers/'.$customer->id.'/collect-payment', $payload);
+        $response = $this->postJson('/api/v1/customers/'.$customerId.'/collect-payment', $payload, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
                     'customer' => [
-                        'id' => $customer->id,
+                        'id' => $customerId,
                         'current_balance' => 600.000, // 1000 - 400
                     ],
                 ],
             ]);
 
-        $this->assertEquals('600.000', (string) $customer->fresh()->current_balance);
-        $this->assertDatabaseHas('payments', [
-            'customer_id' => $customer->id,
-            'amount' => '400.000',
-        ]);
+        $this->inTenant($this->tenant, function () use ($customerId): void {
+            $this->assertEquals('600.000', (string) Customer::findOrFail($customerId)->current_balance);
+            $this->assertDatabaseHas('payments', [
+                'customer_id' => $customerId,
+                'amount' => '400.000',
+            ]);
+        });
     }
 
     public function test_can_generate_customer_account_statement_ledger(): void
     {
-        $customer = Customer::create([
-            'name' => 'عميل كشف حساب',
-            'phone' => '01000007007',
-            'current_balance' => '1200.000',
-            'is_active' => true,
-        ]);
+        $customerId = $this->inTenant($this->tenant, function (): int {
+            $customer = Customer::create([
+                'name' => 'عميل كشف حساب',
+                'phone' => '01000007007',
+                'current_balance' => '1200.000',
+                'is_active' => true,
+            ]);
 
-        Invoice::create([
-            'store_id' => $this->store->id,
-            'customer_id' => $customer->id,
-            'user_id' => $this->adminUser->id,
-            'invoice_number' => 'INV-1001',
-            'invoice_date' => now(),
-            'subtotal' => 1200.000,
-            'discount_amount' => 0.000,
-            'tax_amount' => 0.000,
-            'net_total' => 1200.000,
-            'paid_amount' => 0.000,
-            'remaining_amount' => 1200.000,
-            'payment_type' => 'credit',
-            'status' => 'confirmed',
-        ]);
+            $this->createCreditInvoice($customer->id, 'INV-1001', '1200.000');
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/customers/'.$customer->id.'/statement');
+            return $customer->id;
+        });
+
+        $response = $this->getJson('/api/v1/customers/'.$customerId.'/statement', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -311,15 +261,14 @@ class CustomersApiTest extends TestCase
 
     public function test_can_toggle_customer_active_status(): void
     {
-        $customer = Customer::create([
+        $customerId = $this->inTenant($this->tenant, fn (): int => Customer::create([
             'name' => 'عميل إيقاف',
             'phone' => '01000007019',
             'current_balance' => '0.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->patchJson('/api/v1/customers/'.$customer->id.'/toggle-active');
+        $response = $this->patchJson('/api/v1/customers/'.$customerId.'/toggle-active', [], $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -329,24 +278,75 @@ class CustomersApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertFalse((bool) $customer->fresh()->is_active);
+        $this->assertFalse($this->inTenant($this->tenant, fn (): bool => (bool) Customer::findOrFail($customerId)->is_active));
     }
 
     public function test_can_delete_customer_successfully(): void
     {
-        $customer = Customer::create([
+        $customerId = $this->inTenant($this->tenant, fn (): int => Customer::create([
             'name' => 'عميل للحذف',
             'phone' => '01000007020',
             'current_balance' => '0.000',
             'is_active' => true,
-        ]);
+        ])->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->deleteJson('/api/v1/customers/'.$customer->id);
+        $response = $this->deleteJson('/api/v1/customers/'.$customerId, [], $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
 
-        $this->assertSoftDeleted('customers', ['id' => $customer->id]);
+        $this->inTenant($this->tenant, fn () => $this->assertSoftDeleted('customers', ['id' => $customerId]));
+    }
+
+    public function test_customers_of_another_tenant_are_invisible_and_immutable(): void
+    {
+        $other = $this->createTenant();
+        $foreignId = $this->inTenant($other, fn (): int => Customer::create([
+            'name' => 'عميل مستأجر آخر',
+            'phone' => '01000007030',
+            'current_balance' => '900.000',
+            'is_active' => true,
+        ])->id);
+
+        $this->getJson('/api/v1/customers', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('summary.total_customers', 0)
+            ->assertJsonMissing(['name' => 'عميل مستأجر آخر']);
+
+        $this->getJson('/api/v1/customers/'.$foreignId, $this->adminHeaders)->assertNotFound();
+        $this->putJson('/api/v1/customers/'.$foreignId, ['name' => 'اختراق'], $this->adminHeaders)->assertNotFound();
+        $this->postJson('/api/v1/customers/'.$foreignId.'/collect-payment', [
+            'amount' => 100.000,
+            'payment_method' => 'cash',
+            'payment_date' => now()->toDateString(),
+        ], $this->adminHeaders)->assertNotFound();
+        $this->deleteJson('/api/v1/customers/'.$foreignId, [], $this->adminHeaders)->assertNotFound();
+
+        $this->inTenant($other, function () use ($foreignId): void {
+            $customer = Customer::findOrFail($foreignId);
+            $this->assertSame('عميل مستأجر آخر', $customer->name);
+            $this->assertSame('900.000', (string) $customer->current_balance);
+            $this->assertSame(0, Payment::query()->count());
+        });
+    }
+
+    /** Runs inside the tenant. */
+    private function createCreditInvoice(int $customerId, string $number, string $total): void
+    {
+        Invoice::create([
+            'store_id' => $this->storeId,
+            'customer_id' => $customerId,
+            'user_id' => $this->adminUser->id,
+            'invoice_number' => $number,
+            'invoice_date' => now(),
+            'subtotal' => $total,
+            'discount_amount' => '0.000',
+            'tax_amount' => '0.000',
+            'net_total' => $total,
+            'paid_amount' => '0.000',
+            'remaining_amount' => $total,
+            'payment_type' => 'credit',
+            'status' => 'confirmed',
+        ]);
     }
 }

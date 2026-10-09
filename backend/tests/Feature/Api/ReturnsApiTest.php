@@ -6,127 +6,66 @@ namespace Tests\Feature\Api;
 
 use App\Models\Customer;
 use App\Models\Item;
-use App\Models\Store;
+use App\Models\ReturnDocument;
 use App\Models\StoreStock;
 use App\Models\Supplier;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ReturnsApiTest extends TestCase
+class ReturnsApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
-    protected string $adminToken;
+    /** @var array<string, string> */
+    protected array $adminHeaders;
 
     protected User $unauthorizedUser;
 
-    protected string $unauthorizedToken;
+    /** @var array<string, string> */
+    protected array $unauthorizedHeaders;
 
-    protected Store $store;
+    protected int $storeId;
 
-    protected Customer $customer;
+    protected int $customerId;
 
-    protected Supplier $supplier;
+    protected int $supplierId;
 
-    protected Item $item;
+    protected int $itemId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        $this->tenant = $this->createTenant();
+        $this->storeId = (int) $this->tenantStore($this->tenant)->id;
+        $this->adminUser = $this->tenantAdmin($this->tenant);
+        $this->adminHeaders = $this->tenantHeaders($this->tenant);
 
-        $this->store = Store::create([
-            'name' => 'الفرع الرئيسي',
-            'code' => 'MAIN-001',
-            'type' => 'retail',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
+        $this->unauthorizedUser = $this->createTenantUser($this->tenant, attributes: ['name' => 'مستخدم بدون صلاحيات']);
+        $this->unauthorizedHeaders = $this->tenantHeaders($this->tenant, $this->unauthorizedUser);
 
-        $adminRole = Role::findByName('admin');
-
-        $this->adminUser = User::factory()->create([
-            'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->adminUser->assignRole($adminRole);
-        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
-
-        $this->unauthorizedUser = User::factory()->create([
-            'name' => 'مستخدم بدون صلاحيات',
-            'phone' => '01000000000',
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->unauthorizedToken = $this->unauthorizedUser->createToken('unauth-token')->plainTextToken;
-
-        $this->customer = Customer::create([
-            'name' => 'كافيه البن العربي',
-            'phone' => '01000007003',
-            'balance' => '1000.000',
-            'price_tier' => 'retail',
-            'is_active' => true,
-        ]);
-
-        $this->supplier = Supplier::create([
-            'name' => 'شركة النيل للبن الأخضر',
-            'phone' => '01234567890',
-            'company_name' => 'النيل للاستيراد',
-            'current_balance' => '5000.000',
-            'is_active' => true,
-        ]);
-
-        $this->item = Item::create([
-            'name' => 'بن برازيلي سانتوس',
-            'code' => 'BN-BRZ-SAN',
-            'category' => 'coffee_beans',
-            'unit' => 'كجم',
-            'cost_price' => '350.000',
-            'selling_price' => '480.000',
-            'price_retail' => '480.000',
-            'price_wholesale' => '440.000',
-            'current_stock' => '100.000',
-            'min_stock_level' => '15.000',
-            'is_active' => true,
-        ]);
-
-        StoreStock::create([
-            'store_id' => $this->store->id,
-            'item_id' => $this->item->id,
-            'quantity' => '100.000',
-        ]);
+        [$this->customerId, $this->supplierId, $this->itemId] = $this->inTenant($this->tenant, fn (): array => $this->seedParties($this->storeId));
     }
 
     public function test_unauthenticated_request_is_rejected(): void
     {
-        $response = $this->getJson('/api/v1/returns');
+        $response = $this->getJson('/api/v1/returns', $this->tenantGuestHeaders($this->tenant));
         $response->assertStatus(401);
     }
 
     public function test_unauthorized_user_cannot_access_returns_or_create(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
-            ->getJson('/api/v1/returns');
+        $response = $this->getJson('/api/v1/returns', $this->unauthorizedHeaders);
 
         $response->assertStatus(403);
     }
 
     public function test_can_list_returns_with_summary_metrics(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/returns');
+        $response = $this->getJson('/api/v1/returns', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -141,21 +80,20 @@ class ReturnsApiTest extends TestCase
     {
         $payload = [
             'return_type' => 'sales_return',
-            'customer_id' => $this->customer->id,
+            'customer_id' => $this->customerId,
             'return_date' => now()->toDateString(),
             'refund_amount' => '0.000',
             'reason' => 'مرتجع عبوة زائدة من العميل',
             'items' => [
                 [
-                    'item_id' => $this->item->id,
+                    'item_id' => $this->itemId,
                     'quantity' => 5.000,
                     'unit_price' => 480.000,
                 ],
             ],
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/returns', $payload);
+        $response = $this->postJson('/api/v1/returns', $payload, $this->adminHeaders);
 
         // 5 * 480 = 2400
         $response->assertStatus(201)
@@ -163,34 +101,33 @@ class ReturnsApiTest extends TestCase
                 'success' => true,
                 'data' => [
                     'return_type' => 'sales_return',
-                    'customer_id' => $this->customer->id,
+                    'customer_id' => $this->customerId,
                     'total_amount' => 2400.000,
                 ],
             ]);
 
         // Stock increased from 100 to 105
-        $this->assertEquals(105.000, (float) Item::find($this->item->id)->current_stock);
+        $this->assertEquals(105.000, $this->itemStock());
     }
 
     public function test_can_create_purchase_return_and_deduct_inventory(): void
     {
         $payload = [
             'return_type' => 'purchase_return',
-            'supplier_id' => $this->supplier->id,
+            'supplier_id' => $this->supplierId,
             'return_date' => now()->toDateString(),
             'refund_amount' => '0.000',
             'reason' => 'مرتجع بضاعة غير مطابقة للمواصفات',
             'items' => [
                 [
-                    'item_id' => $this->item->id,
+                    'item_id' => $this->itemId,
                     'quantity' => 10.000,
                     'unit_price' => 350.000,
                 ],
             ],
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/returns', $payload);
+        $response = $this->postJson('/api/v1/returns', $payload, $this->adminHeaders);
 
         // 10 * 350 = 3500
         $response->assertStatus(201)
@@ -198,21 +135,20 @@ class ReturnsApiTest extends TestCase
                 'success' => true,
                 'data' => [
                     'return_type' => 'purchase_return',
-                    'supplier_id' => $this->supplier->id,
+                    'supplier_id' => $this->supplierId,
                     'total_amount' => 3500.000,
                 ],
             ]);
 
         // Stock decreased from 100 to 90
-        $this->assertEquals(90.000, (float) Item::find($this->item->id)->current_stock);
+        $this->assertEquals(90.000, $this->itemStock());
     }
 
     public function test_create_return_fails_validation_on_missing_fields(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/returns', [
-                'return_type' => 'sales_return',
-            ]);
+        $response = $this->postJson('/api/v1/returns', [
+            'return_type' => 'sales_return',
+        ], $this->adminHeaders);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['return_date', 'items']);
@@ -222,26 +158,24 @@ class ReturnsApiTest extends TestCase
     {
         $payload = [
             'return_type' => 'sales_return',
-            'customer_id' => $this->customer->id,
+            'customer_id' => $this->customerId,
             'return_date' => now()->toDateString(),
             'refund_amount' => '0.000',
             'reason' => 'مرتجع للتجربة',
             'items' => [
                 [
-                    'item_id' => $this->item->id,
+                    'item_id' => $this->itemId,
                     'quantity' => 2.000,
                     'unit_price' => 480.000,
                 ],
             ],
         ];
 
-        $createRes = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/returns', $payload);
+        $createRes = $this->postJson('/api/v1/returns', $payload, $this->adminHeaders);
 
         $returnId = $createRes->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/returns/'.$returnId);
+        $response = $this->getJson('/api/v1/returns/'.$returnId, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -258,28 +192,104 @@ class ReturnsApiTest extends TestCase
     {
         $payload = [
             'return_type' => 'sales_return',
-            'customer_id' => $this->customer->id,
+            'customer_id' => $this->customerId,
             'return_date' => now()->toDateString(),
             'items' => [
                 [
-                    'item_id' => $this->item->id,
+                    'item_id' => $this->itemId,
                     'quantity' => 1.000,
                     'unit_price' => 480.000,
                 ],
             ],
         ];
 
-        $createRes = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/returns', $payload);
+        $createRes = $this->postJson('/api/v1/returns', $payload, $this->adminHeaders);
 
         $returnId = $createRes->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->deleteJson('/api/v1/returns/'.$returnId);
+        $response = $this->deleteJson('/api/v1/returns/'.$returnId, [], $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson(['success' => true]);
 
-        $this->assertSoftDeleted('returns', ['id' => $returnId]);
+        $this->inTenant($this->tenant, fn () => $this->assertSoftDeleted('returns', ['id' => $returnId]));
+    }
+
+    public function test_returns_of_another_tenant_are_invisible_and_cannot_be_deleted(): void
+    {
+        $other = $this->createTenant();
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        [$foreignCustomerId, , $foreignItemId] = $this->inTenant($other, fn (): array => $this->seedParties($otherStoreId));
+
+        $foreignReturnId = (int) $this->postJson('/api/v1/returns', [
+            'return_type' => 'sales_return',
+            'customer_id' => $foreignCustomerId,
+            'return_date' => now()->toDateString(),
+            'items' => [['item_id' => $foreignItemId, 'quantity' => 3.000, 'unit_price' => 480.000]],
+        ], $this->tenantHeaders($other))->assertCreated()->json('data.id');
+
+        $this->getJson('/api/v1/returns', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonPath('meta.total', 0);
+        $this->getJson('/api/v1/returns/'.$foreignReturnId, $this->adminHeaders)->assertNotFound();
+        $this->deleteJson('/api/v1/returns/'.$foreignReturnId, [], $this->adminHeaders)->assertNotFound();
+
+        $this->inTenant($other, function () use ($foreignReturnId, $foreignItemId): void {
+            $this->assertNotSoftDeleted('returns', ['id' => $foreignReturnId]);
+            $this->assertSame('103.000', (string) Item::findOrFail($foreignItemId)->current_stock);
+        });
+        $this->inTenant($this->tenant, fn () => $this->assertSame(0, ReturnDocument::query()->count()));
+        $this->assertEquals(100.000, $this->itemStock());
+    }
+
+    private function itemStock(): float
+    {
+        return $this->inTenant($this->tenant, fn (): float => (float) Item::find($this->itemId)->current_stock);
+    }
+
+    /**
+     * Runs inside the tenant.
+     *
+     * @return array{0: int, 1: int, 2: int}
+     */
+    private function seedParties(int $storeId): array
+    {
+        $customer = Customer::create([
+            'name' => 'كافيه البن العربي',
+            'phone' => '01000007003',
+            'balance' => '1000.000',
+            'price_tier' => 'retail',
+            'is_active' => true,
+        ]);
+
+        $supplier = Supplier::create([
+            'name' => 'شركة النيل للبن الأخضر',
+            'phone' => '01234567890',
+            'company_name' => 'النيل للاستيراد',
+            'current_balance' => '5000.000',
+            'is_active' => true,
+        ]);
+
+        $item = Item::create([
+            'name' => 'بن برازيلي سانتوس',
+            'code' => 'BN-BRZ-SAN',
+            'category' => 'coffee_beans',
+            'unit' => 'كجم',
+            'cost_price' => '350.000',
+            'selling_price' => '480.000',
+            'price_retail' => '480.000',
+            'price_wholesale' => '440.000',
+            'current_stock' => '100.000',
+            'min_stock_level' => '15.000',
+            'is_active' => true,
+        ]);
+
+        StoreStock::create([
+            'store_id' => $storeId,
+            'item_id' => $item->id,
+            'quantity' => '100.000',
+        ]);
+
+        return [$customer->id, $supplier->id, $item->id];
     }
 }

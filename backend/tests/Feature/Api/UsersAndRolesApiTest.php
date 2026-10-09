@@ -1,68 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\ActivityLog;
-use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Spatie\Permission\PermissionRegistrar;
+use Tests\TenantTestCase;
 
-class UsersAndRolesApiTest extends TestCase
+class UsersAndRolesApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
-    protected string $adminToken;
+    /** @var array<string, string> */
+    protected array $adminHeaders;
 
-    protected Store $store;
+    protected int $storeId;
 
-    protected Role $adminRole;
-
-    protected Role $cashierRole;
+    protected int $cashierRoleId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->adminRole = Role::create(['name' => 'admin']);
-        $this->cashierRole = Role::create(['name' => 'cashier']);
-
-        Permission::create(['name' => 'pos.access']);
-        Permission::create(['name' => 'invoices.view']);
-        Permission::create(['name' => 'users.manage']);
-        Permission::create(['name' => 'roles.manage']);
-        Permission::create(['name' => 'logs.view']);
-
-        $this->cashierRole->givePermissionTo('pos.access');
-
-        $this->store = Store::create([
-            'name' => 'المحمصة الرئيسية',
-            'code' => 'MAIN-01',
-            'type' => 'retail',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        $this->adminUser = User::factory()->create([
-            'name' => 'كمال سرور المدير',
-            'phone' => self::ADMIN_PHONE,
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->adminUser->assignRole($this->adminRole);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        // The harness tenant carries the real PermissionsSeeder matrix (admin, cashier, …).
+        $this->tenant = $this->createTenant();
+        $this->storeId = (int) $this->tenantStore($this->tenant)->id;
+        $this->adminUser = $this->tenantAdmin($this->tenant);
+        $this->adminHeaders = $this->tenantHeaders($this->tenant);
+        $this->cashierRoleId = $this->inTenant($this->tenant, fn (): int => (int) Role::findByName('cashier')->id);
     }
 
     public function test_can_list_users(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/users');
+        $response = $this->getJson('/api/v1/users', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -87,12 +64,11 @@ class UsersAndRolesApiTest extends TestCase
             'email' => 'cashier@sroor.com',
             'password' => 'secret123',
             'role' => 'cashier',
-            'default_store_id' => $this->store->id,
+            'default_store_id' => $this->storeId,
             'is_active' => true,
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->postJson('/api/v1/users', $payload);
+        $response = $this->postJson('/api/v1/users', $payload, $this->adminHeaders);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -103,33 +79,30 @@ class UsersAndRolesApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('users', [
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('users', [
             'phone' => '01000007002',
             'name' => 'محمود الكاشير',
-        ]);
+        ]));
     }
 
     public function test_can_update_user(): void
     {
-        $targetUser = User::factory()->create([
+        $targetUser = $this->createTenantUser($this->tenant, 'cashier', attributes: [
             'name' => 'موظف سابق',
             'phone' => '01000007007',
             'password' => Hash::make('oldpass'),
-            'default_store_id' => $this->store->id,
         ]);
-        $targetUser->assignRole($this->cashierRole);
 
         $payload = [
             'name' => 'موظف معدل',
             'phone' => '01000007007',
             'email' => 'updated@sroor.com',
             'role' => 'cashier',
-            'default_store_id' => $this->store->id,
+            'default_store_id' => $this->storeId,
             'is_active' => true,
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->putJson("/api/v1/users/{$targetUser->id}", $payload);
+        $response = $this->putJson("/api/v1/users/{$targetUser->id}", $payload, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -139,22 +112,20 @@ class UsersAndRolesApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('users', [
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('users', [
             'id' => $targetUser->id,
             'name' => 'موظف معدل',
-        ]);
+        ]));
     }
 
     public function test_can_toggle_user_active_state(): void
     {
-        $targetUser = User::factory()->create([
+        $targetUser = $this->createTenantUser($this->tenant, 'cashier', attributes: [
             'phone' => '01000007004',
             'is_active' => true,
         ]);
-        $targetUser->assignRole($this->cashierRole);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->patchJson("/api/v1/users/{$targetUser->id}/toggle-active");
+        $response = $this->patchJson("/api/v1/users/{$targetUser->id}/toggle-active", [], $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -162,28 +133,25 @@ class UsersAndRolesApiTest extends TestCase
                 'is_active' => false,
             ]);
 
-        $this->assertFalse($targetUser->fresh()->is_active);
+        $this->assertFalse($this->inTenant($this->tenant, fn (): bool => (bool) User::findOrFail($targetUser->id)->is_active));
     }
 
     public function test_can_delete_user_and_prevent_self_deletion(): void
     {
-        $targetUser = User::factory()->create([
+        $targetUser = $this->createTenantUser($this->tenant, 'cashier', attributes: [
             'phone' => '01000007009',
         ]);
-        $targetUser->assignRole($this->cashierRole);
 
         // Delete another user
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->deleteJson("/api/v1/users/{$targetUser->id}");
+        $response = $this->deleteJson("/api/v1/users/{$targetUser->id}", [], $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson(['success' => true]);
 
-        $this->assertSoftDeleted('users', ['id' => $targetUser->id]);
+        $this->inTenant($this->tenant, fn () => $this->assertSoftDeleted('users', ['id' => $targetUser->id]));
 
         // Attempt self-deletion
-        $selfResponse = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->deleteJson("/api/v1/users/{$this->adminUser->id}");
+        $selfResponse = $this->deleteJson("/api/v1/users/{$this->adminUser->id}", [], $this->adminHeaders);
 
         $selfResponse->assertStatus(422)
             ->assertJson(['success' => false]);
@@ -191,8 +159,7 @@ class UsersAndRolesApiTest extends TestCase
 
     public function test_can_get_roles_permissions_matrix(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/roles');
+        $response = $this->getJson('/api/v1/roles', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -214,34 +181,36 @@ class UsersAndRolesApiTest extends TestCase
             'permissions' => ['pos.access', 'invoices.view'],
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->putJson("/api/v1/roles/{$this->cashierRole->id}/permissions", $payload);
+        $response = $this->putJson("/api/v1/roles/{$this->cashierRoleId}/permissions", $payload, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    'id' => $this->cashierRole->id,
+                    'id' => $this->cashierRoleId,
                     'name' => 'cashier',
                 ],
             ]);
 
-        $this->assertTrue($this->cashierRole->fresh()->hasPermissionTo('invoices.view'));
+        $this->assertTrue($this->inTenant($this->tenant, function (): bool {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            return Role::findById($this->cashierRoleId)->hasPermissionTo('invoices.view');
+        }));
     }
 
     public function test_can_get_activity_logs(): void
     {
-        ActivityLog::create([
+        $this->inTenant($this->tenant, fn () => ActivityLog::create([
             'module' => 'sales',
             'action' => 'created',
             'description' => 'تم إنشاء فاتورة مبيعات جديدة',
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->store->id,
+            'store_id' => $this->storeId,
             'ip_address' => '127.0.0.1',
-        ]);
+        ]));
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs');
+        $response = $this->getJson('/api/v1/activity-logs', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -257,5 +226,40 @@ class UsersAndRolesApiTest extends TestCase
                 'stores',
                 'modules_list',
             ]);
+    }
+
+    public function test_changing_a_role_in_one_tenant_never_changes_the_same_role_in_another(): void
+    {
+        $other = $this->createTenant();
+        // Roles are cloned from the same seeded template, so B's cashier has the SAME id as A's.
+        $otherCashierId = $this->inTenant($other, fn (): int => (int) Role::findByName('cashier')->id);
+        $this->assertSame($this->cashierRoleId, $otherCashierId);
+        $before = $this->rolePermissions($other, $otherCashierId);
+        $this->assertContains('pos.access', $before);
+        $this->assertNotContains('roles.manage', $before);
+
+        $this->putJson("/api/v1/roles/{$this->cashierRoleId}/permissions", [
+            'permissions' => ['roles.manage'],
+        ], $this->adminHeaders)->assertOk();
+
+        $this->assertSame(['roles.manage'], $this->rolePermissions($this->tenant, $this->cashierRoleId));
+        $this->assertSame($before, $this->rolePermissions($other, $otherCashierId), 'A role edit leaked into another tenant.');
+
+        // Behavioural check through B's API: B's cashier still cannot manage users (roles.manage), and still has POS.
+        $bCashier = $this->createTenantUser($other, 'cashier');
+        $this->getJson('/api/v1/users', $this->tenantHeaders($other, $bCashier))->assertForbidden();
+        $this->assertTrue($this->inTenant($other, fn (): bool => User::findOrFail($bCashier->id)->can('pos.access')));
+    }
+
+    /** @return list<string> sorted permission names of $roleId inside $tenant */
+    private function rolePermissions(Tenant $tenant, int $roleId): array
+    {
+        return $this->inTenant($tenant, function () use ($roleId): array {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+            $names = Role::findById($roleId)->permissions()->pluck('name')->all();
+            sort($names);
+
+            return $names;
+        });
     }
 }

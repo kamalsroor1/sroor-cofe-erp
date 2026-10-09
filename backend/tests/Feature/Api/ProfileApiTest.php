@@ -4,63 +4,48 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
-use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ProfileApiTest extends TestCase
+class ProfileApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    private const PROFILE_PHONE = '01000007500';
+
+    protected Tenant $tenant;
 
     protected User $user;
 
-    protected string $token;
-
-    protected Store $store;
+    /** @var array<string, string> */
+    protected array $headers;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        $this->tenant = $this->createTenant();
 
-        $this->store = Store::create([
-            'name' => 'الفرع الرئيسي',
-            'code' => 'MAIN-001',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        $adminRole = Role::findByName('admin');
-
-        $this->user = User::factory()->create([
+        // The profile owner: an explicit admin with known credentials and preferences.
+        $this->user = $this->createTenantUser($this->tenant, 'admin', attributes: [
             'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
+            'phone' => self::PROFILE_PHONE,
             'email' => 'kamal@sroor.com',
             'password' => Hash::make('password123'),
             'theme_preference' => 'dark',
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
         ]);
-        $this->user->assignRole($adminRole);
-        $this->token = $this->user->createToken('test-token')->plainTextToken;
+        $this->headers = $this->tenantHeaders($this->tenant, $this->user);
     }
 
     public function test_unauthenticated_request_is_rejected(): void
     {
-        $response = $this->getJson('/api/v1/profile');
+        $response = $this->getJson('/api/v1/profile', $this->tenantGuestHeaders($this->tenant));
         $response->assertStatus(401);
     }
 
     public function test_authenticated_user_can_view_profile(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
-            ->getJson('/api/v1/profile');
+        $response = $this->getJson('/api/v1/profile', $this->headers);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -68,7 +53,7 @@ class ProfileApiTest extends TestCase
                 'data' => [
                     'id' => $this->user->id,
                     'name' => 'كمال سرور',
-                    'phone' => self::ADMIN_PHONE,
+                    'phone' => self::PROFILE_PHONE,
                     'email' => 'kamal@sroor.com',
                     'theme_preference' => 'dark',
                 ],
@@ -79,13 +64,12 @@ class ProfileApiTest extends TestCase
     {
         $payload = [
             'name' => 'كمال سرور المهندس',
-            'phone' => self::ADMIN_PHONE,
+            'phone' => self::PROFILE_PHONE,
             'email' => 'kamal.dev@sroor.com',
             'theme_preference' => 'light',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
-            ->putJson('/api/v1/profile', $payload);
+        $response = $this->putJson('/api/v1/profile', $payload, $this->headers);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -97,47 +81,45 @@ class ProfileApiTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('users', [
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseHas('users', [
             'id' => $this->user->id,
             'name' => 'كمال سرور المهندس',
             'theme_preference' => 'light',
-        ]);
+        ]));
     }
 
     public function test_authenticated_user_can_change_password(): void
     {
         $payload = [
             'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
+            'phone' => self::PROFILE_PHONE,
             'theme_preference' => 'dark',
             'current_password' => 'password123',
             'new_password' => 'newSecretPass123',
             'new_password_confirmation' => 'newSecretPass123',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
-            ->putJson('/api/v1/profile', $payload);
+        $response = $this->putJson('/api/v1/profile', $payload, $this->headers);
 
         $response->assertStatus(200)
             ->assertJson(['success' => true]);
 
-        $this->user->refresh();
-        $this->assertTrue(Hash::check('newSecretPass123', $this->user->password));
+        $hash = $this->inTenant($this->tenant, fn (): string => (string) User::findOrFail($this->user->id)->password);
+        $this->assertTrue(Hash::check('newSecretPass123', $hash));
     }
 
     public function test_update_profile_fails_on_wrong_current_password(): void
     {
         $payload = [
             'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
+            'phone' => self::PROFILE_PHONE,
             'theme_preference' => 'dark',
             'current_password' => 'wrongPassword',
             'new_password' => 'newSecretPass123',
             'new_password_confirmation' => 'newSecretPass123',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
-            ->putJson('/api/v1/profile', $payload);
+        $response = $this->putJson('/api/v1/profile', $payload, $this->headers);
 
         $response->assertStatus(422)
             ->assertJson(['success' => false]);
@@ -145,9 +127,7 @@ class ProfileApiTest extends TestCase
 
     public function test_update_profile_fails_validation_on_duplicate_phone(): void
     {
-        User::factory()->create([
-            'phone' => '01000007005',
-        ]);
+        $this->createTenantUser($this->tenant, attributes: ['phone' => '01000007005']);
 
         $payload = [
             'name' => 'كمال سرور',
@@ -155,10 +135,35 @@ class ProfileApiTest extends TestCase
             'theme_preference' => 'dark',
         ];
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->token)
-            ->putJson('/api/v1/profile', $payload);
+        $response = $this->putJson('/api/v1/profile', $payload, $this->headers);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['phone']);
+    }
+
+    public function test_phone_uniqueness_and_profile_updates_are_scoped_to_the_tenant(): void
+    {
+        $other = $this->createTenant();
+        $otherUser = $this->createTenantUser($other, attributes: [
+            'name' => 'مستخدم مستأجر آخر',
+            'phone' => '01000007006',
+        ]);
+
+        // The same phone in ANOTHER tenant's DB is not a duplicate here.
+        $this->putJson('/api/v1/profile', [
+            'name' => 'كمال سرور',
+            'phone' => '01000007006',
+            'theme_preference' => 'dark',
+        ], $this->headers)->assertOk()->assertJsonPath('data.phone', '01000007006');
+
+        // The other tenant's user is untouched, and B's profile endpoint shows B's user only.
+        $this->inTenant($other, fn () => $this->assertDatabaseHas('users', [
+            'id' => $otherUser->id,
+            'name' => 'مستخدم مستأجر آخر',
+            'phone' => '01000007006',
+        ]));
+        $this->getJson('/api/v1/profile', $this->tenantHeaders($other, $otherUser))
+            ->assertOk()
+            ->assertJsonPath('data.name', 'مستخدم مستأجر آخر');
     }
 }

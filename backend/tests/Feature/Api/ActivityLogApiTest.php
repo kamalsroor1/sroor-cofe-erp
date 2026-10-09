@@ -6,103 +6,81 @@ namespace Tests\Feature\Api;
 
 use App\Models\ActivityLog;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ActivityLogApiTest extends TestCase
+class ActivityLogApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
-    protected string $adminToken;
+    /** @var array<string, string> */
+    protected array $adminHeaders;
 
     protected User $regularUser;
 
-    protected string $regularToken;
+    /** @var array<string, string> */
+    protected array $regularHeaders;
 
-    protected Store $mainStore;
+    protected int $mainStoreId;
 
-    protected Store $branchStore;
+    protected int $branchStoreId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
-
-        $this->mainStore = Store::create([
-            'name' => 'الفرع الرئيسي',
-            'code' => 'MAIN',
-            'type' => 'retail',
-            'is_default' => true,
-            'is_active' => true,
-        ]);
-
-        $this->branchStore = Store::create([
+        $this->tenant = $this->createTenant();
+        $this->mainStoreId = (int) $this->tenantStore($this->tenant)->id;
+        $this->branchStoreId = $this->inTenant($this->tenant, fn (): int => Store::create([
             'name' => 'فرع المعادي',
             'code' => 'MAADI',
             'type' => 'branch',
             'is_default' => false,
             'is_active' => true,
-        ]);
+        ])->id);
 
-        $this->adminUser = User::factory()->create([
-            'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
-            'password' => Hash::make('password123'),
-            'is_active' => true,
-            'default_store_id' => $this->mainStore->id,
-        ]);
-        $this->adminUser->assignRole('admin');
-        $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+        $this->adminUser = $this->tenantAdmin($this->tenant);
+        $this->adminHeaders = $this->tenantHeaders($this->tenant);
 
-        $this->regularUser = User::factory()->create([
+        // A cashier: has a role, but not logs.view.
+        $this->regularUser = $this->createTenantUser($this->tenant, 'cashier', attributes: [
             'name' => 'أحمد كاشير',
-            'phone' => '01000007005',
-            'password' => Hash::make('password123'),
-            'is_active' => true,
-            'default_store_id' => $this->branchStore->id,
+            'default_store_id' => $this->branchStoreId,
         ]);
-        $this->regularUser->assignRole('cashier');
-        $this->regularToken = $this->regularUser->createToken('cashier-token')->plainTextToken;
+        $this->regularHeaders = $this->tenantHeaders($this->tenant, $this->regularUser, $this->branchStoreId);
 
-        ActivityLog::query()->delete();
+        $this->inTenant($this->tenant, fn () => ActivityLog::query()->delete());
     }
 
     public function test_unauthenticated_request_is_rejected(): void
     {
-        $response = $this->getJson('/api/v1/activity-logs');
+        $response = $this->getJson('/api/v1/activity-logs', $this->tenantGuestHeaders($this->tenant));
         $response->assertStatus(401);
     }
 
     public function test_user_without_logs_view_permission_is_forbidden(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->regularToken)
-            ->getJson('/api/v1/activity-logs');
+        $response = $this->getJson('/api/v1/activity-logs', $this->regularHeaders);
 
         $response->assertStatus(403);
     }
 
     public function test_authorized_admin_can_fetch_logs_with_complete_structure(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'sales',
             'action' => 'invoice_created',
             'description' => 'إصدار فاتورة مبيعات رقم #INV-1001',
             'ip_address' => '127.0.0.1',
             'user_agent' => 'Mozilla/5.0 Test Suite',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs');
+        $response = $this->getJson('/api/v1/activity-logs', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -146,18 +124,16 @@ class ActivityLogApiTest extends TestCase
 
     public function test_log_payload_carries_the_stored_properties(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'shifts',
             'action' => 'shift_closed',
             'description' => 'إغلاق وردية',
             'properties' => ['expected_cash' => '2100.000', 'difference' => '-5.000'],
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs');
+        $response = $this->getJson('/api/v1/activity-logs', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.0.properties.difference', '-5.000')
@@ -167,28 +143,25 @@ class ActivityLogApiTest extends TestCase
 
     public function test_can_filter_logs_by_search_keyword(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'sales',
             'action' => 'invoice_created',
             'description' => 'بيع بن حبوب كولومبي فاخر',
             'ip_address' => '192.168.1.50',
-            'created_at' => now(),
         ]);
 
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->regularUser->id,
-            'store_id' => $this->branchStore->id,
+            'store_id' => $this->branchStoreId,
             'module' => 'expenses',
             'action' => 'expense_paid',
             'description' => 'سداد فاتورة كهرباء الفرع',
             'ip_address' => '10.0.0.1',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs?search=كولومبي');
+        $response = $this->getJson('/api/v1/activity-logs?search=كولومبي', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
@@ -197,26 +170,23 @@ class ActivityLogApiTest extends TestCase
 
     public function test_can_filter_logs_by_module_and_action(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'sales',
             'action' => 'invoice_cancelled',
             'description' => 'إلغاء فاتورة مبيعات #INV-999',
-            'created_at' => now(),
         ]);
 
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'inventory',
             'action' => 'stock_adjusted',
             'description' => 'تسوية رصيد بن اسبريسو',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs?module=sales&action=invoice_cancelled');
+        $response = $this->getJson('/api/v1/activity-logs?module=sales&action=invoice_cancelled', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
@@ -225,26 +195,23 @@ class ActivityLogApiTest extends TestCase
 
     public function test_can_filter_logs_by_user_and_store(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'auth',
             'action' => 'login',
             'description' => 'تسجيل دخول ناجح للمدير',
-            'created_at' => now(),
         ]);
 
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->regularUser->id,
-            'store_id' => $this->branchStore->id,
+            'store_id' => $this->branchStoreId,
             'module' => 'shifts',
             'action' => 'shift_open',
             'description' => 'فتح وردية كاشير جديدة',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs?user_id='.$this->regularUser->id.'&store_id='.$this->branchStore->id);
+        $response = $this->getJson('/api/v1/activity-logs?user_id='.$this->regularUser->id.'&store_id='.$this->branchStoreId, $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
@@ -254,28 +221,28 @@ class ActivityLogApiTest extends TestCase
 
     public function test_can_filter_logs_by_date_range(): void
     {
-        $pastLog = ActivityLog::create([
-            'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
-            'module' => 'sales',
-            'action' => 'sale',
-            'description' => 'عملية سابقة',
-        ]);
-        $pastLog->timestamps = false;
-        $pastLog->created_at = now()->subDays(5);
-        $pastLog->save();
+        $this->inTenant($this->tenant, function (): void {
+            $pastLog = ActivityLog::create([
+                'user_id' => $this->adminUser->id,
+                'store_id' => $this->mainStoreId,
+                'module' => 'sales',
+                'action' => 'sale',
+                'description' => 'عملية سابقة',
+            ]);
+            $pastLog->timestamps = false;
+            $pastLog->created_at = now()->subDays(5);
+            $pastLog->save();
+        });
 
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'sales',
             'action' => 'sale',
             'description' => 'عملية اليوم',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs?from_date='.now()->toDateString().'&to_date='.now()->toDateString());
+        $response = $this->getJson('/api/v1/activity-logs?from_date='.now()->toDateString().'&to_date='.now()->toDateString(), $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
@@ -284,26 +251,23 @@ class ActivityLogApiTest extends TestCase
 
     public function test_returns_accurate_today_statistics(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'sales',
             'action' => 'invoice_created',
             'description' => 'فاتورة عادية',
-            'created_at' => now(),
         ]);
 
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->regularUser->id,
-            'store_id' => $this->branchStore->id,
+            'store_id' => $this->branchStoreId,
             'module' => 'sales',
             'action' => 'cancelled',
             'description' => 'إلغاء حرج',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs');
+        $response = $this->getJson('/api/v1/activity-logs', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonPath('stats.today_total', 2)
@@ -314,8 +278,7 @@ class ActivityLogApiTest extends TestCase
 
     public function test_validation_fails_on_invalid_date_format(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs?from_date=invalid-date');
+        $response = $this->getJson('/api/v1/activity-logs?from_date=invalid-date', $this->adminHeaders);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['from_date']);
@@ -323,8 +286,7 @@ class ActivityLogApiTest extends TestCase
 
     public function test_handles_empty_logs_and_pagination_limits(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->getJson('/api/v1/activity-logs?per_page=10');
+        $response = $this->getJson('/api/v1/activity-logs?per_page=10', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertJsonCount(0, 'data')
@@ -334,18 +296,16 @@ class ActivityLogApiTest extends TestCase
 
     public function test_authorized_admin_can_export_logs_as_csv(): void
     {
-        ActivityLog::create([
+        $this->log([
             'user_id' => $this->adminUser->id,
-            'store_id' => $this->mainStore->id,
+            'store_id' => $this->mainStoreId,
             'module' => 'sales',
             'action' => 'export_test',
             'description' => 'اختبار تصدير ملف إكسل و CSV',
             'ip_address' => '127.0.0.1',
-            'created_at' => now(),
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
-            ->get('/api/v1/activity-logs/export-csv');
+        $response = $this->get('/api/v1/activity-logs/export-csv', $this->adminHeaders);
 
         $response->assertStatus(200)
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
@@ -353,9 +313,61 @@ class ActivityLogApiTest extends TestCase
 
     public function test_unauthorized_user_cannot_export_csv(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->regularToken)
-            ->getJson('/api/v1/activity-logs/export-csv');
+        $response = $this->getJson('/api/v1/activity-logs/export-csv', $this->regularHeaders);
 
         $response->assertStatus(403);
+    }
+
+    public function test_logs_of_another_tenant_never_appear_in_list_stats_or_export(): void
+    {
+        $other = $this->createTenant();
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $this->inTenant($other, fn () => ActivityLog::create([
+            'user_id' => $otherAdminId,
+            'store_id' => $otherStoreId,
+            'module' => 'sales',
+            'action' => 'cancelled',
+            'description' => 'سجل مستأجر آخر سري',
+            'created_at' => now(),
+        ]));
+        $this->log([
+            'user_id' => $this->adminUser->id,
+            'store_id' => $this->mainStoreId,
+            'module' => 'sales',
+            'action' => 'invoice_created',
+            'description' => 'سجل المستأجر الحالي',
+        ]);
+
+        $this->getJson('/api/v1/activity-logs', $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'سجل المستأجر الحالي')
+            ->assertJsonPath('total_count', 1)
+            ->assertJsonPath('stats.today_total', 1)
+            ->assertJsonPath('stats.today_critical', 0)
+            ->assertJsonMissing(['description' => 'سجل مستأجر آخر سري']);
+
+        $csv = $this->get('/api/v1/activity-logs/export-csv', $this->adminHeaders)->assertOk();
+        // The CSV body is streamed after the request returns; in production tenancy is still
+        // initialised at that point, so replay the stream inside the requesting tenant.
+        $body = $this->inTenant($this->tenant, fn (): string => (string) $csv->streamedContent());
+        $this->assertStringContainsString('سجل المستأجر الحالي', $body);
+        $this->assertStringNotContainsString('سجل مستأجر آخر سري', $body);
+
+        // Filtering by the other tenant's ids matches nothing here.
+        $this->getJson('/api/v1/activity-logs?user_id='.$otherAdminId.'&store_id='.$otherStoreId, $this->adminHeaders)
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    /**
+     * Creates a log row inside the tenant, stamped now.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function log(array $attributes): void
+    {
+        $this->inTenant($this->tenant, fn () => ActivityLog::create(array_merge(['created_at' => now()], $attributes)));
     }
 }
