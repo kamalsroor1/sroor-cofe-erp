@@ -213,4 +213,10 @@ return [
     'telegram_connection_failed' => 'Could not reach Telegram. Check the bot token, the chat ID and the internet connection.',
     'commercial_register' => 'Commercial register',
     'tax_registration_no' => 'Tax registration number',
+
+    // SETG-2 ext / SETG-10 (W2 lane 2B)
+    'business_day_cutoff' => 'Business day starts at',
+    'business_day_cutoff_invalid' => 'The business day start must be in HH:MM format (00:00 to 23:59).',
+    'low_stock_default_threshold' => 'Default low-stock threshold',
+    'inventory_units' => 'Units of measure',
 ];

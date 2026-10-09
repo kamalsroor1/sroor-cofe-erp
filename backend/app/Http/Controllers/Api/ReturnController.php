@@ -12,6 +12,7 @@ use App\Http\Requests\StoreReturnRequest;
 use App\Http\Resources\ReturnResource;
 use App\Models\ReturnDocument;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -28,7 +29,7 @@ final class ReturnController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.view') && ! $user->can('returns.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -38,8 +39,9 @@ final class ReturnController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
+        $clientStoreId = ClientStoreGuard::verified($request);
         $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+            ?: $clientStoreId
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -100,7 +102,7 @@ final class ReturnController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.view') && ! $user->can('returns.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -117,8 +119,7 @@ final class ReturnController extends Controller
      */
     public function store(StoreReturnRequest $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 

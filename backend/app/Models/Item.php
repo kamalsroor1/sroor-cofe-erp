@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Settings\TenantSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -182,15 +183,27 @@ class Item extends Model
         return $query->where('is_active', true);
     }
 
+    /**
+     * SETG-10: active items at or below their own minimum, or — when they have none
+     * (NULL or <= 0) — at or below the tenant's low_stock_default_threshold.
+     */
     public function scopeLowStock(Builder $query): Builder
     {
-        return $query->whereColumn('current_stock', '<=', 'min_stock_level')
+        return app(TenantSettings::class)->whereLowStock($query)
             ->where('is_active', true);
     }
 
+    /**
+     * Same rule as scopeLowStock() / TenantSettings::whereLowStock(), for one row.
+     */
     public function isLowStock(): bool
     {
-        return bccomp($this->current_stock, $this->min_stock_level, 3) <= 0;
+        $min = (string) $this->min_stock_level;
+        $threshold = bccomp($min, '0', 3) > 0
+            ? $min
+            : app(TenantSettings::class)->lowStockDefaultThreshold();
+
+        return bccomp((string) $this->current_stock, $threshold, 3) <= 0;
     }
 
     /**

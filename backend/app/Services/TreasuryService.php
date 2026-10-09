@@ -7,6 +7,7 @@ use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\TreasuryTransfer;
+use App\Support\TenantClock;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,8 @@ class TreasuryService
 {
     public function __construct(
         protected AuditLogService $auditLogService,
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected TenantClock $tenantClock,
     ) {}
 
     /**
@@ -121,7 +123,9 @@ class TreasuryService
         $fee = (string) ($data['transfer_fee'] ?? '0.000');
         $storeId = $data['store_id'] ?? null;
         $notes = $data['notes'] ?? null;
-        $date = $data['transfer_date'] ?? now()->toDateString();
+        $date = $data['transfer_date'] ?? $this->tenantClock->businessDate();
+        // Authenticated user, else an explicit actor from a job/command, else NULL ("system").
+        $actorId = Auth::id() ?? (isset($data['user_id']) && is_numeric($data['user_id']) ? (int) $data['user_id'] : null);
 
         if (empty($fromMethod) || empty($toMethod)) {
             throw new Exception('يرجى تحديد الحساب المحول منه والحساب المستلم.');
@@ -149,8 +153,8 @@ class TreasuryService
             throw new Exception("عفواً، رصيد الحساب المحول منه [{$fromLabel}] غير كافٍ لإتمام التحويل (المتاح: ".number_format((float) $sourceBal, 2).' ج.م - المطلوب بالعمولة: '.number_format((float) $totalRequired, 2).' ج.م).');
         }
 
-        return DB::transaction(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date) {
-            $transferNumber = 'TRF-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
+        return DB::transaction(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {
+            $transferNumber = 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
 
             $transfer = TreasuryTransfer::create([
                 'transfer_number' => $transferNumber,
@@ -159,7 +163,7 @@ class TreasuryService
                 'amount' => $amount,
                 'transfer_fee' => $fee,
                 'store_id' => $storeId,
-                'user_id' => Auth::id() ?? 1,
+                'user_id' => $actorId,
                 'transfer_date' => $date,
                 'notes' => $notes,
             ]);

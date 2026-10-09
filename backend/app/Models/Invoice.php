@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $invoice_number
  * @property string|null $client_uuid
  * @property int $customer_id
- * @property int $user_id
+ * @property int|null $user_id
  * @property int|null $store_id
  * @property Carbon|null $invoice_date
  * @property string $payment_type

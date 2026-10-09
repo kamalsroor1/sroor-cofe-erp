@@ -12,6 +12,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Supplier;
 use App\Services\TreasuryService;
+use App\Support\ClientStoreGuard;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ final class TreasuryController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = (int) ($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
+        $storeId = (int) (ClientStoreGuard::concrete($request) ?: session('current_store_id') ?: 1);
         // The tenant's calendar day (SETG-2), not the server's.
         $today = $this->tenantClock->today();
 

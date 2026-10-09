@@ -18,8 +18,8 @@ class DashboardAnalyticsService
      */
     public function getAnalytics(?int $storeId = null, int $trendDays = 7): array
     {
-        // SETG-2: day boundaries follow the tenant timezone; storage is unchanged.
-        $now = $this->tenantClock->now();
+        // SETG-2 ext: "today" is the tenant business day (timezone + cutoff); storage is unchanged.
+        $now = $this->tenantClock->businessNow();
         $today = $now->toDateString();
         $startDate = $now->subDays($trendDays - 1)->toDateString();
 

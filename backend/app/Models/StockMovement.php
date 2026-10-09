@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $source_type
  * @property int $source_id
  * @property string|null $document_number
- * @property int $user_id
+ * @property int|null $user_id
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at

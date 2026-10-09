@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Support\TenantClock;
+
 class POSInvoiceDTO
 {
     /**
@@ -33,7 +35,7 @@ class POSInvoiceDTO
         return new self(
             customerId: (int) $data['customer_id'],
             storeId: (int) $data['store_id'],
-            invoiceDate: $data['invoice_date'] ?? now()->toDateString(),
+            invoiceDate: $data['invoice_date'] ?? app(TenantClock::class)->businessDate(),
             paymentType: $data['payment_type'] ?? 'cash',
             paymentMethod: $data['payment_method'] ?? 'cash',
             discountType: $data['discount_type'] ?? 'fixed',

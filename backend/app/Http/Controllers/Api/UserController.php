@@ -36,7 +36,7 @@ final class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('users.manage') && ! $user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -110,7 +110,7 @@ final class UserController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $authUser = $request->user();
-        if ($authUser && ! $authUser->hasRole('admin') && ! $authUser->can('users.manage') && ! $authUser->can('roles.manage')) {
+        if ($authUser && ! $authUser->hasRole('admin') && ! $authUser->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -158,7 +158,7 @@ final class UserController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('users.manage') && ! $user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -183,7 +183,7 @@ final class UserController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('users.manage') && ! $user->can('roles.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

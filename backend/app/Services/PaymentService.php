@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -15,8 +16,25 @@ class PaymentService
     public function __construct(
         protected CustomerBalanceService $customerBalanceService,
         protected SupplierBalanceService $supplierBalanceService,
-        protected AuditLogService $auditLogService
+        protected AuditLogService $auditLogService,
+        protected TenantClock $tenantClock,
     ) {}
+
+    /**
+     * The user a document is attributed to: the authenticated user, else the explicit
+     * `user_id` a job/command passed in $data, else NULL ("system"). Never a made-up id.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function actorId(array $data = []): ?int
+    {
+        $authId = Auth::id();
+        if ($authId !== null) {
+            return (int) $authId;
+        }
+
+        return isset($data['user_id']) && is_numeric($data['user_id']) ? (int) $data['user_id'] : null;
+    }
 
     /**
      * Record a payment voucher from a customer (for an invoice or on account)
@@ -53,9 +71,9 @@ class PaymentService
                 'supplier_id' => null,
                 'invoice_id' => $invoiceId,
                 'purchase_id' => null,
-                'user_id' => Auth::id() ?? 1,
+                'user_id' => $this->actorId($data),
                 'amount' => $amount,
-                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
+                'payment_date' => $data['payment_date'] ?? $this->tenantClock->businessDate(),
                 'payment_method' => $data['payment_method'] ?? 'cash',
                 'notes' => $data['notes'] ?? 'سند قبض نقدي من العميل',
             ]);
@@ -66,7 +84,8 @@ class PaymentService
                 action: 'customer_payment_recorded',
                 auditable: $payment,
                 oldValues: null,
-                newValues: $payment->toArray()
+                newValues: $payment->toArray(),
+                actorId: $this->actorId($data),
             );
 
             return $payment;
@@ -108,9 +127,9 @@ class PaymentService
                 'supplier_id' => $supplier->id,
                 'invoice_id' => null,
                 'purchase_id' => $purchaseId,
-                'user_id' => Auth::id() ?? 1,
+                'user_id' => $this->actorId($data),
                 'amount' => $amount,
-                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
+                'payment_date' => $data['payment_date'] ?? $this->tenantClock->businessDate(),
                 'payment_method' => $data['payment_method'] ?? 'cash',
                 'notes' => $data['notes'] ?? 'سند صرف نقدي للمورد',
             ]);
@@ -122,7 +141,8 @@ class PaymentService
                 action: 'supplier_payment_recorded',
                 auditable: $payment,
                 oldValues: null,
-                newValues: $payment->toArray()
+                newValues: $payment->toArray(),
+                actorId: $this->actorId($data),
             );
 
             return $payment;

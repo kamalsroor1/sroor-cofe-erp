@@ -10,6 +10,8 @@ use App\Models\Item;
 use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +24,25 @@ class InvoiceService
         protected StockService $stockService,
         protected CustomerBalanceService $customerBalanceService,
         protected AuditLogService $auditLogService,
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected TenantClock $tenantClock,
     ) {}
+
+    /**
+     * The user a document is attributed to: the authenticated user, else the explicit
+     * `user_id` a job/command passed in $data, else NULL ("system"). Never a made-up id.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function actorId(array $data = []): ?int
+    {
+        $authId = Auth::id();
+        if ($authId !== null) {
+            return (int) $authId;
+        }
+
+        return isset($data['user_id']) && is_numeric($data['user_id']) ? (int) $data['user_id'] : null;
+    }
 
     /**
      * Confirm a sales invoice atomically.
@@ -80,9 +99,10 @@ class InvoiceService
                 'invoice_number' => $invoiceNumber,
                 'client_uuid' => $clientUuid,
                 'customer_id' => $customer->id,
-                'user_id' => Auth::id() ?? 1,
+                'user_id' => $this->actorId($data),
                 'store_id' => $storeId,
-                'invoice_date' => $data['invoice_date'] ?? now()->toDateString(),
+                // SETG-2 ext: the business date on the tenant clock (cutoff-aware), never the server date.
+                'invoice_date' => $data['invoice_date'] ?? $this->tenantClock->businessDate(),
                 'payment_type' => $data['payment_type'] ?? 'cash',
                 'payment_method' => $data['payment_method'] ?? 'cash',
                 'status' => 'confirmed',
@@ -115,7 +135,8 @@ class InvoiceService
                 $itemDiscount = (string) ($line['discount_amount'] ?? '0.000');
 
                 // Line Total = (Quantity * Unit Price) - Item Discount
-                $grossLineTotal = bcmul($qty, $unitPrice, 3);
+                // SETG-13: half-up at scale 3, identical to the POS (helpers/decimal.js dMul).
+                $grossLineTotal = Decimal::mul($qty, $unitPrice);
                 $netLineTotal = bcsub($grossLineTotal, $itemDiscount, 3);
                 if (bccomp($netLineTotal, '0.000', 3) < 0) {
                     $netLineTotal = '0.000';
@@ -125,7 +146,7 @@ class InvoiceService
                     ? $item->weighted_avg_cost
                     : $item->cost_price;
 
-                $lineCost = bcmul($qty, $effectiveCost, 3);
+                $lineCost = Decimal::mul($qty, $effectiveCost);
                 $totalCost = bcadd($totalCost, $lineCost, 3);
 
                 // Create invoice item row
@@ -146,7 +167,8 @@ class InvoiceService
                     documentNumber: $invoice->invoice_number,
                     movementType: 'sales_out',
                     notes: "صرف مبيعات بالفاتورة رقم {$invoice->invoice_number}",
-                    storeId: $storeId
+                    storeId: $storeId,
+                    actorId: $this->actorId($data),
                 );
 
                 $subtotal = bcadd($subtotal, $netLineTotal, 3);
@@ -158,8 +180,8 @@ class InvoiceService
             $invoiceDiscountAmount = '0.000';
 
             if ($discountType === 'percentage') {
-                // (Subtotal * Discount Value) / 100
-                $invoiceDiscountAmount = bcdiv(bcmul($subtotal, $discountValue, 4), '100', 3);
+                // (Subtotal * Discount Value) / 100 — SETG-13: half-up, identical to dPercent().
+                $invoiceDiscountAmount = Decimal::percent($subtotal, (string) $discountValue);
             } else {
                 $invoiceDiscountAmount = $discountValue;
             }
@@ -206,7 +228,7 @@ class InvoiceService
                     $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
                 } else {
                     $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = 'EXP-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
+                    $expenseNumber = 'EXP-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
                     $expense = Expense::create([
                         'expense_number' => $expenseNumber,
                         'category' => 'shipping',
@@ -215,7 +237,7 @@ class InvoiceService
                         'payment_method' => $paymentMethod,
                         'expense_date' => $invoice->invoice_date,
                         'store_id' => $invoice->store_id,
-                        'user_id' => Auth::id() ?? 1,
+                        'user_id' => $this->actorId($data),
                         'notes' => "مصروف خدمات/شحن مسدد من الخزينة لفاتورة مبيعات رقم {$invoice->invoice_number}",
                     ]);
 
@@ -270,7 +292,7 @@ class InvoiceService
                     'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
                     'customer_id' => $customer->id,
                     'invoice_id' => $invoice->id,
-                    'user_id' => Auth::id() ?? 1,
+                    'user_id' => $this->actorId($data),
                     'amount' => $line['amount'],
                     'payment_date' => $invoice->invoice_date,
                     'payment_method' => $line['method'],
@@ -286,7 +308,8 @@ class InvoiceService
                 action: 'invoice_confirmed',
                 auditable: $invoice,
                 oldValues: null,
-                newValues: $invoice->toArray()
+                newValues: $invoice->toArray(),
+                actorId: $this->actorId($data),
             );
 
             $this->activityLogService->logSales(
@@ -575,7 +598,7 @@ class InvoiceService
                 $unitPrice = (string) $line['unit_price'];
                 $itemDiscount = (string) ($line['discount_amount'] ?? '0.000');
 
-                $grossLineTotal = bcmul($qty, $unitPrice, 3);
+                $grossLineTotal = Decimal::mul($qty, $unitPrice);
                 $netLineTotal = bcsub($grossLineTotal, $itemDiscount, 3);
                 if (bccomp($netLineTotal, '0.000', 3) < 0) {
                     $netLineTotal = '0.000';
@@ -585,7 +608,7 @@ class InvoiceService
                     ? $item->weighted_avg_cost
                     : $item->cost_price;
 
-                $lineCost = bcmul($qty, $effectiveCost, 3);
+                $lineCost = Decimal::mul($qty, $effectiveCost);
                 $totalCost = bcadd($totalCost, $lineCost, 3);
 
                 $lockedInvoice->items()->create([
@@ -604,7 +627,8 @@ class InvoiceService
                     documentNumber: $lockedInvoice->invoice_number,
                     movementType: 'sales_out',
                     notes: "صرف مبيعات بتعديل الفاتورة رقم {$lockedInvoice->invoice_number}",
-                    storeId: $lockedInvoice->store_id
+                    storeId: $lockedInvoice->store_id,
+                    actorId: $this->actorId($data),
                 );
 
                 $subtotal = bcadd($subtotal, $netLineTotal, 3);
@@ -616,7 +640,8 @@ class InvoiceService
             $invoiceDiscountAmount = '0.000';
 
             if ($discountType === 'percentage') {
-                $invoiceDiscountAmount = bcdiv(bcmul($subtotal, $discountValue, 4), '100', 3);
+                // SETG-13: half-up, identical to dPercent().
+                $invoiceDiscountAmount = Decimal::percent($subtotal, $discountValue);
             } else {
                 $invoiceDiscountAmount = $discountValue;
             }
@@ -671,7 +696,7 @@ class InvoiceService
                     $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
                 } else {
                     $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = 'EXP-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
+                    $expenseNumber = 'EXP-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
                     $expense = Expense::create([
                         'expense_number' => $expenseNumber,
                         'category' => 'shipping',
@@ -680,7 +705,7 @@ class InvoiceService
                         'payment_method' => $paymentMethod,
                         'expense_date' => $data['invoice_date'] ?? $lockedInvoice->invoice_date,
                         'store_id' => $lockedInvoice->store_id,
-                        'user_id' => Auth::id() ?? 1,
+                        'user_id' => $this->actorId($data),
                         'notes' => "مصروف خدمات/شحن مسدد من الخزينة لفاتورة مبيعات رقم {$lockedInvoice->invoice_number}",
                     ]);
 
@@ -745,7 +770,7 @@ class InvoiceService
                             'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
                             'customer_id' => $newCustomerId,
                             'invoice_id' => $lockedInvoice->id,
-                            'user_id' => Auth::id() ?? 1,
+                            'user_id' => $this->actorId($data),
                             'amount' => $pAmount,
                             'payment_date' => $lockedInvoice->invoice_date,
                             'payment_method' => $p['method'] ?? 'cash',
@@ -758,7 +783,7 @@ class InvoiceService
                     'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
                     'customer_id' => $newCustomerId,
                     'invoice_id' => $lockedInvoice->id,
-                    'user_id' => Auth::id() ?? 1,
+                    'user_id' => $this->actorId($data),
                     'amount' => $paidAmount,
                     'payment_date' => $lockedInvoice->invoice_date,
                     'payment_method' => $data['payment_method'] ?? 'cash',
@@ -884,7 +909,8 @@ class InvoiceService
                 : 'MAIN';
         }
 
-        $prefix = "INV-{$storeCode}-".date('Ymd');
+        // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
+        $prefix = "INV-{$storeCode}-".str_replace('-', '', $this->tenantClock->businessDate());
 
         $lastInvoice = Invoice::withTrashed()
             ->where('invoice_number', 'LIKE', $prefix.'-%')

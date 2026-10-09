@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Supplier;
 use App\Services\ExportService;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\Request;
 
 class ExportController extends Controller
@@ -32,7 +33,8 @@ class ExportController extends Controller
     public function exportItemMovements($id, Request $request, ExportService $exportService)
     {
         $item = Item::withTrashed()->findOrFail($id);
-        $storeId = ($request->query('store_id') && $request->query('store_id') !== 'all') ? (int) $request->query('store_id') : null;
+        $clientStoreId = ClientStoreGuard::verified($request, 'store_id', 'query');
+        $storeId = is_int($clientStoreId) ? $clientStoreId : null;
         $fromDate = $request->query('from');
         $toDate = $request->query('to');
         $filterType = $request->query('type');

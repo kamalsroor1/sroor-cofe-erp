@@ -6,6 +6,9 @@ namespace App\Http\Requests;
 
 use App\Models\Customer;
 use App\Models\Store;
+use App\Support\ActiveStore;
+use App\Support\ClientStoreGuard;
+use App\Support\TenantClock;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePOSInvoiceRequest extends FormRequest
@@ -36,8 +39,17 @@ final class StorePOSInvoiceRequest extends FormRequest
             ]);
         }
 
-        $storeId = $this->input('store_id')
-            ?? $this->header('X-Store-Id')
+        // Security (interim until STOR-2): a body store_id is access-checked like the header
+        // (403 otherwise), and the already-verified X-Store-Id wins when both are sent.
+        $bodyStoreId = ClientStoreGuard::verified($this);
+        if ($bodyStoreId === ActiveStore::ALL) {
+            ClientStoreGuard::deny();
+        }
+
+        $headerStoreId = ActiveStore::parseHeader($this->header('X-Store-Id'));
+
+        $storeId = (is_int($headerStoreId) ? $headerStoreId : null)
+            ?? $bodyStoreId
             ?? session('current_store_id')
             ?? $this->user()?->getCurrentStore()?->id
             ?? Store::first()?->id;
@@ -70,7 +82,8 @@ final class StorePOSInvoiceRequest extends FormRequest
         $this->merge([
             'customer_id' => $customerId ? (int) $customerId : null,
             'store_id' => $storeId ? (int) $storeId : null,
-            'invoice_date' => $this->input('invoice_date') ?? now()->toDateString(),
+            // SETG-2 ext: the business date on the tenant clock (timezone + cutoff), not the server date.
+            'invoice_date' => $this->input('invoice_date') ?? app(TenantClock::class)->businessDate(),
             'payment_type' => $paymentType,
             'payment_method' => $paymentMethod,
         ]);

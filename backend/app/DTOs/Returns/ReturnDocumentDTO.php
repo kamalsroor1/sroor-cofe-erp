@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTOs\Returns;
 
+use App\Support\TenantClock;
+
 final class ReturnDocumentDTO
 {
     public function __construct(
@@ -29,7 +31,7 @@ final class ReturnDocumentDTO
             invoice_id: isset($data['invoice_id']) && $data['invoice_id'] !== '' ? (int) $data['invoice_id'] : null,
             purchase_id: isset($data['purchase_id']) && $data['purchase_id'] !== '' ? (int) $data['purchase_id'] : null,
             store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
-            return_date: (string) ($data['return_date'] ?? now()->toDateString()),
+            return_date: (string) ($data['return_date'] ?? app(TenantClock::class)->businessDate()),
             refund_amount: isset($data['refund_amount']) ? (string) $data['refund_amount'] : '0.000',
             reason: isset($data['reason']) && $data['reason'] !== '' ? (string) $data['reason'] : null,
         );

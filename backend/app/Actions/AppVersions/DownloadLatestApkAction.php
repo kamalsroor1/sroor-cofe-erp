@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Actions\AppVersions;
 
 use App\Models\AppVersion;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -15,7 +14,7 @@ final class DownloadLatestApkAction
     /**
      * Serve the latest active release binary for the platform.
      *
-     * Only files uploaded through the super-admin AppVersion flow (public disk) are
+     * Only files uploaded through the super-admin AppVersion flow (central, AppVersion::releaseDisk()) are
      * served. There is deliberately no fallback to files in public/ or outside the
      * app: that served the wrong binary (e.g. an Android APK to iOS) and made the
      * response depend on whatever happened to sit on the server's filesystem.
@@ -28,7 +27,7 @@ final class DownloadLatestApkAction
             ->orderByDesc('version_code')
             ->first();
 
-        if (! $latest instanceof AppVersion || ! Storage::disk('public')->exists($latest->apk_path)) {
+        if (! $latest instanceof AppVersion || ! AppVersion::releaseDisk()->exists($latest->apk_path)) {
             throw new NotFoundHttpException(__('app_update.file_not_available'));
         }
 
@@ -45,7 +44,7 @@ final class DownloadLatestApkAction
         $defaultFilename = $platform === 'windows' ? $appNameSlug.'-Setup.exe' : $appNameSlug.'.apk';
 
         return response()->download(
-            Storage::disk('public')->path($latest->apk_path),
+            AppVersion::releaseDisk()->path($latest->apk_path),
             $latest->apk_filename ?? $defaultFilename,
             [
                 'Content-Type' => $contentType,

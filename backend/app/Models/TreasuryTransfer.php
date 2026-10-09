@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $amount
  * @property string $transfer_fee
  * @property int|null $store_id
- * @property int $user_id
+ * @property int|null $user_id
  * @property Carbon|null $transfer_date
  * @property string|null $notes
  * @property Carbon|null $created_at

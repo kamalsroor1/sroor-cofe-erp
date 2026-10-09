@@ -18,6 +18,10 @@ use Tests\TenantTestCase;
  * reports, the dashboard, the daily journal and shifts. Storage is unchanged: timestamps
  * stay in the application timezone (config('app.timezone')), DATE columns stay as-is.
  *
+ * SETG-2 ext: the write side follows the same clock — a document created without an
+ * explicit date is stamped with TenantClock::businessDate(), so the W1 timezone pin is
+ * lifted (any IANA zone is selectable). Business-day cutoff: BusinessDayCutoffTest.
+ *
  * Fixed instant used everywhere: 2026-10-08 18:00 UTC
  *  - Africa/Cairo (app/storage timezone and tenant default): still 2026-10-08 (evening)
  *  - Asia/Tokyo (UTC+9, no DST):                            already 2026-10-09 03:00
@@ -207,6 +211,48 @@ final class TenantTimezoneReportTest extends TenantTestCase
             ->assertStatus(200)
             ->assertJsonPath('report.opened_at', '2026-10-09 01:00:00')
             ->assertJsonPath('report.closed_at', '2026-10-09 02:30:00');
+    }
+
+    public function test_a_tokyo_tenant_can_select_its_zone_and_new_documents_get_its_date(): void
+    {
+        $tenant = $this->createTenant();
+
+        $this->postJson('/api/v1/settings', ['company_name' => 'Tokyo shop', 'timezone' => 'Asia/Tokyo'], $this->tenantHeaders($tenant))
+            ->assertStatus(200);
+
+        [$itemId, $customerId] = $this->inTenant($tenant, function () use ($tenant): array {
+            $now = $this->storageTime(self::NOW_UTC);
+            $itemId = DB::table('items')->insertGetId([
+                'name' => 'Timezone Item', 'code' => 'TZ-ITEM', 'unit' => 'كجم',
+                'cost_price' => '5.000', 'selling_price' => '10.000', 'current_stock' => '5.000',
+                'is_active' => true, 'created_at' => $now, 'updated_at' => $now,
+            ]);
+            DB::table('store_stocks')->insert([
+                'store_id' => $this->tenantStore($tenant)->getKey(), 'item_id' => $itemId, 'quantity' => '5.000',
+                'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $customerId = DB::table('customers')->insertGetId([
+                'name' => 'Timezone Buyer', 'created_at' => $now, 'updated_at' => $now,
+            ]);
+
+            return [$itemId, $customerId];
+        });
+
+        // Server day is 2026-10-08, Tokyo is already 2026-10-09 03:00: the invoice belongs to the 9th.
+        $response = $this->postJson('/api/v1/pos/checkout', [
+            'customer_id' => $customerId,
+            'payment_type' => 'cash',
+            'payment_method' => 'cash',
+            'items' => [['item_id' => $itemId, 'quantity' => '1.000', 'unit_price' => '10.000']],
+        ], $this->tenantHeaders($tenant))->assertStatus(201);
+
+        $this->assertSame('2026-10-09', substr((string) $response->json('data.invoice_date'), 0, 10));
+        $this->assertStringContainsString('-20261009-', (string) $response->json('data.invoice_number'));
+
+        $this->getJson('/api/v1/reports/summary?period=today', $this->tenantHeaders($tenant))
+            ->assertStatus(200)
+            ->assertJsonPath('period.from_date', '2026-10-09')
+            ->assertJsonPath('summary.invoices_count', 1);
     }
 
     public function test_reports_still_require_authentication_and_permission(): void

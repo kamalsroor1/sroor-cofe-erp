@@ -1,6 +1,8 @@
-// SP-4: the POS exact-decimal helper must reproduce the server's bcmath
-// results (scale 3, truncation toward zero) so the client never sends or
-// shows a total the server would compute differently.
+// SP-4 / SETG-13: the POS exact-decimal helper must reproduce the server's
+// rounding (app/Support/Money/Decimal.php: scale 3, half-up, a tie rounds away
+// from zero) so the client never sends or shows a total the server would
+// compute differently. The full shared vectors run in
+// backend/tests/js/decimal-rounding.test.js and RoundingParityTest.php.
 //
 // Node-only: imports the helper directly, no page and no server data.
 import { test, expect } from '@playwright/test';
@@ -26,13 +28,15 @@ test.describe('decimal helper (bcmath parity)', () => {
         expect(dMul(0.25, 550.5)).toBe('137.625');
     });
 
-    test('truncates multiplication toward zero like bcmul(.., 3)', () => {
-        // 1.375 x 3.333 = 4.582875 -> bcmul(.., 3) = 4.582
-        expect(dMul('1.375', '3.333')).toBe('4.582');
-        // 0.333 x 0.333 = 0.110889 -> 0.110
-        expect(dMul('0.333', '0.333')).toBe('0.110');
-        // negative truncates toward zero: -4.582875 -> -4.582
-        expect(dMul('-1.375', '3.333')).toBe('-4.582');
+    test('rounds multiplication half-up like Decimal::mul()', () => {
+        // 1.375 x 3.333 = 4.582875 -> 4.583
+        expect(dMul('1.375', '3.333')).toBe('4.583');
+        // 0.333 x 0.333 = 0.110889 -> 0.111
+        expect(dMul('0.333', '0.333')).toBe('0.111');
+        // negative ties round away from zero: -4.582875 -> -4.583
+        expect(dMul('-1.375', '3.333')).toBe('-4.583');
+        // exact tie at the 4th decimal: 0.5 x 0.001 = 0.0005 -> 0.001
+        expect(dMul('0.5', '0.001')).toBe('0.001');
     });
 
     test('adds and subtracts without float drift', () => {
@@ -44,10 +48,11 @@ test.describe('decimal helper (bcmath parity)', () => {
     });
 
     test('mirrors the server percentage discount formula', () => {
-        // bcdiv(bcmul('137.625', '12.5', 4), '100', 3) = 17.203
+        // Decimal::percent: 137.625 x 12.5 / 100 = 17.203125 -> 17.203
         expect(dPercent('137.625', '12.5')).toBe('17.203');
         expect(dPercent('1000', '10')).toBe('100.000');
-        expect(dPercent('99.999', '33.333')).toBe('33.332');
+        // 33.33266667 -> 33.333 (half-up, was 33.332 under truncation)
+        expect(dPercent('99.999', '33.333')).toBe('33.333');
     });
 
     test('compares, clamps and sums', () => {
@@ -70,8 +75,11 @@ test.describe('decimal helper (bcmath parity)', () => {
         expect(normalize('12')).toBe('12.000');
         expect(normalize('.5')).toBe('0.500');
         expect(normalize('7.')).toBe('7.000');
-        expect(normalize('1.23456')).toBe('1.234');
-        expect(normalize('-1.23456')).toBe('-1.234');
+        expect(normalize('1.23456')).toBe('1.235');
+        expect(normalize('-1.23456')).toBe('-1.235');
+        expect(normalize('0.0005')).toBe('0.001');
+        expect(normalize('-0.0005')).toBe('-0.001');
+        expect(normalize('0.0004')).toBe('0.000');
         expect(normalize(1e-7)).toBe('0.000');
         expect(normalize(1e21)).toBe('1000000000000000000000.000');
         expect(normalize('')).toBe('0.000');

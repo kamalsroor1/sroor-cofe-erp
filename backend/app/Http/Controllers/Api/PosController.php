@@ -15,6 +15,7 @@ use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -98,8 +99,7 @@ final class PosController extends Controller
 
         $customerId = (int) $request->query('customer_id');
         $itemId = (int) $request->query('item_id');
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->query('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 

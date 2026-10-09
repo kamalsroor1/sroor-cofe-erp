@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -31,6 +33,12 @@ class AppVersion extends Model
     use HasFactory;
 
     protected $table = 'app_versions';
+
+    /** Disk the super-admin uploads release binaries to (always from central context). */
+    public const RELEASE_DISK = 'public';
+
+    /** Central alias of RELEASE_DISK's root that tenancy never re-roots (config/filesystems.php). */
+    public const CENTRAL_RELEASE_DISK = 'app_releases';
 
     public function getConnectionName()
     {
@@ -93,6 +101,19 @@ class AppVersion extends Model
         }
 
         return $bytes.' B';
+    }
+
+    /**
+     * Disk to read release binaries from. Releases are central (one row and one file
+     * for every tenant), but on a tenant host stancl's FilesystemTenancyBootstrapper
+     * re-roots 'public' to storage/tenant<id>/app/public, so the binary is read through
+     * the central alias there.
+     */
+    public static function releaseDisk(): Filesystem
+    {
+        $tenancyInitialized = function_exists('tenancy') && tenancy()->initialized;
+
+        return Storage::disk($tenancyInitialized ? self::CENTRAL_RELEASE_DISK : self::RELEASE_DISK);
     }
 
     /**

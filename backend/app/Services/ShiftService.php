@@ -39,7 +39,7 @@ class ShiftService
     /**
      * Open a new shift for a store/van
      */
-    public function openShift(string $openingCash = '0.000', ?string $notes = null, ?int $storeId = null): CashShift
+    public function openShift(string $openingCash = '0.000', ?string $notes = null, ?int $storeId = null, ?int $actorId = null): CashShift
     {
         $targetStoreId = $storeId
             ?? session('current_store_id')
@@ -54,7 +54,8 @@ class ShiftService
         $shiftNumber = $this->nextShiftNumber();
 
         $shift = CashShift::create([
-            'user_id' => Auth::id() ?? 1,
+            // Authenticated user, else the explicit actor (job/command), else NULL ("system").
+            'user_id' => Auth::id() ?? $actorId,
             'store_id' => $targetStoreId,
             'shift_number' => $shiftNumber,
             'status' => 'open',
@@ -74,14 +75,16 @@ class ShiftService
     }
 
     /**
-     * SETG-2: the daily shift sequence restarts at midnight on the tenant clock, and the
-     * date in the number is the tenant-local date. The next sequence is derived from the
-     * numbers already issued for that date (not from opened_at), so it never collides
-     * with an existing number even if the tenant timezone changed earlier the same day.
+     * SETG-2 (+ ext): the daily shift sequence restarts at the start of the business day
+     * (tenant clock + business_day_cutoff), and the date in the number is the business
+     * date — a shift opened at 01:30 with cutoff 03:00 belongs to the previous day. The
+     * next sequence is derived from the numbers already issued for that date (not from
+     * opened_at), so it never collides with an existing number even if the timezone or
+     * cutoff changed earlier the same day.
      */
     private function nextShiftNumber(): string
     {
-        $prefix = 'SHIFT-'.$this->tenantClock->now()->format('Ymd').'-';
+        $prefix = 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate()).'-';
 
         $lastNumber = CashShift::query()
             ->where('shift_number', 'like', $prefix.'%')

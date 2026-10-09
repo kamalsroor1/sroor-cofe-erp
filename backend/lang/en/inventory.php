@@ -384,4 +384,8 @@ return [
     'min_selling_price' => 'Minimum selling price',
     'quantity' => 'Quantity',
     'view_transfer_details' => 'View transfer details',
+
+    // SETG-10 (W2 lane 2B)
+    'unit_not_in_tenant_list' => 'The unit ":unit" is not in the unit list of this business. Pick a unit from the list or add it in settings.',
+    'switched_to_store' => 'Switched to branch: :store',
 ];

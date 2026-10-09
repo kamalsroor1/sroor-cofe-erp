@@ -16,6 +16,7 @@ use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\InvoiceSummaryResource;
 use App\Models\Invoice;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -37,7 +38,8 @@ final class InvoiceController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $rawStoreId = $request->input('store_id') ?: $request->header('X-Store-Id');
+        // A body/query store_id is a store filter: access-checked (403) before it is used.
+        $rawStoreId = ClientStoreGuard::verified($request) ?: $request->header('X-Store-Id');
         $storeId = ($rawStoreId && $rawStoreId !== 'all' && is_numeric($rawStoreId) && (int) $rawStoreId > 0)
             ? (int) $rawStoreId
             : null;
@@ -140,8 +142,9 @@ final class InvoiceController extends Controller
      */
     public function store(StoreSalesInvoiceRequest $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        // The validated body store_id also wins inside CreateInvoiceDTO, so it is access-checked
+        // even with a header; `all` is never a store to sell from (422).
+        $storeId = ClientStoreGuard::concrete($request)
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 

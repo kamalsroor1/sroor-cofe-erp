@@ -8,6 +8,7 @@ use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\DTOs\POSInvoiceDTO;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
+use App\Support\ClientStoreGuard;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -98,7 +99,7 @@ class POSController extends Controller
         $lastPrice = $this->getCustomerLastPriceAction->execute(
             customerId: (int) $request->query('customer_id'),
             itemId: (int) $request->query('item_id'),
-            storeId: $request->query('store_id') ? (int) $request->query('store_id') : null
+            storeId: is_int($clientStoreId = ClientStoreGuard::verified($request, 'store_id', 'query')) ? $clientStoreId : null
         );
 
         return response()->json([

@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Stancl\Tenancy\Events\CreatingDatabase;
 use Stancl\Tenancy\Events\DatabaseCreated;
 use Stancl\Tenancy\Events\DatabaseMigrated;
 use Stancl\Tenancy\Events\MigratingDatabase;
 use Stancl\Tenancy\Events\TenantCreated;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class CentralTenantResolverApiTest extends TestCase
+/**
+ * Central, public route: it never initialises tenancy. QA-4: runs on the tenant harness
+ * base class, so the central database holds ONLY central tables (as in production); the
+ * tenant rows are created with the provisioning events faked, so no tenant database is made.
+ */
+class CentralTenantResolverApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -142,6 +144,25 @@ class CentralTenantResolverApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.tenant_id', 'alias-test');
+    }
+
+    public function test_resolving_one_workspace_while_sending_another_tenants_header_returns_only_the_requested_one(): void
+    {
+        Tenant::create(['id' => 'alpha-shop', 'name' => 'Alpha Shop', 'slug' => 'alpha-shop', 'email' => 'alpha@shop.test', 'status' => 'active']);
+        $beta = Tenant::create(['id' => 'beta-shop', 'name' => 'Beta Shop', 'slug' => 'beta-shop', 'email' => 'beta@shop.test', 'status' => 'active']);
+        $beta->domains()->create(['domain' => 'beta-shop.baraa-solutions.com']);
+
+        $response = $this->getJson('/api/v1/central/tenants/resolve?code=beta-shop', ['X-Tenant' => 'alpha-shop']);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.tenant_id', 'beta-shop')
+            ->assertJsonPath('data.name', 'Beta Shop');
+
+        $body = (string) $response->getContent();
+        $this->assertStringNotContainsString('alpha', strtolower($body), 'The resolver leaked the X-Tenant workspace.');
+        $this->assertStringNotContainsString('tenancy_db', $body, 'The resolver exposed tenant database settings.');
+        $this->assertStringNotContainsString('beta@shop.test', $body, 'The resolver exposed the tenant contact email.');
+        $this->assertFalse(tenancy()->initialized, 'The central resolver must never initialise tenancy.');
     }
 
     /**

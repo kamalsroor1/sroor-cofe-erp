@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Actions\Logs;
 
 use App\Models\ActivityLog;
+use App\Support\TenantClock;
 
 final class GetActivityLogsAction
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Fetch paginated and filtered activity logs
      */
@@ -76,7 +81,9 @@ final class GetActivityLogsAction
         $logs = $query->latest('id')->paginate($perPage);
 
         // Optimized Stats
-        $todayLogs = ActivityLog::whereDate('created_at', now()->toDateString());
+        // SETG-2 ext: "today" is the tenant business day, as a [start, end) timestamp range.
+        [$dayStart, $dayEnd] = $this->tenantClock->businessDayRange($this->tenantClock->businessDate());
+        $todayLogs = ActivityLog::where('created_at', '>=', $dayStart)->where('created_at', '<', $dayEnd);
         $stats = [
             'today_total' => (int) (clone $todayLogs)->count(),
             'today_critical' => (int) (clone $todayLogs)->whereIn('action', ['cancelled', 'deleted', 'login_failed'])->count(),

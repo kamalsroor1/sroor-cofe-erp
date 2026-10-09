@@ -15,6 +15,7 @@ use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -33,7 +34,7 @@ final class ExpenseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('expenses.view') && ! $user->can('daily_journal.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('daily_journal.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -45,8 +46,7 @@ final class ExpenseController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -136,8 +136,7 @@ final class ExpenseController extends Controller
      */
     public function store(StoreExpenseRequest $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -159,7 +158,7 @@ final class ExpenseController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('expenses.view') && ! $user->can('daily_journal.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('daily_journal.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

@@ -38,7 +38,7 @@ final class SupplierController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -114,7 +114,7 @@ final class SupplierController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -166,7 +166,7 @@ final class SupplierController extends Controller
     public function statement(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.view') && ! $user->can('suppliers.statement')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('suppliers.manage') && ! $user->can('suppliers.statement')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

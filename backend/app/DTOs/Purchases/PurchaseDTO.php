@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTOs\Purchases;
 
+use App\Support\TenantClock;
+
 final class PurchaseDTO
 {
     public function __construct(
@@ -23,7 +25,7 @@ final class PurchaseDTO
     {
         return new self(
             supplier_id: (int) $data['supplier_id'],
-            purchase_date: (string) ($data['purchase_date'] ?? now()->toDateString()),
+            purchase_date: (string) ($data['purchase_date'] ?? app(TenantClock::class)->businessDate()),
             items: (array) ($data['items'] ?? []),
             paid_amount: isset($data['paid_amount']) ? (string) $data['paid_amount'] : '0.000',
             discount_amount: isset($data['discount_amount']) ? (string) $data['discount_amount'] : '0.000',

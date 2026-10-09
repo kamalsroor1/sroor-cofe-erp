@@ -12,12 +12,14 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Supplier;
+use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
 
 class GetDashboardApiOverviewAction
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly TenantSettings $tenantSettings,
     ) {}
 
     /**
@@ -25,7 +27,7 @@ class GetDashboardApiOverviewAction
      */
     public function execute(?int $storeId = null): array
     {
-        // SETG-2: "today" is the tenant-local calendar day.
+        // SETG-2 (+ ext): "today" is the tenant's current business day (timezone + cutoff).
         $today = $this->tenantClock->today();
 
         // 1. Customers & Suppliers counts and debts
@@ -73,8 +75,8 @@ class GetDashboardApiOverviewAction
             ->latest('opened_at')
             ->first();
 
-        // 6. Low stock count
-        $lowStockCount = Item::active()->lowStock()->count();
+        // 6. Low stock count (SETG-10: items without their own minimum use the tenant default threshold)
+        $lowStockCount = $this->tenantSettings->whereLowStock(Item::active())->count();
 
         // 7. Recent 4 Invoices
         $recentInvoices = Invoice::with(['customer', 'store'])

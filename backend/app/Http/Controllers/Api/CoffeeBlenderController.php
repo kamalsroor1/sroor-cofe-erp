@@ -12,6 +12,7 @@ use App\Http\Requests\CalculateBlendCostRequest;
 use App\Http\Requests\CreateBlenderInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 
 final class CoffeeBlenderController extends Controller
@@ -39,8 +40,7 @@ final class CoffeeBlenderController extends Controller
      */
     public function createInvoice(CreateBlenderInvoiceRequest $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 

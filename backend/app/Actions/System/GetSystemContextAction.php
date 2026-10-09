@@ -12,14 +12,18 @@ use App\Models\Item;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
+use App\Support\TenantClock;
 use Illuminate\Http\Request;
 
 final class GetSystemContextAction
 {
     public function __construct(
         private readonly GetTranslationsAction $translationsAction,
-        private readonly TreasuryService $treasuryService
+        private readonly TreasuryService $treasuryService,
+        private readonly TenantSettings $tenantSettings,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     /**
@@ -55,9 +59,8 @@ final class GetSystemContextAction
 
         // 3. System Alerts & Telemetry
         $alerts = [];
-        $lowStockCount = Item::where('is_active', true)
-            ->whereColumn('current_stock', '<=', 'min_stock_level')
-            ->count();
+        // SETG-10: items without their own minimum use the tenant default threshold.
+        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
 
         if ($lowStockCount > 0) {
             $alerts[] = [
@@ -136,6 +139,14 @@ final class GetSystemContextAction
                 'tax_registration_no' => Setting::get('tax_registration_no') ?: '',
                 'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
                 'server_time' => now()->toDateTimeString(),
+                // SETG-1 ext / SETG-2 ext / SETG-10 / SETG-13: tenant settings the SPA formats and validates with.
+                'currency' => $this->tenantSettings->currency(),
+                'currency_decimals' => $this->tenantSettings->currencyDecimals(),
+                'timezone' => $this->tenantSettings->timezone(),
+                'business_day_cutoff' => $this->tenantSettings->businessDayCutoff(),
+                'business_date' => $this->tenantClock->businessDate(),
+                'inventory_units' => $this->tenantSettings->inventoryUnits(),
+                'low_stock_default_threshold' => $this->tenantSettings->lowStockDefaultThreshold(),
             ],
             'branding' => [
                 'logo_light' => '/logo-light.png?v='.Setting::get('logo_light_v', '1'),

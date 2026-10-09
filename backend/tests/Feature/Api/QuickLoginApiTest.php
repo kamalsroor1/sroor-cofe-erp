@@ -8,20 +8,12 @@ use App\Models\ActivityLog;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Role;
-use Stancl\Tenancy\Events\CreatingDatabase;
-use Stancl\Tenancy\Events\DatabaseCreated;
-use Stancl\Tenancy\Events\DatabaseMigrated;
-use Stancl\Tenancy\Events\MigratingDatabase;
-use Stancl\Tenancy\Events\TenantCreated;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
  * AUTH-1a: testing-only quick login (passwordless, pick-a-user).
@@ -31,19 +23,16 @@ use Tests\TestCase;
  * (EnsureQuickLoginAllowed / QuickLoginGate) must still answer 404 when the config flag is off,
  * when the environment is production, or when no tenant context is initialised.
  *
- * Tenancy is switched by hand (no bootstrappers) because central and tenant schemas share one
- * sqlite :memory: database in the suite. Requests that do not need tenant context (token use
- * on /auth/me, /users) run with tenancy off so they never reach tenancy()->central().
+ * QA-4: runs on a real harness tenant (own database). Tenant context comes from the request
+ * (`X-Tenant`, via tenantGuestHeaders()), exactly like the Android/Electron clients; database
+ * assertions run inside the tenant (inTenant()). The harness admin is deactivated in setUp so
+ * the picker contains only the users each test creates.
  *
  * The default-env case (flag never set => routes not registered) is pinned in AuthApiTest.
  */
-class QuickLoginApiTest extends TestCase
+class QuickLoginApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
-
     private const ENV_KEY = 'QUICK_LOGIN_ENABLED';
-
-    private Store $store;
 
     private Tenant $tenant;
 
@@ -67,39 +56,17 @@ class QuickLoginApiTest extends TestCase
     {
         parent::setUp();
 
-        Event::fake([
-            TenantCreated::class,
-            CreatingDatabase::class,
-            DatabaseCreated::class,
-            MigratingDatabase::class,
-            DatabaseMigrated::class,
-        ]);
+        $this->tenant = $this->createTenant();
+        $adminId = (int) $this->tenantAdmin($this->tenant)->id;
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
-
-        $this->store = Store::create([
-            'name' => 'الفرع الرئيسي',
-            'code' => 'MAIN',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        $this->tenant = Tenant::create([
-            'id' => 'quick-cafe',
-            'name' => 'كافيه التجربة',
-            'slug' => 'quick-cafe',
-            'email' => 'quick@cafe.test',
-            'status' => 'active',
-        ]);
-
-        ActivityLog::query()->delete();
+        $this->inTenant($this->tenant, function () use ($adminId): void {
+            User::query()->whereKey($adminId)->update(['is_active' => false]);
+            ActivityLog::query()->delete();
+        });
     }
 
     protected function tearDown(): void
     {
-        $this->leaveTenant();
-
         putenv(self::ENV_KEY);
         unset($_ENV[self::ENV_KEY], $_SERVER[self::ENV_KEY]);
 
@@ -110,42 +77,46 @@ class QuickLoginApiTest extends TestCase
     // helpers
     // ------------------------------------------------------------------
 
-    private function enterTenant(): void
+    /** @return array<string, string> tenant selection without a token (guest) */
+    private function inTenantHeaders(?Tenant $tenant = null): array
     {
-        tenancy()->tenant = $this->tenant;
-        tenancy()->initialized = true;
+        return $this->tenantGuestHeaders($tenant ?? $this->tenant);
     }
 
-    private function leaveTenant(): void
+    /** @return array<string, string> */
+    private function bearer(string $token, ?Tenant $tenant = null): array
     {
-        if (function_exists('tenancy')) {
-            tenancy()->tenant = null;
-            tenancy()->initialized = false;
-        }
+        return $this->inTenantHeaders($tenant) + ['Authorization' => 'Bearer '.$token];
     }
 
-    private function resetAuth(): void
+    private function makeUser(string $name, string $phone, string $email, bool $active = true, ?string $role = 'cashier', ?Tenant $tenant = null): User
     {
-        $this->app['auth']->forgetGuards();
-        $this->flushHeaders();
+        return $this->inTenant($tenant ?? $this->tenant, function () use ($name, $phone, $email, $active, $role): User {
+            $user = User::factory()->create([
+                'name' => $name,
+                'phone' => $phone,
+                'email' => $email,
+                'password' => Hash::make('secret123'),
+                'is_active' => $active,
+                'default_store_id' => Store::query()->where('is_main', true)->value('id'),
+            ]);
+
+            if ($role !== null) {
+                $user->assignRole(Role::findOrCreate($role));
+            }
+
+            return $user;
+        });
     }
 
-    private function makeUser(string $name, string $phone, string $email, bool $active = true, ?string $role = 'cashier'): User
+    private function tokenCount(?Tenant $tenant = null): int
     {
-        $user = User::factory()->create([
-            'name' => $name,
-            'phone' => $phone,
-            'email' => $email,
-            'password' => Hash::make('secret123'),
-            'is_active' => $active,
-            'default_store_id' => $this->store->id,
-        ]);
+        return $this->inTenant($tenant ?? $this->tenant, fn (): int => PersonalAccessToken::query()->count());
+    }
 
-        if ($role !== null) {
-            $user->assignRole(Role::findOrCreate($role));
-        }
-
-        return $user;
+    private function assertNoQuickLoginActivity(): void
+    {
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseMissing('activity_logs', ['action' => 'api_quick_login']));
     }
 
     private function ttlMinutes(): int
@@ -161,22 +132,20 @@ class QuickLoginApiTest extends TestCase
     {
         config(['auth.quick_login.enabled' => false]);
         $user = $this->makeUser('كاشير', '01000001001', 'c1@sroor.test');
-        $this->enterTenant();
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
             ->assertStatus(404);
-        $this->getJson('/api/v1/auth/quick-login/users')->assertStatus(404);
+        $this->getJson('/api/v1/auth/quick-login/users', $this->inTenantHeaders())->assertStatus(404);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
-        $this->assertDatabaseMissing('activity_logs', ['action' => 'api_quick_login']);
+        $this->assertSame(0, $this->tokenCount());
+        $this->assertNoQuickLoginActivity();
     }
 
     public function test_auth_options_reports_quick_login_false_when_flag_is_off(): void
     {
         config(['auth.quick_login.enabled' => false]);
-        $this->enterTenant();
 
-        $this->getJson('/api/v1/auth/options')
+        $this->getJson('/api/v1/auth/options', $this->inTenantHeaders())
             ->assertStatus(200)
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.quick_login', false)
@@ -193,17 +162,16 @@ class QuickLoginApiTest extends TestCase
         $user = $this->makeUser('كاشير', '01000001002', 'c2@sroor.test');
         $this->app->detectEnvironment(fn (): string => 'production');
         $this->assertTrue($this->app->isProduction());
-        $this->enterTenant();
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
             ->assertStatus(404);
-        $this->getJson('/api/v1/auth/quick-login/users')->assertStatus(404);
+        $this->getJson('/api/v1/auth/quick-login/users', $this->inTenantHeaders())->assertStatus(404);
 
-        $this->getJson('/api/v1/auth/options')
+        $this->getJson('/api/v1/auth/options', $this->inTenantHeaders())
             ->assertStatus(200)
             ->assertJsonPath('data.quick_login', false);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     // ------------------------------------------------------------------
@@ -212,9 +180,7 @@ class QuickLoginApiTest extends TestCase
 
     public function test_auth_options_reports_quick_login_true_when_allowed(): void
     {
-        $this->enterTenant();
-
-        $this->getJson('/api/v1/auth/options')
+        $this->getJson('/api/v1/auth/options', $this->inTenantHeaders())
             ->assertStatus(200)
             ->assertJsonPath('data.quick_login', true)
             ->assertJsonPath('data.default_method', 'password');
@@ -224,12 +190,11 @@ class QuickLoginApiTest extends TestCase
     {
         $this->freezeSecond();
         $user = $this->makeUser('كاشير الوردية', '01000001003', 'c3@sroor.test');
-        $this->enterTenant();
 
         $response = $this->postJson('/api/v1/auth/quick-login', [
             'user_id' => $user->id,
             'device_name' => 'pos-terminal',
-        ]);
+        ], $this->inTenantHeaders());
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -245,26 +210,29 @@ class QuickLoginApiTest extends TestCase
         $this->assertNotSame('', $plain);
         $this->assertNotNull($response->json('data.expires_at'));
 
-        $this->assertDatabaseCount('personal_access_tokens', 1);
-        $pat = PersonalAccessToken::findToken($plain);
-        $this->assertNotNull($pat, 'returned token must be a Sanctum personal access token');
-        $this->assertSame($user->id, (int) $pat->tokenable_id);
-        $this->assertSame(['quick-login'], $pat->abilities, 'quick-login token must carry only the quick-login ability');
-        $this->assertFalse($pat->can('*'));
-        $this->assertNotNull($pat->expires_at, 'quick-login token must expire');
-        $this->assertTrue(
-            $pat->expires_at->equalTo(now()->addMinutes($this->ttlMinutes())),
-            'expires_at must be now + token_ttl_minutes, got '.$pat->expires_at->toDateTimeString()
-        );
+        $ttl = $this->ttlMinutes();
+        $this->inTenant($this->tenant, function () use ($plain, $user, $ttl): void {
+            $this->assertDatabaseCount('personal_access_tokens', 1);
+            $pat = PersonalAccessToken::findToken($plain);
+            $this->assertNotNull($pat, 'returned token must be a Sanctum personal access token');
+            $this->assertSame($user->id, (int) $pat->tokenable_id);
+            $this->assertSame(['quick-login'], $pat->abilities, 'quick-login token must carry only the quick-login ability');
+            $this->assertFalse($pat->can('*'));
+            $this->assertNotNull($pat->expires_at, 'quick-login token must expire');
+            $this->assertTrue(
+                $pat->expires_at->equalTo(now()->addMinutes($ttl)),
+                'expires_at must be now + token_ttl_minutes, got '.$pat->expires_at->toDateTimeString()
+            );
 
-        $this->assertNull($user->fresh()->api_token, 'quick-login must never write users.api_token');
-        $this->assertDatabaseMissing('users', ['api_token' => $plain]);
+            $this->assertNull(User::query()->findOrFail($user->id)->api_token, 'quick-login must never write users.api_token');
+            $this->assertDatabaseMissing('users', ['api_token' => $plain]);
 
-        $this->assertDatabaseHas('activity_logs', [
-            'module' => 'auth',
-            'action' => 'api_quick_login',
-            'user_id' => $user->id,
-        ]);
+            $this->assertDatabaseHas('activity_logs', [
+                'module' => 'auth',
+                'action' => 'api_quick_login',
+                'user_id' => $user->id,
+            ]);
+        });
     }
 
     // ------------------------------------------------------------------
@@ -275,18 +243,17 @@ class QuickLoginApiTest extends TestCase
     {
         $perMinute = (int) config('auth.quick_login.per_minute', 5);
         $this->assertGreaterThan(0, $perMinute);
-        $this->enterTenant();
 
         for ($i = 0; $i < $perMinute; $i++) {
-            $status = $this->postJson('/api/v1/auth/quick-login', ['user_id' => 987654 + $i])->status();
+            $status = $this->postJson('/api/v1/auth/quick-login', ['user_id' => 987654 + $i], $this->inTenantHeaders())->status();
             $this->assertNotSame(429, $status, "request #{$i} must not be throttled yet");
             $this->assertNotSame(404, $status, 'quick-login route must be reachable when allowed');
         }
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 987000])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 987000], $this->inTenantHeaders())
             ->assertStatus(429);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     // ------------------------------------------------------------------
@@ -296,80 +263,74 @@ class QuickLoginApiTest extends TestCase
     public function test_quick_login_refuses_super_admin_role(): void
     {
         $super = $this->makeUser('مدير المنصة', '01000001004', 'super@sroor.test', true, 'super_admin');
-        $this->enterTenant();
 
-        $response = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $super->id, 'device_name' => 'pos-1']);
+        $response = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $super->id, 'device_name' => 'pos-1'], $this->inTenantHeaders());
 
         $this->assertContains($response->status(), [403, 422], 'super_admin must not be quick-logged-in');
         $this->assertNull($response->json('data.token'));
-        $this->assertDatabaseCount('personal_access_tokens', 0);
-        $this->assertDatabaseMissing('activity_logs', ['action' => 'api_quick_login']);
+        $this->assertSame(0, $this->tokenCount());
+        $this->assertNoQuickLoginActivity();
     }
 
     public function test_quick_login_refuses_inactive_user(): void
     {
         $inactive = $this->makeUser('موظف موقوف', '01000001005', 'off@sroor.test', false);
-        $this->enterTenant();
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $inactive->id, 'device_name' => 'pos-1'])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $inactive->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
             ->assertStatus(422)
             ->assertJsonPath('success', false);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     public function test_quick_login_validation_rejects_bad_payloads(): void
     {
-        $this->enterTenant();
-
-        $this->postJson('/api/v1/auth/quick-login', [])
+        $this->postJson('/api/v1/auth/quick-login', [], $this->inTenantHeaders())
             ->assertStatus(422)
             ->assertJsonValidationErrors(['user_id']);
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 'abc'])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 'abc'], $this->inTenantHeaders())
             ->assertStatus(422)
             ->assertJsonValidationErrors(['user_id']);
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 0])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 0], $this->inTenantHeaders())
             ->assertStatus(422)
             ->assertJsonValidationErrors(['user_id']);
 
         $user = $this->makeUser('كاشير', '01000001006', 'c6@sroor.test');
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => str_repeat('x', 101)])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => str_repeat('x', 101)], $this->inTenantHeaders())
             ->assertStatus(422)
             ->assertJsonValidationErrors(['device_name']);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     public function test_quick_login_cannot_be_driven_by_phone_or_email(): void
     {
         $user = $this->makeUser('كاشير', '01000001007', 'c7@sroor.test');
-        $this->enterTenant();
 
-        $this->postJson('/api/v1/auth/quick-login', ['login' => '01000001007', 'device_name' => 'pos-1'])
+        $this->postJson('/api/v1/auth/quick-login', ['login' => '01000001007', 'device_name' => 'pos-1'], $this->inTenantHeaders())
             ->assertStatus(422)
             ->assertJsonValidationErrors(['user_id']);
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => '01000001007'])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => '01000001007'], $this->inTenantHeaders())
             ->assertStatus(422);
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 'c7@sroor.test'])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => 'c7@sroor.test'], $this->inTenantHeaders())
             ->assertStatus(422);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
-        $this->assertNull($user->fresh()->api_token);
+        $this->assertSame(0, $this->tokenCount());
+        $this->assertNull($this->inTenant($this->tenant, fn () => User::query()->findOrFail($user->id)->api_token));
     }
 
     public function test_quick_login_unknown_user_gets_422(): void
     {
-        $this->enterTenant();
-        $missingId = ((int) User::query()->max('id')) + 1000;
+        $missingId = $this->inTenant($this->tenant, fn (): int => ((int) User::query()->max('id')) + 1000);
 
-        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $missingId])
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $missingId], $this->inTenantHeaders())
             ->assertStatus(422);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     // ------------------------------------------------------------------
@@ -382,9 +343,8 @@ class QuickLoginApiTest extends TestCase
         $mohamed = $this->makeUser('محمد أمين المخزن', '01000002002', 'mohamed-leak@sroor.test', true, 'storekeeper');
         $this->makeUser('حساب موقوف', '01000002003', 'inactive-leak@sroor.test', false);
         $this->makeUser('مدير المنصة', '01000002004', 'super-leak@sroor.test', true, 'super_admin');
-        $this->enterTenant();
 
-        $response = $this->getJson('/api/v1/auth/quick-login/users');
+        $response = $this->getJson('/api/v1/auth/quick-login/users', $this->inTenantHeaders());
 
         $response->assertStatus(200)->assertJsonPath('success', true);
 
@@ -414,6 +374,7 @@ class QuickLoginApiTest extends TestCase
         $user = $this->makeUser('كاشير', '01000001008', 'c8@sroor.test');
         $this->assertFalse(tenancy()->initialized);
 
+        // No X-Tenant and a central host: the request never enters a tenant.
         $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'])
             ->assertStatus(404);
         $this->getJson('/api/v1/auth/quick-login/users')->assertStatus(404);
@@ -421,7 +382,7 @@ class QuickLoginApiTest extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('data.quick_login', false);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     // ------------------------------------------------------------------
@@ -431,30 +392,23 @@ class QuickLoginApiTest extends TestCase
     public function test_quick_login_token_is_rejected_after_ttl(): void
     {
         $user = $this->makeUser('كاشير', '01000001009', 'c9@sroor.test');
-        $this->enterTenant();
 
-        $token = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'])
+        $token = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $user->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
             ->assertStatus(200)
             ->json('data.token');
         $this->assertIsString($token);
 
-        $this->leaveTenant();
-        $this->resetAuth();
-
-        $this->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/api/v1/auth/me')
+        $this->getJson('/api/v1/auth/me', $this->bearer($token))
             ->assertStatus(200)
             ->assertJsonPath('data.user.id', $user->id);
 
-        $this->resetAuth();
         $this->travel($this->ttlMinutes() + 1)->minutes();
 
-        $this->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/api/v1/auth/me')
+        $this->getJson('/api/v1/auth/me', $this->bearer($token))
             ->assertStatus(401)
             ->assertJsonPath('success', false);
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertSame(0, $this->tokenCount());
     }
 
     // ------------------------------------------------------------------
@@ -464,26 +418,53 @@ class QuickLoginApiTest extends TestCase
     public function test_quick_login_token_cannot_reach_user_management(): void
     {
         $admin = $this->makeUser('مدير الفرع', '01000001010', 'admin-ql@sroor.test', true, 'admin');
-        $this->enterTenant();
 
-        $quickToken = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $admin->id, 'device_name' => 'pos-1'])
+        $quickToken = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $admin->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
             ->assertStatus(200)
             ->json('data.token');
         $this->assertIsString($quickToken);
 
-        $this->leaveTenant();
-        $this->resetAuth();
-
-        $this->withHeader('Authorization', 'Bearer '.$quickToken)
-            ->getJson('/api/v1/users')
+        $this->getJson('/api/v1/users', $this->bearer($quickToken))
             ->assertStatus(403);
 
-        $this->resetAuth();
-
         // Same admin with a full-ability token is allowed, proving the 403 is the token scope.
-        $fullToken = $admin->createToken('full')->plainTextToken;
-        $this->withHeader('Authorization', 'Bearer '.$fullToken)
-            ->getJson('/api/v1/users')
+        $this->getJson('/api/v1/users', $this->tenantHeaders($this->tenant, $admin))
             ->assertStatus(200);
+    }
+
+    // ------------------------------------------------------------------
+    // (k) QA-4 tenant isolation
+    // ------------------------------------------------------------------
+
+    public function test_quick_login_cannot_pick_a_user_that_only_exists_in_another_tenant(): void
+    {
+        $other = $this->createTenant();
+        $foreign = $this->makeUser('كاشير مستأجر آخر', '01000003001', 'foreign@sroor.test', true, 'cashier', $other);
+        $this->assertFalse($this->inTenant($this->tenant, fn (): bool => User::query()->whereKey($foreign->id)->exists()));
+
+        $this->postJson('/api/v1/auth/quick-login', ['user_id' => $foreign->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
+            ->assertStatus(422);
+
+        $this->assertSame(0, $this->tokenCount());
+        $this->assertSame(0, $this->tokenCount($other));
+    }
+
+    public function test_quick_login_picker_and_token_never_cross_tenants(): void
+    {
+        $other = $this->createTenant();
+        $mine = $this->makeUser('كاشير محلي', '01000003002', 'mine@sroor.test');
+        $this->makeUser('كاشير مستأجر آخر', '01000003003', 'theirs@sroor.test', true, 'cashier', $other);
+
+        $picker = $this->getJson('/api/v1/auth/quick-login/users', $this->inTenantHeaders())->assertOk();
+        $this->assertNotContains('كاشير مستأجر آخر', array_column((array) $picker->json('data'), 'name'));
+
+        $token = $this->postJson('/api/v1/auth/quick-login', ['user_id' => $mine->id, 'device_name' => 'pos-1'], $this->inTenantHeaders())
+            ->assertOk()
+            ->json('data.token');
+        $this->assertIsString($token);
+
+        // The token lives in this tenant's database only: presenting it to another tenant is a 401.
+        $this->getJson('/api/v1/auth/me', $this->bearer($token, $other))->assertStatus(401);
+        $this->getJson('/api/v1/auth/me', $this->bearer($token))->assertOk();
     }
 }

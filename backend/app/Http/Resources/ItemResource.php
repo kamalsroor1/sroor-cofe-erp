@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Item;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,7 +17,7 @@ class ItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+            ?: ClientStoreGuard::verified($request)
             ?: auth()->user()?->getCurrentStore()?->id;
 
         $storeStock = $storeId ? (float) $this->getStockInStore((int) $storeId) : (float) $this->current_stock;

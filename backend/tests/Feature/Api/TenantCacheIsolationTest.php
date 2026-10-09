@@ -10,39 +10,28 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\Tenant;
-use App\Models\User;
 use App\Services\InventoryAnalyticsService;
 use App\Services\ProfitLossService;
 use App\Support\TenantCache;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
  * P0-X1 regression: report caches (P&L, ABC) must be keyed per tenant and
  * clearCache() must actually invalidate the keys the reports write.
  *
- * Tenancy is switched by hand (no bootstrappers) so both "tenants" share the
- * same sqlite :memory: DB. That is the worst case for a cache leak: if a
- * report computed for tenant A is served to tenant B, B sees stale/foreign data.
+ * QA-4: two real harness tenants, each with its own database. Tenant B gets a store
+ * with the SAME id as tenant A's main store, so the report cache keys of both tenants
+ * differ ONLY by the tenant scope. That is the worst case for a cache leak: if a report
+ * computed for tenant A is served to tenant B, B sees A's (empty) data instead of its own.
  */
-class TenantCacheIsolationTest extends TestCase
+class TenantCacheIsolationTest extends TenantTestCase
 {
-    use RefreshDatabase;
-
-    private Store $store;
-
-    private User $admin;
-
-    private Customer $customer;
-
-    private Item $item;
-
     private Tenant $tenantA;
 
     private Tenant $tenantB;
+
+    /** Same id in both tenants (B's store is created with A's main store id). */
+    private int $storeId;
 
     private string $from;
 
@@ -52,107 +41,100 @@ class TenantCacheIsolationTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        $this->tenantA = $this->createTenant();
+        $this->tenantB = $this->createTenant();
+        $this->storeId = (int) $this->tenantStore($this->tenantA)->id;
 
-        $this->store = Store::create([
-            'name' => 'المخزن الرئيسي',
-            'code' => 'MAIN-001',
-            'type' => 'warehouse',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        $this->admin = User::factory()->create([
-            'name' => 'كمال سرور',
-            'phone' => self::ADMIN_PHONE,
-            'password' => Hash::make('password'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $this->admin->assignRole(Role::findByName('admin'));
-
-        $this->customer = Customer::create([
-            'name' => 'كافيه العروبة',
-            'phone' => '01000007003',
-            'current_balance' => '0.000',
-            'is_active' => true,
-        ]);
-
-        $this->item = Item::create([
-            'name' => 'بن برازيلي',
-            'code' => 'BN-QA-01',
-            'category' => 'coffee_beans',
-            'cost_price' => '300.000',
-            'selling_price' => '500.000',
-            'current_stock' => '50.000',
-            'min_stock_level' => '1.000',
-            'is_active' => true,
-        ]);
-
-        $this->tenantA = new Tenant(['id' => 'tenant-a']);
-        $this->tenantB = new Tenant(['id' => 'tenant-b']);
+        $storeId = $this->storeId;
+        $this->inTenant($this->tenantB, function () use ($storeId): void {
+            $store = new Store;
+            $store->forceFill([
+                'id' => $storeId,
+                'name' => 'المخزن الرئيسي',
+                'code' => 'MAIN-001',
+                'type' => 'warehouse',
+                'is_main' => false,
+                'is_active' => true,
+            ])->save();
+        });
+        $this->assertTrue($this->inTenant($this->tenantB, fn (): bool => Store::query()->whereKey($storeId)->exists()));
 
         $this->from = now()->subDays(7)->toDateString();
         $this->to = now()->toDateString();
     }
 
-    protected function tearDown(): void
+    /** One confirmed 1000.000 invoice on $this->storeId inside $tenant (2 kg at 500.000, cost 300.000). */
+    private function createConfirmedInvoice(Tenant $tenant, string $number = 'INV-QA-001'): void
     {
-        tenancy()->tenant = null;
-        tenancy()->initialized = false;
+        $adminId = (int) $this->tenantAdmin($tenant)->id;
+        $storeId = $this->storeId;
 
-        parent::tearDown();
+        $this->inTenant($tenant, function () use ($adminId, $storeId, $number): void {
+            $customer = Customer::create([
+                'name' => 'كافيه العروبة',
+                'phone' => '01000007003',
+                'current_balance' => '0.000',
+                'is_active' => true,
+            ]);
+
+            $item = Item::create([
+                'name' => 'بن برازيلي',
+                'code' => 'BN-QA-01',
+                'category' => 'coffee_beans',
+                'cost_price' => '300.000',
+                'selling_price' => '500.000',
+                'current_stock' => '50.000',
+                'min_stock_level' => '1.000',
+                'is_active' => true,
+            ]);
+
+            $invoice = Invoice::create([
+                'invoice_number' => $number,
+                'store_id' => $storeId,
+                'customer_id' => $customer->id,
+                'user_id' => $adminId,
+                'invoice_date' => now()->toDateString(),
+                'discount_amount' => '0.000',
+                'net_total' => '1000.000',
+                'paid_amount' => '1000.000',
+                'remaining_amount' => '0.000',
+                'total_cost' => '600.000',
+                'status' => 'confirmed',
+                'payment_method' => 'cash',
+            ]);
+
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'item_id' => $item->id,
+                'quantity' => '2.000',
+                'unit_price' => '500.000',
+                'cost_price' => '300.000',
+                'discount_amount' => '0.000',
+                'total_price' => '1000.000',
+            ]);
+        });
     }
 
-    private function actAsTenant(?Tenant $tenant): void
+    /** @return array<string, mixed> */
+    private function profitLoss(Tenant $tenant, ?int $storeId): array
     {
-        tenancy()->tenant = $tenant;
-        tenancy()->initialized = $tenant !== null;
+        return $this->inTenant($tenant, fn (): array => app(ProfitLossService::class)->getProfitLossReport($this->from, $this->to, $storeId));
     }
 
-    private function createConfirmedInvoice(string $number = 'INV-QA-001'): Invoice
+    /** @return array<string, mixed> */
+    private function abc(Tenant $tenant): array
     {
-        $invoice = Invoice::create([
-            'invoice_number' => $number,
-            'store_id' => $this->store->id,
-            'customer_id' => $this->customer->id,
-            'user_id' => $this->admin->id,
-            'invoice_date' => now()->toDateString(),
-            'discount_amount' => '0.000',
-            'net_total' => '1000.000',
-            'paid_amount' => '1000.000',
-            'remaining_amount' => '0.000',
-            'total_cost' => '600.000',
-            'status' => 'confirmed',
-            'payment_method' => 'cash',
-        ]);
-
-        InvoiceItem::create([
-            'invoice_id' => $invoice->id,
-            'item_id' => $this->item->id,
-            'quantity' => '2.000',
-            'unit_price' => '500.000',
-            'cost_price' => '300.000',
-            'discount_amount' => '0.000',
-            'total_price' => '1000.000',
-        ]);
-
-        return $invoice;
+        return $this->inTenant($tenant, fn (): array => app(InventoryAnalyticsService::class)->getAbcAnalysis($this->from, $this->to, $this->storeId));
     }
 
     public function test_profit_loss_report_is_not_served_from_another_tenants_cache(): void
     {
-        $service = app(ProfitLossService::class);
-
-        $this->actAsTenant($this->tenantA);
-        $reportA = $service->getProfitLossReport($this->from, $this->to, $this->store->id);
+        $reportA = $this->profitLoss($this->tenantA, $this->storeId);
         $this->assertSame('0.000', $reportA['grand_revenue']);
 
-        $this->createConfirmedInvoice();
+        $this->createConfirmedInvoice($this->tenantB);
 
-        $this->actAsTenant($this->tenantB);
-        $reportB = $service->getProfitLossReport($this->from, $this->to, $this->store->id);
+        $reportB = $this->profitLoss($this->tenantB, $this->storeId);
 
         $this->assertSame(
             '1000.000',
@@ -160,20 +142,19 @@ class TenantCacheIsolationTest extends TestCase
             'Tenant B received tenant A\'s cached P&L report (cache key is not tenant-scoped).'
         );
         $this->assertSame(1, $reportB['stores'][0]['invoices_count']);
+
+        // And A still sees only its own (empty) data.
+        $this->assertSame('0.000', $this->profitLoss($this->tenantA, $this->storeId)['grand_revenue']);
     }
 
     public function test_abc_analysis_is_not_served_from_another_tenants_cache(): void
     {
-        $service = app(InventoryAnalyticsService::class);
-
-        $this->actAsTenant($this->tenantA);
-        $reportA = $service->getAbcAnalysis($this->from, $this->to, $this->store->id);
+        $reportA = $this->abc($this->tenantA);
         $this->assertSame('0.000', $reportA['total_revenue']);
 
-        $this->createConfirmedInvoice();
+        $this->createConfirmedInvoice($this->tenantB);
 
-        $this->actAsTenant($this->tenantB);
-        $reportB = $service->getAbcAnalysis($this->from, $this->to, $this->store->id);
+        $reportB = $this->abc($this->tenantB);
 
         $this->assertSame(
             '1000.000',
@@ -184,16 +165,13 @@ class TenantCacheIsolationTest extends TestCase
 
     public function test_profit_loss_clear_cache_invalidates_the_cached_report(): void
     {
-        $service = app(ProfitLossService::class);
-
-        $this->actAsTenant($this->tenantA);
-        $before = $service->getProfitLossReport($this->from, $this->to, $this->store->id);
+        $before = $this->profitLoss($this->tenantA, $this->storeId);
         $this->assertSame('0.000', $before['grand_revenue']);
 
-        $this->createConfirmedInvoice();
-        ProfitLossService::clearCache();
+        $this->createConfirmedInvoice($this->tenantA);
+        $this->inTenant($this->tenantA, fn () => ProfitLossService::clearCache());
 
-        $after = $service->getProfitLossReport($this->from, $this->to, $this->store->id);
+        $after = $this->profitLoss($this->tenantA, $this->storeId);
         $this->assertSame(
             '1000.000',
             $after['grand_revenue'],
@@ -203,31 +181,25 @@ class TenantCacheIsolationTest extends TestCase
 
     public function test_profit_loss_clear_cache_for_store_invalidates_the_cached_report(): void
     {
-        $service = app(ProfitLossService::class);
+        $this->profitLoss($this->tenantA, $this->storeId);
+        $this->profitLoss($this->tenantA, null);
 
-        $this->actAsTenant($this->tenantA);
-        $service->getProfitLossReport($this->from, $this->to, $this->store->id);
-        $service->getProfitLossReport($this->from, $this->to, null);
+        $this->createConfirmedInvoice($this->tenantA);
+        $this->inTenant($this->tenantA, fn () => ProfitLossService::clearCache($this->storeId));
 
-        $this->createConfirmedInvoice();
-        ProfitLossService::clearCache($this->store->id);
-
-        $this->assertSame('1000.000', $service->getProfitLossReport($this->from, $this->to, $this->store->id)['grand_revenue']);
-        $this->assertSame('1000.000', $service->getProfitLossReport($this->from, $this->to, null)['grand_revenue']);
+        $this->assertSame('1000.000', $this->profitLoss($this->tenantA, $this->storeId)['grand_revenue']);
+        $this->assertSame('1000.000', $this->profitLoss($this->tenantA, null)['grand_revenue']);
     }
 
     public function test_abc_clear_cache_invalidates_the_cached_report(): void
     {
-        $service = app(InventoryAnalyticsService::class);
-
-        $this->actAsTenant($this->tenantA);
-        $before = $service->getAbcAnalysis($this->from, $this->to, $this->store->id);
+        $before = $this->abc($this->tenantA);
         $this->assertSame('0.000', $before['total_revenue']);
 
-        $this->createConfirmedInvoice();
-        InventoryAnalyticsService::clearCache();
+        $this->createConfirmedInvoice($this->tenantA);
+        $this->inTenant($this->tenantA, fn () => InventoryAnalyticsService::clearCache());
 
-        $after = $service->getAbcAnalysis($this->from, $this->to, $this->store->id);
+        $after = $this->abc($this->tenantA);
         $this->assertSame(
             '1000.000',
             (string) $after['total_revenue'],
@@ -237,41 +209,36 @@ class TenantCacheIsolationTest extends TestCase
 
     public function test_clear_cache_in_one_tenant_does_not_require_touching_the_other(): void
     {
-        $service = app(ProfitLossService::class);
-
         // Both tenants cache an empty report.
-        $this->actAsTenant($this->tenantA);
-        $service->getProfitLossReport($this->from, $this->to, $this->store->id);
-        $this->actAsTenant($this->tenantB);
-        $service->getProfitLossReport($this->from, $this->to, $this->store->id);
+        $this->profitLoss($this->tenantA, $this->storeId);
+        $this->profitLoss($this->tenantB, $this->storeId);
 
-        $this->createConfirmedInvoice();
+        $this->createConfirmedInvoice($this->tenantA);
+        $this->createConfirmedInvoice($this->tenantB);
 
         // Only tenant A clears; A sees fresh data.
-        $this->actAsTenant($this->tenantA);
-        ProfitLossService::clearCache();
-        $this->assertSame('1000.000', $service->getProfitLossReport($this->from, $this->to, $this->store->id)['grand_revenue']);
+        $this->inTenant($this->tenantA, fn () => ProfitLossService::clearCache());
+        $this->assertSame('1000.000', $this->profitLoss($this->tenantA, $this->storeId)['grand_revenue']);
+
+        // B's cache was not invalidated by A's clear: B is still served its own cached (stale) report.
+        $this->assertSame('0.000', $this->profitLoss($this->tenantB, $this->storeId)['grand_revenue']);
     }
 
     public function test_tenant_cache_key_differs_between_tenants_and_central(): void
     {
-        $this->actAsTenant(null);
+        $this->endTenancy();
         $central = TenantCache::key('x');
 
-        $this->actAsTenant($this->tenantA);
-        $keyA = TenantCache::key('x');
-
-        $this->actAsTenant($this->tenantB);
-        $keyB = TenantCache::key('x');
+        $keyA = $this->inTenant($this->tenantA, fn (): string => TenantCache::key('x'));
+        $keyB = $this->inTenant($this->tenantB, fn (): string => TenantCache::key('x'));
 
         $this->assertNotSame($keyA, $keyB);
         $this->assertNotSame($keyA, $central);
         $this->assertNotSame($keyB, $central);
-        $this->assertStringContainsString('tenant-a', $keyA);
-        $this->assertStringContainsString('tenant-b', $keyB);
+        $this->assertStringContainsString((string) $this->tenantA->getTenantKey(), $keyA);
+        $this->assertStringContainsString((string) $this->tenantB->getTenantKey(), $keyB);
 
         // Deterministic within a tenant.
-        $this->actAsTenant($this->tenantA);
-        $this->assertSame($keyA, TenantCache::key('x'));
+        $this->assertSame($keyA, $this->inTenant($this->tenantA, fn (): string => TenantCache::key('x')));
     }
 }

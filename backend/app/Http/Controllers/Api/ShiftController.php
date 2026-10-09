@@ -16,6 +16,7 @@ use App\Http\Requests\OpenShiftRequest;
 use App\Http\Resources\CashShiftResource;
 use App\Models\CashShift;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,12 +35,13 @@ final class ShiftController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access') && ! $user->can('pos.sell')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        $clientStoreId = ClientStoreGuard::verified($request);
         $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+            ?: $clientStoreId
             ?: $user?->getCurrentStore()?->id;
 
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
@@ -70,12 +72,11 @@ final class ShiftController extends Controller
     public function current(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access') && ! $user->can('pos.sell')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -103,8 +104,7 @@ final class ShiftController extends Controller
      */
     public function open(OpenShiftRequest $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -127,8 +127,7 @@ final class ShiftController extends Controller
     {
         $shiftId = (int) ($request->input('shift_id') ?: $request->route('id'));
         if (! $shiftId) {
-            $storeId = $request->header('X-Store-Id')
-                ?: $request->input('store_id')
+            $storeId = ClientStoreGuard::concrete($request)
                 ?: auth()->user()?->getCurrentStore()?->id;
             $shiftId = (int) CashShift::where('status', 'open')->when($storeId, fn ($q) => $q->where('store_id', $storeId))->value('id');
         }
@@ -153,7 +152,7 @@ final class ShiftController extends Controller
     public function zReport(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access') && ! $user->can('pos.sell')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

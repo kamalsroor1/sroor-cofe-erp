@@ -6,10 +6,15 @@ namespace App\Actions\Stores;
 
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Services\Settings\TenantSettings;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class GetStoreStocksAction
 {
+    public function __construct(
+        private readonly TenantSettings $tenantSettings,
+    ) {}
+
     /**
      * Fetch filtered store stocks with valuations
      */
@@ -30,8 +35,9 @@ final class GetStoreStocksAction
         }
 
         if ($stockStatus === 'low') {
+            // SETG-10: the item's own minimum, else the tenant default threshold.
             $query->whereHas('item', function ($iq) {
-                $iq->whereColumn('store_stocks.quantity', '<=', 'items.min_stock_level');
+                $this->tenantSettings->whereLowStock($iq, 'store_stocks.quantity', 'items.min_stock_level');
             });
         } elseif ($stockStatus === 'out') {
             $query->where('quantity', '<=', 0);

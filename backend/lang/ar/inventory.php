@@ -419,4 +419,8 @@ return [
     'min_selling_price' => 'أقل سعر بيع',
     'quantity' => 'الكمية',
     'view_transfer_details' => 'عرض تفاصيل التحويل',
+
+    // SETG-10 (W2 lane 2B)
+    'unit_not_in_tenant_list' => 'الوحدة «:unit» مش موجودة في قائمة وحدات القياس بتاعة المحل. اختار وحدة من القائمة أو ضيفها من الإعدادات.',
+    'switched_to_store' => 'تم التبديل إلى فرع: :store',
 ];

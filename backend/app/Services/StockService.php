@@ -7,6 +7,7 @@ use App\Models\StockDeposit;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Support\TenantClock;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,21 @@ use Illuminate\Support\Facades\DB;
 
 class StockService
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
+    /**
+     * The user a stock row is attributed to: the authenticated user, else the explicit
+     * actor passed by a job/command, else NULL ("system"). Never a made-up user id.
+     */
+    private function actorId(?int $explicit): ?int
+    {
+        $authId = Auth::id();
+
+        return $authId !== null ? (int) $authId : $explicit;
+    }
+
     /**
      * Check if item has enough available stock (globally or in a specific store/van)
      */
@@ -41,7 +57,8 @@ class StockService
         string $documentNumber,
         string $movementType = 'sales_out',
         ?string $notes = null,
-        ?int $storeId = null
+        ?int $storeId = null,
+        ?int $actorId = null,
     ): StockMovement {
         // 1. Lock master item row
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
@@ -92,7 +109,7 @@ class StockService
             'source_type' => get_class($source),
             'source_id' => $source->getKey(),
             'document_number' => $documentNumber,
-            'user_id' => Auth::id() ?? 1,
+            'user_id' => $this->actorId($actorId),
             'notes' => $notes ?? "صرف مخزني للمستند {$documentNumber}",
         ]);
     }
@@ -108,7 +125,8 @@ class StockService
         string $documentNumber,
         string $movementType = 'purchase_in',
         ?string $notes = null,
-        ?int $storeId = null
+        ?int $storeId = null,
+        ?int $actorId = null,
     ): StockMovement {
         // 1. Lock master item row
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
@@ -155,7 +173,7 @@ class StockService
             'source_type' => get_class($source),
             'source_id' => $source->getKey(),
             'document_number' => $documentNumber,
-            'user_id' => Auth::id() ?? 1,
+            'user_id' => $this->actorId($actorId),
             'notes' => $notes ?? "إضافة مخزنية للمستند {$documentNumber}",
         ]);
     }
@@ -170,7 +188,8 @@ class StockService
         string $depositType = 'manual_deposit',
         ?string $reason = null,
         ?string $depositDate = null,
-        ?int $storeId = null
+        ?int $storeId = null,
+        ?int $actorId = null,
     ): StockDeposit {
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
@@ -207,12 +226,12 @@ class StockService
 
         $deposit = StockDeposit::create([
             'item_id' => $lockedItem->id,
-            'user_id' => Auth::id() ?? 1,
+            'user_id' => $this->actorId($actorId),
             'deposit_type' => $depositType,
             'quantity' => $quantity,
             'cost_price' => $costPrice,
             'reason' => $reason,
-            'deposit_date' => $depositDate ?? now()->toDateString(),
+            'deposit_date' => $depositDate ?? $this->tenantClock->businessDate(),
         ]);
 
         StockMovement::create([
@@ -226,7 +245,7 @@ class StockService
             'source_type' => StockDeposit::class,
             'source_id' => $deposit->id,
             'document_number' => "DEP-{$deposit->id}",
-            'user_id' => Auth::id() ?? 1,
+            'user_id' => $this->actorId($actorId),
             'notes' => $reason ?? 'إيداع مخزني يدوي',
         ]);
 
@@ -241,9 +260,10 @@ class StockService
         Item $item,
         string $actualQuantity,
         string $reason,
-        ?int $storeId = null
+        ?int $storeId = null,
+        ?int $actorId = null,
     ): StockMovement {
-        return DB::transaction(function () use ($item, $actualQuantity, $reason, $storeId) {
+        return DB::transaction(function () use ($item, $actualQuantity, $reason, $storeId, $actorId) {
             $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
             if (! $storeId) {
@@ -296,7 +316,7 @@ class StockService
             $isSurplus = bccomp($diff, '0.000', 3) > 0;
             $movementType = $isSurplus ? 'stock_adjustment_in' : 'stock_adjustment_out';
             $adjQty = $isSurplus ? $diff : bcmul($diff, '-1', 3);
-            $docNumber = 'ADJ-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -4));
+            $docNumber = 'ADJ-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
 
             $movement = StockMovement::create([
                 'item_id' => $lockedItem->id,
@@ -309,7 +329,7 @@ class StockService
                 'source_type' => Item::class,
                 'source_id' => $lockedItem->id,
                 'document_number' => $docNumber,
-                'user_id' => Auth::id() ?? 1,
+                'user_id' => $this->actorId($actorId),
                 'notes' => "تسوية جردية: {$reason} (الرصيد قبل: {$currentStoreQty} | الفعلي الجديد: {$actualQuantity})",
             ]);
 

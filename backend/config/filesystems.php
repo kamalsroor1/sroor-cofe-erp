@@ -66,6 +66,18 @@ return [
             'report' => false,
         ],
 
+        // App release binaries (APK / desktop installer) read from a tenant host. Same
+        // physical root as the central 'public' disk, where the super-admin uploads them,
+        // but never re-rooted by tenancy (not in tenancy.filesystem.disks). Read through
+        // App\Models\AppVersion::releaseDisk() only.
+        'app_releases' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         // Platform branding assets (BRND-2): logo, favicon, app icon.
         'central_public' => [
             'driver' => 'local',

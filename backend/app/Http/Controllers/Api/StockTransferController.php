@@ -14,6 +14,9 @@ use App\Http\Requests\StoreStockTransferRequest;
 use App\Http\Resources\StockTransferResource;
 use App\Models\StockTransfer;
 use App\Models\Store;
+use App\Models\User;
+use App\Support\ActiveStore;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,7 +33,7 @@ final class StockTransferController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('stores.view') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -42,14 +45,18 @@ final class StockTransferController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
         $query = StockTransfer::query()->with(['fromStore', 'toStore', 'user', 'items.item']);
 
-        if ($storeId && (! $fromStore && ! $toStore)) {
+        // A user who cannot see every store always stays limited to transfers touching the active
+        // store, even when filtering by from/to store (else a branch could list other branches' moves).
+        $restrictToActiveStore = (! $fromStore && ! $toStore)
+            || ($user instanceof User && ! ActiveStore::canViewAll($user));
+
+        if ($storeId && $restrictToActiveStore) {
             $query->where(function ($q) use ($storeId) {
                 $q->where('from_store_id', (int) $storeId)
                     ->orWhere('to_store_id', (int) $storeId);
@@ -114,7 +121,7 @@ final class StockTransferController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('stores.view') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

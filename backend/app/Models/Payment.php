@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $supplier_id
  * @property int|null $invoice_id
  * @property int|null $purchase_id
- * @property int $user_id
+ * @property int|null $user_id
  * @property string $amount
  * @property Carbon|null $payment_date
  * @property string $payment_method

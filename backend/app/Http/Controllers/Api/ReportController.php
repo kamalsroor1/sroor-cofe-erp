@@ -17,6 +17,7 @@ use App\Http\Requests\FilterReportRequest;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,9 @@ final class ReportController extends Controller
 
     private function buildDTO(FilterReportRequest|Request $request): ReportFilterDTO
     {
+        // ReportFilterDTO lets a query/body store_id override the header: access-check it first (403).
+        ClientStoreGuard::verified($request);
+
         $headerStoreId = $request->header('X-Store-Id')
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
@@ -43,7 +47,7 @@ final class ReportController extends Controller
         return ReportFilterDTO::fromArray(
             $request->all(),
             $headerStoreId ? (int) $headerStoreId : null,
-            $this->tenantClock->now(),
+            $this->tenantClock->businessNow(),
         );
     }
 
@@ -181,7 +185,7 @@ final class ReportController extends Controller
     public function topItems(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view') && ! $user->can('reports.advanced')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -200,12 +204,12 @@ final class ReportController extends Controller
     public function itemCard(Request $request, int|string $itemId): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view') && ! $user->can('reports.advanced')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $item = Item::findOrFail((int) $itemId);
-        $storeId = $request->input('store_id')
+        $storeId = ClientStoreGuard::verified($request)
             ?: $request->header('X-Store-Id')
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;

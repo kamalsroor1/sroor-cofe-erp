@@ -38,7 +38,7 @@ final class SettingController extends Controller
         }
 
         $tenant = function_exists('tenant') ? tenant() : null;
-        $defaultName = $tenant?->name ?? 'مؤسسة تجارية';
+        $defaultName = $tenant?->name ?? __('auth.default_company_name');
 
         $settings = [
             'company_name' => Setting::get('company_name', $defaultName),
@@ -53,11 +53,12 @@ final class SettingController extends Controller
             'print_show_qr' => Setting::getBool('print_show_qr', true),
             'invoice_primary_color' => Setting::get('invoice_primary_color', 'emerald'),
             'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
-            'inventory_units' => Setting::get('inventory_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,لتر'),
+            // SETG-10: same list item create/update validate against.
+            TenantSettings::KEY_INVENTORY_UNITS => implode(',', $this->tenantSettings->inventoryUnits()),
             'telegram_bot_token' => Setting::get('telegram_bot_token', ''),
             'telegram_chat_id' => Setting::get('telegram_chat_id', ''),
-            'commercial_register' => Setting::get('commercial_register', ''),
-            'tax_registration_no' => Setting::get('tax_registration_no', ''),
+            TenantSettings::KEY_COMMERCIAL_REGISTER => Setting::get(TenantSettings::KEY_COMMERCIAL_REGISTER, ''),
+            TenantSettings::KEY_TAX_REGISTRATION_NO => Setting::get(TenantSettings::KEY_TAX_REGISTRATION_NO, ''),
             'telegram_notifications_enabled' => Setting::getBool('telegram_notifications_enabled', true),
             ...$this->tenantSettings->toArray(),
         ];

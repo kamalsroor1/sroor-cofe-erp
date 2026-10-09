@@ -8,6 +8,8 @@ use App\Models\Purchase;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Support\Money\Decimal;
+use App\Support\TenantClock;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +20,27 @@ class PurchaseService
         protected StockService $stockService,
         protected SupplierBalanceService $supplierBalanceService,
         protected AuditLogService $auditLogService,
-        protected ?ActivityLogService $activityLogService = null
+        protected ?ActivityLogService $activityLogService = null,
+        protected ?TenantClock $tenantClock = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
+        $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+    }
+
+    /**
+     * The user a document is attributed to: the authenticated user, else the explicit
+     * `user_id` a job/command passed in $data, else NULL ("system"). Never a made-up id.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function actorId(array $data = []): ?int
+    {
+        $authId = Auth::id();
+        if ($authId !== null) {
+            return (int) $authId;
+        }
+
+        return isset($data['user_id']) && is_numeric($data['user_id']) ? (int) $data['user_id'] : null;
     }
 
     /**
@@ -35,9 +55,9 @@ class PurchaseService
             $purchase = Purchase::create([
                 'purchase_number' => $data['purchase_number'] ?? $this->generateUniqueNumber(),
                 'supplier_id' => $data['supplier_id'],
-                'user_id' => Auth::id() ?? 1,
+                'user_id' => $this->actorId($data),
                 'store_id' => $storeId,
-                'purchase_date' => $data['purchase_date'] ?? now()->toDateString(),
+                'purchase_date' => $data['purchase_date'] ?? $this->tenantClock->businessDate(),
                 'status' => 'confirmed',
                 'payment_status' => 'unpaid',
                 'subtotal' => '0.000',
@@ -63,7 +83,8 @@ class PurchaseService
                 $qty = (string) ($line['quantity'] ?? '0.000');
                 $baseCost = (string) ($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
                 $totalQuantity = bcadd($totalQuantity, $qty, 3);
-                $totalBaseValuation = bcadd($totalBaseValuation, bcmul($qty, $baseCost, 3), 3);
+                // CTO: half-up everywhere (App\Support\Money\Decimal), new documents only.
+                $totalBaseValuation = bcadd($totalBaseValuation, Decimal::mul($qty, $baseCost), 3);
             }
 
             // 2. Process each item line and allocate landed expenses
@@ -72,7 +93,7 @@ class PurchaseService
 
                 $quantity = (string) $line['quantity'];
                 $baseCostPrice = (string) ($line['cost_price'] ?? $line['unit_cost'] ?? '0.000');
-                $lineBaseTotal = bcmul($quantity, $baseCostPrice, 3);
+                $lineBaseTotal = Decimal::mul($quantity, $baseCostPrice);
                 $baseSubtotal = bcadd($baseSubtotal, $lineBaseTotal, 3);
 
                 // Allocate expenses to this line
@@ -87,15 +108,13 @@ class PurchaseService
                     $allocated = '0.000';
 
                     if ($method === 'by_quantity' && bccomp($totalQuantity, '0.000', 3) > 0) {
-                        // Ratio = line.qty / totalQuantity
-                        $ratio = bcdiv($quantity, $totalQuantity, 6);
-                        $allocated = bcmul($expAmount, $ratio, 3);
+                        // expense x line.qty / totalQuantity, computed exactly then half-up.
+                        $allocated = Decimal::round(bcdiv(bcmul($expAmount, $quantity, 6), $totalQuantity, 12));
                     } elseif ($method === 'by_value' && bccomp($totalBaseValuation, '0.000', 3) > 0) {
-                        // Ratio = line.baseTotal / totalBaseValuation
-                        $ratio = bcdiv($lineBaseTotal, $totalBaseValuation, 6);
-                        $allocated = bcmul($expAmount, $ratio, 3);
+                        // expense x line.baseTotal / totalBaseValuation, computed exactly then half-up.
+                        $allocated = Decimal::round(bcdiv(bcmul($expAmount, $lineBaseTotal, 6), $totalBaseValuation, 12));
                     } elseif ($method === 'equal' && $itemsCount > 0) {
-                        $allocated = bcdiv($expAmount, (string) $itemsCount, 3);
+                        $allocated = Decimal::round(bcdiv($expAmount, (string) $itemsCount, 12));
                     }
 
                     $lineAllocatedExpense = bcadd($lineAllocatedExpense, $allocated, 3);
@@ -103,7 +122,7 @@ class PurchaseService
 
                 // Landed Unit Cost = Base Cost + (Allocated Expense / Quantity)
                 $unitAllocatedExpense = bccomp($quantity, '0.000', 3) > 0
-                    ? bcdiv($lineAllocatedExpense, $quantity, 3)
+                    ? Decimal::round(bcdiv($lineAllocatedExpense, $quantity, 12))
                     : '0.000';
                 $landedUnitCost = bcadd($baseCostPrice, $unitAllocatedExpense, 3);
 
@@ -138,7 +157,8 @@ class PurchaseService
                     documentNumber: $purchase->purchase_number,
                     movementType: 'purchase_in',
                     notes: "توريد بضاعة بفاتورة شراء رقم {$purchase->purchase_number}".(bccomp($unitAllocatedExpense, '0.000', 3) > 0 ? " (شامل مصاريف محملة +{$unitAllocatedExpense} ج.م/وحدة)" : ''),
-                    storeId: $storeId
+                    storeId: $storeId,
+                    actorId: $this->actorId($data),
                 );
             }
 
@@ -174,7 +194,7 @@ class PurchaseService
                         'payment_number' => 'PAY-EXP-'.strtoupper(uniqid()),
                         'supplier_id' => $purchase->supplier_id,
                         'purchase_id' => $purchase->id,
-                        'user_id' => Auth::id() ?? 1,
+                        'user_id' => $this->actorId($data),
                         'amount' => $expAmount,
                         'payment_date' => $purchase->purchase_date,
                         'payment_method' => $paymentMethod,
@@ -215,7 +235,7 @@ class PurchaseService
                     'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
                     'supplier_id' => $purchase->supplier_id,
                     'purchase_id' => $purchase->id,
-                    'user_id' => Auth::id() ?? 1,
+                    'user_id' => $this->actorId($data),
                     'amount' => $paidAmount,
                     'payment_date' => $purchase->purchase_date,
                     'payment_method' => $data['payment_method'] ?? 'cash',
@@ -230,7 +250,8 @@ class PurchaseService
                 action: 'purchase_confirmed',
                 auditable: $purchase,
                 oldValues: null,
-                newValues: $purchase->toArray()
+                newValues: $purchase->toArray(),
+                actorId: $this->actorId($data),
             );
 
             $this->activityLogService->logPurchase(
@@ -387,7 +408,7 @@ class PurchaseService
                         'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
                         'supplier_id' => $lockedPurchase->supplier_id,
                         'purchase_id' => $lockedPurchase->id,
-                        'user_id' => Auth::id() ?? 1,
+                        'user_id' => $this->actorId(),
                         'amount' => $lockedPurchase->paid_amount,
                         'payment_date' => $lockedPurchase->purchase_date,
                         'payment_method' => 'cash',
@@ -461,8 +482,9 @@ class PurchaseService
         string $newCost
     ): string {
         $existingStock = bccomp($currentStock, '0.000', 3) > 0 ? $currentStock : '0.000';
-        $existingValuation = bcmul($existingStock, $currentWac ?: '0.000', 3);
-        $newValuation = bcmul($newQuantity, $newCost, 3);
+        // CTO: half-up everywhere (App\Support\Money\Decimal).
+        $existingValuation = Decimal::mul($existingStock, $currentWac ?: '0.000');
+        $newValuation = Decimal::mul($newQuantity, $newCost);
         $totalValuation = bcadd($existingValuation, $newValuation, 3);
         $totalQuantity = bcadd($existingStock, $newQuantity, 3);
 
@@ -470,12 +492,13 @@ class PurchaseService
             return $newCost;
         }
 
-        return bcdiv($totalValuation, $totalQuantity, 3);
+        return Decimal::round(bcdiv($totalValuation, $totalQuantity, 12));
     }
 
     public function generateUniqueNumber(): string
     {
-        $prefix = 'PUR-'.date('Ymd');
+        // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
+        $prefix = 'PUR-'.str_replace('-', '', $this->tenantClock->businessDate());
 
         $lastPurchase = Purchase::withTrashed()
             ->where('purchase_number', 'LIKE', $prefix.'-%')

@@ -8,10 +8,15 @@ use App\DTOs\Items\AdjustStockDTO;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
 final class AdjustItemStockAction
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Adjust item stock in store and record audit movement with bcmath and lockForUpdate
      */
@@ -38,8 +43,13 @@ final class AdjustItemStockAction
                 $newStoreQty = bcsub($currentStoreQty, $adjustQty, 3);
             }
 
-            $prefix = 'ADJ-'.date('ymd');
-            $count = StockMovement::whereDate('created_at', now()->toDateString())->count() + 1;
+            // SETG-2 ext: number and daily counter follow the tenant business day.
+            $businessDate = $this->tenantClock->businessDate();
+            [$dayStart, $dayEnd] = $this->tenantClock->businessDayRange($businessDate);
+            $prefix = 'ADJ-'.substr(str_replace('-', '', $businessDate), 2);
+            $count = StockMovement::where('created_at', '>=', $dayStart)
+                ->where('created_at', '<', $dayEnd)
+                ->count() + 1;
             $docNumber = $prefix.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
 
             $movement = StockMovement::create([

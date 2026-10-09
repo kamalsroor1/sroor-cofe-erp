@@ -7,6 +7,7 @@ use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Support\TenantClock;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,26 @@ use Illuminate\Support\Facades\DB;
 class StockTransferService
 {
     public function __construct(
-        protected ?ActivityLogService $activityLogService = null
+        protected ?ActivityLogService $activityLogService = null,
+        protected ?TenantClock $tenantClock = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
+        $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+    }
+
+    /**
+     * The user a transfer (and its stock movements) is attributed to: the authenticated
+     * user, else the explicit actor the caller passed (job/command), else NULL ("system").
+     * Never a made-up id.
+     */
+    private function actorId(mixed $explicit = null): ?int
+    {
+        $authId = Auth::id();
+        if ($authId !== null) {
+            return (int) $authId;
+        }
+
+        return is_numeric($explicit) ? (int) $explicit : null;
     }
 
     /**
@@ -36,8 +54,8 @@ class StockTransferService
             $toStore = Store::where('id', $toStoreId)->firstOrFail();
 
             $transferNumber = $data['transfer_number'] ?? $this->generateUniqueNumber();
-            $userId = Auth::id() ?? $data['user_id'] ?? 1;
-            $transferDate = $data['transfer_date'] ?? now()->toDateString();
+            $userId = $this->actorId($data['user_id'] ?? null);
+            $transferDate = $data['transfer_date'] ?? $this->tenantClock->businessDate();
             $status = $data['status'] ?? 'confirmed';
 
             $transfer = StockTransfer::create([
@@ -158,11 +176,17 @@ class StockTransferService
     }
 
     /**
-     * Cancel an existing transfer with safe rollback of stock
+     * Cancel an existing transfer with safe rollback of stock.
+     *
+     * $actorId is the explicit actor for callers without an authenticated user (jobs,
+     * commands); the authenticated user always wins, and with neither the reversal
+     * movements are attributed to NULL ("system").
      */
-    public function cancelTransfer(StockTransfer $transfer, ?string $reason = null): StockTransfer
+    public function cancelTransfer(StockTransfer $transfer, ?string $reason = null, ?int $actorId = null): StockTransfer
     {
-        return DB::transaction(function () use ($transfer, $reason) {
+        $userId = $this->actorId($actorId);
+
+        return DB::transaction(function () use ($transfer, $reason, $userId) {
             $lockedTransfer = StockTransfer::where('id', $transfer->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedTransfer->status === 'cancelled') {
@@ -225,7 +249,7 @@ class StockTransferService
                         'source_type' => StockTransfer::class,
                         'source_id' => $lockedTransfer->id,
                         'document_number' => $lockedTransfer->transfer_number,
-                        'user_id' => Auth::id() ?? 1,
+                        'user_id' => $userId,
                         'notes' => "عكس تحويل ملغي من [{$toStore->name}] بإذن رقم {$lockedTransfer->transfer_number}",
                     ]);
 
@@ -240,7 +264,7 @@ class StockTransferService
                         'source_type' => StockTransfer::class,
                         'source_id' => $lockedTransfer->id,
                         'document_number' => $lockedTransfer->transfer_number,
-                        'user_id' => Auth::id() ?? 1,
+                        'user_id' => $userId,
                         'notes' => "إعادة بضاعة تحويل ملغي إلى [{$fromStore->name}] بإذن رقم {$lockedTransfer->transfer_number}",
                     ]);
                 }
@@ -270,7 +294,8 @@ class StockTransferService
      */
     public function generateUniqueNumber(): string
     {
-        $prefix = 'TRF-'.date('Ymd');
+        // SETG-2 ext: the number carries the tenant business date, not the server date.
+        $prefix = 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate());
 
         $lastTransfer = StockTransfer::withTrashed()
             ->where('transfer_number', 'LIKE', $prefix.'-%')

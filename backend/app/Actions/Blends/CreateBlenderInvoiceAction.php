@@ -7,11 +7,13 @@ namespace App\Actions\Blends;
 use App\DTOs\Blends\CreateBlenderInvoiceDTO;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
+use App\Support\TenantClock;
 
 final class CreateBlenderInvoiceAction
 {
     public function __construct(
-        private readonly InvoiceService $invoiceService
+        private readonly InvoiceService $invoiceService,
+        private readonly TenantClock $tenantClock,
     ) {}
 
     /**
@@ -46,7 +48,7 @@ final class CreateBlenderInvoiceAction
         return $this->invoiceService->confirmInvoice([
             'customer_id' => $dto->customer_id,
             'store_id' => $dto->store_id,
-            'invoice_date' => now()->toDateString(),
+            'invoice_date' => $this->tenantClock->businessDate(),
             'items' => $itemsForInvoice,
             'payment_type' => 'cash',
             'payment_method' => 'cash',

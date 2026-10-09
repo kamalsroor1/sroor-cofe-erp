@@ -14,6 +14,7 @@ use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Resources\PurchaseResource;
 use App\Models\Purchase;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -31,7 +32,7 @@ final class PurchaseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view') && ! $user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -42,8 +43,9 @@ final class PurchaseController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
+        $clientStoreId = ClientStoreGuard::verified($request);
         $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+            ?: $clientStoreId
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -107,7 +109,7 @@ final class PurchaseController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view') && ! $user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -124,8 +126,7 @@ final class PurchaseController extends Controller
      */
     public function store(StorePurchaseRequest $request): JsonResponse
     {
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: auth()->user()?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -145,7 +146,7 @@ final class PurchaseController extends Controller
     public function cancel(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.delete') && ! $user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.delete')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -168,12 +169,13 @@ final class PurchaseController extends Controller
     public function smartReorder(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view') && ! $user->can('purchases.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        $clientStoreId = ClientStoreGuard::verified($request);
         $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id');
+            ?: $clientStoreId;
         $storeFilter = ($storeId && $storeId !== 'all') ? (int) $storeId : null;
 
         $analysisDays = (int) $request->input('analysis_days', 14);

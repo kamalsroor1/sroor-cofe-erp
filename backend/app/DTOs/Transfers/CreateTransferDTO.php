@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTOs\Transfers;
 
+use App\Support\TenantClock;
+
 final class CreateTransferDTO
 {
     public function __construct(
@@ -21,7 +23,7 @@ final class CreateTransferDTO
             from_store_id: (int) $data['from_store_id'],
             to_store_id: (int) $data['to_store_id'],
             items: (array) ($data['items'] ?? []),
-            transfer_date: (string) ($data['transfer_date'] ?? now()->toDateString()),
+            transfer_date: (string) ($data['transfer_date'] ?? app(TenantClock::class)->businessDate()),
             status: (string) ($data['status'] ?? 'confirmed'),
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
         );

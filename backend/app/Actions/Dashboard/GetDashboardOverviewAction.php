@@ -16,6 +16,7 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Services\Settings\TenantSettings;
 use App\Services\ShiftService;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ final class GetDashboardOverviewAction
         private readonly DashboardAnalyticsService $analyticsService,
         private readonly ProfitService $profitService,
         private readonly TenantClock $tenantClock,
+        private readonly TenantSettings $tenantSettings,
         private readonly ShiftService $shiftService,
     ) {}
 
@@ -34,7 +36,7 @@ final class GetDashboardOverviewAction
      */
     public function execute(?User $user = null, ?int $storeId = null): array
     {
-        // SETG-2: "today" is the tenant-local calendar day.
+        // SETG-2 (+ ext): "today" is the tenant's current business day (timezone + cutoff).
         $today = $this->tenantClock->today();
 
         // 1. Resolve Store
@@ -119,12 +121,9 @@ final class GetDashboardOverviewAction
         $totalCustomersDebt = (float) (Customer::where('is_active', true)->sum('current_balance') ?: 0);
         $totalSuppliersDebt = (float) (Supplier::where('is_active', true)->sum('current_balance') ?: 0);
 
-        // 8. Low Stock Items Radar
-        $lowStockItems = Item::where('is_active', true)
-            ->where(function ($q) {
-                $q->whereColumn('current_stock', '<=', 'min_stock_level')
-                    ->orWhere('current_stock', '<=', 5);
-            })
+        // 8. Low Stock Items Radar (SETG-10: own minimum, else the tenant default threshold)
+        $lowStockThreshold = $this->tenantSettings->lowStockDefaultThreshold();
+        $lowStockItems = $this->tenantSettings->whereLowStock(Item::where('is_active', true))
             ->orderBy('current_stock', 'asc')
             ->take(8)
             ->get(['id', 'name', 'code', 'category', 'current_stock', 'min_stock_level', 'unit'])
@@ -134,19 +133,14 @@ final class GetDashboardOverviewAction
                 'code' => $it->code,
                 'category' => $it->category,
                 'current_stock' => (float) $it->current_stock,
-                'min_stock' => (float) ($it->min_stock_level ?? 5),
+                'min_stock' => (float) (bccomp((string) ($it->min_stock_level ?? '0'), '0', 3) > 0 ? $it->min_stock_level : $lowStockThreshold),
                 'unit' => $it->unit ?? 'كجم',
             ]);
 
-        $lowStockCount = Item::where('is_active', true)
-            ->where(function ($q) {
-                $q->whereColumn('current_stock', '<=', 'min_stock_level')
-                    ->orWhere('current_stock', '<=', 5);
-            })
-            ->count();
+        $lowStockCount = $this->tenantSettings->whereLowStock(Item::where('is_active', true))->count();
 
         // 9. Monthly Profits & Margin
-        $startOfMonth = $this->tenantClock->now()->startOfMonth()->toDateString();
+        $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();
         $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
 
         // 10. Top Selling Items this Month

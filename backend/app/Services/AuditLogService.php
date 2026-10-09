@@ -13,10 +13,13 @@ class AuditLogService
         string $action,
         Model $auditable,
         ?array $oldValues = null,
-        ?array $newValues = null
+        ?array $newValues = null,
+        ?int $actorId = null,
     ): AuditLog {
         return AuditLog::create([
-            'user_id' => Auth::id() ?? 1,
+            // Authenticated user, else the explicit actor (job/command), else NULL ("system").
+            // Never a made-up id: crediting user 1 would forge the audit trail.
+            'user_id' => Auth::id() ?? $actorId,
             'action_type' => $action,
             'auditable_type' => get_class($auditable),
             'auditable_id' => $auditable->getKey(),

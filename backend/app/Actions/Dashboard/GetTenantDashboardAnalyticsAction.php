@@ -19,6 +19,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
+use App\Services\Settings\TenantSettings;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -33,6 +34,7 @@ class GetTenantDashboardAnalyticsAction
         protected DashboardAnalyticsService $analyticsService,
         protected ProfitService $profitService,
         protected TenantClock $tenantClock,
+        protected TenantSettings $tenantSettings,
     ) {}
 
     /**
@@ -47,7 +49,7 @@ class GetTenantDashboardAnalyticsAction
             return $this->memoized[$cacheKey];
         }
 
-        // SETG-2: "today" is the tenant-local calendar day.
+        // SETG-2 (+ ext): "today" is the tenant's current business day (timezone + cutoff).
         $today = $this->tenantClock->today();
 
         // 1. Resolve Active Store
@@ -112,17 +114,15 @@ class GetTenantDashboardAnalyticsAction
         $totalCustomersDebt = (float) Customer::where('is_active', true)->sum('current_balance');
 
         // 8. Low Stock Radar
-        $lowStockQuery = Item::where('is_active', true)
-            ->whereNotNull('min_stock_level')
-            ->where('min_stock_level', '>', 0)
-            ->whereColumn('current_stock', '<=', 'min_stock_level')
+        // SETG-10: own minimum, else the tenant default threshold.
+        $lowStockQuery = $this->tenantSettings->whereLowStock(Item::where('is_active', true))
             ->orderBy('current_stock', 'asc')
             ->take(6);
 
         $lowStockItems = $lowStockQuery->get(['id', 'name', 'code', 'current_stock', 'min_stock_level', 'unit']);
 
         // 9. Periodic Profits (Monthly Gross & Margin)
-        $startOfMonth = $this->tenantClock->now()->startOfMonth()->toDateString();
+        $startOfMonth = $this->tenantClock->businessNow()->startOfMonth()->toDateString();
         $periodic = $this->profitService->getPeriodicProfits($startOfMonth, $today, $storeFilter);
 
         // 10. Top Selling Coffee & Products this Month

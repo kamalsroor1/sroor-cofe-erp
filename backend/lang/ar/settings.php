@@ -213,4 +213,10 @@ return [
     'telegram_connection_failed' => 'تعذر الاتصال بخدمة تيليجرام. راجع التوكن ومعرف المحادثة والاتصال بالإنترنت.',
     'commercial_register' => 'السجل التجاري',
     'tax_registration_no' => 'رقم التسجيل الضريبي',
+
+    // SETG-2 ext / SETG-10 (W2 lane 2B)
+    'business_day_cutoff' => 'بداية اليوم التجاري',
+    'business_day_cutoff_invalid' => 'بداية اليوم التجاري لازم تكون بالشكل HH:MM (من 00:00 لحد 23:59).',
+    'low_stock_default_threshold' => 'حد النواقص الافتراضي',
+    'inventory_units' => 'وحدات القياس',
 ];

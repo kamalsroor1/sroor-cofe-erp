@@ -20,6 +20,7 @@ use App\Http\Resources\StoreResource;
 use App\Http\Resources\StoreStockResource;
 use App\Models\Store;
 use App\Models\User;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -192,7 +193,9 @@ final class StoreController extends Controller
      */
     public function stocks(Request $request): JsonResponse
     {
-        $storeId = (int) ($request->input('store_id') ?: $request->header('X-Store-Id') ?: 1);
+        // store_id is the branch picked on the stores screen (explicit filter, wins over the header);
+        // access-checked, and `all` is a 422, never store 0.
+        $storeId = (int) (ClientStoreGuard::concrete($request, preferClient: true) ?: 1);
         $search = trim((string) $request->input('search', ''));
         $stockStatus = (string) $request->input('stock_status', 'all');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
@@ -233,7 +236,7 @@ final class StoreController extends Controller
         if (! $isGlobalAdmin && ! $isAssigned) {
             return response()->json([
                 'success' => false,
-                'message' => __('inventory.unauthorized_store_access') ?: 'عفواً، ليس لديك صلاحية للوصول إلى هذا الفرع.',
+                'message' => __('common.store_access_denied'),
             ], 403);
         }
 
@@ -244,7 +247,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.switched_to_store', ['store' => $store->name]) ?: 'تم التبديل إلى فرع: '.$store->name,
+            'message' => __('inventory.switched_to_store', ['store' => $store->name]),
             'active_store' => (new StoreResource($store))->resolve(),
         ], 200);
     }

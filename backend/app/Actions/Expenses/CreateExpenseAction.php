@@ -7,10 +7,15 @@ namespace App\Actions\Expenses;
 use App\DTOs\Expenses\ExpenseDTO;
 use App\Models\Expense;
 use App\Models\Store;
+use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
 final class CreateExpenseAction
 {
+    public function __construct(
+        private readonly TenantClock $tenantClock,
+    ) {}
+
     /**
      * Create expense inside DB transaction with sequential number
      */
@@ -19,8 +24,13 @@ final class CreateExpenseAction
         return DB::transaction(function () use ($dto, $userId) {
             $storeId = $dto->store_id ?: Store::getMainStore()?->id ?: Store::first()?->id;
 
-            $prefix = 'EXP-'.date('ymd');
-            $count = Expense::whereDate('created_at', now()->toDateString())->count() + 1;
+            // SETG-2 ext: number and daily counter follow the tenant business day.
+            $businessDate = $this->tenantClock->businessDate();
+            [$dayStart, $dayEnd] = $this->tenantClock->businessDayRange($businessDate);
+            $prefix = 'EXP-'.substr(str_replace('-', '', $businessDate), 2);
+            $count = Expense::where('created_at', '>=', $dayStart)
+                ->where('created_at', '<', $dayEnd)
+                ->count() + 1;
             $expenseNumber = $prefix.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
 
             return Expense::create([

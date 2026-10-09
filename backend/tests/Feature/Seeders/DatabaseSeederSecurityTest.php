@@ -12,19 +12,20 @@ use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\PlansAndFeaturesSeeder;
 use Database\Seeders\TenantSampleSeeder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Stancl\Tenancy\Events\CreatingDatabase;
 use Stancl\Tenancy\Events\DatabaseCreated;
 use Stancl\Tenancy\Events\DatabaseMigrated;
 use Stancl\Tenancy\Events\MigratingDatabase;
 use Stancl\Tenancy\Events\TenantCreated;
 use Tests\Concerns\DetectsRealPhoneNumbers;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
  * F1a: the central DatabaseSeeder, TenantSampleSeeder and every other seeder / console
@@ -40,11 +41,17 @@ use Tests\TestCase;
  *
  * TenantSampleSeeder is replaced with a no-op in the DatabaseSeeder runs so no tenant
  * database is ever provisioned.
+ *
+ * QA-4: on the tenant harness base class the central database holds only central tables
+ * (as in production), and one existing tenant proves the central seeder never writes into
+ * a tenant database.
  */
-final class DatabaseSeederSecurityTest extends TestCase
+final class DatabaseSeederSecurityTest extends TenantTestCase
 {
     use DetectsRealPhoneNumbers;
-    use RefreshDatabase;
+
+    /** QA-4: an already-provisioned tenant; the central seeder must never write into it. */
+    private Tenant $existingTenant;
 
     /** @var list<string> */
     private const ENV_KEYS = [
@@ -64,6 +71,9 @@ final class DatabaseSeederSecurityTest extends TestCase
         foreach (self::ENV_KEYS as $key) {
             $this->clearEnv($key);
         }
+
+        // Created before the provisioning events are faked (the harness needs them).
+        $this->existingTenant = $this->createTenant();
 
         Event::fake([
             TenantCreated::class,
@@ -315,6 +325,23 @@ final class DatabaseSeederSecurityTest extends TestCase
         // The --password option and random fallback must remain (no known default password).
         $this->assertStringContainsString('{--password=', $contents);
         $this->assertStringContainsString('Str::password(', $contents);
+    }
+
+    public function test_central_seeder_never_writes_into_an_existing_tenant_database(): void
+    {
+        $snapshot = fn (): array => $this->inTenant($this->existingTenant, fn (): array => [
+            'users' => User::withTrashed()->orderBy('id')->pluck('phone', 'id')->all(),
+            'super_admin_role' => Role::query()->where('name', 'super_admin')->exists(),
+            'super_admin_permissions' => Permission::query()->where('name', 'like', 'super_admin.%')->count(),
+        ]);
+        $before = $snapshot();
+
+        $this->runDatabaseSeeder();
+        $this->assertCount(1, $this->superAdmins(), 'The central seeder ran in the central database.');
+
+        $this->assertSame($before, $snapshot(), 'The central DatabaseSeeder wrote into a tenant database.');
+        $this->assertFalse($before['super_admin_role']);
+        $this->assertSame(0, $before['super_admin_permissions']);
     }
 
     private function captureTenantSampleDto(): CreateTenantDTO

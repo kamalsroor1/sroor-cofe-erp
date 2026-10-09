@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $item_id
- * @property int $user_id
+ * @property int|null $user_id
  * @property string $deposit_type
  * @property string $quantity
  * @property string $cost_price

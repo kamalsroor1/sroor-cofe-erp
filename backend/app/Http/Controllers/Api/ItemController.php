@@ -19,6 +19,8 @@ use App\Http\Requests\UpdateItemRequest;
 use App\Http\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\Store;
+use App\Services\Settings\TenantSettings;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,7 +32,8 @@ final class ItemController extends Controller
         private readonly DeleteItemAction $deleteItemAction,
         private readonly ToggleItemActiveAction $toggleItemActiveAction,
         private readonly AdjustItemStockAction $adjustItemStockAction,
-        private readonly GetItemMovementsAction $getItemMovementsAction
+        private readonly GetItemMovementsAction $getItemMovementsAction,
+        private readonly TenantSettings $tenantSettings,
     ) {}
 
     /**
@@ -39,7 +42,7 @@ final class ItemController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage') && ! $user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -50,8 +53,9 @@ final class ItemController extends Controller
         $status = (string) $request->input('status', 'all');
         $perPage = max(1, min(500, (int) $request->input('per_page', 20)));
 
+        $clientStoreId = ClientStoreGuard::verified($request);
         $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+            ?: $clientStoreId
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
@@ -71,7 +75,7 @@ final class ItemController extends Controller
 
         if (! empty($categoryId) && $categoryId !== 'null') {
             if ($categoryId === 'low_stock') {
-                $query->whereColumn('current_stock', '<=', 'min_stock_level')->where('current_stock', '>', 0);
+                $this->tenantSettings->whereLowStock($query)->where('current_stock', '>', 0);
             } elseif ($categoryId === 'in_stock') {
                 $query->where('current_stock', '>', 0);
             } elseif ($categoryId === 'favorites') {
@@ -84,7 +88,7 @@ final class ItemController extends Controller
         }
 
         if ($stockStatus === 'low') {
-            $query->whereColumn('current_stock', '<=', 'min_stock_level')->where('current_stock', '>', 0);
+            $this->tenantSettings->whereLowStock($query)->where('current_stock', '>', 0);
         } elseif ($stockStatus === 'out') {
             $query->where('current_stock', '<=', 0);
         } elseif ($stockStatus === 'in_stock') {
@@ -102,7 +106,7 @@ final class ItemController extends Controller
         $categories = Item::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->values();
 
         $totalItemsCount = Item::count();
-        $lowStockCount = Item::whereColumn('current_stock', '<=', 'min_stock_level')->where('is_active', true)->count();
+        $lowStockCount = $this->tenantSettings->whereLowStock(Item::query())->where('is_active', true)->count();
         $totalStockValue = (float) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val');
 
         return response()->json([
@@ -145,7 +149,7 @@ final class ItemController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage') && ! $user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -179,7 +183,7 @@ final class ItemController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.delete')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -198,7 +202,7 @@ final class ItemController extends Controller
     public function toggleActive(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.edit')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
@@ -217,6 +221,9 @@ final class ItemController extends Controller
      */
     public function adjustStock(AdjustStockRequest $request, int $id): JsonResponse
     {
+        // The adjusted branch comes from the body: it must be one the user may access (403).
+        ClientStoreGuard::verified($request);
+
         $dto = AdjustStockDTO::fromArray($id, $request->validated());
         $userId = (int) auth()->id();
 
@@ -235,14 +242,15 @@ final class ItemController extends Controller
     public function movements(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
         $item = Item::withTrashed()->findOrFail($id);
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $storeId = $request->input('store_id') && $request->input('store_id') !== 'all' ? (int) $request->input('store_id') : null;
+        $clientStoreId = ClientStoreGuard::verified($request);
+        $storeId = is_int($clientStoreId) ? $clientStoreId : null;
         $type = $request->input('type');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
@@ -267,21 +275,23 @@ final class ItemController extends Controller
     public function lowStock(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('items.manage') && ! $user->can('pos.access')) {
+        if ($user && ! $user->hasRole('admin') && ! $user->can('items.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = (int) ($request->header('X-Store-Id') ?: $request->input('store_id') ?: session('current_store_id') ?: 1);
+        $storeId = (int) (ClientStoreGuard::concrete($request) ?: session('current_store_id') ?: 1);
 
-        $items = Item::query()
-            ->active()
-            ->lowStock()
+        $threshold = $this->tenantSettings->lowStockDefaultThreshold();
+
+        $items = $this->tenantSettings->whereLowStock(Item::query()->active())
             ->orderBy('current_stock', 'asc')
             ->get()
-            ->map(function (Item $item) use ($storeId) {
+            ->map(function (Item $item) use ($storeId, $threshold) {
                 $stock = (string) $item->getStockInStore($storeId);
                 $min = (string) $item->min_stock_level;
-                $deficit = bcsub($min, $stock, 3);
+                // An item without its own minimum is measured against the tenant default threshold.
+                $effectiveMin = bccomp($min !== '' ? $min : '0', '0', 3) > 0 ? $min : $threshold;
+                $deficit = bcsub($effectiveMin, $stock, 3);
                 if (bccomp($deficit, '0.000', 3) < 0) {
                     $deficit = '0.000';
                 }

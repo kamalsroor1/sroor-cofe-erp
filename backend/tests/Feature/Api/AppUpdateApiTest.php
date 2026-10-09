@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\AppVersion;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class AppUpdateApiTest extends TestCase
+/**
+ * Public, central app-update endpoints. QA-4: on the tenant harness base class the central
+ * database holds only central tables, and the tenant cases below prove that a request
+ * carrying a tenant (X-Tenant) still reads and writes the CENTRAL app_versions table.
+ */
+class AppUpdateApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artisan('migrate', ['--path' => 'database/migrations']);
         AppVersion::query()->delete();
     }
 
@@ -266,5 +268,69 @@ class AppUpdateApiTest extends TestCase
         $this->assertNotSame('app_update.file_not_available', __('app_update.file_not_available'), 'Missing lang key app_update.file_not_available.');
         app()->setLocale('en');
         $this->assertNotSame('app_update.file_not_available', __('app_update.file_not_available'), 'Missing en lang key app_update.file_not_available.');
+    }
+
+    public function test_check_version_inside_a_tenant_request_reads_the_central_release_table(): void
+    {
+        $tenant = $this->createTenant();
+
+        AppVersion::create([
+            'platform' => 'android',
+            'version_name' => '1.4.0',
+            'version_code' => 14,
+            'min_version_code' => 1,
+            'is_force_update' => false,
+            'release_notes_ar' => 'إصدار مركزي واحد لكل المحلات',
+            'is_active' => true,
+            'published_at' => now(),
+        ]);
+
+        $this->getJson('/api/v1/app/check-update?platform=android&version_code=1&version_name=1.0.0', ['X-Tenant' => (string) $tenant->getTenantKey()])
+            ->assertStatus(200)
+            ->assertJsonPath('has_update', true)
+            ->assertJsonPath('latest_version', '1.4.0');
+
+        // The tenant database never gets (or needs) an app_versions table.
+        $this->assertFalse($this->inTenant($tenant, fn (): bool => Schema::hasTable('app_versions')));
+    }
+
+    /**
+     * The client journey on a tenant host: check-update returns download_url built from the
+     * request host, and the app then downloads from that URL. The binary is a central
+     * release (central public disk), so it must be served whichever tenant asks.
+     */
+    public function test_download_url_returned_on_a_tenant_host_serves_the_central_release(): void
+    {
+        Storage::fake('public');
+        Storage::fake(AppVersion::CENTRAL_RELEASE_DISK);
+        Storage::disk(AppVersion::CENTRAL_RELEASE_DISK)->put('apks/sroor-erp-v1.5.apk', 'FAKE_APK_CONTENT');
+        $tenantA = $this->createTenant();
+        $tenantB = $this->createTenant();
+
+        $release = AppVersion::create([
+            'platform' => 'android',
+            'version_name' => '1.5.0',
+            'version_code' => 15,
+            'release_notes_ar' => 'إصدار للتنزيل',
+            'apk_path' => 'apks/sroor-erp-v1.5.apk',
+            'apk_filename' => 'sroor-erp-v1.5.apk',
+            'is_active' => true,
+            'download_count' => 0,
+            'published_at' => now(),
+        ]);
+
+        foreach ([$tenantA, $tenantB] as $tenant) {
+            $downloadUrl = (string) $this->getJson($this->tenantUrl($tenant, '/api/v1/app/check-update?platform=android&version_code=1&version_name=1.0.0'))
+                ->assertStatus(200)
+                ->assertJsonPath('has_update', true)
+                ->json('download_url');
+            $this->assertStringStartsWith($this->tenantUrl($tenant, '/'), $downloadUrl);
+
+            $this->get($downloadUrl)
+                ->assertStatus(200)
+                ->assertHeader('Content-Type', 'application/vnd.android.package-archive');
+        }
+
+        $this->assertSame(2, (int) $release->fresh()->download_count, 'Both tenants must count on the one central release row.');
     }
 }

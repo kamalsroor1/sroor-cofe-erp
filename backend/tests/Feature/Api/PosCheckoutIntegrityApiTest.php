@@ -1003,20 +1003,21 @@ class PosCheckoutIntegrityApiTest extends TestCase
     public function test_fractional_kilo_split_exactly_equal_to_net_is_accepted(): void
     {
         // Guards the fixture arithmetic used by the overpay test below (passes before and after option A).
+        // SETG-13: net is 595.958 under half-up (it was 595.957 under truncation).
         $cardamom = $this->createFractionalItem();
 
         $response = $this->postAs(self::INVOICES_URL, $this->payload([
             'payment_type' => 'cash',
             'items' => $this->fractionalLines($cardamom),
             'payments' => [
-                ['method' => 'cash', 'amount' => '595.957'],
+                ['method' => 'cash', 'amount' => '595.958'],
             ],
         ]));
 
         $response->assertStatus(201);
         $invoice = Invoice::findOrFail($response->json('data.id'));
-        $this->assertSame('595.957', (string) $invoice->net_total);
-        $this->assertSame('595.957', $this->paymentsSum($invoice->id));
+        $this->assertSame('595.958', (string) $invoice->net_total);
+        $this->assertSame('595.958', $this->paymentsSum($invoice->id));
     }
 
     public function test_fractional_kilo_quantities_compute_exact_change(): void
@@ -1027,21 +1028,21 @@ class PosCheckoutIntegrityApiTest extends TestCase
             'payment_type' => 'cash',
             'items' => $this->fractionalLines($cardamom),
             'payments' => [
-                ['method' => 'visa', 'amount' => '95.957'],
+                ['method' => 'visa', 'amount' => '95.958'],
                 ['method' => 'cash', 'amount' => '600.000'],
             ],
         ]));
 
-        // net = 0.250 * 550.500 (137.625) + 1.375 * 333.333 (458.332875 truncated to 458.332) = 595.957
-        // paid 695.957 -> change 100.000; cash line 600.000 -> 500.000
+        // SETG-13 half-up: net = 0.250 * 550.500 (137.625) + 1.375 * 333.333 (458.332875 -> 458.333) = 595.958
+        // paid 695.958 -> change 100.000; cash line 600.000 -> 500.000
         $response->assertStatus(201)->assertJsonPath('data.change_amount', '100.000');
         $invoice = Invoice::findOrFail($response->json('data.id'));
 
-        $this->assertSame('595.957', (string) $invoice->net_total);
-        $this->assertSame('595.957', (string) $invoice->paid_amount);
+        $this->assertSame('595.958', (string) $invoice->net_total);
+        $this->assertSame('595.958', (string) $invoice->paid_amount);
         $this->assertSame('0.000', (string) $invoice->remaining_amount);
         $this->assertSame('100.000', (string) $invoice->change_amount);
-        $this->assertSame([['visa', '95.957'], ['cash', '500.000']], $this->paymentLines($invoice->id));
+        $this->assertSame([['visa', '95.958'], ['cash', '500.000']], $this->paymentLines($invoice->id));
         $this->assertSame((string) $invoice->net_total, $this->paymentsSum($invoice->id));
         $this->assertSame('49.750', $this->storeStockQty());
         $this->assertSame('8.625', (string) StoreStock::where('store_id', $this->store->id)->where('item_id', $cardamom->id)->value('quantity'));
@@ -1060,10 +1061,11 @@ class PosCheckoutIntegrityApiTest extends TestCase
             ],
         ]));
 
-        $response->assertStatus(201)->assertJsonPath('data.change_amount', '4.043');
+        // SETG-13 half-up: 600.000 - 595.958 = 4.042 (was 4.043 under truncation).
+        $response->assertStatus(201)->assertJsonPath('data.change_amount', '4.042');
         $invoice = Invoice::findOrFail($response->json('data.id'));
-        $this->assertSame('4.043', (string) $invoice->change_amount);
-        $this->assertSame([['cash', '595.957']], $this->paymentLines($invoice->id));
+        $this->assertSame('4.042', (string) $invoice->change_amount);
+        $this->assertSame([['cash', '595.958']], $this->paymentLines($invoice->id));
     }
 
     public function test_partial_with_payments_total_reaching_net_is_rejected_and_never_yields_change(): void

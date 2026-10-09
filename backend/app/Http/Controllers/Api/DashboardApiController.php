@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Dashboard\GetDashboardOverviewAction;
 use App\Http\Controllers\Controller;
 use App\Models\Store;
+use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,8 +27,7 @@ final class DashboardApiController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 401);
         }
 
-        $storeId = $request->header('X-Store-Id')
-            ?: $request->input('store_id')
+        $storeId = ClientStoreGuard::concrete($request)
             ?: $user->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 

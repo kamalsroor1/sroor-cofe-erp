@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTOs\Invoices;
 
+use App\Support\TenantClock;
+
 final class CreateInvoiceDTO
 {
     public function __construct(
@@ -28,7 +30,7 @@ final class CreateInvoiceDTO
             customer_id: (int) $data['customer_id'],
             items: (array) ($data['items'] ?? []),
             store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
-            invoice_date: (string) ($data['invoice_date'] ?? now()->toDateString()),
+            invoice_date: (string) ($data['invoice_date'] ?? app(TenantClock::class)->businessDate()),
             payment_type: (string) ($data['payment_type'] ?? 'cash'),
             payment_method: (string) ($data['payment_method'] ?? 'cash'),
             discount_type: (string) ($data['discount_type'] ?? 'fixed'),
