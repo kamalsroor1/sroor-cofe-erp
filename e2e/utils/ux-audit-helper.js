@@ -1,9 +1,10 @@
-import { expect } from "@playwright/test";
+/* global document */
+import { expect } from '@playwright/test';
 
 export const VIEWPORTS = [
-  { name: "mobile", width: 390, height: 844, isMobile: true },
-  { name: "tablet", width: 820, height: 1180, isMobile: false },
-  { name: "desktop", width: 1366, height: 768, isMobile: false },
+    { name: 'mobile', width: 390, height: 844, isMobile: true },
+    { name: 'tablet', width: 820, height: 1180, isMobile: false },
+    { name: 'desktop', width: 1366, height: 768, isMobile: false },
 ];
 
 /**
@@ -16,95 +17,148 @@ export const VIEWPORTS = [
  * @param {string|RegExp} [options.apiPattern] - URL pattern to intercept for 500 mock test
  */
 export async function auditPageUx(page, options) {
-  const { route, testId, apiPattern } = options;
-  const consoleErrors = [];
+    const { route, testId, apiPattern } = options;
+    const consoleErrors = [];
 
-  page.on("console", (msg) => {
-    const text = msg.text();
-    if (
-      (msg.type() === "error" || text.includes("[Vue warn]")) &&
-      !text.includes("favicon") &&
-      !text.includes("ERR_CONNECTION_REFUSED")
-    ) {
-      consoleErrors.push(text);
-    }
-  });
+    page.on('console', (msg) => {
+        const text = msg.text();
+        const isIgnored =
+            text.includes('favicon') ||
+            text.includes('ERR_CONNECTION_REFUSED') ||
+            text.includes('status of 500') ||
+            text.includes('Internal Server Error');
 
-  // 1. Multi-Viewport Audits (390, 820, 1366)
-  for (const vp of VIEWPORTS) {
-    await page.setViewportSize({ width: vp.width, height: vp.height });
-    await page.goto(route, { waitUntil: "domcontentloaded" });
-
-    // Assert RTL
-    const htmlDir = await page.locator("html").getAttribute("dir");
-    expect(htmlDir === "rtl" || !htmlDir).toBe(true);
-
-    // Assert No Horizontal Overflow
-    const hasHorizontalOverflow = await page.evaluate(() => {
-      return (
-        document.documentElement.scrollWidth >
-        document.documentElement.clientWidth + 2
-      );
-    });
-    expect(hasHorizontalOverflow).toBe(false);
-
-    // Viewport-specific view assertion
-    if (testId) {
-      const container = page.locator(`[data-testid="${testId}"]`);
-      if ((await container.count()) > 0) {
-        await expect(container.first()).toBeVisible();
-      }
-    }
-
-    // Touch targets check on mobile (≥ 44px)
-    if (vp.isMobile) {
-      const actions = page.locator('[data-testid^="action-"], button:visible');
-      const actionCount = await actions.count();
-      if (actionCount > 0) {
-        const firstAction = actions.first();
-        const box = await firstAction.boundingBox();
-        if (box) {
-          // Coarse pointer touch target requirement is 44px min dimension
-          expect(Math.max(box.width, box.height)).toBeGreaterThanOrEqual(36);
+        if ((msg.type() === 'error' || text.includes('[Vue warn]')) && !isIgnored) {
+            consoleErrors.push(text);
         }
-      }
-    }
-  }
-
-  // 2. Dark / Light Toggle Check
-  await page.evaluate(() => {
-    document.documentElement.classList.add("dark");
-  });
-  const isDark = await page.evaluate(() =>
-    document.documentElement.classList.contains("dark"),
-  );
-  expect(isDark).toBe(true);
-  await page.evaluate(() => {
-    document.documentElement.classList.remove("dark");
-  });
-
-  // 3. Mock 500 Error + Retry Test
-  if (apiPattern) {
-    await page.route(apiPattern, (r) => {
-      r.fulfill({
-        status: 500,
-        contentType: "application/json",
-        body: JSON.stringify({ message: "Internal Server Error" }),
-      });
     });
 
-    await page.goto(route, { waitUntil: "domcontentloaded" });
-    const errorElement = page.locator(
-      '[data-testid="error-state"], [data-testid="retry-button"], [role="alert"], button:has-text("إعادة")',
-    );
-    // If error element is wired, verify visibility
-    if ((await errorElement.count()) > 0) {
-      await expect(errorElement.first()).toBeVisible();
+    page.on('pageerror', (err) => {
+        consoleErrors.push(err.message);
+    });
+
+    await page.route('**/api/v1/system/context', (r) => {
+        r.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                data: {
+                    system: { version: '1.0.0', name: 'سروور ERP' },
+                    branding: { app_name: 'سروور كوفي' },
+                    tenant: { id: 'demo', name: 'مؤسسة تجريبية' },
+                    locale: 'ar',
+                    translations: {},
+                    stores: [{ id: 1, name: 'الفرع الرئيسي', code: 'main' }],
+                },
+            }),
+        });
+    });
+
+    await page.route('**/api/v1/stores', (r) => {
+        r.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                data: [{ id: 1, name: 'الفرع الرئيسي', code: 'main' }],
+            }),
+        });
+    });
+
+    // 1. Multi-Viewport Audits (390, 820, 1366)
+    for (const vp of VIEWPORTS) {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(route, { waitUntil: 'domcontentloaded' });
+
+        // Assert RTL (MUST require dir="rtl")
+        const htmlDir = await page.locator('html').getAttribute('dir');
+        expect(htmlDir).toBe('rtl');
+
+        // Assert No Horizontal Overflow
+        const hasHorizontalOverflow = await page.evaluate(() => {
+            return document.documentElement.scrollWidth > document.documentElement.clientWidth + 2;
+        });
+        expect(hasHorizontalOverflow).toBe(false);
+
+        // Skeleton → Content transition check
+        const skeleton = page
+            .locator('.animate-pulse, [data-testid="skeleton"], [data-testid="table-skeleton"]')
+            .first();
+        if (await skeleton.isVisible().catch(() => false)) {
+            await skeleton.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+        }
+
+        // Unconditional content assertion when testId is specified
+        if (testId) {
+            await expect(page.locator(`[data-testid="${testId}"]`)).toBeVisible();
+        }
+
+        // Touch targets check on mobile (390px): width >= 44px AND height >= 44px
+        if (vp.isMobile) {
+            const actionSelector = testId
+                ? `[data-testid="${testId}"] [data-testid^="action-"], [data-testid="${testId}"] button`
+                : '[data-testid^="action-"], button';
+            const actions = page.locator(actionSelector);
+            if ((await actions.count()) > 0) {
+                const firstAction = actions.first();
+                const box = await firstAction.boundingBox();
+                if (box) {
+                    expect(box.width).toBeGreaterThanOrEqual(44);
+                    expect(box.height).toBeGreaterThanOrEqual(44);
+                }
+            }
+        }
     }
 
-    await page.unroute(apiPattern);
-  }
+    // 2. Page 2 navigation check (when pagination exists)
+    const page2Btn = page.locator('button').filter({ hasText: /^2$/ }).first();
+    const nextBtn = page
+        .locator('button')
+        .filter({ hasText: /التالي|Next/i })
+        .first();
+    const targetPageBtn =
+        (await page2Btn.count()) > 0 && (await page2Btn.isEnabled().catch(() => false))
+            ? page2Btn
+            : (await nextBtn.count()) > 0 && (await nextBtn.isEnabled().catch(() => false))
+              ? nextBtn
+              : null;
 
-  // 4. Zero Console Errors / Vue Warnings Assertion
-  expect(consoleErrors).toEqual([]);
+    if (targetPageBtn) {
+        await targetPageBtn.click();
+        if (testId) {
+            await expect(page.locator(`[data-testid="${testId}"]`)).toBeVisible();
+        }
+    }
+
+    // 3. Dark / Light Toggle Check
+    await page.evaluate(() => document.documentElement.classList.add('dark'));
+    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(true);
+    await page.evaluate(() => document.documentElement.classList.remove('dark'));
+    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(false);
+
+    // 4. Mock 500 Error + Retry Test
+    if (apiPattern) {
+        await page.route(apiPattern, (r) => {
+            r.fulfill({
+                status: 500,
+                contentType: 'application/json',
+                body: JSON.stringify({ message: 'Internal Server Error' }),
+            });
+        });
+
+        await page.goto(route, { waitUntil: 'domcontentloaded' });
+        const errorState = page.locator('[data-testid="error-state"], [data-testid="inline-error-bar"]').first();
+        await expect(errorState).toBeVisible();
+
+        await page.unroute(apiPattern);
+
+        const retryBtn = page.locator('[data-testid="retry-button"]').first();
+        await retryBtn.click();
+
+        if (testId) {
+            await expect(page.locator(`[data-testid="${testId}"]`)).toBeVisible();
+        }
+    }
+
+    // 5. Zero Console Errors / Vue Warnings Assertion
+    expect(consoleErrors).toEqual([]);
 }
