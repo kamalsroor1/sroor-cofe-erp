@@ -5,14 +5,21 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\ActiveStore;
+use App\Support\ClientStoreGuard;
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 final class ApiTokenAuth
 {
+    /** @var list<string> routes where a stale X-Store-Id is ignored, see isStoreRecoveryRoute() */
+    private const STORE_RECOVERY_ROUTES = ['api.auth.me', 'api.auth.logout', 'api.stores.index', 'api.stores.switch'];
+
     /**
      * Authenticate an API request with a Sanctum personal access token.
      *
@@ -95,12 +102,59 @@ final class ApiTokenAuth
         }
         $request->setUserResolver(fn () => $user);
 
-        // Set store context from header
-        $storeHeader = $request->header('X-Store-Id');
-        if ($storeHeader && is_numeric($storeHeader)) {
-            session(['current_store_id' => (int) $storeHeader]);
+        // STOR-1 (security): X-Store-Id is trusted only after an access check. An explicit header
+        // the user may not use is a 403, never a silent fallback; without the header nothing is
+        // written and readers fall back to the user's own default store.
+        if (! $this->isCentralRoute($request) && ! $this->isStoreRecoveryRoute($request)) {
+            $storeHeader = $request->header('X-Store-Id');
+
+            if (is_string($storeHeader) && trim($storeHeader) !== '') {
+                $storeId = ActiveStore::parseHeader($storeHeader);
+
+                if ($storeId === ActiveStore::ALL) {
+                    if (! ActiveStore::canViewAll($user)) {
+                        return $this->storeForbidden();
+                    }
+                } elseif (! is_int($storeId) || ! ActiveStore::canAccess($user, $storeId)) {
+                    return $this->storeForbidden();
+                } else {
+                    session(['current_store_id' => $storeId]);
+                }
+            }
         }
 
         return $next($request);
+    }
+
+    /**
+     * The /api/v1/super-admin control plane runs in the central DB (no `stores` table), so the
+     * store header the SPA attaches to every call is ignored there.
+     */
+    private function isCentralRoute(Request $request): bool
+    {
+        $route = $request->route();
+
+        return $route instanceof Route
+            && in_array(EnsureCentralContext::class, $route->gatherMiddleware(), true);
+    }
+
+    /**
+     * Routes the SPA needs to RECOVER from a stale X-Store-Id (a store the user lost access to):
+     * who am I, which stores may I use, switch, log out. The header is ignored there (not
+     * trusted, not written to the session); each of them resolves the store from the user's own
+     * accessible stores, so ignoring it never exposes another branch's data.
+     */
+    private function isStoreRecoveryRoute(Request $request): bool
+    {
+        return $request->routeIs(self::STORE_RECOVERY_ROUTES);
+    }
+
+    private function storeForbidden(): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => __('common.store_access_denied'),
+            'error_code' => ClientStoreGuard::ERROR_CODE,
+        ], 403);
     }
 }

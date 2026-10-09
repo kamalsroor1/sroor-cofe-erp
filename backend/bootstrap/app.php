@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
+use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
@@ -76,6 +77,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'store.scope' => StoreScope::class,
             'store.access' => StoreAccess::class,
+            // STOR-1: alias only; mounted on the operational routes by STOR-2 (W3).
+            'store.active' => ResolveActiveStore::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -9,6 +9,7 @@ use App\Models\CashShift;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
+use App\Support\ActiveStore;
 use Illuminate\Http\Request;
 
 final class ApiMeAction
@@ -21,9 +22,11 @@ final class ApiMeAction
         $user->loadMissing('stores');
 
         $activeStore = null;
-        $storeHeader = $request->header('X-Store-Id');
-        if ($storeHeader && is_numeric($storeHeader)) {
-            $activeStore = Store::where('id', (int) $storeHeader)->where('is_active', true)->first();
+        // /auth/me ignores a stale X-Store-Id in ApiTokenAuth (so the SPA can recover), hence the
+        // header is honoured here only for a store the user may access; else the user's own store.
+        $storeHeader = ActiveStore::parseHeader($request->header('X-Store-Id'));
+        if (is_int($storeHeader) && ActiveStore::canAccess($user, $storeHeader)) {
+            $activeStore = Store::where('id', $storeHeader)->where('is_active', true)->first();
         }
 
         if (! $activeStore) {

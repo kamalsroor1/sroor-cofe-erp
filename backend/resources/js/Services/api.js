@@ -2,6 +2,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { trans } from '../helpers/trans';
 import { isNetworkError, reportRequestFailure, reportServerReachable } from '../helpers/connectivity';
+import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
 
 // 1. Create centralized Axios instance
 const apiClient = axios.create({
@@ -55,6 +56,13 @@ apiClient.interceptors.response.use(
         // Feeds the offline banner (OFFL-1): any HTTP answer means the server is reachable.
         if (error.response) reportServerReachable();
         else reportRequestFailure(error);
+
+        // Stale active branch (403 store_access_denied): forget it and retry once without
+        // X-Store-Id, so the API falls back to the user's own store (no alert, no lockout).
+        const storeRetry = storeAccessRetryConfig(error, localStorage);
+        if (storeRetry) {
+            return apiClient(storeRetry);
+        }
 
         const status = error.response ? error.response.status : null;
         const data = error.response ? error.response.data : null;

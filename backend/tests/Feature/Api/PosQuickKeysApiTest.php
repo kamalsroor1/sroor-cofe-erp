@@ -356,10 +356,11 @@ final class PosQuickKeysApiTest extends TenantTestCase
             ->assertJsonPath('data.quick_keys.0.item.id', $itemOther)
             ->assertJsonPath('data.quick_keys.0.page', 5);
 
-        // A cashier sending another branch's X-Store-Id gets no keys from that branch.
+        // A cashier sending another branch's X-Store-Id is refused outright (STOR-1): nothing
+        // from that branch, keys included, is returned.
         $cashier = $this->createTenantUser($tenant, 'cashier');
         $this->getJson('/api/v1/pos/bootstrap', $this->tenantHeaders($tenant, $cashier, $otherId))
-            ->assertOk()
-            ->assertJsonCount(0, 'data.quick_keys');
+            ->assertForbidden()
+            ->assertJsonMissingPath('data.quick_keys');
     }
 }

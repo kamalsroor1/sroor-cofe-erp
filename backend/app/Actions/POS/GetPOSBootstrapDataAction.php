@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\User;
+use App\Support\ActiveStore;
 use Illuminate\Support\Facades\DB;
 
 class GetPOSBootstrapDataAction
@@ -18,6 +19,7 @@ class GetPOSBootstrapDataAction
     public function __construct(
         private readonly GetStorePosSettingsAction $getStorePosSettingsAction,
         private readonly GetPosQuickKeysAction $getPosQuickKeysAction,
+        private readonly ActiveStore $activeStore,
     ) {}
 
     /**
@@ -25,18 +27,9 @@ class GetPOSBootstrapDataAction
      */
     public function execute(?User $user): array
     {
-        // 1. Resolve Active Store
-        $storeId = session('current_store_id');
-        $activeStore = null;
-        if ($storeId) {
-            $activeStore = Store::where('id', $storeId)->where('is_active', true)->first();
-        }
-        if (! $activeStore && $user) {
-            $activeStore = $user->getCurrentStore();
-            if ($activeStore) {
-                $storeId = $activeStore->id;
-            }
-        }
+        // 1. Resolve Active Store (STOR-1: access-checked; drives the WHOLE payload)
+        $activeStore = $this->resolveActiveStore($user);
+        $storeId = $activeStore?->id;
 
         // 2. Active Cashier Shift
         $activeShift = null;
@@ -180,11 +173,41 @@ class GetPOSBootstrapDataAction
             'pos_settings' => $activeStore
                 ? (new StorePosSettingResource($this->getStorePosSettingsAction->execute((int) $activeStore->id)))->resolve()
                 : null,
-            // POSB-6: quick keys of the active store, only when the user may access that store
-            // (X-Store-Id is not access-checked upstream). Constant query count (no N+1).
-            'quick_keys' => $activeStore && $user && $user->can('view', $activeStore)
+            // POSB-6: quick keys of the active store (access-checked in resolveActiveStore()).
+            // Constant query count (no N+1).
+            'quick_keys' => $activeStore
                 ? PosQuickKeyResource::collection($this->getPosQuickKeysAction->execute((int) $activeStore->id))->resolve()
                 : [],
         ];
+    }
+
+    /**
+     * STOR-1: the store whose stock, open shift, pos_settings and quick keys are returned.
+     *
+     * Order: the store resolved by ResolveActiveStore (once STOR-2 mounts it), then the session
+     * store written by ApiTokenAuth (re-checked here as defence in depth, because the payload
+     * exposes stock and the open shift), then the user's own default accessible store. A store
+     * the user may not access is never returned; no user means no store-specific data.
+     */
+    private function resolveActiveStore(?User $user): ?Store
+    {
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        $resolved = $this->activeStore->store();
+        if ($resolved instanceof Store && $resolved->is_active && ActiveStore::canAccess($user, (int) $resolved->id)) {
+            return $resolved;
+        }
+
+        $sessionStoreId = session('current_store_id');
+        if (is_numeric($sessionStoreId) && ActiveStore::canAccess($user, (int) $sessionStoreId)) {
+            $sessionStore = Store::query()->whereKey((int) $sessionStoreId)->where('is_active', true)->first();
+            if ($sessionStore instanceof Store) {
+                return $sessionStore;
+            }
+        }
+
+        return ActiveStore::defaultFor($user);
     }
 }
