@@ -23,7 +23,8 @@ use Illuminate\Support\Carbon;
  * `lineTotal()` multiplies it by the quantity with bcmath. A line counts towards the
  * tenant's entitlements only while `activeFor()` returns it: status `active`,
  * starts_at <= moment < ends_at (NULL ends_at = open-ended, NULL starts_at = never active),
- * AND its parent subscription is active at that moment (CTO W1 Q3 [2026-10-09]).
+ * AND its parent subscription is in force at that moment: `active` within its term (CTO W1
+ * Q3 [2026-10-09]) or `past_due` (grace period, CTO decision 2026-10-09).
  *
  * The (subscription_id, tenant_id) pair is also a composite foreign key to
  * subscriptions (id, tenant_id) (migration 2026_10_10_200550), so even a raw query
@@ -162,12 +163,18 @@ class SubscriptionAddon extends Model
      * Lines of $tenant that are in force at $at (default: now):
      * - the line is `active`, started (starts_at NOT NULL and <= $at) and not ended
      *   (ends_at NULL or > $at);
-     * - its parent subscription is active at $at: status `active` and ends_at > $at
-     *   (same rule as Subscription::isActive()). A trialing, past_due, pending_payment,
-     *   cancelled or expired subscription grants no add-on (CTO W1 Q3 [2026-10-09]).
+     * - its parent subscription is in force at $at:
+     *     * status `active` and ends_at > $at (same rule as Subscription::isActive()), or
+     *     * status `past_due`, whatever its ends_at: the term has ended and the tenant is in
+     *       its grace period, during which add-ons KEEP working (CTO decision 2026-10-09).
+     *   A trialing, pending_payment, cancelled or expired subscription grants no add-on
+     *   (CTO W1 Q3 [2026-10-09]).
      *
      * The subscription STATUS is its current value (it has no history); only the dates are
-     * evaluated at $at. Tenant access itself is still decided by `tenants.status` (IDEN-3.x).
+     * evaluated at $at. When add-ons stop at the end of the grace period is decided by the
+     * TENANT status, not here: TenantEntitlementService counts no add-on once the tenant is
+     * read_only / suspended / cancelled / archived (IDEN-3.x), even if the subscription row
+     * still says past_due.
      *
      * @param  Builder<SubscriptionAddon>  $query
      * @return Builder<SubscriptionAddon>
@@ -187,8 +194,12 @@ class SubscriptionAddon extends Model
                     ->orWhere($this->qualifyColumn('ends_at'), '>', $moment);
             })
             ->whereHas('subscription', function (Builder $parent) use ($moment): void {
-                $parent->where('status', SubscriptionStatus::Active->value)
-                    ->where('ends_at', '>', $moment);
+                $parent->where(function (Builder $inForce) use ($moment): void {
+                    $inForce->where(function (Builder $active) use ($moment): void {
+                        $active->where('status', SubscriptionStatus::Active->value)
+                            ->where('ends_at', '>', $moment);
+                    })->orWhere('status', SubscriptionStatus::PastDue->value);
+                });
             });
     }
 
@@ -211,9 +222,16 @@ class SubscriptionAddon extends Model
         // A line that was never saved may have no parent yet: then it is not active.
         $subscription = $this->getRelationValue('subscription');
 
-        return $subscription instanceof Subscription
-            && $subscription->status === SubscriptionStatus::Active
-            && $subscription->ends_at->gt($moment);
+        if (! $subscription instanceof Subscription) {
+            return false;
+        }
+
+        return match ($subscription->status) {
+            SubscriptionStatus::Active => $subscription->ends_at->gt($moment),
+            // Grace period (CTO 2026-10-09): the tenant status decides when it ends.
+            SubscriptionStatus::PastDue => true,
+            default => false,
+        };
     }
 
     /**

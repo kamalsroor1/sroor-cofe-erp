@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<string, int>|null $bundled_limits
  * @property string $unit_price monthly unit price (recurring) or one-time price (service)
  * @property string|null $yearly_price NULL = not sold yearly
+ * @property string|null $included_credits credits granted per cycle by a `credits` add-on (ENTI-1.10), DECIMAL(12,3) string; NULL for other types
  * @property array<array-key, mixed>|null $price_tiers raw JSON: [{"min_qty": 3, "unit_price": "212.000", "yearly_price": "2120.000"}, …]
  * @property bool $is_active
  * @property bool $is_public
@@ -49,6 +50,7 @@ class Addon extends Model
         'unit_price',
         'yearly_price',
         'price_tiers',
+        'included_credits',
         'is_active',
         'is_public',
         'sort_order',
@@ -69,6 +71,7 @@ class Addon extends Model
             'unit_price' => 'decimal:3',
             'yearly_price' => 'decimal:3',
             'price_tiers' => 'array',
+            'included_credits' => 'decimal:3',
             'is_active' => 'boolean',
             'is_public' => 'boolean',
             'sort_order' => 'integer',
@@ -124,6 +127,12 @@ class Addon extends Model
     public function isRecurring(): bool
     {
         return $this->type === AddonType::Recurring;
+    }
+
+    /** A credits pack (ENTI-1.10): priced per cycle like a recurring add-on, plus included_credits. */
+    public function isCredits(): bool
+    {
+        return $this->type === AddonType::Credits;
     }
 
     /**

@@ -50,5 +50,9 @@ return [
         'backup_failed' => 'فشل النسخ الاحتياطي',
         'audit_write_failed' => 'فشل تسجيل قيد مراجعة',
         'entitlements_overridden' => 'تعديل صلاحيات باقة محل يدويًا',
+        'recovery_codes_viewed' => 'عرض أكواد الاسترداد للتحقق الثنائي',
+    ],
+    'prune' => [
+        'done' => 'تم حذف :count من سجلات مراجعة المنصة الأقدم من :date.',
     ],
 ];

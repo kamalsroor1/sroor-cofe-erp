@@ -114,6 +114,36 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        /*
+        | IDEN-1.15: the ONLY connection allowed to delete platform audit rows. Used by the
+        | scheduled `central-audit:prune` command (routes/console.php) and nothing else.
+        | Production: a dedicated MySQL user with SELECT + DELETE on central_audit_logs and
+        | activity_log only (the app user gets neither UPDATE nor DELETE on them). Every key
+        | falls back to the central DB_* value, so dev/CI work unchanged; with the fallback
+        | the prune simply runs as the app user (and fails in production, by design, until
+        | DB_AUDIT_PRUNER_USERNAME/PASSWORD are set).
+        */
+        'audit_pruner' => [
+            'driver' => env('DB_AUDIT_PRUNER_DRIVER', env('DB_CONNECTION', 'sqlite')),
+            'url' => env('DB_AUDIT_PRUNER_URL'),
+            'host' => env('DB_AUDIT_PRUNER_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_AUDIT_PRUNER_PORT', env('DB_PORT', '3306')),
+            'database' => env('DB_AUDIT_PRUNER_DATABASE', env('DB_DATABASE', database_path('database.sqlite'))),
+            'username' => env('DB_AUDIT_PRUNER_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_AUDIT_PRUNER_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_AUDIT_PRUNER_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
     ],
 
     /*

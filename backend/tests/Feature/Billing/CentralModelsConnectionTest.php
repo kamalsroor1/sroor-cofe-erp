@@ -23,6 +23,7 @@ use App\Models\PlatformSetting;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
+use App\Models\TenantCreditLedgerEntry;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,7 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'BillingSequence' => [BillingSequence::class, self::VIA_TRAIT],
             'BillingInvoice' => [BillingInvoice::class, self::VIA_TRAIT],
             'BillingPayment' => [BillingPayment::class, self::VIA_TRAIT],
+            'TenantCreditLedgerEntry' => [TenantCreditLedgerEntry::class, self::VIA_TRAIT],
             'CentralMedia' => [CentralMedia::class, self::VIA_TRAIT],
             'CentralActivity' => [CentralActivity::class, self::VIA_TRAIT],
             'CentralUser' => [CentralUser::class, self::VIA_OWN_METHOD],

@@ -73,6 +73,9 @@ enum CentralAuditEvent: string
     case AuditWriteFailed = 'audit_write_failed';
     case EntitlementsOverridden = 'entitlements_overridden';
 
+    // W2 batch 2 security: an operator read their 2FA recovery codes
+    case RecoveryCodesViewed = 'recovery_codes_viewed';
+
     public function translationKey(): string
     {
         return 'central_audit.events.'.$this->value;

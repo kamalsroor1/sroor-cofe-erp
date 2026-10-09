@@ -6,12 +6,18 @@ use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\Contracts\TenantFeatureManagerInterface;
 use App\Contracts\TenantProvisionerInterface;
 use App\Enums\CentralPermission;
+use App\Models\Addon;
 use App\Models\CentralUser;
+use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
+use App\Observers\Billing\EntitlementsCacheObserver;
 use App\Observers\TenantObserver;
 use App\Services\Branding\PlatformBranding;
+use App\Services\Entitlements\EntitlementFeatures;
+use App\Services\Entitlements\TenantEntitlementService;
 use App\Services\SuperAdminAnalyticsService;
-use App\Services\TenantFeatureManager;
 use App\Services\TenantProvisionerService;
 use App\Support\PlatformSuperAdmin;
 use App\Support\QuickLogin;
@@ -48,9 +54,10 @@ class AppServiceProvider extends ServiceProvider
             TenantProvisionerService::class
         );
 
+        // ENTI-2.2: the entitlement engine is the single source of truth for features/limits.
         $this->app->bind(
             TenantFeatureManagerInterface::class,
-            TenantFeatureManager::class
+            TenantEntitlementService::class
         );
 
         $this->app->bind(
@@ -99,6 +106,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Model Observers
         Tenant::observe(TenantObserver::class);
+
+        // ENTI-2.2: any change to the central rows entitlements derive from bumps the
+        // affected tenants' entitlement cache (explicit TenantCache::bumpFor scope).
+        foreach ([Tenant::class, Plan::class, Subscription::class, SubscriptionAddon::class, Addon::class] as $model) {
+            $model::observe(EntitlementsCacheObserver::class);
+        }
+
+        // ENTI-2.2 / Q-E1: Pennant features resolve through the entitlement service (array store).
+        $this->app->make(EntitlementFeatures::class)->register();
 
         $this->registerRateLimiters();
 

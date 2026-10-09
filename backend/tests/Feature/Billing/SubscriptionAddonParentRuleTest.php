@@ -19,8 +19,13 @@ use Tests\TenantTestCase;
 
 /**
  * CTO W1 Q3 [2026-10-09]: an add-on line is active only while its PARENT subscription is
- * active (status `active` and ends_at in the future) and the line itself has started
+ * in force (status `active` and ends_at in the future) and the line itself has started
  * (starts_at NOT NULL and reached). activeFor() and isActive() must agree.
+ *
+ * CTO decision 2026-10-09 (W2 batch 2): during `past_due` (grace) the lines KEEP working,
+ * even though the subscription term (ends_at) is over. They stop when the TENANT becomes
+ * read_only / suspended / cancelled / archived; that gate lives in TenantEntitlementService
+ * (TenantEntitlementServiceTest).
  */
 #[Group('billing')]
 #[Group('mysql')]
@@ -32,7 +37,6 @@ final class SubscriptionAddonParentRuleTest extends TenantTestCase
     public static function inactiveParentStatuses(): iterable
     {
         yield 'trialing' => [SubscriptionStatus::Trialing];
-        yield 'past_due' => [SubscriptionStatus::PastDue];
         yield 'pending_payment' => [SubscriptionStatus::PendingPayment];
         yield 'cancelled' => [SubscriptionStatus::Cancelled];
         yield 'expired' => [SubscriptionStatus::Expired];
@@ -79,9 +83,45 @@ final class SubscriptionAddonParentRuleTest extends TenantTestCase
         $this->assertFalse($line->fresh()?->isActive());
     }
 
+    public function test_a_line_keeps_counting_while_its_subscription_is_past_due(): void
+    {
+        // Grace period: the term has ended (ends_at in the past) and the status is past_due.
+        [$tenant, $subscription] = $this->subscribedTenant(SubscriptionStatus::PastDue, now()->subDays(2));
+        $line = $this->line($subscription, now()->subMonth());
+
+        $this->assertSame([$line->id], $this->activeIds($tenant));
+        $line->refresh();
+        $this->assertTrue($line->isActive());
+        $this->assertTrue($line->isActive(now()->addDays(5)), 'The subscription dates do not end the grace; the tenant status does.');
+    }
+
+    public function test_a_past_due_line_still_needs_to_have_started_and_not_ended(): void
+    {
+        [$tenant, $subscription] = $this->subscribedTenant(SubscriptionStatus::PastDue, now()->subDay());
+        $notStarted = $this->line($subscription, now()->addDay());
+        $ended = $this->line($subscription, now()->subMonth());
+        $ended->update(['ends_at' => now()->subHour()]);
+
+        $this->assertSame([], $this->activeIds($tenant));
+        $this->assertFalse($notStarted->fresh()?->isActive());
+        $this->assertFalse($ended->fresh()?->isActive());
+    }
+
+    public function test_a_past_due_subscription_that_expires_stops_its_lines(): void
+    {
+        [$tenant, $subscription] = $this->subscribedTenant(SubscriptionStatus::PastDue, now()->subDay());
+        $line = $this->line($subscription, now()->subMonth());
+        $this->assertSame([$line->id], $this->activeIds($tenant));
+
+        $subscription->update(['status' => SubscriptionStatus::Expired]);
+
+        $this->assertSame([], $this->activeIds($tenant));
+        $this->assertFalse($line->fresh()?->isActive());
+    }
+
     public function test_reactivating_the_subscription_brings_its_lines_back(): void
     {
-        [$tenant, $subscription] = $this->subscribedTenant(SubscriptionStatus::PastDue);
+        [$tenant, $subscription] = $this->subscribedTenant(SubscriptionStatus::PendingPayment);
         $line = $this->line($subscription, now()->subDay());
         $this->assertSame([], $this->activeIds($tenant));
 

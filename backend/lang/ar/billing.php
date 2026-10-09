@@ -23,6 +23,7 @@ return [
     'addon_type' => [
         'recurring' => 'إضافة متكررة',
         'service' => 'خدمة',
+        'credits' => 'باقة رصيد',
     ],
     'billing_invoice_status' => [
         'draft' => 'مسودة',
@@ -81,5 +82,11 @@ return [
     'subscription_addon' => [
         'subscription_missing' => 'لا يمكن حفظ بند الإضافة بدون اشتراك موجود.',
         'tenant_mismatch' => 'بند الإضافة لا يخص حساب الاشتراك الذي يتبعه.',
+    ],
+    'credits' => [
+        'insufficient_balance' => 'الرصيد غير كافٍ.',
+        'invalid_amount' => 'قيمة الرصيد غير صحيحة.',
+        'invalid_reason' => 'نوع حركة الرصيد غير صحيح.',
+        'immutable' => 'لا يمكن تعديل أو حذف حركات الرصيد.',
     ],
 ];

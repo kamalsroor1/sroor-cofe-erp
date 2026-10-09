@@ -23,6 +23,7 @@ return [
     'addon_type' => [
         'recurring' => 'Recurring add-on',
         'service' => 'Service',
+        'credits' => 'Credits pack',
     ],
     'billing_invoice_status' => [
         'draft' => 'Draft',
@@ -81,5 +82,11 @@ return [
     'subscription_addon' => [
         'subscription_missing' => 'An add-on line cannot be saved without an existing subscription.',
         'tenant_mismatch' => 'The add-on line does not belong to the account of its subscription.',
+    ],
+    'credits' => [
+        'insufficient_balance' => 'Not enough credits.',
+        'invalid_amount' => 'Invalid credit amount.',
+        'invalid_reason' => 'Invalid credit movement type.',
+        'immutable' => 'Credit movements cannot be changed or deleted.',
     ],
 ];

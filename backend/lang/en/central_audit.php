@@ -50,5 +50,9 @@ return [
         'backup_failed' => 'Backup failed',
         'audit_write_failed' => 'Audit write failed',
         'entitlements_overridden' => 'Entitlements overridden',
+        'recovery_codes_viewed' => 'Two-factor recovery codes viewed',
+    ],
+    'prune' => [
+        'done' => 'Deleted :count platform audit rows older than :date.',
     ],
 ];

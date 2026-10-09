@@ -35,24 +35,27 @@ final class BillingMigrationsRoundTripTest extends TenantTestCase
         '2026_10_10_200550_add_tenant_scoped_foreign_key_to_subscription_addons',
         '2026_10_10_200600_add_catalog_columns_to_plan_features_table',
         '2026_10_10_200610_apply_approved_plan_catalog',
+        '2026_10_10_200700_add_included_credits_to_addons_table',
+        '2026_10_10_200710_create_tenant_credit_ledger_table',
+        '2026_10_10_200720_create_tenant_credit_accounts_table',
     ];
 
     private const TABLES = [
         'plans', 'plan_features', 'subscriptions', 'addons', 'plan_addon', 'subscription_addons',
-        'billing_sequences', 'billing_invoices', 'billing_payments',
+        'billing_sequences', 'billing_invoices', 'billing_payments', 'tenant_credit_ledger', 'tenant_credit_accounts',
     ];
 
-    private const CREATED_TABLES = ['addons', 'plan_addon', 'subscription_addons', 'billing_sequences', 'billing_invoices', 'billing_payments'];
+    private const CREATED_TABLES = ['addons', 'plan_addon', 'subscription_addons', 'billing_sequences', 'billing_invoices', 'billing_payments', 'tenant_credit_ledger', 'tenant_credit_accounts'];
 
     public function test_every_billing_migration_file_is_in_the_chain(): void
     {
         $files = array_map(
             static fn (string $path): string => basename($path, '.php'),
-            (array) glob(database_path('migrations/2026_10_10_200[1-6]*.php')),
+            (array) glob(database_path('migrations/2026_10_10_200[1-7]*.php')),
         );
         sort($files);
 
-        $this->assertSame(self::CHAIN, $files, 'A new billing migration in 200100-200699 must be added to the round-trip chain.');
+        $this->assertSame(self::CHAIN, $files, 'A new billing migration in 200100-200799 must be added to the round-trip chain.');
     }
 
     public function test_the_chain_rolls_back_and_reapplies_to_the_same_schema_and_catalog(): void

@@ -41,7 +41,7 @@ class BillingEnumsTest extends TestCase
             'SubscriptionStatus' => [SubscriptionStatus::class, ['trialing', 'active', 'past_due', 'pending_payment', 'cancelled', 'expired']],
             'SubscriptionAddonStatus' => [SubscriptionAddonStatus::class, ['active', 'pending_payment', 'cancelled', 'expired']],
             'BillingCycle' => [BillingCycle::class, ['monthly', 'yearly', 'biennial']],
-            'AddonType' => [AddonType::class, ['recurring', 'service']],
+            'AddonType' => [AddonType::class, ['recurring', 'service', 'credits']],
             'BillingInvoiceStatus' => [BillingInvoiceStatus::class, ['draft', 'pending', 'paid', 'void', 'refunded']],
             'BillingInvoiceType' => [BillingInvoiceType::class, ['plan', 'renewal', 'upgrade', 'addon', 'service']],
             'BillingPaymentStatus' => [BillingPaymentStatus::class, ['pending', 'verified', 'rejected', 'failed', 'refunded']],

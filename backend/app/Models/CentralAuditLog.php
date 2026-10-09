@@ -7,10 +7,12 @@ namespace App\Models;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\CentralAuditLogImmutableException;
 use App\Models\Builders\CentralAuditLogBuilder;
+use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * One append-only entry of the CENTRAL platform-operator audit log (IDEN-1.5).
@@ -19,10 +21,24 @@ use Illuminate\Support\Carbon;
  * initialized. Rows are written only through App\Services\CentralAuditLogger (which
  * redacts secrets) and can never be updated or deleted through Eloquent.
  *
- * TODO(CTO): the plan asks for this model on top of spatie/laravel-activitylog. The
- * package is not installed yet (PKG-1 owns composer.json), so this is the documented
- * fallback: a standalone model whose columns mirror activitylog's, so it can later
- * extend Spatie\Activitylog\Models\Activity without a data migration.
+ * IDEN-1.15 (CTO W1 Q2): the model sits on spatie/laravel-activitylog. It extends
+ * Spatie\Activitylog\Models\Activity, so it IS an activitylog Activity (causer/subject
+ * morphs, `properties`, causedBy()/forSubject()/forEvent() scopes, getExtraProperty()),
+ * but it keeps its own table and column names, so no data was migrated:
+ *  - table `central_audit_logs` (not config('activitylog.table_name')) on the central
+ *    connection via UsesCentralConnection (the package constructor's connection default
+ *    is never used: getConnectionName() wins);
+ *  - `event` holds a CentralAuditEvent value; there is no `log_name`, `batch_uuid` or
+ *    `updated_at` column, so the package's inLog()/hasBatch()/forBatch() scopes do not
+ *    apply here, and rows are never written through the activity() helper: the ONLY write
+ *    path stays App\Services\CentralAuditLogger (redaction, transaction rules, retries);
+ *  - `properties` keeps the `array` cast (the package default is a Collection), so every
+ *    existing reader keeps working; changes() is therefore always empty.
+ * The package's own `activity_log` table (App\Models\CentralActivity) is a separate log.
+ *
+ * Retention: 2 years, pruned by the scheduled `central-audit:prune` command on the
+ * dedicated `audit_pruner` DB connection (routes/console.php). In production the app's
+ * DB user has no UPDATE/DELETE grant on this table.
  *
  * @property int $id
  * @property string $event
@@ -41,12 +57,17 @@ use Illuminate\Support\Carbon;
  *
  * @method static CentralAuditLogBuilder query()
  */
-class CentralAuditLog extends Model
+class CentralAuditLog extends Activity
 {
+    use UsesCentralConnection;
+
     protected $table = 'central_audit_logs';
 
     /** Append-only: there is no updated_at column. */
     public const UPDATED_AT = null;
+
+    /** The package model is fully unguarded; this one accepts $fillable only. */
+    public $guarded = ['*'];
 
     /**
      * @var list<string>
@@ -65,6 +86,8 @@ class CentralAuditLog extends Model
     ];
 
     /**
+     * Overrides the package's `properties => collection` cast.
+     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -86,14 +109,6 @@ class CentralAuditLog extends Model
         static::deleting(static function (): never {
             throw new CentralAuditLogImmutableException;
         });
-    }
-
-    /**
-     * The audit log ALWAYS lives in the central database, even while a tenant is initialized.
-     */
-    public function getConnectionName(): ?string
-    {
-        return config('tenancy.database.central_connection', config('database.default'));
     }
 
     /**
