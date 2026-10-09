@@ -119,12 +119,13 @@
       v-else
       :title="$t('contacts.no_transactions_found')"
       :description="$t('contacts.no_transactions_in_period')"
-      icon="📄"
+      :icon="FileText"
     />
   </div>
 </template>
 
 <script setup>
+import { FileText } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';

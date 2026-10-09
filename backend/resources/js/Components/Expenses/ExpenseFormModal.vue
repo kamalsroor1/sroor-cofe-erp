@@ -102,7 +102,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="saving"
+          :loading="isBusy"
           class="font-bold shadow-theme-primary shadow-md"
         >
           {{ editingExpense ? $t('common.save') : $t('expenses.add_expense') }}
@@ -113,6 +113,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
@@ -124,14 +125,18 @@ import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   editingExpense: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
   costCenterModalOptions: { type: Array, default: () => [] },
   quickCategories: { type: Array, default: () => [] },
   saving: { type: Boolean, default: false },
+  submitting: { type: Boolean, default: false },
+  isSubmitting: { type: Boolean, default: false },
 });
+
+const isBusy = computed(() => props.saving || props.submitting || props.isSubmitting);
 
 defineEmits(['close', 'save', 'update:field']);
 

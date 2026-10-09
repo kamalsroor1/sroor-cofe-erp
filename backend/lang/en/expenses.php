@@ -50,7 +50,7 @@ return [
     'total_month' => 'Total Expenses This Month',
     'total_cash' => 'Cash Drawn from Drawer',
     'total_filtered' => 'Total Filtered Expenses',
-    'new_expense' => 'Record New Operating Expense 💸',
+    'new_expense' => 'Record New Operating Expense',
     'edit_expense' => 'Edit Expense Details',
     'delete_confirm' => 'Are you sure you want to delete expense (:title)?',
     'no_expenses' => 'No recorded expenses matching search',

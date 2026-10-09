@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('inventory.branch_stocks_balance')"
       :subtitle="$t('inventory.branch_stocks_subtitle')"
-      icon="📦"
+      :icon="Package"
     >
       <template #actions>
         <router-link
@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { ArrowRight } from 'lucide-vue-next';
+import { ArrowRight, Package } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import StoreStocksFilterBar from '../../Components/StoreStocks/StoreStocksFilterBar.vue';
 import StoreStocksTable from '../../Components/StoreStocks/StoreStocksTable.vue';

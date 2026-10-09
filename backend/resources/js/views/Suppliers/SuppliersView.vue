@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader :title="$t('contacts.suppliers_title')" :subtitle="$t('contacts.suppliers_subtitle')" icon="🏭">
+    <PageHeader :title="$t('contacts.suppliers_title')" :subtitle="$t('contacts.suppliers_subtitle')" :icon="Truck">
       <template #actions>
         <BaseButton
           type="button"
@@ -32,11 +32,14 @@
       :suppliers="suppliers"
       :pagination="pagination"
       :loading="isLoading"
+      :error="hasError"
+      :error-message="errorMessage"
       @create="openCreateModal"
       @pay="openPaymentModal"
       @edit="openEditModal"
       @delete="deleteSupplier"
       @page-change="fetchSuppliers"
+      @retry="fetchSuppliers"
     />
 
     <!-- Add / Edit Supplier Modal -->
@@ -64,7 +67,7 @@
 </template>
 
 <script setup>
-import { Plus } from 'lucide-vue-next';
+import { Plus, Truck } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import SuppliersMetricsGrid from '../../Components/Suppliers/SuppliersMetricsGrid.vue';
@@ -80,6 +83,8 @@ const {
   searchQuery,
   debtStatus,
   isLoading,
+  hasError,
+  errorMessage,
   isSubmitting,
   pagination,
   showSupplierModal,

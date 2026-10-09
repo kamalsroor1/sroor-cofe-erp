@@ -47,7 +47,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="submitting"
+          :loading="isBusy"
           class="font-black shadow-lg shadow-theme-primary/20"
         >
           <Users class="w-4 h-4" />
@@ -71,7 +71,11 @@ const props = defineProps({
   allUsers: { type: Array, default: () => [] },
   modelValue: { type: Array, default: () => [] },
   submitting: { type: Boolean, default: false },
+  isSubmitting: { type: Boolean, default: false },
+  saving: { type: Boolean, default: false },
 });
+
+const isBusy = computed(() => props.submitting || props.isSubmitting || props.saving);
 
 const emit = defineEmits(['close', 'submit', 'update:modelValue']);
 
