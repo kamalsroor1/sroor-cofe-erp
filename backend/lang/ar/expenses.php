@@ -91,4 +91,27 @@ return [
     'expense_deleted' => 'تم حذف المصروف بنجاح',
     'delete_expense_confirm_title' => 'حذف المصروف (:title)؟',
     'delete_expense_confirm_text' => 'هل أنت متأكد من حذف هذا المصروف؟',
+
+    // Category / Item Icons
+    'icon_folder' => 'مجلد',
+    'icon_tag' => 'وسم',
+    'icon_boxes' => 'صناديق',
+    'icon_package' => 'طرد',
+    'icon_layers' => 'طبقات',
+    'icon_shopping_bag' => 'حقيبة تسوق',
+    'icon_shopping_cart' => 'عربة تسوق',
+    'icon_store' => 'متجر',
+    'icon_sparkles' => 'مميز',
+    'icon_star' => 'نجمة',
+    'icon_flame' => 'رائج',
+    'icon_coffee' => 'قهوة',
+    'icon_cup_soda' => 'مشروبات',
+    'icon_utensils' => 'أدوات طعام',
+    'icon_droplet' => 'سوائل',
+    'icon_leaf' => 'طبيعي',
+    'icon_zap' => 'سريع',
+    'icon_gift' => 'هدية',
+    'icon_bookmark' => 'إشارة مرجعية',
+    'icon_archive' => 'أرشيف',
 ];
+

@@ -37,6 +37,8 @@
             :key="item.name"
             type="button"
             @click="updateForm('icon', item.name)"
+            :aria-pressed="isCurrentIcon(item.name)"
+            :aria-label="$t(item.labelKey)"
             class="min-h-[44px] rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 transition active:scale-90 cursor-pointer shadow-2xs"
             :class="
               isCurrentIcon(item.name)
@@ -127,26 +129,26 @@ const emit = defineEmits(['close', 'submit', 'update:form']);
 const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
 const iconPresets = [
-  { name: 'Folder', icon: Folder },
-  { name: 'Tag', icon: Tag },
-  { name: 'Boxes', icon: Boxes },
-  { name: 'Package', icon: Package },
-  { name: 'Layers', icon: Layers },
-  { name: 'ShoppingBag', icon: ShoppingBag },
-  { name: 'ShoppingCart', icon: ShoppingCart },
-  { name: 'Store', icon: Store },
-  { name: 'Sparkles', icon: Sparkles },
-  { name: 'Star', icon: Star },
-  { name: 'Flame', icon: Flame },
-  { name: 'Coffee', icon: Coffee },
-  { name: 'CupSoda', icon: CupSoda },
-  { name: 'Utensils', icon: Utensils },
-  { name: 'Droplet', icon: Droplet },
-  { name: 'Leaf', icon: Leaf },
-  { name: 'Zap', icon: Zap },
-  { name: 'Gift', icon: Gift },
-  { name: 'Bookmark', icon: Bookmark },
-  { name: 'Archive', icon: Archive },
+  { name: 'Folder', icon: Folder, labelKey: 'expenses.icon_folder' },
+  { name: 'Tag', icon: Tag, labelKey: 'expenses.icon_tag' },
+  { name: 'Boxes', icon: Boxes, labelKey: 'expenses.icon_boxes' },
+  { name: 'Package', icon: Package, labelKey: 'expenses.icon_package' },
+  { name: 'Layers', icon: Layers, labelKey: 'expenses.icon_layers' },
+  { name: 'ShoppingBag', icon: ShoppingBag, labelKey: 'expenses.icon_shopping_bag' },
+  { name: 'ShoppingCart', icon: ShoppingCart, labelKey: 'expenses.icon_shopping_cart' },
+  { name: 'Store', icon: Store, labelKey: 'expenses.icon_store' },
+  { name: 'Sparkles', icon: Sparkles, labelKey: 'expenses.icon_sparkles' },
+  { name: 'Star', icon: Star, labelKey: 'expenses.icon_star' },
+  { name: 'Flame', icon: Flame, labelKey: 'expenses.icon_flame' },
+  { name: 'Coffee', icon: Coffee, labelKey: 'expenses.icon_coffee' },
+  { name: 'CupSoda', icon: CupSoda, labelKey: 'expenses.icon_cup_soda' },
+  { name: 'Utensils', icon: Utensils, labelKey: 'expenses.icon_utensils' },
+  { name: 'Droplet', icon: Droplet, labelKey: 'expenses.icon_droplet' },
+  { name: 'Leaf', icon: Leaf, labelKey: 'expenses.icon_leaf' },
+  { name: 'Zap', icon: Zap, labelKey: 'expenses.icon_zap' },
+  { name: 'Gift', icon: Gift, labelKey: 'expenses.icon_gift' },
+  { name: 'Bookmark', icon: Bookmark, labelKey: 'expenses.icon_bookmark' },
+  { name: 'Archive', icon: Archive, labelKey: 'expenses.icon_archive' },
 ];
 
 const isCurrentIcon = (name) => {

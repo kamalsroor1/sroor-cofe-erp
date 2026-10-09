@@ -154,3 +154,14 @@ All checks executed from `backend/`:
 8. **Item 8 (Should-fix):** In `ExpensesTable.vue` and `SuppliersTable.vue`, rendered `<ErrorState>` on `error` before checking `rows.length > 0` (handling stale rows on failed pagination). Emitted and handled active page on retry (`fetchExpenses(pagination.current_page)`, `fetchSuppliers(pagination.current_page)`).
 9. **Item 9 (Should-fix):** Removed `💳` emoji prefix from `method_visa` in `backend/lang/ar/treasury.php` and `backend/lang/en/treasury.php`.
 10. **Item 10 (Should-fix) & Nits:** Updated Items 4 and 9 status to "Partial" in this report with accurate scope notes. Fixed dead branch in `BaseButton.vue:7` and replaced deep watch on rows in `DataTable.vue` with `ResizeObserver`.
+
+---
+
+## 8. Review Fixes (Round 3 — Claude-Code Re-Review on PR #4)
+
+1. **Metric Grid Layer Issue (Blocking):** Removed `.metric-grid-2col` from `app.css` (`@layer components`) to eliminate CSS specificity conflicts with `@layer utilities`. Used responsive Tailwind utility classes directly on each grid:
+   - 3-card grids (`ExpensesMetricsGrid.vue`, `SuppliersMetricsGrid.vue`, `StockTransfersMetricsGrid.vue`): `grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 [&>:last-child:nth-child(odd)]:col-span-2 sm:[&>:last-child:nth-child(odd)]:col-span-1`. Verified on 390px viewport: 2-column layout with 3rd card spanning full width (2 columns).
+   - 4-card grids (`DashboardKpiGrid.vue`, `DashboardSkeleton.vue`, `StoresMetricsGrid.vue`): `grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4`. Verified on 390px viewport: 2x2 even grid.
+2. **Category Icon Picker Accessibility (Nit):** In `CategoryFormModal.vue:35-48`, added `:aria-pressed="isCurrentIcon(item.name)"` and localized `:aria-label="$t(item.labelKey)"` with 20 translated icon names added in parity to `expenses.php` (allowed file).
+3. **Touch Targets CSS Cleanup (Nit):** In `app.css:571-583`, removed unused `.touch-target-44`, `.btn-touch-target`, and `.checkbox-touch-target` selectors, keeping strictly `.data-table-actions button/a/[role='button']`.
+

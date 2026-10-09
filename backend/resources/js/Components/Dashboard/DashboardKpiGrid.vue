@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 metric-grid-2col">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
     <MetricCard
       :title="$t('dashboard.today_sales')"
       :value="formatMoney(metrics.today_sales || 0)"

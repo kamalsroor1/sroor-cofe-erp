@@ -556,21 +556,8 @@ input, textarea, [contenteditable="true"] {
 }
 
 @layer components {
-    /* 📊 G7: Opt-in 2-column KPI grid on mobile (<640px) */
-    @media (max-width: 639px) {
-        .metric-grid-2col {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.625rem;
-        }
-        .metric-grid-2col > :last-child:nth-child(odd) {
-            grid-column: span 2 / span 2;
-        }
-    }
-
     /* 🎯 G8: Minimum 44px touch targets on coarse pointer devices (touchscreens, tablets, phones) */
     @media (pointer: coarse) {
-        .touch-target-44,
-        .btn-touch-target,
         .data-table-actions button,
         .data-table-actions a,
         .data-table-actions [role='button'] {
@@ -580,13 +567,6 @@ input, textarea, [contenteditable="true"] {
             align-items: center;
             justify-content: center;
         }
-
-        .checkbox-touch-target {
-            min-height: 44px;
-            min-width: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
     }
 }
+

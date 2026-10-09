@@ -85,4 +85,27 @@ return [
     'expense_deleted' => 'Expense deleted successfully',
     'delete_expense_confirm_title' => 'Delete Expense (:title)?',
     'delete_expense_confirm_text' => 'Are you sure you want to delete this expense?',
+
+    // Category / Item Icons
+    'icon_folder' => 'Folder',
+    'icon_tag' => 'Tag',
+    'icon_boxes' => 'Boxes',
+    'icon_package' => 'Package',
+    'icon_layers' => 'Layers',
+    'icon_shopping_bag' => 'Shopping Bag',
+    'icon_shopping_cart' => 'Shopping Cart',
+    'icon_store' => 'Store',
+    'icon_sparkles' => 'Sparkles',
+    'icon_star' => 'Star',
+    'icon_flame' => 'Flame',
+    'icon_coffee' => 'Coffee',
+    'icon_cup_soda' => 'Beverage',
+    'icon_utensils' => 'Utensils',
+    'icon_droplet' => 'Droplet',
+    'icon_leaf' => 'Leaf',
+    'icon_zap' => 'Zap',
+    'icon_gift' => 'Gift',
+    'icon_bookmark' => 'Bookmark',
+    'icon_archive' => 'Archive',
 ];
+

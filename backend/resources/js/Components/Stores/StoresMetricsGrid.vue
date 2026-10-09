@@ -1,12 +1,12 @@
 <template>
   <div class="font-tajawal">
     <!-- 🔄 Skeleton Loading State -->
-    <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 metric-grid-2col">
+    <div v-if="isLoading" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       <StatCardSkeleton v-for="n in 4" :key="n" />
     </div>
 
     <!-- 📊 Summary Metrics Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 metric-grid-2col">
+    <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       <!-- Total Stores Count -->
       <MetricCard
         :title="$t('inventory.total_stores_count')"
