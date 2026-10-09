@@ -21,6 +21,25 @@
 | 6 | `code-reviewer` | مراجعة الـ diff مقابل كل القواعد | لا — قراءة فقط |
 | 7 | `security-auditor` | عزل المستأجرين والفروع، الصلاحيات، الحقن، الأسرار، الرفع | لا — قراءة فقط |
 | 8 | `docs-historian` | سجل `docs/history/`، توثيق الصفحات والموديولات والماستر | التوثيق فقط |
+| 9 | `quality-gatekeeper` | Pint, Larastan (level 5 + baseline), ESLint, Prettier: تشغيل البوابة، إصلاح أخطاء lint/type، تقليص الـ baseline، تمريرة التنسيق الواحدة | نعم — بدون تغيير السلوك |
+| 10 | `devops-engineer` | GitHub Actions CI، خط نشر الـ VPS، runbooks التجهيز، النسخ الاحتياطي (Google Drive)، queue/cron، معايير الـ env، إصدارات Android/Electron | نعم — لا يلمس الإنتاج دون طلب صريح |
+| 11 | `product-researcher` | بحث المنافسين على الويب (الميزات، الإعدادات، سير العمل، التسعير، UX) ومقارنتها بالكود وتوصيات قابلة للقرار | التوثيق فقط |
+
+### 1.1 مهارات المشروع (`.claude/skills/`)
+
+يحمّلها الوكلاء مسبقاً عبر حقل `skills:` في الـ frontmatter:
+
+| المهارة | الغرض | يحمّلها |
+|---|---|---|
+| `quality-gate` | تشغيل بوابة الجودة (Pint, Larastan, ESLint, Prettier, PHPUnit) على الملفات المعدّلة وإصلاحها قبل الـ Commit أو عند فشل CI | `backend-architect` · `frontend-vue` · `qa-tester` · `debugger` · `code-reviewer` · `quality-gatekeeper` |
+| `larastan-fixing` | إصلاح أخطاء Larastan level 5 بشكل صحيح وإدارة `phpstan-baseline.neon` | `backend-architect` · `quality-gatekeeper` |
+| `ci-pipeline` | صيانة وتتبع GitHub Actions (`ci.yml` على `feature/multi-tenant`، `deploy.yml` على `main`) | `qa-tester` · `devops-engineer` · `security-auditor` |
+| `production-ops` | معايير الإنتاج/الـ staging: تجهيز الـ VPS، `.env`، النسخ الاحتياطي المشفّر لكل مستأجر إلى Google Drive، queue/cron | `devops-engineer` · `security-auditor` |
+
+### 1.2 المهارات المجتمعية (`.agents/skills/`)
+
+* `laravel-patterns` · `laravel-security` · `laravel-specialist` · `tailwind-design-system` — مرجع **ثانوي** للأدوات غير Claude (Codex / Cursor / Gemini / Antigravity). عند التعارض تفوز `.claude/rules/`.
+* ممنوع اتباع أي جزء منها يقترح Livewire أو Inertia أو Blade Pages أو Alpine أو NativePHP؛ هذه حُذفت نهائياً ولا تُعاد. مهارة `livewire-development` حُذفت في 2026-10-09.
 
 ---
 
@@ -58,6 +77,18 @@
 * **النطاق:** `docs/**` · `README.md` · `AGENTS.md` · `AI_START.md`.
 * **محظور:** ❌ تعديل كود تنفيذي · ❌ وضع علامة ✓ على فحص لم يُنفَّذ فعلاً · ❌ توثيق أسرار أو عناوين خوادم أو بيانات عملاء · ❌ إعادة كتابة ملفات `docs/history/` القديمة.
 
+### 2.8 `quality-gatekeeper`
+* **النطاق:** إعدادات وأخطاء Pint و Larastan و ESLint و Prettier في `backend/` و `desktop/`، و `phpstan-baseline.neon`.
+* **محظور:** ❌ أي تغيير في السلوك · ❌ تكبير الـ baseline · ❌ تنسيق الشجرة كلها خارج تمريرة التنسيق المعتمدة.
+
+### 2.9 `devops-engineer`
+* **النطاق:** `.github/workflows/**`، تصميم النشر والنسخ الاحتياطي والـ queue/cron، runbooks التشغيل، معايير `.env`.
+* **محظور:** ❌ لمس الإنتاج أو تشغيل اسكريبتات النشر دون طلب صريح في نفس الرسالة · ❌ إضافة أسرار داخل ملفات متتبعة (الأسرار عبر GitHub Actions secrets / `.env`).
+
+### 2.10 `product-researcher`
+* **النطاق:** بحث ويب عن المنافسين وقراءة الكود للمقارنة، وكتابة مستندات التوصيات المطلوبة فقط.
+* **محظور:** ❌ تعديل كود التطبيق.
+
 ---
 
 ## 3. خطوط العمل المعتمدة (Pipelines)
@@ -65,7 +96,10 @@
 ```mermaid
 flowchart LR
     subgraph Feature[ميزة جديدة]
-        A1[backend-architect] --> A2[frontend-vue] --> A3[i18n-guardian] --> A4[qa-tester] --> A5[code-reviewer] --> A6[docs-historian]
+        A1[backend-architect] --> A2[frontend-vue] --> A3[i18n-guardian] --> A4[qa-tester] --> A5[quality-gatekeeper<br/>البوابة] --> A6[code-reviewer] --> A7[docs-historian]
+    end
+    subgraph Ops[CI / بنية تحتية / نشر / نسخ احتياطي]
+        E1[devops-engineer] --> E2[security-auditor<br/>عند لمس الأسرار أو الوصول]
     end
     subgraph Bug[إصلاح خطأ]
         B1[debugger] --> B2[qa-tester<br/>Regression test] --> B3[code-reviewer]
@@ -78,9 +112,14 @@ flowchart LR
     end
 ```
 
+* قبل كل Commit ← `quality-gatekeeper` يشغّل مهارة `quality-gate` على الملفات المعدّلة.
 * أي تغيير يمس المصادقة أو الصلاحيات أو الـ Tenancy أو الـ Routes أو رفع الملفات ← يضاف `security-auditor` قبل الدمج.
 * المهام المستقلة عن بعضها تُشغَّل بالتوازي (مثال: `backend-architect` و `i18n-guardian` على ملفات مختلفة).
 * التعديلات البسيطة (سطر أو اثنان) لا تحتاج خط عمل كامل.
+
+### 3.1 تسليم المهام بين الأدوات (Cross-tool Handoff)
+* المهام المسلَّمة لأداة أخرى (مثل Antigravity) تُكتب في `docs/handoff/` (الهدف، النطاق، الملفات المسموحة، معايير القبول).
+* العمل عبر أداة أخرى يتم في git worktree / branch منفصل، ثم يدمجه منسّق Claude Code عبر Draft PR إلى `feature/multi-tenant` — **وليس إلى `main` أبداً**.
 
 ---
 

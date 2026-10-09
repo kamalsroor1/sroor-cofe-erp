@@ -11,11 +11,14 @@
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) | نقطة الدخول: الـ Stack الفعلي، خريطة المشروع، الأوامر، القواعد الذهبية العشر، وجدول الـ Agents. |
 | [`.claude/rules/`](.claude/rules/) | **مصدر الحقيقة للقواعد التفصيلية** (تُحمَّل تلقائياً حسب مسار الملف): `backend-architecture` · `money-stock-integrity` · `multi-tenancy` · `frontend-vue` · `localization` · `testing` · `security-and-operations` · `docs-and-history`. |
-| [`.claude/agents/`](.claude/agents/) | الوكلاء المتخصصون: `backend-architect` · `frontend-vue` · `qa-tester` · `debugger` · `i18n-guardian` · `code-reviewer` · `security-auditor` · `docs-historian`. |
-| `AGENTS.md` (هذا الملف) | المرآة العربية لنفس القواعد للأدوات الأخرى (Codex / Cursor / Gemini). عند أي تعارض، `.claude/rules/` هي المرجع ثم يُصحَّح هذا الملف. |
+| [`.claude/agents/`](.claude/agents/) | الوكلاء المتخصصون (11): `backend-architect` · `frontend-vue` · `qa-tester` · `debugger` · `i18n-guardian` · `code-reviewer` · `security-auditor` · `docs-historian` · `quality-gatekeeper` · `devops-engineer` · `product-researcher`. التفاصيل في القسم 5. |
+| [`.claude/skills/`](.claude/skills/) | مهارات المشروع: `quality-gate` · `larastan-fixing` · `ci-pipeline` · `production-ops` — يحمّلها الوكلاء مسبقاً عبر `skills:` في الـ frontmatter. التفاصيل في القسم 5. |
+| [`.agents/skills/`](.agents/skills/) | مهارات مجتمعية **ثانوية** للأدوات غير Claude: `laravel-patterns` · `laravel-security` · `laravel-specialist` · `tailwind-design-system`. مرجع مساعد فقط؛ عند التعارض تفوز `.claude/rules/`. |
+| `docs/handoff/` | مكان تسليم المهام بين الأدوات المختلفة (مثل Antigravity). راجع القسم 5. |
+| `AGENTS.md` (هذا الملف) | المرآة العربية لنفس القواعد للأدوات الأخرى (Codex / Cursor / Gemini / Antigravity). عند أي تعارض، `CLAUDE.md` + `.claude/rules/` هي المرجع ثم يُصحَّح هذا الملف. |
 
 > **الـ Stack الحالي الفعلي:** Laravel 13 (PHP 8.3+) + Sanctum + spatie/permission + stancl/tenancy v3 · Pure Vue 3 SPA + Pinia + Vue Router + Tailwind v4 + Vite · **Capacitor 8** (Android) · **Electron** (Desktop) · PHPUnit 12 + Playwright.
-> **تم حذفها نهائياً وممنوع إعادتها:** Livewire · Inertia · Blade Pages · Alpine · NativePHP. أي ذكر لها داخل `docs/history/` هو تاريخ وليس توجيهاً.
+> **تم حذفها نهائياً وممنوع إعادتها:** Livewire · Inertia · Blade Pages · Alpine · NativePHP. أي ذكر لها داخل `docs/history/` أو داخل أي مهارة في `.agents/skills/` هو تاريخ/مرجع عام وليس توجيهاً (مهارة `livewire-development` حُذفت في 2026-10-09).
 
 ---
 
@@ -220,13 +223,41 @@ resources/js/
 | Code Review | `code-reviewer` | لا (قراءة فقط) |
 | Security Audit | `security-auditor` | لا (قراءة فقط) |
 | Docs & PM | `docs-historian` | التوثيق فقط |
+| Quality Gate (Pint, Larastan level 5 + baseline, ESLint, Prettier) — تشغيل البوابة وإصلاح أخطاء lint/type وتقليص الـ baseline | `quality-gatekeeper` | نعم (بدون أي تغيير في السلوك) |
+| DevOps (GitHub Actions CI، خط نشر الـ VPS، runbooks التجهيز، النسخ الاحتياطي إلى Google Drive، queue/cron، معايير الـ env) | `devops-engineer` | نعم (لا يلمس الإنتاج دون طلب صريح) |
+| Product Research (بحث المنافسين: الميزات، الإعدادات، سير العمل، التسعير، UX ومقارنتها بالكود وتوصيات قابلة للقرار) | `product-researcher` | التوثيق فقط |
 
 **خطوط العمل المعتمدة:**
-* ميزة جديدة: `backend-architect` ← `frontend-vue` (+ `i18n-guardian`) ← `qa-tester` ← `code-reviewer` ← `docs-historian`
+* ميزة جديدة: `backend-architect` ← `frontend-vue` (+ `i18n-guardian`) ← `qa-tester` ← `quality-gatekeeper` (البوابة) ← `code-reviewer` ← `docs-historian`
+* قبل كل Commit: `quality-gatekeeper` يشغّل مهارة `quality-gate` على الملفات المعدّلة.
+* فشل CI / بنية تحتية / نشر / نسخ احتياطي: `devops-engineer` (+ `security-auditor` لأي شيء يمس الأسرار أو صلاحيات الوصول).
 * خطأ/Bug: `debugger` ← `qa-tester` (اختبار Regression) ← `code-reviewer`
 * تدقيق Controller: `qa-tester` (الاختبارات أولاً) ← `backend-architect` ← `code-reviewer`
 * تدقيق صفحة: `frontend-vue` ← `i18n-guardian` ← `qa-tester` (E2E) ← `docs-historian`
-* أي تغيير يمس المصادقة/الصلاحيات/الـ Tenancy/الرفع: يضاف `security-auditor`.
+* أي تغيير يمس المصادقة/الصلاحيات/الـ Tenancy/الـ Routes/الرفع: يضاف `security-auditor`.
+
+### مهارات المشروع (`.claude/skills/`)
+
+يحمّلها الوكلاء مسبقاً عبر حقل `skills:` في الـ frontmatter (مثلاً `backend-architect` و`quality-gatekeeper` ← `quality-gate` + `larastan-fixing`، و`devops-engineer` ← `ci-pipeline` + `production-ops`). الأدوات الأخرى تقرأ `SKILL.md` يدوياً عند الحاجة.
+
+| المهارة | متى تُستخدم |
+|---|---|
+| `quality-gate` | تشغيل بوابة الجودة (Pint, Larastan, ESLint, Prettier, PHPUnit) على الملفات المعدّلة وإصلاح النتائج بالترتيب — بعد أي تعديل PHP/Vue/JS، وقبل كل Commit، وعند فشل CI. |
+| `larastan-fixing` | إصلاح أخطاء Larastan/PHPStan (level 5) بالطريقة الصحيحة (Models, Relations, Collections, DTOs, Actions) وإدارة `phpstan-baseline.neon`. |
+| `ci-pipeline` | صيانة وتتبع GitHub Actions: بوابات `ci.yml` على `feature/multi-tenant` وworkflow النشر التلقائي `deploy.yml` على `main`، وإعادة إنتاج CI محلياً. |
+| `production-ops` | معايير تشغيل الإنتاج/الـ staging: تجهيز الـ VPS (Redis, queue worker, cron, تجهيز قاعدة بيانات كل مستأجر)، معايير `.env`، النسخ الاحتياطي المشفّر لكل مستأجر إلى Google Drive، وقيود الـ staging. |
+
+### المهارات المجتمعية (`.agents/skills/`) — مرجع ثانوي للأدوات غير Claude
+
+* `laravel-patterns` · `laravel-security` · `laravel-specialist` · `tailwind-design-system`.
+* مرجع عام مساعد فقط؛ قواعد `CLAUDE.md` + `.claude/rules/` + هذا الملف تفوز عند أي تعارض.
+* **ممنوع قطعياً** اتباع أي جزء منها يقترح Livewire أو Inertia أو Blade Pages أو Alpine أو NativePHP — هذه حُذفت نهائياً ولا تُعاد. مهارة `livewire-development` (ومرجع `livewire.md` داخل `laravel-specialist`) حُذفت في 2026-10-09.
+
+### تسليم المهام بين الأدوات (Cross-tool Handoff)
+
+* المهام المسلَّمة لأداة أخرى (مثل Antigravity) تُكتب في `docs/handoff/`: الهدف، النطاق، الملفات المسموح لمسها، ومعايير القبول.
+* العمل عبر أداة أخرى يتم في **git worktree / branch منفصل** — ليس على شجرة العمل الرئيسية.
+* الدمج يتم بواسطة منسّق Claude Code عبر **Draft PR إلى `feature/multi-tenant`** — **ولا يُدمج أبداً إلى `main`** مباشرة.
 
 ---
 

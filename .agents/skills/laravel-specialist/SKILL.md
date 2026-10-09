@@ -1,17 +1,19 @@
 ---
 name: laravel-specialist
-description: Build and configure Laravel 10+ applications, including creating Eloquent models and relationships, implementing Sanctum authentication, configuring Horizon queues, designing RESTful APIs with API resources, and building reactive interfaces with Livewire. Use when creating Laravel models, setting up queue workers, implementing Sanctum auth flows, building Livewire components, optimising Eloquent queries, or writing Pest/PHPUnit tests for Laravel features.
+description: Build and configure Laravel 10+ applications, including creating Eloquent models and relationships, implementing Sanctum authentication, configuring Horizon queues, designing RESTful APIs with API resources. Use when creating Laravel models, setting up queue workers, implementing Sanctum auth flows, optimising Eloquent queries, or writing Pest/PHPUnit tests for Laravel features.
 license: MIT
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
   domain: backend
-  triggers: Laravel, Eloquent, PHP framework, Laravel API, Artisan, Blade templates, Laravel queues, Livewire, Laravel testing, Sanctum, Horizon
+  triggers: Laravel, Eloquent, PHP framework, Laravel API, Artisan, Laravel queues, Laravel testing, Sanctum, Horizon
   role: specialist
   scope: implementation
   output-format: code
   related-skills: fullstack-guardian, test-master, devops-engineer, security-reviewer
 ---
+
+> **Sroor ERP note:** this project is a pure Vue 3 SPA + JSON API. Livewire, Inertia, Blade pages and Alpine are removed and must never be reintroduced (see CLAUDE.md).
 
 # Laravel Specialist
 
@@ -34,7 +36,6 @@ Load detailed guidance based on context:
 | Eloquent ORM | `references/eloquent.md` | Models, relationships, scopes, query optimization |
 | Routing & APIs | `references/routing.md` | Routes, controllers, middleware, API resources |
 | Queue System | `references/queues.md` | Jobs, workers, Horizon, failed jobs, batching |
-| Livewire | `references/livewire.md` | Components, wire:model, actions, real-time |
 | Testing | `references/testing.md` | Feature tests, factories, mocking, Pest PHP |
 
 ## Constraints
@@ -259,6 +260,6 @@ Run these at each workflow stage to confirm correctness before proceeding:
 
 ## Knowledge Reference
 
-Laravel 10+, Eloquent ORM, PHP 8.2+, API resources, Sanctum/Passport, queues, Horizon, Livewire, Inertia, Octane, Pest/PHPUnit, Redis, broadcasting, events/listeners, notifications, task scheduling
+Laravel 10+, Eloquent ORM, PHP 8.2+, API resources, Sanctum/Passport, queues, Horizon, Octane, Pest/PHPUnit, Redis, broadcasting, events/listeners, notifications, task scheduling
 
 [Documentation](https://jeffallan.github.io/claude-skills/skills/backend/laravel-specialist/)
