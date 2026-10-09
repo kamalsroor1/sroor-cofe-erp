@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Receipt, FileText, Pencil, Trash2 } from 'lucide-vue-next';
+import { Receipt, FileText, Pencil, Trash2, Users } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
@@ -35,14 +35,16 @@ const columns = computed(() => [
     :pagination="pagination"
     :empty-title="$t('contacts.no_customers_found')"
     :empty-message="$t('contacts.no_customers_description')"
-    empty-icon="👥"
+    :empty-icon="Users"
     data-testid="customers-table"
     @page-change="$emit('page-change', $event)"
   >
     <!-- Custom Empty State Action -->
     <template #empty>
       <div class="flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <div class="text-4xl">👥</div>
+        <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400">
+          <Users class="w-8 h-8" />
+        </div>
         <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">{{ $t('contacts.no_customers_found') }}</h3>
         <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm">{{ $t('contacts.no_customers_description') }}</p>
         <button

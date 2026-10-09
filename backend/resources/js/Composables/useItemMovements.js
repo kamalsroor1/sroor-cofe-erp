@@ -96,10 +96,10 @@ export function useItemMovements() {
                 movements.value = data.data || [];
                 stats.value = data.stats || {};
             }
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load item movements:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load item movements:', err);
         } finally {
             isLoading.value = false;
         }

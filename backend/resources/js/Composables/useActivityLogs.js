@@ -92,7 +92,7 @@ export function useActivityLogs() {
             pagination.value = res.data?.pagination || pagination.value;
         } catch (e) {
             error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to fetch activity logs:', e);
         } finally {
             isLoading.value = false;

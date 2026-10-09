@@ -77,7 +77,7 @@ export function useUsers() {
             pagination.value = res.data?.pagination || pagination.value;
         } catch (e) {
             error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to fetch users:', e);
         } finally {
             isLoading.value = false;
@@ -144,8 +144,6 @@ export function useUsers() {
             showModal.value = false;
             fetchUsers();
         } catch (e) {
-            error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -161,8 +159,6 @@ export function useUsers() {
             const res = await api.patch(`/users/${u.id}/toggle-active`);
             u.is_active = res.data?.is_active;
         } catch (e) {
-            error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -195,8 +191,6 @@ export function useUsers() {
                 });
                 fetchUsers();
             } catch (e) {
-                error.value = true;
-                errorMessage.value = e.userMessage || e.message || 'An error occurred';
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),

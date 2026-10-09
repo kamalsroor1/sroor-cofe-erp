@@ -113,7 +113,7 @@ export function useReports() {
             stores.value = res.data?.data || [];
         } catch (e) {
             error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load stores:', e);
         }
     };
@@ -143,7 +143,7 @@ export function useReports() {
             treasuryData.value = d.treasury_data || {};
         } catch (e) {
             error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load comprehensive reports:', e);
         } finally {
             isLoading.value = false;

@@ -28,28 +28,15 @@
 
     <!-- 📋 Transfers Ledger Table -->
 
-    <template v-if="error && (!transfers || transfers.length === 0)">
+    <template v-if="error && (!transfersList || transfersList.length === 0)">
       <ErrorState
         data-testid="error-state"
         :message="errorMessage"
-        @retry="fetchStockTransfers(pagination?.current_page || 1)"
+        @retry="fetchTransfers(pagination?.current_page || 1)"
       />
     </template>
     <template v-else>
-      <div
-        v-if="error"
-        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
-        data-testid="error-state"
-      >
-        <span>{{ errorMessage }}</span>
-        <button
-          @click="fetchStockTransfers(pagination?.current_page || 1)"
-          data-testid="retry-button"
-          class="underline font-bold"
-        >
-          {{ $t('connectivity.retry') }}
-        </button>
-      </div>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchTransfers(pagination?.current_page || 1)" />
       <StockTransfersTable
         :transfers="transfersList"
         :pagination="pagination"
@@ -70,6 +57,7 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ref, watch, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
@@ -94,6 +82,8 @@ const toStoreId = ref('all');
 const dateFrom = ref('');
 const dateTo = ref('');
 const isLoading = ref(true);
+const error = ref(false);
+const errorMessage = ref('');
 
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
 
@@ -111,6 +101,8 @@ const loadStores = async () => {
 
 const fetchTransfers = async (page = 1) => {
   isLoading.value = true;
+  error.value = false;
+  errorMessage.value = '';
   try {
     const res = await api.get('/transfers', {
       params: {
@@ -132,6 +124,8 @@ const fetchTransfers = async (page = 1) => {
       total: transfersList.value.length,
     };
   } catch (err) {
+    error.value = true;
+    errorMessage.value = err.userMessage || err.message || trans('common.error_occurred');
     console.error('Failed to load transfers:', err);
   } finally {
     isLoading.value = false;

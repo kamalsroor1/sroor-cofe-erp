@@ -114,4 +114,3 @@ return [
     'icon_bookmark' => 'إشارة مرجعية',
     'icon_archive' => 'أرشيف',
 ];
-

@@ -108,4 +108,3 @@ return [
     'icon_bookmark' => 'Bookmark',
     'icon_archive' => 'Archive',
 ];
-

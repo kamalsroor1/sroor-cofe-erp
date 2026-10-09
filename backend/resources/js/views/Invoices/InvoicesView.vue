@@ -74,20 +74,7 @@
           />
         </template>
         <template v-else>
-          <div
-            v-if="error"
-            class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
-            data-testid="error-state"
-          >
-            <span>{{ errorMessage }}</span>
-            <button
-              @click="fetchInvoices(pagination?.current_page || 1)"
-              data-testid="retry-button"
-              class="underline font-bold"
-            >
-              {{ $t('connectivity.retry') }}
-            </button>
-          </div>
+          <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchInvoices(pagination?.current_page || 1)" />
           <InvoicesTable
             :invoices="invoices"
             :is-loading="isLoading"
@@ -133,6 +120,7 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ref, computed, onMounted } from 'vue';
 import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
@@ -161,6 +149,8 @@ const selectedStatus = ref('all');
 const dateFrom = ref('');
 const dateTo = ref('');
 const isLoading = ref(true);
+const error = ref(false);
+const errorMessage = ref('');
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
 const showDetailsModal = ref(false);
 const selectedInvoiceDetails = ref(null);
@@ -205,6 +195,8 @@ const isAllSelected = computed(
 
 const fetchInvoices = async (page = 1) => {
   isLoading.value = true;
+  error.value = false;
+  errorMessage.value = '';
   try {
     const res = await api.get('/invoices', {
       params: {
@@ -226,8 +218,10 @@ const fetchInvoices = async (page = 1) => {
       per_page: 15,
       total: invoices.value.length,
     };
-  } catch (e) {
-    console.error('Failed to load invoices:', e);
+  } catch (err) {
+    error.value = true;
+    errorMessage.value = err.userMessage || err.message || trans('common.error_occurred');
+    console.error('Failed to load invoices:', err);
   } finally {
     isLoading.value = false;
   }

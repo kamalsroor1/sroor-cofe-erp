@@ -227,4 +227,5 @@ return [
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'payment_ewallet' => 'E-wallet',
     'total_net' => 'Net total',
+    'invoice_with_number' => 'Invoice #:number',
 ];

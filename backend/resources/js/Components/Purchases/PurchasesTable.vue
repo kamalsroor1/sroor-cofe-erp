@@ -6,7 +6,7 @@
     :pagination="pagination"
     :empty-title="$t('purchases.no_purchases_found')"
     :empty-message="$t('purchases.no_purchases_description')"
-    empty-icon="🚛"
+    :empty-icon="Truck"
     @page-change="$emit('page-change', $event)"
     data-testid="purchases-table"
   >
@@ -106,7 +106,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Eye, Ban } from 'lucide-vue-next';
+import { Eye, Ban, Truck } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';

@@ -38,7 +38,7 @@ export function useProfile() {
             form.value.theme_preference = u.theme_preference || 'dark';
         } catch (e) {
             error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load profile:', e);
         } finally {
             isLoading.value = false;
@@ -60,8 +60,6 @@ export function useProfile() {
             form.value.new_password = '';
             form.value.new_password_confirmation = '';
         } catch (e) {
-            error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),

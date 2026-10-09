@@ -77,10 +77,10 @@ export function useCustomers() {
                 per_page: 15,
                 total: customers.value.length,
             };
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load customers:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load customers:', err);
         } finally {
             isLoading.value = false;
         }
@@ -156,10 +156,8 @@ export function useCustomers() {
             }
             showCustomerModal.value = false;
             await fetchCustomers(pagination.value.current_page);
-        } catch (error) {
-            error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            Swal.fire({ icon: 'error', title: t('common.error'), text: error.userMessage || t('common.error') });
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: t('common.error'), text: err.userMessage || t('common.error') });
         } finally {
             isSubmitting.value = false;
         }
@@ -189,13 +187,11 @@ export function useCustomers() {
             });
             showPaymentModal.value = false;
             await fetchCustomers(pagination.value.current_page);
-        } catch (error) {
-            error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
+        } catch (err) {
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
-                text: error.userMessage || t('common.error'),
+                text: err.userMessage || t('common.error'),
             });
         } finally {
             isSubmittingPayment.value = false;
@@ -224,13 +220,11 @@ export function useCustomers() {
                     showConfirmButton: false,
                 });
                 await fetchCustomers(pagination.value.current_page);
-            } catch (error) {
-                error.value = true;
-                errorMessage.value = error.userMessage || error.message || 'An error occurred';
+            } catch (err) {
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
-                    text: error.userMessage || t('contacts.cannot_delete_has_balance'),
+                    text: err.userMessage || t('contacts.cannot_delete_has_balance'),
                 });
             }
         }

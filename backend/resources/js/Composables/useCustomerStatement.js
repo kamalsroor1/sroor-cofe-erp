@@ -1,10 +1,12 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../Services/api';
+import { useTrans } from './useTrans';
 
 export function useCustomerStatement() {
     const route = useRoute();
     const customerId = route.params.id;
+    const { t } = useTrans();
 
     const customer = ref(null);
     const ledger = ref([]);
@@ -18,6 +20,8 @@ export function useCustomerStatement() {
     const dateTo = ref('');
     const activePreset = ref('all');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const applyPreset = (preset) => {
         activePreset.value = preset;
@@ -46,6 +50,8 @@ export function useCustomerStatement() {
 
     const fetchStatement = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get(`/customers/${customerId}/statement`, {
                 params: {
@@ -59,8 +65,10 @@ export function useCustomerStatement() {
                 ledger.value = data.ledger || [];
                 summary.value = data.summary || {};
             }
-        } catch (error) {
-            console.error('Failed to load customer statement:', error);
+        } catch (err) {
+            error.value = true;
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load customer statement:', err);
         } finally {
             isLoading.value = false;
         }
@@ -73,6 +81,8 @@ export function useCustomerStatement() {
     onMounted(fetchStatement);
 
     return {
+        error,
+        errorMessage,
         customer,
         ledger,
         summary,

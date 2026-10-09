@@ -91,10 +91,10 @@ export function useSmartReorder() {
                     total_estimated_cost: data.total_estimated_cost || 0,
                 };
             }
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load smart reorder suggestions:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load smart reorder suggestions:', err);
         } finally {
             isLoading.value = false;
         }

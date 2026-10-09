@@ -50,5 +50,5 @@ import ProfileSecurityCard from '../../Components/Profile/ProfileSecurityCard.vu
 import ProfileThemeCard from '../../Components/Profile/ProfileThemeCard.vue';
 import { useProfile } from '../../Composables/useProfile';
 
-const { error, errorMessage, isLoading, isSubmitting, form, updateField, submitProfile } = useProfile();
+const { error, errorMessage, isLoading, isSubmitting, form, updateField, submitProfile, fetchProfile } = useProfile();
 </script>

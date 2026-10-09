@@ -66,10 +66,10 @@ export function usePurchases() {
                 per_page: 15,
                 total: purchases.value.length,
             };
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load purchases:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load purchases:', err);
         } finally {
             isLoading.value = false;
         }
@@ -109,13 +109,11 @@ export function usePurchases() {
                     showConfirmButton: false,
                 });
                 await fetchPurchases(pagination.value.current_page);
-            } catch (error) {
-                error.value = true;
-                errorMessage.value = error.userMessage || error.message || 'An error occurred';
+            } catch (err) {
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
-                    text: error.userMessage || t('purchases.purchase_cancelled_failed'),
+                    text: err.userMessage || t('purchases.purchase_cancelled_failed'),
                 });
             }
         }

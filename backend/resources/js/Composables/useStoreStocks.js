@@ -41,7 +41,7 @@ export function useStoreStocks() {
             }
         } catch (e) {
             error.value = true;
-            errorMessage.value = e.userMessage || e.message || 'An error occurred';
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load stores:', e);
         }
     };
@@ -69,10 +69,10 @@ export function useStoreStocks() {
                 per_page: 20,
                 total: stocks.value.length,
             };
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load store stocks:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load store stocks:', err);
         } finally {
             isLoading.value = false;
         }

@@ -21,34 +21,18 @@
 
     <!-- Ledger Table & Mobile Cards -->
 
-    <template v-if="error && (!customerstatement || customerstatement.length === 0)">
-      <ErrorState
-        data-testid="error-state"
-        :message="errorMessage"
-        @retry="fetchCustomerStatement(pagination?.current_page || 1)"
-      />
+    <template v-if="error && (!ledger || ledger.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchStatement()" />
     </template>
     <template v-else>
-      <div
-        v-if="error"
-        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
-        data-testid="error-state"
-      >
-        <span>{{ errorMessage }}</span>
-        <button
-          @click="fetchCustomerStatement(pagination?.current_page || 1)"
-          data-testid="retry-button"
-          class="underline font-bold"
-        >
-          {{ $t('connectivity.retry') }}
-        </button>
-      </div>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStatement()" />
       <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
     </template>
   </div>
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import CustomerStatementHeader from '../../Components/Customers/CustomerStatementHeader.vue';
 import CustomerStatementSummaryCards from '../../Components/Customers/CustomerStatementSummaryCards.vue';

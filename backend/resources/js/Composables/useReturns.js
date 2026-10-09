@@ -68,10 +68,10 @@ export function useReturns() {
                 per_page: 15,
                 total: returnsList.value.length,
             };
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load returns:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load returns:', err);
         } finally {
             isLoading.value = false;
         }
@@ -105,10 +105,10 @@ export function useReturns() {
             const response = await api.get(`/returns/${ret.id}`);
             selectedReturnDetails.value = response.data?.data;
             showDetailsModal.value = true;
-        } catch (error) {
+        } catch (err) {
             error.value = true;
-            errorMessage.value = error.userMessage || error.message || 'An error occurred';
-            console.error('Failed to load return details:', error);
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load return details:', err);
         }
     };
 
@@ -134,13 +134,11 @@ export function useReturns() {
                     showConfirmButton: false,
                 });
                 await fetchReturns(pagination.value.current_page);
-            } catch (error) {
-                error.value = true;
-                errorMessage.value = error.userMessage || error.message || 'An error occurred';
+            } catch (err) {
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
-                    text: error.response?.data?.message || t('returns.archive_failed'),
+                    text: err.response?.data?.message || t('returns.archive_failed'),
                 });
             }
         }

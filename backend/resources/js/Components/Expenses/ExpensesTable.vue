@@ -2,19 +2,15 @@
   <div
     class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl font-tajawal"
   >
-    <ErrorState
-      v-if="error"
-      class="p-6"
-      :message="typeof error === 'string' ? error : errorMessage"
-      @retry="$emit('retry', pagination.current_page)"
-    />
     <DataTable
-      v-else
       data-testid="expenses-table"
       :rows="expenses"
       :columns="columns"
       :loading="loading"
       :pagination="pagination"
+      :error="error"
+      :error-message="errorMessage"
+      @retry="$emit('retry', $event)"
       @page-change="$emit('page-change', $event)"
       :empty-title="$t('expenses.no_expenses_found')"
       :empty-message="$t('expenses.no_expenses_description')"
@@ -124,7 +120,6 @@
 import { computed } from 'vue';
 import { Pencil, Trash2 } from 'lucide-vue-next';
 import DataTable from '../Common/DataTable.vue';
-import ErrorState from '../Common/ErrorState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 

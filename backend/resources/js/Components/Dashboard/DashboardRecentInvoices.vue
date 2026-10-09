@@ -13,6 +13,8 @@
       data-testid="dashboard-recent-invoices-table"
       :rows="invoices"
       :columns="columns"
+      :row-clickable="true"
+      @row-click="$emit('preview', $event)"
       :empty-title="$t('dashboard.no_invoices')"
     >
       <template #cell-invoice_number="{ row }">

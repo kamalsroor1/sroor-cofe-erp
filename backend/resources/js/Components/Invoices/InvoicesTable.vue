@@ -6,7 +6,7 @@
     :pagination="pagination"
     :empty-title="$t('invoices.no_invoices_found')"
     :empty-message="$t('invoices.no_invoices_description')"
-    empty-icon="🧾"
+    :empty-icon="Receipt"
     @page-change="$emit('change-page', $event)"
     data-testid="invoices-table"
   >
@@ -100,7 +100,7 @@
 
         <ActionMenu
           :items="getInvoiceActions(row)"
-          :title="`فاتورة #${row.invoice_number}`"
+          :title="$t('invoices.invoice_with_number', { number: row.invoice_number })"
           button-class="min-h-[44px] min-w-[44px] lg:min-h-0 lg:min-w-0 h-8 w-8 lg:min-w-[32px] p-0"
         />
       </div>
@@ -110,7 +110,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Eye, Printer, Ban } from 'lucide-vue-next';
+import { Eye, Printer, Ban, Receipt } from 'lucide-vue-next';
 import DataTable from '@/Components/Common/DataTable.vue';
 import ActionMenu from '../ActionMenu.vue';
 import { useFormatters } from '../../Composables/useFormatters';

@@ -25,28 +25,11 @@
 
     <!-- Records Table & Mobile Cards -->
 
-    <template v-if="error && (!items || items.length === 0)">
-      <ErrorState
-        data-testid="error-state"
-        :message="errorMessage"
-        @retry="fetchTrash(pagination?.current_page || 1)"
-      />
+    <template v-if="error && (!records || records.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchRecords()" />
     </template>
     <template v-else>
-      <div
-        v-if="error"
-        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
-        data-testid="error-state"
-      >
-        <span>{{ errorMessage }}</span>
-        <button
-          @click="fetchTrash(pagination?.current_page || 1)"
-          data-testid="retry-button"
-          class="underline font-bold"
-        >
-          {{ $t('connectivity.retry') }}
-        </button>
-      </div>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchRecords()" />
       <TrashTable
         :records="records"
         :pagination="pagination"
@@ -60,6 +43,7 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import { RefreshCw } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
