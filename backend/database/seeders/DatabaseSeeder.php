@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         // 1. Roles & permissions matrix and SaaS plans
         $this->call(CentralPermissionsSeeder::class);
         $this->call(PlansAndFeaturesSeeder::class);
-        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 
         // 2. Platform super admin. Identity and password come from the environment;
         //    an existing user is never modified (password included).

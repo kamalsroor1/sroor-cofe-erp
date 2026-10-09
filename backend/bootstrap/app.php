@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\AuthenticateCentral;
+use App\Http\Middleware\EnsureCentralContext;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
@@ -11,6 +13,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
@@ -23,6 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        // IDEN-1.3: central control-plane API (/api/v1/super-admin/auth/*). Only the `api`
+        // group: no ResolveApiTenancy, no ApiTokenAuth (see routes/central.php).
+        then: function (): void {
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/central.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('login'));
@@ -46,6 +56,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             before: ResolveApiTenancy::class,
             prepend: ThrottleTenantMisses::class,
+        );
+
+        // IDEN-1.3: on central routes the context check runs before everything else (tenant
+        // host => 404, never 401/429), then operator authentication, then named limiters and
+        // route-model binding. Neither ever shares a group with ResolveApiTenancy.
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: EnsureCentralContext::class,
+        );
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: AuthenticateCentral::class,
         );
 
         $middleware->alias([

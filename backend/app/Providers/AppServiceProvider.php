@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\Contracts\TenantFeatureManagerInterface;
 use App\Contracts\TenantProvisionerInterface;
+use App\Enums\CentralPermission;
+use App\Models\CentralUser;
 use App\Models\Tenant;
 use App\Observers\TenantObserver;
 use App\Services\Branding\PlatformBranding;
@@ -32,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
      * config/rate_limits.php does not provide a value.
      */
     public const TENANT_RESOLVE_PER_MINUTE = 30;
+
+    /** Platform monitoring dashboards (cross-tenant data): never granted to a store admin. */
+    private const MONITORING_ABILITIES = ['viewTelescope', 'viewPulse', 'viewHorizon'];
 
     /**
      * Register any application services.
@@ -66,13 +71,21 @@ class AppServiceProvider extends ServiceProvider
 
         // Implicitly grant Super Admin all permissions, and Store Admin all standard ERP permissions
         Gate::before(function ($user, $ability) {
+            // IDEN-1.2: a platform operator never holds a tenant ability. Only its own granular
+            // CentralPermission abilities (and the monitoring gates defined below) fall through
+            // to the regular checks; everything else is denied outright.
+            if ($user instanceof CentralUser) {
+                return self::isOperatorAbility((string) $ability) ? null : false;
+            }
+
+            // @deprecated removed in IDEN-1.4 (W2-B3): legacy App\Models\User super admin.
             if (PlatformSuperAdmin::check($user)) {
                 return true;
             }
             // Platform-only abilities: a store `admin` must never pass these through the
             // blanket grant below (Telescope/Pulse/Horizon expose cross-tenant data).
             if (str_starts_with((string) $ability, 'super_admin.')
-                || in_array($ability, ['viewTelescope', 'viewPulse', 'viewHorizon'], true)) {
+                || in_array($ability, self::MONITORING_ABILITIES, true)) {
                 return false;
             }
 
@@ -90,6 +103,16 @@ class AppServiceProvider extends ServiceProvider
         $this->registerRateLimiters();
 
         $this->applyPlatformBranding();
+    }
+
+    /**
+     * Abilities a CentralUser may be evaluated on: the granular CentralPermission values and
+     * the monitoring dashboards' gates. Every other ability is a tenant ability.
+     */
+    private static function isOperatorAbility(string $ability): bool
+    {
+        return CentralPermission::tryFrom($ability) !== null
+            || in_array($ability, self::MONITORING_ABILITIES, true);
     }
 
     /**
