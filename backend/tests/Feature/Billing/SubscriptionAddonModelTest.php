@@ -27,13 +27,18 @@ use Tests\TenantTestCase;
  * - `unit_price` is the stored per-unit price for the line's cycle (DECIMAL(12,3) string);
  * - `lineTotal()` = unit_price x quantity with bcmath, scale 3;
  * - `activeFor()` only returns lines of that tenant that are `active` AND inside their
- *   [starts_at, ends_at) window (NULL ends_at = open-ended, NULL starts_at = not started).
+ *   [starts_at, ends_at) window (NULL ends_at = open-ended, NULL starts_at = not started),
+ *   and only while the parent subscription is active (CTO W1 Q3; covered in depth by
+ *   SubscriptionAddonParentRuleTest).
  */
 #[Group('billing')]
 #[Group('mysql')]
 final class SubscriptionAddonModelTest extends TenantTestCase
 {
     private const MIGRATION = 'migrations/2026_10_10_200320_create_subscription_addons_table.php';
+
+    /** Replaces the table's subscription FK with the tenant-scoped composite one. */
+    private const COMPOSITE_FK_MIGRATION = 'migrations/2026_10_10_200550_add_tenant_scoped_foreign_key_to_subscription_addons.php';
 
     public function test_table_has_the_designed_columns_and_indexes(): void
     {
@@ -217,6 +222,7 @@ final class SubscriptionAddonModelTest extends TenantTestCase
     public function test_migration_rolls_back_and_reapplies(): void
     {
         try {
+            $this->runMigration('down', self::COMPOSITE_FK_MIGRATION);
             $this->runMigration('down');
             $this->assertFalse(Schema::hasTable('subscription_addons'));
 
@@ -224,6 +230,7 @@ final class SubscriptionAddonModelTest extends TenantTestCase
             $this->runMigration('down');
         } finally {
             $this->runMigration('up');
+            $this->runMigration('up', self::COMPOSITE_FK_MIGRATION);
         }
 
         $this->assertTrue(Schema::hasTable('subscription_addons'));
@@ -383,7 +390,9 @@ final class SubscriptionAddonModelTest extends TenantTestCase
             'status' => SubscriptionStatus::Active,
             'amount' => '449.000',
             'starts_at' => now()->subMonth(),
-            'ends_at' => now()->addMonth(),
+            // Long enough to cover the future reference moments used below: since CTO W1 Q3 a
+            // line is only active while its parent subscription is (ends_at > moment).
+            'ends_at' => now()->addYear(),
         ]);
 
         return [$tenant, $subscription];
@@ -420,11 +429,11 @@ final class SubscriptionAddonModelTest extends TenantTestCase
         ]);
     }
 
-    private function runMigration(string $direction): void
+    private function runMigration(string $direction, string $path = self::MIGRATION): void
     {
-        $migration = require database_path(self::MIGRATION);
+        $migration = require database_path($path);
         if (! is_object($migration) || ! method_exists($migration, $direction)) {
-            $this->fail(self::MIGRATION." must return a migration with {$direction}().");
+            $this->fail($path." must return a migration with {$direction}().");
         }
 
         $migration->{$direction}();

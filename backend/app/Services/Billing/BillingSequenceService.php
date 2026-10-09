@@ -100,7 +100,7 @@ final class BillingSequenceService
     }
 
     /**
-     * Allocate the next SaaS invoice number, e.g. INV-2026-000001 (format from
+     * Allocate the next SaaS invoice number, e.g. SUB-2026-00001 (format from
      * config('billing.invoice_number')). Same transaction rule as next().
      *
      * @throws BillingSequenceException on invalid configuration, before any number is consumed

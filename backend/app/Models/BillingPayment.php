@@ -15,8 +15,10 @@ use Illuminate\Support\Carbon;
 /**
  * Central DB: a payment against a SaaS invoice (`billing_payments`, ENTI-1.6).
  *
- * `gateway_reference` is the unique idempotency key used by ActivateSubscriptionAction
- * (ENTI-3.4); NULL for a manual receipt that has none yet. `submitted_by` is a tenant
+ * (`gateway`, `gateway_reference`) is the unique idempotency key used by
+ * ActivateSubscriptionAction (ENTI-3.4): a reference is unique within its gateway only
+ * (CTO W1 Q3, migration 2026_10_10_200540), so look payments up by BOTH columns.
+ * `gateway_reference` is NULL for a manual receipt that has none yet. `submitted_by` is a tenant
  * user id (no relation: it lives in the tenant DB).
  *
  * @property int $id

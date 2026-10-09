@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\SubscriptionAddonStatus;
+use App\Enums\Billing\SubscriptionStatus;
 use App\Exceptions\Billing\AddonPricingException;
 use App\Exceptions\Billing\SubscriptionAddonException;
 use App\Models\Concerns\UsesCentralConnection;
@@ -20,8 +21,13 @@ use Illuminate\Support\Carbon;
  *
  * `unit_price` is the stored per-unit price for the line's cycle, frozen at purchase;
  * `lineTotal()` multiplies it by the quantity with bcmath. A line counts towards the
- * tenant's entitlements only while `activeFor()` returns it: status `active` and
- * starts_at <= moment < ends_at (NULL ends_at = open-ended, NULL starts_at = not started).
+ * tenant's entitlements only while `activeFor()` returns it: status `active`,
+ * starts_at <= moment < ends_at (NULL ends_at = open-ended, NULL starts_at = never active),
+ * AND its parent subscription is active at that moment (CTO W1 Q3 [2026-10-09]).
+ *
+ * The (subscription_id, tenant_id) pair is also a composite foreign key to
+ * subscriptions (id, tenant_id) (migration 2026_10_10_200550), so even a raw query
+ * cannot attach a line to another tenant's subscription.
  *
  * `tenant_id` is denormalised from the parent subscription and is NEVER taken from input:
  * it is not mass assignable, and every save copies it from `subscriptions.tenant_id`
@@ -153,11 +159,15 @@ class SubscriptionAddon extends Model
     }
 
     /**
-     * Lines of $tenant that are in force at $at (default: now): status `active`,
-     * started (starts_at <= $at) and not ended (ends_at NULL or > $at).
-     * pending_payment / cancelled / expired lines and lines outside their window are
-     * excluded. The parent subscription's state is NOT checked here: tenant access is
-     * decided by `tenants.status` (IDEN-3.x), and the entitlement engine owns that rule.
+     * Lines of $tenant that are in force at $at (default: now):
+     * - the line is `active`, started (starts_at NOT NULL and <= $at) and not ended
+     *   (ends_at NULL or > $at);
+     * - its parent subscription is active at $at: status `active` and ends_at > $at
+     *   (same rule as Subscription::isActive()). A trialing, past_due, pending_payment,
+     *   cancelled or expired subscription grants no add-on (CTO W1 Q3 [2026-10-09]).
+     *
+     * The subscription STATUS is its current value (it has no history); only the dates are
+     * evaluated at $at. Tenant access itself is still decided by `tenants.status` (IDEN-3.x).
      *
      * @param  Builder<SubscriptionAddon>  $query
      * @return Builder<SubscriptionAddon>
@@ -175,20 +185,35 @@ class SubscriptionAddon extends Model
             ->where(function (Builder $window) use ($moment): void {
                 $window->whereNull($this->qualifyColumn('ends_at'))
                     ->orWhere($this->qualifyColumn('ends_at'), '>', $moment);
+            })
+            ->whereHas('subscription', function (Builder $parent) use ($moment): void {
+                $parent->where('status', SubscriptionStatus::Active->value)
+                    ->where('ends_at', '>', $moment);
             });
     }
 
     /**
-     * In-memory twin of scopeActiveFor() for an already loaded line.
+     * In-memory twin of scopeActiveFor() for an already loaded line (loads the parent
+     * subscription when it is not loaded yet).
      */
     public function isActive(?DateTimeInterface $at = null): bool
     {
         $moment = Carbon::instance($at ?? Carbon::now());
 
-        return $this->status === SubscriptionAddonStatus::Active
-            && $this->starts_at !== null
-            && $this->starts_at->lte($moment)
-            && ($this->ends_at === null || $this->ends_at->gt($moment));
+        if ($this->status !== SubscriptionAddonStatus::Active
+            || $this->starts_at === null
+            || $this->starts_at->gt($moment)
+            || ($this->ends_at !== null && $this->ends_at->lte($moment))
+        ) {
+            return false;
+        }
+
+        // A line that was never saved may have no parent yet: then it is not active.
+        $subscription = $this->getRelationValue('subscription');
+
+        return $subscription instanceof Subscription
+            && $subscription->status === SubscriptionStatus::Active
+            && $subscription->ends_at->gt($moment);
     }
 
     /**

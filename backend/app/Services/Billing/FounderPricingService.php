@@ -88,9 +88,9 @@ final class FounderPricingService
     }
 
     /**
-     * The plan has a positive founder price for this cycle. A NULL founder price (e.g. the
-     * yearly one, undecided in ENTI-1.2) means "no founder price", and biennial is never
-     * sold in Phase 1 (Q-E6).
+     * The plan has a positive founder price for this cycle. A NULL founder price means
+     * "no founder price" for that cycle (the approved catalog sets yearly = 10 x monthly,
+     * 2990 / 5990 / 9990, CTO W1 Q4), and biennial is never sold in Phase 1 (Q-E6).
      */
     public function isEligiblePlan(Plan $plan, BillingCycle $cycle): bool
     {
@@ -276,11 +276,11 @@ final class FounderPricingService
     }
 
     /**
-     * TODO(CTO): "first payment" = no other verified/refunded payment of this tenant in
-     * central `billing_payments`. Tenants that paid BEFORE the billing tables existed (legacy
-     * subscriptions, live-shop migration) have no such rows and would be eligible on their
-     * first payment through the new flow. Confirm whether they count among the 50 founders;
-     * if not, the OPS-12 backfill must insert their historical payments first.
+     * "First payment" = no other verified/refunded payment of this tenant in central
+     * `billing_payments`. CTO W1 Q4 [2026-10-09]: tenants that paid BEFORE the billing
+     * tables existed DO count among the 50 founders, with 12 months from their first
+     * verified payment; the OPS-12 backfill records those historical payments and claims
+     * their slots before new signups are activated.
      */
     private function isFirstPayment(BillingPayment $payment): bool
     {

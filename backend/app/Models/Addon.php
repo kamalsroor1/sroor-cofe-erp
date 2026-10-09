@@ -149,8 +149,8 @@ class Addon extends Model
         }
 
         if ($this->isService()) {
-            // TODO(CTO): a monthly service (premium_support 299/month) is billed as a one-time
-            // service line on each invoice; there is no yearly service price in Phase 1.
+            // One-time services (onboarding). premium_support is a `recurring` add-on, not a
+            // service (CTO W1 Q4), so it is priced per cycle below like any other add-on.
             return $this->money($this->unit_price);
         }
 
@@ -160,8 +160,8 @@ class Addon extends Model
             $yearly = $tier === null ? $this->yearly_price : $tier['yearly_price'];
 
             if ($yearly === null) {
-                // TODO(CTO): yearly tier prices (e.g. store 2120/1870) are not in the approved
-                // price list; until they are stored explicitly, yearly at a tier is not priced.
+                // Yearly = 10 months is stored explicitly per add-on and per tier by the catalog
+                // (CTO W1 Q4, e.g. store 2490 / 2120 / 1870); a missing value is never derived.
                 throw AddonPricingException::yearlyPriceMissing($this->key);
             }
 

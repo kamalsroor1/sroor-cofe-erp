@@ -19,6 +19,9 @@ use Illuminate\Support\Carbon;
  * @property string $default_value
  * @property string|null $icon
  * @property int $sort_order
+ * @property string|null $name_key
+ * @property bool $is_core
+ * @property bool $is_public
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -36,10 +39,15 @@ class PlanFeature extends Model
         'default_value',
         'icon',
         'sort_order',
+        'name_key',
+        'is_core',
+        'is_public',
     ];
 
     protected $casts = [
         'sort_order' => 'integer',
+        'is_core' => 'boolean',
+        'is_public' => 'boolean',
     ];
 
     /**

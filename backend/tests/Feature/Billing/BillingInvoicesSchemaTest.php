@@ -29,8 +29,8 @@ use Tests\TenantTestCase;
  *
  * - money columns DECIMAL(12,3), read back as exact numeric strings;
  * - status / type / method / gateway are string(20|30) + App\Enums\Billing casts;
- * - `number` is unique, `gateway_reference` is unique but nullable (many manual
- *   payments without a reference are allowed);
+ * - `number` is unique; `gateway_reference` is unique PER GATEWAY and nullable (many
+ *   manual payments without a reference are allowed; CTO W1 Q3, migration 200540);
  * - billing history survives the tenant row (no FK cascade on tenant_id).
  */
 #[Group('billing')]
@@ -41,6 +41,11 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
         'billing_sequences' => 'migrations/2026_10_10_200500_create_billing_sequences_table.php',
         'billing_invoices' => 'migrations/2026_10_10_200510_create_billing_invoices_table.php',
         'billing_payments' => 'migrations/2026_10_10_200520_create_billing_payments_table.php',
+    ];
+
+    /** Later migrations that alter these tables: rolled back first, re-applied last. */
+    private const ALTER_MIGRATIONS = [
+        'migrations/2026_10_10_200540_scope_billing_payments_gateway_reference_unique_to_gateway.php',
     ];
 
     public function test_billing_invoices_table_has_the_designed_columns_and_indexes(): void
@@ -98,7 +103,8 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
             $this->assertSame('decimal(12,3)', strtolower((string) $columns['amount']['type']));
         }
 
-        $this->assertTrue($schema->hasIndex('billing_payments', ['gateway_reference'], 'unique'), 'gateway_reference is the idempotency key.');
+        $this->assertTrue($schema->hasIndex('billing_payments', ['gateway', 'gateway_reference'], 'unique'), '(gateway, gateway_reference) is the idempotency key.');
+        $this->assertFalse($schema->hasIndex('billing_payments', ['gateway_reference'], 'unique'), 'A reference is unique per gateway, not globally (CTO W1 Q3).');
         $this->assertTrue($schema->hasIndex('billing_payments', ['billing_invoice_id']));
         $this->assertTrue($schema->hasIndex('billing_payments', ['tenant_id', 'status']));
         $this->assertTrue($schema->hasIndex('billing_payments', ['status', 'created_at']), 'super-admin review queue.');
@@ -229,7 +235,7 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
         $this->invoice($tenant, $subscription, ['number' => 'INV-2026-000001']);
     }
 
-    public function test_gateway_reference_is_unique_but_nullable(): void
+    public function test_gateway_reference_is_unique_per_gateway_but_nullable(): void
     {
         [$tenant, $subscription] = $this->subscribedTenant();
         $invoice = $this->invoice($tenant, $subscription);
@@ -237,12 +243,15 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
         // Many payments without a gateway reference are fine.
         $this->payment($invoice);
         $this->payment($invoice);
-        $this->payment($invoice, ['gateway_reference' => 'paymob:txn-1']);
+        $this->payment($invoice, ['gateway' => BillingGateway::Paymob, 'gateway_reference' => 'txn-1']);
+        // The same reference on another gateway is a different payment (CTO W1 Q3).
+        $this->payment($invoice, ['gateway' => BillingGateway::Fawry, 'gateway_reference' => 'txn-1']);
 
-        $this->assertSame(3, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
+        $this->assertSame(4, BillingPayment::query()->where('billing_invoice_id', $invoice->id)->count());
 
+        // The same reference twice on one gateway is still refused.
         $this->expectException(QueryException::class);
-        $this->payment($invoice, ['gateway_reference' => 'paymob:txn-1']);
+        $this->payment($invoice, ['gateway' => BillingGateway::Paymob, 'gateway_reference' => 'txn-1']);
     }
 
     public function test_an_invoice_with_payments_cannot_be_deleted(): void
@@ -310,6 +319,9 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
     public function test_migrations_roll_back_and_reapply(): void
     {
         try {
+            foreach (array_reverse(self::ALTER_MIGRATIONS) as $migration) {
+                $this->runMigration($migration, 'down');
+            }
             foreach (array_reverse(self::MIGRATIONS, true) as $table => $migration) {
                 $this->runMigration($migration, 'down');
                 $this->assertFalse(Schema::hasTable($table), "{$table} must be dropped by down().");
@@ -317,7 +329,7 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
                 $this->runMigration($migration, 'down');
             }
         } finally {
-            foreach (self::MIGRATIONS as $migration) {
+            foreach ([...array_values(self::MIGRATIONS), ...self::ALTER_MIGRATIONS] as $migration) {
                 $this->runMigration($migration, 'up');
             }
         }

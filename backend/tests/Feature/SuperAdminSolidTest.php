@@ -9,6 +9,8 @@ use App\Actions\Tenants\ToggleTenantStatusAction;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
+use Database\Seeders\Catalog\PlanCatalog;
+use Database\Seeders\PlansAndFeaturesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -60,28 +62,28 @@ class SuperAdminSolidTest extends TestCase
             'max_items' => 500,
             'max_invoices_per_month' => 2000,
             'is_active' => true,
-            'features' => ['pos.access' => true, 'blender.access' => false],
+            'features' => ['pos.access' => true, 'mixes.manage' => false],
         ]);
     }
 
     public function test_tenants_index_action_with_pipeline_filters(): void
     {
         Tenant::create([
-            'id' => 'cairo-roastery',
-            'name' => 'محامص بن القاهرة',
-            'slug' => 'cairo-roastery',
+            'id' => 'cairo-market',
+            'name' => 'سوبر ماركت القاهرة',
+            'slug' => 'cairo-market',
             'plan_id' => $this->basicPlan->id,
-            'email' => 'cairo@coffee.com',
+            'email' => 'cairo@market.test',
             'phone' => '01011111111',
             'status' => 'active',
         ]);
 
         Tenant::create([
-            'id' => 'alex-beans',
-            'name' => 'مطاحن الإسكندرية',
-            'slug' => 'alex-beans',
+            'id' => 'alex-spices',
+            'name' => 'عطارة الإسكندرية',
+            'slug' => 'alex-spices',
             'plan_id' => $this->basicPlan->id,
-            'email' => 'alex@coffee.com',
+            'email' => 'alex@spices.test',
             'phone' => '01022222222',
             'status' => 'suspended',
         ]);
@@ -93,14 +95,14 @@ class SuperAdminSolidTest extends TestCase
         app()->instance('request', $requestActive);
         $dataActive = $action->execute($requestActive);
         $this->assertEquals(1, $dataActive['tenants']->total());
-        $this->assertEquals('محامص بن القاهرة', $dataActive['tenants']->items()[0]['name']);
+        $this->assertEquals('سوبر ماركت القاهرة', $dataActive['tenants']->items()[0]['name']);
 
         // Test Filter 2: Search = الإسكندرية
         $requestSearch = Request::create('/admin/super/tenants', 'GET', ['search' => 'الإسكندرية']);
         app()->instance('request', $requestSearch);
         $dataSearch = $action->execute($requestSearch);
         $this->assertEquals(1, $dataSearch['tenants']->total());
-        $this->assertEquals('مطاحن الإسكندرية', $dataSearch['tenants']->items()[0]['name']);
+        $this->assertEquals('عطارة الإسكندرية', $dataSearch['tenants']->items()[0]['name']);
     }
 
     public function test_toggle_tenant_status_action(): void
@@ -134,15 +136,15 @@ class SuperAdminSolidTest extends TestCase
         ]);
 
         $action = app(OverrideTenantFeatureAction::class);
-        $action->execute($tenant, 'blender.access');
+        $action->execute($tenant, 'mixes.manage');
 
         $tenant->refresh();
-        $this->assertContains('blender.access', $tenant->enabled_features);
+        $this->assertContains('mixes.manage', $tenant->enabled_features);
 
         // Toggle again should remove override
-        $action->execute($tenant, 'blender.access');
+        $action->execute($tenant, 'mixes.manage');
         $tenant->refresh();
-        $this->assertNotContains('blender.access', $tenant->enabled_features);
+        $this->assertNotContains('mixes.manage', $tenant->enabled_features);
     }
 
     public function test_update_plan_action(): void
@@ -158,13 +160,39 @@ class SuperAdminSolidTest extends TestCase
             'max_invoices_per_month' => 5000,
             'is_active' => true,
             'is_popular' => true,
-            'features' => ['pos.access' => true, 'blender.access' => true],
+            'features' => ['pos.access' => true, 'mixes.manage' => true],
         ]);
 
         $this->basicPlan->refresh();
         $this->assertEquals('الباقة الأساسية بلس', $this->basicPlan->name);
         $this->assertEquals(599.0, (float) $this->basicPlan->price_monthly);
         $this->assertTrue($this->basicPlan->is_popular);
-        $this->assertTrue($this->basicPlan->features['blender.access']);
+        $this->assertTrue($this->basicPlan->features['mixes.manage']);
+    }
+
+    public function test_super_admin_plan_edits_survive_the_catalog_seeder(): void
+    {
+        // ENTI-1.8: the seeder runs on every deploy; it may add missing feature keys but
+        // must never overwrite what the super-admin edited.
+        app(UpdatePlanAction::class)->execute($this->basicPlan, [
+            'name' => 'الباقة الأساسية المعدلة',
+            'price_monthly' => '525.000',
+            'max_users' => 7,
+            'max_items' => null,
+            'features' => ['pos.access' => true, 'mixes.manage' => true, 'reports.advanced' => true],
+        ]);
+
+        $this->seed(PlansAndFeaturesSeeder::class);
+        $this->seed(PlansAndFeaturesSeeder::class);
+
+        $plan = Plan::query()->findOrFail($this->basicPlan->id);
+        $this->assertSame('الباقة الأساسية المعدلة', $plan->name);
+        $this->assertSame('525.000', $plan->price_monthly);
+        $this->assertSame(7, $plan->max_users);
+        $this->assertNull($plan->max_items);
+        $this->assertTrue($plan->features['mixes.manage'], 'An edited feature value is kept.');
+        $this->assertTrue($plan->features['reports.advanced'], 'An edited feature value is kept.');
+        $this->assertArrayHasKey('quotations.manage', $plan->features, 'Missing catalog keys are merged in.');
+        $this->assertEqualsCanonicalizing(PlanCatalog::SLUGS, Plan::query()->whereIn('slug', PlanCatalog::SLUGS)->pluck('slug')->all(), 'The missing catalog plans are created, the edited one is not duplicated.');
     }
 }
