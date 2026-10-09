@@ -223,7 +223,8 @@
             },
             "addon_type": {
                 "recurring": "إضافة متكررة",
-                "service": "خدمة"
+                "service": "خدمة",
+                "credits": "باقة رصيد"
             },
             "billing_invoice_status": {
                 "draft": "مسودة",
@@ -282,6 +283,12 @@
             "subscription_addon": {
                 "subscription_missing": "لا يمكن حفظ بند الإضافة بدون اشتراك موجود.",
                 "tenant_mismatch": "بند الإضافة لا يخص حساب الاشتراك الذي يتبعه."
+            },
+            "credits": {
+                "insufficient_balance": "الرصيد غير كافٍ.",
+                "invalid_amount": "قيمة الرصيد غير صحيحة.",
+                "invalid_reason": "نوع حركة الرصيد غير صحيح.",
+                "immutable": "لا يمكن تعديل أو حذف حركات الرصيد."
             }
         },
         "central_audit": {
@@ -333,7 +340,11 @@
                 "backup_succeeded": "نجاح النسخ الاحتياطي",
                 "backup_failed": "فشل النسخ الاحتياطي",
                 "audit_write_failed": "فشل تسجيل قيد مراجعة",
-                "entitlements_overridden": "تعديل صلاحيات باقة محل يدويًا"
+                "entitlements_overridden": "تعديل صلاحيات باقة محل يدويًا",
+                "recovery_codes_viewed": "عرض أكواد الاسترداد للتحقق الثنائي"
+            },
+            "prune": {
+                "done": "تم حذف :count من سجلات مراجعة المنصة الأقدم من :date."
             }
         },
         "central_auth": {
@@ -342,7 +353,28 @@
             "two_factor_required": "مطلوب كود التحقق بخطوتين لإكمال تسجيل الدخول.",
             "logout_success": "تم تسجيل الخروج من لوحة إدارة المنصة.",
             "unauthenticated": "غير مصرح، سجّل الدخول إلى لوحة إدارة المنصة أولًا.",
-            "session_expired": "انتهت جلسة لوحة إدارة المنصة، سجّل الدخول مرة أخرى."
+            "session_expired": "انتهت جلسة لوحة إدارة المنصة، سجّل الدخول مرة أخرى.",
+            "two_factor_setup_needed": "تم تسجيل الدخول، فعّل التحقق بخطوتين للمتابعة.",
+            "two_factor_setup_required": "فعّل التحقق بخطوتين قبل استخدام لوحة إدارة المنصة.",
+            "two_factor_challenge_invalid": "انتهت صلاحية محاولة تسجيل الدخول، سجّل الدخول مرة أخرى.",
+            "two_factor_invalid": "كود التحقق غير صحيح.",
+            "two_factor_enabled": "امسح الكود بتطبيق المصادقة، ثم أكّده بكود تحقق.",
+            "two_factor_confirmed": "تم تفعيل التحقق بخطوتين، احفظ أكواد الاسترداد في مكان آمن.",
+            "two_factor_already_confirmed": "التحقق بخطوتين مفعّل بالفعل لهذا الحساب.",
+            "two_factor_not_enabled": "ابدأ إعداد التحقق بخطوتين أولًا.",
+            "step_up_required": "أكّد هويتك بكود التحقق للمتابعة.",
+            "step_up_confirmed": "تم تأكيد الهوية.",
+            "password_reset_link_sent": "إذا كان هذا البريد مسجلًا لحساب على المنصة، فقد تم إرسال رابط إعادة تعيين كلمة السر إليه.",
+            "password_reset_invalid": "رابط إعادة تعيين كلمة السر غير صالح أو انتهت صلاحيته.",
+            "password_reset_success": "تم تغيير كلمة السر، سجّل الدخول من جديد على كل الأجهزة.",
+            "password_reset_mail": {
+                "subject": "إعادة تعيين كلمة سر لوحة إدارة المنصة",
+                "greeting": "أهلًا :name،",
+                "intro": "وصلنا طلب لإعادة تعيين كلمة سر حسابك على لوحة إدارة المنصة.",
+                "action": "إعادة تعيين كلمة السر",
+                "expiry": "هذا الرابط صالح لمدة :minutes دقيقة.",
+                "ignore": "إذا لم تطلب إعادة تعيين كلمة السر، تجاهل هذه الرسالة وستبقى كلمة السر كما هي."
+            }
         },
         "common": {
             "app_name": "نظام إدارة المبيعات والمخزون والحسابات",
@@ -507,6 +539,55 @@
                 "col_permission_roles": "الأدوار الحاملة لها",
                 "col_phone_matches": "مستخدمين بأرقام موبايل المنصة",
                 "findings": "مستأجرين بهم ملاحظات: :count من :total. لم يتم تعديل أي شيء."
+            },
+            "migrate_super_admins": {
+                "description": "نقل مشرفي المنصة القدامى (جدول users المركزي) إلى حسابات مشغّلين مركزية. تشغيل تجريبي ما لم يُمرَّر --execute.",
+                "tenant_context": "يجب تشغيل هذا الأمر في السياق المركزي، وليس داخل مستأجر.",
+                "no_candidates": "لا يوجد مشرف منصة قديم في جدول users المركزي. لا يوجد ما يُنفَّذ.",
+                "mode_dry_run": "تشغيل تجريبي: لن يُكتب أي شيء. أضف --execute للتنفيذ.",
+                "mode_execute": "تنفيذ: سيتم نقل المشغّلين المحددين.",
+                "col_legacy_id": "رقم المستخدم القديم",
+                "col_name": "الاسم",
+                "col_email": "البريد الإلكتروني",
+                "col_in_central": "مشغّل مركزي بالفعل",
+                "col_status": "النتيجة",
+                "col_central_id": "رقم المشغّل المركزي",
+                "yes": "نعم",
+                "no": "لا",
+                "not_a_candidate": "تم تجاهل :email لأنه ليس مشرف منصة قديمًا.",
+                "selection_hint": "حدّد المشغّلين بـ --email= (يمكن تكراره)، أو شغّل الأمر مع --execute تفاعليًا لتأكيد كل مشغّل.",
+                "selection_required": "تم رفض النقل: مرّر --email= لكل مشغّل، أو شغّل الأمر تفاعليًا لتأكيد كل مشغّل.",
+                "confirm_candidate": "نقل المستخدم القديم رقم :id (:email) إلى مشغّل مركزي؟",
+                "nothing_selected": "لم يتم تحديد أي مشغّل. لم يتغير شيء.",
+                "would_migrate": "سيتم نقل المستخدم القديم رقم :id (:email).",
+                "dry_run_done": "انتهى التشغيل التجريبي. لم يتغير شيء.",
+                "central_role_missing": "دور super_admin المركزي غير موجود. شغّل CentralPermissionsSeeder أولًا.",
+                "assertion_failed": "ما زال مستخدم منقول يملك دور super_admin على أحد الـ guards. تم التراجع عن التشغيل بالكامل؛ راجع الأمر قبل إعادة المحاولة.",
+                "assertion_passed": "تم التحقق: لا يملك أي مستخدم منقول دور super_admin على أي guard.",
+                "failed": "فشل النقل: :error",
+                "failed_database": "فشل النقل بسبب خطأ في قاعدة البيانات. لم يتغير شيء؛ راجع السجلات وأعد المحاولة.",
+                "done": "عدد المشغّلين المنقولين: :count.",
+                "status": {
+                    "created": "تم الإنشاء (بنفس كلمة السر)",
+                    "existing": "موجود بالفعل (تم التأكد من الدور)",
+                    "skipped_no_email": "تم التجاهل: لا يوجد بريد إلكتروني"
+                }
+            },
+            "create_super_admin": {
+                "description": "إنشاء مشرف منصة (مشغّل مركزي). كلمة السر تُطلب تفاعليًا ولا تُمرَّر كخيار.",
+                "invalid_email": "البريد الإلكتروني غير صالح.",
+                "email_taken": "يوجد مشغّل مركزي بهذا البريد الإلكتروني بالفعل.",
+                "ask_name": "اسم المشغّل",
+                "invalid_name": "الاسم مطلوب ويجب ألا يزيد عن 255 حرفًا.",
+                "ask_password": "كلمة السر (:min حرفًا على الأقل)",
+                "ask_password_confirmation": "أعد كتابة كلمة السر",
+                "password_too_short": "يجب أن تكون كلمة السر بين :min و255 حرفًا.",
+                "password_mismatch": "كلمتا السر غير متطابقتين.",
+                "central_role_missing": "دور super_admin المركزي غير موجود. شغّل CentralPermissionsSeeder أولًا.",
+                "failed": "تعذّر إنشاء المشغّل: :error",
+                "failed_database": "تعذّر إنشاء المشغّل بسبب خطأ في قاعدة البيانات. لم يتغير شيء.",
+                "created": "تم إنشاء مشرف المنصة رقم :id: :email",
+                "two_factor_hint": "يجب إعداد التحقق بخطوتين عند أول تسجيل دخول."
             }
         },
         "contacts": {
@@ -1227,7 +1308,9 @@
             "cancel_transfer": "إلغاء التحويل",
             "min_selling_price": "أقل سعر بيع",
             "quantity": "الكمية",
-            "view_transfer_details": "عرض تفاصيل التحويل"
+            "view_transfer_details": "عرض تفاصيل التحويل",
+            "unit_not_in_tenant_list": "الوحدة «:unit» مش موجودة في قائمة وحدات القياس بتاعة المحل. اختار وحدة من القائمة أو ضيفها من الإعدادات.",
+            "switched_to_store": "تم التبديل إلى فرع: :store"
         },
         "invoices": {
             "title": "فواتير المبيعات",
@@ -1531,6 +1614,76 @@
             "throttled": "يرجى الانتظار قبل المحاولة مرة أخرى.",
             "token": "رمز إعادة تعيين كلمة المرور غير صالح.",
             "user": "لم نتمكن من العثور على مستخدم بعنوان البريد الإلكتروني المدخل."
+        },
+        "permissions": {
+            "pos": {
+                "access": "الوصول لشاشة نقطة البيع (POS)"
+            },
+            "invoices": {
+                "view": "عرض سجل فواتير المبيعات",
+                "create": "إنشاء واعتماد فواتير المبيعات",
+                "edit": "تعديل فواتير المبيعات المعتمدة",
+                "cancel": "إلغاء الفواتير وعكس أثر المخزون",
+                "delete": "حذف وأرشفة فواتير المبيعات",
+                "discount": "صلاحية منح خصومات للعملاء"
+            },
+            "items": {
+                "view": "عرض قائمة الأصناف والأسعار",
+                "create": "إضافة أصناف جديدة للمخزون",
+                "edit": "تعديل بيانات وأسعار الأصناف",
+                "delete": "أرشفة وحذف الأصناف",
+                "view_cost": "رؤية سعر التكلفة وهوامش الربح"
+            },
+            "inventory": {
+                "adjust": "تسوية أرصدة المخزون يدويًا (جرد وإيداع)"
+            },
+            "purchases": {
+                "view": "عرض سجل فواتير المشتريات",
+                "create": "تسجيل وتوريد مشتريات جديدة للمخزن",
+                "delete": "أرشفة فواتير المشتريات"
+            },
+            "stores": {
+                "manage": "إدارة الفروع وتعيين الموظفين",
+                "view_all": "عرض بيانات كل الفروع مجمعة"
+            },
+            "transfers": {
+                "view": "عرض أذونات التحويل المخزني",
+                "create": "إنشاء أذونات تحويل وشحن عربات التوزيع"
+            },
+            "customers": {
+                "manage": "إدارة دليل العملاء",
+                "statement": "عرض وتصدير كشف حساب عميل"
+            },
+            "suppliers": {
+                "manage": "إدارة دليل الموردين وحساباتهم",
+                "statement": "عرض وتصدير كشف حساب مورد"
+            },
+            "daily_journal": {
+                "view": "عرض اليومية النقدية وحركة الدرج والشفتات",
+                "close_shift": "فتح وتقفيل ورديات الكاشير واليومية",
+                "manage": "إدارة الخزينة والتحويل بين الخزن"
+            },
+            "expenses": {
+                "manage": "تسجيل وتعديل وحذف المصروفات"
+            },
+            "returns": {
+                "manage": "إدارة مرتجعات المبيعات والمشتريات"
+            },
+            "reports": {
+                "view": "عرض التقارير المالية والأرباح ومقارنة الفروع"
+            },
+            "trash": {
+                "access": "الوصول لسلة المحذوفات المركزية واسترجاع البيانات"
+            },
+            "roles": {
+                "manage": "إدارة المستخدمين والأدوار والصلاحيات"
+            },
+            "logs": {
+                "view": "عرض وفحص سجل العمليات والرقابة الذاتية"
+            },
+            "settings": {
+                "manage": "إدارة إعدادات المحل والطباعة والتكاملات"
+            }
         },
         "plans": {
             "prices_exclude_vat": "الأسعار لا تشمل ضريبة القيمة المضافة.",
@@ -2600,7 +2753,11 @@
             "attr_telegram_chat_id": "معرف المحادثة",
             "telegram_connection_failed": "تعذر الاتصال بخدمة تيليجرام. راجع التوكن ومعرف المحادثة والاتصال بالإنترنت.",
             "commercial_register": "السجل التجاري",
-            "tax_registration_no": "رقم التسجيل الضريبي"
+            "tax_registration_no": "رقم التسجيل الضريبي",
+            "business_day_cutoff": "بداية اليوم التجاري",
+            "business_day_cutoff_invalid": "بداية اليوم التجاري لازم تكون بالشكل HH:MM (من 00:00 لحد 23:59).",
+            "low_stock_default_threshold": "حد النواقص الافتراضي",
+            "inventory_units": "وحدات القياس"
         },
         "subscription": {
             "statuses": {
@@ -3704,7 +3861,8 @@
             },
             "addon_type": {
                 "recurring": "Recurring add-on",
-                "service": "Service"
+                "service": "Service",
+                "credits": "Credits pack"
             },
             "billing_invoice_status": {
                 "draft": "Draft",
@@ -3763,6 +3921,12 @@
             "subscription_addon": {
                 "subscription_missing": "An add-on line cannot be saved without an existing subscription.",
                 "tenant_mismatch": "The add-on line does not belong to the account of its subscription."
+            },
+            "credits": {
+                "insufficient_balance": "Not enough credits.",
+                "invalid_amount": "Invalid credit amount.",
+                "invalid_reason": "Invalid credit movement type.",
+                "immutable": "Credit movements cannot be changed or deleted."
             }
         },
         "central_audit": {
@@ -3814,7 +3978,11 @@
                 "backup_succeeded": "Backup succeeded",
                 "backup_failed": "Backup failed",
                 "audit_write_failed": "Audit write failed",
-                "entitlements_overridden": "Entitlements overridden"
+                "entitlements_overridden": "Entitlements overridden",
+                "recovery_codes_viewed": "Two-factor recovery codes viewed"
+            },
+            "prune": {
+                "done": "Deleted :count platform audit rows older than :date."
             }
         },
         "central_auth": {
@@ -3823,7 +3991,28 @@
             "two_factor_required": "A two-factor code is required to finish signing in.",
             "logout_success": "Signed out of the platform console.",
             "unauthenticated": "Unauthorized. Sign in to the platform console first.",
-            "session_expired": "Your platform console session has expired. Please sign in again."
+            "session_expired": "Your platform console session has expired. Please sign in again.",
+            "two_factor_setup_needed": "Signed in. Set up two-factor authentication to continue.",
+            "two_factor_setup_required": "Set up two-factor authentication before using the platform console.",
+            "two_factor_challenge_invalid": "This sign-in attempt has expired or is no longer valid. Sign in again.",
+            "two_factor_invalid": "The verification code is incorrect.",
+            "two_factor_enabled": "Scan the code with your authenticator app, then confirm it with a verification code.",
+            "two_factor_confirmed": "Two-factor authentication is on. Save your recovery codes somewhere safe.",
+            "two_factor_already_confirmed": "Two-factor authentication is already set up for this account.",
+            "two_factor_not_enabled": "Start the two-factor setup first.",
+            "step_up_required": "Confirm your identity with a verification code to continue.",
+            "step_up_confirmed": "Identity confirmed.",
+            "password_reset_link_sent": "If this email belongs to a platform account, a password reset link has been sent to it.",
+            "password_reset_invalid": "This password reset link is invalid or has expired.",
+            "password_reset_success": "Your password has been reset. Sign in again on every device.",
+            "password_reset_mail": {
+                "subject": "Reset your platform console password",
+                "greeting": "Hello :name,",
+                "intro": "We received a request to reset the password of your platform console account.",
+                "action": "Reset password",
+                "expiry": "This link expires in :minutes minutes.",
+                "ignore": "If you did not request a password reset, ignore this email; your password stays the same."
+            }
         },
         "common": {
             "app_name": "Sales, Inventory & Accounting ERP System",
@@ -3988,6 +4177,55 @@
                 "col_permission_roles": "Roles holding them",
                 "col_phone_matches": "Users matching platform phones",
                 "findings": "Tenants with findings: :count of :total. Nothing was changed."
+            },
+            "migrate_super_admins": {
+                "description": "Move legacy platform super admins (central users table) to central operator accounts. Dry run unless --execute.",
+                "tenant_context": "This command must run in the central context, never inside a tenant.",
+                "no_candidates": "No legacy super admin found in the central users table. Nothing to do.",
+                "mode_dry_run": "DRY RUN: nothing will be written. Add --execute to migrate.",
+                "mode_execute": "EXECUTE: the selected operators will be migrated.",
+                "col_legacy_id": "Legacy user id",
+                "col_name": "Name",
+                "col_email": "Email",
+                "col_in_central": "Already a central operator",
+                "col_status": "Result",
+                "col_central_id": "Central operator id",
+                "yes": "yes",
+                "no": "no",
+                "not_a_candidate": "Skipped :email: it is not a legacy super admin.",
+                "selection_hint": "Select operators with --email= (repeatable), or run with --execute interactively to confirm each one.",
+                "selection_required": "Refusing to migrate: pass --email= for each operator, or run interactively to confirm each one.",
+                "confirm_candidate": "Migrate legacy user #:id (:email) to a central operator?",
+                "nothing_selected": "No operator selected. Nothing was changed.",
+                "would_migrate": "Would migrate legacy user #:id (:email).",
+                "dry_run_done": "Dry run finished. Nothing was changed.",
+                "central_role_missing": "The central super_admin role does not exist. Run the CentralPermissionsSeeder first.",
+                "assertion_failed": "A migrated user still holds a super_admin role on some guard. The whole run was rolled back; investigate before retrying.",
+                "assertion_passed": "Verified: no migrated user holds a super_admin role on any guard.",
+                "failed": "Migration failed: :error",
+                "failed_database": "Migration failed because of a database error. Nothing was changed; check the logs and retry.",
+                "done": "Migrated operators: :count.",
+                "status": {
+                    "created": "created (same password)",
+                    "existing": "already existed (role ensured)",
+                    "skipped_no_email": "skipped: no email"
+                }
+            },
+            "create_super_admin": {
+                "description": "Create a platform super admin (central operator). The password is asked for, never passed as an option.",
+                "invalid_email": "The email address is not valid.",
+                "email_taken": "A central operator with this email already exists.",
+                "ask_name": "Operator name",
+                "invalid_name": "The name is required and must be at most 255 characters.",
+                "ask_password": "Password (at least :min characters)",
+                "ask_password_confirmation": "Repeat the password",
+                "password_too_short": "The password must be between :min and 255 characters.",
+                "password_mismatch": "The passwords do not match.",
+                "central_role_missing": "The central super_admin role does not exist. Run the CentralPermissionsSeeder first.",
+                "failed": "Could not create the operator: :error",
+                "failed_database": "Could not create the operator because of a database error. Nothing was changed.",
+                "created": "Central super admin #:id created: :email",
+                "two_factor_hint": "Two-factor authentication must be set up at the first sign-in."
             }
         },
         "contacts": {
@@ -4708,7 +4946,9 @@
             "cancel_transfer": "Cancel transfer",
             "min_selling_price": "Minimum selling price",
             "quantity": "Quantity",
-            "view_transfer_details": "View transfer details"
+            "view_transfer_details": "View transfer details",
+            "unit_not_in_tenant_list": "The unit \":unit\" is not in the unit list of this business. Pick a unit from the list or add it in settings.",
+            "switched_to_store": "Switched to branch: :store"
         },
         "invoices": {
             "title": "Sales Invoices",
@@ -5012,6 +5252,76 @@
             "throttled": "Please wait before retrying.",
             "token": "This password reset token is invalid.",
             "user": "We can't find a user with that email address."
+        },
+        "permissions": {
+            "pos": {
+                "access": "Access the point of sale (POS) screen"
+            },
+            "invoices": {
+                "view": "View the sales invoice history",
+                "create": "Create and confirm sales invoices",
+                "edit": "Edit confirmed sales invoices",
+                "cancel": "Cancel invoices and reverse their stock effect",
+                "delete": "Delete and archive sales invoices",
+                "discount": "Grant discounts to customers"
+            },
+            "items": {
+                "view": "View the item list and prices",
+                "create": "Add new items to inventory",
+                "edit": "Edit item details and prices",
+                "delete": "Archive and delete items",
+                "view_cost": "See cost prices and profit margins"
+            },
+            "inventory": {
+                "adjust": "Adjust stock balances manually (counts and deposits)"
+            },
+            "purchases": {
+                "view": "View the purchase invoice history",
+                "create": "Record new purchases into stock",
+                "delete": "Archive purchase invoices"
+            },
+            "stores": {
+                "manage": "Manage branches and assign staff",
+                "view_all": "View data of all branches combined"
+            },
+            "transfers": {
+                "view": "View stock transfer orders",
+                "create": "Create stock transfers and load distribution vans"
+            },
+            "customers": {
+                "manage": "Manage the customer directory",
+                "statement": "View and export a customer statement"
+            },
+            "suppliers": {
+                "manage": "Manage suppliers and their accounts",
+                "statement": "View and export a supplier statement"
+            },
+            "daily_journal": {
+                "view": "View the daily cash journal, drawer movements and shifts",
+                "close_shift": "Open and close cashier shifts",
+                "manage": "Manage the treasury and transfers between drawers"
+            },
+            "expenses": {
+                "manage": "Record, edit and delete expenses"
+            },
+            "returns": {
+                "manage": "Manage sales and purchase returns"
+            },
+            "reports": {
+                "view": "View financial and profit reports and branch comparison"
+            },
+            "trash": {
+                "access": "Access the central recycle bin and restore data"
+            },
+            "roles": {
+                "manage": "Manage users, roles and permissions"
+            },
+            "logs": {
+                "view": "View and inspect the activity and audit log"
+            },
+            "settings": {
+                "manage": "Manage shop, printing and integration settings"
+            }
         },
         "plans": {
             "prices_exclude_vat": "Prices exclude VAT.",
@@ -6081,7 +6391,11 @@
             "attr_telegram_chat_id": "chat ID",
             "telegram_connection_failed": "Could not reach Telegram. Check the bot token, the chat ID and the internet connection.",
             "commercial_register": "Commercial register",
-            "tax_registration_no": "Tax registration number"
+            "tax_registration_no": "Tax registration number",
+            "business_day_cutoff": "Business day starts at",
+            "business_day_cutoff_invalid": "The business day start must be in HH:MM format (00:00 to 23:59).",
+            "low_stock_default_threshold": "Default low-stock threshold",
+            "inventory_units": "Units of measure"
         },
         "subscription": {
             "statuses": {
