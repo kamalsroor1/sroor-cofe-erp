@@ -35,9 +35,9 @@ return [
     'insufficient_funds' => 'رصيد الحساب المحول منه غير كافٍ لإتمام عملية التحويل.',
 
     // Common Shifts & Movements
-    'open_shift' => 'فتح يومية / وردية جديدة',
-    'close_shift' => 'تقفيل وردية اليومية (Z-Report)',
-    'opening_cash' => 'رصيد بداية اليومية (الفكة / العهدة):',
+    'open_shift' => 'فتح وردية',
+    'close_shift' => 'إغلاق الوردية (Z-Report)',
+    'opening_cash' => 'رصيد بداية الوردية (العهدة):',
     'actual_closing_cash' => 'النقدية الفعلية بعد الجرد بالدرج:',
     'cash_difference' => 'الفارق (عجز / زيادة):',
     'inflows' => 'إجمالي المقبوضات والتحصيلات',
@@ -86,7 +86,7 @@ return [
     'opening_float_balance' => 'الرصيد الافتتاحي للدرج',
     'print_z_report' => 'طباعة تقرير Z',
     'no_open_shift_warning' => 'لا توجد وردية عمل مفتوحة حالياً لهذا الفرع. يرجى فتح وردية لبدء عمليات البيع والتحصيل.',
-    'open_shift_now' => 'فتح وردية الآن',
+    'open_shift_now' => 'فتح وردية',
     'total_receipts_in' => 'إجمالي المقبوضات (كاش وارد)',
     'inflow_details_sub' => 'مبيعات كاش + تحصيل عملاء',
     'total_disbursements_out' => 'إجمالي المدفوعات (كاش منصرف)',

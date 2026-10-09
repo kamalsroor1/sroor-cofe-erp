@@ -27,19 +27,17 @@
 
       <!-- Date Range Filter -->
       <div class="flex items-center gap-2">
-        <BaseInput
+        <BaseDatePicker
           :model-value="dateFrom"
           @update:model-value="$emit('update:dateFrom', $event)"
-          type="date"
-          input-class="min-h-[44px] text-xs font-mono"
+          :placeholder="$t('invoices.from_date')"
           @change="$emit('filter')"
         />
         <span class="text-xs text-slate-500 font-bold">—</span>
-        <BaseInput
+        <BaseDatePicker
           :model-value="dateTo"
           @update:model-value="$emit('update:dateTo', $event)"
-          type="date"
-          input-class="min-h-[44px] text-xs font-mono"
+          :placeholder="$t('invoices.to_date')"
           @change="$emit('filter')"
         />
       </div>
@@ -79,7 +77,7 @@
 <script setup>
 import BaseSearchInput from '../Form/BaseSearchInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
-import BaseInput from '../Form/BaseInput.vue';
+import BaseDatePicker from '../Form/BaseDatePicker.vue';
 
 defineProps({
   searchQuery: { type: String, default: '' },
