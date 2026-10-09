@@ -27,12 +27,12 @@ All changes strictly obey architectural rules: RTL-first, dark+light mode, CSS v
 | **1** | Dashboard Welcome `:app` Bug | §4.2 | **Done** | Fixed placeholder interpolation in `DashboardWelcomeBanner.vue` by passing `{ app: companyName || $t('dashboard.company_title') }`. Eliminated raw `:app` rendering as `app:` in RTL. |
 | **2** | Status Badges Wrap/Cut | G9 | **Done** | In `StatusBadge.vue`: added `whitespace-nowrap`, `:title="label"`, `shortLabel`/`short` props, `<slot>` support, and concise normalization (`"نشط وفعال"` -> `"نشط"`, `"نقدي (كاش)"` -> `"نقدي"`). |
 | **3** | KPI Cards on Mobile | G7 | **Done** | In `MetricCard.vue`: added `compact` prop, responsive padding (`p-3 sm:p-5`), and `.metric-card` marker. In `app.css`: added automatic 2-column grid rule under `sm` (`< 640px`) with `:last-child:nth-child(odd)` spanning 2 columns, matching `daily-journal`. |
-| **4** | Tables on Tablet (820px) | G1 | **Done** | In `DataTable.vue`: added responsive `cardBreakpoint` defaulting to `'lg'` (renders clean card view under 1024px, preventing column clipping from open ~320px sidebar). Added dynamic RTL/LTR horizontal scroll edge shadow indicators. |
-| **5** | Touch Targets ≥44px on `pointer: coarse` | G8 | **Done** | In `BaseButton.vue`: enforced `coarse:min-h-[44px] coarse:min-w-[44px]`. In `DataTable.vue`: checkboxes wrapped in 44px labels. In `PermissionModulesGrid.vue`: select-all / deselect-all links given coarse touch padding. In `app.css`: defined `@custom-variant coarse` rule. |
+| **4** | Tables on Tablet (820px) | G1 | **Partial** | In `DataTable.vue`: added responsive `cardBreakpoint` defaulting to `'lg'` (renders clean card view under 1024px, preventing column clipping from open ~320px sidebar) and horizontal scroll edge shadow indicators. Note: this applies to views and report tabs using `DataTable` (e.g. Sales, Expenses, Treasury reports); other entity lists are custom table/card views. |
+| **5** | Touch Targets ≥44px on `pointer: coarse` | G8 | **Done** | In `BaseButton.vue`: enforced `coarse:min-h-[44px] coarse:min-w-[44px]`. In `DataTable.vue`: checkboxes wrapped in 44px labels. In `PermissionModulesGrid.vue`: select-all / deselect-all links given coarse touch padding. In `app.css`: defined `@custom-variant coarse` rule and scoped coarse component classes. |
 | **6** | Replace Emojis Outside POS & Super-Admin | G11 | **Done** | Replaced legacy emojis with Lucide SVG icons across `SuppliersView.vue`, `SuppliersTable.vue`, `SupplierStatementTable.vue`, `ExpensesView.vue`, `ExpensesTable.vue`, `StoresView.vue`, `StoresGrid.vue`, `StoreStocksView.vue`, `RolesView.vue`, and `PermissionModulesGrid.vue`. Removed `💸` from `expenses.php`. |
 | **7** | English/Technical Terms in Arabic UI | G12 | **Done** | Replaced technical abbreviations `(Revenue)`, `(COGS)`, `(Gross Profit)`, `(P&L Breakdown)`, `(Expenses)`, `(Net True Profit)`, `(Net Cash)`, `(Inflow)`, `(Outflow)`, and `WAC` in `reports.php`, `purchases.php`, and `ReportsSalesTab.vue`. Added descriptive localized tooltips for financial terms. |
 | **8** | Semantic Colors in Daily Journal | G13 | **Done** | In `DailyJournalMetricsGrid.vue`: Net Cash uses green (`text-emerald-500`) for positive, red (`text-rose-500`) for negative, and neutral for zero. Fixed floating-point precision display so `0.00` never shows `+0` or `-0`. Total inflow shows `+` only when >0 and outflow shows `-` only when >0. |
-| **9** | Random Category Icons & Lucide Picker | G14 | **Done** | Neutralized default category icon from coffee emoji (`☕`) to `Folder` in `CategoryFormModal.vue`, `CategoryCard.vue`, `CategoriesGrid.vue`, and `CategoriesView.vue`. Built a 20-icon Lucide picker grid with live preview. Updated `DynamicIcon.vue` with backwards compatibility mappings. |
+| **9** | Random Category Icons & Lucide Picker | G14 | **Partial** | Neutralized default category icon to `Folder` in frontend components (`CategoryFormModal.vue`, `CategoryCard.vue`, `CategoriesGrid.vue`, `CategoriesView.vue`, `DynamicIcon.vue`) and added Lucide icon picker without raw English titles/inputs. Rotating emojis in backend (`GetPOSBootstrapDataAction` and tenant migration seeders) and `ItemFormModal.vue` are reserved for coordinator. |
 | **10** | Shared Error State Component | G15 | **Done** | Created `backend/resources/js/Components/Common/ErrorState.vue` (warning/danger container, localized message, retry button). Integrated error states into `DataTable.vue`, `SuppliersTable.vue`, `ExpensesTable.vue`, `DailyJournalView.vue`, and their composables (`useSuppliers`, `useExpenses`, `useDailyJournal`). |
 | **11** | Vue Console Warnings on Modals | G16 | **Done** | Eliminated extraneous non-props attribute fallthrough warnings (`submitting`, `isSubmitting`, `form`) on fragment/teleport roots in `SupplierFormModal.vue`, `SupplierPaymentModal.vue`, `ExpenseFormModal.vue`, `StoreFormModal.vue`, and `StoreStaffModal.vue`. |
 | **12** | Native `type="date"` Inputs | G6 | **Done** | Replaced native `<input type="date">` with flatpickr-based RTL-aware `BaseDatePicker` in `ExpensesFilterBar.vue`, `DailyJournalView.vue`, and `CreateStockTransferHeaderCard.vue`. |
@@ -107,12 +107,15 @@ All changes strictly obey architectural rules: RTL-first, dark+light mode, CSS v
 
 All modified translation files were audited with strict Arabic/English key parity.
 
-### Recommended Updates for Coordinator (in forbidden `common.php`):
-- `backend/lang/ar/common.php`: `'active' => 'نشط'` (currently `'نشط وفعال'`)
-- `backend/lang/ar/invoices.php`: `'payment_cash' => 'نقدي'` (currently `'نقدي (كاش)'`)
-- `backend/lang/ar/contacts.php`: `'cash' => 'نقدي'` (currently `'نقدي (كاش)'`)
+### Updates Handled in Branch per Review:
+- `backend/lang/ar/invoices.php`: `'payment_cash' => 'نقدي'` (was `'نقدي (كاش)'`)
+- `backend/lang/ar/contacts.php`: `'cash' => 'نقدي'` (was `'نقدي (كاش)'`)
+- `backend/lang/{ar,en}/treasury.php`: `'method_visa'` removed `💳` emoji prefix.
 
-*(Note: `StatusBadge.vue` automatically normalizes these labels so they render concisely even prior to backend translation file edits).*
+### Reserved for Coordinator:
+- `backend/lang/ar/common.php`: `'active' => 'نشط'` (currently `'نشط وفعال'`)
+- Backend default category icon in `GetPOSBootstrapDataAction` and tenant migration seeders.
+- `ItemFormModal.vue` category label display.
 
 ---
 
@@ -136,3 +139,18 @@ All checks executed from `backend/`:
 ## 6. What Was Not Verified
 - Production assets (`npm run build` into `public/build/`) and `php artisan lang:export` were intentionally not executed, reserved for the coordinator per handoff protocol.
 - Physical testing on physical mobile/tablet hardware (verified via responsive viewports and standard `@media (pointer: coarse)` rules).
+
+---
+
+## 7. Review Fixes (Round 2 — Claude-Code Feedback on PR #4)
+
+1. **Item 1 (Blocking):** Removed hardcoded Arabic string checks (`'نشط وفعال'`, `'نقدي (كاش)'`) in `StatusBadge.vue:31-46`. Updated `invoices.php` (`payment_cash` -> `نقدي`) and `contacts.php` (`cash` -> `نقدي`) in parity.
+2. **Item 2 (Blocking):** Removed free-text icon input (`placeholder="Folder"`) and raw English identifiers/tooltips (`:title`/`:aria-label="item.name"`) in `CategoryFormModal.vue`.
+3. **Item 3 (Blocking):** Restructured `@media (pointer: coarse)` inside `@layer components` in `app.css`. Removed bare `table td button` / `table td a` and bare `.base-btn` selectors to prevent leaking into POS. Reverted unrelated Prettier churn across lines 1-555.
+4. **Item 4 (Should-fix):** Replaced global `.grid:has(> .metric-card)` with opt-in `.metric-grid-2col` without `!important`. Applied to both skeleton and loaded grids in `DashboardKpiGrid`, `DashboardSkeleton`, `StoresMetricsGrid`, `SuppliersMetricsGrid`, `ExpensesMetricsGrid`, and `StockTransfersMetricsGrid`.
+5. **Item 5 (Should-fix):** In `DailyJournalView.vue`, hid `DailyJournalShiftBanner` and the shift status header controls when `hasError || isLoading`.
+6. **Item 6 (Should-fix):** Removed `min-h-[38px]` overrides on date picker, add expense button, and close shift button in `DailyJournalView.vue` header to respect minimum 44px coarse touch target rules.
+7. **Item 7 (Should-fix):** Standardized on `submitting: { type: Boolean, default: false }` across `SupplierFormModal`, `SupplierPaymentModal`, `ExpenseFormModal`, `StoreFormModal`, and `StoreStaffModal`. Removed `saving`, `isSubmitting`, and unused `form` prop sink in `SupplierPaymentModal`.
+8. **Item 8 (Should-fix):** In `ExpensesTable.vue` and `SuppliersTable.vue`, rendered `<ErrorState>` on `error` before checking `rows.length > 0` (handling stale rows on failed pagination). Emitted and handled active page on retry (`fetchExpenses(pagination.current_page)`, `fetchSuppliers(pagination.current_page)`).
+9. **Item 9 (Should-fix):** Removed `💳` emoji prefix from `method_visa` in `backend/lang/ar/treasury.php` and `backend/lang/en/treasury.php`.
+10. **Item 10 (Should-fix) & Nits:** Updated Items 4 and 9 status to "Partial" in this report with accurate scope notes. Fixed dead branch in `BaseButton.vue:7` and replaced deep watch on rows in `DataTable.vue` with `ResizeObserver`.
