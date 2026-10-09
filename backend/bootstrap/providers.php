@@ -1,6 +1,7 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use App\Providers\CentralFortifyServiceProvider;
 use App\Providers\HorizonServiceProvider;
 use App\Providers\LocalizationServiceProvider;
 use Laravel\Telescope\TelescopeServiceProvider;
@@ -14,4 +15,6 @@ return [
     App\Providers\TelescopeServiceProvider::class,
     HorizonServiceProvider::class,
     LocalizationServiceProvider::class,
+    // IDEN-1.12: headless Fortify for platform operators (Fortify itself is not auto-discovered).
+    CentralFortifyServiceProvider::class,
 ];

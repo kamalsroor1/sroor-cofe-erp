@@ -115,6 +115,16 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        // IDEN-1.12: platform operators (CentralUser). Tokens live in the CENTRAL
+        // `central_password_reset_tokens`; CentralFortifyServiceProvider pins `connection`
+        // to tenancy.database.central_connection at boot (this file loads before tenancy.php).
+        // Reset links are built from central.password_reset_url, never from the Host header.
+        'central_users' => [
+            'provider' => 'central_users',
+            'table' => 'central_password_reset_tokens',
+            'expire' => 30,
+            'throttle' => 60,
+        ],
     ],
 
     /*

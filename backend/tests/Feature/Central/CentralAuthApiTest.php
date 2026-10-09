@@ -20,6 +20,10 @@ use Tests\TenantTestCase;
  * Contract: 200 / 422 (uniform message) / 429 (central-login limiter, incl. the hourly
  * per-email cap that ignores the IP) / 401 (Bearer central token only, ability central:*,
  * unexpired) / 404 on a tenant host (EnsureCentralContext first).
+ *
+ * IDEN-1.12 changed the login outcome: without confirmed 2FA only a `central:2fa-setup`
+ * token (403 on /me), with confirmed 2FA a challenge id and no token. The full-token flow
+ * (challenge, confirm, step-up) is covered by CentralTwoFactorApiTest.
  */
 final class CentralAuthApiTest extends TenantTestCase
 {
@@ -29,7 +33,8 @@ final class CentralAuthApiTest extends TenantTestCase
 
     private const LOGOUT = '/api/v1/super-admin/auth/logout';
 
-    private const PASSWORD = 'correct-horse-battery';
+    // Fake operator password; the `fixture` prefix marks it as fake for gitleaks (.gitleaks.toml).
+    private const PASSWORD = 'fixtureCentralOperatorPassword';
 
     protected function setUp(): void
     {
@@ -63,7 +68,7 @@ final class CentralAuthApiTest extends TenantTestCase
 
     // ---------------------------------------------------------------- login 200
 
-    public function test_login_issues_an_expiring_central_token_and_audits_success(): void
+    public function test_login_without_confirmed_two_factor_issues_only_a_setup_token_and_audits_success(): void
     {
         $this->freezeSecond();
         $user = $this->operator();
@@ -71,8 +76,10 @@ final class CentralAuthApiTest extends TenantTestCase
         $response = $this->postJson(self::LOGIN, ['email' => $user->email, 'password' => self::PASSWORD, 'device_name' => 'ops-laptop'])
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', __('central_auth.login_success'))
+            ->assertJsonPath('message', __('central_auth.two_factor_setup_needed'))
             ->assertJsonPath('data.two_factor_required', false)
+            ->assertJsonPath('data.two_factor_setup_required', true)
+            ->assertJsonPath('data.abilities', ['central:2fa-setup'])
             ->assertJsonPath('data.token_type', 'Bearer')
             ->assertJsonPath('data.user.email', $user->email)
             ->assertJsonPath('data.user.roles', [CentralPermission::ROLE_SUPER_ADMIN])
@@ -83,24 +90,27 @@ final class CentralAuthApiTest extends TenantTestCase
         $token = CentralPersonalAccessToken::query()->sole();
         $this->assertSame($user->getKey(), $token->tokenable_id);
         $this->assertSame('ops-laptop', $token->name);
-        $this->assertSame(['central:*'], $token->abilities);
+        $this->assertSame(['central:2fa-setup'], $token->abilities);
         $this->assertNotNull($token->expires_at);
-        $this->assertTrue($token->expires_at->equalTo(now()->addMinutes(240)));
+        $this->assertTrue($token->expires_at->equalTo(now()->addMinutes(15)));
         $this->assertSame($token->expires_at->toIso8601String(), $response->json('data.expires_at'));
+        $this->assertNull($token->two_factor_verified_at);
 
+        // A setup sign-in is not a full sign-in: last_login_* stays untouched.
         $user->refresh();
-        $this->assertNotNull($user->last_login_at);
-        $this->assertSame('127.0.0.1', $user->last_login_ip);
+        $this->assertNull($user->last_login_at);
 
         $this->assertSame(1, $this->auditCount(CentralAuditEvent::LoginSucceeded));
         $log = CentralAuditLog::query()->where('event', CentralAuditEvent::LoginSucceeded->value)->sole();
         $this->assertSame($user->getKey(), $log->causer_id);
+        $this->assertSame('two_factor_setup', $log->properties['session_scope'] ?? null);
 
-        // The issued token authenticates /me.
+        // The setup token is NOT a console session: /me answers 403 "set up 2FA".
         $this->withHeaders($this->bearer((string) $response->json('data.token')))
             ->getJson(self::ME)
-            ->assertOk()
-            ->assertJsonPath('data.email', $user->email);
+            ->assertForbidden()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'central_auth.two_factor_setup_required');
     }
 
     public function test_login_email_is_case_insensitive_and_trimmed(): void
@@ -112,29 +122,33 @@ final class CentralAuthApiTest extends TenantTestCase
             ->assertJsonPath('data.user.id', $user->getKey());
     }
 
-    public function test_token_ttl_follows_config(): void
+    public function test_setup_token_ttl_follows_config(): void
     {
         $this->freezeSecond();
-        config(['central.token_ttl_minutes' => 30]);
+        config(['central.two_factor_setup_ttl_minutes' => 5]);
         $user = $this->operator();
 
         $this->postJson(self::LOGIN, ['email' => $user->email, 'password' => self::PASSWORD])->assertOk();
 
-        $this->assertTrue(CentralPersonalAccessToken::query()->sole()->expires_at?->equalTo(now()->addMinutes(30)));
+        $this->assertTrue(CentralPersonalAccessToken::query()->sole()->expires_at?->equalTo(now()->addMinutes(5)));
     }
 
-    public function test_login_with_confirmed_two_factor_returns_two_factor_required_and_no_token(): void
+    public function test_login_with_confirmed_two_factor_returns_a_challenge_and_no_token(): void
     {
+        $this->freezeSecond();
         $user = $this->operator();
         $user->forceFill(['two_factor_secret' => 'encrypted-secret', 'two_factor_confirmed_at' => now()])->save();
 
-        $this->postJson(self::LOGIN, ['email' => $user->email, 'password' => self::PASSWORD])
+        $response = $this->postJson(self::LOGIN, ['email' => $user->email, 'password' => self::PASSWORD])
             ->assertOk()
-            ->assertExactJson([
-                'success' => true,
-                'message' => __('central_auth.two_factor_required'),
-                'data' => ['two_factor_required' => true],
-            ]);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', __('central_auth.two_factor_required'))
+            ->assertJsonPath('data.two_factor_required', true)
+            ->assertJsonPath('data.challenge_expires_at', now()->addSeconds(300)->toIso8601String())
+            ->assertJsonMissingPath('data.token')
+            ->assertJsonMissingPath('data.user');
+
+        $this->assertSame(64, strlen((string) $response->json('data.challenge_id')));
 
         $this->assertSame(0, CentralPersonalAccessToken::query()->count());
         $this->assertSame(0, $this->auditCount(CentralAuditEvent::LoginSucceeded));

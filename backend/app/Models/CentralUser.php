@@ -6,11 +6,13 @@ namespace App\Models;
 
 use Database\Factories\CentralUserFactory;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\NewAccessToken;
 use Spatie\Permission\Traits\HasRoles;
@@ -48,6 +50,9 @@ class CentralUser extends Authenticatable
 
     use HasRoles;
     use Notifiable;
+
+    /** IDEN-1.12: Fortify TOTP secret + encrypted recovery codes (written by Fortify's actions). */
+    use TwoFactorAuthenticatable;
 
     protected $table = 'central_users';
 
@@ -92,6 +97,19 @@ class CentralUser extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * IDEN-1.12: operator emails are stored trimmed and lowercase, so login, password reset
+     * and the super-admin commands always compare the same value.
+     *
+     * @return Attribute<string, string>
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: static fn (mixed $value): string => mb_strtolower(trim((string) $value)),
+        );
     }
 
     /**

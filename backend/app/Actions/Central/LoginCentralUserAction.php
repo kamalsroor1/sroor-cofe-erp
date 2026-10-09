@@ -4,28 +4,30 @@ declare(strict_types=1);
 
 namespace App\Actions\Central;
 
+use App\Actions\Central\Data\CentralSignInResult;
+use App\Actions\Central\TwoFactor\TwoFactorChallengeStore;
 use App\DTOs\Central\CentralLoginDTO;
-use App\DTOs\Central\CentralLoginResult;
 use App\Enums\CentralAuditEvent;
 use App\Models\CentralUser;
 use App\Services\CentralAuditLogger;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Signs a platform operator in (IDEN-1.3).
+ * Signs a platform operator in (IDEN-1.3, IDEN-1.12).
  *
  * - Unknown email, wrong password and inactive account all answer the same 422
  *   (`central_auth.failed`), and an unknown email still pays for one hash check, so the
  *   response does not reveal whether the account exists. Each failure is audited with
  *   recordAttempt() (survives any rollback) and its reason.
- * - A confirmed 2FA (`two_factor_confirmed_at`) returns "two_factor_required" and NO
- *   token; the challenge endpoint is IDEN-1.12.
- * - Success: one central transaction stamps last_login_*, issues a central token
- *   (ability `central:*`, `expires_at` = now + central.token_ttl_minutes) and audits
- *   `login_succeeded` (record() joins the transaction).
+ * - Password accepted, 2FA confirmed (`two_factor_confirmed_at`): NO token. A single-use
+ *   challenge id (5 min, only its hash in the central cache) to exchange together with a
+ *   TOTP or recovery code at /auth/two-factor-challenge (CompleteTwoFactorChallengeAction).
+ * - Password accepted, 2FA NOT confirmed: only a setup token (`central:2fa-setup`, short
+ *   TTL) usable on the 2FA enable / confirm / recovery-codes endpoints. A full `central:*`
+ *   token is never issued without a proven second factor. Audited `login_succeeded` with
+ *   session_scope `two_factor_setup`.
  */
 final class LoginCentralUserAction
 {
@@ -38,9 +40,11 @@ final class LoginCentralUserAction
 
     public function __construct(
         private readonly CentralAuditLogger $auditLogger,
+        private readonly TwoFactorChallengeStore $challenges,
+        private readonly IssueCentralTokenAction $issueToken,
     ) {}
 
-    public function execute(CentralLoginDTO $dto, ?string $ipAddress = null): CentralLoginResult
+    public function execute(CentralLoginDTO $dto, ?string $ipAddress = null): CentralSignInResult
     {
         $user = CentralUser::query()->where('email', $dto->email)->first();
 
@@ -58,31 +62,23 @@ final class LoginCentralUserAction
             ]);
         }
 
-        if ($user->two_factor_confirmed_at !== null) {
-            return CentralLoginResult::twoFactorRequired();
+        if ($user->two_factor_confirmed_at !== null && ! empty($user->two_factor_secret)) {
+            $challenge = $this->challenges->create((int) $user->getKey(), $dto->deviceName);
+
+            return CentralSignInResult::challenge($challenge['id'], $challenge['expires_at']);
         }
 
-        return DB::connection($user->getConnectionName())->transaction(function () use ($user, $dto, $ipAddress): CentralLoginResult {
-            $user->forceFill([
-                'last_login_at' => now(),
-                'last_login_ip' => $ipAddress,
-            ])->save();
-
-            $newToken = $user->createToken($dto->deviceName);
-            $expiresAt = $newToken->accessToken->getAttribute('expires_at');
+        return DB::connection($user->getConnectionName())->transaction(function () use ($user, $dto, $ipAddress): CentralSignInResult {
+            $result = $this->issueToken->execute($user, $dto->deviceName, CentralSignInResult::SCOPE_TWO_FACTOR_SETUP, $ipAddress);
 
             $this->auditLogger->record(
                 CentralAuditEvent::LoginSucceeded,
-                ['device_name' => $dto->deviceName],
+                ['device_name' => $dto->deviceName, 'session_scope' => CentralSignInResult::SCOPE_TWO_FACTOR_SETUP],
                 actor: $user,
                 subject: $user,
             );
 
-            return CentralLoginResult::issued(
-                $user,
-                $newToken->plainTextToken,
-                $expiresAt instanceof Carbon ? $expiresAt : Carbon::parse((string) $expiresAt),
-            );
+            return $result;
         });
     }
 
