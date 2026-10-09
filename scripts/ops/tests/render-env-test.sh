@@ -182,6 +182,16 @@ if [[ $RC -eq 2 ]]; then ok "missing template -> usage error (2)"; else ko "miss
 run_render bash "$RENDER" "$TEMPLATE" "$WORK/out/x.env" --optional 'bad key'
 if [[ $RC -eq 2 ]]; then ok "invalid --optional key -> usage error (2)"; else ko "invalid --optional" "rc=$RC"; fi
 
+# 8b. SMTP (W1 Q6) and the backup archive password (D4) can never be waived.
+for never in MAIL_HOST MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD; do
+    run_render bash "$RENDER" "$TEMPLATE" "$WORK/out/never.env" --optional "SESSION_DOMAIN,$never"
+    if [[ $RC -eq 2 && "$OUT" == *"$never is mandatory"* && ! -e "$WORK/out/never.env" ]]; then
+        ok "--optional $never is refused (mandatory in production)"
+    else
+        ko "--optional $never is refused" "rc=$RC out=$OUT"
+    fi
+done
+
 # 9. Real production template: with every required key provided it renders
 #    and the OPS-1 validator accepts the shape (when both files exist).
 PROD_TEMPLATE="$OPS_DIR/templates/production.env.example"
@@ -199,6 +209,32 @@ if [[ -f "$PROD_TEMPLATE" ]]; then
         ok "production template renders when every empty key is provided"
     else
         ko "production template renders" "$OUT"
+    fi
+    # The keys W2 made mandatory are required by the real template.
+    for must in MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD DB_AUDIT_PRUNER_PASSWORD; do
+        missing_vars=()
+        for v in "${vars[@]}"; do
+            [[ "$v" == "$must="* ]] || missing_vars+=("$v")
+        done
+        run_render "${missing_vars[@]}" bash "$RENDER" "$PROD_TEMPLATE" "$WORK/out/prod-missing.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN
+        if [[ $RC -eq 1 && "$OUT" == *"$must is required"* ]]; then
+            ok "production template requires $must"
+        else
+            ko "production template requires $must" "rc=$RC"
+        fi
+    done
+    if [[ "${tpl[MAIL_MAILER]:-}" == "smtp" ]]; then
+        ok "production template defaults MAIL_MAILER to smtp"
+    else
+        ko "production template defaults MAIL_MAILER to smtp"
+    fi
+    # Deploy-only template: the migrator password is required, nothing else leaks in.
+    DEPLOY_TEMPLATE="$OPS_DIR/templates/deploy.env.example"
+    run_render bash "$RENDER" "$DEPLOY_TEMPLATE" "$WORK/out/deploy.env"
+    if [[ $RC -eq 1 && "$OUT" == *"DB_MIGRATOR_PASSWORD is required"* ]]; then
+        ok "deploy template requires DB_MIGRATOR_PASSWORD"
+    else
+        ko "deploy template requires DB_MIGRATOR_PASSWORD" "rc=$RC"
     fi
 else
     printf '  skip  production template not present\n'

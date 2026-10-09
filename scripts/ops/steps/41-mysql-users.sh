@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Step 41: least-privilege MySQL accounts + central database. Idempotent:
-# re-running rotates the passwords to the env values and repairs drifted grants.
+# re-running rotates the passwords to the env values and repairs drifted grants
+# (static grants + the per-table append-only audit grants, see
+# sync-central-grants.sh). Run it while no deploy is in progress.
 #
 #   bash steps/41-mysql-users.sh                         apply (root, on the server)
 #   bash steps/41-mysql-users.sh --print-expected-grants show the grants (no secrets needed)
@@ -28,8 +30,8 @@ case "$MODE" in
 esac
 
 require_root
-require_vars CENTRAL_DB_NAME TENANT_DB_PREFIX MYSQL_USER_HOST MYSQL_APP_USER MYSQL_MIGRATOR_USER MYSQL_PROVISIONER_USER MYSQL_BACKUP_USER
-require_secret MYSQL_APP_PASSWORD MYSQL_MIGRATOR_PASSWORD MYSQL_PROVISIONER_PASSWORD MYSQL_BACKUP_PASSWORD
+require_vars CENTRAL_DB_NAME TENANT_DB_PREFIX MYSQL_USER_HOST MYSQL_APP_USER MYSQL_MIGRATOR_USER MYSQL_PROVISIONER_USER MYSQL_BACKUP_USER MYSQL_AUDIT_PRUNER_USER CENTRAL_AUDIT_TABLES
+require_secret MYSQL_APP_PASSWORD MYSQL_MIGRATOR_PASSWORD MYSQL_PROVISIONER_PASSWORD MYSQL_BACKUP_PASSWORD MYSQL_AUDIT_PRUNER_PASSWORD
 
 MYSQL_ROOT=(mysql --protocol=socket -uroot -N -B)
 
@@ -44,4 +46,10 @@ if [[ "$expected" != "$actual" ]]; then
     die "SHOW GRANTS does not match the runbook"
 fi
 
-info "mysql users OK (4 accounts, grants match the runbook)"
+# REVOKE ALL above also dropped the per-table grants on central (append-only
+# audit contract, IDEN-1.15): re-apply them for the tables that exist now.
+# Before the first deploy the central DB is empty and this is a no-op.
+info "per-table central grants (app: no UPDATE/DELETE on $CENTRAL_AUDIT_TABLES $CENTRAL_APPEND_ONLY_TABLES)"
+bash "$OPS_DIR/sync-central-grants.sh" --as-root
+
+info "mysql users OK (5 accounts, grants match the runbook)"

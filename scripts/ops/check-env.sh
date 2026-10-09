@@ -5,8 +5,10 @@
 #
 #   bash scripts/ops/check-env.sh /var/www/sroor/shared/.env [--check-perms]
 #
-# Reused by the release pipeline (OPS-3) as the "TELESCOPE_ENABLED must be
-# false in production" gate.
+# Reused by the release pipeline (OPS-3, scripts/ops/deploy.sh preflight) as
+# the gate for: TELESCOPE_ENABLED=false, BACKUP_ARCHIVE_PASSWORD set (CTO
+# decision D4), mandatory SMTP (W1 Q6) and the audit_pruner account (IDEN-1.15).
+# WARN lines never fail the run.
 
 set -euo pipefail
 
@@ -40,10 +42,16 @@ if ! parse_env_file "$ENV_FILE" ENV_VALUES; then
 fi
 
 VIOLATIONS=0
+WARNINGS=0
 
 violation() {
     VIOLATIONS=$((VIOLATIONS + 1))
     printf 'FAIL  %s\n' "$1"
+}
+
+warning() {
+    WARNINGS=$((WARNINGS + 1))
+    printf 'WARN  %s\n' "$1"
 }
 
 # No subshells below: forks are slow on some hosts (Git Bash on Windows).
@@ -93,6 +101,44 @@ if [[ "${db_username,,}" == "root" ]]; then
 fi
 must_be_set REDIS_PASSWORD "Redis requires a password on the VPS"
 
+# Append-only audit (IDEN-1.15): the prune runs with its own account.
+must_be_set DB_AUDIT_PRUNER_USERNAME "audit retention account (vps-runbook.md §5.1)"
+must_be_set DB_AUDIT_PRUNER_PASSWORD "fresh secret"
+pruner_user="${ENV_VALUES[DB_AUDIT_PRUNER_USERNAME]:-}"
+if [[ -n "$pruner_user" && ("${pruner_user,,}" == "root" || "$pruner_user" == "$db_username") ]]; then
+    violation "DB_AUDIT_PRUNER_USERNAME must be its own account (not root, not DB_USERNAME)"
+fi
+
+# Mandatory SMTP (W1 Q6): password resets, 2FA and billing mails must leave the box.
+must_equal MAIL_MAILER smtp "W1 Q6: SMTP is mandatory (Brevo or SES SMTP)"
+must_be_set MAIL_HOST "SMTP host"
+must_be_set MAIL_USERNAME "SMTP user"
+must_be_set MAIL_PASSWORD "SMTP secret"
+if [[ ! "${ENV_VALUES[MAIL_PORT]:-}" =~ ^[0-9]{2,5}$ ]]; then
+    violation "MAIL_PORT must be set to a port number (SMTP)"
+fi
+if [[ "${ENV_VALUES[MAIL_FROM_ADDRESS]:-}" != *?@?* ]]; then
+    violation "MAIL_FROM_ADDRESS must be set to an e-mail address"
+fi
+
+# Backups (OPS-5, CTO decision D4): no archive password = backups refuse to run.
+backup_password="${ENV_VALUES[BACKUP_ARCHIVE_PASSWORD]:-}"
+if [[ -z "$backup_password" ]]; then
+    violation "BACKUP_ARCHIVE_PASSWORD must be set (D4: backups refuse to run without it)"
+elif [[ ${#backup_password} -lt 24 ]]; then
+    warning "BACKUP_ARCHIVE_PASSWORD is shorter than 24 characters (generate with: openssl rand -hex 32)"
+fi
+
+# Sentry (OPS-7): DSN only in this file; never send PII.
+if [[ -z "${ENV_VALUES[SENTRY_LARAVEL_DSN]:-}" ]]; then
+    warning "SENTRY_LARAVEL_DSN is empty: error reporting is off (required before the shop cutover, OPS-7)"
+fi
+sentry_pii="${ENV_VALUES[SENTRY_SEND_DEFAULT_PII]:-}"
+case "${sentry_pii,,}" in
+    "" | false | 0) ;;
+    *) violation "SENTRY_SEND_DEFAULT_PII must be false (no PII to Sentry)" ;;
+esac
+
 log_level="${ENV_VALUES[LOG_LEVEL]:-}"
 case "${log_level,,}" in
     debug) violation "LOG_LEVEL must not be debug in production (tokens/PII may reach the logs)" ;;
@@ -110,4 +156,4 @@ if [[ "$VIOLATIONS" -gt 0 ]]; then
     exit 1
 fi
 
-printf 'PASS  %s meets the production standards\n' "$ENV_FILE"
+printf 'PASS  %s meets the production standards (%d warning(s))\n' "$ENV_FILE" "$WARNINGS"

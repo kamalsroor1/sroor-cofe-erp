@@ -10,7 +10,8 @@
 #   <template>  KEY=VALUE skeleton, e.g. scripts/ops/templates/production.env.example
 #   <output>    file to (re)write atomically with mode 600, e.g. $RUNNER_TEMP/prod.env
 #   --optional  keys that may stay empty (default: every key that is empty in
-#               the template is REQUIRED and must be provided non-empty)
+#               the template is REQUIRED and must be provided non-empty).
+#               MAIL_* and BACKUP_ARCHIVE_PASSWORD are refused here (exit 2).
 #
 # Rules:
 #   - For every KEY in the template: if an environment variable KEY is set,
@@ -38,6 +39,11 @@ TEMPLATE="$1"
 OUTPUT="$2"
 shift 2
 
+# Keys that may never be waived with --optional when the template has them:
+# SMTP is mandatory (W1 Q6) and an empty backup password disables backups
+# (CTO decision D4).
+NEVER_OPTIONAL=(MAIL_MAILER MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD)
+
 declare -A OPTIONAL=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -49,6 +55,12 @@ while [[ $# -gt 0 ]]; do
                     printf 'invalid key in --optional: must match [A-Za-z_][A-Za-z0-9_]*\n' >&2
                     exit 2
                 }
+                for _never in "${NEVER_OPTIONAL[@]}"; do
+                    if [[ "$_k" == "$_never" ]]; then
+                        printf '%s is mandatory in production and cannot be --optional\n' "$_k" >&2
+                        exit 2
+                    fi
+                done
                 OPTIONAL["$_k"]=1
             done
             shift 2

@@ -29,20 +29,24 @@
 |---|---|
 | `APP_KEY` | `php artisan key:generate --show` على جهازك أو على الخادم، مرة واحدة |
 | `DB_PASSWORD` | كلمة مرور المستخدم `app` (OPS-1، `/root/sroor-provision.env` → `MYSQL_APP_PASSWORD`) |
+| `DB_AUDIT_PRUNER_PASSWORD` | **[CTO-2026-10-09]** كلمة مرور `sroor_audit_pruner` (`MYSQL_AUDIT_PRUNER_PASSWORD`، `vps-runbook.md` §5.1) |
+| `DB_MIGRATOR_PASSWORD` | **[CTO-2026-10-09]** كلمة مرور `sroor_migrator` (`MYSQL_MIGRATOR_PASSWORD`). بتروح `deploy.env` المؤقت بس، **مش** `.env` التطبيق |
 | `REDIS_PASSWORD` | OPS-1 → `REDIS_PASSWORD` |
-| `MAIL_USERNAME`، `MAIL_PASSWORD` | مزوّد SMTP |
+| `MAIL_USERNAME`، `MAIL_PASSWORD` | مزوّد SMTP (**إلزامي**، Brevo أو SES SMTP، W1 Q6) |
+| `BACKUP_ARCHIVE_PASSWORD` | **[CTO-2026-10-09]** `openssl rand -hex 32`. **إلزامي** (D4): فاضي = الـ release يفشل. احفظ نسخة منه خارج الخادم (password manager)؛ من غيره مفيش restore |
+| `SENTRY_LARAVEL_DSN` | **[CTO-2026-10-09]** من مشروع Sentry (free tier). اختياري لحد OPS-7، والـ DSN مكانه `.env` الـ VPS بس |
 | `TELEGRAM_BOT_TOKEN`، `TELEGRAM_CHAT_ID` | بوت التنبيهات (بوت **جديد**، ليس القديم) |
 | `DEPLOY_SSH_PRIVATE_KEY` | المفتاح الخاص لمستخدم الـ deploy (OPS-1 §SSH)، يُولَّد خصيصًا للـ CI |
 | `DEPLOY_SSH_KNOWN_HOSTS` | ناتج `ssh-keyscan -p <port> <host>` بعد التحقق من الـ fingerprint يدويًا |
 
-5. أضف **Environment variables** (ليست سرية، لكن تختلف حسب البيئة): `APP_URL`، `SESSION_DOMAIN`، `SANCTUM_STATEFUL_DOMAINS`، `MAIL_HOST`، `MAIL_PORT`، `MAIL_FROM_ADDRESS`، `DEPLOY_HOST`، `DEPLOY_PORT`، `DEPLOY_USER`.
-6. لاحقًا (OPS-5/OPS-2) تُضاف بنفس الطريقة أسرار الـ backup (Google OAuth client/refresh token، كلمة مرور تشفير الأرشيف) وأي حساب DB إضافي، **ومفتاحها يُضاف أولًا إلى `production.env.example` بقيمة فارغة**؛ القالب هو الـ allowlist لما يصل للخادم.
+5. أضف **Environment variables** (ليست سرية، لكن تختلف حسب البيئة): `APP_URL`، `SESSION_DOMAIN`، `SANCTUM_STATEFUL_DOMAINS`، `MAIL_HOST`، `MAIL_PORT`، `MAIL_FROM_ADDRESS`، `DEPLOY_HOST`، `DEPLOY_PORT`، `DEPLOY_USER`، و**[CTO-2026-10-09]** `DEPLOY_APP_ROOT` (اختياري، الافتراضي `/var/www/sroor`).
+6. لاحقًا (OPS-5/OPS-2) تُضاف بنفس الطريقة أسرار الـ backup (Google OAuth client/refresh token) وأي حساب DB إضافي، **ومفتاحها يُضاف أولًا إلى `production.env.example` بقيمة فارغة** و**يتربط في `env:` بتاع خطوة «Render the production .env» في `release.yml`**؛ القالب هو الـ allowlist لما يصل للخادم.
 
-قاعدة القرار: أي مفتاح قيمته فارغة في `scripts/ops/templates/production.env.example` = **مطلوب** وقت الـ render، إلا إن مُرّر صراحةً في `--optional`.
+قاعدة القرار: أي مفتاح قيمته فارغة في `scripts/ops/templates/production.env.example` = **مطلوب** وقت الـ render، إلا إن مُرّر صراحةً في `--optional`. **[CTO-2026-10-09]** `MAIL_MAILER`/`MAIL_HOST`/`MAIL_PORT`/`MAIL_USERNAME`/`MAIL_PASSWORD`/`MAIL_FROM_ADDRESS`/`BACKUP_ARCHIVE_PASSWORD` مايتعملوش `--optional` أبدًا (`render-env.sh` يخرج بـ 2). `release.yml` بيمرّر `--optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN` بس.
 
 ## 3. كيف يُبنى `.env` على الـ VPS
 
-المسار (ينفذه `release.yml` في OPS-3؛ هذا هو العقد):
+**[CTO-2026-10-09] منفَّذ في `.github/workflows/release.yml` (job ‏`deploy`)** — التفاصيل في [`deploy-runbook.md`](deploy-runbook.md) §1 و§3. باختصار: `render-env.sh` ← `check-env.sh` في الـ runner ← `deploy.env` منفصل للـ migrator ← رفع بـ `scp` لمجلد `incoming/...` (700) ← `deploy.sh` يعيد `check-env.sh` على الخادم ويركّب `shared/.env` ذريًا (600) مع نسخة `.env.previous` للـ rollback ← مجلد الرفع يتمسح في كل الحالات. المقتطف ده كان العقد الأصلي (OPS-4)، والـ workflow الفعلي ملتزم بيه:
 
 ```yaml
   deploy:

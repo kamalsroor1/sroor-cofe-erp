@@ -1,0 +1,362 @@
+# Release pipeline for the multi-tenant SaaS VPS (OPS-3).
+#
+# tests -> build (composer --no-dev, npm ci && npm run build) -> deploy to the
+# GitHub Environment `production` over SSH with a deploy key from Secrets,
+# running scripts/ops/deploy.sh on the server (releases/<id> + atomic symlink,
+# migrate + tenants:migrate, caches, horizon:terminate, health check, automatic
+# rollback). Runbook: docs/07-operations/deploy-runbook.md.
+#
+# This workflow is NOT deploy.yml: deploy.yml ships `main` to the shared host
+# with the live shop and must never be touched from here.
+#
+# Triggers: a pushed tag v* or a manual run. A manual run may start from any
+# ref, but only `tests` runs then: `build` and `deploy` require a tag ref v*
+# (`if: startsWith(github.ref, 'refs/tags/v')`), so a branch can never reach
+# production even if the environment rules were loosened. The `production` environment must
+# restrict deployments to tags v* and require the CTO as reviewer
+# (docs/07-operations/secrets.md §2), so the deploy job waits for approval and
+# no other ref can read the production secrets.
+#
+# Secrets/vars it reads are listed in docs/07-operations/secrets.md §2. No value
+# is ever echoed: they reach scripts through `env:` and files with mode 600.
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      allow_no_health_checks:
+        description: 'Rehearsal only: accept the release while no spatie/laravel-health check is registered'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One release at a time; never cancel a deploy half-way.
+concurrency:
+  group: release-production
+  cancel-in-progress: false
+
+env:
+  # Production runtime (vps-runbook.md, CTO decision W1 Q6).
+  PHP_VERSION: '8.4'
+  PHP_EXTENSIONS: bcmath, ctype, curl, dom, fileinfo, gd, iconv, intl, mbstring, pdo, pdo_sqlite, pdo_mysql, sqlite3, tokenizer, xml, zip
+  NODE_VERSION: '24'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        working-directory: backend
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+
+      - name: Composer install
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (no real secrets)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: PHPUnit (sqlite :memory:, PHP 8.4)
+        working-directory: backend
+        run: php artisan test
+
+      - name: Tests for scripts/ops (provisioning, grants, check-env)
+        run: bash scripts/ops/tests/run-tests.sh
+
+      - name: Tests for scripts/ops/render-env.sh
+        run: bash scripts/ops/tests/render-env-test.sh
+
+      - name: Tests for scripts/ops/deploy.sh (rollback included)
+        run: bash scripts/ops/tests/deploy-test.sh
+
+  build:
+    name: build
+    needs: tests
+    # Tag refs only (also for workflow_dispatch): nothing is packaged from a branch.
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      sha256: ${{ steps.package.outputs.sha256 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        working-directory: backend
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+
+      # Full install first: `npm run build` runs `php artisan lang:export` (prebuild).
+      - name: Composer install (for the frontend build)
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Throwaway build environment (no real secrets, never packaged)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: npm ci
+        working-directory: backend
+        run: npm ci
+
+      - name: npm run build (runs lang:export via prebuild)
+        working-directory: backend
+        run: npm run build
+
+      - name: Production vendor (composer install --no-dev)
+        working-directory: backend
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      # Only tracked files from this checkout + build output: no scratch
+      # scripts, backups or root *.py ever reach the server.
+      - name: Package the release artifact
+        id: package
+        run: |
+          set -euo pipefail
+          rm -f backend/.env
+          test -f backend/public/build/manifest.json
+          mkdir -p "$RUNNER_TEMP/release"
+          tar --create --gzip --file "$RUNNER_TEMP/release/release.tar.gz" \
+            --exclude='backend/node_modules' \
+            --exclude='backend/tests' \
+            --exclude='backend/android' \
+            --exclude='backend/storage' \
+            --exclude='backend/.env' \
+            --exclude='backend/.env.*' \
+            --exclude='backend/bootstrap/cache/config.php' \
+            --exclude='backend/bootstrap/cache/events.php' \
+            --exclude='backend/bootstrap/cache/routes-*.php' \
+            --exclude='backend/public/hot' \
+            --exclude='backend/public/storage' \
+            --exclude='backend/database/*.sqlite' \
+            backend scripts/ops
+          tar -tzf "$RUNNER_TEMP/release/release.tar.gz" >"$RUNNER_TEMP/members.txt"
+          grep -qx 'backend/artisan' "$RUNNER_TEMP/members.txt"
+          grep -qx 'backend/vendor/autoload.php' "$RUNNER_TEMP/members.txt"
+          if grep -qE '(^|/)\.env$|^backend/vendor/phpunit/' "$RUNNER_TEMP/members.txt"; then
+            echo "::error::the artifact contains a .env file or dev dependencies"
+            exit 1
+          fi
+          sum="$(sha256sum "$RUNNER_TEMP/release/release.tar.gz" | awk '{print $1}')"
+          echo "sha256=$sum" >> "$GITHUB_OUTPUT"
+          echo "artifact: $(du -h "$RUNNER_TEMP/release/release.tar.gz" | cut -f1), sha256 $sum"
+
+      - name: Upload the release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          path: ${{ runner.temp }}/release/release.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+
+  deploy:
+    name: deploy
+    needs: build
+    # Tag refs only (also for workflow_dispatch), in addition to the environment's tag rule.
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production
+    steps:
+      # Same commit as the artifact: provides render-env.sh, check-env.sh and
+      # deploy.sh (uploaded next to the artifact).
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download the release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          path: ${{ runner.temp }}/release
+
+      - name: Verify the artifact checksum
+        env:
+          EXPECTED_SHA256: ${{ needs.build.outputs.sha256 }}
+        run: echo "${EXPECTED_SHA256}  $RUNNER_TEMP/release/release.tar.gz" | sha256sum -c -
+
+      - name: Render the production .env (values never printed)
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_AUDIT_PRUNER_PASSWORD: ${{ secrets.DB_AUDIT_PRUNER_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          BACKUP_ARCHIVE_PASSWORD: ${{ secrets.BACKUP_ARCHIVE_PASSWORD }}
+          SENTRY_LARAVEL_DSN: ${{ secrets.SENTRY_LARAVEL_DSN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_URL: ${{ vars.APP_URL }}
+          SESSION_DOMAIN: ${{ vars.SESSION_DOMAIN }}
+          SANCTUM_STATEFUL_DOMAINS: ${{ vars.SANCTUM_STATEFUL_DOMAINS }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          MAIL_FROM_ADDRESS: ${{ vars.MAIL_FROM_ADDRESS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          bash scripts/ops/render-env.sh scripts/ops/templates/production.env.example \
+            "$RUNNER_TEMP/production.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN
+
+      # Fails the release if TELESCOPE_ENABLED is not false, BACKUP_ARCHIVE_PASSWORD
+      # is empty (CTO decision D4), SMTP is incomplete, APP_DEBUG is on, ...
+      # deploy.sh runs the same gate again on the server.
+      - name: Production standards gate
+        run: bash scripts/ops/check-env.sh "$RUNNER_TEMP/production.env"
+
+      - name: Render the deploy-only env (migrator account, never in the app .env)
+        env:
+          DB_MIGRATOR_PASSWORD: ${{ secrets.DB_MIGRATOR_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          bash scripts/ops/render-env.sh scripts/ops/templates/deploy.env.example "$RUNNER_TEMP/deploy.env"
+
+      - name: Configure SSH (deploy key + pinned host key from Secrets)
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          for name in DEPLOY_SSH_PRIVATE_KEY DEPLOY_SSH_KNOWN_HOSTS DEPLOY_HOST DEPLOY_USER; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::$name is not configured in the production environment"
+              exit 1
+            fi
+          done
+          [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9.:-]+$ ]] || { echo "::error::DEPLOY_HOST has invalid characters"; exit 1; }
+          [[ "$DEPLOY_USER" =~ ^[a-z][a-z0-9_-]*$ ]] || { echo "::error::DEPLOY_USER has invalid characters"; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "::error::DEPLOY_PORT must be numeric"; exit 1; }
+          ssh_dir="$RUNNER_TEMP/ssh"
+          install -d -m 700 "$ssh_dir"
+          (umask 077 && printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" >"$ssh_dir/id_deploy")
+          (umask 077 && printf '%s\n' "$DEPLOY_SSH_KNOWN_HOSTS" >"$ssh_dir/known_hosts")
+          cat >"$ssh_dir/config" <<EOF
+          Host sroor-vps
+            HostName ${DEPLOY_HOST}
+            Port ${DEPLOY_PORT}
+            User ${DEPLOY_USER}
+            IdentityFile ${ssh_dir}/id_deploy
+            IdentitiesOnly yes
+            UserKnownHostsFile ${ssh_dir}/known_hosts
+            StrictHostKeyChecking yes
+            PasswordAuthentication no
+            BatchMode yes
+            ServerAliveInterval 30
+            ServerAliveCountMax 6
+          EOF
+          chmod 600 "$ssh_dir/config"
+          echo "SSH_CONFIG=$ssh_dir/config" >> "$GITHUB_ENV"
+
+      - name: Upload artifact, env files and scripts/ops to the server
+        env:
+          APP_ROOT: ${{ vars.DEPLOY_APP_ROOT || '/var/www/sroor' }}
+        run: |
+          set -euo pipefail
+          [[ "$APP_ROOT" =~ ^/[A-Za-z0-9/_.-]+$ ]] || { echo "::error::DEPLOY_APP_ROOT must be an absolute path"; exit 1; }
+          incoming="$APP_ROOT/incoming/${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "INCOMING=$incoming" >> "$GITHUB_ENV"
+          echo "APP_ROOT=$APP_ROOT" >> "$GITHUB_ENV"
+          ssh -F "$SSH_CONFIG" sroor-vps "umask 077 && mkdir -p '$incoming'"
+          scp -F "$SSH_CONFIG" -q \
+            "$RUNNER_TEMP/release/release.tar.gz" "$RUNNER_TEMP/production.env" "$RUNNER_TEMP/deploy.env" \
+            "sroor-vps:$incoming/"
+          scp -F "$SSH_CONFIG" -q -r scripts/ops "sroor-vps:$incoming/ops"
+
+      # deploy.sh exits 1 (nothing switched), 3 (switched, then rolled back
+      # automatically) or 4 (rollback needs a human) on failure; all fail the job.
+      - name: Deploy (scripts/ops/deploy.sh on the server)
+        env:
+          ARTIFACT_SHA256: ${{ needs.build.outputs.sha256 }}
+          ALLOW_NO_HEALTH_CHECKS: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_no_health_checks && 'allow-no-health-checks' || 'strict' }}
+        run: |
+          set -euo pipefail
+          ssh -F "$SSH_CONFIG" sroor-vps bash -s -- "$APP_ROOT" "$INCOMING" "$GITHUB_SHA" "$ARTIFACT_SHA256" "$ALLOW_NO_HEALTH_CHECKS" <<'REMOTE'
+          set -euo pipefail
+          app_root="$1"
+          incoming="$2"
+          sha="$3"
+          sum="$4"
+          health_mode="$5"
+          # The upload (incl. both env files) never outlives this run.
+          trap 'rm -rf "$incoming"' EXIT
+          args=(--app-root "$app_root" --sha "$sha" --artifact "$incoming/release.tar.gz" --artifact-sha256 "$sum"
+            --deploy-env "$incoming/deploy.env" --env-file "$incoming/production.env" --php-version 8.4 --queue-mode horizon)
+          if [[ "$health_mode" == "allow-no-health-checks" ]]; then
+            args+=(--allow-no-health-checks)
+          fi
+          # </dev/null: nothing in the deploy may read the rest of this script from stdin.
+          bash "$incoming/ops/deploy.sh" "${args[@]}" </dev/null
+          REMOTE
+
+      - name: Remove local secrets
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh" "$RUNNER_TEMP/production.env" "$RUNNER_TEMP/deploy.env" "$RUNNER_TEMP/release"

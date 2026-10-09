@@ -85,6 +85,18 @@ env_file_compliant() {
     bash "$SCRIPT_DIR/check-env.sh" "$APP_ROOT/shared/.env" --check-perms
 }
 
+mysql_is_84() {
+    [[ "$(mysql --protocol=socket -uroot -N -B -e 'SELECT VERSION()')" == 8.4.* ]]
+}
+
+php_is_expected() {
+    [[ "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" == "$PHP_VERSION" ]]
+}
+
+central_grants_append_only() {
+    bash "$SCRIPT_DIR/sync-central-grants.sh" --as-root --check-only
+}
+
 echo "== services"
 for svc in nginx "php$PHP_VERSION-fpm" mysql redis-server supervisor cron fail2ban unattended-upgrades certbot.timer; do
     check "service active: $svc" systemctl is-active --quiet "$svc"
@@ -106,12 +118,15 @@ check "redis listens on loopback only" listens_only_on_loopback 6379
 check "mysql X protocol disabled" bash -c '! ss -Hltn "sport = :33060" | grep -q .'
 
 echo "== php"
+check "/usr/bin/php is PHP $PHP_VERSION" php_is_expected
 check "php extensions: bcmath intl pdo_mysql redis gd zip mbstring" php_has_extensions
 check "php-fpm config test" "php-fpm$PHP_VERSION" -t
 
 echo "== mysql"
-check "SHOW GRANTS of app/migrator/provisioner/backup == runbook" grants_match_runbook
+check "MySQL server is 8.4 LTS" mysql_is_84
+check "SHOW GRANTS of app/migrator/provisioner/backup/audit_pruner == runbook" grants_match_runbook
 check "central database exists" mysql --protocol=socket -uroot -N -B -e "USE \`$CENTRAL_DB_NAME\`"
+check "per-table central grants: app has no UPDATE/DELETE on $CENTRAL_AUDIT_TABLES $CENTRAL_APPEND_ONLY_TABLES" central_grants_append_only
 
 echo "== tls + nginx"
 check "certificate valid for 14+ days" cert_valid_14_days
