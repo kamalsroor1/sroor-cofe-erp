@@ -22,10 +22,11 @@
  *  - #actions="{ row, index }"             — اختصار لخانة الإجراءات (actions)
  */
 
-import { computed } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import Pagination from '@/Components/Common/Pagination.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
-import { ChevronUp, ChevronDown } from 'lucide-vue-next';
+import ErrorState from '@/Components/Common/ErrorState.vue';
+import { ChevronUp, ChevronDown, PackageOpen } from 'lucide-vue-next';
 
 const props = defineProps({
   columns: {
@@ -93,9 +94,92 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  cardBreakpoint: {
+    type: String,
+    default: 'lg', // 'md' | 'lg' | 'xl' | 'none'
+  },
+  minWidth: {
+    type: String,
+    default: 'min-w-[640px]',
+  },
+  error: {
+    type: [Boolean, String, Object],
+    default: null,
+  },
+  errorMessage: {
+    type: String,
+    default: '',
+  },
 });
 
-const emit = defineEmits(['sort', 'row-click', 'update:modelValue']);
+const emit = defineEmits(['sort', 'row-click', 'update:modelValue', 'retry']);
+
+// ─── Table & Card Visibility Breakpoints ─────────────────────────────────────
+const tableVisibilityClass = computed(() => {
+  switch (props.cardBreakpoint) {
+    case 'none':
+      return 'block';
+    case 'md':
+      return 'hidden md:block';
+    case 'xl':
+      return 'hidden xl:block';
+    case 'lg':
+    default:
+      return 'hidden lg:block';
+  }
+});
+
+const cardVisibilityClass = computed(() => {
+  switch (props.cardBreakpoint) {
+    case 'none':
+      return 'hidden';
+    case 'md':
+      return 'md:hidden';
+    case 'xl':
+      return 'xl:hidden';
+    case 'lg':
+    default:
+      return 'lg:hidden';
+  }
+});
+
+// ─── Horizontal Scroll Indicators (Edge Shadow) ──────────────────────────────
+const tableContainer = ref(null);
+const canScrollStart = ref(false);
+const canScrollEnd = ref(false);
+
+const updateScrollIndicators = () => {
+  const el = tableContainer.value;
+  if (!el) return;
+  const { scrollWidth, clientWidth } = el;
+  if (scrollWidth <= clientWidth + 2) {
+    canScrollStart.value = false;
+    canScrollEnd.value = false;
+    return;
+  }
+  const maxScroll = scrollWidth - clientWidth;
+  const currentScroll = Math.abs(el.scrollLeft);
+
+  canScrollStart.value = currentScroll > 6;
+  canScrollEnd.value = currentScroll < maxScroll - 6;
+};
+
+onMounted(() => {
+  nextTick(updateScrollIndicators);
+  window.addEventListener('resize', updateScrollIndicators);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateScrollIndicators);
+});
+
+watch(
+  [() => props.rows, () => props.columns, () => props.loading],
+  () => {
+    nextTick(updateScrollIndicators);
+  },
+  { deep: true }
+);
 
 // ─── Sorting Logic ────────────────────────────────────────────────────────────
 const handleSort = (col) => {
@@ -158,7 +242,9 @@ const getCellValue = (row, key) => {
 const alignClass = (col) => {
   if (col.align === 'center') return 'text-center';
   if (col.align === 'left') return 'text-left';
-  return 'text-right';
+  if (col.align === 'right') return 'text-right';
+  if (col.align === 'end') return 'text-end';
+  return 'text-start';
 };
 
 const visibleOnMobile = (col) => col.hideOnMobile !== true;
@@ -167,128 +253,157 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
 <template>
   <div class="font-tajawal space-y-4">
     <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- Desktop Table (Hidden on Small Screens < md)           -->
+    <!-- Table View (Hidden on Small/Tablet Screens per cardBreakpoint) -->
     <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="hidden md:block overflow-x-auto">
-      <table class="w-full text-xs text-right" :class="tableClass">
-        <!-- thead -->
-        <thead>
-          <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-            <!-- Select All Checkbox -->
-            <th v-if="selectable" class="pb-3 w-10 text-center">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                :indeterminate="modelValue.length > 0 && !isAllSelected"
-                class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
-                @change="toggleSelectAll"
-              />
-            </th>
+    <div :class="tableVisibilityClass" class="relative rounded-2xl overflow-hidden group/table">
+      <!-- Start Edge Shadow Indicator (visible when scrolled) -->
+      <div
+        v-show="canScrollStart"
+        class="pointer-events-none absolute inset-y-0 start-0 w-8 z-10 bg-gradient-to-r rtl:bg-gradient-to-l from-slate-900/10 dark:from-black/40 to-transparent transition-opacity duration-200"
+        aria-hidden="true"
+      />
 
-            <!-- Data Columns -->
-            <th
-              v-for="col in columns"
-              :key="col.key"
-              class="pb-3"
-              :class="[
-                alignClass(col),
-                col.width ? col.width : '',
-                col.sortable
-                  ? 'cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200 transition'
-                  : '',
-              ]"
-              @click="handleSort(col)"
-            >
-              <slot :name="`header-${col.key}`" :column="col">
-                <span class="inline-flex items-center gap-1.5" :class="col.align === 'left' ? 'flex-row-reverse' : ''">
-                  <span>{{ col.label }}</span>
-                  <span v-if="col.sortable" class="inline-flex flex-col opacity-60">
-                    <ChevronUp
-                      class="w-3 h-3 -mb-1"
-                      :class="
-                        sortKey === col.key && sortDir === 'asc' ? 'text-theme-primary opacity-100' : 'opacity-30'
-                      "
-                    />
-                    <ChevronDown
-                      class="w-3 h-3"
-                      :class="
-                        sortKey === col.key && sortDir === 'desc' ? 'text-theme-primary opacity-100' : 'opacity-30'
-                      "
-                    />
-                  </span>
-                </span>
-              </slot>
-            </th>
-          </tr>
-        </thead>
+      <!-- Scrollable Container -->
+      <div ref="tableContainer" class="overflow-x-auto scrollbar-thin" @scroll.passive="updateScrollIndicators">
+        <table class="w-full text-xs text-start" :class="[tableClass, minWidth]" data-table="true">
+          <!-- thead -->
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
+              <!-- Select All Checkbox -->
+              <th v-if="selectable" class="pb-3 coarse:pb-2.5 w-12 text-center">
+                <label class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    :indeterminate="modelValue.length > 0 && !isAllSelected"
+                    class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
+                    @change="toggleSelectAll"
+                  />
+                </label>
+              </th>
 
-        <!-- tbody -->
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
-          <!-- ── Loading Skeleton ── -->
-          <template v-if="loading">
-            <tr v-for="n in skeletonRows" :key="`sk-${n}`" class="animate-pulse">
-              <td v-if="selectable" class="py-3.5 text-center">
-                <div class="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded mx-auto"></div>
-              </td>
-              <td v-for="col in columns" :key="col.key" class="py-3.5">
-                <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
-              </td>
-            </tr>
-          </template>
-
-          <!-- ── Data Rows ── -->
-          <template v-else-if="rows && rows.length > 0">
-            <tr
-              v-for="(row, index) in rows"
-              :key="row[selectKey] ?? index"
-              class="transition"
-              :class="[
-                rowClickable
-                  ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                  : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/20',
-                selectable && isRowSelected(row) ? 'bg-theme-light dark:bg-theme-light' : '',
-              ]"
-              @click="handleRowClick(row, $event)"
-            >
-              <!-- Row Checkbox -->
-              <td v-if="selectable" class="py-3.5 text-center" @click.stop>
-                <input
-                  type="checkbox"
-                  :checked="isRowSelected(row)"
-                  class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
-                  @change="toggleSelectRow(row)"
-                />
-              </td>
-
-              <!-- Column Cells -->
-              <td
+              <!-- Data Columns -->
+              <th
                 v-for="col in columns"
                 :key="col.key"
-                class="py-3.5"
-                :class="[alignClass(col), col.mono ? 'font-mono' : '', col.class || '']"
+                class="pb-3 coarse:pb-2.5 px-3"
+                :class="[
+                  alignClass(col),
+                  col.width ? col.width : '',
+                  col.sortable
+                    ? 'cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-900 dark:text-slate-200 transition'
+                    : '',
+                ]"
+                @click="handleSort(col)"
               >
-                <slot
-                  v-if="$slots[`cell-${col.key}`]"
-                  :name="`cell-${col.key}`"
-                  :row="row"
-                  :value="getCellValue(row, col.key)"
-                  :index="index"
-                />
-                <slot v-else-if="col.key === 'actions' && $slots['actions']" name="actions" :row="row" :index="index" />
-                <span v-else class="text-slate-700 dark:text-slate-200">
-                  {{ getCellValue(row, col.key) ?? '—' }}
-                </span>
-              </td>
+                <slot :name="`header-${col.key}`" :column="col">
+                  <span
+                    class="inline-flex items-center gap-1.5"
+                    :class="col.align === 'left' ? 'flex-row-reverse' : ''"
+                  >
+                    <span>{{ col.label }}</span>
+                    <span v-if="col.sortable" class="inline-flex flex-col opacity-60">
+                      <ChevronUp
+                        class="w-3 h-3 -mb-1"
+                        :class="
+                          sortKey === col.key && sortDir === 'asc' ? 'text-theme-primary opacity-100' : 'opacity-30'
+                        "
+                      />
+                      <ChevronDown
+                        class="w-3 h-3"
+                        :class="
+                          sortKey === col.key && sortDir === 'desc' ? 'text-theme-primary opacity-100' : 'opacity-30'
+                        "
+                      />
+                    </span>
+                  </span>
+                </slot>
+              </th>
             </tr>
-          </template>
-        </tbody>
-      </table>
+          </thead>
+
+          <!-- tbody -->
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
+            <!-- ── Loading Skeleton ── -->
+            <template v-if="loading">
+              <tr v-for="n in skeletonRows" :key="`sk-${n}`" class="animate-pulse">
+                <td v-if="selectable" class="py-3.5 text-center">
+                  <div class="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded mx-auto"></div>
+                </td>
+                <td v-for="col in columns" :key="col.key" class="py-3.5 px-3">
+                  <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
+                </td>
+              </tr>
+            </template>
+
+            <!-- ── Data Rows ── -->
+            <template v-else-if="rows && rows.length > 0">
+              <tr
+                v-for="(row, index) in rows"
+                :key="row[selectKey] ?? index"
+                class="transition"
+                :class="[
+                  rowClickable
+                    ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                    : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/20',
+                  selectable && isRowSelected(row) ? 'bg-theme-light dark:bg-theme-light' : '',
+                ]"
+                @click="handleRowClick(row, $event)"
+              >
+                <!-- Row Checkbox -->
+                <td v-if="selectable" class="py-1 text-center" @click.stop>
+                  <label class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      :checked="isRowSelected(row)"
+                      class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
+                      @change="toggleSelectRow(row)"
+                    />
+                  </label>
+                </td>
+
+                <!-- Column Cells -->
+                <td
+                  v-for="col in columns"
+                  :key="col.key"
+                  class="py-3.5 px-3"
+                  :class="[alignClass(col), col.mono ? 'font-mono' : '', col.class || '']"
+                >
+                  <slot
+                    v-if="$slots[`cell-${col.key}`]"
+                    :name="`cell-${col.key}`"
+                    :row="row"
+                    :value="getCellValue(row, col.key)"
+                    :index="index"
+                  />
+                  <div
+                    v-else-if="col.key === 'actions' && $slots['actions']"
+                    class="data-table-actions inline-flex items-center gap-1"
+                  >
+                    <slot name="actions" :row="row" :index="index" />
+                  </div>
+                  <span v-else class="text-slate-700 dark:text-slate-200">
+                    {{ getCellValue(row, col.key) ?? '—' }}
+                  </span>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- End Edge Shadow Indicator (visible when more horizontal content exists) -->
+      <div
+        v-show="canScrollEnd"
+        class="pointer-events-none absolute inset-y-0 end-0 w-8 z-10 bg-gradient-to-l rtl:bg-gradient-to-r from-slate-900/10 dark:from-black/40 to-transparent transition-opacity duration-200"
+        aria-hidden="true"
+      />
     </div>
 
     <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- Mobile Cards View (Visible on Small Screens < md)      -->
+    <!-- Responsive Cards View (Visible per cardBreakpoint)     -->
     <!-- ═══════════════════════════════════════════════════════ -->
-    <div class="md:hidden space-y-3">
+    <div :class="cardVisibilityClass" class="space-y-3">
       <!-- Loading Skeleton Cards -->
       <template v-if="loading">
         <div
@@ -300,7 +415,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
             <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/3"></div>
             <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4"></div>
           </div>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
             <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-2/3"></div>
             <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-1/2"></div>
@@ -325,21 +440,25 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
           <!-- Custom Mobile Card Override Slot -->
           <slot v-if="$slots['mobile-card']" name="mobile-card" :row="row" :index="index" />
 
-          <!-- Default Automatic Mobile Card -->
+          <!-- Default Automatic Card -->
           <div v-else class="space-y-2.5 font-tajawal">
             <!-- Top Header Row: First Column + Actions / Last Column -->
             <div
               class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <input
+                <label
                   v-if="selectable"
-                  type="checkbox"
-                  :checked="isRowSelected(row)"
-                  class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer shrink-0"
+                  class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] -m-2 cursor-pointer shrink-0"
                   @click.stop
-                  @change="toggleSelectRow(row)"
-                />
+                >
+                  <input
+                    type="checkbox"
+                    :checked="isRowSelected(row)"
+                    class="w-4 h-4 rounded text-theme-primary focus:ring-theme-primary cursor-pointer"
+                    @change="toggleSelectRow(row)"
+                  />
+                </label>
                 <div class="min-w-0">
                   <slot
                     v-if="$slots[`cell-${columns[0].key}`]"
@@ -355,7 +474,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
               </div>
 
               <!-- Right Side Badge / Actions of Header -->
-              <div class="shrink-0">
+              <div class="shrink-0 flex items-center gap-1 data-table-actions">
                 <slot
                   v-if="columns.length > 1 && $slots[`cell-${columns[columns.length - 1].key}`]"
                   :name="`cell-${columns[columns.length - 1].key}`"
@@ -368,7 +487,7 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
             </div>
 
             <!-- Body Grid of Columns -->
-            <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
               <div
                 v-for="col in columns
                   .slice(1, columns[columns.length - 1]?.key === 'actions' ? -1 : undefined)
@@ -399,12 +518,19 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
     </div>
 
     <!-- ═══════════════════════════════════════════════════════ -->
-    <!-- Empty State                                              -->
+    <!-- Error State OR Empty State                               -->
     <!-- ═══════════════════════════════════════════════════════ -->
     <div v-if="!loading && (!rows || rows.length === 0)">
-      <slot name="empty">
-        <EmptyState :title="emptyTitle || emptyMessage || $t('common.no_data')" :icon="emptyIcon || '📭'" />
-      </slot>
+      <template v-if="error">
+        <slot name="error">
+          <ErrorState :message="typeof error === 'string' ? error : errorMessage" @retry="$emit('retry')" />
+        </slot>
+      </template>
+      <template v-else>
+        <slot name="empty">
+          <EmptyState :title="emptyTitle || emptyMessage || $t('common.no_data')" :icon="emptyIcon || PackageOpen" />
+        </slot>
+      </template>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════ -->

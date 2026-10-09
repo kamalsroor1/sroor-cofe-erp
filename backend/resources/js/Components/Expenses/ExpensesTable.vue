@@ -157,12 +157,15 @@
       </div>
     </div>
 
+    <!-- Error State -->
+    <ErrorState v-else-if="error" :message="typeof error === 'string' ? error : errorMessage" @retry="$emit('retry')" />
+
     <!-- Empty State -->
     <EmptyState
       v-else
       :title="$t('expenses.no_expenses_found')"
       :description="$t('expenses.no_expenses_description')"
-      icon="💸"
+      :icon="Receipt"
     >
       <template #action>
         <button
@@ -209,9 +212,10 @@
 </template>
 
 <script setup>
-import { Pencil, Trash2 } from 'lucide-vue-next';
+import { Pencil, Trash2, Receipt } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ErrorState from '../Common/ErrorState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
@@ -222,16 +226,18 @@ defineProps({
   expenses: { type: Array, default: () => [] },
   pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, per_page: 20, total: 0 }) },
   loading: { type: Boolean, default: false },
+  error: { type: [Boolean, String, Object], default: null },
+  errorMessage: { type: String, default: '' },
 });
 
-defineEmits(['create', 'edit', 'delete', 'page-change']);
+defineEmits(['create', 'edit', 'delete', 'page-change', 'retry']);
 
 const formatPaymentMethod = (method) => {
   const map = {
     cash: t('contacts.cash'),
     instapay: t('contacts.instapay'),
     e_wallet: t('contacts.wallet'),
-    visa: '💳 Visa',
+    visa: t('treasury.method_visa'),
     bank_transfer: t('contacts.bank_transfer'),
     check: t('invoices.check'),
   };

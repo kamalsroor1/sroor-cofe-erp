@@ -16,6 +16,8 @@ export function useSuppliers() {
     const searchQuery = ref('');
     const debtStatus = ref('all');
     const isLoading = ref(false);
+    const hasError = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const pagination = ref({
@@ -52,6 +54,8 @@ export function useSuppliers() {
 
     const fetchSuppliers = async (page = 1) => {
         isLoading.value = true;
+        hasError.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/suppliers', {
                 params: {
@@ -75,6 +79,8 @@ export function useSuppliers() {
             };
         } catch (error) {
             console.error('Failed to load suppliers:', error);
+            hasError.value = true;
+            errorMessage.value = error?.response?.data?.message || '';
         } finally {
             isLoading.value = false;
         }
@@ -234,6 +240,8 @@ export function useSuppliers() {
         searchQuery,
         debtStatus,
         isLoading,
+        hasError,
+        errorMessage,
         isSubmitting,
         pagination,
         showSupplierModal,

@@ -5,15 +5,12 @@
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
           <!-- Date Filter Picker -->
-          <div
-            class="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm"
-          >
-            <Calendar class="w-4 h-4 text-theme-primary" />
-            <input
+          <div class="w-44">
+            <BaseDatePicker
               v-model="selectedDate"
               @change="fetchDailyJournal"
-              type="date"
-              class="bg-transparent border-0 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-0 cursor-pointer"
+              :clearable="false"
+              input-class="min-h-[38px] text-xs py-1"
             />
           </div>
 
@@ -27,29 +24,26 @@
             <span>{{ $t('treasury.record_journal_expense') }}</span>
           </button>
 
-          <!-- Shift Control Button -->
-          <BaseButton
+          <!-- Shift Status Indicator (When Closed) -->
+          <div
             v-if="!activeShift"
-            type="button"
-            variant="primary"
-            size="md"
-            @click="showOpenShiftModal = true"
-            class="font-black shadow-theme-primary shadow-lg flex items-center gap-2"
+            class="min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 select-none"
           >
-            <Play class="w-4 h-4 fill-white text-white" />
-            <span>{{ $t('treasury.open_shift') }}</span>
-          </BaseButton>
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span>{{ $t('treasury.shift_closed_now') }}</span>
+          </div>
 
+          <!-- Shift Close Button (When Open) -->
           <BaseButton
             v-else
             type="button"
             variant="danger"
             size="md"
             @click="openCloseShiftModal"
-            class="font-black shadow-rose-500/20 shadow-lg flex items-center gap-2"
+            class="font-black shadow-rose-500/20 shadow-lg flex items-center gap-2 min-h-[38px]"
           >
             <Lock class="w-4 h-4" />
-            <span>{{ $t('treasury.close_shift') }} (Z-Report)</span>
+            <span>{{ $t('treasury.close_shift') }}</span>
           </BaseButton>
         </div>
       </template>
@@ -62,11 +56,21 @@
       @open-shift="showOpenShiftModal = true"
     />
 
-    <!-- Financial Metrics Grid -->
-    <DailyJournalMetricsGrid :summary="summary" :loading="isLoading" />
+    <!-- Error State Display when server error occurs -->
+    <div
+      v-if="hasError && !isLoading"
+      class="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl"
+    >
+      <ErrorState :message="errorMessage" @retry="fetchDailyJournal" />
+    </div>
 
-    <!-- Journal Tabs (Invoices vs Expenses) -->
-    <DailyJournalTabs v-model:active-tab="activeTab" :invoices="invoices" :expenses="expenses" :loading="isLoading" />
+    <template v-else>
+      <!-- Financial Metrics Grid -->
+      <DailyJournalMetricsGrid :summary="summary" :loading="isLoading" />
+
+      <!-- Journal Tabs (Invoices vs Expenses) -->
+      <DailyJournalTabs v-model:active-tab="activeTab" :invoices="invoices" :expenses="expenses" :loading="isLoading" />
+    </template>
 
     <!-- Open Shift Modal -->
     <OpenShiftModal
@@ -104,9 +108,11 @@
 </template>
 
 <script setup>
-import { Calendar, MinusCircle, Play, Lock } from 'lucide-vue-next';
+import { MinusCircle, Lock } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import BaseDatePicker from '../../Components/Form/BaseDatePicker.vue';
 import DailyJournalShiftBanner from '../../Components/DailyJournal/DailyJournalShiftBanner.vue';
 import DailyJournalMetricsGrid from '../../Components/DailyJournal/DailyJournalMetricsGrid.vue';
 import DailyJournalTabs from '../../Components/DailyJournal/DailyJournalTabs.vue';
@@ -119,6 +125,8 @@ const {
   selectedDate,
   activeTab,
   isLoading,
+  hasError,
+  errorMessage,
   isSubmitting,
   activeShift,
   summary,

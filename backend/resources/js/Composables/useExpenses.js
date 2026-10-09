@@ -22,6 +22,8 @@ export function useExpenses() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
+    const hasError = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const pagination = ref({
@@ -57,6 +59,8 @@ export function useExpenses() {
 
     const fetchExpenses = async (page = 1) => {
         isLoading.value = true;
+        hasError.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/expenses', {
                 params: {
@@ -85,6 +89,8 @@ export function useExpenses() {
             };
         } catch (error) {
             console.error('Failed to load expenses:', error);
+            hasError.value = true;
+            errorMessage.value = error?.response?.data?.message || '';
         } finally {
             isLoading.value = false;
         }
@@ -218,6 +224,8 @@ export function useExpenses() {
         dateFrom,
         dateTo,
         isLoading,
+        hasError,
+        errorMessage,
         isSubmitting,
         pagination,
         showExpenseModal,

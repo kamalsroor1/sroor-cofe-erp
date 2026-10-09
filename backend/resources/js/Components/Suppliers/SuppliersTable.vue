@@ -150,8 +150,13 @@
               <p v-if="supplier.company_name" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-bold">
                 {{ supplier.company_name }}
               </p>
-              <p v-if="supplier.phone" class="text-[11px] text-slate-400 font-mono mt-0.5" dir="ltr">
-                📞 {{ supplier.phone }}
+              <p
+                v-if="supplier.phone"
+                class="text-[11px] text-slate-400 font-mono mt-0.5 inline-flex items-center gap-1"
+                dir="ltr"
+              >
+                <Phone class="w-3 h-3 text-slate-400 shrink-0" />
+                <span>{{ supplier.phone }}</span>
               </p>
             </div>
 
@@ -207,12 +212,15 @@
       </div>
     </div>
 
+    <!-- Error State -->
+    <ErrorState v-else-if="error" :message="typeof error === 'string' ? error : errorMessage" @retry="$emit('retry')" />
+
     <!-- Empty State -->
     <EmptyState
       v-else
       :title="$t('contacts.no_suppliers_found')"
       :description="$t('contacts.no_suppliers_description')"
-      icon="🏭"
+      :icon="Truck"
     >
       <template #action>
         <button
@@ -259,9 +267,10 @@
 </template>
 
 <script setup>
-import { CreditCard, FileText, Pencil, Trash2 } from 'lucide-vue-next';
+import { CreditCard, FileText, Pencil, Trash2, Truck, Phone } from 'lucide-vue-next';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
+import ErrorState from '../Common/ErrorState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
@@ -270,7 +279,9 @@ defineProps({
   suppliers: { type: Array, default: () => [] },
   pagination: { type: Object, default: () => ({ current_page: 1, last_page: 1, per_page: 15, total: 0 }) },
   loading: { type: Boolean, default: false },
+  error: { type: [Boolean, String, Object], default: null },
+  errorMessage: { type: String, default: '' },
 });
 
-defineEmits(['create', 'pay', 'edit', 'delete', 'page-change']);
+defineEmits(['create', 'pay', 'edit', 'delete', 'page-change', 'retry']);
 </script>
