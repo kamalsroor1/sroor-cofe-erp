@@ -21,7 +21,7 @@ This is an accounting system. A rounding error or a race condition is a **money 
   if (bccomp($available, $requested, 3) < 0) { /* insufficient stock */ }
   ```
 - Forbidden on money/qty: `+ - * /`, `round()`, `floatval()`, `(float)`, `number_format()` for storage, `==` / `<` comparisons (use `bccomp`).
-- Percentages: compute as `bcdiv(bcmul($amount, $percent, 6), '100', 3)` — use a higher intermediate scale, then settle at 3.
+- Rounding: **half-up at scale 3 everywhere** (CTO decision: sales, sales returns, purchases, purchase returns) through `App\Support\Money\Decimal` (`mul`, `percent`, `round`) and its frontend twin `resources/js/helpers/decimal.js`. Never truncate a final amount with `bcmul/bcdiv(..., 3)`: compute exactly (higher intermediate scale), then `Decimal::round()`. New documents only — historical documents are never recomputed.
 - Eloquent casts: `'decimal:3'`. Fractional/weight selling (grams, kg) is a first-class feature — never assume integer quantities.
 - Frontend may format with `Number()` for **display only** (`useMoney`, `useFormatters`). Authoritative totals always come from the server.
 
