@@ -312,8 +312,41 @@ export const defaultArabicTranslations = {
             "tenant_trial_extended": "تمديد الفترة التجريبية لمحل",
             "tenant_deleted": "حذف محل",
             "subscription_activated": "تفعيل اشتراك",
-            "plan_updated": "تعديل باقة"
+            "plan_updated": "تعديل باقة",
+            "two_factor_confirmed": "تأكيد التحقق بخطوتين",
+            "two_factor_challenge_failed": "فشل رمز التحقق بخطوتين",
+            "recovery_code_used": "استخدام رمز استرداد",
+            "step_up_confirmed": "تأكيد الهوية لعملية حساسة",
+            "password_reset_requested": "طلب إعادة تعيين كلمة السر",
+            "password_reset_completed": "إتمام إعادة تعيين كلمة السر",
+            "super_admin_migrated": "نقل حساب مدير المنصة",
+            "tenant_status_changed": "تغيير حالة محل",
+            "tenant_archived": "أرشفة محل",
+            "tenant_unarchived": "إلغاء أرشفة محل",
+            "tenant_archive_refused": "رفض أرشفة محل",
+            "tenant_purged": "مسح بيانات محل نهائيًا",
+            "tenant_purge_refused": "رفض مسح بيانات محل",
+            "tenant_db_config_updated": "تعديل إعدادات قاعدة بيانات محل",
+            "tenant_provisioning_started": "بدء تجهيز محل",
+            "tenant_provisioning_succeeded": "نجاح تجهيز محل",
+            "tenant_provisioning_failed": "فشل تجهيز محل",
+            "tenant_rate_limit_raised": "رفع حد الطلبات لمحل مؤقتًا",
+            "platform_settings_updated": "تعديل إعدادات المنصة",
+            "platform_asset_uploaded": "رفع ملف هوية للمنصة",
+            "platform_asset_deleted": "حذف ملف هوية للمنصة",
+            "backup_succeeded": "نجاح النسخ الاحتياطي",
+            "backup_failed": "فشل النسخ الاحتياطي",
+            "audit_write_failed": "فشل تسجيل قيد مراجعة",
+            "entitlements_overridden": "تعديل صلاحيات باقة محل يدويًا"
         }
+    },
+    "central_auth": {
+        "failed": "البريد الإلكتروني أو كلمة السر غير صحيحة.",
+        "login_success": "تم تسجيل الدخول إلى لوحة إدارة المنصة.",
+        "two_factor_required": "مطلوب كود التحقق بخطوتين لإكمال تسجيل الدخول.",
+        "logout_success": "تم تسجيل الخروج من لوحة إدارة المنصة.",
+        "unauthenticated": "غير مصرح، سجّل الدخول إلى لوحة إدارة المنصة أولًا.",
+        "session_expired": "انتهت جلسة لوحة إدارة المنصة، سجّل الدخول مرة أخرى."
     },
     "common": {
         "app_name": "نظام إدارة المبيعات والمخزون والحسابات",
@@ -1503,6 +1536,187 @@ export const defaultArabicTranslations = {
         "token": "رمز إعادة تعيين كلمة المرور غير صالح.",
         "user": "لم نتمكن من العثور على مستخدم بعنوان البريد الإلكتروني المدخل."
     },
+    "plans": {
+        "prices_exclude_vat": "الأسعار لا تشمل ضريبة القيمة المضافة.",
+        "plans": {
+            "free": {
+                "name": "التجربة",
+                "description": "تجربة مجانية بكل مزايا باقة النمو وبحدود صغيرة."
+            },
+            "basic": {
+                "name": "البداية",
+                "description": "لمحل واحد: بيع ومخزون ومشتريات وخزينة وورديات ومرتجعات."
+            },
+            "pro": {
+                "name": "النمو",
+                "description": "لمحلات بفروع قليلة أو تاجر جملة صغير، مع تقارير الأرباح وإعادة الطلب والتحويلات."
+            },
+            "enterprise": {
+                "name": "الأعمال",
+                "description": "للسلاسل وشركات التوزيع، بحدود أكبر وكل المزايا."
+            }
+        },
+        "features": {
+            "pos_access": {
+                "name": "نقطة البيع (الكاشير)",
+                "description": "شاشة بيع سريعة تدعم الباركود وباركود الميزان والدفع الفوري."
+            },
+            "invoices_create": {
+                "name": "فواتير المبيعات",
+                "description": "إصدار فواتير نقدية وآجلة مع كشف حساب العميل."
+            },
+            "invoices_edit": {
+                "name": "تعديل وإلغاء الفواتير",
+                "description": "تعديل بنود الفاتورة أو إلغاؤها مع عكس أثرها على المخزون والخزينة."
+            },
+            "whatsapp_share": {
+                "name": "مشاركة الفواتير على واتساب",
+                "description": "إرسال رابط الفاتورة للعميل على واتساب."
+            },
+            "quotations_manage": {
+                "name": "عروض الأسعار",
+                "description": "إعداد عروض أسعار للعملاء وتحويلها إلى فواتير."
+            },
+            "pos_offline": {
+                "name": "البيع بدون إنترنت",
+                "description": "متابعة البيع عند انقطاع الإنترنت ومزامنة الفواتير عند عودته."
+            },
+            "items_manage": {
+                "name": "الأصناف والمخزون",
+                "description": "إدارة الأصناف والأسعار والتكلفة ووحدات القياس وحد إعادة الطلب."
+            },
+            "items_movements": {
+                "name": "كارت حركة الصنف",
+                "description": "تتبع حركات الوارد والصادر والرصيد لكل صنف."
+            },
+            "transfers_manage": {
+                "name": "التحويلات بين المخازن",
+                "description": "أذون تحويل البضاعة بين الفروع والمخازن وسيارات التوزيع."
+            },
+            "mixes_manage": {
+                "name": "الخلطات والتركيبات",
+                "description": "تكوين خلطة من عدة أصناف بالنسب أو الوزن، وحساب تكلفتها وهالكها، وبيعها مباشرة."
+            },
+            "purchases_manage": {
+                "name": "المشتريات والموردين",
+                "description": "تسجيل فواتير الشراء من الموردين وتحديث التكلفة والمخزون."
+            },
+            "purchases_reorder": {
+                "name": "مساعد إعادة الطلب",
+                "description": "اقتراح كميات الشراء حسب معدل الاستهلاك."
+            },
+            "expenses_manage": {
+                "name": "المصروفات",
+                "description": "تسجيل المصروفات وتصنيفها وخصمها من الخزينة."
+            },
+            "payments_manage": {
+                "name": "سندات القبض والصرف",
+                "description": "تحصيل دفعات العملاء وسداد دفعات الموردين."
+            },
+            "shifts_manage": {
+                "name": "ورديات الكاشير",
+                "description": "فتح وإغلاق الورديات ومطابقة الدرج والعجز والزيادة."
+            },
+            "treasury_view": {
+                "name": "الخزينة",
+                "description": "متابعة المقبوضات والمدفوعات والسيولة."
+            },
+            "returns_manage": {
+                "name": "المرتجعات",
+                "description": "مرتجعات المبيعات والمشتريات مع تسوية المخزون والأرصدة."
+            },
+            "reports_basic": {
+                "name": "التقارير الأساسية",
+                "description": "ملخص المبيعات اليومي وتقارير الورديات."
+            },
+            "reports_advanced": {
+                "name": "تقارير الأرباح",
+                "description": "صافي الربح وهامش الربح وتكلفة المبيعات والأصناف الأكثر مبيعًا."
+            },
+            "reports_export": {
+                "name": "تصدير التقارير",
+                "description": "تصدير الكشوف والمخزون والفواتير إلى ملفات Excel."
+            },
+            "audit_logs": {
+                "name": "سجل الرقابة",
+                "description": "معرفة من أنشأ أو عدّل أو ألغى كل عملية ومتى."
+            },
+            "printing_thermal": {
+                "name": "الطباعة الحرارية",
+                "description": "طباعة الإيصالات مباشرة على الطابعات الحرارية."
+            },
+            "printing_a4": {
+                "name": "طباعة A4",
+                "description": "فواتير بمقاس A4 بالشعار وبيانات المنشأة."
+            },
+            "telegram_notifications": {
+                "name": "إشعارات تيليجرام",
+                "description": "إرسال ملخصات الورديات والمبيعات تلقائيًا على تيليجرام."
+            },
+            "api_access": {
+                "name": "واجهة الربط البرمجية (API)",
+                "description": "ربط النظام ببرامج وأنظمة أخرى عبر واجهة برمجية."
+            },
+            "custom_domain": {
+                "name": "نطاق مخصص",
+                "description": "تشغيل النظام على نطاق المنشأة الخاص."
+            }
+        },
+        "addons": {
+            "store": {
+                "name": "فرع بيع إضافي",
+                "description": "فرع بيع إضافي ومعه مستخدم."
+            },
+            "warehouse": {
+                "name": "مخزن إضافي",
+                "description": "مخزن إضافي بدون نقطة بيع."
+            },
+            "van": {
+                "name": "سيارة توزيع إضافية",
+                "description": "سيارة توزيع إضافية ومعها مستخدم للمندوب."
+            },
+            "user": {
+                "name": "مستخدم إضافي",
+                "description": "مستخدم إضافي على الحساب."
+            },
+            "storage_10gb": {
+                "name": "مساحة تخزين إضافية",
+                "description": "مساحة إضافية للمرفقات والصور والنسخ."
+            },
+            "items_5k": {
+                "name": "أصناف إضافية",
+                "description": "رفع الحد الأقصى لعدد الأصناف."
+            },
+            "mixes": {
+                "name": "الخلطات والتركيبات",
+                "description": "تكوين خلطة من عدة أصناف بالنسب أو الوزن، وحساب تكلفتها وهالكها، وبيعها مباشرة."
+            },
+            "reports_advanced": {
+                "name": "تقارير الأرباح",
+                "description": "صافي الربح وهامش الربح وتكلفة المبيعات بدون الترقية لباقة أعلى."
+            },
+            "audit_logs": {
+                "name": "سجل الرقابة",
+                "description": "معرفة من أنشأ أو عدّل أو ألغى كل عملية ومتى."
+            },
+            "api_access": {
+                "name": "واجهة الربط البرمجية (API)",
+                "description": "ربط النظام ببرامج وأنظمة أخرى عبر واجهة برمجية."
+            },
+            "custom_domain": {
+                "name": "نطاق مخصص",
+                "description": "تشغيل النظام على نطاق المنشأة الخاص."
+            },
+            "premium_support": {
+                "name": "دعم مميز",
+                "description": "أولوية في الرد ومسؤول حساب مخصص."
+            },
+            "onboarding": {
+                "name": "التهيئة وترحيل البيانات",
+                "description": "تهيئة الحساب وترحيل الأصناف والعملاء والأرصدة من Excel مع تدريب أونلاين."
+            }
+        }
+    },
     "pos": {
         "title": "نقطة البيع والكاشير السريع (POS)",
         "subtitle": "إصدار فواتير المبيعات، حساب الخصومات والشحن، والدفع كاش أو إلكتروني",
@@ -1743,7 +1957,11 @@ export const defaultArabicTranslations = {
         "store_not_found": "الفرع غير موجود",
         "decrease_qty": "إنقاص الكمية",
         "increase_qty": "زيادة الكمية",
-        "one_kg_chip": "1 كجم"
+        "one_kg_chip": "1 كجم",
+        "quick_keys_saved": "تم حفظ الأصناف السريعة للفرع",
+        "quick_keys_duplicate_position": "الخانة :position في الصفحة :page مستخدمة لأكثر من مفتاح",
+        "quick_keys_item_unavailable": "الصنف غير موجود أو غير نشط",
+        "quick_keys_category_unavailable": "الفئة غير موجودة أو غير نشطة"
     },
     "profile": {
         "title": "الملف الشخصي وإعدادات الحساب",
@@ -2421,6 +2639,34 @@ export const defaultArabicTranslations = {
             "already_used": "تم تمديد الفترة التجريبية لهذا الحساب من قبل، والتمديد مسموح مرة واحدة فقط.",
             "already_paid": "لا يمكن تمديد الفترة التجريبية لحساب سبق له الدفع.",
             "not_eligible": "لا يمكن تمديد الفترة التجريبية في حالة الحساب الحالية."
+        },
+        "suspension_reasons": {
+            "non_payment": "عدم السداد",
+            "violation": "مخالفة شروط الاستخدام",
+            "customer_request": "بناءً على طلب العميل",
+            "other": "سبب آخر"
+        },
+        "limit_resources": {
+            "users": "المستخدمين",
+            "stores": "الفروع",
+            "warehouses": "المخازن",
+            "vans": "السيارات",
+            "items": "الأصناف",
+            "invoices_month": "الفواتير الشهرية",
+            "storage_mb": "مساحة التخزين",
+            "other": "هذا المورد"
+        },
+        "errors": {
+            "read_only": "الحساب للعرض فقط حاليًا، ومش هتقدر تضيف أو تعدّل بيانات. جدّد الاشتراك لإعادة التفعيل.",
+            "access_blocked": "الوصول للحساب موقوف (الحالة: :status). تواصل مع إدارة المنصة.",
+            "activation_requires_payment": "تفعيل الحساب بيتم بعد تأكيد الدفع فقط.",
+            "invalid_transition": "لا يمكن تغيير حالة الحساب من «:from» إلى «:to».",
+            "status_conflict": "حالة الحساب اتغيّرت وأصبحت «:status». حدّث الصفحة وحاول تاني.",
+            "archive_not_allowed": "الأرشفة مسموحة للحسابات الموقوفة أو الملغية فقط. الحالة الحالية: «:status».",
+            "not_archived": "الحساب مش مؤرشف.",
+            "suspension_reason_required": "اختار سبب الإيقاف.",
+            "limit_reached": "وصلت للحد الأقصى المسموح في باقتك من :resource (:max). رقّي باقتك أو أضف إضافة.",
+            "feature_unavailable": "الميزة دي مش متاحة في باقتك الحالية."
         }
     },
     "super": {
@@ -3547,8 +3793,41 @@ export const defaultEnglishTranslations = {
             "tenant_trial_extended": "Shop trial extended",
             "tenant_deleted": "Shop deleted",
             "subscription_activated": "Subscription activated",
-            "plan_updated": "Plan updated"
+            "plan_updated": "Plan updated",
+            "two_factor_confirmed": "Two-factor confirmed",
+            "two_factor_challenge_failed": "Two-factor challenge failed",
+            "recovery_code_used": "Recovery code used",
+            "step_up_confirmed": "Step-up confirmed",
+            "password_reset_requested": "Password reset requested",
+            "password_reset_completed": "Password reset completed",
+            "super_admin_migrated": "Super-admin migrated",
+            "tenant_status_changed": "Tenant status changed",
+            "tenant_archived": "Tenant archived",
+            "tenant_unarchived": "Tenant unarchived",
+            "tenant_archive_refused": "Tenant archive refused",
+            "tenant_purged": "Tenant purged",
+            "tenant_purge_refused": "Tenant purge refused",
+            "tenant_db_config_updated": "Tenant database config updated",
+            "tenant_provisioning_started": "Tenant provisioning started",
+            "tenant_provisioning_succeeded": "Tenant provisioning succeeded",
+            "tenant_provisioning_failed": "Tenant provisioning failed",
+            "tenant_rate_limit_raised": "Tenant rate limit raised",
+            "platform_settings_updated": "Platform settings updated",
+            "platform_asset_uploaded": "Platform asset uploaded",
+            "platform_asset_deleted": "Platform asset deleted",
+            "backup_succeeded": "Backup succeeded",
+            "backup_failed": "Backup failed",
+            "audit_write_failed": "Audit write failed",
+            "entitlements_overridden": "Entitlements overridden"
         }
+    },
+    "central_auth": {
+        "failed": "The email or password is incorrect.",
+        "login_success": "Signed in to the platform console.",
+        "two_factor_required": "A two-factor code is required to finish signing in.",
+        "logout_success": "Signed out of the platform console.",
+        "unauthenticated": "Unauthorized. Sign in to the platform console first.",
+        "session_expired": "Your platform console session has expired. Please sign in again."
     },
     "common": {
         "app_name": "Sales, Inventory & Accounting ERP System",
@@ -4738,6 +5017,187 @@ export const defaultEnglishTranslations = {
         "token": "This password reset token is invalid.",
         "user": "We can't find a user with that email address."
     },
+    "plans": {
+        "prices_exclude_vat": "Prices exclude VAT.",
+        "plans": {
+            "free": {
+                "name": "Trial",
+                "description": "Free trial with every Growth feature and small limits."
+            },
+            "basic": {
+                "name": "Starter",
+                "description": "For a single shop: sales, stock, purchases, treasury, shifts and returns."
+            },
+            "pro": {
+                "name": "Growth",
+                "description": "For a few branches or a small wholesaler, with profit reports, reordering and transfers."
+            },
+            "enterprise": {
+                "name": "Business",
+                "description": "For chains and distribution companies, with higher limits and every feature."
+            }
+        },
+        "features": {
+            "pos_access": {
+                "name": "Point of sale",
+                "description": "Fast checkout with barcode and scale-barcode support and instant payment."
+            },
+            "invoices_create": {
+                "name": "Sales invoices",
+                "description": "Cash and credit invoices with customer statements."
+            },
+            "invoices_edit": {
+                "name": "Edit and cancel invoices",
+                "description": "Edit or cancel invoices and reverse their stock and treasury effects."
+            },
+            "whatsapp_share": {
+                "name": "Share invoices on WhatsApp",
+                "description": "Send the invoice link to the customer on WhatsApp."
+            },
+            "quotations_manage": {
+                "name": "Quotations",
+                "description": "Prepare customer quotations and turn them into invoices."
+            },
+            "pos_offline": {
+                "name": "Offline POS",
+                "description": "Keep selling when the internet is down and sync invoices when it is back."
+            },
+            "items_manage": {
+                "name": "Items and stock",
+                "description": "Manage items, prices, cost, units of measure and reorder levels."
+            },
+            "items_movements": {
+                "name": "Item movement card",
+                "description": "Track incoming, outgoing and running balance for every item."
+            },
+            "transfers_manage": {
+                "name": "Stock transfers",
+                "description": "Transfer goods between branches, warehouses and delivery vans."
+            },
+            "mixes_manage": {
+                "name": "Mix builder",
+                "description": "Build a mix from several items by ratio or weight, cost it with its waste and sell it directly."
+            },
+            "purchases_manage": {
+                "name": "Purchases and suppliers",
+                "description": "Record supplier purchase invoices and update cost and stock."
+            },
+            "purchases_reorder": {
+                "name": "Reorder assistant",
+                "description": "Suggest purchase quantities from the consumption rate."
+            },
+            "expenses_manage": {
+                "name": "Expenses",
+                "description": "Record and categorise expenses and pay them from the treasury."
+            },
+            "payments_manage": {
+                "name": "Receipts and payments",
+                "description": "Collect customer payments and pay suppliers."
+            },
+            "shifts_manage": {
+                "name": "Cashier shifts",
+                "description": "Open and close shifts and reconcile the cash drawer, shortages and overages."
+            },
+            "treasury_view": {
+                "name": "Treasury",
+                "description": "Follow receipts, payments and cash on hand."
+            },
+            "returns_manage": {
+                "name": "Returns",
+                "description": "Sales and purchase returns that settle stock and balances."
+            },
+            "reports_basic": {
+                "name": "Basic reports",
+                "description": "Daily sales summary and shift reports."
+            },
+            "reports_advanced": {
+                "name": "Profit reports",
+                "description": "Net profit, margin, cost of sales and best-selling items."
+            },
+            "reports_export": {
+                "name": "Report export",
+                "description": "Export statements, stock and invoices to Excel files."
+            },
+            "audit_logs": {
+                "name": "Audit log",
+                "description": "See who created, changed or cancelled every operation, and when."
+            },
+            "printing_thermal": {
+                "name": "Thermal printing",
+                "description": "Print receipts directly on thermal printers."
+            },
+            "printing_a4": {
+                "name": "A4 printing",
+                "description": "A4 invoices with your logo and business details."
+            },
+            "telegram_notifications": {
+                "name": "Telegram notifications",
+                "description": "Send shift and sales summaries to Telegram automatically."
+            },
+            "api_access": {
+                "name": "Public API",
+                "description": "Connect the system to other software through an API."
+            },
+            "custom_domain": {
+                "name": "Custom domain",
+                "description": "Run the system on your own domain."
+            }
+        },
+        "addons": {
+            "store": {
+                "name": "Extra sales branch",
+                "description": "One more sales branch, with one more user."
+            },
+            "warehouse": {
+                "name": "Extra warehouse",
+                "description": "One more warehouse, without a point of sale."
+            },
+            "van": {
+                "name": "Extra delivery van",
+                "description": "One more delivery van, with one more user for the sales rep."
+            },
+            "user": {
+                "name": "Extra user",
+                "description": "One more user on the account."
+            },
+            "storage_10gb": {
+                "name": "Extra storage",
+                "description": "More space for attachments, images and backups."
+            },
+            "items_5k": {
+                "name": "Extra items",
+                "description": "Raise the maximum number of items."
+            },
+            "mixes": {
+                "name": "Mix builder",
+                "description": "Build a mix from several items by ratio or weight, cost it with its waste and sell it directly."
+            },
+            "reports_advanced": {
+                "name": "Profit reports",
+                "description": "Net profit, margin and cost of sales without upgrading your plan."
+            },
+            "audit_logs": {
+                "name": "Audit log",
+                "description": "See who created, changed or cancelled every operation, and when."
+            },
+            "api_access": {
+                "name": "Public API",
+                "description": "Connect the system to other software through an API."
+            },
+            "custom_domain": {
+                "name": "Custom domain",
+                "description": "Run the system on your own domain."
+            },
+            "premium_support": {
+                "name": "Premium support",
+                "description": "Priority replies and a dedicated account manager."
+            },
+            "onboarding": {
+                "name": "Onboarding and data migration",
+                "description": "Account setup, import of items, customers and balances from Excel, and online training."
+            }
+        }
+    },
     "pos": {
         "title": "Point of Sale (POS)",
         "subtitle": "Issue sales invoices, discounts, and payments",
@@ -4978,7 +5438,11 @@ export const defaultEnglishTranslations = {
         "store_not_found": "Branch not found",
         "decrease_qty": "Decrease quantity",
         "increase_qty": "Increase quantity",
-        "one_kg_chip": "1 kg"
+        "one_kg_chip": "1 kg",
+        "quick_keys_saved": "Branch quick keys saved",
+        "quick_keys_duplicate_position": "Position :position on page :page is used by more than one key",
+        "quick_keys_item_unavailable": "Item not found or inactive",
+        "quick_keys_category_unavailable": "Category not found or inactive"
     },
     "profile": {
         "title": "User Profile & Account Settings",
@@ -5656,6 +6120,34 @@ export const defaultEnglishTranslations = {
             "already_used": "This account's trial was already extended. The extension can be used only once.",
             "already_paid": "The trial cannot be extended for an account that has already paid.",
             "not_eligible": "The trial cannot be extended in the account's current status."
+        },
+        "suspension_reasons": {
+            "non_payment": "Non-payment",
+            "violation": "Terms of use violation",
+            "customer_request": "Customer request",
+            "other": "Other reason"
+        },
+        "limit_resources": {
+            "users": "users",
+            "stores": "branches",
+            "warehouses": "warehouses",
+            "vans": "vans",
+            "items": "items",
+            "invoices_month": "monthly invoices",
+            "storage_mb": "storage",
+            "other": "this resource"
+        },
+        "errors": {
+            "read_only": "This account is read-only: you cannot add or change data. Renew your subscription to reactivate it.",
+            "access_blocked": "Access to this account is blocked (status: :status). Contact the platform team.",
+            "activation_requires_payment": "An account can only be activated after its payment is confirmed.",
+            "invalid_transition": "The account status cannot change from \":from\" to \":to\".",
+            "status_conflict": "The account status has changed to \":status\". Refresh the page and try again.",
+            "archive_not_allowed": "Only suspended or cancelled accounts can be archived. Current status: \":status\".",
+            "not_archived": "This account is not archived.",
+            "suspension_reason_required": "Choose a suspension reason.",
+            "limit_reached": "You have reached your plan limit for :resource (:max). Upgrade your plan or buy an add-on.",
+            "feature_unavailable": "This feature is not included in your current plan."
         }
     },
     "super": {
