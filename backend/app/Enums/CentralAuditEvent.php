@@ -46,6 +46,33 @@ enum CentralAuditEvent: string
     case SubscriptionActivated = 'subscription_activated';
     case PlanUpdated = 'plan_updated';
 
+    // W2 (identity, lifecycle, provisioning, platform settings, backups, entitlements)
+    case TwoFactorConfirmed = 'two_factor_confirmed';
+    case TwoFactorChallengeFailed = 'two_factor_challenge_failed';
+    case RecoveryCodeUsed = 'recovery_code_used';
+    case StepUpConfirmed = 'step_up_confirmed';
+    case PasswordResetRequested = 'password_reset_requested';
+    case PasswordResetCompleted = 'password_reset_completed';
+    case SuperAdminMigrated = 'super_admin_migrated';
+    case TenantStatusChanged = 'tenant_status_changed';
+    case TenantArchived = 'tenant_archived';
+    case TenantUnarchived = 'tenant_unarchived';
+    case TenantArchiveRefused = 'tenant_archive_refused';
+    case TenantPurged = 'tenant_purged';
+    case TenantPurgeRefused = 'tenant_purge_refused';
+    case TenantDbConfigUpdated = 'tenant_db_config_updated';
+    case TenantProvisioningStarted = 'tenant_provisioning_started';
+    case TenantProvisioningSucceeded = 'tenant_provisioning_succeeded';
+    case TenantProvisioningFailed = 'tenant_provisioning_failed';
+    case TenantRateLimitRaised = 'tenant_rate_limit_raised';
+    case PlatformSettingsUpdated = 'platform_settings_updated';
+    case PlatformAssetUploaded = 'platform_asset_uploaded';
+    case PlatformAssetDeleted = 'platform_asset_deleted';
+    case BackupSucceeded = 'backup_succeeded';
+    case BackupFailed = 'backup_failed';
+    case AuditWriteFailed = 'audit_write_failed';
+    case EntitlementsOverridden = 'entitlements_overridden';
+
     public function translationKey(): string
     {
         return 'central_audit.events.'.$this->value;
