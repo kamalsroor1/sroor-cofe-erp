@@ -28,16 +28,40 @@
     />
 
     <!-- Customers Table & Mobile Cards -->
-    <CustomersTable
-      :customers="customers"
-      :pagination="pagination"
-      :loading="isLoading"
-      @create="openCreateModal"
-      @pay="openPaymentModal"
-      @edit="openEditModal"
-      @delete="deleteCustomer"
-      @page-change="fetchCustomers"
-    />
+
+    <template v-if="error && (!customers || customers.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchCustomers(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchCustomers(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <CustomersTable
+        :customers="customers"
+        :pagination="pagination"
+        :loading="isLoading"
+        @create="openCreateModal"
+        @pay="openPaymentModal"
+        @edit="openEditModal"
+        @delete="deleteCustomer"
+        @page-change="fetchCustomers"
+      />
+    </template>
 
     <!-- Add / Edit Customer Modal -->
     <CustomerFormModal
@@ -64,6 +88,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -79,6 +104,8 @@ const {
   metrics,
   searchQuery,
   debtStatus,
+  error,
+  errorMessage,
   isLoading,
   isSubmitting,
   pagination,

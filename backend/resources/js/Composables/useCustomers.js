@@ -16,6 +16,8 @@ export function useCustomers() {
     const searchQuery = ref('');
     const debtStatus = ref('all');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const pagination = ref({
@@ -52,6 +54,8 @@ export function useCustomers() {
 
     const fetchCustomers = async (page = 1) => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/customers', {
                 params: {
@@ -74,6 +78,8 @@ export function useCustomers() {
                 total: customers.value.length,
             };
         } catch (error) {
+            error.value = true;
+            errorMessage.value = error.userMessage || error.message || 'An error occurred';
             console.error('Failed to load customers:', error);
         } finally {
             isLoading.value = false;
@@ -151,6 +157,8 @@ export function useCustomers() {
             showCustomerModal.value = false;
             await fetchCustomers(pagination.value.current_page);
         } catch (error) {
+            error.value = true;
+            errorMessage.value = error.userMessage || error.message || 'An error occurred';
             Swal.fire({ icon: 'error', title: t('common.error'), text: error.userMessage || t('common.error') });
         } finally {
             isSubmitting.value = false;
@@ -182,6 +190,8 @@ export function useCustomers() {
             showPaymentModal.value = false;
             await fetchCustomers(pagination.value.current_page);
         } catch (error) {
+            error.value = true;
+            errorMessage.value = error.userMessage || error.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -215,6 +225,8 @@ export function useCustomers() {
                 });
                 await fetchCustomers(pagination.value.current_page);
             } catch (error) {
+                error.value = true;
+                errorMessage.value = error.userMessage || error.message || 'An error occurred';
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
@@ -229,6 +241,8 @@ export function useCustomers() {
     });
 
     return {
+        error,
+        errorMessage,
         customers,
         metrics,
         searchQuery,

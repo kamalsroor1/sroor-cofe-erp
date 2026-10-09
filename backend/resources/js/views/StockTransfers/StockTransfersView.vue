@@ -27,14 +27,38 @@
     />
 
     <!-- 📋 Transfers Ledger Table -->
-    <StockTransfersTable
-      :transfers="transfersList"
-      :pagination="pagination"
-      :is-loading="isLoading"
-      @preview="openDetailsModal"
-      @cancel="cancelTransferDoc"
-      @page-change="fetchTransfers"
-    />
+
+    <template v-if="error && (!transfers || transfers.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchStockTransfers(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchStockTransfers(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <StockTransfersTable
+        :transfers="transfersList"
+        :pagination="pagination"
+        :is-loading="isLoading"
+        @preview="openDetailsModal"
+        @cancel="cancelTransferDoc"
+        @page-change="fetchTransfers"
+      />
+    </template>
 
     <!-- 👁️ Transfer Details Modal -->
     <StockTransferDetailsModal
@@ -46,6 +70,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ref, watch, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
 import Swal from 'sweetalert2';

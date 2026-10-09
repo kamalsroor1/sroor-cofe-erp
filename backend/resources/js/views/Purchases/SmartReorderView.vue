@@ -47,18 +47,43 @@
     />
 
     <!-- Reorder Suggestions Table & Mobile Cards -->
-    <SmartReorderTable
-      :suggestions="suggestions"
-      :selected-ids="selectedIds"
-      :is-all-selected="isAllSelected"
-      :loading="isLoading"
-      @toggle-select-all="toggleSelectAll"
-      @toggle-item="toggleItem"
-    />
+
+    <template v-if="error && (!items || items.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchSmartReorder(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchSmartReorder(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <SmartReorderTable
+        :suggestions="suggestions"
+        :selected-ids="selectedIds"
+        :is-all-selected="isAllSelected"
+        :loading="isLoading"
+        @toggle-select-all="toggleSelectAll"
+        @toggle-item="toggleItem"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ArrowRight, ShoppingCart } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -74,6 +99,8 @@ const {
   targetCoverDays,
   selectedUrgency,
   searchQuery,
+  error,
+  errorMessage,
   isLoading,
   selectedItems,
   selectedIds,

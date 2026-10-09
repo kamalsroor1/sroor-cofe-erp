@@ -65,20 +65,44 @@
           @bulk-cancel="bulkCancelSelected"
           @deselect-all="selectedInvoiceIds = []"
         />
-        <InvoicesTable
-          :invoices="invoices"
-          :is-loading="isLoading"
-          :selected-ids="selectedInvoiceIds"
-          :is-all-selected="isAllSelected"
-          :pagination="pagination"
-          @toggle-select="toggleSelectInvoice"
-          @toggle-select-all="toggleSelectAll"
-          @preview="openDetailsModal"
-          @print="openPrintReceipt"
-          @cancel="cancelInvoice"
-          @change-page="fetchInvoices"
-          @reset-filters="resetAllFilters"
-        />
+
+        <template v-if="error && (!invoices || invoices.length === 0)">
+          <ErrorState
+            data-testid="error-state"
+            :message="errorMessage"
+            @retry="fetchInvoices(pagination?.current_page || 1)"
+          />
+        </template>
+        <template v-else>
+          <div
+            v-if="error"
+            class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+            data-testid="error-state"
+          >
+            <span>{{ errorMessage }}</span>
+            <button
+              @click="fetchInvoices(pagination?.current_page || 1)"
+              data-testid="retry-button"
+              class="underline font-bold"
+            >
+              {{ $t('connectivity.retry') }}
+            </button>
+          </div>
+          <InvoicesTable
+            :invoices="invoices"
+            :is-loading="isLoading"
+            :selected-ids="selectedInvoiceIds"
+            :is-all-selected="isAllSelected"
+            :pagination="pagination"
+            @toggle-select="toggleSelectInvoice"
+            @toggle-select-all="toggleSelectAll"
+            @preview="openDetailsModal"
+            @print="openPrintReceipt"
+            @cancel="cancelInvoice"
+            @change-page="fetchInvoices"
+            @reset-filters="resetAllFilters"
+          />
+        </template>
       </div>
 
       <InvoicesFilterSidebar
@@ -109,6 +133,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ref, computed, onMounted } from 'vue';
 import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import api from '../../Services/api';

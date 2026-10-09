@@ -19,6 +19,8 @@ export function useReturns() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const typeOptions = computed(() => [
         { value: 'all', label: t('returns.all_return_types') },
@@ -40,6 +42,8 @@ export function useReturns() {
 
     const fetchReturns = async (page = 1) => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/returns', {
                 params: {
@@ -65,6 +69,8 @@ export function useReturns() {
                 total: returnsList.value.length,
             };
         } catch (error) {
+            error.value = true;
+            errorMessage.value = error.userMessage || error.message || 'An error occurred';
             console.error('Failed to load returns:', error);
         } finally {
             isLoading.value = false;
@@ -100,6 +106,8 @@ export function useReturns() {
             selectedReturnDetails.value = response.data?.data;
             showDetailsModal.value = true;
         } catch (error) {
+            error.value = true;
+            errorMessage.value = error.userMessage || error.message || 'An error occurred';
             console.error('Failed to load return details:', error);
         }
     };
@@ -127,6 +135,8 @@ export function useReturns() {
                 });
                 await fetchReturns(pagination.value.current_page);
             } catch (error) {
+                error.value = true;
+                errorMessage.value = error.userMessage || error.message || 'An error occurred';
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
@@ -141,6 +151,8 @@ export function useReturns() {
     });
 
     return {
+        error,
+        errorMessage,
         returnsList,
         summary,
         searchQuery,

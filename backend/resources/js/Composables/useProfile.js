@@ -7,6 +7,8 @@ export function useProfile() {
     const { t } = useTrans();
 
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const form = ref({
@@ -25,6 +27,8 @@ export function useProfile() {
 
     const fetchProfile = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const res = await api.get('/profile');
             const u = res.data?.data || {};
@@ -33,6 +37,8 @@ export function useProfile() {
             form.value.email = u.email || '';
             form.value.theme_preference = u.theme_preference || 'dark';
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             console.error('Failed to load profile:', e);
         } finally {
             isLoading.value = false;
@@ -54,6 +60,8 @@ export function useProfile() {
             form.value.new_password = '';
             form.value.new_password_confirmation = '';
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -69,6 +77,8 @@ export function useProfile() {
     });
 
     return {
+        error,
+        errorMessage,
         isLoading,
         isSubmitting,
         form,

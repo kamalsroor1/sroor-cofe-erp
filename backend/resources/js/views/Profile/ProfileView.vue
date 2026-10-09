@@ -12,6 +12,9 @@
     </div>
 
     <!-- Main Profile Form -->
+    <template v-else-if="error">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchProfile" />
+    </template>
     <form v-else @submit.prevent="submitProfile" class="space-y-6">
       <!-- Personal Information Card -->
       <ProfileBasicInfoCard :form="form" @update:field="updateField" />
@@ -39,6 +42,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ProfileBasicInfoCard from '../../Components/Profile/ProfileBasicInfoCard.vue';
@@ -46,5 +50,5 @@ import ProfileSecurityCard from '../../Components/Profile/ProfileSecurityCard.vu
 import ProfileThemeCard from '../../Components/Profile/ProfileThemeCard.vue';
 import { useProfile } from '../../Composables/useProfile';
 
-const { isLoading, isSubmitting, form, updateField, submitProfile } = useProfile();
+const { error, errorMessage, isLoading, isSubmitting, form, updateField, submitProfile } = useProfile();
 </script>

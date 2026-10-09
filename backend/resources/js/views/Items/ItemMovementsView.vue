@@ -43,17 +43,42 @@
     />
 
     <!-- Movements Ledger Table -->
-    <ItemMovementsTable
-      :movements="movements"
-      :loading="isLoading"
-      :get-movement-badge="getMovementBadge"
-      :format-movement-label="formatMovementLabel"
-      :is-positive-movement="isPositiveMovement"
-    />
+
+    <template v-if="error && (!movements || movements.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchItemMovements(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchItemMovements(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <ItemMovementsTable
+        :movements="movements"
+        :loading="isLoading"
+        :get-movement-badge="getMovementBadge"
+        :format-movement-label="formatMovementLabel"
+        :is-positive-movement="isPositiveMovement"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ArrowRight, Printer } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -69,6 +94,8 @@ const {
   dateFrom,
   dateTo,
   activePreset,
+  error,
+  errorMessage,
   isLoading,
   formatMovementLabel,
   isPositiveMovement,

@@ -30,14 +30,38 @@
     />
 
     <!-- Returns Ledger Table & Mobile Cards -->
-    <ReturnsTable
-      :returns-list="returnsList"
-      :pagination="pagination"
-      :loading="isLoading"
-      @open-details="openDetailsModal"
-      @delete-return="deleteReturnDoc"
-      @page-change="fetchReturns"
-    />
+
+    <template v-if="error && (!returns || returns.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchReturns(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchReturns(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <ReturnsTable
+        :returns-list="returnsList"
+        :pagination="pagination"
+        :loading="isLoading"
+        @open-details="openDetailsModal"
+        @delete-return="deleteReturnDoc"
+        @page-change="fetchReturns"
+      />
+    </template>
 
     <!-- Return Details Modal -->
     <ReturnDetailsModal
@@ -49,6 +73,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReturnsMetricsGrid from '../../Components/Returns/ReturnsMetricsGrid.vue';
@@ -65,6 +90,8 @@ const {
   typeOptions,
   dateFrom,
   dateTo,
+  error,
+  errorMessage,
   isLoading,
   pagination,
   showDetailsModal,

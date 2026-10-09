@@ -34,7 +34,11 @@
     <ReportsNavigationTabs :tabs="tabs" v-model:active-tab="activeTab" />
 
     <!-- Tab Contents -->
-    <Transition name="report-tab-fade" mode="out-in">
+
+    <template v-if="error">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchReportsData" />
+    </template>
+    <Transition v-else name="report-tab-fade" mode="out-in">
       <ReportsSalesTab v-if="activeTab === 'sales'" :key="'sales'" :summary="summary" :loading="isLoading" />
 
       <ReportsItemsTab
@@ -83,6 +87,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { Printer, BarChart3 } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReportsFilterBar from '../../Components/Reports/ReportsFilterBar.vue';
@@ -98,6 +103,8 @@ import { useReports } from '../../Composables/useReports';
 
 const {
   activeTab,
+  error,
+  errorMessage,
   isLoading,
   stores,
   filters,

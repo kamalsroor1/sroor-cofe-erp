@@ -20,11 +20,36 @@
     />
 
     <!-- Ledger Table & Mobile Cards -->
-    <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
+
+    <template v-if="error && (!customerstatement || customerstatement.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchCustomerStatement(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchCustomerStatement(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
+    </template>
   </div>
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import CustomerStatementHeader from '../../Components/Customers/CustomerStatementHeader.vue';
 import CustomerStatementSummaryCards from '../../Components/Customers/CustomerStatementSummaryCards.vue';
 import CustomerStatementFilterBar from '../../Components/Customers/CustomerStatementFilterBar.vue';
@@ -38,6 +63,8 @@ const {
   dateFrom,
   dateTo,
   activePreset,
+  error,
+  errorMessage,
   isLoading,
   applyPreset,
   fetchStatement,

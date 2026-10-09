@@ -29,11 +29,36 @@
     />
 
     <!-- Stocks Table & Mobile Cards -->
-    <StoreStocksTable :stocks="stocks" :pagination="pagination" :loading="isLoading" @page-change="fetchStocks" />
+
+    <template v-if="error && (!stocks || stocks.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchStoreStocks(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchStoreStocks(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <StoreStocksTable :stocks="stocks" :pagination="pagination" :loading="isLoading" @page-change="fetchStocks" />
+    </template>
   </div>
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ArrowRight, Package } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import StoreStocksFilterBar from '../../Components/StoreStocks/StoreStocksFilterBar.vue';
@@ -44,6 +69,8 @@ const {
   selectedStoreId,
   searchQuery,
   stockStatus,
+  error,
+  errorMessage,
   isLoading,
   stocks,
   pagination,

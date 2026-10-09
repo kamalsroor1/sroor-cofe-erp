@@ -24,18 +24,43 @@
     <TrashFilterBar :search="search" @update:search="updateSearch" />
 
     <!-- Records Table & Mobile Cards -->
-    <TrashTable
-      :records="records"
-      :pagination="pagination"
-      :loading="isLoading"
-      @restore="restoreRecord"
-      @force-delete="forceDeleteRecord"
-      @page-change="changePage"
-    />
+
+    <template v-if="error && (!items || items.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchTrash(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button
+          @click="fetchTrash(pagination?.current_page || 1)"
+          data-testid="retry-button"
+          class="underline font-bold"
+        >
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <TrashTable
+        :records="records"
+        :pagination="pagination"
+        :loading="isLoading"
+        @restore="restoreRecord"
+        @force-delete="forceDeleteRecord"
+        @page-change="changePage"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { RefreshCw } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -49,6 +74,8 @@ const {
   search,
   records,
   counts,
+  error,
+  errorMessage,
   isLoading,
   tabsList,
   pagination,

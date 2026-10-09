@@ -18,6 +18,8 @@ export function usePurchases() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const pagination = ref({
         current_page: 1,
@@ -39,6 +41,8 @@ export function usePurchases() {
 
     const fetchPurchases = async (page = 1) => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/purchases', {
                 params: {
@@ -63,6 +67,8 @@ export function usePurchases() {
                 total: purchases.value.length,
             };
         } catch (error) {
+            error.value = true;
+            errorMessage.value = error.userMessage || error.message || 'An error occurred';
             console.error('Failed to load purchases:', error);
         } finally {
             isLoading.value = false;
@@ -104,6 +110,8 @@ export function usePurchases() {
                 });
                 await fetchPurchases(pagination.value.current_page);
             } catch (error) {
+                error.value = true;
+                errorMessage.value = error.userMessage || error.message || 'An error occurred';
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
@@ -118,6 +126,8 @@ export function usePurchases() {
     });
 
     return {
+        error,
+        errorMessage,
         purchases,
         metrics,
         searchQuery,

@@ -10,6 +10,8 @@ export function useUsers() {
     const rolesList = ref([]);
     const storesList = ref([]);
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const filters = reactive({
@@ -65,6 +67,8 @@ export function useUsers() {
 
     const fetchUsers = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const res = await api.get('/users', { params: filters });
             users.value = res.data?.data || [];
@@ -72,6 +76,8 @@ export function useUsers() {
             storesList.value = res.data?.stores || [];
             pagination.value = res.data?.pagination || pagination.value;
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             console.error('Failed to fetch users:', e);
         } finally {
             isLoading.value = false;
@@ -138,6 +144,8 @@ export function useUsers() {
             showModal.value = false;
             fetchUsers();
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -153,6 +161,8 @@ export function useUsers() {
             const res = await api.patch(`/users/${u.id}/toggle-active`);
             u.is_active = res.data?.is_active;
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || 'An error occurred';
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -185,6 +195,8 @@ export function useUsers() {
                 });
                 fetchUsers();
             } catch (e) {
+                error.value = true;
+                errorMessage.value = e.userMessage || e.message || 'An error occurred';
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
@@ -199,6 +211,8 @@ export function useUsers() {
     });
 
     return {
+        error,
+        errorMessage,
         users,
         rolesList,
         storesList,

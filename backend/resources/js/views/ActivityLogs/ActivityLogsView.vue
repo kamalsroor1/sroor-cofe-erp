@@ -36,13 +36,29 @@
     />
 
     <!-- Logs Timeline & Pagination -->
-    <ActivityLogsTimeline
-      :logs="logs"
-      :pagination="pagination"
-      :loading="isLoading"
-      @inspect="openDetails"
-      @page-change="changePage"
-    />
+
+    <template v-if="error && (!logs || logs.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchLogs()" />
+    </template>
+    <template v-else>
+      <div
+        v-if="error"
+        class="bg-rose-50 text-rose-500 p-3 rounded-lg mb-4 flex justify-between items-center"
+        data-testid="error-state"
+      >
+        <span>{{ errorMessage }}</span>
+        <button @click="fetchLogs()" data-testid="retry-button" class="underline font-bold">
+          {{ $t('connectivity.retry') }}
+        </button>
+      </div>
+      <ActivityLogsTimeline
+        :logs="logs"
+        :pagination="pagination"
+        :loading="isLoading"
+        @inspect="openDetails"
+        @page-change="changePage"
+      />
+    </template>
 
     <!-- Payload Details Modal -->
     <ActivityLogDetailsModal :selected-log="selectedLog" @close="closeDetails" />
@@ -50,6 +66,7 @@
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { RefreshCw } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -67,6 +84,8 @@ const {
   moduleOptions,
   userOptions,
   storeOptions,
+  error,
+  errorMessage,
   isLoading,
   selectedLog,
   updateSearch,
