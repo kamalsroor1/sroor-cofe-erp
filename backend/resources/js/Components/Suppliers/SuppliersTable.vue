@@ -7,6 +7,14 @@
       <TableSkeleton :rows="8" :cols="7" />
     </div>
 
+    <!-- Error State (renders even if stale rows exist from previous page) -->
+    <div v-else-if="error" class="p-6">
+      <ErrorState
+        :message="typeof error === 'string' ? error : errorMessage"
+        @retry="$emit('retry', pagination.current_page)"
+      />
+    </div>
+
     <!-- Data Loaded -->
     <div v-else-if="suppliers.length > 0">
       <!-- 1. Desktop & Tablet Table (hidden md:block) -->
@@ -212,9 +220,6 @@
       </div>
     </div>
 
-    <!-- Error State -->
-    <ErrorState v-else-if="error" :message="typeof error === 'string' ? error : errorMessage" @retry="$emit('retry')" />
-
     <!-- Empty State -->
     <EmptyState
       v-else
@@ -235,7 +240,7 @@
 
     <!-- Pagination Bar -->
     <div
-      v-if="pagination.last_page > 1"
+      v-if="!error && pagination.last_page > 1"
       class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between"
     >
       <div class="text-xs text-slate-500 dark:text-slate-400">

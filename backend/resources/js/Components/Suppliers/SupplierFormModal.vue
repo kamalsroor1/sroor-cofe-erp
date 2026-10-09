@@ -73,7 +73,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="isBusy"
+          :loading="submitting"
           class="font-black shadow-lg shadow-theme-primary/20"
         >
           {{ editingSupplier ? $t('common.save_changes') : $t('contacts.save_supplier') }}
@@ -84,23 +84,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
-const props = defineProps({
+defineProps({
   show: { type: Boolean, default: false },
   editingSupplier: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
-  saving: { type: Boolean, default: false },
   submitting: { type: Boolean, default: false },
-  isSubmitting: { type: Boolean, default: false },
 });
-
-const isBusy = computed(() => props.saving || props.submitting || props.isSubmitting);
 
 defineEmits(['close', 'save', 'update:field']);
 </script>

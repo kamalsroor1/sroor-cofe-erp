@@ -44,7 +44,7 @@
       @edit="openEditModal"
       @delete="deleteExpense"
       @page-change="fetchExpenses"
-      @retry="fetchExpenses"
+      @retry="fetchExpenses($event || pagination.current_page)"
     />
 
     <!-- Add / Edit Expense Modal -->

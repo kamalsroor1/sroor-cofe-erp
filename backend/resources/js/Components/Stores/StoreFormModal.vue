@@ -78,11 +78,11 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="isBusy"
+          :loading="submitting"
           class="font-black shadow-lg shadow-theme-primary/20"
         >
-          <Plus v-if="!editingStore && !isBusy" class="w-4 h-4" />
-          <Save v-else-if="!isBusy" class="w-4 h-4" />
+          <Plus v-if="!editingStore && !submitting" class="w-4 h-4" />
+          <Save v-else-if="!submitting" class="w-4 h-4" />
           <span>{{ editingStore ? $t('common.save_changes') : $t('inventory.create_store') }}</span>
         </BaseButton>
       </div>
@@ -91,7 +91,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import { Plus, Save } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
@@ -107,11 +106,7 @@ const props = defineProps({
   editingStore: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
-  isSubmitting: { type: Boolean, default: false },
-  saving: { type: Boolean, default: false },
 });
-
-const isBusy = computed(() => props.submitting || props.isSubmitting || props.saving);
 
 const emit = defineEmits(['close', 'submit', 'update:form']);
 

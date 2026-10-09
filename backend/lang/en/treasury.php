@@ -125,7 +125,7 @@ return [
     'method_cash_drawer' => '💵 Cash from Drawer',
     'method_instapay' => '⚡ InstaPay',
     'method_wallet' => '📱 E-Wallet',
-    'method_visa' => '💳 POS Card / Visa',
+    'method_visa' => 'POS Card / Visa',
     'submit_expense_btn' => 'Save Expense',
     'daily_journal_report_title' => 'Daily Journal & Treasury Report - :date',
     'daily_journal_print_preview' => 'Daily Journal & Closing Print Preview (A4 Document)',

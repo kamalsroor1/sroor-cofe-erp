@@ -39,7 +39,7 @@
       @edit="openEditModal"
       @delete="deleteSupplier"
       @page-change="fetchSuppliers"
-      @retry="fetchSuppliers"
+      @retry="fetchSuppliers($event || pagination.current_page)"
     />
 
     <!-- Add / Edit Supplier Modal -->

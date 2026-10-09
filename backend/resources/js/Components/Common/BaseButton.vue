@@ -4,7 +4,7 @@
     :to="to"
     :type="to ? undefined : type"
     :disabled="to ? undefined : disabled || loading"
-    :aria-label="ariaLabel || (isIconOnly && label ? label : undefined)"
+    :aria-label="ariaLabel || undefined"
     class="base-btn font-tajawal font-bold inline-flex items-center justify-center gap-2 transition-all duration-150 select-none cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
     :class="[
       sizeClasses[size] || sizeClasses.md,

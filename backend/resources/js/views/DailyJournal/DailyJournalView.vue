@@ -6,51 +6,50 @@
         <div class="flex items-center gap-2 flex-wrap">
           <!-- Date Filter Picker -->
           <div class="w-44">
-            <BaseDatePicker
-              v-model="selectedDate"
-              @change="fetchDailyJournal"
-              :clearable="false"
-              input-class="min-h-[38px] text-xs py-1"
-            />
+            <BaseDatePicker v-model="selectedDate" @change="fetchDailyJournal" :clearable="false" />
           </div>
 
           <!-- Quick Add Expense in Journal Button -->
           <button
             type="button"
             @click="showExpenseModal = true"
-            class="min-h-[38px] px-3.5 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+            class="min-h-[44px] px-3.5 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
           >
             <MinusCircle class="w-4 h-4" />
             <span>{{ $t('treasury.record_journal_expense') }}</span>
           </button>
 
-          <!-- Shift Status Indicator (When Closed) -->
-          <div
-            v-if="!activeShift"
-            class="min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 select-none"
-          >
-            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-            <span>{{ $t('treasury.shift_closed_now') }}</span>
-          </div>
+          <!-- Shift Status Controls (Hidden during initial load or error) -->
+          <template v-if="!hasError && !isLoading">
+            <!-- Shift Status Indicator (When Closed) -->
+            <div
+              v-if="!activeShift"
+              class="min-h-[44px] px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 select-none"
+            >
+              <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span>{{ $t('treasury.shift_closed_now') }}</span>
+            </div>
 
-          <!-- Shift Close Button (When Open) -->
-          <BaseButton
-            v-else
-            type="button"
-            variant="danger"
-            size="md"
-            @click="openCloseShiftModal"
-            class="font-black shadow-rose-500/20 shadow-lg flex items-center gap-2 min-h-[38px]"
-          >
-            <Lock class="w-4 h-4" />
-            <span>{{ $t('treasury.close_shift') }}</span>
-          </BaseButton>
+            <!-- Shift Close Button (When Open) -->
+            <BaseButton
+              v-else
+              type="button"
+              variant="danger"
+              size="md"
+              @click="openCloseShiftModal"
+              class="font-black shadow-rose-500/20 shadow-lg flex items-center gap-2"
+            >
+              <Lock class="w-4 h-4" />
+              <span>{{ $t('treasury.close_shift') }}</span>
+            </BaseButton>
+          </template>
         </div>
       </template>
     </PageHeader>
 
-    <!-- Active Shift Status Banner -->
+    <!-- Active Shift Status Banner (Hidden during initial load or error) -->
     <DailyJournalShiftBanner
+      v-if="!hasError && !isLoading"
       :active-shift="activeShift"
       @print-z="printActiveZReport"
       @open-shift="showOpenShiftModal = true"

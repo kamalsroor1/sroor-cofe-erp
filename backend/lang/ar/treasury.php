@@ -131,7 +131,7 @@ return [
     'method_cash_drawer' => '💵 نقداً من درج الكاشير',
     'method_instapay' => '⚡ إنستاباي',
     'method_wallet' => '📱 محفظة إلكترونية',
-    'method_visa' => '💳 فيزا وبطاقة بنكية',
+    'method_visa' => 'فيزا وبطاقة بنكية',
     'submit_expense_btn' => 'تسجيل المصروف',
     'daily_journal_report_title' => 'تقرير حركة اليومية والخزينة - :date',
     'daily_journal_print_preview' => 'معاينة طباعة اليومية والتقفيل (A4 Document)',

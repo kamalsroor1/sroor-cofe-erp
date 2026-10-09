@@ -164,22 +164,28 @@ const updateScrollIndicators = () => {
   canScrollEnd.value = currentScroll < maxScroll - 6;
 };
 
+let resizeObserver = null;
+
 onMounted(() => {
   nextTick(updateScrollIndicators);
   window.addEventListener('resize', updateScrollIndicators);
+  if (typeof ResizeObserver !== 'undefined' && tableContainer.value) {
+    resizeObserver = new ResizeObserver(() => updateScrollIndicators());
+    resizeObserver.observe(tableContainer.value);
+  }
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateScrollIndicators);
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
 });
 
-watch(
-  [() => props.rows, () => props.columns, () => props.loading],
-  () => {
-    nextTick(updateScrollIndicators);
-  },
-  { deep: true }
-);
+watch([() => props.rows?.length, () => props.columns?.length, () => props.loading], () => {
+  nextTick(updateScrollIndicators);
+});
 
 // ─── Sorting Logic ────────────────────────────────────────────────────────────
 const handleSort = (col) => {

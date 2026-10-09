@@ -62,7 +62,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="isBusy"
+          :loading="submitting"
           class="font-black shadow-lg shadow-theme-primary/20"
         >
           {{ $t('contacts.confirm_payment') }}
@@ -73,7 +73,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
@@ -86,17 +85,12 @@ import { useTrans } from '../../Composables/useTrans';
 const { formatMoney } = useFormatters();
 const { t } = useTrans();
 
-const props = defineProps({
+defineProps({
   show: { type: Boolean, default: false },
   targetSupplier: { type: Object, default: null },
   paymentForm: { type: Object, default: () => ({}) },
-  form: { type: Object, default: null },
-  savingPayment: { type: Boolean, default: false },
   submitting: { type: Boolean, default: false },
-  isSubmitting: { type: Boolean, default: false },
 });
-
-const isBusy = computed(() => props.savingPayment || props.submitting || props.isSubmitting);
 
 defineEmits(['close', 'save', 'update:field']);
 
