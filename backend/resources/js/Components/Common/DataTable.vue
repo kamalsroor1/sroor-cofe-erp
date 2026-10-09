@@ -26,7 +26,8 @@ import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Pagination from '@/Components/Common/Pagination.vue';
 import EmptyState from '@/Components/Common/EmptyState.vue';
 import ErrorState from '@/Components/Common/ErrorState.vue';
-import { ChevronUp, ChevronDown, PackageOpen, AlertCircle } from 'lucide-vue-next';
+import InlineErrorBar from '@/Components/Common/InlineErrorBar.vue';
+import { ChevronUp, ChevronDown, PackageOpen } from 'lucide-vue-next';
 
 const props = defineProps({
   columns: {
@@ -259,22 +260,11 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
 <template>
   <div class="font-tajawal space-y-4">
     <!-- Inline Error Bar for stale rows -->
-    <div
+    <InlineErrorBar
       v-if="error && rows && rows.length > 0"
-      class="flex items-center justify-between p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-red-700 dark:text-red-400"
-    >
-      <div class="flex items-center gap-2 text-sm font-bold">
-        <AlertCircle class="w-5 h-5" />
-        <span>{{ typeof error === 'string' ? error : errorMessage || $t('common.error_occurred') }}</span>
-      </div>
-      <button
-        type="button"
-        class="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 transition min-h-[44px] min-w-[44px]"
-        @click="$emit('retry')"
-      >
-        {{ $t('connectivity.retry') }}
-      </button>
-    </div>
+      :message="typeof error === 'string' ? error : errorMessage"
+      @retry="$emit('retry')"
+    />
 
     <!-- ═══════════════════════════════════════════════════════ -->
     <!-- Table View (Hidden on Small/Tablet Screens per cardBreakpoint) -->
@@ -552,7 +542,15 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
       </template>
       <template v-else>
         <slot name="empty">
-          <EmptyState :title="emptyTitle || emptyMessage || $t('common.no_data')" :icon="emptyIcon || PackageOpen" />
+          <EmptyState
+            :title="emptyTitle || emptyMessage || $t('common.no_data')"
+            :description="emptyTitle && emptyMessage ? emptyMessage : ''"
+            :icon="emptyIcon || PackageOpen"
+          >
+            <slot name="empty-actions">
+              <slot name="empty-action" />
+            </slot>
+          </EmptyState>
         </slot>
       </template>
     </div>
@@ -566,6 +564,10 @@ const visibleOnMobile = (col) => col.hideOnMobile !== true;
       :from="pagination.from"
       :to="pagination.to"
       :total="pagination.total"
+      :current-page="pagination.current_page || pagination.currentPage"
+      :last-page="pagination.last_page || pagination.lastPage"
+      :per-page="pagination.per_page || pagination.perPage"
+      :pagination="pagination"
       @page-change="$emit('page-change', $event)"
     />
   </div>

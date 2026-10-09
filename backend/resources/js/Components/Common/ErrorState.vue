@@ -39,6 +39,7 @@ defineEmits(['retry']);
 
 <template>
   <div
+    data-testid="error-state"
     class="text-center font-tajawal select-none transition-all duration-200"
     :class="[compact ? 'py-8 px-4 space-y-2.5' : 'py-14 sm:py-16 px-4 space-y-3.5']"
   >
@@ -69,6 +70,7 @@ defineEmits(['retry']);
       <BaseButton
         variant="outline"
         size="sm"
+        data-testid="retry-button"
         :icon="RefreshCw"
         :loading="loading"
         class="coarse:min-h-[44px] coarse:min-w-[44px] border-rose-300 dark:border-rose-800/80 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
