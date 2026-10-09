@@ -12,35 +12,30 @@ final class PurchasePolicy
     public function viewAny(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('purchases.view')
-            || $user->can('purchases.manage');
+            || $user->can('purchases.view');
     }
 
     public function view(User $user, Purchase $purchase): bool
     {
         return $user->hasRole('admin')
-            || $user->can('purchases.view')
-            || $user->can('purchases.manage');
+            || $user->can('purchases.view');
     }
 
     public function create(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('purchases.create')
-            || $user->can('purchases.manage');
+            || $user->can('purchases.create');
     }
 
     public function cancel(User $user, Purchase $purchase): bool
     {
         return $user->hasRole('admin')
-            || $user->can('purchases.delete')
-            || $user->can('purchases.manage');
+            || $user->can('purchases.delete');
     }
 
     public function reorder(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('purchases.view')
-            || $user->can('purchases.manage');
+            || $user->can('purchases.view');
     }
 }

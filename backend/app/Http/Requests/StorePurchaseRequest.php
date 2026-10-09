@@ -10,7 +10,7 @@ class StorePurchaseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole('admin') || $this->user()?->can('purchases.create') || $this->user()?->can('purchases.manage') ?? false;
+        return $this->user()?->hasRole('admin') || $this->user()?->can('purchases.create') ?? false;
     }
 
     public function rules(): array

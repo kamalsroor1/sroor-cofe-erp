@@ -10,7 +10,7 @@ class FilterReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole('admin') || $this->user()?->can('reports.view') || $this->user()?->can('reports.advanced') ?? false;
+        return $this->user()?->hasRole('admin') || $this->user()?->can('reports.view') ?? false;
     }
 
     public function rules(): array

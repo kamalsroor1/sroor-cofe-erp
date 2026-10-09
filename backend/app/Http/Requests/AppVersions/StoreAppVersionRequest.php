@@ -8,7 +8,7 @@ class StoreAppVersionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->can('system.manage');
+        return $this->user() && $this->user()->can('super_admin.app_versions.manage');
     }
 
     public function rules(): array

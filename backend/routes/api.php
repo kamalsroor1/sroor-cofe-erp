@@ -166,8 +166,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // Cashier Shifts & Z-Report & Daily Journal
         Route::get('/shifts', [ShiftController::class, 'index'])->name('api.shifts.index');
         Route::get('/shifts/current', [ShiftController::class, 'current'])->name('api.shifts.current');
-        Route::post('/shifts/open', [ShiftController::class, 'open'])->name('api.shifts.open');
-        Route::post('/shifts/close', [ShiftController::class, 'close'])->name('api.shifts.close');
+        // QA-2 / Q10 (CTO): opening and closing a shift requires daily_journal.close_shift.
+        Route::post('/shifts/open', [ShiftController::class, 'open'])->name('api.shifts.open')->middleware('can:daily_journal.close_shift');
+        Route::post('/shifts/close', [ShiftController::class, 'close'])->name('api.shifts.close')->middleware('can:daily_journal.close_shift');
         Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport'])->name('api.shifts.z_report');
         Route::get('/daily-journal', [DailyJournalController::class, 'index'])->name('api.daily_journal.index');
 

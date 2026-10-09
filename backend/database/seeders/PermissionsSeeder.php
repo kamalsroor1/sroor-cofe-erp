@@ -9,63 +9,80 @@ use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsSeeder extends Seeder
 {
+    /**
+     * Tenant permission names grouped by module. The display label of each one lives in
+     * lang/{ar,en}/permissions.php under "permissions.<name>". PermissionsParityTest
+     * (tests/Feature/Architecture) enforces both the labels and that every name the code
+     * checks is listed here.
+     *
+     * CTO D5: a permission added here is granted to the `admin` role only (the admin sync
+     * below, plus Gate::before); other roles receive it manually from the roles screen.
+     * Existing tenants get new names through a tenant migration (see 2026_10_10_070000).
+     *
+     * @var list<string>
+     */
+    public const PERMISSIONS = [
+        // POS & Invoices
+        'pos.access',
+        'invoices.view',
+        'invoices.create',
+        'invoices.edit',
+        'invoices.cancel',
+        'invoices.delete',
+        'invoices.discount',
+
+        // Items & Inventory
+        'items.view',
+        'items.create',
+        'items.edit',
+        'items.delete',
+        'items.view_cost',
+        // QA-2: stock adjustments (AdjustStockRequest, ItemPolicy::adjustStock).
+        'inventory.adjust',
+
+        // Purchases
+        'purchases.view',
+        'purchases.create',
+        'purchases.delete',
+
+        // Stores & Transfers
+        'stores.manage',
+        // QA-2 (coordinator): read every branch at once (X-Store-Id "all"; ActiveStore, ApiTokenAuth).
+        'stores.view_all',
+        'transfers.view',
+        'transfers.create',
+
+        // Contacts
+        'customers.manage',
+        'customers.statement',
+        'suppliers.manage',
+        'suppliers.statement',
+
+        // Financials & Daily Journal
+        'daily_journal.view',
+        'daily_journal.close_shift',
+        // QA-2: treasury transfers between drawers (TreasuryPolicy::transfer).
+        'daily_journal.manage',
+        'expenses.manage',
+        'returns.manage',
+
+        // Admin & Reports
+        'reports.view',
+        'trash.access',
+        'roles.manage',
+        'logs.view',
+
+        // SETG-7: settings endpoints, SettingPolicy and store POS settings.
+        'settings.manage',
+    ];
+
     public function run(): void
     {
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 1. Define all permissions grouped by module
-        $permissions = [
-            // POS & Invoices
-            'pos.access' => 'الوصول لشاشة نقطة البيع (POS)',
-            'invoices.view' => 'عرض سجل فواتير المبيعات',
-            'invoices.create' => 'إنشاء واعتماد فواتير المبيعات',
-            'invoices.edit' => 'تعديل فواتير المبيعات المعتمدة',
-            'invoices.cancel' => 'إلغاء الفواتير وعكس أثر المخزون',
-            'invoices.delete' => 'حذف وأرشفة فواتير المبيعات',
-            'invoices.discount' => 'صلاحية منح خصومات للعملاء',
-
-            // Items & Inventory
-            'items.view' => 'عرض قائمة الأصناف والأسعار',
-            'items.create' => 'إضافة أصناف جديدة للمخزون',
-            'items.edit' => 'تعديل بيانات وأسعار الأصناف',
-            'items.delete' => 'أرشفة وحذف الأصناف',
-            'items.view_cost' => 'رؤية سعر التكلفة وهوامش الربح',
-
-            // Purchases
-            'purchases.view' => 'عرض سجل فواتير المشتريات',
-            'purchases.create' => 'تسجيل وتوريد مشتريات جديدة للمخزن',
-            'purchases.delete' => 'أرشفة فواتير المشتريات',
-
-            // Stores & Transfers
-            'stores.manage' => 'إدارة الفروع وتعيين الموظفين',
-            'transfers.view' => 'عرض أذونات التحويل المخزني',
-            'transfers.create' => 'إنشاء أذونات تحويل وشحن عربات التوزيع',
-
-            // Contacts
-            'customers.manage' => 'إدارة دليل العملاء',
-            'customers.statement' => 'عرض وتصدير كشف حساب عميل',
-            'suppliers.manage' => 'إدارة دليل الموردين وحساباتهم',
-            'suppliers.statement' => 'عرض وتصدير كشف حساب مورد',
-
-            // Financials & Daily Journal
-            'daily_journal.view' => 'عرض اليومية النقدية وحركة الدرج والشفتات',
-            'daily_journal.close_shift' => 'فتح وتقفيل ورديات الكاشير واليومية',
-            'expenses.manage' => 'تسجيل وتعديل وحذف المصروفات',
-            'returns.manage' => 'إدارة مرتجعات المبيعات والمشتريات',
-
-            // Admin & Reports
-            'reports.view' => 'عرض التقارير المالية والأرباح ومقارنة الفروع',
-            'trash.access' => 'الوصول لسلة المحذوفات المركزية واسترجاع البيانات',
-            'roles.manage' => 'إدارة المستخدمين والأدوار والصلاحيات',
-            'logs.view' => 'عرض وفحص سجل العمليات والرقابة الذاتية',
-
-            // SETG-7: used by the settings endpoints, SettingPolicy and store POS settings.
-            // Granted to admin through the "all non super_admin.*" sync below.
-            'settings.manage' => 'إدارة إعدادات المحل والطباعة والتكاملات',
-        ];
-
-        foreach ($permissions as $name => $description) {
+        // 1. Every tenant permission (labels: lang/{ar,en}/permissions.php, key "permissions.<name>").
+        foreach (self::PERMISSIONS as $name) {
             Permission::firstOrCreate(['name' => $name], ['guard_name' => 'web']);
         }
 
@@ -93,11 +110,11 @@ class PermissionsSeeder extends Seeder
             'returns.manage',
         ]);
 
-        // Storekeeper permissions
+        // Storekeeper permissions. CTO 2026-10-09: no items.create / items.edit (item create,
+        // edit, toggle-active, price and cost changes stay admin-only); see the tenant migration
+        // 2026_10_10_070010_revoke_item_edit_permissions_from_storekeeper.
         $storeRole->syncPermissions([
             'items.view',
-            'items.create',
-            'items.edit',
             'purchases.view',
             'purchases.create',
             'transfers.view',

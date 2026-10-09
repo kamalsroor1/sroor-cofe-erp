@@ -108,7 +108,7 @@ const routes = [
         meta: {
             title: 'الأصناف والمخزون',
             requiresAuth: true,
-            permission: 'items.manage',
+            permission: 'items.view',
         },
     },
     {
@@ -118,7 +118,7 @@ const routes = [
         meta: {
             title: 'فئات الأصناف',
             requiresAuth: true,
-            permission: 'items.manage',
+            permission: 'items.view',
         },
     },
     {
@@ -128,7 +128,7 @@ const routes = [
         meta: {
             title: 'حركات مخزون الصنف',
             requiresAuth: true,
-            permission: 'items.manage',
+            permission: 'items.view',
         },
     },
     {
@@ -221,7 +221,7 @@ const routes = [
         meta: {
             title: 'مرتجعات المبيعات والمشتريات',
             requiresAuth: true,
-            permission: 'returns.view',
+            permission: 'returns.manage',
         },
     },
     {
@@ -231,7 +231,7 @@ const routes = [
         meta: {
             title: 'تسجيل مرتجع جديد',
             requiresAuth: true,
-            permission: 'returns.create',
+            permission: 'returns.manage',
         },
     },
     {
@@ -241,7 +241,7 @@ const routes = [
         meta: {
             title: 'التحويلات المخزنية',
             requiresAuth: true,
-            permission: 'stores.view',
+            permission: 'transfers.view',
         },
     },
     {
@@ -281,7 +281,7 @@ const routes = [
         meta: {
             title: 'إدارة المستخدمين والموظفين',
             requiresAuth: true,
-            permission: 'users.manage',
+            permission: 'roles.manage',
         },
     },
     {

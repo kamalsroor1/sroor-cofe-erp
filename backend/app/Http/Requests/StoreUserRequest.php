@@ -11,7 +11,7 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) ($this->user() && ($this->user()->hasRole('admin') || $this->user()->can('users.manage') || $this->user()->can('roles.manage')));
+        return (bool) ($this->user() && ($this->user()->hasRole('admin') || $this->user()->can('roles.manage')));
     }
 
     public function rules(): array

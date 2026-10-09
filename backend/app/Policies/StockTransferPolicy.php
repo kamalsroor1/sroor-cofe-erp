@@ -12,7 +12,6 @@ final class StockTransferPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('stores.view')
             || $user->can('stores.manage')
             || $user->can('transfers.view');
     }
@@ -20,7 +19,6 @@ final class StockTransferPolicy
     public function view(User $user, StockTransfer $transfer): bool
     {
         return $user->hasRole('admin')
-            || $user->can('stores.view')
             || $user->can('stores.manage')
             || $user->can('transfers.view');
     }

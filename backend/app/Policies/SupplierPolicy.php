@@ -12,15 +12,13 @@ final class SupplierPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('suppliers.manage')
-            || $user->can('suppliers.view');
+            || $user->can('suppliers.manage');
     }
 
     public function view(User $user, ?Supplier $supplier = null): bool
     {
         return $user->hasRole('admin')
-            || $user->can('suppliers.manage')
-            || $user->can('suppliers.view');
+            || $user->can('suppliers.manage');
     }
 
     public function create(User $user): bool
@@ -51,7 +49,6 @@ final class SupplierPolicy
     {
         return $user->hasRole('admin')
             || $user->can('suppliers.manage')
-            || $user->can('suppliers.view')
             || $user->can('suppliers.statement');
     }
 }

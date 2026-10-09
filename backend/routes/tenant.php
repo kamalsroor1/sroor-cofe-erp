@@ -178,9 +178,9 @@ Route::middleware([
 
         // Items & Inventory Movements
         Route::get('/items', [ItemController::class, 'index'])->name('items.index')->middleware('can:items.view');
-        Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('can:items.manage');
-        Route::put('/items/{id}', [ItemController::class, 'update'])->name('items.update')->middleware('can:items.manage');
-        Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('items.destroy')->middleware('can:items.manage');
+        Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('can:items.create');
+        Route::put('/items/{id}', [ItemController::class, 'update'])->name('items.update')->middleware('can:items.edit');
+        Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('items.destroy')->middleware('can:items.delete');
         Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('items.movements')->middleware('can:items.view');
 
         // Multi-Store, Vans & Warehouse Management

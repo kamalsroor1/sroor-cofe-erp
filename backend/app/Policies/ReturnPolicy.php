@@ -12,21 +12,18 @@ final class ReturnPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('returns.view')
             || $user->can('returns.manage');
     }
 
     public function view(User $user, ReturnDocument $returnDocument): bool
     {
         return $user->hasRole('admin')
-            || $user->can('returns.view')
             || $user->can('returns.manage');
     }
 
     public function create(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('returns.create')
             || $user->can('returns.manage');
     }
 

@@ -23,99 +23,110 @@ final class GetPermissionsTreeAction
                 'title' => 'المبيعات ونقاط البيع (POS)',
                 'icon' => 'shopping-cart',
                 'permissions' => [
-                    'pos.access' => 'دخول شاشة الكاشير السريع (POS)',
-                    'invoices.view' => 'عرض سجل الفواتير',
-                    'invoices.create' => 'إنشاء وحفظ فواتير جديدة',
-                    'invoices.edit' => 'تعديل فواتير المبيعات المعتمدة',
-                    'invoices.cancel' => 'إلغاء الفواتير وعكس المخزون',
-                    'invoices.delete' => 'حذف وأرشفة فواتير المبيعات',
-                    'invoices.discount' => 'صلاحية منح خصومات للعملاء',
+                    'pos.access',
+                    'invoices.view',
+                    'invoices.create',
+                    'invoices.edit',
+                    'invoices.cancel',
+                    'invoices.delete',
+                    'invoices.discount',
                 ],
             ],
             'inventory' => [
                 'title' => 'الأصناف والمخزون وخامات البن',
                 'icon' => 'package',
                 'permissions' => [
-                    'items.view' => 'عرض دليل الأصناف والأرصدة',
-                    'items.create' => 'إضافة أصناف جديدة',
-                    'items.edit' => 'تعديل بيانات وأسعار الأصناف',
-                    'items.delete' => 'حذف أو أرشفة الأصناف',
-                    'items.view_cost' => 'عرض أسعار التكلفة وهوامش الربح',
+                    'items.view',
+                    'items.create',
+                    'items.edit',
+                    'items.delete',
+                    'items.view_cost',
+                    'inventory.adjust',
                 ],
             ],
             'purchases' => [
                 'title' => 'المشتريات والتوريدات',
                 'icon' => 'truck',
                 'permissions' => [
-                    'purchases.view' => 'عرض فواتير المشتريات',
-                    'purchases.create' => 'تسجيل فواتير شراء وتوريد',
-                    'purchases.delete' => 'إلغاء فواتير المشتريات',
+                    'purchases.view',
+                    'purchases.create',
+                    'purchases.delete',
                 ],
             ],
             'customers' => [
                 'title' => 'العملاء والتحصيل النقدي',
                 'icon' => 'users',
                 'permissions' => [
-                    'customers.manage' => 'إدارة دليل العملاء',
-                    'customers.statement' => 'عرض وتصدير كشف حساب عميل',
+                    'customers.manage',
+                    'customers.statement',
                 ],
             ],
             'suppliers' => [
                 'title' => 'الموردين وسندات السداد',
                 'icon' => 'factory',
                 'permissions' => [
-                    'suppliers.manage' => 'إدارة دليل الموردين',
-                    'suppliers.statement' => 'عرض وتصدير كشف حساب مورد',
+                    'suppliers.manage',
+                    'suppliers.statement',
                 ],
             ],
             'expenses' => [
                 'title' => 'المصروفات والعهد النثرية',
                 'icon' => 'banknote',
                 'permissions' => [
-                    'expenses.manage' => 'تسجيل وتعديل وحذف المصروفات',
+                    'expenses.manage',
                 ],
             ],
             'returns' => [
                 'title' => 'مرتجعات المبيعات والمشتريات',
                 'icon' => 'rotate-ccw',
                 'permissions' => [
-                    'returns.manage' => 'إدارة وتسجيل مرتجعات المبيعات والمشتريات',
+                    'returns.manage',
                 ],
             ],
             'reports' => [
                 'title' => 'التقارير المالية والأرباح',
                 'icon' => 'bar-chart-3',
                 'permissions' => [
-                    'reports.view' => 'عرض تقارير الأرباح والمبيعات والقوائم المالية',
+                    'reports.view',
                 ],
             ],
             'stores' => [
                 'title' => 'الفروع والتحويلات المخزنية',
                 'icon' => 'store',
                 'permissions' => [
-                    'stores.manage' => 'إدارة الفروع وتعيين الكاشيرين',
-                    'transfers.view' => 'عرض أذونات التحويل المخزني',
-                    'transfers.create' => 'إنشاء تحويلات بين الفروع والمخازن',
+                    'stores.manage',
+                    'stores.view_all',
+                    'transfers.view',
+                    'transfers.create',
                 ],
             ],
             'daily_journal' => [
                 'title' => 'الورديات والخزينة (Z-Report)',
                 'icon' => 'wallet',
                 'permissions' => [
-                    'daily_journal.view' => 'عرض دفتر اليومية وحركة الدرج',
-                    'daily_journal.close_shift' => 'فتح وتقفيل ورديات الكاشير',
+                    'daily_journal.view',
+                    'daily_journal.close_shift',
+                    'daily_journal.manage',
                 ],
             ],
             'administration' => [
                 'title' => 'إدارة النظام والمستخدمين والرقابة',
                 'icon' => 'shield-check',
                 'permissions' => [
-                    'roles.manage' => 'إدارة المستخدمين وتعديل الصلاحيات',
-                    'logs.view' => 'عرض سجل التدقيق والأنشطة',
-                    'trash.access' => 'الوصول لسلة المحذوفات واسترجاع البيانات',
+                    'roles.manage',
+                    'settings.manage',
+                    'logs.view',
+                    'trash.access',
                 ],
             ],
         ];
+
+        // Labels come from lang/{ar,en}/permissions.php; only seeded names are listed (QA-2 parity).
+        foreach ($modules as $key => $module) {
+            $modules[$key]['permissions'] = collect($module['permissions'])
+                ->mapWithKeys(fn (string $name): array => [$name => __('permissions.'.$name)])
+                ->all();
+        }
 
         $rolesData = [];
         if ($isAdmin || $user->can('roles.manage')) {

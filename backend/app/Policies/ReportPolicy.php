@@ -11,14 +11,12 @@ final class ReportPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('reports.view')
-            || $user->can('reports.advanced');
+            || $user->can('reports.view');
     }
 
     public function view(User $user): bool
     {
         return $user->hasRole('admin')
-            || $user->can('reports.view')
-            || $user->can('reports.advanced');
+            || $user->can('reports.view');
     }
 }

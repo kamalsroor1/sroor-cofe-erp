@@ -13,7 +13,6 @@ final class ItemPolicy
     {
         return $user->hasRole('admin')
             || $user->can('items.view')
-            || $user->can('items.manage')
             || $user->can('pos.access');
     }
 
@@ -21,36 +20,31 @@ final class ItemPolicy
     {
         return $user->hasRole('admin')
             || $user->can('items.view')
-            || $user->can('items.manage')
             || $user->can('pos.access');
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('admin') || $user->can('items.manage');
+        return $user->hasRole('admin') || $user->can('items.create');
     }
 
     public function update(User $user, Item $item): bool
     {
-        return $user->hasRole('admin') || $user->can('items.manage');
+        return $user->hasRole('admin') || $user->can('items.edit');
     }
 
     public function delete(User $user, Item $item): bool
     {
-        return $user->hasRole('admin') || $user->can('items.manage');
+        return $user->hasRole('admin') || $user->can('items.delete');
     }
 
     public function adjustStock(User $user, Item $item): bool
     {
-        return $user->hasRole('admin')
-            || $user->can('items.manage')
-            || $user->can('inventory.adjust');
+        return $user->hasRole('admin') || $user->can('inventory.adjust');
     }
 
     public function movements(User $user, Item $item): bool
     {
-        return $user->hasRole('admin')
-            || $user->can('items.view')
-            || $user->can('items.manage');
+        return $user->hasRole('admin') || $user->can('items.view');
     }
 }

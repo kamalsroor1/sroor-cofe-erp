@@ -13,7 +13,6 @@ final class ExpensePolicy
     {
         return $user->hasRole('admin')
             || $user->can('expenses.manage')
-            || $user->can('expenses.view')
             || $user->can('daily_journal.view');
     }
 
@@ -21,7 +20,6 @@ final class ExpensePolicy
     {
         return $user->hasRole('admin')
             || $user->can('expenses.manage')
-            || $user->can('expenses.view')
             || $user->can('daily_journal.view');
     }
 

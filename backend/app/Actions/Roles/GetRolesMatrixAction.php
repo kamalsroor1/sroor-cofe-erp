@@ -32,103 +32,118 @@ final class GetRolesMatrixAction
                 'title' => 'المبيعات ونقاط البيع (POS)',
                 'icon' => '🛒',
                 'permissions' => [
-                    'pos.access' => 'دخول شاشة الكاشير السريع (POS)',
-                    'invoices.view' => 'عرض سجل الفواتير',
-                    'invoices.create' => 'إنشاء وحفظ فواتير جديدة',
-                    'invoices.cancel' => 'إلغاء الفواتير وعكس المخزون',
-                    'invoices.print' => 'طباعة إيصالات الفواتير',
+                    'pos.access',
+                    'invoices.view',
+                    'invoices.create',
+                    'invoices.edit',
+                    'invoices.cancel',
+                    'invoices.delete',
+                    'invoices.discount',
                 ],
             ],
             'inventory' => [
                 'title' => 'الأصناف والمخزون وخامات البن',
                 'icon' => '📦',
                 'permissions' => [
-                    'items.view' => 'عرض دليل الأصناف والأرصدة',
-                    'items.create' => 'إضافة أصناف جديدة وتعديلها',
-                    'items.delete' => 'حذف أو أرشفة الأصناف',
-                    'items.cost.view' => 'عرض أسعار التكلفة وهامش الربح',
+                    'items.view',
+                    'items.create',
+                    'items.edit',
+                    'items.delete',
+                    'items.view_cost',
+                    'inventory.adjust',
                 ],
             ],
             'purchases' => [
                 'title' => 'المشتريات والتوريدات',
                 'icon' => '🚚',
                 'permissions' => [
-                    'purchases.view' => 'عرض فواتير المشتريات',
-                    'purchases.create' => 'تسجيل فواتير شراء جديدة',
-                    'purchases.delete' => 'إلغاء فواتير المشتريات',
+                    'purchases.view',
+                    'purchases.create',
+                    'purchases.delete',
                 ],
             ],
             'customers' => [
                 'title' => 'العملاء والتحصيل النقدي',
                 'icon' => '👥',
                 'permissions' => [
-                    'customers.manage' => 'إدارة العملاء وإضافة عميل جديد',
-                    'customers.statement' => 'عرض كشف حساب العميل والطباعة',
+                    'customers.manage',
+                    'customers.statement',
                 ],
             ],
             'suppliers' => [
                 'title' => 'الموردين وسندات السداد',
                 'icon' => '🏭',
                 'permissions' => [
-                    'suppliers.manage' => 'إدارة الموردين وتسجيل سداد للمورد',
-                    'suppliers.statement' => 'عرض كشف حساب المورد والطباعة',
+                    'suppliers.manage',
+                    'suppliers.statement',
                 ],
             ],
             'expenses' => [
                 'title' => 'المصروفات والنثريات',
                 'icon' => '💸',
                 'permissions' => [
-                    'expenses.manage' => 'تسجيل وتعديل المصروفات التشغيلية',
+                    'expenses.manage',
+                ],
+            ],
+            'returns' => [
+                'title' => 'مرتجعات المبيعات والمشتريات',
+                'icon' => '🔄',
+                'permissions' => [
+                    'returns.manage',
                 ],
             ],
             'reports' => [
                 'title' => 'التقارير المالية والأرباح',
                 'icon' => '📈',
                 'permissions' => [
-                    'reports.view' => 'عرض تقارير الأرباح والمبيعات الشاملة',
-                    'reports.advanced' => 'التقارير المالية المتقدمة وتصدير البيانات',
+                    'reports.view',
                 ],
             ],
             'stores' => [
                 'title' => 'الفروع والتحويلات المخزنية',
                 'icon' => '🏬',
                 'permissions' => [
-                    'stores.view' => 'عرض الفروع والمخازن',
-                    'stores.manage' => 'إدارة الفروع وعربيات التوزيع',
-                    'transfers.view' => 'عرض أذونات التحويل المخزني',
-                    'transfers.create' => 'إنشاء تحويلات بين المخازن',
+                    'stores.manage',
+                    'stores.view_all',
+                    'transfers.view',
+                    'transfers.create',
                 ],
             ],
             'daily_journal' => [
                 'title' => 'الورديات والخزينة (Z-Report)',
                 'icon' => '💵',
                 'permissions' => [
-                    'daily_journal.view' => 'فتح وإغلاق الورديات واعتماد Z-Report',
+                    'daily_journal.view',
+                    'daily_journal.close_shift',
+                    'daily_journal.manage',
                 ],
             ],
             'roles' => [
                 'title' => 'إدارة النظام والمستخدمين',
                 'icon' => '🛡️',
                 'permissions' => [
-                    'users.manage' => 'إدارة الموظفين وحسابات المستخدمين',
-                    'roles.manage' => 'إدارة الأدوار وتعديل الصلاحيات',
-                    'logs.view' => 'عرض سجل التدقيق الأمني والنشاطات',
-                    'trash.access' => 'الوصول لسلة المحذوفات واسترجاع البيانات',
+                    'roles.manage',
+                    'settings.manage',
+                    'logs.view',
+                    'trash.access',
                 ],
             ],
         ];
+
+        // Labels come from lang/{ar,en}/permissions.php; only seeded names are listed (QA-2 parity).
+        foreach ($modules as $key => $module) {
+            $modules[$key]['permissions'] = collect($module['permissions'])
+                ->mapWithKeys(fn (string $name): array => [$name => __('permissions.'.$name)])
+                ->all();
+        }
 
         return [
             'roles' => $roles->map(fn ($r) => [
                 'id' => $r->id,
                 'name' => $r->name,
-                'label' => match ($r->name) {
-                    'admin' => 'مدير النظام 👑',
-                    'cashier' => 'كاشير مبيعات 🛒',
-                    'storekeeper' => 'أمين مخزن 📦',
-                    'accountant' => 'محاسب 💼',
-                    default => $r->name,
-                },
+                'label' => in_array($r->name, ['admin', 'cashier', 'storekeeper', 'accountant'], true)
+                    ? __('users.role_'.$r->name)
+                    : $r->name,
                 'permissions_count' => $r->permissions->count(),
                 'permissions' => $r->permissions->pluck('name')->toArray(),
             ]),
