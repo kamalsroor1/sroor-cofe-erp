@@ -223,4 +223,32 @@ return [
         '--class' => TenantDatabaseSeeder::class, // tenant-safe root seeder (never the central DatabaseSeeder)
         // '--force' => true, // This needs to be true to seed tenant databases in production
     ],
+
+    /**
+     * OPS-2: queued tenant provisioning (App\Jobs\ProvisionTenantJob).
+     *
+     * - connection: Laravel DB connection used for CREATE/DROP DATABASE and the per-tenant
+     *   user on MySQL/MariaDB (config/database.php `provisioner`, the `sroor_provisioner`
+     *   account of vps-runbook.md §5). Never root in production.
+     * - queue_connection / queue: where the job runs. The job may take up to 900 s, so the
+     *   queue connection's `retry_after` must be larger than that (a duplicate delivery is
+     *   dropped by WithoutOverlapping, but it is still wasted work). null = the default.
+     * - per_tenant_db_user: create one MySQL user per tenant, granted only on its own
+     *   database (escaped GRANT target). Required where the app account has no access to
+     *   tenant databases (the VPS). Off by default: dev/CI/shared hosting reuse DB_*.
+     * - db_user_host: host part of the per-tenant user ('localhost' on the VPS socket setup).
+     * - unique_for: seconds the job's unique lock lives (never below every attempt + backoff,
+     *   3 x 900 + 30 + 120 = 2850). A pending/running tenant without activity for that long is
+     *   "stale" (lost dispatch, dead worker) and may be retried by a super-admin.
+     *
+     * Read at runtime through config() only (never env() outside this file).
+     */
+    'provisioning' => [
+        'connection' => env('TENANT_PROVISIONER_CONNECTION', 'provisioner'),
+        'queue_connection' => env('TENANT_PROVISIONING_QUEUE_CONNECTION') ?: null,
+        'queue' => env('TENANT_PROVISIONING_QUEUE') ?: 'default',
+        'per_tenant_db_user' => filter_var(env('TENANT_DB_PER_TENANT_USER', false), FILTER_VALIDATE_BOOL),
+        'db_user_host' => env('TENANT_DB_USER_HOST') ?: 'localhost',
+        'unique_for' => max(2850, (int) (env('TENANT_PROVISIONING_UNIQUE_FOR') ?: 3600)),
+    ],
 ];

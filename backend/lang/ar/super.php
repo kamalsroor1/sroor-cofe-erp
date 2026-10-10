@@ -390,4 +390,11 @@ return [
         'note_too_long' => 'الملاحظة طويلة جدًا.',
     ],
     'version_status_toggled' => 'تم تغيير حالة الإصدار بنجاح',
+    // BRND-2: platform settings & brand assets (super-admin console).
+    'platform_branding' => [
+        'unknown_field' => 'الحقل ده مش مسموح بتعديله هنا.',
+        'nothing_to_update' => 'ابعت إعداد واحد على الأقل للتعديل.',
+        'asset_uploaded' => 'تم رفع الصورة وتحديث هوية المنصة.',
+        'asset_deleted' => 'تم حذف الصورة والرجوع للصورة الافتراضية.',
+    ],
 ];

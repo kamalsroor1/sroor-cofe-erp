@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\TenantProvisioningException;
 use App\Models\Tenant;
 use Closure;
 use Illuminate\Http\Request;
@@ -21,9 +22,10 @@ class ResolveApiTenancy
 
     /**
      * IDEN-1.11: the only routes of this group that answer on the platform-console host
-     * (central-safe, no tenant data). Everything else there is 404.
+     * (central-safe, no tenant data). Everything else there is 404. `api.branding` (BRND-3)
+     * answers there with platform branding only (tenant = null).
      */
-    public const ADMIN_HOST_ROUTES = ['api.ping', 'api.system.translations'];
+    public const ADMIN_HOST_ROUTES = ['api.ping', 'api.system.translations', 'api.branding'];
 
     /**
      * Handle incoming API request and dynamically initialize tenant context if requested
@@ -47,6 +49,11 @@ class ResolveApiTenancy
 
         // 1. Check if tenancy is already initialized (e.g. by domain)
         if (function_exists('tenancy') && tenancy()->initialized) {
+            $current = tenancy()->tenant;
+            if ($current instanceof Tenant && ! $current->isProvisioned()) {
+                return $this->notReady($current);
+            }
+
             return $next($request);
         }
 
@@ -58,6 +65,12 @@ class ResolveApiTenancy
                 ?? Tenant::whereHas('domains', fn ($q) => $q->where('domain', $tenantIdentifier))->first();
 
             if ($tenant) {
+                // OPS-2: a workspace still being provisioned (or failed) has no usable
+                // database yet: refuse before initializing tenancy.
+                if (! $tenant->isProvisioned()) {
+                    return $this->notReady($tenant);
+                }
+
                 tenancy()->initialize($tenant);
             } else {
                 return response()->json([
@@ -89,11 +102,21 @@ class ResolveApiTenancy
             }
 
             if ($tenant) {
+                if (! $tenant->isProvisioned()) {
+                    return $this->notReady($tenant);
+                }
+
                 tenancy()->initialize($tenant);
             }
         }
 
         return $next($request);
+    }
+
+    /** OPS-2: 503 `provisioning.workspace_not_ready` (+ Retry-After while in progress). */
+    private function notReady(Tenant $tenant): Response
+    {
+        return TenantProvisioningException::workspaceNotReady($tenant->provisioningStatus())->render();
     }
 
     private function namesTenant(Request $request): bool

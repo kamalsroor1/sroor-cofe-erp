@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Console\Tenancy\MigrateProvisionedTenants;
+use App\Console\Tenancy\RollbackProvisionedTenants;
+use App\Console\Tenancy\RunForProvisionedTenants;
+use App\Console\Tenancy\SeedProvisionedTenants;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\Contracts\TenantFeatureManagerInterface;
 use App\Contracts\TenantProvisionerInterface;
@@ -24,12 +28,17 @@ use App\Support\QuickLogin;
 use App\Support\RateLimitKey;
 use App\Support\TenantRateLimitOverrides;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Commands\Migrate as StanclMigrate;
+use Stancl\Tenancy\Commands\Rollback as StanclRollback;
+use Stancl\Tenancy\Commands\Run as StanclRun;
+use Stancl\Tenancy\Commands\Seed as StanclSeed;
 use Stancl\Tenancy\Events\TenancyEnded;
 use Stancl\Tenancy\Events\TenancyInitialized;
 
@@ -67,6 +76,23 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(PlatformBranding::class);
+
+        $this->defaultTenantCommandsToProvisionedTenants();
+    }
+
+    /**
+     * OPS-2: stancl's tenants:migrate / rollback / seed / run default to every tenant row,
+     * including pending or failed ones without a database. Container extenders (applied
+     * whatever the provider order) swap in subclasses that default to ready tenants only;
+     * an explicit --tenants list is kept. tenants:migrate-fresh (final, destructive,
+     * always run with explicit intent) is left as is.
+     */
+    private function defaultTenantCommandsToProvisionedTenants(): void
+    {
+        $this->app->extend(StanclMigrate::class, static fn (StanclMigrate $command, Application $app): StanclMigrate => new MigrateProvisionedTenants($app->make('migrator'), $app->make('events')));
+        $this->app->extend(StanclRollback::class, static fn (StanclRollback $command, Application $app): StanclRollback => new RollbackProvisionedTenants($app->make('migrator')));
+        $this->app->extend(StanclSeed::class, static fn (StanclSeed $command, Application $app): StanclSeed => new SeedProvisionedTenants($app->make('db')));
+        $this->app->extend(StanclRun::class, static fn (StanclRun $command): StanclRun => new RunForProvisionedTenants);
     }
 
     /**

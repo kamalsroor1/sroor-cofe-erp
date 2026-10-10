@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\TenantLogoVariant;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AppUpdateController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\CentralTenantResolverController;
 use App\Http\Controllers\Api\CoffeeBlenderController;
@@ -28,6 +30,8 @@ use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StorePosSettingsController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemContextApiController;
+use App\Http\Controllers\Api\TenantBrandAssetController;
+use App\Http\Controllers\Api\TenantLogoController;
 use App\Http\Controllers\Api\TrashController;
 use App\Http\Controllers\Api\TreasuryController;
 use App\Http\Controllers\Api\UserController;
@@ -61,6 +65,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
     }
 
     Route::get('/system/translations', [SystemContextApiController::class, 'translations'])->middleware('throttle:public-api')->name('api.system.translations');
+
+    // BRND-3: public branding (before login): platform brand + the resolved shop's public brand. Allowlist only.
+    Route::get('/branding', [BrandingController::class, 'show'])->middleware('throttle:public-api')->name('api.branding');
 
     // 2. Protected Endpoints (Requires valid Bearer Token)
     Route::middleware(ApiTokenAuth::class)->group(function () {
@@ -235,6 +242,16 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             Route::post('/settings', [SettingController::class, 'update'])->name('api.settings.update');
             Route::post('/settings/telegram/test', [SettingController::class, 'sendTestTelegram'])->name('api.settings.telegram_test');
 
+            // BRND-5: shop logo upload/removal (sanitized image, tenant disk). settings.manage.
+            Route::post('/settings/branding/logo/{variant}', [TenantBrandAssetController::class, 'store'])
+                ->whereIn('variant', TenantLogoVariant::values())
+                ->middleware('can:settings.manage')
+                ->name('api.settings.branding.logo.store');
+            Route::delete('/settings/branding/logo/{variant}', [TenantBrandAssetController::class, 'destroy'])
+                ->whereIn('variant', TenantLogoVariant::values())
+                ->middleware('can:settings.manage')
+                ->name('api.settings.branding.logo.destroy');
+
             // Trash Bin (Soft-deleted records recovery)
             Route::get('/trash', [TrashController::class, 'index'])->name('api.trash.index');
             Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('api.trash.restore');
@@ -242,6 +259,16 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         });
 
     });
+});
+
+// BRND-5: the shop logo, public (login screen, manifest) and bound to the tenant of the request
+// HOST only (TenantHostResolver ignores X-Tenant / ?tenant=; central or admin host = 404). Its own
+// group OUTSIDE ResolveApiTenancy so no header can select the shop; ThrottleTenantMisses still
+// caps unknown-host probes and public-api caps each client.
+Route::prefix('v1')->middleware([ThrottleTenantMisses::class, 'throttle:public-api'])->group(function () {
+    Route::get('/branding/logo/{variant}', [TenantLogoController::class, 'show'])
+        ->whereIn('variant', TenantLogoVariant::values())
+        ->name('api.branding.logo');
 });
 
 // IDEN-1.4: the platform console (control plane) lives in routes/central.php only.

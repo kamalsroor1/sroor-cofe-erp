@@ -48,7 +48,9 @@ final class BackupFreshnessCheck extends Check
             $required[] = TenantBackup::CENTRAL;
         }
         $skip = array_values(array_filter((array) config('backup.tenants.skip_statuses', []), 'is_string'));
+        // OPS-2: only provisioned tenants are backed up (the others have no database).
         $tenantIds = Tenant::query()
+            ->provisioned()
             ->when($skip !== [], fn ($query) => $query->whereNotIn('status', $skip))
             ->where('created_at', '<', $cutoff)
             ->orderBy('id')

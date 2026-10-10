@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Branding\GetBrandingAction;
 use App\Actions\Settings\SendTestTelegramAction;
 use App\Actions\Settings\UpdateSettingsAction;
 use App\DTOs\Settings\TelegramTestDTO;
@@ -13,6 +14,7 @@ use App\Http\Requests\UpdateSettingsRequest;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Branding\TenantBranding;
 use App\Services\Settings\SettingSecrets;
 use App\Services\Settings\TenantSettings;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +27,7 @@ final class SettingController extends Controller
         private readonly UpdateSettingsAction $updateSettingsAction,
         private readonly TenantSettings $tenantSettings,
         private readonly SendTestTelegramAction $sendTestTelegramAction,
+        private readonly GetBrandingAction $getBrandingAction,
     ) {}
 
     /**
@@ -39,6 +42,7 @@ final class SettingController extends Controller
 
         $tenant = function_exists('tenant') ? tenant() : null;
         $defaultName = $tenant?->name ?? __('auth.default_company_name');
+        $branding = $this->getBrandingAction->execute()['tenant'];
 
         $settings = [
             'company_name' => Setting::get('company_name', $defaultName),
@@ -53,6 +57,11 @@ final class SettingController extends Controller
             'print_show_qr' => Setting::getBool('print_show_qr', true),
             'invoice_primary_color' => Setting::get('invoice_primary_color', 'emerald'),
             'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
+            // BRND-5: receipt text (header: one line per "\n") and the shop logos (tenant route URLs, null = none).
+            TenantBranding::KEY_RECEIPT_HEADER_LINES => implode("\n", $branding->receiptHeaderLines ?? []),
+            TenantBranding::KEY_RECEIPT_FOOTER_TEXT => Setting::get(TenantBranding::KEY_RECEIPT_FOOTER_TEXT, ''),
+            'logo_light_url' => $branding?->logoLightUrl,
+            'logo_dark_url' => $branding?->logoDarkUrl,
             // SETG-10: same list item create/update validate against.
             TenantSettings::KEY_INVENTORY_UNITS => implode(',', $this->tenantSettings->inventoryUnits()),
             'telegram_bot_token' => Setting::get('telegram_bot_token', ''),
@@ -92,7 +101,7 @@ final class SettingController extends Controller
     public function update(UpdateSettingsRequest $request): JsonResponse
     {
         try {
-            $updated = $this->updateSettingsAction->execute($request->validated());
+            $updated = $this->updateSettingsAction->execute($request->validated(), $request->sanitizedLogos());
         } catch (Throwable $e) {
             // SETG-7: log the cause server-side; never return the exception text (SQL, paths, secrets).
             report($e);

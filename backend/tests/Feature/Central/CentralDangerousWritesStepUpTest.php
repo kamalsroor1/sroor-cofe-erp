@@ -49,6 +49,7 @@ final class CentralDangerousWritesStepUpTest extends TenantTestCase
             'tenant update-units' => ['POST', '/api/v1/super-admin/tenants/{tenant}/update-units', ['units' => ['كجم']]],
             'plan update' => ['PUT', '/api/v1/super-admin/plans/{plan}', ['name' => 'x']],
             'platform settings update' => ['POST', '/api/v1/super-admin/settings', ['platform_name' => 'x']],
+            'platform units update' => ['POST', '/api/v1/super-admin/units', ['units' => ['كجم']]],
             'app-version store' => ['POST', '/api/v1/super-admin/app-versions', []],
             'app-version toggle-active' => ['PATCH', '/api/v1/super-admin/app-versions/{version}/toggle-active', []],
             'app-version destroy' => ['DELETE', '/api/v1/super-admin/app-versions/{version}', []],

@@ -3,9 +3,13 @@
 declare(strict_types=1);
 
 use App\Enums\CentralPermission;
+use App\Enums\PlatformAssetSlot;
 use App\Http\Controllers\Api\Central\CentralAuthController;
 use App\Http\Controllers\Api\Central\CentralPasswordResetController;
 use App\Http\Controllers\Api\Central\CentralTwoFactorController;
+use App\Http\Controllers\Api\Central\PlatformSettingsController;
+use App\Http\Controllers\Api\Central\PlatformUnitsController;
+use App\Http\Controllers\Api\Central\TenantProvisioningController;
 use App\Http\Controllers\Api\Central\TenantRateLimitController;
 use App\Http\Controllers\Api\SuperAdminApiController;
 use App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController;
@@ -48,7 +52,10 @@ use Illuminate\Support\Facades\Route;
 |                                   update-db-config, run-migrations, rate-limit raise,
 |                                   toggle-status, override-feature, tenant update-units,
 |                                   plan update, platform settings update and app-version
-|                                   store / toggle-active / destroy (security audit, W2 3I).
+|                                   store / toggle-active / destroy (security audit, W2 3I),
+|                                   platform-settings update + asset upload/delete (BRND-2),
+|                                   tenant retry-provisioning (OPS-2), platform units
+|                                   update (W2 batch 4 review).
 |                                   The `can:` check runs first: a read-only operator
 |                                   still gets a plain 403, never a step-up prompt.
 |
@@ -127,10 +134,13 @@ Route::prefix('v1/super-admin')
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.toggle_status');
         Route::post('/tenants/{id}/override-feature', [SuperAdminApiController::class, 'overrideFeature'])
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.override_feature');
-        Route::post('/tenants/{id}/update-units', [SuperAdminApiController::class, 'updateTenantUnits'])
+        Route::post('/tenants/{id}/update-units', [PlatformUnitsController::class, 'updateTenant'])
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.update_units');
         Route::post('/tenants/{id}/run-migrations', [SuperAdminApiController::class, 'runTenantMigrations'])
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.run_migrations');
+        // OPS-2: re-queue a failed provisioning (409 unless the tenant is `failed`).
+        Route::post('/tenants/{id}/retry-provisioning', [TenantProvisioningController::class, 'retry'])
+            ->middleware([$can(CentralPermission::TenantsManage), 'throttle:6,1', RequireRecentTwoFactor::class])->name('tenants.retry_provisioning');
 
         // IDEN-4.6 ext: temporary per-tenant rate-limit raise (expiring, audited).
         Route::get('/tenants/{id}/rate-limits', [TenantRateLimitController::class, 'show'])
@@ -148,15 +158,29 @@ Route::prefix('v1/super-admin')
         Route::post('/telescope-link', TelescopeLinkController::class)
             ->middleware([$can(CentralPermission::MonitoringView), 'throttle:10,1'])->name('telescope_link');
 
-        // Platform settings & units
-        Route::get('/settings', [SuperAdminApiController::class, 'getPlatformSettings'])
+        // Platform settings & brand assets (BRND-2)
+        Route::get('/platform-settings', [PlatformSettingsController::class, 'show'])
+            ->middleware($can(CentralPermission::SettingsView))->name('platform_settings.show');
+        Route::put('/platform-settings', [PlatformSettingsController::class, 'update'])
+            ->middleware([$can(CentralPermission::SettingsManage), RequireRecentTwoFactor::class])->name('platform_settings.update');
+        Route::post('/platform-settings/assets/{slot}', [PlatformSettingsController::class, 'storeAsset'])
+            ->whereIn('slot', PlatformAssetSlot::values())
+            ->middleware([$can(CentralPermission::SettingsManage), 'throttle:10,1', RequireRecentTwoFactor::class])->name('platform_settings.assets.store');
+        Route::delete('/platform-settings/assets/{slot}', [PlatformSettingsController::class, 'destroyAsset'])
+            ->whereIn('slot', PlatformAssetSlot::values())
+            ->middleware([$can(CentralPermission::SettingsManage), 'throttle:10,1', RequireRecentTwoFactor::class])->name('platform_settings.assets.destroy');
+
+        // Legacy settings screen (deprecated, removed in BRND-11): same storage, same contract.
+        Route::get('/settings', [PlatformSettingsController::class, 'legacyShow'])
             ->middleware($can(CentralPermission::SettingsView))->name('settings.get');
-        Route::post('/settings', [SuperAdminApiController::class, 'updatePlatformSettings'])
+        Route::post('/settings', [PlatformSettingsController::class, 'legacyUpdate'])
             ->middleware([$can(CentralPermission::SettingsManage), RequireRecentTwoFactor::class])->name('settings.update');
-        Route::get('/units', [SuperAdminApiController::class, 'getUnits'])
+
+        // Platform unit catalog
+        Route::get('/units', [PlatformUnitsController::class, 'index'])
             ->middleware($can(CentralPermission::SettingsView))->name('units.get');
-        Route::post('/units', [SuperAdminApiController::class, 'updateUnits'])
-            ->middleware($can(CentralPermission::SettingsManage))->name('units.update');
+        Route::post('/units', [PlatformUnitsController::class, 'update'])
+            ->middleware([$can(CentralPermission::SettingsManage), RequireRecentTwoFactor::class])->name('units.update');
 
         // App versions & APK releases
         Route::get('/app-versions', [SuperAdminAppVersionController::class, 'index'])

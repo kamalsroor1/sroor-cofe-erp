@@ -164,6 +164,34 @@ return [
             ]) : [],
         ],
 
+        /*
+        | OPS-2: the tenant provisioner (App\Services\Tenancy\ProvisionerMySQLDatabaseManager,
+        | config('tenancy.provisioning.connection')). Production: the `sroor_provisioner`
+        | account (CREATE USER + ALL on the escaped pattern `tenant\_%` WITH GRANT OPTION,
+        | vps-runbook.md §5), never root. Connects WITHOUT a default schema: it only runs
+        | CREATE/DROP DATABASE, CREATE/DROP USER, GRANT and information_schema lookups.
+        | DB_PROVISIONER_USERNAME/PASSWORD empty = the central DB_* account (dev/CI/Hostinger).
+        | Only used when the central driver is mysql/mariadb.
+        */
+        'provisioner' => [
+            'driver' => in_array(env('DB_CONNECTION'), ['mysql', 'mariadb'], true) ? env('DB_CONNECTION') : 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => null,
+            'username' => env('DB_PROVISIONER_USERNAME') ?: env('DB_USERNAME', 'root'),
+            'password' => env('DB_PROVISIONER_USERNAME') ? env('DB_PROVISIONER_PASSWORD', '') : env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
     ],
 
     /*

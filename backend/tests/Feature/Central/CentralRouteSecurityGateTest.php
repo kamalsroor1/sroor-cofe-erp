@@ -74,6 +74,13 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
         'api.super_admin.app_versions.store',
         'api.super_admin.app_versions.toggle_active',
         'api.super_admin.app_versions.destroy',
+        // W2 batch 4: platform branding writes and provisioning retry.
+        'api.super_admin.platform_settings.update',
+        'api.super_admin.platform_settings.assets.store',
+        'api.super_admin.platform_settings.assets.destroy',
+        'api.super_admin.tenants.retry_provisioning',
+        // W2 batch 4 review: the legacy platform units write.
+        'api.super_admin.units.update',
     ];
 
     protected function setUp(): void

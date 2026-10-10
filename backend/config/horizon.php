@@ -215,6 +215,21 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        // OPS-2: tenant provisioning (ProvisionTenantJob: tries 3, timeout 900 s) on its own
+        // connection/queue (config/queue.php `provisioning`, retry_after > 900). One process:
+        // provisioning is rare and each job holds a unique lock per tenant.
+        'supervisor-provisioning' => [
+            'connection' => 'provisioning',
+            'queue' => [env('TENANT_PROVISIONING_QUEUE') ?: 'provisioning'],
+            'balance' => false,
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 930,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [

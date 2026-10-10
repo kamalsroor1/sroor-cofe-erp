@@ -148,4 +148,8 @@ return [
         'disk_unknown' => 'The free disk space could not be read.',
         'disk_usage' => 'The disk is :percent% full.',
     ],
+    'tenants' => [
+        'skipped_not_provisioned' => 'Skipped :count tenant(s) that are not provisioned yet (pending, running or failed: no database).',
+        'none_provisioned' => 'No provisioned tenants: nothing to run.',
+    ],
 ];

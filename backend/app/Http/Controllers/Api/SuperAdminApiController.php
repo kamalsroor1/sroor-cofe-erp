@@ -6,9 +6,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Plans\GetSuperAdminPlansDataAction;
 use App\Actions\Plans\UpdatePlanAction;
-use App\Actions\SuperAdmin\GetPlatformSystemUnitsAction;
-use App\Actions\SuperAdmin\UpdatePlatformSettingsAction;
-use App\Actions\SuperAdmin\UpdatePlatformSystemUnitsAction;
 use App\Actions\Tenants\GetTenantDetailsAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
@@ -16,10 +13,7 @@ use App\Actions\Tenants\ProvisionTenantAction;
 use App\Actions\Tenants\RunTenantMigrationsAction;
 use App\Actions\Tenants\ToggleTenantStatusAction;
 use App\Actions\Tenants\UpdateTenantDatabaseConfigAction;
-use App\Actions\Tenants\UpdateTenantUnitsAction;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
-use App\DTOs\Branding\PlatformBrandingDTO;
-use App\DTOs\Branding\UpdateLegacyPlatformSettingsDTO;
 use App\DTOs\CreateTenantDTO;
 use App\Enums\CentralAuditEvent;
 use App\Enums\TenantStatus;
@@ -28,16 +22,12 @@ use App\Http\Requests\OverrideTenantFeatureRequest;
 use App\Http\Requests\StoreTenantRequest;
 use App\Http\Requests\ToggleTenantStatusRequest;
 use App\Http\Requests\UpdatePlanRequest;
-use App\Http\Requests\UpdatePlatformSettingsRequest;
-use App\Http\Requests\UpdateSystemUnitsRequest;
 use App\Http\Requests\UpdateTenantDatabaseConfigRequest;
-use App\Http\Requests\UpdateTenantUnitsRequest;
 use App\Http\Resources\PlanResource;
 use App\Http\Resources\TenantResource;
 use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\Tenant;
-use App\Services\Branding\PlatformBranding;
 use App\Services\CentralAuditLogger;
 use App\Support\Tenancy\TenantSuspensionReason;
 use Illuminate\Http\JsonResponse;
@@ -211,33 +201,6 @@ final class SuperAdminApiController extends Controller
     }
 
     /**
-     * Update allowed units for a specific tenant
-     */
-    public function updateTenantUnits(UpdateTenantUnitsRequest $request, string $id, UpdateTenantUnitsAction $action): JsonResponse
-    {
-        $tenant = $this->findTenant($id);
-        /** @var list<string> $units */
-        $units = array_values($request->validated('units'));
-
-        try {
-            $units = $action->execute($tenant, $units, $this->operator($request));
-        } catch (Throwable $e) {
-            Log::error('Tenant units update failed', ['tenant' => $tenant->getKey(), 'exception' => $e]);
-
-            return response()->json([
-                'success' => false,
-                'message' => __('super.units_save_failed'),
-            ], 422);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => __('super.units_saved_success'),
-            'allowed_units' => $units,
-        ]);
-    }
-
-    /**
      * Run migrations specifically for this tenant. Returns a status only: the console
      * output (paths, SQL, connection names) is logged, never returned.
      */
@@ -319,72 +282,6 @@ final class SuperAdminApiController extends Controller
             'success' => true,
             'message' => __('super.plan_updated_success', ['name' => $plan->name]),
         ]);
-    }
-
-    /**
-     * Get Central Platform Branding & Settings (CENTRAL `platform_settings` via PlatformBranding).
-     */
-    public function getPlatformSettings(PlatformBranding $branding): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'data' => $this->platformSettingsPayload($branding->get()),
-        ]);
-    }
-
-    /**
-     * Update Central Platform Branding & Settings
-     */
-    public function updatePlatformSettings(UpdatePlatformSettingsRequest $request, UpdatePlatformSettingsAction $action): JsonResponse
-    {
-        $branding = $action->execute(UpdateLegacyPlatformSettingsDTO::fromArray($request->validated()), $this->operator($request));
-
-        return response()->json([
-            'success' => true,
-            'message' => __('super.platform_settings_saved_success'),
-            'data' => $this->platformSettingsPayload($branding),
-        ]);
-    }
-
-    /**
-     * Get system units configuration (Super Admin)
-     */
-    public function getUnits(GetPlatformSystemUnitsAction $action): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'units' => $action->execute(),
-        ]);
-    }
-
-    /**
-     * Update system units configuration (Super Admin)
-     */
-    public function updateUnits(UpdateSystemUnitsRequest $request, UpdatePlatformSystemUnitsAction $action): JsonResponse
-    {
-        /** @var list<string> $units */
-        $units = array_values($request->validated('units'));
-
-        return response()->json([
-            'success' => true,
-            'message' => __('super.units_updated_success'),
-            'units' => $action->execute($units, $this->operator($request)),
-        ]);
-    }
-
-    /**
-     * Response shape of the legacy settings screen (unchanged keys).
-     *
-     * @return array{platform_name: string, platform_subtitle: string, support_email: string, support_phone: string}
-     */
-    private function platformSettingsPayload(PlatformBrandingDTO $branding): array
-    {
-        return [
-            'platform_name' => $branding->name,
-            'platform_subtitle' => $branding->subtitle,
-            'support_email' => $branding->supportEmail,
-            'support_phone' => $branding->supportPhone,
-        ];
     }
 
     /**

@@ -3,15 +3,21 @@
 namespace App\Models;
 
 use App\Enums\TenantAccessLevel;
+use App\Enums\TenantProvisioningStatus;
 use App\Enums\TenantStatus;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
 use App\Support\Tenancy\TenantSuspensionReason;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Crypt;
+use SensitiveParameter;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
@@ -22,7 +28,7 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  *
  * @property string|null $tenancy_db_name
  * @property string|null $tenancy_db_username
- * @property string|null $tenancy_db_password
+ * @property string|null $tenancy_db_password read decrypted (stored encrypted, see tenancyDbPassword())
  *
  * Custom columns (see getCustomColumns()):
  * @property string $id
@@ -40,11 +46,19 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * @property Carbon|null $trial_extended_at the one-time +7-day trial extension was used (Q-L4)
  * @property Carbon|null $subscription_ends_at end of the PAID period; null for a trial (IDEN-3.2)
  * @property Carbon|null $grace_ends_at explicit end of the past_due grace
+ * @property TenantProvisioningStatus|null $provisioning_status OPS-2; column default `ready` (null only on an unsaved/unrefreshed model)
+ * @property int|null $provisioning_attempts
+ * @property string|null $provisioning_error_code a App\Support\Tenancy\ProvisioningErrorCode value
+ * @property Carbon|null $provisioning_started_at
+ * @property Carbon|null $provisioned_at
  * @property array|null $enabled_features
+ * @property array|null $settings
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Domain> $domains
  * @property-read Collection<int, TenantLifecycleEvent> $lifecycleEvents
+ *
+ * @method static Builder<static> provisioned()
  */
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
@@ -62,6 +76,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'grace_ends_at' => 'datetime',
         'suspension_reason' => TenantSuspensionReason::class,
         'status_before_archive' => TenantStatus::class,
+        'provisioning_status' => TenantProvisioningStatus::class,
+        'provisioning_attempts' => 'integer',
+        'provisioning_started_at' => 'datetime',
+        'provisioned_at' => 'datetime',
     ];
 
     public static function getCustomColumns(): array
@@ -84,7 +102,116 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'read_only_since',
             'suspension_reason',
             'status_before_archive',
+            // Queued provisioning (OPS-2): real columns, never inside `data`.
+            'provisioning_status',
+            'provisioning_attempts',
+            'provisioning_error_code',
+            'provisioning_started_at',
+            'provisioned_at',
+            // Every other real column of `tenants`: anything missing here is copied into `data`
+            // on save and the copy overrides the column on hydration (stale updated_at, and an
+            // array-cast `settings` re-encoded into ever-growing nested JSON on each save).
+            'logo',
+            'address',
+            'commercial_register',
+            'tax_number',
+            'settings',
+            'created_at',
+            'updated_at',
         ];
+    }
+
+    // ========================================================================
+    // التجهيز (Provisioning, OPS-2)
+    // ========================================================================
+
+    /**
+     * The stored provisioning status. A model whose attribute was never loaded (created
+     * without it, so the column default applied) is `ready`, like every pre-OPS-2 tenant.
+     */
+    public function provisioningStatus(): TenantProvisioningStatus
+    {
+        return $this->provisioning_status ?? TenantProvisioningStatus::Ready;
+    }
+
+    /** Only a provisioned workspace may be served (ResolveApiTenancy, workspace resolver). */
+    public function isProvisioned(): bool
+    {
+        return $this->provisioningStatus()->isReady();
+    }
+
+    /**
+     * A pending/running provisioning with no activity for longer than the job's unique window
+     * (config tenancy.provisioning.unique_for): its dispatch was lost or its worker died, so
+     * no job can still be working on it and a super-admin retry is allowed.
+     *
+     * Reads the real `tenants.updated_at` column (a custom column, see getCustomColumns()).
+     */
+    public function provisioningIsStale(int $windowSeconds): bool
+    {
+        if (! $this->provisioningStatus()->isInProgress()) {
+            return false;
+        }
+
+        $started = $this->provisioning_started_at;
+        $updated = $this->updated_at;
+        $last = match (true) {
+            $started === null => $updated,
+            $updated === null => $started,
+            default => $started->gt($updated) ? $started : $updated,
+        };
+
+        return $last === null || $last->lt(now()->subSeconds($windowSeconds));
+    }
+
+    // ========================================================================
+    // بيانات اتصال قاعدة البيانات (Tenant database credentials)
+    // ========================================================================
+
+    /**
+     * `tenancy_db_password` is stored ENCRYPTED in the central `data` column (W2 batch 4,
+     * S-sec3) and read decrypted, so stancl's DatabaseConfig (getPassword(), tenantConfig()
+     * both go through getAttribute()) builds the tenant connection with the real password.
+     * Get-only on purpose: stancl's VirtualColumn re-assigns every `data` key through
+     * setAttribute() when it decodes the row, so a set-mutator would encrypt twice. Writers
+     * seal the value with sealDatabasePassword(). A legacy PLAINTEXT value (rows written
+     * before this change) is returned as is.
+     */
+    protected function tenancyDbPassword(): Attribute
+    {
+        return Attribute::make(get: static fn (mixed $value): mixed => self::revealDatabasePassword($value));
+    }
+
+    /** Encrypt a tenant database password for `tenancy_db_password` (null / '' unchanged). */
+    public static function sealDatabasePassword(#[SensitiveParameter] ?string $password): ?string
+    {
+        return $password === null || $password === '' ? $password : Crypt::encryptString($password);
+    }
+
+    private static function revealDatabasePassword(#[SensitiveParameter] mixed $value): mixed
+    {
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException) {
+            return $value; // legacy plaintext row
+        }
+    }
+
+    /**
+     * Tenants whose database exists and is fully set up (`ready`). Every loop over "all
+     * tenants" (tenants:* commands, backups, health, audits) must use it: a pending,
+     * running or failed tenant has no usable database.
+     *
+     * @param  Builder<Tenant>  $query
+     * @return Builder<Tenant>
+     */
+    public function scopeProvisioned(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('provisioning_status'), TenantProvisioningStatus::Ready->value);
     }
 
     // ========================================================================

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Tenants;
 
 use App\Enums\CentralAuditEvent;
+use App\Exceptions\TenantProvisioningException;
 use App\Models\CentralUser;
 use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
@@ -16,6 +17,10 @@ use Throwable;
  * Runs the pending tenant migrations of ONE tenant on operator request and audits the
  * outcome. The console output (paths, SQL, connection names) goes to the log only; the
  * caller gets a boolean.
+ *
+ * Only on a `ready` tenant (409 provisioning.workspace_not_ready otherwise): a pending or
+ * running tenant is being migrated by ProvisionTenantJob, a failed one has no usable
+ * database (its recovery is the provisioning retry).
  */
 final class RunTenantMigrationsAction
 {
@@ -23,6 +28,11 @@ final class RunTenantMigrationsAction
 
     public function execute(Tenant $tenant, CentralUser $operator): bool
     {
+        $tenant = $tenant->fresh() ?? $tenant;
+        if (! $tenant->isProvisioned()) {
+            throw TenantProvisioningException::requiresReadyWorkspace($tenant->provisioningStatus());
+        }
+
         try {
             $exitCode = Artisan::call('tenants:migrate', ['--tenants' => [(string) $tenant->getKey()]]);
             Log::info('Tenant migrations run by an operator', [

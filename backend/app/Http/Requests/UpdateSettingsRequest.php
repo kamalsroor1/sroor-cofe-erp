@@ -4,13 +4,28 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\TenantLogoVariant;
 use App\Http\Requests\Settings\SendTestTelegramRequest;
+use App\Services\Branding\TenantBranding;
 use App\Services\Settings\TenantSettings;
+use App\Support\Media\BrandAssetSpec;
+use App\Support\Media\ImageSanitizer;
+use App\Support\Media\SanitizedImage;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 
 class UpdateSettingsRequest extends FormRequest
 {
+    /** Legacy logo field of this form without a variant: it means the light logo. */
+    public const LEGACY_LOGO_FIELD = 'logo_file';
+
+    /** @var array<string, SanitizedImage> variant value => sanitized upload */
+    private array $sanitizedLogos = [];
+
     public function authorize(): bool
     {
         return (bool) ($this->user() && (
@@ -33,8 +48,13 @@ class UpdateSettingsRequest extends FormRequest
             'show_print_logo' => ['sometimes', 'boolean'],
             'thermal_show_customer_balance' => ['sometimes', 'boolean'],
             'print_show_qr' => ['sometimes', 'boolean'],
-            'invoice_primary_color' => ['nullable', 'string', 'in:amber,emerald,blue,slate'],
-            'system_theme_color' => ['nullable', 'string', 'max:50'],
+            'invoice_primary_color' => ['nullable', 'string', Rule::in(TenantBranding::INVOICE_COLORS)],
+            // BRND-5: a palette preset id or a #RRGGBB code (applied as CSS variables by the SPA).
+            TenantBranding::KEY_THEME_COLOR => ['nullable', 'string', 'max:50', $this->themeColorRule()],
+            // BRND-5: printed receipt header, plain text, one line per "\n" (an array of lines is accepted too).
+            TenantBranding::KEY_RECEIPT_HEADER_LINES => ['nullable', 'string', 'max:1000', $this->receiptHeaderRule()],
+            // BRND-5: printed receipt footer (falls back to invoice_footer_note when empty).
+            TenantBranding::KEY_RECEIPT_FOOTER_TEXT => ['nullable', 'string', 'max:'.TenantBranding::MAX_FOOTER_LENGTH, 'not_regex:'.TenantBranding::MARKUP_PATTERN],
             // SETG-10: the tenant unit list (comma-separated); item create/update validate against it.
             TenantSettings::KEY_INVENTORY_UNITS => ['nullable', 'string', 'max:1000'],
             // SETG-7: write-only secret — blank keeps the stored token, clear_telegram_bot_token removes it.
@@ -45,9 +65,11 @@ class UpdateSettingsRequest extends FormRequest
             TenantSettings::KEY_COMMERCIAL_REGISTER => ['nullable', 'string', 'max:50'],
             TenantSettings::KEY_TAX_REGISTRATION_NO => ['nullable', 'string', 'max:50'],
             'telegram_notifications_enabled' => ['sometimes', 'boolean'],
-            'logo_file' => ['nullable', 'image', 'max:4096'],
-            'logo_light_file' => ['nullable', 'image', 'max:4096'],
-            'logo_dark_file' => ['nullable', 'image', 'max:4096'],
+            // BRND-5: legacy multipart logo fields, now stored per tenant (UploadTenantBrandAssetAction).
+            // The real check is ImageSanitizer in after(); these rules only fail fast.
+            self::LEGACY_LOGO_FIELD => $this->logoRules(),
+            TenantLogoVariant::Light->legacySettingsField() => $this->logoRules(),
+            TenantLogoVariant::Dark->legacySettingsField() => $this->logoRules(),
 
             // SETG-1 tenant localization. Optional so older clients that omit them keep the stored values.
             // SETG-1 ext (CTO W1 Q5): only the 6 Phase-1 currencies can be newly saved; a legacy
@@ -81,6 +103,12 @@ class UpdateSettingsRequest extends FormRequest
             'telegram_chat_id' => __('settings.attr_telegram_chat_id'),
             TenantSettings::KEY_COMMERCIAL_REGISTER => __('settings.commercial_register'),
             TenantSettings::KEY_TAX_REGISTRATION_NO => __('settings.tax_registration_no'),
+            TenantBranding::KEY_RECEIPT_HEADER_LINES => __('branding.attributes.receipt_header_lines'),
+            TenantBranding::KEY_RECEIPT_FOOTER_TEXT => __('branding.attributes.receipt_footer_text'),
+            TenantBranding::KEY_THEME_COLOR => __('branding.attributes.system_theme_color'),
+            self::LEGACY_LOGO_FIELD => __('branding.attributes.logo_file'),
+            TenantLogoVariant::Light->legacySettingsField() => __('branding.attributes.logo_file'),
+            TenantLogoVariant::Dark->legacySettingsField() => __('branding.attributes.logo_file'),
         ];
     }
 
@@ -91,7 +119,133 @@ class UpdateSettingsRequest extends FormRequest
     {
         return [
             TenantSettings::KEY_BUSINESS_DAY_CUTOFF.'.regex' => __('settings.business_day_cutoff_invalid'),
+            TenantBranding::KEY_RECEIPT_FOOTER_TEXT.'.not_regex' => __('branding.receipt_text_no_markup'),
         ];
+    }
+
+    /**
+     * BRND-5: sanitize the legacy logo uploads (magic bytes, no SVG/GIF/ICO, dimensions,
+     * re-encode) during validation, so a bad image is a 422 and nothing is saved.
+     *
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->isNotEmpty()) {
+                    return;
+                }
+
+                $sanitizer = app(ImageSanitizer::class);
+
+                foreach ($this->legacyLogoFields() as $variant => $field) {
+                    $file = $this->file($field);
+
+                    if (! $file instanceof UploadedFile) {
+                        continue;
+                    }
+
+                    try {
+                        $this->sanitizedLogos[$variant] = $sanitizer->sanitize($file, BrandAssetSpec::logo(), $field);
+                    } catch (ValidationException $e) {
+                        $validator->errors()->merge($e->errors());
+                    }
+                }
+            },
+        ];
+    }
+
+    /**
+     * Sanitized legacy logo uploads, keyed by TenantLogoVariant value.
+     *
+     * @return array<string, SanitizedImage>
+     */
+    public function sanitizedLogos(): array
+    {
+        return $this->sanitizedLogos;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $lines = $this->input(TenantBranding::KEY_RECEIPT_HEADER_LINES);
+
+        if (is_array($lines)) {
+            $this->merge([
+                TenantBranding::KEY_RECEIPT_HEADER_LINES => implode("\n", array_map(
+                    static fn (mixed $line): string => is_scalar($line) ? (string) $line : '',
+                    $lines,
+                )),
+            ]);
+        }
+    }
+
+    /**
+     * variant value => form field; `logo_file` only when no explicit light file was sent.
+     *
+     * @return array<string, string>
+     */
+    private function legacyLogoFields(): array
+    {
+        $light = TenantLogoVariant::Light->legacySettingsField();
+
+        return [
+            TenantLogoVariant::Light->value => $this->hasFile($light) ? $light : self::LEGACY_LOGO_FIELD,
+            TenantLogoVariant::Dark->value => TenantLogoVariant::Dark->legacySettingsField(),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function logoRules(): array
+    {
+        $spec = BrandAssetSpec::logo();
+
+        return ['nullable', 'file', 'mimes:'.implode(',', $spec->allowedExtensions), 'max:'.$spec->maxKb];
+    }
+
+    private function themeColorRule(): Closure
+    {
+        return static function (string $attribute, mixed $value, Closure $fail): void {
+            if (is_string($value) && ! TenantBranding::isValidThemeColor($value)) {
+                $fail(__('branding.theme_color_invalid'));
+            }
+        };
+    }
+
+    private function receiptHeaderRule(): Closure
+    {
+        return static function (string $attribute, mixed $value, Closure $fail): void {
+            if (! is_string($value)) {
+                return;
+            }
+
+            if (preg_match(TenantBranding::MARKUP_PATTERN, $value) === 1) {
+                $fail(__('branding.receipt_text_no_markup'));
+
+                return;
+            }
+
+            $lines = array_values(array_filter(
+                array_map('trim', preg_split('/\R/u', $value) ?: []),
+                static fn (string $line): bool => $line !== '',
+            ));
+
+            if (count($lines) > TenantBranding::MAX_HEADER_LINES) {
+                $fail(__('branding.receipt_header_too_many_lines', ['max' => TenantBranding::MAX_HEADER_LINES]));
+
+                return;
+            }
+
+            foreach ($lines as $line) {
+                if (mb_strlen($line) > TenantBranding::MAX_HEADER_LINE_LENGTH) {
+                    $fail(__('branding.receipt_header_line_too_long', ['max' => TenantBranding::MAX_HEADER_LINE_LENGTH]));
+
+                    return;
+                }
+            }
+        };
     }
 
     /**

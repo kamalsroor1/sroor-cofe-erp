@@ -8,15 +8,20 @@ use App\Enums\CentralAuditEvent;
 use App\Models\CentralUser;
 use App\Models\PlatformSetting;
 use App\Services\CentralAuditLogger;
+use App\Services\Platform\PlatformUnitsCatalog;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Saves the platform unit catalog into the CENTRAL `platform_settings` table (pinned
- * connection), never into a tenant `settings` table.
+ * connection), never into a tenant `settings` table. The row and its audit entry commit
+ * or roll back together.
  */
 final class UpdatePlatformSystemUnitsAction
 {
-    public function __construct(private readonly CentralAuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly PlatformUnitsCatalog $catalog,
+        private readonly CentralAuditLogger $auditLogger,
+    ) {}
 
     /**
      * @param  list<string>  $units
@@ -24,26 +29,18 @@ final class UpdatePlatformSystemUnitsAction
      */
     public function execute(array $units, CentralUser $operator): array
     {
-        $setting = new PlatformSetting;
+        $connection = (string) (new PlatformSetting)->getConnectionName();
 
-        DB::connection($setting->getConnectionName())->transaction(function () use ($units, $operator): void {
-            $row = PlatformSetting::query()->where('key', GetPlatformSystemUnitsAction::KEY)->lockForUpdate()->first()
-                ?? new PlatformSetting(['key' => GetPlatformSystemUnitsAction::KEY]);
+        return DB::connection($connection)->transaction(function () use ($units, $operator): array {
+            $saved = $this->catalog->save($units, (int) $operator->getKey());
 
-            $row->fill([
-                'value' => implode(',', $units),
-                'type' => 'string',
-                'updated_by' => (int) $operator->getKey(),
-            ])->save();
-
-            // Joins the central transaction: the row exists exactly when the change does.
             $this->auditLogger->record(
                 CentralAuditEvent::PlatformUnitsUpdated,
-                ['units' => $units],
+                ['units' => $saved],
                 actor: $operator,
             );
-        });
 
-        return $units;
+            return $saved;
+        });
     }
 }

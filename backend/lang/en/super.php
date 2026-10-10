@@ -389,4 +389,11 @@ return [
         'note_too_long' => 'The note is too long.',
     ],
     'version_status_toggled' => 'Release status changed successfully',
+    // BRND-2: platform settings & brand assets (super-admin console).
+    'platform_branding' => [
+        'unknown_field' => 'This field cannot be changed here.',
+        'nothing_to_update' => 'Send at least one setting to update.',
+        'asset_uploaded' => 'Image uploaded and platform branding updated.',
+        'asset_deleted' => 'Image removed; the default image is used again.',
+    ],
 ];

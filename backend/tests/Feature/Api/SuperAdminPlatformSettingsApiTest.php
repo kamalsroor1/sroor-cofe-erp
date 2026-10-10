@@ -63,9 +63,33 @@ final class SuperAdminPlatformSettingsApiTest extends TenantTestCase
             ->assertJsonValidationErrors(['platform_name', 'support_email']);
     }
 
+    public function test_legacy_update_rejects_markup_and_badly_formatted_contacts_like_the_new_endpoint(): void
+    {
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
+        $before = $this->getJson('/api/v1/super-admin/settings', $headers)->assertStatus(200)->json('data');
+
+        $this->postJson('/api/v1/super-admin/settings', [
+            'platform_name' => '<script>x</script>',
+            'platform_subtitle' => 'سطر <b>عريض</b>',
+            'support_email' => 'support@',
+            'support_phone' => 'call me <now>',
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['platform_name', 'platform_subtitle', 'support_email', 'support_phone']);
+
+        $this->postJson('/api/v1/super-admin/settings', [
+            'platform_name' => 'منصة سرور',
+            'support_phone' => '+20 '.str_repeat('1', 30),
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['support_phone']);
+
+        $this->assertSame($before, $this->getJson('/api/v1/super-admin/settings', $headers)->json('data'));
+    }
+
     public function test_can_get_and_update_system_units(): void
     {
-        $headers = $this->centralHeaders($this->centralSuperAdmin());
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
 
         $this->getJson('/api/v1/super-admin/units', $headers)
             ->assertStatus(200)
@@ -81,7 +105,7 @@ final class SuperAdminPlatformSettingsApiTest extends TenantTestCase
 
     public function test_update_units_validates_input(): void
     {
-        $this->postJson('/api/v1/super-admin/units', ['units' => 'كجم'], $this->centralHeaders($this->centralSuperAdmin()))
+        $this->postJson('/api/v1/super-admin/units', ['units' => 'كجم'], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['units']);
     }

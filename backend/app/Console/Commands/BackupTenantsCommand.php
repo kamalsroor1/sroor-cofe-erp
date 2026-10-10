@@ -700,8 +700,9 @@ final class BackupTenantsCommand extends Command
     // ---------------------------------------------------------------------------------
 
     /**
-     * Tenants to back up: the requested ids (any status), or every tenant whose status is
-     * not in backup.tenants.skip_statuses (archived tenants keep their final backup).
+     * Tenants to back up: the requested ids (any status), or every provisioned tenant
+     * (OPS-2: a pending / running / failed one has no database) whose status is not in
+     * backup.tenants.skip_statuses (archived tenants keep their final backup).
      *
      * @return LazyCollection<int, Tenant>
      */
@@ -712,6 +713,7 @@ final class BackupTenantsCommand extends Command
 
         return Tenant::query()
             ->when($ids !== [], fn ($query) => $query->whereIn('id', $ids))
+            ->when($ids === [], fn ($query) => $query->provisioned())
             ->when($ids === [] && $skip !== [], fn ($query) => $query->whereNotIn('status', $skip))
             ->orderBy('id')
             ->cursor();

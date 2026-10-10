@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\System;
 
+use App\Actions\Branding\GetBrandingAction;
+use App\Http\Resources\BrandingResource;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
 use App\Models\CashShift;
@@ -12,7 +14,6 @@ use App\Models\Item;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
-use App\Services\Branding\PlatformBranding;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
 use App\Support\TenantClock;
@@ -25,7 +26,7 @@ final class GetSystemContextAction
         private readonly TreasuryService $treasuryService,
         private readonly TenantSettings $tenantSettings,
         private readonly TenantClock $tenantClock,
-        private readonly PlatformBranding $platformBranding,
+        private readonly GetBrandingAction $getBrandingAction,
     ) {}
 
     /**
@@ -110,6 +111,13 @@ final class GetSystemContextAction
         $locale = GetTranslationsAction::normalizeLocale(is_string($headerLocale) ? $headerLocale : null);
         $translations = $this->translationsAction->execute($locale);
 
+        // BRND-3 / BRND-5: one source for the platform and shop brand.
+        $branding = $this->getBrandingAction->execute();
+        $platformBrand = $branding['platform'];
+        $tenantBrand = $branding['tenant'];
+        $platformBlock = BrandingResource::platformBlock($platformBrand);
+        $platformLogos = $platformBlock['logos'];
+
         return [
             'auth' => [
                 'user' => (new UserResource($user))->resolve(),
@@ -132,15 +140,16 @@ final class GetSystemContextAction
             ] : null,
             'system' => [
                 // BRND-1: the platform brand is central (platform_settings), never a tenant setting.
-                'platform_name' => $this->platformBranding->get()->name,
-                'company_name' => Setting::get('company_name') ?: ($tenant?->name ?? __('auth.default_company_name')),
-                'company_subtitle' => Setting::get('company_subtitle') ?: '',
+                'platform_name' => $platformBrand->name,
+                // BRND-5: read through TenantBranding (name falls back to tenant name, then platform name).
+                'company_name' => $tenantBrand->name ?? (Setting::get('company_name') ?: __('auth.default_company_name')),
+                'company_subtitle' => $tenantBrand->subtitle ?? (Setting::get('company_subtitle') ?: ''),
                 // SETG-7: real legal/contact info for the A4 invoice header ('' = hide the line).
-                'company_phone' => Setting::get('company_phone') ?: '',
-                'company_address' => Setting::get('company_address') ?: '',
-                'commercial_register' => Setting::get('commercial_register') ?: '',
-                'tax_registration_no' => Setting::get('tax_registration_no') ?: '',
-                'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
+                'company_phone' => $tenantBrand->phone ?? (Setting::get('company_phone') ?: ''),
+                'company_address' => $tenantBrand->address ?? (Setting::get('company_address') ?: ''),
+                'commercial_register' => $tenantBrand->commercialRegister ?? (Setting::get('commercial_register') ?: ''),
+                'tax_registration_no' => $tenantBrand->taxRegistrationNo ?? (Setting::get('tax_registration_no') ?: ''),
+                'system_theme_color' => $tenantBrand->themeColor ?? Setting::get('system_theme_color', 'emerald'),
                 'server_time' => now()->toDateTimeString(),
                 // SETG-1 ext / SETG-2 ext / SETG-10 / SETG-13: tenant settings the SPA formats and validates with.
                 'currency' => $this->tenantSettings->currency(),
@@ -152,9 +161,13 @@ final class GetSystemContextAction
                 'low_stock_default_threshold' => $this->tenantSettings->lowStockDefaultThreshold(),
             ],
             'branding' => [
-                'logo_light' => '/logo-light.png?v='.Setting::get('logo_light_v', '1'),
-                'logo_dark' => '/logo-dark.png?v='.Setting::get('logo_dark_v', '1'),
-                'logo' => '/logo.png?v='.Setting::get('logo_v', '1'),
+                'platform' => $platformBlock,
+                'tenant' => $tenantBrand !== null ? BrandingResource::tenantBlock($tenantBrand) : null,
+                // Back-compat keys (pre-BRND-5 SPA): the shop logo, else the platform logo. Never
+                // the shared public/logo*.png of the old implementation.
+                'logo_light' => $tenantBrand->logoLightUrl ?? $platformLogos['light'],
+                'logo_dark' => $tenantBrand->logoDarkUrl ?? $tenantBrand->logoLightUrl ?? $platformLogos['dark'],
+                'logo' => $tenantBrand->logoLightUrl ?? $platformLogos['light'],
             ],
             'notifications' => $alerts,
             'locale' => $locale,

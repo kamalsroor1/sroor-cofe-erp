@@ -26,8 +26,15 @@ class TenantSampleSeeder extends Seeder
 
     private const DEMO_ADMIN_EMAIL = 'admin@demo.com';
 
+    /** Same demo admin phone as scripts/local/setup-local.ps1 and the e2e suites (e2e/utils/e2e-user.js). */
+    public const DEMO_ADMIN_PHONE = '01000000201';
+
     public function run(): void
     {
+        // OPS-2: provisioning is a queued job. With QUEUE_CONNECTION=database (local .env)
+        // and no worker the demo tenant would stay `pending`; seeding provisions it inline.
+        config(['tenancy.provisioning.queue_connection' => 'sync']);
+
         $slug = self::slug();
 
         $existing = Tenant::query()->whereKey($slug)->orWhere('slug', $slug)->first();
@@ -48,7 +55,7 @@ class TenantSampleSeeder extends Seeder
             name: 'مؤسسة تجارة وتوزيع البضائع',
             slug: $slug,
             email: self::DEMO_ADMIN_EMAIL,
-            phone: '01000000099',
+            phone: self::DEMO_ADMIN_PHONE,
             password: $plainPassword,
             planId: $plan->id,
             trialDays: 30,
