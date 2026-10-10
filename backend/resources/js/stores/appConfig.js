@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import api from '../Services/api';
 import { applyThemeColor } from '../helpers/themeHelper';
 import { trans } from '../helpers/trans';
+import { isCentralAppContext } from '../Services/centralApi';
 
 export const useAppConfigStore = defineStore('appConfig', {
     state: () => ({
@@ -42,6 +43,8 @@ export const useAppConfigStore = defineStore('appConfig', {
          * Fetch full bootstrap context from API
          */
         async fetchBootstrapContext() {
+            // Tenant bootstrap (/system/context) never runs on the platform console.
+            if (isCentralAppContext()) return null;
             try {
                 const response = await api.get('/system/context');
                 const data = response.data?.data;
@@ -84,6 +87,11 @@ export const useAppConfigStore = defineStore('appConfig', {
          * Fetch translation dictionary for locale
          */
         async fetchTranslations(locale = 'ar') {
+            // Central mode: the server already injected window.spaTranslations; no tenant API call.
+            if (isCentralAppContext()) {
+                if (typeof window !== 'undefined' && window.spaTranslations) this.translations = window.spaTranslations;
+                return;
+            }
             try {
                 const response = await api.get(`/system/translations?locale=${locale}`);
                 if (response.data?.data) {

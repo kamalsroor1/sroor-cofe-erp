@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('SuperAdminUnitsView Comprehensive 4-Axes Audit & Multi-Viewport Verification', () => {
+    // IDEN-1.4 / IDEN-1.9: /super-admin/* is served only in the central app context (admin host,
+    // central token + 2FA); a tenant session (e2e/.auth/user.json) no longer reaches it.
+    test.fixme(true, 'needs admin host (IDEN-1.11) — covered by central-login.spec.js');
     test.use({ storageState: 'e2e/.auth/user.json' });
 
     const viewports = [

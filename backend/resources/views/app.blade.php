@@ -8,6 +8,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if (($appContext ?? null) === 'central')
+    {{-- IDEN-1.11: platform-console shell (admin host only); contract for the SPA boot. --}}
+    <meta name="app-context" content="central">
+    {{-- Platform-console host(s), only on the console itself (resources/js/helpers/platformHosts.js). --}}
+    <meta name="admin-domains" content="{{ implode(',', \App\Http\Middleware\EnsureCentralContext::adminHosts()) }}">
+    @endif
+    {{-- Central (workspace-hub) hosts from config, admin hosts excluded (helpers/platformHosts.js). --}}
+    <meta name="central-domains" content="{{ implode(',', \App\Support\PlatformHosts::publicCentralDomains()) }}">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -15,7 +23,7 @@
     <title>{{ \App\Models\Setting::get('platform_name') ?: \App\Models\Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية') }}</title>
 
     <!-- Early Anti-Flicker Theme Script -->
-    <script>
+    <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         (function() {
             try {
                 const storedTheme = localStorage.getItem('theme_preference') || 'dark';
@@ -58,7 +66,7 @@
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     <!-- Injected Global Translations & System Context -->
-    <script>
+    <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         @php
             $translationsAction = app(\App\Actions\System\GetTranslationsAction::class);
             $locale = app()->getLocale() ?: 'ar';
@@ -106,7 +114,7 @@
                     100% { transform: translateX(300%); }
                 }
             </style>
-            <script>
+            <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
                 if (window.electronAPI || navigator.userAgent.includes('Electron')) {
                     document.getElementById('pre-vue-splash').style.display = 'none';
                 }

@@ -1,8 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
+import { useCentralAuthStore } from '../stores/centralAuth';
+import { CENTRAL_STORAGE_KEYS, isCentralAppContext, setCentralSessionHandlers } from '../Services/centralApi';
+import { safeCentralRedirect } from '../Composables/useSuperAdminLogin';
+import { trans } from '../helpers/trans';
 
-const routes = [
+/**
+ * Two disjoint route tables (IDEN-1.9). The server decides the mode:
+ * <meta name="app-context" content="central"> is rendered on the admin host only.
+ *  - tenant mode: the ERP / POS routes; no /super-admin route exists (=> redirect to /);
+ *  - central mode: only the platform console and its own sign-in; no tenant route exists.
+ */
+const CENTRAL_MODE = isCentralAppContext();
+
+const tenantRoutes = [
     {
         path: '/connect',
         alias: '/workspace',
@@ -334,75 +346,87 @@ const routes = [
         },
     },
     {
-        path: '/super-admin/dashboard',
-        name: 'super_admin.dashboard',
-        component: () => import('../views/SuperAdmin/SuperAdminDashboardView.vue'),
-        meta: {
-            title: 'لوحة تحكم السوبر أدمن',
-            requiresAuth: true,
-            superAdminOnly: true,
-        },
-    },
-    {
-        path: '/super-admin/tenants',
-        name: 'super_admin.tenants',
-        component: () => import('../views/SuperAdmin/SuperAdminTenantsView.vue'),
-        meta: {
-            title: 'إدارة المستأجرين',
-            requiresAuth: true,
-            superAdminOnly: true,
-        },
-    },
-    {
-        path: '/super-admin/tenants/:id',
-        name: 'super_admin.tenants.show',
-        component: () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue'),
-        meta: {
-            title: 'تفاصيل المستأجر والتحكم',
-            requiresAuth: true,
-            superAdminOnly: true,
-        },
-    },
-    {
-        path: '/super-admin/plans',
-        name: 'super_admin.plans',
-        component: () => import('../views/SuperAdmin/SuperAdminPlansView.vue'),
-        meta: {
-            title: 'إدارة الباقات والأسعار',
-            requiresAuth: true,
-            superAdminOnly: true,
-        },
-    },
-    {
-        path: '/super-admin/app-versions',
-        name: 'super_admin.app_versions',
-        component: () => import('../views/SuperAdmin/SuperAdminAppVersionsView.vue'),
-        meta: {
-            title: 'إدارة إصدارات التطبيق وحزم APK',
-            requiresAuth: true,
-            superAdminOnly: true,
-        },
-    },
-    {
-        path: '/super-admin/units',
-        name: 'super_admin.units',
-        component: () => import('../views/SuperAdmin/SuperAdminUnitsView.vue'),
-        meta: {
-            title: 'إدارة وحدات القياس للنظام',
-            requiresAuth: true,
-            superAdminOnly: true,
-        },
-    },
-    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         redirect: '/',
     },
 ];
 
+const centralGuest = (path, name, titleKey, loader) => ({
+    path,
+    name,
+    component: loader,
+    meta: { titleKey, guestOnly: true, centralGuest: true },
+});
+
+const centralPage = (path, name, titleKey, loader) => ({
+    path,
+    name,
+    component: loader,
+    meta: { titleKey, requiresCentralAuth: true },
+});
+
+const centralRoutes = [
+    centralGuest(
+        '/super-admin/login',
+        'super_admin.login',
+        'super.page_titles.login',
+        () => import('../views/SuperAdmin/SuperAdminLoginView.vue')
+    ),
+    centralGuest(
+        '/super-admin/forgot-password',
+        'super_admin.forgot_password',
+        'super.page_titles.forgot_password',
+        () => import('../views/SuperAdmin/SuperAdminForgotPasswordView.vue')
+    ),
+    centralGuest(
+        '/super-admin/reset-password',
+        'super_admin.reset_password',
+        'super.page_titles.reset_password',
+        () => import('../views/SuperAdmin/SuperAdminResetPasswordView.vue')
+    ),
+    centralPage(
+        '/super-admin/dashboard',
+        'super_admin.dashboard',
+        'super.page_titles.dashboard',
+        () => import('../views/SuperAdmin/SuperAdminDashboardView.vue')
+    ),
+    centralPage(
+        '/super-admin/tenants',
+        'super_admin.tenants',
+        'super.page_titles.tenants',
+        () => import('../views/SuperAdmin/SuperAdminTenantsView.vue')
+    ),
+    centralPage(
+        '/super-admin/tenants/:id',
+        'super_admin.tenants.show',
+        'super.page_titles.tenant_show',
+        () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue')
+    ),
+    centralPage(
+        '/super-admin/plans',
+        'super_admin.plans',
+        'super.page_titles.plans',
+        () => import('../views/SuperAdmin/SuperAdminPlansView.vue')
+    ),
+    centralPage(
+        '/super-admin/app-versions',
+        'super_admin.app_versions',
+        'super.page_titles.app_versions',
+        () => import('../views/SuperAdmin/SuperAdminAppVersionsView.vue')
+    ),
+    centralPage(
+        '/super-admin/units',
+        'super_admin.units',
+        'super.page_titles.units',
+        () => import('../views/SuperAdmin/SuperAdminUnitsView.vue')
+    ),
+    { path: '/:pathMatch(.*)*', name: 'super_admin.not_found', redirect: '/super-admin/dashboard' },
+];
+
 const router = createRouter({
     history: createWebHistory(),
-    routes,
+    routes: CENTRAL_MODE ? centralRoutes : tenantRoutes,
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition;
@@ -412,8 +436,8 @@ const router = createRouter({
     },
 });
 
-// Navigation Guards
-router.beforeEach(async (to, from, next) => {
+// Tenant navigation guard
+async function tenantGuard(to, from, next) {
     const authStore = useAuthStore();
     const appConfigStore = useAppConfigStore();
 
@@ -436,9 +460,6 @@ router.beforeEach(async (to, from, next) => {
 
     // 3. Guest-only check (e.g. Login page)
     if (to.meta.guestOnly && authStore.isAuthenticated) {
-        if (authStore.isSuperAdmin) {
-            return next({ name: 'super_admin.dashboard' });
-        }
         return next({ name: 'dashboard' });
     }
 
@@ -447,17 +468,7 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Smart Root Landing: Super Admin vs Tenant Store
-    if (to.path === '/' && authStore.isSuperAdmin) {
-        return next({ name: 'super_admin.dashboard' });
-    }
-
-    // 6. Super Admin Only check
-    if (to.meta.superAdminOnly && !authStore.isSuperAdmin) {
-        return next({ name: 'dashboard' });
-    }
-
-    // 6. Permission / Role Check
+    // 5. Permission / Role Check
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         return next({ name: 'dashboard' });
     }
@@ -467,6 +478,75 @@ router.beforeEach(async (to, from, next) => {
     }
 
     next();
-});
+}
+
+// Platform console navigation guard (central mode)
+async function centralGuard(to) {
+    const centralAuth = useCentralAuthStore();
+
+    document.title = to.meta.titleKey
+        ? `${trans(to.meta.titleKey)} - ${trans('super.platform_title')}`
+        : trans('super.platform_title');
+
+    if (centralAuth.token && centralAuth.isSessionExpired()) {
+        await centralAuth.logout('expired');
+    }
+
+    let authenticated = false;
+    if (centralAuth.isAuthenticated) {
+        try {
+            authenticated = await centralAuth.ensureSession();
+        } catch {
+            // Network / server error: keep the stored session; the page shows its own error state.
+            authenticated = centralAuth.isAuthenticated;
+        }
+    }
+
+    if (to.meta.centralGuest) {
+        return authenticated ? { name: 'super_admin.dashboard' } : true;
+    }
+
+    if (to.meta.requiresCentralAuth && !authenticated) {
+        return { name: 'super_admin.login', query: { redirect: safeCentralRedirect(to.fullPath) } };
+    }
+
+    return true;
+}
+
+function installCentralSessionHandlers() {
+    const sendToLogin = () => {
+        const current = router.currentRoute.value;
+        if (current.meta?.requiresCentralAuth) {
+            router.replace({ name: 'super_admin.login', query: { redirect: safeCentralRedirect(current.fullPath) } });
+        }
+    };
+
+    setCentralSessionHandlers({
+        onUnauthenticated: () => {
+            const centralAuth = useCentralAuthStore();
+            const hadSession = centralAuth.isAuthenticated;
+            centralAuth.clearSession();
+            if (hadSession) centralAuth.notice = 'expired';
+            sendToLogin();
+        },
+        onStepUpRequired: () => useCentralAuthStore().requestStepUp(),
+    });
+
+    // Signing out in one tab signs out every tab of the console.
+    window.addEventListener('storage', (event) => {
+        if (event.key !== CENTRAL_STORAGE_KEYS.token || event.newValue) return;
+        const centralAuth = useCentralAuthStore();
+        if (!centralAuth.token) return;
+        centralAuth.clearSession();
+        sendToLogin();
+    });
+}
+
+if (CENTRAL_MODE) {
+    installCentralSessionHandlers();
+    router.beforeEach(centralGuard);
+} else {
+    router.beforeEach(tenantGuard);
+}
 
 export default router;

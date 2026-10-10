@@ -1,8 +1,9 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import api from '../Services/api';
+import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
+import { useTenantStatusForm } from './useTenantStatusForm';
 
 export function useSuperAdminTenantShow() {
     const { t } = useTrans();
@@ -22,12 +23,14 @@ export function useSuperAdminTenantShow() {
     const isImpersonating = ref(false);
     const isMigrating = ref(false);
     const showStatusModal = ref(false);
-    const isUpdatingStatus = ref(false);
-
-    const statusForm = ref({
-        status: 'active',
-        extend_days: 0,
-    });
+    const {
+        statusForm,
+        statusErrors,
+        isSubmittingStatus: isUpdatingStatus,
+        resetStatusForm,
+        updateStatusField,
+        submitStatus,
+    } = useTenantStatusForm();
 
     const fetchTenantDetails = async () => {
         isLoading.value = true;
@@ -60,7 +63,6 @@ export function useSuperAdminTenantShow() {
                     'دستة',
                     'لتر',
                 ];
-                statusForm.value.status = data.tenant.status;
             }
         } catch (e) {
             DarkSwal.fire({
@@ -173,32 +175,20 @@ export function useSuperAdminTenantShow() {
         }
     };
 
-    const updateStatusAndPlan = async () => {
-        isUpdatingStatus.value = true;
-        try {
-            await api.post(`/super-admin/tenants/${tenantId}/toggle-status`, statusForm.value);
-            tenant.value.status = statusForm.value.status;
-            showStatusModal.value = false;
-            DarkSwal.fire({
-                icon: 'success',
-                title: t('common.success'),
-                text: t('super.status_updated_msg'),
-                timer: 1500,
-                showConfirmButton: false,
-            });
-        } catch (e) {
-            DarkSwal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: e.response?.data?.message || t('super.status_update_failed'),
-            });
-        } finally {
-            isUpdatingStatus.value = false;
-        }
+    const openStatusModal = () => {
+        resetStatusForm(tenant.value?.status || null);
+        showStatusModal.value = true;
     };
 
-    const updateStatusField = (field, val) => {
-        statusForm.value[field] = val;
+    const updateStatusAndPlan = async () => {
+        const updated = await submitStatus(tenantId);
+        if (!updated) return;
+        if (tenant.value) {
+            tenant.value.status = updated.status;
+            if ('trial_ends_at' in updated) tenant.value.trial_ends_at = updated.trial_ends_at;
+            if ('subscription_ends_at' in updated) tenant.value.subscription_ends_at = updated.subscription_ends_at;
+        }
+        showStatusModal.value = false;
     };
 
     const deleteTenant = async () => {
@@ -252,6 +242,7 @@ export function useSuperAdminTenantShow() {
         showStatusModal,
         isUpdatingStatus,
         statusForm,
+        statusErrors,
         toggleFeature,
         addTenantUnit,
         addCustomUnitDirect,
@@ -259,6 +250,7 @@ export function useSuperAdminTenantShow() {
         saveTenantUnits,
         runMigrations,
         impersonateTenant,
+        openStatusModal,
         updateStatusAndPlan,
         updateStatusField,
         deleteTenant,

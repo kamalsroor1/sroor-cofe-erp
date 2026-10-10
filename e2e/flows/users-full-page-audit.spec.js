@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { E2E_USER_PHONE } from '../utils/e2e-user.js';
 
 test.describe('UsersView Comprehensive 4-Axes Audit & Multi-Viewport Verification', () => {
     test.use({ storageState: 'e2e/.auth/user.json' });
@@ -55,7 +56,8 @@ test.describe('UsersView Comprehensive 4-Axes Audit & Multi-Viewport Verificatio
             await expect(page.locator('input[placeholder*="بحث"]').first()).toBeVisible();
 
             // 4. Verify Users Table / Cards Render
-            await expect(page.locator('text=01000000001').locator('visible=true').first()).toBeVisible();
+            // The signed-in admin (E2E_USER_PHONE) is always in the list.
+            await expect(page.locator(`text=${E2E_USER_PHONE}`).locator('visible=true').first()).toBeVisible();
 
             // 5. Verify No Console Errors
             expect(consoleErrors).toEqual([]);

@@ -2,6 +2,7 @@ import { test as setup } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { E2E_USER_PASSWORD, E2E_USER_PHONE, E2E_WORKSPACE_CODE } from '../utils/e2e-user.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,8 +14,8 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         fs.mkdirSync(authDir, { recursive: true });
     }
 
-    const testPhone = process.env.E2E_USER_PHONE || '01000000001';
-    const testPassword = process.env.E2E_USER_PASSWORD || 'password';
+    const testPhone = E2E_USER_PHONE;
+    const testPassword = E2E_USER_PASSWORD;
 
     console.log(`\n🔑 Setting up E2E Auth Session with user: ${testPhone}...`);
 
@@ -23,7 +24,7 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 15000 });
 
         // Multi-tenant: the first screen may ask for a workspace code before the login form.
-        const workspaceCode = process.env.E2E_WORKSPACE_CODE || '2M';
+        const workspaceCode = E2E_WORKSPACE_CODE;
         if ((await page.locator('input[type="password"]').count()) === 0) {
             await page.locator('input[type="text"]').first().fill(workspaceCode);
             await page.locator('input[type="text"]').first().press('Enter');

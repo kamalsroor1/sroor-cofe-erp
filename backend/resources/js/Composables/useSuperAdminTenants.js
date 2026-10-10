@@ -1,7 +1,8 @@
 import { ref, computed, onMounted } from 'vue';
-import api from '../Services/api';
+import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
+import { useTenantStatusForm } from './useTenantStatusForm';
 
 export function useSuperAdminTenants() {
     const { t } = useTrans();
@@ -46,10 +47,8 @@ export function useSuperAdminTenants() {
         tenancy_db_password: '',
     });
 
-    const statusForm = ref({
-        status: 'active',
-        extend_days: 0,
-    });
+    const { statusForm, statusErrors, isSubmittingStatus, resetStatusForm, updateStatusField, submitStatus } =
+        useTenantStatusForm();
 
     let debounceTimer = null;
 
@@ -134,41 +133,15 @@ export function useSuperAdminTenants() {
 
     const openStatusModal = (tenant) => {
         selectedTenant.value = tenant;
-        statusForm.value = {
-            status: tenant.status || 'active',
-            extend_days: 0,
-        };
+        resetStatusForm(tenant?.status || null);
         showStatusModal.value = true;
     };
 
-    const updateStatusField = (field, val) => {
-        statusForm.value[field] = val;
-    };
-
     const submitStatusChange = async () => {
-        if (!selectedTenant.value) return;
-        isSubmitting.value = true;
-        try {
-            await api.post(`/super-admin/tenants/${selectedTenant.value.id}/toggle-status`, statusForm.value);
-            DarkSwal.fire({
-                icon: 'success',
-                title: t('common.success'),
-                text: t('super.status_updated_msg'),
-                timer: 1500,
-                showConfirmButton: false,
-            });
-            showStatusModal.value = false;
-            fetchTenants();
-        } catch (e) {
-            DarkSwal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: e.response?.data?.message || t('super.status_update_failed'),
-                confirmButtonText: t('common.ok'),
-            });
-        } finally {
-            isSubmitting.value = false;
-        }
+        const updated = await submitStatus(selectedTenant.value?.id);
+        if (!updated) return;
+        showStatusModal.value = false;
+        fetchTenants();
     };
 
     const confirmDeleteTenant = async (tenant) => {
@@ -220,6 +193,8 @@ export function useSuperAdminTenants() {
         selectedTenant,
         createForm,
         statusForm,
+        statusErrors,
+        isSubmittingStatus,
         fetchTenants,
         updateSearch,
         updateStatusFilter,

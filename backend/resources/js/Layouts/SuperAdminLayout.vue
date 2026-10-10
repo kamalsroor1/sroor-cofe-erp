@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { useCentralAuthStore } from '../stores/centralAuth';
 import { trans } from '../helpers/trans';
-import api from '../Services/api';
+import centralApi from '../Services/centralApi';
 import { notifyError } from '../helpers/alert';
+import { useIdleLogout } from '../Composables/useIdleLogout';
 import versionData from '../version.json';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
+import StepUpPrompt from '../Components/SuperAdmin/StepUpPrompt.vue';
 import {
   BarChart3,
   Store,
@@ -15,7 +17,6 @@ import {
   Smartphone,
   Activity,
   ShieldCheck,
-  Coffee,
   LogOut,
   Menu,
   X,
@@ -23,11 +24,13 @@ import {
   ExternalLink,
 } from 'lucide-vue-next';
 
-const authStore = useAuthStore();
+const centralAuth = useCentralAuthStore();
 const route = useRoute();
 const router = useRouter();
 
-const user = computed(() => authStore.user || {});
+useIdleLogout();
+
+const user = computed(() => centralAuth.user || {});
 const mobileMenuOpen = ref(false);
 
 const isOpeningTelescope = ref(false);
@@ -39,11 +42,11 @@ const openTelescope = async () => {
   mobileMenuOpen.value = false;
 
   try {
-    const response = await api.post('/super-admin/telescope-link');
+    const response = await centralApi.post('/super-admin/telescope-link');
     window.open(response.data.data.url, '_blank', 'noopener');
   } catch (error) {
     const status = error.response?.status;
-    // 401 and 403 are already surfaced by the api interceptor.
+    // 401 and 403 are already surfaced by the centralApi interceptor.
     if (status !== 401 && status !== 403) {
       notifyError(trans('auth.telescope_forbidden'), error.userMessage || '');
     }
@@ -72,7 +75,7 @@ const navItems = computed(() => [
     active: route.path.startsWith('/super-admin/plans'),
   },
   {
-    name: 'وحدات القياس',
+    name: trans('super.nav_units'),
     href: '/super-admin/units',
     icon: Scale,
     active: route.path.startsWith('/super-admin/units'),
@@ -87,8 +90,8 @@ const navItems = computed(() => [
 ]);
 
 const handleLogout = async () => {
-  await authStore.logout();
-  router.push({ name: 'login' });
+  await centralAuth.logout();
+  router.replace({ name: 'super_admin.login' });
 };
 </script>
 
@@ -106,7 +109,8 @@ const handleLogout = async () => {
         <button
           @click="mobileMenuOpen = !mobileMenuOpen"
           type="button"
-          class="md:hidden w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center text-lg active:scale-90 transition cursor-pointer shadow-xs border border-slate-300 dark:border-slate-700"
+          :aria-label="$t('nav.more_menu')"
+          class="md:hidden w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center text-lg active:scale-90 transition cursor-pointer shadow-xs border border-slate-300 dark:border-slate-700"
         >
           <X v-if="mobileMenuOpen" class="w-5 h-5" />
           <Menu v-else class="w-5 h-5" />
@@ -138,25 +142,18 @@ const handleLogout = async () => {
 
       <!-- Top Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <router-link
-          to="/"
-          class="h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition active:scale-95 border border-slate-300 dark:border-slate-700 shadow-xs cursor-pointer"
-        >
-          <Coffee class="w-4 h-4 text-theme-primary" />
-          <span class="hidden sm:inline">{{ $t('super.back_to_pos') }}</span>
-        </router-link>
-
-        <div class="text-left hidden md:block pl-2 border-r border-slate-200 dark:border-slate-800 pr-3">
+        <div class="text-end hidden md:block ps-3 border-s border-slate-200 dark:border-slate-800">
           <div class="text-xs font-black text-slate-900 dark:text-white">
             {{ user?.name || $t('super.platform_admin') }}
           </div>
-          <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">SUPER ADMIN</div>
+          <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">{{ $t('super.operator_badge') }}</div>
         </div>
 
         <button
           @click="handleLogout"
           type="button"
-          class="h-10 px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1.5 transition cursor-pointer active:scale-95"
+          data-testid="central-logout"
+          class="min-h-11 px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-xs font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1.5 transition cursor-pointer active:scale-95"
           :title="$t('super.logout_title')"
         >
           <LogOut class="w-4 h-4" />
@@ -188,7 +185,9 @@ const handleLogout = async () => {
           </div>
           <button
             @click="mobileMenuOpen = false"
-            class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center font-bold cursor-pointer"
+            type="button"
+            :aria-label="$t('common.close')"
+            class="w-11 h-11 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center font-bold cursor-pointer"
           >
             <X class="w-4 h-4" />
           </button>
@@ -292,7 +291,7 @@ const handleLogout = async () => {
           <div
             class="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-200 dark:border-indigo-900/40 font-mono"
           >
-            <span class="font-tajawal">إصدار المنصة</span>
+            <span class="font-tajawal">{{ $t('super.platform_version') }}</span>
             <span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-bold"
               >v{{ versionData?.version || '1.0.1' }}</span
             >
@@ -305,6 +304,8 @@ const handleLogout = async () => {
         <slot />
       </main>
     </div>
+
+    <StepUpPrompt />
   </div>
 </template>
 

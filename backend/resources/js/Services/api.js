@@ -3,6 +3,11 @@ import Swal from 'sweetalert2';
 import { trans } from '../helpers/trans';
 import { isNetworkError, reportRequestFailure, reportServerReachable } from '../helpers/connectivity';
 import { storeAccessRetryConfig } from '../helpers/storeAccessRecovery';
+import { isCentralAppContext } from './centralApi';
+
+// Tenant client only. The platform console uses Services/centralApi.js (IDEN-1.9); on the admin
+// host (central mode) this client never sends a tenant token, store or tenant header.
+const isCentralMode = isCentralAppContext();
 
 // 1. Create centralized Axios instance
 const apiClient = axios.create({
@@ -17,6 +22,11 @@ const apiClient = axios.create({
 // 2. Request Interceptor: Attach Auth Token, Store ID, Tenant, and Locale
 apiClient.interceptors.request.use(
     (config) => {
+        if (isCentralMode) {
+            config.headers['X-Locale'] = localStorage.getItem('app_locale') || 'ar';
+            return config;
+        }
+
         // Auth Token
         const token = localStorage.getItem('auth_token');
         if (token) {
@@ -69,7 +79,7 @@ apiClient.interceptors.response.use(
         const message = data?.message || error.message || trans('common.unexpected_error');
 
         // 401 Unauthorized: Session Expired / Invalid Token
-        if (status === 401) {
+        if (status === 401 && !isCentralMode) {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('auth_store');

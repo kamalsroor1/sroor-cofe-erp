@@ -57,9 +57,11 @@
     <!-- Edit Tenant Status Modal -->
     <EditTenantStatusModal
       :show="showStatusModal"
-      :selected-tenant="selectedTenant"
+      :tenant-name="selectedTenant?.name || ''"
+      :current-status="selectedTenant?.status || ''"
       :form="statusForm"
-      :is-submitting="isSubmitting"
+      :errors="statusErrors"
+      :is-submitting="isSubmittingStatus"
       @update:field="updateStatusField"
       @submit="submitStatusChange"
       @close="showStatusModal = false"
@@ -89,6 +91,8 @@ const {
   selectedTenant,
   createForm,
   statusForm,
+  statusErrors,
+  isSubmittingStatus,
   updateSearch,
   updateStatusFilter,
   updatePlanFilter,

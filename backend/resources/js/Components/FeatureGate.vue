@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { Lock } from 'lucide-vue-next';
 import { useAppConfigStore } from '@/stores/appConfig';
 
 const props = defineProps({
@@ -53,19 +54,14 @@ const isAllowed = computed(() => {
   </template>
   <template v-else-if="showFallback">
     <slot name="fallback">
+      <!-- No upgrade link: the plans screen belongs to the platform console (admin host); the
+           tenant subscription / upgrade page arrives with ENTI-3.x. -->
       <div
-        class="p-3.5 bg-theme-light border border-theme-border rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs text-theme-primary font-tajawal shadow-xs"
+        class="p-3.5 bg-theme-light border border-theme-border rounded-2xl flex items-center gap-2 text-xs text-theme-primary font-tajawal shadow-xs"
+        role="note"
       >
-        <div class="flex items-center gap-2">
-          <span class="text-sm">🔒</span>
-          <span class="font-bold">{{ $t('super.plan_upgrade_required') }}</span>
-        </div>
-        <router-link
-          to="/super-admin/plans"
-          class="h-8 px-3.5 bg-theme-primary hover:bg-theme-hover text-slate-950 font-black rounded-xl text-xs flex items-center justify-center transition active:scale-95 shadow-xs"
-        >
-          {{ $t('super.upgrade_now') }}
-        </router-link>
+        <Lock class="w-4 h-4 shrink-0" aria-hidden="true" />
+        <span class="font-bold">{{ $t('super.plan_upgrade_required') }}</span>
       </div>
     </slot>
   </template>

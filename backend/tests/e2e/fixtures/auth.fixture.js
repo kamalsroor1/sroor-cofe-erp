@@ -1,7 +1,7 @@
 import { test as base } from '@playwright/test';
 
-// Dummy fallback matches the dev seeder's default super admin (DatabaseSeeder::DEFAULT_SUPER_ADMIN_PHONE).
-const E2E_USER_PHONE = process.env.E2E_USER_PHONE || '01000000001';
+// Default: the local `demo` tenant admin (scripts/local/setup-local.ps1); the central admin no longer logs into a tenant.
+const E2E_USER_PHONE = process.env.E2E_USER_PHONE || '01000000201';
 
 /**
  * Custom Playwright test fixture with pre-authenticated mobile session

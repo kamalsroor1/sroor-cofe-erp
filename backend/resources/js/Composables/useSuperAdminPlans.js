@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue';
-import api from '../Services/api';
+import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
 import { pickPlanLimits, preparePlanLimits } from '../helpers/planLimits';

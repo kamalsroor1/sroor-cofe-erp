@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-// Dummy fallback matches the dev seeder's default super admin (DatabaseSeeder::DEFAULT_SUPER_ADMIN_PHONE).
-const E2E_USER_PHONE = process.env.E2E_USER_PHONE || '01000000001';
+// Default: the local `demo` tenant admin (scripts/local/setup-local.ps1); the central admin no longer logs into a tenant.
+const E2E_USER_PHONE = process.env.E2E_USER_PHONE || '01000000201';
 
 test.describe('1️⃣ موديول الدخول والجلسات (Authentication & Session E2E)', () => {
     test('TC-01: تسجيل دخول ناجح ببيانات صحيحة والانتقال للرئيسية', async ({ page }) => {

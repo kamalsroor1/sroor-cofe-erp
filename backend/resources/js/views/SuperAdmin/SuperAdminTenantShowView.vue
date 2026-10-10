@@ -18,7 +18,7 @@
         :is-impersonating="isImpersonating"
         :is-migrating="isMigrating"
         @impersonate="impersonateTenant"
-        @open-status="showStatusModal = true"
+        @open-status="openStatusModal"
         @run-migrations="runMigrations"
         @delete-tenant="deleteTenant"
       />
@@ -54,10 +54,13 @@
       </div>
 
       <!-- Status & Plan Modal -->
-      <TenantStatusModal
+      <EditTenantStatusModal
         :show="showStatusModal"
+        :tenant-name="tenant.name || ''"
+        :current-status="tenant.status || ''"
         :form="statusForm"
-        :is-updating-status="isUpdatingStatus"
+        :errors="statusErrors"
+        :is-submitting="isUpdatingStatus"
         @update:field="updateStatusField"
         @submit="updateStatusAndPlan"
         @close="showStatusModal = false"
@@ -71,7 +74,7 @@ import TenantShowHeader from '../../Components/SuperAdmin/TenantShowHeader.vue';
 import TenantStatsGrid from '../../Components/SuperAdmin/TenantStatsGrid.vue';
 import TenantUnitsCard from '../../Components/SuperAdmin/TenantUnitsCard.vue';
 import TenantFeaturesMatrixCard from '../../Components/SuperAdmin/TenantFeaturesMatrixCard.vue';
-import TenantStatusModal from '../../Components/SuperAdmin/TenantStatusModal.vue';
+import EditTenantStatusModal from '../../Components/SuperAdmin/EditTenantStatusModal.vue';
 import { useSuperAdminTenantShow } from '../../Composables/useSuperAdminTenantShow';
 
 const {
@@ -88,6 +91,7 @@ const {
   showStatusModal,
   isUpdatingStatus,
   statusForm,
+  statusErrors,
   toggleFeature,
   addTenantUnit,
   addCustomUnitDirect,
@@ -95,6 +99,7 @@ const {
   saveTenantUnits,
   runMigrations,
   impersonateTenant,
+  openStatusModal,
   updateStatusAndPlan,
   updateStatusField,
   deleteTenant,
