@@ -7,6 +7,7 @@ defineEmits(['send-backup-telegram']);
 <template>
   <div class="space-y-6 font-tajawal">
     <div
+      id="setting-database_backup"
       class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xs space-y-6"
     >
       <div class="border-b border-slate-200 dark:border-slate-800 pb-4">
