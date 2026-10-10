@@ -30,14 +30,25 @@
     />
 
     <!-- Returns Ledger Table & Mobile Cards -->
-    <ReturnsTable
-      :returns-list="returnsList"
-      :pagination="pagination"
-      :loading="isLoading"
-      @open-details="openDetailsModal"
-      @delete-return="deleteReturnDoc"
-      @page-change="fetchReturns"
-    />
+
+    <template v-if="error && (!returnsList || returnsList.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchReturns(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchReturns(pagination?.current_page || 1)" />
+      <ReturnsTable
+        :returns-list="returnsList"
+        :pagination="pagination"
+        :loading="isLoading"
+        @open-details="openDetailsModal"
+        @delete-return="deleteReturnDoc"
+        @page-change="fetchReturns"
+      />
+    </template>
 
     <!-- Return Details Modal -->
     <ReturnDetailsModal
@@ -49,6 +60,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReturnsMetricsGrid from '../../Components/Returns/ReturnsMetricsGrid.vue';
@@ -65,6 +78,8 @@ const {
   typeOptions,
   dateFrom,
   dateTo,
+  error,
+  errorMessage,
   isLoading,
   pagination,
   showDetailsModal,

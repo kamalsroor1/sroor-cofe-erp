@@ -17,37 +17,36 @@
         :error="errors?.name"
       />
 
-      <!-- Emoji / Icon Selector -->
+      <!-- Lucide Icon Selector & Preset Palette -->
       <div class="space-y-2">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          {{ $t('inventory.category_icon_emoji') }}
-        </label>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            {{ $t('inventory.category_icon_emoji') }}
+          </label>
           <div
-            class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 shadow-2xs"
+            class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-theme-primary shadow-2xs"
           >
-            {{ form.icon || '☕' }}
+            <DynamicIcon :name="form.icon || 'Folder'" fallback="Folder" class="w-5 h-5 text-theme-primary" />
           </div>
-          <BaseInput
-            :model-value="form.icon"
-            @update:model-value="updateForm('icon', $event)"
-            placeholder="☕"
-            input-class="h-12 text-center text-lg font-mono"
-            wrapper-class="flex-1"
-          />
         </div>
 
-        <!-- Quick Emoji Presets Palette -->
-        <div class="flex flex-wrap gap-1.5 pt-1">
+        <!-- Curated Lucide Presets Palette -->
+        <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5 pt-1">
           <button
-            v-for="emoji in emojiPresets"
-            :key="emoji"
+            v-for="item in iconPresets"
+            :key="item.name"
             type="button"
-            @click="updateForm('icon', emoji)"
-            class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base transition active:scale-90 cursor-pointer shadow-2xs"
-            :class="form.icon === emoji ? 'border-theme-primary ring-2 ring-theme-primary/30' : ''"
+            @click="updateForm('icon', item.name)"
+            :aria-pressed="isCurrentIcon(item.name)"
+            :aria-label="$t(item.labelKey)"
+            class="min-h-[44px] rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 transition active:scale-90 cursor-pointer shadow-2xs"
+            :class="
+              isCurrentIcon(item.name)
+                ? 'border-theme-primary ring-2 ring-theme-primary/30 text-theme-primary bg-theme-light'
+                : ''
+            "
           >
-            {{ emoji }}
+            <component :is="item.icon" class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -87,8 +86,30 @@
 </template>
 
 <script setup>
-import { Tag } from 'lucide-vue-next';
+import {
+  Tag,
+  Folder,
+  Boxes,
+  Package,
+  Layers,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
+  Sparkles,
+  Star,
+  Flame,
+  Coffee,
+  CupSoda,
+  Utensils,
+  Droplet,
+  Leaf,
+  Zap,
+  Gift,
+  Bookmark,
+  Archive,
+} from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
+import DynamicIcon from '../Common/DynamicIcon.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseSwitch from '../Form/BaseSwitch.vue';
@@ -107,5 +128,31 @@ const emit = defineEmits(['close', 'submit', 'update:form']);
 // Never mutate the prop: emit a patched shallow copy and let the parent apply it.
 const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
-const emojiPresets = ['☕', '🍵', '🧃', '🥪', '🍰', '🍫', '🥤', '🍟', '🥐', '🍪', '🍨', '🍳'];
+const iconPresets = [
+  { name: 'Folder', icon: Folder, labelKey: 'expenses.icon_folder' },
+  { name: 'Tag', icon: Tag, labelKey: 'expenses.icon_tag' },
+  { name: 'Boxes', icon: Boxes, labelKey: 'expenses.icon_boxes' },
+  { name: 'Package', icon: Package, labelKey: 'expenses.icon_package' },
+  { name: 'Layers', icon: Layers, labelKey: 'expenses.icon_layers' },
+  { name: 'ShoppingBag', icon: ShoppingBag, labelKey: 'expenses.icon_shopping_bag' },
+  { name: 'ShoppingCart', icon: ShoppingCart, labelKey: 'expenses.icon_shopping_cart' },
+  { name: 'Store', icon: Store, labelKey: 'expenses.icon_store' },
+  { name: 'Sparkles', icon: Sparkles, labelKey: 'expenses.icon_sparkles' },
+  { name: 'Star', icon: Star, labelKey: 'expenses.icon_star' },
+  { name: 'Flame', icon: Flame, labelKey: 'expenses.icon_flame' },
+  { name: 'Coffee', icon: Coffee, labelKey: 'expenses.icon_coffee' },
+  { name: 'CupSoda', icon: CupSoda, labelKey: 'expenses.icon_cup_soda' },
+  { name: 'Utensils', icon: Utensils, labelKey: 'expenses.icon_utensils' },
+  { name: 'Droplet', icon: Droplet, labelKey: 'expenses.icon_droplet' },
+  { name: 'Leaf', icon: Leaf, labelKey: 'expenses.icon_leaf' },
+  { name: 'Zap', icon: Zap, labelKey: 'expenses.icon_zap' },
+  { name: 'Gift', icon: Gift, labelKey: 'expenses.icon_gift' },
+  { name: 'Bookmark', icon: Bookmark, labelKey: 'expenses.icon_bookmark' },
+  { name: 'Archive', icon: Archive, labelKey: 'expenses.icon_archive' },
+];
+
+const isCurrentIcon = (name) => {
+  const current = (props.form.icon || 'Folder').trim().toLowerCase();
+  return current === name.toLowerCase();
+};
 </script>

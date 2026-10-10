@@ -43,17 +43,26 @@
     />
 
     <!-- Movements Ledger Table -->
-    <ItemMovementsTable
-      :movements="movements"
-      :loading="isLoading"
-      :get-movement-badge="getMovementBadge"
-      :format-movement-label="formatMovementLabel"
-      :is-positive-movement="isPositiveMovement"
-    />
+
+    <template v-if="error && (!movements || movements.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchMovements()" />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchMovements()" />
+      <ItemMovementsTable
+        :movements="movements"
+        :loading="isLoading"
+        :get-movement-badge="getMovementBadge"
+        :format-movement-label="formatMovementLabel"
+        :is-positive-movement="isPositiveMovement"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ArrowRight, Printer } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -69,6 +78,8 @@ const {
   dateFrom,
   dateTo,
   activePreset,
+  error,
+  errorMessage,
   isLoading,
   formatMovementLabel,
   isPositiveMovement,

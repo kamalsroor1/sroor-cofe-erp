@@ -117,7 +117,7 @@ return [
     'cancel_reason_default' => 'إلغاء من واجهة النظام',
     'purchase_cancelled_success' => 'تم إلغاء فاتورة المشتريات وعكس المخزون بنجاح',
     'purchase_cancelled_failed' => 'تعذر إلغاء فاتورة الشراء',
-    'create_subtitle' => 'توريد أصناف وخامات وحساب التكلفة المحملة ومتوسط التكلفة المرجح WAC',
+    'create_subtitle' => 'توريد أصناف وخامات وحساب التكلفة المحملة ومتوسط التكلفة المرجح',
     'supplier_po_section' => 'بيانات المورد وأمر الشراء',
     'supplier_invoice_ref_label' => 'رقم فاتورة المورد (المرجع)',
     'supply_items_section' => 'بنود وأصناف التوريد',
@@ -172,4 +172,8 @@ return [
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'final_net_total' => 'صافي الفاتورة',
     'remaining_debt' => 'المتبقي للمورد (آجل)',
+
+    // Tooltips for technical financial terms (UX review 2026-10-09, G12)
+    'wac_tooltip' => 'متوسط التكلفة المرجح (Weighted Average Cost - WAC)',
+    'landed_cost_tooltip' => 'التكلفة المحملة تشمل سعر الشراء مضافاً إليه الشحن والجمارك ومصاريف التوريد',
 ];

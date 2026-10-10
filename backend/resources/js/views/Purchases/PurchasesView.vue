@@ -40,14 +40,25 @@
     />
 
     <!-- Purchases Table & Mobile Cards -->
-    <PurchasesTable
-      :purchases="purchases"
-      :pagination="pagination"
-      :loading="isLoading"
-      @preview="openDetailsModal"
-      @cancel="cancelPurchase"
-      @page-change="fetchPurchases"
-    />
+
+    <template v-if="error && (!purchases || purchases.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchPurchases(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchPurchases(pagination?.current_page || 1)" />
+      <PurchasesTable
+        :purchases="purchases"
+        :pagination="pagination"
+        :loading="isLoading"
+        @preview="openDetailsModal"
+        @cancel="cancelPurchase"
+        @page-change="fetchPurchases"
+      />
+    </template>
 
     <!-- Purchase Details Modal -->
     <PurchaseDetailsModal :show="showDetailsModal" :purchase="selectedPurchase" @close="showDetailsModal = false" />
@@ -55,6 +66,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { Plus, Sparkles } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import PurchasesMetricsGrid from '../../Components/Purchases/PurchasesMetricsGrid.vue';
@@ -71,6 +84,8 @@ const {
   statusOptions,
   dateFrom,
   dateTo,
+  error,
+  errorMessage,
   isLoading,
   pagination,
   showDetailsModal,

@@ -8,6 +8,8 @@ export function useReports() {
 
     const activeTab = ref('sales');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const stores = ref([]);
 
     const filters = reactive({
@@ -110,12 +112,16 @@ export function useReports() {
             const res = await api.get('/stores');
             stores.value = res.data?.data || [];
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load stores:', e);
         }
     };
 
     const fetchReportsData = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const params = {
                 period: filters.period,
@@ -136,6 +142,8 @@ export function useReports() {
             inventoryData.value = d.inventory_data || {};
             treasuryData.value = d.treasury_data || {};
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load comprehensive reports:', e);
         } finally {
             isLoading.value = false;
@@ -156,6 +164,8 @@ export function useReports() {
     });
 
     return {
+        error,
+        errorMessage,
         activeTab,
         isLoading,
         stores,

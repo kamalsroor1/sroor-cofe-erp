@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 font-tajawal">
     <!-- 1. KPI Cards Skeleton Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       <StatCardSkeleton v-for="n in 4" :key="n" />
     </div>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-tajawal">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-tajawal">
     <template v-if="loading">
       <StatCardSkeleton v-for="i in 4" :key="i" />
     </template>

@@ -6,9 +6,9 @@
     <div class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <div
-          class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shrink-0 shadow-2xs group-hover:scale-110 transition-transform"
+          class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-110 transition-transform text-theme-primary"
         >
-          {{ category.icon || '☕' }}
+          <DynamicIcon :name="category.icon || 'Folder'" fallback="Folder" class="w-6 h-6" />
         </div>
         <div class="min-w-0">
           <h4
@@ -52,6 +52,7 @@
 
 <script setup>
 import { Pencil, Trash2 } from 'lucide-vue-next';
+import DynamicIcon from '../Common/DynamicIcon.vue';
 import ActionMenu from '../ActionMenu.vue';
 import { trans } from '../../helpers/trans';
 

@@ -10,9 +10,11 @@
       <div
         class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1"
       >
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{
-          $t('reports.total_sales_revenue')
-        }}</span>
+        <span
+          class="text-xs font-bold text-slate-500 dark:text-slate-400 cursor-help"
+          :title="$t('reports.revenue_tooltip')"
+          >{{ $t('reports.total_sales_revenue') }}</span
+        >
         <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
           {{ formatMoney(summary.total_sales) }}
           <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
@@ -26,7 +28,11 @@
       <div
         class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md space-y-1"
       >
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('reports.total_cogs_label') }}</span>
+        <span
+          class="text-xs font-bold text-slate-500 dark:text-slate-400 cursor-help"
+          :title="$t('reports.cogs_tooltip')"
+          >{{ $t('reports.total_cogs_label') }}</span
+        >
         <div class="text-2xl font-black text-rose-500 dark:text-rose-400 font-mono">
           {{ formatMoney(summary.total_cogs) }}
           <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
@@ -38,9 +44,11 @@
       <div
         class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/30 shadow-sm dark:shadow-md space-y-1"
       >
-        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{
-          $t('reports.gross_profit_label')
-        }}</span>
+        <span
+          class="text-xs font-bold text-emerald-600 dark:text-emerald-400 cursor-help"
+          :title="$t('reports.gross_profit_tooltip')"
+          >{{ $t('reports.gross_profit_label') }}</span
+        >
         <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
           {{ formatMoney(summary.gross_profit) }}
           <span class="text-xs text-emerald-500 font-normal font-tajawal">{{ $t('common.currency') }}</span>
@@ -68,7 +76,7 @@
 
       <!-- Net True Profit -->
       <div
-        class="sm:col-span-2 lg:col-span-2 p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 dark:from-emerald-950/60 dark:to-slate-950/80 border border-emerald-200 dark:border-emerald-500/40 shadow-sm dark:shadow-xl space-y-1"
+        class="sm:col-span-2 lg:col-span-2 p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 dark:from-emerald-950/60 dark:via-teal-950/50 dark:to-slate-950/80 border border-emerald-200 dark:border-emerald-500/40 shadow-sm dark:shadow-xl space-y-1"
       >
         <div class="flex items-center justify-between">
           <span class="text-xs font-black text-emerald-700 dark:text-emerald-300">{{

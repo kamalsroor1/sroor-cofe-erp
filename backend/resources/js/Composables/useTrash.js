@@ -11,6 +11,8 @@ export function useTrash() {
     const records = ref([]);
     const counts = ref({});
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const tabsList = computed(() => [
         { id: 'items', label: t('trash.tab_items_label'), icon: '📦' },
@@ -51,6 +53,8 @@ export function useTrash() {
 
     const fetchRecords = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const res = await api.get('/trash', {
                 params: {
@@ -63,6 +67,8 @@ export function useTrash() {
             counts.value = res.data?.counts || {};
             pagination.value = res.data?.pagination || pagination.value;
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load trash records:', e);
         } finally {
             isLoading.value = false;
@@ -143,6 +149,8 @@ export function useTrash() {
     });
 
     return {
+        error,
+        errorMessage,
         currentTab,
         search,
         records,

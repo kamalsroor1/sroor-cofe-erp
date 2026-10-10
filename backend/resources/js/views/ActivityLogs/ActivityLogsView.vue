@@ -36,13 +36,20 @@
     />
 
     <!-- Logs Timeline & Pagination -->
-    <ActivityLogsTimeline
-      :logs="logs"
-      :pagination="pagination"
-      :loading="isLoading"
-      @inspect="openDetails"
-      @page-change="changePage"
-    />
+
+    <template v-if="error && (!logs || logs.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchLogs()" />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchLogs()" />
+      <ActivityLogsTimeline
+        :logs="logs"
+        :pagination="pagination"
+        :loading="isLoading"
+        @inspect="openDetails"
+        @page-change="changePage"
+      />
+    </template>
 
     <!-- Payload Details Modal -->
     <ActivityLogDetailsModal :selected-log="selectedLog" @close="closeDetails" />
@@ -50,6 +57,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { RefreshCw } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -67,6 +76,8 @@ const {
   moduleOptions,
   userOptions,
   storeOptions,
+  error,
+  errorMessage,
   isLoading,
   selectedLog,
   updateSearch,

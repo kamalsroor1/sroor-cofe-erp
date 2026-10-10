@@ -28,16 +28,27 @@
     />
 
     <!-- Customers Table & Mobile Cards -->
-    <CustomersTable
-      :customers="customers"
-      :pagination="pagination"
-      :loading="isLoading"
-      @create="openCreateModal"
-      @pay="openPaymentModal"
-      @edit="openEditModal"
-      @delete="deleteCustomer"
-      @page-change="fetchCustomers"
-    />
+
+    <template v-if="error && (!customers || customers.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchCustomers(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchCustomers(pagination?.current_page || 1)" />
+      <CustomersTable
+        :customers="customers"
+        :pagination="pagination"
+        :loading="isLoading"
+        @create="openCreateModal"
+        @pay="openPaymentModal"
+        @edit="openEditModal"
+        @delete="deleteCustomer"
+        @page-change="fetchCustomers"
+      />
+    </template>
 
     <!-- Add / Edit Customer Modal -->
     <CustomerFormModal
@@ -64,6 +75,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -79,6 +92,8 @@ const {
   metrics,
   searchQuery,
   debtStatus,
+  error,
+  errorMessage,
   isLoading,
   isSubmitting,
   pagination,

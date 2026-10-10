@@ -65,20 +65,31 @@
           @bulk-cancel="bulkCancelSelected"
           @deselect-all="selectedInvoiceIds = []"
         />
-        <InvoicesTable
-          :invoices="invoices"
-          :is-loading="isLoading"
-          :selected-ids="selectedInvoiceIds"
-          :is-all-selected="isAllSelected"
-          :pagination="pagination"
-          @toggle-select="toggleSelectInvoice"
-          @toggle-select-all="toggleSelectAll"
-          @preview="openDetailsModal"
-          @print="openPrintReceipt"
-          @cancel="cancelInvoice"
-          @change-page="fetchInvoices"
-          @reset-filters="resetAllFilters"
-        />
+
+        <template v-if="error && (!invoices || invoices.length === 0)">
+          <ErrorState
+            data-testid="error-state"
+            :message="errorMessage"
+            @retry="fetchInvoices(pagination?.current_page || 1)"
+          />
+        </template>
+        <template v-else>
+          <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchInvoices(pagination?.current_page || 1)" />
+          <InvoicesTable
+            :invoices="invoices"
+            :is-loading="isLoading"
+            :selected-ids="selectedInvoiceIds"
+            :is-all-selected="isAllSelected"
+            :pagination="pagination"
+            @toggle-select="toggleSelectInvoice"
+            @toggle-select-all="toggleSelectAll"
+            @preview="openDetailsModal"
+            @print="openPrintReceipt"
+            @cancel="cancelInvoice"
+            @change-page="fetchInvoices"
+            @reset-filters="resetAllFilters"
+          />
+        </template>
       </div>
 
       <InvoicesFilterSidebar
@@ -109,6 +120,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ref, computed, onMounted } from 'vue';
 import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap } from 'lucide-vue-next';
 import api from '../../Services/api';
@@ -136,6 +149,8 @@ const selectedStatus = ref('all');
 const dateFrom = ref('');
 const dateTo = ref('');
 const isLoading = ref(true);
+const error = ref(false);
+const errorMessage = ref('');
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
 const showDetailsModal = ref(false);
 const selectedInvoiceDetails = ref(null);
@@ -180,6 +195,8 @@ const isAllSelected = computed(
 
 const fetchInvoices = async (page = 1) => {
   isLoading.value = true;
+  error.value = false;
+  errorMessage.value = '';
   try {
     const res = await api.get('/invoices', {
       params: {
@@ -201,8 +218,10 @@ const fetchInvoices = async (page = 1) => {
       per_page: 15,
       total: invoices.value.length,
     };
-  } catch (e) {
-    console.error('Failed to load invoices:', e);
+  } catch (err) {
+    error.value = true;
+    errorMessage.value = err.userMessage || err.message || trans('common.error_occurred');
+    console.error('Failed to load invoices:', err);
   } finally {
     isLoading.value = false;
   }

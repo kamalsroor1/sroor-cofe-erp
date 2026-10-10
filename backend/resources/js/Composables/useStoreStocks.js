@@ -13,6 +13,8 @@ export function useStoreStocks() {
     const searchQuery = ref('');
     const stockStatus = ref('all');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const pagination = ref({
         current_page: 1,
@@ -38,6 +40,8 @@ export function useStoreStocks() {
                 selectedStoreId.value = stores.value[0].id;
             }
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to load stores:', e);
         }
     };
@@ -46,6 +50,8 @@ export function useStoreStocks() {
         if (!selectedStoreId.value) return;
 
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/stores/stocks', {
                 params: {
@@ -63,8 +69,10 @@ export function useStoreStocks() {
                 per_page: 20,
                 total: stocks.value.length,
             };
-        } catch (error) {
-            console.error('Failed to load store stocks:', error);
+        } catch (err) {
+            error.value = true;
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load store stocks:', err);
         } finally {
             isLoading.value = false;
         }
@@ -88,6 +96,8 @@ export function useStoreStocks() {
     });
 
     return {
+        error,
+        errorMessage,
         stores,
         stocks,
         selectedStoreId,

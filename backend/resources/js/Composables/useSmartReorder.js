@@ -20,6 +20,8 @@ export function useSmartReorder() {
     const selectedUrgency = ref('all');
     const searchQuery = ref('');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const selectedItems = ref([]);
 
     let debounceTimer = null;
@@ -68,6 +70,8 @@ export function useSmartReorder() {
 
     const fetchSuggestions = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/purchases/smart-reorder', {
                 params: {
@@ -87,8 +91,10 @@ export function useSmartReorder() {
                     total_estimated_cost: data.total_estimated_cost || 0,
                 };
             }
-        } catch (error) {
-            console.error('Failed to load smart reorder suggestions:', error);
+        } catch (err) {
+            error.value = true;
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load smart reorder suggestions:', err);
         } finally {
             isLoading.value = false;
         }
@@ -117,6 +123,8 @@ export function useSmartReorder() {
     onMounted(fetchSuggestions);
 
     return {
+        error,
+        errorMessage,
         suggestions,
         metrics,
         analysisDays,

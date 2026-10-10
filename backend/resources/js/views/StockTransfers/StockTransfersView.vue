@@ -27,14 +27,25 @@
     />
 
     <!-- 📋 Transfers Ledger Table -->
-    <StockTransfersTable
-      :transfers="transfersList"
-      :pagination="pagination"
-      :is-loading="isLoading"
-      @preview="openDetailsModal"
-      @cancel="cancelTransferDoc"
-      @page-change="fetchTransfers"
-    />
+
+    <template v-if="error && (!transfersList || transfersList.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchTransfers(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchTransfers(pagination?.current_page || 1)" />
+      <StockTransfersTable
+        :transfers="transfersList"
+        :pagination="pagination"
+        :is-loading="isLoading"
+        @preview="openDetailsModal"
+        @cancel="cancelTransferDoc"
+        @page-change="fetchTransfers"
+      />
+    </template>
 
     <!-- 👁️ Transfer Details Modal -->
     <StockTransferDetailsModal
@@ -46,6 +57,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ref, watch, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
@@ -69,6 +82,8 @@ const toStoreId = ref('all');
 const dateFrom = ref('');
 const dateTo = ref('');
 const isLoading = ref(true);
+const error = ref(false);
+const errorMessage = ref('');
 
 const pagination = ref({ current_page: 1, last_page: 1, per_page: 15, total: 0 });
 
@@ -86,6 +101,8 @@ const loadStores = async () => {
 
 const fetchTransfers = async (page = 1) => {
   isLoading.value = true;
+  error.value = false;
+  errorMessage.value = '';
   try {
     const res = await api.get('/transfers', {
       params: {
@@ -107,6 +124,8 @@ const fetchTransfers = async (page = 1) => {
       total: transfersList.value.length,
     };
   } catch (err) {
+    error.value = true;
+    errorMessage.value = err.userMessage || err.message || trans('common.error_occurred');
     console.error('Failed to load transfers:', err);
   } finally {
     isLoading.value = false;

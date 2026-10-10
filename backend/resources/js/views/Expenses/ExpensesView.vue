@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader :title="$t('expenses.title')" :subtitle="$t('expenses.subtitle')" icon="💸">
+    <PageHeader :title="$t('expenses.title')" :subtitle="$t('expenses.subtitle')" :icon="Receipt">
       <template #actions>
         <BaseButton
           type="button"
@@ -38,10 +38,13 @@
       :expenses="expenses"
       :pagination="pagination"
       :loading="isLoading"
+      :error="hasError"
+      :error-message="errorMessage"
       @create="openCreateModal"
       @edit="openEditModal"
       @delete="deleteExpense"
       @page-change="fetchExpenses"
+      @retry="fetchExpenses($event || pagination.current_page)"
     />
 
     <!-- Add / Edit Expense Modal -->
@@ -60,7 +63,7 @@
 </template>
 
 <script setup>
-import { Plus } from 'lucide-vue-next';
+import { Plus, Receipt } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ExpensesMetricsGrid from '../../Components/Expenses/ExpensesMetricsGrid.vue';
@@ -81,6 +84,8 @@ const {
   dateFrom,
   dateTo,
   isLoading,
+  hasError,
+  errorMessage,
   isSubmitting,
   pagination,
   showExpenseModal,

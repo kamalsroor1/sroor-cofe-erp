@@ -20,11 +20,20 @@
     />
 
     <!-- Ledger Table & Mobile Cards -->
-    <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
+
+    <template v-if="error && (!ledger || ledger.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchStatement()" />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStatement()" />
+      <CustomerStatementTable :ledger="ledger" :loading="isLoading" />
+    </template>
   </div>
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import CustomerStatementHeader from '../../Components/Customers/CustomerStatementHeader.vue';
 import CustomerStatementSummaryCards from '../../Components/Customers/CustomerStatementSummaryCards.vue';
 import CustomerStatementFilterBar from '../../Components/Customers/CustomerStatementFilterBar.vue';
@@ -38,6 +47,8 @@ const {
   dateFrom,
   dateTo,
   activePreset,
+  error,
+  errorMessage,
   isLoading,
   applyPreset,
   fetchStatement,

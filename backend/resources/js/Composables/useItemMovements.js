@@ -21,6 +21,8 @@ export function useItemMovements() {
     const dateTo = ref('');
     const activePreset = ref('all');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const formatMovementLabel = (type) => {
         const map = {
@@ -79,6 +81,8 @@ export function useItemMovements() {
 
     const fetchMovements = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get(`/items/${itemId}/movements`, {
                 params: {
@@ -92,8 +96,10 @@ export function useItemMovements() {
                 movements.value = data.data || [];
                 stats.value = data.stats || {};
             }
-        } catch (error) {
-            console.error('Failed to load item movements:', error);
+        } catch (err) {
+            error.value = true;
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load item movements:', err);
         } finally {
             isLoading.value = false;
         }
@@ -106,6 +112,8 @@ export function useItemMovements() {
     onMounted(fetchMovements);
 
     return {
+        error,
+        errorMessage,
         itemId,
         item,
         movements,

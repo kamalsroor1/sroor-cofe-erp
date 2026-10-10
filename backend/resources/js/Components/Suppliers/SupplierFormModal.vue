@@ -73,7 +73,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="saving"
+          :loading="submitting"
           class="font-black shadow-lg shadow-theme-primary/20"
         >
           {{ editingSupplier ? $t('common.save_changes') : $t('contacts.save_supplier') }}
@@ -94,7 +94,7 @@ defineProps({
   show: { type: Boolean, default: false },
   editingSupplier: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
-  saving: { type: Boolean, default: false },
+  submitting: { type: Boolean, default: false },
 });
 
 defineEmits(['close', 'save', 'update:field']);

@@ -102,7 +102,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="saving"
+          :loading="submitting"
           class="font-bold shadow-theme-primary shadow-md"
         >
           {{ editingExpense ? $t('common.save') : $t('expenses.add_expense') }}
@@ -130,7 +130,7 @@ defineProps({
   form: { type: Object, default: () => ({}) },
   costCenterModalOptions: { type: Array, default: () => [] },
   quickCategories: { type: Array, default: () => [] },
-  saving: { type: Boolean, default: false },
+  submitting: { type: Boolean, default: false },
 });
 
 defineEmits(['close', 'save', 'update:field']);

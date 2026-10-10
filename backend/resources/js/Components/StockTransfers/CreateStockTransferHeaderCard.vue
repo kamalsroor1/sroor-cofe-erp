@@ -36,10 +36,9 @@
 
       <!-- Transfer Date -->
       <div>
-        <BaseInput
+        <BaseDatePicker
           :model-value="form.transfer_date"
           @update:model-value="updateForm('transfer_date', $event)"
-          type="date"
           :label="$t('inventory.transfer_date_label')"
           required
         />
@@ -62,6 +61,7 @@
 <script setup>
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseInput from '../Form/BaseInput.vue';
+import BaseDatePicker from '../Form/BaseDatePicker.vue';
 
 const props = defineProps({
   form: { type: Object, required: true },

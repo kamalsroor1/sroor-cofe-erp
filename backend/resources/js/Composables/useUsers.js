@@ -10,6 +10,8 @@ export function useUsers() {
     const rolesList = ref([]);
     const storesList = ref([]);
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const filters = reactive({
@@ -65,6 +67,8 @@ export function useUsers() {
 
     const fetchUsers = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const res = await api.get('/users', { params: filters });
             users.value = res.data?.data || [];
@@ -72,6 +76,8 @@ export function useUsers() {
             storesList.value = res.data?.stores || [];
             pagination.value = res.data?.pagination || pagination.value;
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to fetch users:', e);
         } finally {
             isLoading.value = false;
@@ -199,6 +205,8 @@ export function useUsers() {
     });
 
     return {
+        error,
+        errorMessage,
         users,
         rolesList,
         storesList,

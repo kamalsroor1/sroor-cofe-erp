@@ -28,9 +28,13 @@
           <!-- Header Row: Type, Code & Status -->
           <div class="flex items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-xl">
-                {{ store.type === 'van' ? '🚚' : store.type === 'warehouse' ? '🏭' : '🏬' }}
-              </span>
+              <div
+                class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-theme-primary shrink-0"
+              >
+                <Truck v-if="store.type === 'van'" class="w-4 h-4" />
+                <Warehouse v-else-if="store.type === 'warehouse'" class="w-4 h-4" />
+                <StoreIcon v-else class="w-4 h-4" />
+              </div>
               <span
                 class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400"
               >
@@ -138,9 +142,10 @@
                 <span
                   v-for="user in store.assigned_users"
                   :key="user.id"
-                  class="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 font-tajawal"
+                  class="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 font-tajawal inline-flex items-center gap-1"
                 >
-                  👤 {{ user.name }}
+                  <User class="w-3 h-3 text-slate-400 shrink-0" />
+                  <span>{{ user.name }}</span>
                 </span>
               </template>
               <span v-else class="text-[10px] text-slate-400 font-tajawal italic">
@@ -166,12 +171,12 @@
       </div>
     </div>
 
-    <!-- 🚫 Empty State -->
+    <!-- Empty State -->
     <EmptyState
       v-else
       :title="$t('inventory.no_stores_found')"
       :description="$t('inventory.add_store_description')"
-      :icon="'🏬'"
+      :icon="StoreIcon"
     >
       <template #action>
         <button
@@ -187,7 +192,20 @@
 </template>
 
 <script setup>
-import { MapPin, Phone, Users, Package, Pencil, Trash2, CheckCircle2, Ban } from 'lucide-vue-next';
+import {
+  MapPin,
+  Phone,
+  Users,
+  User,
+  Package,
+  Pencil,
+  Trash2,
+  CheckCircle2,
+  Ban,
+  Store as StoreIcon,
+  Warehouse,
+  Truck,
+} from 'lucide-vue-next';
 import CardSkeleton from '../Common/Skeletons/CardSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import ActionMenu from '../ActionMenu.vue';

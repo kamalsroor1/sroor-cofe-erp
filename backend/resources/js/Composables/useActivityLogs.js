@@ -11,6 +11,8 @@ export function useActivityLogs() {
     const storesList = ref([]);
     const modulesList = ref({});
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
     const selectedLog = ref(null);
 
     const filters = reactive({
@@ -78,6 +80,8 @@ export function useActivityLogs() {
 
     const fetchLogs = async () => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const res = await api.get('/activity-logs', { params: filters });
             logs.value = res.data?.data || [];
@@ -87,6 +91,8 @@ export function useActivityLogs() {
             modulesList.value = res.data?.modules_list || {};
             pagination.value = res.data?.pagination || pagination.value;
         } catch (e) {
+            error.value = true;
+            errorMessage.value = e.userMessage || e.message || t('common.error_occurred');
             console.error('Failed to fetch activity logs:', e);
         } finally {
             isLoading.value = false;
@@ -111,6 +117,8 @@ export function useActivityLogs() {
     });
 
     return {
+        error,
+        errorMessage,
         logs,
         stats,
         filters,
