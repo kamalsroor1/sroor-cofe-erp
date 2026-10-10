@@ -38,9 +38,7 @@ const UNIT_NAMES = [
 ];
 
 // TEMPORARY allowlist — files this lane may not edit. Remove an entry once its file is fixed.
-const ALLOWLIST = new Map([
-    ['Composables/useSettings.js', 'Antigravity-owned settings screen (handoff: lines ~108, ~116, ~234)'],
-]);
+const ALLOWLIST = new Map([]);
 
 const unitAlternation = UNIT_NAMES.join('|');
 const QUOTED_UNIT = new RegExp(`(['"\`])(?:${unitAlternation})\\1`, 'g');
