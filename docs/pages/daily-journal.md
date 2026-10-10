@@ -1,91 +1,71 @@
-# 📖 وثيقة المكون والصفحة: دفتر اليومية وحركات الخزينة والورديات (`DailyJournalView.vue`)
+# 📖 وثيقة المكون والصفحة: دفتر اليومية وحركات الخزينة والورديات (`DailyJournalView`)
 
-> **المسار (Route):** `/daily-journal`  
-> **الملف الرئيسي:** `resources/js/views/DailyJournal/DailyJournalView.vue` (Thin Orchestrator: ~75 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **دفتر اليومية وحركات الخزينة والورديات (Daily Journal & Cash Shifts Ledger)** مركز التحكم المالي اليومي للتدفقات النقدية ومطابقة رصيد الدرج:
-1. **دفتر اليومية الموحد:** تتبع ومطابقة كافة المقبوضات (فواتير مبيعات، تحصيلات عملاء) والمصروفات (مصروفات تشغيلية، سداد موردين) لتاريخ محدد.
-2. **إدارة ورديات الكاشير (Shift Control & Z-Report):** فتح الوردية وتحديد رصيد البداية الافتتاحي (Float/Opening Cash)، وإغلاق الوردية وحساب العجز أو الزيادة (Drawer Shortage/Overage) فورياً ومقارنة النقدية الفعلية مع المتوقعة.
-3. **بطاقات المؤشرات والسيولة الحية:** إجمالي المقبوضات النقدية (+Total Inflow)، إجمالي المدفوعات والمصروفات (-Total Outflow)، صافي التدفق اليومي (Net Cash Flow)، والنقدية المتوقعة في الدرج (Expected Cash in Drawer).
-4. **تبويبات المقبوضات والمصروفات التفاعلية:** تصفح فواتير المبيعات الصادرة لليوم ومصروفات وسندات الصرف بنقرة واحدة مع شارات طرق الدفع والحالة.
-5. **تسجيل المصروف السريع من الدرج (Quick Journal Expense Modal):** قيد فوري لأي مصروف نثري أو نولون مباشر وتحديث حسابات الوردية والدرج.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** دفتر اليومية وحركات الخزينة والورديات (Daily Journal & Cash Shifts)
+* **المسار (Route):** `/daily-journal` (مع اسم مستعار `/shifts`)
+* **اسم المسار (Route Name):** `daily_journal.index`
+* **الصلاحية المطلوبة (Permission):** `daily_journal.view`
+* **الملف الرئيسي:** `resources/js/views/DailyJournal/DailyJournalView.vue` (~143 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * المركز المالي اليومي لمتابعة الإيرادات والمصروفات وحركات الخزينة لحظة بلحظة ("يوم بيوم").
+  * إدارة دورة حياة ورديات الكاشير: افتتاح الوردية، الرصيد الافتتاحي، قفل الوردية، ومطابقة النقدية الفعلية مع المتوقعة.
+  * استخراج تقرير الإقفال المالي النهائي للوردية (Z-Report) مع تفصيل المبيعات النقدية والإلكترونية والآجلة.
+  * تسجيل المصروفات النثرية والتشغيلية المباشرة من الخزينة اليومية.
+  * طباعة تقرير اليومية الضريبي والمالي الشامل A4 لمراجع الحسابات والإدارة.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم بـ 724 سطرًا إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/DailyJournal/
-│   └── DailyJournalView.vue                     <-- Thin Orchestrator (~75 lines)
-├── Components/DailyJournal/
-│   ├── DailyJournalShiftBanner.vue              <-- شريط الوردية النشطة وطباعة Z-Report أو تنبيه الفتح
-│   ├── DailyJournalMetricsGrid.vue              <-- بطاقات التدفق النقدي (الوارد، المنصرف، الصافي، رصيد الدرج)
-│   ├── DailyJournalTabs.vue                     <-- تبويبات وجداول الفواتير والمصروفات (Desktop + Mobile Cards)
-│   ├── OpenShiftModal.vue                       <-- نافذة فتح الوردية وإدخال العهدة الافتتاحية
-│   ├── CloseShiftModal.vue                      <-- نافذة إغلاق الوردية وحساب العجز/الزيادة Z-Report
-│   └── QuickExpenseModal.vue                    <-- نافذة تسجيل مصروف سريع من اليومية
-└── Composables/
-    └── useDailyJournal.js                       <-- كبسولة المنطق والاتصال بالـ API وإدارة الورديات
+DailyJournalView.vue (~143 lines)
+├── DailyJournalShiftBanner.vue       <-- شريط حالة الوردية النشطة للمستخدم (اسم الكاشير، توقيت الافتتاح، الرصيد الافتتاحي)
+├── DailyJournalMetricsGrid.vue       <-- بطاقات المؤشرات المالية: إجمالي المقبوضات، المصروفات، سداد الموردين، الرصيد المتوقع
+├── DailyJournalBreakdownCards.vue    <-- تفصيل حركات التدفقات النقدية (Inflows vs Outflows) وقائمة ورديات اليوم
+├── DailyJournalAuditTrail.vue        <-- سجل العمليات والأحداث المالية لليوم المختار
+├── DailyJournalOpenShiftModal.vue    <-- نافذة افتتاح وردية كاشير جديدة وتحديد العهدة الافتتاحية
+├── DailyJournalCloseShiftModal.vue   <-- نافذة قفل الوردية، إدخال الجرد الفعلي، وعرض العجز أو الزيادة
+├── DailyJournalExpenseModal.vue      <-- نافذة تسجيل مصروف نثري فوري مخصوم من الخزينة
+└── DailyJournalZReportModal.vue      <-- نافذة معاينة وطباعة تقرير الـ Z-Report التفصيلي
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة، فلتر التاريخ، وزر فتح/إغلاق الوردية.
-* `BaseButton.vue`: أزرار الإجراءات وفتح/إغلاق الوردية مع مؤشرات التحميل.
-* `BaseNumberInput.vue`: حقول إدخال النقدية الفعلية للعد والجرد.
-* `StatCardSkeleton.vue`: هياكل تحميل بطاقات المؤشرات الوميضية.
-* `TableSkeleton.vue`: هيكل التحميل الوميضي للجداول.
-* `EmptyState.vue`: حالة عدم وجود فواتير أو مصروفات لتاريخ محدد.
-* `AppModal.vue`: الحاوية الموحدة لنوافذ الورديات والمصروفات.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `MetricCard.vue`, `AppModal.vue`.
+* **المخازن المستخدمة:** `useAuthStore` (التحقق من صلاحية قفل وافتتاح الوردية `daily_journal.close_shift`).
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`) وتنسيق الفروقات النقدية.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب بيانات اليومية والوردية** | `GET /api/v1/daily-journal` | `date` | الوردية النشطة + ملخص السيولة + فواتير ومصروفات اليوم |
-| **فتح وردية جديدة** | `POST /api/v1/shifts/open` | `opening_cash_balance`, `notes` | تسجيل بداية الوردية وربط الكاشير والدرج |
-| **إغلاق الوردية واعتماد Z-Report** | `POST /api/v1/shifts/close` | `shift_id`, `actual_cash_balance`, `notes` | تقفيل الوردية وحساب الفارق واعتماد Z-Report |
-| **قيد مصروف سريع** | `POST /api/v1/expenses` | `title`, `amount`, `cost_center`, `payment_method`, `category`, `expense_date` | تسجيل سند الصرف وخصم المبلغ من الدرج |
-| **طباعة تقرير Z-Report** | `GET /api/v1/shifts/{id}/z-report` | - | بيانات التقرير المالي الشامل للوردية |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * تراص بطاقات الوردية والسيولة، بطاقات لمسية متراصة لحركات الفواتير والمصروفات، مع أزرار لمس مريحة للإبهام لفتح وإغلاق الوردية بارتفاع $\ge 44	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * جداول بيانات مالية محاسبية عالية الكثافة مع تمييز لوني واضح للقيم الموجبة والسالبة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/daily-journal`: جلب بيانات اليومية للفرع والتاريخ المحددين:
+  * **الكنترولر:** `App\Http\Controllers\Api\DailyJournalController@index`
+  * **Form Request:** `GetDailyJournalRequest`
+* `GET /api/v1/shifts/current`: جلب بيانات الوردية المفتوحة حالياً للكاشير.
+* `POST /api/v1/shifts/open`: افتتاح وردية كاشير جديدة (`daily_journal.close_shift`):
+  * **Form Request:** `OpenShiftRequest`
+  * **Action:** `App\Actions\Shifts\OpenShiftAction`
+* `POST /api/v1/shifts/close`: قفل الوردية الحالية وتسجيل الجرد الفعلي (`daily_journal.close_shift`):
+  * **Form Request:** `CloseShiftRequest`
+  * **Action:** `App\Actions\Shifts\CloseShiftAction`
+* `GET /api/v1/shifts/{id}/z-report`: استخراج تقرير Z-Report الرسمي للوردية.
+* `POST /api/v1/expenses`: تسجيل مصروف نثري جديد (`StoreExpenseRequest`).
+* مسار الطباعة المباشر: `GET /daily-journal/print` (عرض Blade مخصص مقاس A4).
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/treasury.php` و `lang/en/treasury.php`:
-* `treasury.journal_title`: يومية المبيعات وحركة الخزينة / Sales & Treasury Daily Journal
-* `treasury.open_shift`: فتح وردية / Open Shift
-* `treasury.close_shift`: تقفيل الوردية (Z-Report) / Close Shift
-* `treasury.expected_drawer_balance`: الرصيد المتوقع بالدرج / Expected Drawer Cash
-* `treasury.exact_match_no_diff`: مطابقة تماماً بدون عجز أو زيادة ✓ / Exact Match (No Difference)
+## 5. نطاق الفروع وعزل البيانات (Store Scoping):
+* تتطلب كافة استعلامات اليومية والورديات ترويسة `X-Store-Id` لتحديد الخزينة والفرع.
+* يتم التدقيق الصارم عبر `ClientStoreGuard::concrete($request)`.
+* أي محاولة للاستعلام عن خزينة فرع غير مصرح للمستخدم به تنتج استجابة **403 Forbidden** بكود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/daily-journal-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.58 ثانية.
+## 6. القواعد المالية الصارمة ويوم العمل (Financial Integrity):
+1. **توقيت قطع يوم العمل (`Business-Day Cutoff`):**
+   * يعتمد دفتر اليومية على ساعة المستأجر وتوقيت القطع `TenantSettings::businessDayCutoff()` (الافتراضي `00:00` أو وقت مخصص كـ `03:00`).
+   * الوردية المفتوحة الساعة 01:30 فجراً قبل وقت القطع 03:00 تُنسب برمجياً ومحاسبياً إلى يوم العمل السابق وتُقيد في دفاتره.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:**
+   * حسابات رصيد الخزينة المتوقع:
+     $$\text{Expected Cash} = \text{Opening Balance} + \text{Cash Sales} + \text{Customer Payments} - \text{Expenses} - \text{Supplier Payments}$$
+   * تنفذ كافة العمليات الحسابية بدقة 3 خانات عشرية باستخدام `bcmath` لضمان عدم وجود أدنى فارق هللات.

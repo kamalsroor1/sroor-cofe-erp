@@ -1,81 +1,51 @@
-# ⚖️ وثيقة المكون والصفحة: إدارة وحدات القياس المركزية للنظام (`SuperAdminUnitsView.vue`)
+# ⚖️ وثيقة المكون والصفحة: إدارة وحدات القياس المركزية للنظام (`SuperAdminUnitsView`)
 
-> **المسار (Route):** `/super-admin/units`  
-> **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminUnitsView.vue` (Thin Orchestrator: ~65 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% وفق المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **إدارة وحدات القياس المركزية للنظام (`/super-admin/units`)** كتالوج وحدات القياس القياسي لمنظومة الـ Multi-Tenant SaaS:
-1. **رأس الصفحة وإجراءات الحفظ السريع:** عنوان الصفحة، وزر العودة للوحة القيادة، وزر حفظ التعديلات للنظام.
-2. **قائمة وشبكة الوحدات المفعلة بالنظام (Active System Units Grid):** استعراض كافة وحدات القياس المعتمدة مع تصنيف تلقائي (عددية منفصلة ممنوع الكسور / وزن وحجم تقبل الكسور)، وزر إزالة الوحدة.
-3. **قسم إضافة وحدة مخصصة جديدة للنظام:** حقل إدخال وكتابة اسم الوحدة المخصصة وزر الإضافة الفورية.
-4. **قسم المقترحات الشائعة (Preset Suggestions):** اقتراحات جاهزة للوحدات الشائعة للضغط والإضافة بنقرة واحدة.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** إدارة وحدات القياس للنظام (System Measurement Units)
+* **المسار (Route):** `/super-admin/units`
+* **اسم المسار (Route Name):** `super_admin.units`
+* **الصلاحية المطلوبة (Permission):** `super_admin.access` (أو `super_admin.settings.view` / `super_admin.settings.manage` لمشغلي المنصة المركزية `CentralUser`).
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminUnitsView.vue` (~75 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * إدارة كتالوج وحدات القياس الافتراضية والقياسية المعتمدة على مستوى المنصة ككل (`System Units Catalog`).
+  * تزويد المستأجرين الجدد بقائمة الوحدات القياسية عند تهيئة حساباتهم.
+  * عرض شبكة الوحدات المفعلة مع تصنيفها التلقائي (وحدات عددية منفصلة Discrete Units أو وحدات أوزان وأحجام تقبل الكسور Fractional Units).
+  * إضافة وحدات مخصصة جديدة أو اختيار وحدات من قائمة المقترحات الجاهزة الشائعة بنقرة واحدة (`Preset Suggestions`).
+  * حفظ وتحديث قائمة الوحدات المركزية في إعدادات المنصة.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف بـ 212 سطراً إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/SuperAdmin/
-│   └── SuperAdminUnitsView.vue                <-- Thin Orchestrator (~65 lines)
-├── Components/SuperAdmin/
-│   ├── ActiveUnitsGrid.vue                    <-- شبكة شارات الوحدات المفعلة وتصنيفها وزر الحذف
-│   ├── AddCustomUnitSection.vue               <-- قسم إضافة وحدة مخصصة جديدة
-│   └── UnitPresetSuggestions.vue              <-- قسم الوحدات المقترحة الشائعة للإضافة الفورية
-└── Composables/
-    └── useSuperAdminUnits.js                  <-- كبسولة المنطق وإدارة البيانات والعمليات
+SuperAdminUnitsView.vue (~75 lines)
+├── PageHeader.vue                 <-- رأس الصفحة مع أزرار العودة للوحة القيادة وحفظ التعديلات
+├── ActiveUnitsGrid.vue            <-- شبكة شارات الوحدات المفعلة وتصنيفها وزر إزالة الوحدة
+├── AddCustomUnitSection.vue       <-- قسم كتابة وإضافة وحدة مخصصة جديدة
+└── UnitPresetSuggestions.vue     <-- قسم مقترحات الوحدات الشائعة للإضافة السريعة
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر العودة للوحة القيادة وزر حفظ التعديلات.
-* `BaseButton.vue`: أزرار الحفظ والإضافة.
-* `BaseInput.vue`: حقل إدخال الوحدة المخصصة.
-* `DarkSwal`: التنبيهات الموحدة للنجاح والخطأ والتنبيه.
-
----
-
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب قائمة وحدات القياس المركزية** | `GET /api/v1/super-admin/units` | - | مصفوفة الوحدات المركزية المعتمدة |
-| **حفظ وتحديث وحدات القياس** | `POST /api/v1/super-admin/units` | `{ units: [...] }` | تأكيد الحفظ والتحديث |
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`.
+* **القالب العام:** `SuperAdminLayout.vue`.
+* **الـ Composable:** `useSuperAdminUnits.js` لإدارة جلب الوحدات وإضافة وحدة جديدة وحذف وحدة وحفظ القائمة.
+* **المخازن المستخدمة:** `useAuthStore` للتحقق من صلاحية السوبر أدمن.
 
 ---
 
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي، شارات قابلة للنقر والإزالة بسهولة، أزرار بارتفاع $\ge 40	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * تنسيق بطاقات وشارات متراصة بمرونة تامة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
-
----
-
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/super.php` و `lang/en/super.php`:
-* `super.units_page_title`: إدارة وحدات القياس للنظام / System Units of Measurement
-* `super.units_page_subtitle`: تحديد وتخصيص وحدات القياس المتاحة لكافة المستأجرين في المنظومة / Define and manage standard measurement units
-* `super.active_units_count`: الوحدات المفعلة حالياً بالنظام (:count) / Currently Active System Units (:count)
-* `super.discrete_unit_badge`: عددية (ممنوع الكسور) / Discrete (Whole items)
-* `super.continuous_unit_badge`: وزن/حجم (تقبل الكسور) / Continuous (Weight/Volume)
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/super-admin/units`:
+  * **الوصف:** جلب قائمة وحدات القياس المركزية المعتمدة للمنصة.
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@getUnits`
+* `POST /api/v1/super-admin/units`:
+  * **الوصف:** حفظ وتحديث قائمة وحدات القياس المركزية.
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@updateUnits`
+  * **Form Request:** `App\Http\Requests\UpdateSystemUnitsRequest`
+  * **الحقول:** `units: string[]` (قائمة أسماء الوحدات).
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/super-admin-units-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 5.33 ثانية.
+## 5. الحماية الأمنية وعزل المنصة المركزية:
+* **حماية النطاق المركزي:** الوصول محمي بـ `EnsureCentralContext` و `can:super_admin.access`.
+* **التخزين المركزي:** تُخزن الوحدات في جدول الإعدادات المركزي أو كإعداد عام للمنصة دون المساس بإعدادات المستأجرين الفردية المستقلة.

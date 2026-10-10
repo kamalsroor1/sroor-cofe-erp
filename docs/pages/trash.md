@@ -1,83 +1,55 @@
-# 🗑️ وثيقة المكون والصفحة: سلة المحذوفات والاسترجاع الآمن (`TrashView.vue`)
+# 🗑️ وثيقة المكون والصفحة: سلة المحذوفات والاسترجاع الآمن (`TrashView`)
 
-> **المسار (Route):** `/trash`  
-> **الملف الرئيسي:** `resources/js/views/Trash/TrashView.vue` (Thin Orchestrator: ~65 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **سلة المحذوفات المركزية (Trash & Soft Deletes Recovery)** صمام الأمان لمنع فقدان البيانات:
-1. **إدارة المحذوفات المؤقتة (Soft Delete Recovery):** استعراض واستعادة كافة السجلات المحذوفة عبر 6 تبويبات مخصصة (الأصناف، العملاء، الموردين، الفروع، المصروفات، المرتجعات).
-2. **عداد المحذوفات الحي:** إظهار عدد السجلات المحذوفة بجانب كل تبويب مع شارة مميزة عند وجود عناصر.
-3. **البحث السريع:** إمكانية البحث داخل سلة المحذوفات بالاسم أو الكود.
-4. **الاسترجاع الفوري والحذف النهائي:** أزرار استرجاع مع تأكيد آمن عبر SweetAlert وزر حذف نهائي صارم (Force Delete).
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** سلة المحذوفات (Trash & Recovery)
+* **المسار (Route):** `/trash`
+* **اسم المسار (Route Name):** `trash.index`
+* **الصلاحية المطلوبة (Permission):** `trash.access` (أو دور `admin`).
+* **الملف الرئيسي:** `resources/js/views/Trash/TrashView.vue` (~63 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * إدارة السجلات المحذوفة ناعماً (Soft Deleted Records) في بيئة المستأجر عبر تبويبات منفصلة (الأصناف، العملاء، الموردين، الفروع، المصروفات، المرتجعات).
+  * استعراض عدادات السجلات المحذوفة لكل موديول بصورة حية.
+  * البحث السريع داخل السجلات المحذوفة بالاسم أو الرمز.
+  * استرجاع السجلات المحذوفة فورياً إلى حالتها النشطة (`Restore`).
+  * الحذف النهائي والفيزيائي الصارم للسجلات (`Force Delete`) مع رسائل تأكيد.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف بـ 261 سطرًا إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Trash/
-│   └── TrashView.vue                          <-- Thin Orchestrator (~65 lines)
-├── Components/Trash/
-│   ├── TrashModuleTabs.vue                    <-- شريط التبويبات الـ 6 مع الأيقونات والعدادات
-│   ├── TrashFilterBar.vue                     <-- شريط البحث الفوري في سلة المحذوفات
-│   └── TrashTable.vue                         <-- جدول المحذوفات وبطاقات الهواتف مع أزرار الاسترجاع والحذف
-└── Composables/
-    └── useTrash.js                            <-- كبسولة المنطق والاتصال بالـ API والاستعادة والحذف
+TrashView.vue (~63 lines)
+├── PageHeader.vue            <-- رأس الصفحة مع زر تحديث السلة
+├── TrashModuleTabs.vue       <-- شريط التبويبات مع الأيقونات وشارات العدادات
+├── TrashFilterBar.vue        <-- شريط البحث في السجلات المحذوفة
+└── TrashTable.vue            <-- جدول السجلات مع تفاصيل الحذف وأزرار الاسترجاع والحذف النهائي
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر تحديث السلة.
-* `BaseButton.vue`: زر التحديث والإجراءات مع مؤشرات التحميل.
-* `BaseSearchInput.vue`: حقل البحث الفوري.
-* `TableSkeleton.vue`: هيكل التحميل الوميضي للجداول.
-* `EmptyState.vue`: حالة عدم وجود محذوفات في التبويب المختار.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseSearchInput.vue`, `TableSkeleton.vue`, `EmptyState.vue`.
+* **الـ Composable:** `useTrash.js` لإدارة التبويب النشط وجلب المحذوفات وتنفيذ عمليات الاسترجاع والحذف النهائي.
+* **المخازن المستخدمة:** `useAuthStore` للتحقق من صلاحية `trash.access`.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب المحذوفات والعدادات** | `GET /api/v1/trash` | `tab`, `search`, `page` | قائمة العناصر المحذوفة + العدادات + الترقيم |
-| **استرجاع عنصر محذوف** | `POST /api/v1/trash/{module}/{id}/restore` | - | استعادة العنصر إلى السجلات النشطة |
-| **حذف نهائي لعنصر** | `DELETE /api/v1/trash/{module}/{id}/force` | - | الحذف الفيزيائي النهائي من قاعدة البيانات |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * تبويبات قابلة للتمرير الأفقي، بطاقات لمسية متراصة لكل عنصر محذوف، وأزرار استرجاع/حذف بارتفاع $\ge 40	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * جدول محاسبي أنيق مع تاريخ الحذف والوصف وأزرار واضحة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/trash` (أو مسار المستأجر `/trash`):
+  * **الوصف:** جلب السجلات المحذوفة للتبويب المحدد مع العدادات وترقيم الصفحات.
+  * **الكنترولر:** `App\Http\Controllers\Api\TrashController@index`
+  * **Action:** `App\Actions\Trash\GetTrashRecordsAction`
+  * **المعاملات:** `tab` (items, customers, suppliers, stores, expenses, returns), `search`, `per_page`, `page`.
+* `POST /api/v1/trash/{type}/{id}/restore`:
+  * **الوصف:** استرجاع السجل المحذوف وإعادته للعمليات النشطة.
+  * **الكنترولر:** `App\Http\Controllers\Api\TrashController@restore`
+  * **Action:** `App\Actions\Trash\RestoreTrashRecordAction`
+* `DELETE /api/v1/trash/{type}/{id}/force`:
+  * **الوصف:** الحذف الفيزيائي النهائي للسجل من قاعدة البيانات.
+  * **الكنترولر:** `App\Http\Controllers\Api\TrashController@forceDelete`
+  * **Action:** `App\Actions\Trash\ForceDeleteTrashRecordAction`
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/trash.php` و `lang/en/trash.php`:
-* `trash.trash_title`: سلة المحذوفات / Trash & Recovery
-* `trash.trash_subtitle`: استرجاع أو الحذف النهائي للسجلات المحذوفة... / Restore or permanently purge deleted records...
-* `trash.tab_items_label`: الأصناف والخامات / Items & Raw Materials
-* `trash.restore_success`: تم الاسترجاع / Restored Successfully
-* `trash.force_delete_success`: تم الحذف النهائي / Purged Successfully
-
----
-
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/trash-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.15 ثانية.
+## 5. الحماية والأمان وعزل البيانات:
+* **حماية الصلاحيات:** تقتصر إمكانية فتح السلة أو استرجاع أو حذف السجلات على حاملي صلاحية `trash.access` أو مديري النظام `admin`.
+* **عزل المستأجر:** كافة السجلات المحذوفة والاستعلامات تقتصر حصراً على قاعدة بيانات المستأجر النشط.

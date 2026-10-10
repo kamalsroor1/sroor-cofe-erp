@@ -1,91 +1,62 @@
-# 💸 وثيقة المكون والصفحة: إدارة المصروفات العامة والتكاليف التشغيلية (`ExpensesView.vue`)
+# 💸 وثيقة المكون والصفحة: إدارة المصروفات العامة والتكاليف التشغيلية (`ExpensesView`)
 
-> **المسار (Route):** `/expenses`  
-> **الملف الرئيسي:** `resources/js/views/Expenses/ExpensesView.vue` (Thin Orchestrator: ~75 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **إدارة المصروفات العامة والتكاليف التشغيلية (Expenses & Operational Cost Centers)** الأداة المركزية لضبط التدفقات النقدية الخارجة وقيد المصاريف:
-1. **تسجيل المصروفات والخدمات الإضافية:** تسجيل كافة المصروفات (إيجارات، مرافق، رواتب، وقود وصيانة، بوفيه وضيافة، شحن، ومصاريف تشغيلية عامة).
-2. **ربط المصروفات بمراكز التكلفة:** توجيه كل مصروف لمركز التكلفة الخاص به (`cost_center`) لتمكين التحليل المالي وحساب صافي الأرباح في قائمة الدخل بدقة.
-3. **متابعة السيولة والخزينة:** بطاقات KPI إحصائية حية لحساب إجمالي مصروفات الشهر الحالي (`total_month`)، المصروفات النقدية المسحوبة من درج الكاشير (`total_cash`)، وإجمالي المصروفات المحددة بالفلتر (`total_filtered`).
-4. **التصفية المتعددة:** تصفية فورية حسب مراكز التكلفة، البحث بالبيان، النطاق الزمني (`from_date`, `to_date`)، والأقراص السريعة للتصنيفات (`quick_categories`).
-5. **تعدد قنوات الصرف:** دعم قنوات الصرف المختلفة (نقداً من الدرج، إنستاباي، محفظة إلكترونية، فيزا، تحويل بنكي، وشيك).
-6. **إضافة وتعديل وحذف المصروفات:** نوافذ مودال موحدة وسريعة عبر `AppModal.vue` و `BaseButton.vue` مع تسجيل سندات الصرف في الخزينة والوردية النشطة.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** إدارة المصروفات والعهد النثرية (Operational Expenses)
+* **المسار (Route):** `/expenses`
+* **اسم المسار (Route Name):** `expenses.index`
+* **الصلاحية المطلوبة (Permission):** `expenses.manage`
+* **الملف الرئيسي:** `resources/js/views/Expenses/ExpensesView.vue` (~98 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * المركز المالي لتوثيق ومراقبة كافة المصروفات التشغيلية والنثرية (مثل: إيجار، فواتير كهرباء ومياه، خامات تشغيل، صيانة، رواتب، ضيافة).
+  * ربط كل مصروف بالفرع المسؤول عنه وتحديد طريقة السداد (نقداً من الخزينة، عهدة موظف، تحويل بنكي).
+  * بطاقات إحصائية فورية تلخص إجمالي المصروفات للشهر الحالي، مصروفات اليوم، وتوزيع المصروفات حسب التصنيفات.
+  * إرفاق صور الفواتير وسندات الصرف الورقية كملفات إثبات لكل عملية.
+  * فلترة متقدمة حسب التصنيف، الفرع، النطاق الزمني، واسم الموظف الذي قيد المصروف.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم بـ 628 سطرًا إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Expenses/
-│   └── ExpensesView.vue                         <-- Thin Orchestrator (~75 lines)
-├── Components/Expenses/
-│   ├── ExpensesMetricsGrid.vue                  <-- بطاقات المؤشرات المالية لمصروفات الشهر والنقدي والفترة
-│   ├── ExpensesFilterBar.vue                    <-- شريط البحث ومراكز التكلفة والتواريخ وأقراص التصنيفات السريعة
-│   ├── ExpensesTable.vue                        <-- جدول المصروفات المزدوج (Desktop Table + Mobile Cards)
-│   └── ExpenseFormModal.vue                     <-- نافذة إضافة وتعديل المصروف
-└── Composables/
-    └── useExpenses.js                           <-- كبسولة المنطق الحسابي والاتصال بالـ API وإدارة المودال
+ExpensesView.vue (~98 lines)
+├── ExpensesHeader.vue                <-- رأس الصفحة مع زر تسجيل مصروف جديد، وتصدير البيانات
+├── ExpensesMetricsGrid.vue           <-- بطاقات المؤشرات: إجمالي مصروفات الشهر، مصروفات اليوم، العهد النثرية
+├── ExpensesFilterBar.vue             <-- شريط الفلاتر: البحث، تصنيف المصروف، الفرع، والنطاق الزمني
+├── ExpensesTable.vue                 <-- جدول المصروفات مع البيان، المبلغ، الفرع، الموظف، المرفقات، وقائمة الإجراءات
+└── ExpenseFormModal.vue              <-- نافذة إضافة وتعديل المصروف (البند، التصنيف، المبلغ، الفرع، المرفق، الملاحظات)
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر إضافة مصروف جديد.
-* `BaseSearchInput.vue`: شريط البحث النصي المتجاوب.
-* `BaseSelect.vue`: قوائم اختيار مراكز التكلفة.
-* `BaseInput.vue`: حقول إدخال التواريخ والنصوص.
-* `BaseButton.vue`: أزرار الإجراءات والحفظ مع مؤشرات التحميل.
-* `StatCardSkeleton.vue`: هياكل تحميل بطاقات المؤشرات الوميضية.
-* `TableSkeleton.vue`: هيكل التحميل الوميضي للجدول.
-* `EmptyState.vue`: حالة عدم وجود مصروفات مطابقة.
-* `AppModal.vue`: الحاوية الموحدة لنافذة إضافة/تعديل المصروف.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `DataTable.vue`, `AppModal.vue`, `StatusBadge.vue`.
+* **المخازن المستخدمة:** `useAuthStore`, `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`) وتواريخ العمليات.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب قائمة المصروفات** | `GET /api/v1/expenses` | `search`, `cost_center`, `category`, `from`, `to`, `page`, `per_page` | بيانات المصروفات + ملخص `summary` + مراكز التكلفة + `meta` |
-| **إضافة مصروف جديد** | `POST /api/v1/expenses` | `title`, `category`, `cost_center`, `amount`, `expense_date`, `payment_method`, `notes` | رسالة نجاح وكائن المصروف وسند الصرف |
-| **تعديل بيانات مصروف** | `PUT /api/v1/expenses/{id}` | `title`, `category`, `cost_center`, `amount`, `expense_date`, `payment_method`, `notes` | رسالة نجاح وتحديث البيانات |
-| **حذف مصروف** | `DELETE /api/v1/expenses/{id}` | - | نقل المصروف لسلة المحذوفات وتحديث الخزينة |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * تراص بطاقات المصروفات بوضوح، إظهار العنوان ومركز التكلفة والتصنيف وقناة الدفع والمبلغ باللون الوردي، مع أزرار لمس مريحة للإبهام للتعديل والحذف بارتفاع $\ge 44	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * جدول بيانات مالي عالي الكثافة مع تمييز لوني واضح للمبالغ وقنوات الصرف.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/expenses`: جلب قائمة المصروفات مع الفلاتر وترقيم الصفحات:
+  * **الكنترولر:** `App\Http\Controllers\Api\ExpenseController@index`
+  * **Resource:** `App\Http\Resources\ExpenseResource`
+* `POST /api/v1/expenses`: تسجيل مصروف تشغيلي جديد (`expenses.manage`):
+  * **Form Request:** `App\Http\Requests\StoreExpenseRequest`
+  * **Action:** `App\Actions\Expenses\StoreExpenseAction`
+* `GET /api/v1/expenses/{id}`: جلب تفاصيل المصروف.
+* `PUT /api/v1/expenses/{id}`: تعديل بيانات المصروف:
+  * **Form Request:** `App\Http\Requests\UpdateExpenseRequest`
+  * **Action:** `App\Actions\Expenses\UpdateExpenseAction`
+* `DELETE /api/v1/expenses/{id}`: حذف سجل المصروف (`expenses.manage`).
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/expenses.php` و `lang/en/expenses.php`:
-* `expenses.title`: المصاريف والخدمات الإضافية / Expenses & Additional Services
-* `expenses.total_month_expenses`: إجمالي مصروفات هذا الشهر / Total Month Expenses
-* `expenses.cash_expenses`: مصروفات كاش من الدرج / Cash Expenses from Drawer
-* `expenses.add_expense`: إضافة مصروف / Add Expense
-* `expenses.all_cost_centers`: كافة مراكز التكلفة / All Cost Centers
+## 5. مصفوفة الصلاحيات ونطاق الفروع:
+* **الصلاحيات (`PermissionsSeeder.php`):**
+  * `expenses.manage`: تسجيل وتعديل ومراقبة المصروفات (متاحة للمدير والمحاسب).
+* **نطاق الفروع:** تتطلب طلبات المصروفات ترويسة `X-Store-Id` ومعرف الفرع `store_id`؛ ويتم التحقق عبر `ClientStoreGuard::concrete($request)`. أي محاولة لتسجيل أو استعراض مصروفات فرع غير مصرح للمستخدم به تنتج خطأ **HTTP 403** بكود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/expenses-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.58 ثانية.
+## 6. القواعد المالية الصارمة ويوم العمل:
+1. **خصم فوري من الخزينة اليومية:** المصروفات النقدية تُخصم فوراً من رصيد درج الكاشير في دفتر اليومية `daily-journal` للفرع داخل `DB::transaction()`.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:** كافة مبالغ المصروفات تُعالج بدقة 3 خانات عشرية وبتقريب متماثل للنصف للأعلى (`half-up rounding at 3 dp`).
+3. **ارتباط المصروف بيوم العمل:** يتبع المصروف ساعة المستأجر وتوقيت القطع `business_day_cutoff` عبر `TenantClock`.

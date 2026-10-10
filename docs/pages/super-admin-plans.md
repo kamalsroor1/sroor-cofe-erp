@@ -1,82 +1,54 @@
-# 💼 وثيقة المكون والصفحة: إدارة باقات الاشتراك والأسعار المركزية (`SuperAdminPlansView.vue`)
+# 💼 وثيقة المكون والصفحة: إدارة باقات الاشتراك والأسعار المركزية (`SuperAdminPlansView`)
 
-> **المسار (Route):** `/super-admin/plans`  
-> **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminPlansView.vue` (Thin Orchestrator: ~65 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% وفق المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **إدارة باقات الاشتراك والأسعار المركزية (`/super-admin/plans`)** مركز التحكم في خطط التسعير وحدود الموارد لمنظومة الـ Multi-Tenant SaaS:
-1. **شبكة بطاقات الباقات والأسعار (Subscription Plans Grid):** استعراض الباقات المتاحة (مثل البداية، الاحترافية، المؤسسية)، وحالتها (مفعلة/معطلة)، شارة الأكثر طلباً (Popular)، الأسعار الشهرية والسنوية.
-2. **حدود الموارد لكل باقة (Resource Limits):** عرض الحد الأقصى للمستخدمين، الفروع والمخازن، الأصناف، والفواتير الشهرية.
-3. **نافذة تعديل الأسعار وحدود الموارد (Edit Plan Modal):** نافذة `AppModal` لتعديل اسم الباقة، السعر الشهري، السعر السنوي، وحدود الموارد (مستخدمين، فروع، أصناف، فواتير)، وتحديد ما إذا كانت مفعلة أو الأكثر طلباً.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** إدارة الباقات والأسعار (Subscription Plans & Pricing)
+* **المسار (Route):** `/super-admin/plans`
+* **اسم المسار (Route Name):** `super_admin.plans`
+* **الصلاحية المطلوبة (Permission):** `super_admin.access` (أو `super_admin.plans.view` / `super_admin.plans.manage` لمشغلي المنصة المركزية `CentralUser`).
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminPlansView.vue` (~72 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * إدارة خطط وباقات الاشتراك لمنظومة SaaS متعددة المستأجرين.
+  * عرض بطاقات الباقات (مثل الأساسية، المتقدمة، الاحترافية)، وأسعارها الشهرية والسنوية، وشارة الباقة الأكثر طلباً (`is_popular`).
+  * تحديد وإدارة قيود الموارد لكل باقة: الحد الأقصى للمستخدمين (`max_users`)، الفروع والمخازن (`max_stores`)، الأصناف (`max_items`)، والفواتير الشهرية (`max_invoices_per_month`).
+  * تعديل حدود الميزات والأسعار وتفعيل أو إيقاف الباقات من خلال نافذة تعديل الباقة (`EditPlanModal`).
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف بـ 320 سطراً إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/SuperAdmin/
-│   └── SuperAdminPlansView.vue                <-- Thin Orchestrator (~65 lines)
-├── Components/SuperAdmin/
-│   ├── PlansGrid.vue                          <-- شبكة بطاقات الباقات وهياكل التحميل
-│   ├── PlanCard.vue                           <-- بطاقة الباقة الفردية مع الأسعار والحدود
-│   └── EditPlanModal.vue                      <-- نافذة AppModal لتعديل الباقة والأسعار والحدود
-└── Composables/
-    └── useSuperAdminPlans.js                  <-- كبسولة المنطق وإدارة البيانات والعمليات
+SuperAdminPlansView.vue (~72 lines)
+├── PageHeader.vue               <-- رأس الصفحة مع أزرار التنقل
+├── PlansGrid.vue                <-- شبكة بطاقات الباقات مع هيكل التحميل الوميضي
+│   └── PlanCard.vue             <-- بطاقة الباقة الفردية مع الأسعار والحدود وشارات الحالة
+└── EditPlanModal.vue            <-- نافذة تعديل بيانات الباقة والأسعار والقيود
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر العودة للوحة القيادة وإدارة المستأجرين.
-* `BaseButton.vue`: أزرار الحفظ والإلغاء وتعديل الأسعار.
-* `BaseInput.vue`: حقول إدخال اسم الباقة والأسعار وحدود الموارد.
-* `CardSkeleton.vue`: هيكل التحميل الوميضي للبطاقات.
-* `AppModal.vue`: الحاوية الموحدة للنوافذ المنبثقة.
-* `DarkSwal`: التنبيهات الموحدة للنجاح والخطأ.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `CardSkeleton.vue`, `AppModal.vue`.
+* **القالب العام:** `SuperAdminLayout.vue`.
+* **الـ Composable:** `useSuperAdminPlans.js` لإدارة جلب الباقات وعمليات التعديل والحفظ.
+* **المخازن المستخدمة:** `useAuthStore` للتحقق من صلاحية السوبر أدمن.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب سجل الباقات** | `GET /api/v1/super-admin/plans` | - | قائمة الباقات مع الأسعار والحدود |
-| **تحديث باقة محددة** | `PUT /api/v1/super-admin/plans/{id}` | `name`, `price_monthly`, `price_yearly`, `max_users`, `max_stores`, `max_items`, `max_invoices_per_month`, `is_active`, `is_popular` | تحديث بيانات الباقة |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي لبطاقات الباقات، أزرار بارتفاع $\ge 40	ext{px}$، ونوافذ منبثقة ملائمة للمس.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * شبكة ثلاثية الأبعاد لباقات الاشتراك مع تأثيرات Hover متناسقة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/super-admin/plans`:
+  * **الوصف:** جلب قائمة الباقات المتاحة مع تفاصيل الأسعار وحدود الموارد.
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@plans`
+  * **Action:** `App\Actions\Plans\GetSuperAdminPlansDataAction`
+  * **Resource:** `App\Http\Resources\PlanResource`
+* `PUT /api/v1/super-admin/plans/{id}`:
+  * **الوصف:** تحديث بيانات الباقة والأسعار والقيود التشغيلية.
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@updatePlan`
+  * **Form Request:** `App\Http\Requests\UpdatePlanRequest`
+  * **Action:** `App\Actions\Plans\UpdatePlanAction`
+  * **الحقول:** `name`, `price_monthly`, `price_yearly`, `max_users`, `max_stores`, `max_items`, `max_invoices_per_month`, `is_active`, `is_popular`.
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/super.php` و `lang/en/super.php`:
-* `super.plans_page_title`: إدارة باقات الاشتراك والأسعار / Subscription Plans Management
-* `super.popular_badge`: الأكثر طلباً / Popular
-* `super.edit_prices_and_limits_btn`: تعديل الأسعار والحدود / Edit Prices & Limits
-* `super.edit_plan_modal_title`: تعديل باقة :name / Edit Plan :name
-* `super.max_users_label`: الحد الأقصى للمستخدمين / Max Users
-
----
-
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/super-admin-plans-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 5.18 ثانية.
+## 5. الحماية الأمنية والدقة المالية:
+* **حماية النطاق المركزي:** التحقق عبر `EnsureCentralContext` و `can:super_admin.access`.
+* **الاتصال المركزي:** موديل `Plan` يرتبط بقاعدة البيانات المركزية `central`.
+* **الدقة المالية للأسعار:** الأسعار الشهرية والسنوية تعالج بدقة `DECIMAL(12,3)` لضمان النزاهة المحاسبية عند احتساب الاشتراكات والفواتير.

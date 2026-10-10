@@ -1,90 +1,59 @@
-# ☕ وثيقة المكون والصفحة: حاسبة وتوليفة خلطات البن والأصناف المركبة (`CoffeeBlenderView.vue`)
+# ☕ وثيقة المكون والصفحة: حاسبة وتوليفة خلطات البن والأصناف المركبة (`CoffeeBlenderView`)
 
-> **المسار (Route):** `/coffee-blender`  
-> **الملف الرئيسي:** `resources/js/views/CoffeeBlender/CoffeeBlenderView.vue` (Thin Orchestrator: ~65 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تعتبر صفحة **حاسبة خلطات وتكاليف البن (Coffee Blender & Product Formulation Studio)** الركيزة الأساسية لمحامص ومحلات ومصانع البن والمشروبات والمطاعم لإنتاج أصناف مركبة مخصصة حسب رغبة العميل (Custom Blend Formulation) في الوقت الفعلي:
-1. **تحديد مواصفات التشغيلة:** إدخال اسم الخلطة أو المنتج المجمع، واختيار الوزن المستهدف من الأزرار السريعة (125جم، 250جم، 500جم، 1000جم) أو كتابة وزن حر مخصص.
-2. **درجة التحميص ومستوى الطحن:** اختيار نوع التحميص (فاتح، وسط، غامق، محروق/دبل) ومستوى التجهيز (تركي ناعم، إسبريسو، فرينش بريس، حبوب خامة بدون طحن).
-3. **توليفة المكونات ونسب الخامات:** إضافة أصناف البن الخام وتوزيع النسب المئوية (%) بسلايدر تفاعلي سلس، واحتساب الجرامات وسعر التكلفة وسعر البيع لكل صنف تلقائياً.
-4. **الإضافات الخاصة (تحويجة الحبهان والمستكة):** تحديد كميات الحبهان والبهارات بالجرام واحتساب تكلفتها وقيمتها البيعية.
-5. **التحليل المالي اللحظي:** احتساب إجمالي تكلفة الخامات، سعر البيع المقترح، وقيمة ونسبة هامش الربحية فورياً قبل حفظ الفاتورة.
-6. **الربط المباشر بالفواتير والمخزون:** إصدار واعتماد فاتورة مبيعات مباشرة مع خصم كميات البن الخام بالجرام آلياً وبشكل ذري (Atomic Stock Deduction) من رصيد المخزن الفعلي دون حدوث أي تعارضات أو Race Conditions.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** معمل توليفة خلطات البن وتجميع المنتجات (Coffee Blender Studio)
+* **المسار (Route):** `/coffee-blender`
+* **اسم المسار (Route Name):** `coffee_blender.index`
+* **الصلاحية المطلوبة (Permission):** `items.create`
+* **الملف الرئيسي:** `resources/js/views/CoffeeBlender/CoffeeBlenderView.vue` (~96 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * المحرك الرياضي المتخصص لمحامص ومقاهي القهوة المختصة لتركيب وتوليف خلطات الإسبريسو والقهوة المقطرة (Espresso Blends).
+  * تحديد نسب مئوية أو أوزان دقيقة بالجرامات للأصناف الخام (مثل: بن كولومبي 60% + بن إثيوبي 40%).
+  * الحساب اللحظي والدقيق لتكلفة الجرام والكيلوجرام الناتج بناءً على تكاليف الشراء الحالية للمواد الخام عبر مكتبة `bcmath`.
+  * حساب هامش الربح المستهدف واقتراح سعر البيع القطاعي والجملة للخلطة المركبة.
+  * خياران تنفيذيان مباشرين:
+    1. **توليد فاتورة بيع فورية:** خصم المكونات الخام مباشرة من المخزن وإصدار فاتورة بيع للعميل للخلطة المخصصة.
+    2. **حفظ وتجميع صنف مركب:** إنشاء صنف جديد في دليل الأصناف وتحديد وصفته المعتمدة.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/
-│   └── CoffeeBlender/
-│       └── CoffeeBlenderView.vue                <-- Thin Orchestrator (~65 lines)
-├── Components/
-│   └── CoffeeBlender/
-│       ├── CoffeeBlenderSpecsCard.vue           <-- بطاقة مواصفات الخلطة والوزن والأوزان السريعة
-│       ├── CoffeeBlenderFormulationCard.vue     <-- بطاقة اختيار الأصناف الخام وسلايدر النسب والملاحظات
-│       └── CoffeeBlenderCostSummary.vue         <-- لوحة التلخيص المالي واختيار العميل وزر الاعتماد
-└── Composables/
-    └── useCoffeeBlender.js                      <-- كبسولة المنطق الحسابي والاتصال بالـ APIs
+CoffeeBlenderView.vue (~96 lines)
+├── CoffeeBlenderHeader.vue           <-- رأس الصفحة، اسم التوليفة، والوزن الإجمالي المطلوب
+├── CoffeeBlenderIngredientsCard.vue  <-- جدول اختيار حبوب البن الخام، النسب المئوية %، الأوزان، وتكلفة كل مكون
+├── CoffeeBlenderOutputCard.vue       <-- بطاقة النتائج المالية (إجمالي التكلفة، تكلفة الجرام، هامش الربح، أزرار التنفيذ)
+└── CoffeeBlenderHistoryModal.vue     <-- نافذة استعراض الوصفات المحفوظة مسبقاً وتطبيقها بضغطة زر
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر العودة لسجل الفواتير.
-* `BaseButton.vue`: زر إضافة المكون الخام، أزرار الأوزان السريعة، وزر الاعتماد.
-* `BaseInput.vue`: حقول إدخال اسم الخلطة والملاحظات.
-* `BaseNumberInput.vue`: حقل الوزن المخصص، جرامات الحبهان، وحقول النسب.
-* `BaseSelect.vue`: القوائم المنسدلة للتحميص، مستوى الطحن، واختيار العميل.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `AppModal.vue`.
+* **المخازن المستخدمة:** `useAuthStore`, `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`) والجرامات والنسب المئوية.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request / DTO) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب الأصناف والعملاء** | `GET /api/v1/items`, `GET /api/v1/customers` | Query Parameters | قائمة الأصناف الحية والعملاء |
-| **حساب تكلفة الخلطة** | `POST /api/v1/coffee-blender/calculate` | Formulation Payload | التكلفة وسعر البيع وهوامش الربح |
-| **إصدار فاتورة الخلطة** | `POST /api/v1/coffee-blender/invoice` | `CreateBlenderInvoiceDTO` | اعتماد الفاتورة وخصم المخزون |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي كامل (Single Column Stack) حيث تظهر مواصفات الخلطة تليها بطاقات المكونات اللمسية ثم بطاقة التكلفة والإنهاء.
-  * أزرار الأوزان السريعة مريحة للإبهام بارتفاع $\ge 44	ext{px}$.
-  * سلايدر النسب المئوية يعمل بسلاسة دون اعتراض التمرير الرأسي للشاشة.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * توزيع شبكي بنسبة 8 أعمدة لورك سبيس الخلطة و 4 أعمدة للوحة التكلفة والعميل في لوحة عائمة ملتصقة `sticky top-6`.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وسلايدر النسب وأزرار الإجراءات وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `POST /api/v1/coffee-blender/calculate`: احتساب تكاليف التوليفة ونسب المكونات لحظياً:
+  * **الكنترولر:** `App\Http\Controllers\Api\CoffeeBlenderController@calculate`
+  * **Form Request:** `App\Http\Requests\CalculateBlendCostRequest`
+  * **Action:** `App\Actions\Blends\CalculateBlendCostAction`
+* `POST /api/v1/coffee-blender/invoice`: إصدار فاتورة بيع فورية للخلطة وخصم الحبوب الخام من المخزون:
+  * **Form Request:** `App\Http\Requests\CreateBlenderInvoiceRequest`
+  * **Action:** `App\Actions\Blends\CreateBlenderInvoiceAction`
+* `GET /api/v1/items`: جلب قائمة حبوب البن والمواد الخام المتوفرة بالفرع.
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/inventory.php` و `lang/en/inventory.php`:
-* `inventory.blender_title`: أداة وحاسبة تركيب وتجميع المنتجات / Product Formulation & Assembly Calculator
-* `inventory.blend_specs_title`: مواصفات التركيبة والكمية المستهدفة / Assembly Specifications & Target Quantity
-* `inventory.raw_beans_components`: المكونات والمواد الأولية / Raw Materials & Assembly Components
-* `inventory.blend_cost_summary`: ملخص تكلفة وسعر التركيبة / Assembly Cost & Price Summary
-* `inventory.blend_invoice_btn`: إصدار وتأكيد فاتورة التركيبة ⚡ / Issue & Confirm Assembly Invoice ⚡
+## 5. نطاق الفروع وعزل البيانات (Store Scoping):
+* تُرسل ترويسة `X-Store-Id` للتحقق من توافر رصيد حبوب البن الخام في المستودع المحدد.
+* يتم فحص صلاحية الوصول للمخزن عبر `ClientStoreGuard::concrete($request)`.
+* محاولة الخصم من مخزن غير مصرح به تُرجع **HTTP 403** مع كود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Feature API Test:** `php artisan test tests/Feature/Api/CoffeeBlenderApiTest.php` -> نجاح 2/2 اختبارات و 6 تأكيدات.
-* ✅ **Playwright E2E Test:** `e2e/flows/coffee-blender-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.47 ثانية.
+## 6. القواعد المالية الصارمة والدقة بالجرام:
+1. **الدقة المتناهية `DECIMAL(12,3)` و `bcmath`:** نظراً لأن خلطات البن تُحسب بالجرام وكسور الجرام، تُجرى كافة العمليات الحسابية بدقة متناهية وبتقريب متماثل للنصف للأعلى (`symmetric half-up at 3 dp`).
+2. **خصم متعدد داخل `DB::transaction()` مع `lockForUpdate()`:** عند إصدار الفاتورة، يتم قفل كافة بنود البن الخام المكونة للتوليفة وخصم أوزانها بالتوازي داخل Transaction ذرية واحدة تمنع كسر قيد المخزون.

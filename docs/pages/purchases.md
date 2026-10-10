@@ -1,89 +1,59 @@
-# 🚛 وثيقة المكون والصفحة: سجل وإدارة فواتير المشتريات والتوريد (`PurchasesView.vue`)
+# 🚛 وثيقة المكون والصفحة: سجل وإدارة فواتير المشتريات والتوريد (`PurchasesView`)
 
-> **المسار (Route):** `/purchases`  
-> **الملف الرئيسي:** `resources/js/views/Purchases/PurchasesView.vue` (Thin Orchestrator: ~70 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **سجل فواتير المشتريات والتوريد (Purchases Management & Supplier Invoices)** البوابة المالية واللوجستية الرئيسية لاستقبال البضائع والخامات من الموردين وتتبع حركة التوريد:
-1. **متابعة المؤشرات اللحظية (Purchases KPIs):**
-   - إجمالي المشتريات المؤكدة (`total_purchases`).
-   - مستحقات الموردين غير المسددة (`unpaid_total`).
-   - عدد فواتير التوريد المعتمدة (`confirmed_count`).
-2. **التصفية والبحث المتقدم:** البحث الفوري برقم الفاتورة أو اسم المورد، الفلترة حسب حالة الفاتورة (مؤكدة / ملغاة)، والفلترة بالنطاق الزمني.
-3. **استعراض تفاصيل الفاتورة (Purchase Details Modal):** نافذة منبثقة تفاعلية تعرض بنود الفاتورة والكميات المستلمة والتكلفة المحملة (Landed Costs) والخصومات والفرع المستلم.
-4. **إلغاء الفاتورة بأمان (Atomic Transaction):** إمكانية إلغاء فاتورة الشراء مع عكس الرصيد المخزني والمالي فوراً وبأمان عبر `POST /api/v1/purchases/{id}/cancel`.
-5. **التكامل مع رادار إعادة الطلب الذكي:** زر مباشر ينقل المستخدم إلى `/purchases/smart-reorder` للتحليل التنبؤي لاستهلاك الخامات.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** سجل فواتير المشتريات والتوريد (Purchase Invoices Log)
+* **المسار (Route):** `/purchases`
+* **اسم المسار (Route Name):** `purchases.index`
+* **الصلاحية المطلوبة (Permission):** `purchases.view`
+* **الملف الرئيسي:** `resources/js/views/Purchases/PurchasesView.vue` (~83 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * المركز المحاسبي والمخزني لتوثيق وتتبع كافة عمليات التوريد والشراء الواردة من الموردين وتجار الجملة.
+  * فلترة متقدمة حسب المورد، الفرع/المستودع المستلم، نوع السداد (نقدي، آجل، دفعات)، والتاريخ.
+  * بطاقات إحصائية تلخص إجمالي قيمة المشتريات، عدد الفواتير، المشتريات النقدية، والمشتريات الآجلة والمديونيات الجديدة.
+  * معاينة بنود فاتورة الشراء وتكاليف الأصناف والكميات الموردة وخيارات الإلغاء الآمن.
+  * زر وصول سريع لرادار إعادة الطلب الذكي ومساعد التوريد (`Smart Reorder Radar`).
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Purchases/
-│   └── PurchasesView.vue                        <-- Thin Orchestrator (~70 lines)
-├── Components/Purchases/
-│   ├── PurchasesMetricsGrid.vue                 <-- بطاقات إجمالي المشتريات والمستحقات والفواتير
-│   ├── PurchasesFilterBar.vue                   <-- شريط البحث وقائمة الحالة ونطاق التاريخ
-│   ├── PurchasesTable.vue                       <-- جدول وتراص بطاقات فواتير المشتريات وأزرار الإجراءات
-│   └── PurchaseDetailsModal.vue                 <-- نافذة استعراض تفاصيل الفاتورة والبنود والتحميل المالي
-└── Composables/
-    └── usePurchases.js                          <-- كبسولة المنطق الحسابي والاتصال بالـ APIs
+PurchasesView.vue (~83 lines)
+├── PurchasesHeader.vue               <-- رأس الصفحة مع زر فاتورة شراء جديدة ورابط رادار الطلب الذكي
+├── PurchasesMetricsGrid.vue          <-- بطاقات المؤشرات: إجمالي المشتريات، النقد، الآجل، عدد الفواتير
+├── PurchasesFilterBar.vue            <-- شريط الفلاتر: البحث، المورد، الفرع، حالة السداد، والنطاق الزمني
+├── PurchasesTable.vue                <-- جدول فواتير المشتريات مع بيانات المورد، الإجمالي، الحالة، وقائمة الإجراءات
+└── PurchaseDetailsModal.vue          <-- نافذة معاينة تفاصيل الفاتورة والبنود الموردة وتكاليف الأصناف
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر إنشاء فاتورة جديدة وزر رادار إعادة الطلب.
-* `BaseSearchInput.vue`: حقل البحث النصي مع Debounce تلقائي.
-* `BaseSelect.vue`: القائمة المنسدلة لاختيار حالة الفاتورة.
-* `StatCardSkeleton.vue` و `TableSkeleton.vue`: هياكل التحميل التفاعلية بالوميض (Shimmer).
-* `EmptyState.vue`: حالة عدم وجود فواتير مشتريات مسجلة مع زر إضافة أول فاتورة.
-* `AppModal.vue`: النافذة المنبثقة الموحدة لعرض تفاصيل الفاتورة.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `DataTable.vue`, `StatusBadge.vue`, `AppModal.vue`.
+* **المخازن المستخدمة:** `useAuthStore` (فحص صلاحيات `purchases.create` و `purchases.delete`)، `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ (`formatMoney`) وتواريخ الفواتير.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Parameters/Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب فواتير المشتريات** | `GET /api/v1/purchases` | `search`, `status`, `from`, `to`, `page`, `per_page` | قائمة الفواتير، المؤشرات المالية، والترقيم |
-| **إلغاء فاتورة شراء** | `POST /api/v1/purchases/{id}/cancel` | `reason` | إشعار نجاح وعكس المخزون وحساب المورد |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * بطاقات لمسية متراصة ومريحة للإبهام، ترتيب عمودي للبطاقات والحقول، وأزرار بإجراءات واضحة وبارتفاع $\ge 44	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * جدول بيانات عالي الكثافة مع محاذاة دقيقة للمبالغ المالية وشارات ملونة معتمدة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/purchases`: جلب قائمة فواتير الشراء مع الفلاتر وترقيم الصفحات:
+  * **الكنترولر:** `App\Http\Controllers\Api\PurchaseController@index`
+  * **Resource:** `App\Http\Resources\PurchaseResource`
+* `GET /api/v1/purchases/{id}`: جلب بيانات الفاتورة التفصيلية والبنود.
+* `POST /api/v1/purchases/{id}/cancel`: إلغاء فاتورة الشراء وعكس المخزون وحساب المورد (`purchases.delete`):
+  * **الكنترولر:** `App\Http\Controllers\Api\PurchaseController@cancel`
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/purchases.php` و `lang/en/purchases.php`:
-* `purchases.purchases_list`: سجل فواتير المشتريات والتوريد / Purchase Invoices Registry
-* `purchases.total_purchases`: إجمالي المشتريات / Total Purchases
-* `purchases.unpaid_total`: المستحقات غير المسددة / Unpaid Due
-* `purchases.confirmed_count`: الفواتير المعتمدة / Confirmed Invoices
-* `purchases.new_purchase`: فاتورة توريد جديدة / New Purchase Invoice
-* `purchases.smart_reorder_radar`: رادار الطلب الذكي / Smart Reorder Radar
+## 5. مصفوفة الصلاحيات ونطاق الفروع (Store Scoping):
+* **الصلاحيات (`PermissionsSeeder.php`):**
+  * `purchases.view`: استعراض فواتير الشراء (متاحة للمدير، أمين المخزن، والمحاسب).
+  * `purchases.create`: إنشاء فواتير شراء جديدة وتوريد المخزون.
+  * `purchases.delete`: إلغاء فواتير الشراء المعتمدة (للمدير فقط).
+* **نطاق الفروع:** ترسل الصفحة ترويسة `X-Store-Id` لتحديد الفرع؛ ويتم التدقيق عبر `ClientStoreGuard::verified($request)`. أي محاولة غير مصرح بها تُرجع **HTTP 403** مع كود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/purchases-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 3.85 ثانية.
+## 6. القواعد المحاسبية والمخزنية الصارمة:
+1. **عكس المخزون وحساب المورد عند الإلغاء:** عند إلغاء فاتورة الشراء، يتم خصم الكميات الموردة من رصيد المستودع داخل `DB::transaction()` وباستخدام `lockForUpdate()`، وتعديل رصيد المورد.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:** كافة بنود التكلفة والمبالغ الإجمالية والضرائب تُعالج بدقة 3 خانات عشرية وبتقريب متماثل للنصف للأعلى (`half-up rounding at 3 dp`).
+3. **توقيت يوم العمل:** تتبع الفاتورة يوم العمل المحسوب عبر `TenantClock::businessDate()` طبقاً لتوقيت `business_day_cutoff`.
