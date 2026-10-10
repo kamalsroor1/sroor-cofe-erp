@@ -4,25 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Console;
 
+use App\Enums\CentralPermission;
+use App\Models\CentralUser;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
-use Stancl\Tenancy\Events\CreatingDatabase;
-use Stancl\Tenancy\Events\DatabaseCreated;
-use Stancl\Tenancy\Events\DatabaseMigrated;
-use Stancl\Tenancy\Events\MigratingDatabase;
-use Stancl\Tenancy\Events\TenancyEnded;
-use Stancl\Tenancy\Events\TenancyInitialized;
-use Stancl\Tenancy\Events\TenantCreated;
-use Tests\TestCase;
+use Tests\Concerns\SeedsCentralPlatformRoles;
+use Tests\TenantTestCase;
 
 /**
  * F3a: tenants:audit-super-admin must only count model_has_roles rows whose model_type
@@ -30,78 +23,71 @@ use Tests\TestCase;
  * that happens to share a user's id must neither be counted as a role holder nor pull
  * that user's phone into the "central super admin phones" match list.
  *
- * Central and tenant schemas share one sqlite :memory: DB in the suite, so tenancy
- * bootstrapping is disabled (TenancyInitialized/Ended faked) and $tenant->run() just
- * executes the closure on the same connection.
+ * IDEN-1.8: runs on the real topology (Tests\TenantTestCase): the legacy central `users`
+ * rows and their roles live in the CENTRAL database, the audited tenant has its OWN database.
+ * Before, both sides shared one sqlite :memory: database, so one inserted row fed both halves
+ * of the audit at once; each half is now seeded where it really lives.
  */
-final class AuditTenantSuperAdminRolesCommandTest extends TestCase
+final class AuditTenantSuperAdminRolesCommandTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    use SeedsCentralPlatformRoles;
 
-    private const TENANT_ID = 'audit-tenant';
-
-    private Store $store;
+    private Tenant $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Event::fake([
-            TenantCreated::class,
-            CreatingDatabase::class,
-            DatabaseCreated::class,
-            MigratingDatabase::class,
-            DatabaseMigrated::class,
-            TenancyInitialized::class,
-            TenancyEnded::class,
-        ]);
-        config(['tenancy.bootstrappers' => []]);
-
-        $this->seed(PermissionsSeeder::class);
-
-        $this->store = Store::create([
-            'name' => 'الفرع الرئيسي',
-            'code' => 'MAIN',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-
-        Tenant::create([
-            'id' => self::TENANT_ID,
-            'name' => 'مستأجر التدقيق',
-            'slug' => self::TENANT_ID,
-            'email' => 'audit@tenant.test',
-            'status' => 'active',
-        ]);
+        $this->tenant = $this->createTenant();
     }
 
-    protected function tearDown(): void
+    /** Legacy web-guard `super_admin` role in the CENTRAL database. */
+    private function centralLegacyRole(): Role
     {
-        if (function_exists('tenancy')) {
-            tenancy()->tenant = null;
-            tenancy()->initialized = false;
-        }
+        $this->endTenancy();
 
-        parent::tearDown();
+        return $this->webRole('super_admin');
     }
 
-    private function superAdminRole(): Role
+    /** A legacy row of the CENTRAL `users` table. */
+    private function centralLegacyUser(string $phone, string $email): User
     {
-        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->endTenancy();
 
-        return $role;
-    }
-
-    private function makeUser(string $phone, string $email): User
-    {
-        return User::factory()->create([
-            'name' => 'مستخدم',
+        $user = new User;
+        $user->forceFill([
+            'name' => 'مستخدم مركزي',
             'phone' => $phone,
             'email' => $email,
             'password' => Hash::make('secret123'),
             'is_active' => true,
-            'default_store_id' => $this->store->id,
+        ])->save();
+
+        return $user;
+    }
+
+    /** A web-guard `super_admin` role inside the TENANT database (pre P0-AUTH-4 leftovers). */
+    private function tenantLegacyRoleId(): int
+    {
+        return $this->inTenant($this->tenant, fn (): int => (int) $this->webRole('super_admin')->id);
+    }
+
+    private function tenantUser(string $phone, string $email, ?string $role = null): User
+    {
+        return $this->createTenantUser($this->tenant, $role, [], [
+            'name' => 'مستخدم',
+            'phone' => $phone,
+            'email' => $email,
+        ]);
+    }
+
+    /** Insert a model_has_roles row on a NON-User morph, in the current context's database. */
+    private function foreignMorphRoleRow(int $roleId, int $modelId): void
+    {
+        DB::table('model_has_roles')->insert([
+            'role_id' => $roleId,
+            'model_type' => Store::class,
+            'model_id' => $modelId,
         ]);
     }
 
@@ -110,15 +96,19 @@ final class AuditTenantSuperAdminRolesCommandTest extends TestCase
      */
     private function auditRow(): array
     {
-        $exit = Artisan::call('tenants:audit-super-admin', ['--tenant' => self::TENANT_ID]);
+        $this->endTenancy();
+        $tenantId = (string) $this->tenant->getTenantKey();
+
+        $exit = Artisan::call('tenants:audit-super-admin', ['--tenant' => $tenantId]);
         $output = Artisan::output();
 
         $this->assertSame(0, $exit, $output);
+        $this->assertFalse(tenancy()->initialized, 'The audit must leave tenant context.');
 
         foreach (preg_split('/\R/u', $output) ?: [] as $line) {
             $cells = array_map('trim', explode('|', trim($line)));
             // A table row renders as "| c1 | c2 | ... |" => first/last cells empty.
-            if (count($cells) === 8 && $cells[1] === self::TENANT_ID) {
+            if (count($cells) === 8 && $cells[1] === $tenantId) {
                 return [
                     'tenant' => $cells[1],
                     'role_exists' => $cells[2],
@@ -139,17 +129,26 @@ final class AuditTenantSuperAdminRolesCommandTest extends TestCase
         return $cell === '-' ? [] : array_map('trim', explode(',', $cell));
     }
 
+    /** @return array{central: list<array<string, mixed>>, tenant: list<array<string, mixed>>} */
+    private function roleRowsSnapshot(): array
+    {
+        $read = static fn (): array => DB::table('model_has_roles')
+            ->orderBy('model_type')->orderBy('model_id')->orderBy('role_id')
+            ->get()->map(fn ($r): array => (array) $r)->all();
+
+        $this->endTenancy();
+        $central = $read();
+
+        return ['central' => $central, 'tenant' => $this->inTenant($this->tenant, $read)];
+    }
+
     public function test_role_row_on_a_non_user_morph_is_not_counted_as_a_holder(): void
     {
-        $role = $this->superAdminRole();
-        $bystander = $this->makeUser('01000000031', 'bystander@tenant.test');
+        $roleId = $this->tenantLegacyRoleId();
+        $bystander = $this->tenantUser('01222222201', 'bystander@tenant.test');
 
         // A super_admin row attached to a Store whose id equals the bystander's id.
-        DB::table('model_has_roles')->insert([
-            'role_id' => $role->id,
-            'model_type' => Store::class,
-            'model_id' => $bystander->id,
-        ]);
+        $this->inTenant($this->tenant, fn () => $this->foreignMorphRoleRow($roleId, (int) $bystander->id));
 
         $row = $this->auditRow();
 
@@ -158,28 +157,27 @@ final class AuditTenantSuperAdminRolesCommandTest extends TestCase
 
     public function test_role_row_on_a_non_user_morph_does_not_pull_a_user_into_phone_matches(): void
     {
-        $role = $this->superAdminRole();
-        $bystander = $this->makeUser('01000000037', 'bystander4@tenant.test');
+        $role = $this->centralLegacyRole();
+        $centralBystander = $this->centralLegacyUser('01222222202', 'bystander4@central.test');
+        $this->foreignMorphRoleRow((int) $role->id, (int) $centralBystander->id);
 
-        DB::table('model_has_roles')->insert([
-            'role_id' => $role->id,
-            'model_type' => Store::class,
-            'model_id' => $bystander->id,
-        ]);
+        // The tenant holds a user with the bystander's phone: only a real holder would match it.
+        $tenantTwin = $this->tenantUser('01222222202', 'bystander4@tenant.test');
 
         $row = $this->auditRow();
 
-        $this->assertNotContains('#'.$bystander->id, $this->matchedIds($row['phone_matches']), 'A non-User morph row pulled an unrelated user into the phone matches.');
+        $this->assertNotContains('#'.$tenantTwin->id, $this->matchedIds($row['phone_matches']), 'A non-User morph row pulled an unrelated user into the phone matches.');
         $this->assertSame('-', $row['phone_matches']);
     }
 
     public function test_real_user_holding_super_admin_is_still_counted_and_matched(): void
     {
-        $this->superAdminRole();
-        $holder = $this->makeUser('01000000032', 'holder@tenant.test');
-        $holder->assignRole('super_admin');
+        $this->centralLegacyRole();
+        $this->centralLegacyUser('01222222203', 'holder@central.test')->assignRole('super_admin');
 
-        $other = $this->makeUser('01000000033', 'other@tenant.test');
+        $this->tenantLegacyRoleId();
+        $holder = $this->tenantUser('01222222203', 'holder@tenant.test', 'super_admin');
+        $other = $this->tenantUser('01222222204', 'other@tenant.test');
 
         $row = $this->auditRow();
 
@@ -191,39 +189,62 @@ final class AuditTenantSuperAdminRolesCommandTest extends TestCase
 
     public function test_mixed_rows_count_only_the_user_morph(): void
     {
-        $role = $this->superAdminRole();
-        $holder = $this->makeUser('01000000034', 'holder2@tenant.test');
-        $holder->assignRole('super_admin');
-        $bystander = $this->makeUser('01000000035', 'bystander2@tenant.test');
+        $centralRole = $this->centralLegacyRole();
+        $this->centralLegacyUser('01222222205', 'holder2@central.test')->assignRole('super_admin');
+        $centralBystander = $this->centralLegacyUser('01222222206', 'bystander2@central.test');
+        $this->foreignMorphRoleRow((int) $centralRole->id, (int) $centralBystander->id);
 
-        DB::table('model_has_roles')->insert([
-            'role_id' => $role->id,
-            'model_type' => Store::class,
-            'model_id' => $bystander->id,
-        ]);
+        $tenantRoleId = $this->tenantLegacyRoleId();
+        $holder = $this->tenantUser('01222222205', 'holder2@tenant.test', 'super_admin');
+        $bystander = $this->tenantUser('01222222206', 'bystander2@tenant.test');
+        $this->inTenant($this->tenant, fn () => $this->foreignMorphRoleRow($tenantRoleId, (int) $bystander->id));
 
         $row = $this->auditRow();
 
         $this->assertSame('1', $row['role_users']);
-        $matches = $this->matchedIds($row['phone_matches']);
-        $this->assertSame(['#'.$holder->id], $matches);
+        $this->assertSame(['#'.$holder->id], $this->matchedIds($row['phone_matches']));
     }
 
     public function test_audit_remains_read_only_with_foreign_morph_rows(): void
     {
-        $role = $this->superAdminRole();
-        $bystander = $this->makeUser('01000000036', 'bystander3@tenant.test');
-        DB::table('model_has_roles')->insert([
-            'role_id' => $role->id,
-            'model_type' => Store::class,
-            'model_id' => $bystander->id,
-        ]);
+        $centralRole = $this->centralLegacyRole();
+        $centralBystander = $this->centralLegacyUser('01222222207', 'bystander3@central.test');
+        $this->foreignMorphRoleRow((int) $centralRole->id, (int) $centralBystander->id);
 
-        $before = DB::table('model_has_roles')->orderBy('model_id')->get()->map(fn ($r): array => (array) $r)->all();
+        $tenantRoleId = $this->tenantLegacyRoleId();
+        $bystander = $this->tenantUser('01222222207', 'bystander3@tenant.test');
+        $this->inTenant($this->tenant, fn () => $this->foreignMorphRoleRow($tenantRoleId, (int) $bystander->id));
+
+        $before = $this->roleRowsSnapshot();
 
         $this->auditRow();
 
-        $after = DB::table('model_has_roles')->orderBy('model_id')->get()->map(fn ($r): array => (array) $r)->all();
-        $this->assertSame($before, $after);
+        $this->assertSame($before, $this->roleRowsSnapshot());
+    }
+
+    public function test_central_operator_sharing_an_id_with_a_legacy_user_does_not_pull_its_phone(): void
+    {
+        // IDEN-1.1: CentralUser is standalone (`central_users`); its role rows carry the
+        // CentralUser morph and must never be joined onto `users.id`.
+        $legacy = $this->centralLegacyUser('01222222208', 'legacy-no-role@central.test');
+        $this->seedCentralPlatformRoles();
+
+        $operator = new CentralUser;
+        $operator->forceFill([
+            'id' => $legacy->id,
+            'name' => 'مشغل',
+            'email' => 'operator-'.Str::lower(Str::random(6)).'@central.test',
+            'password' => Hash::make('password'),
+            'is_active' => true,
+        ])->save();
+        $operator->assignRole($this->centralRole(CentralPermission::ROLE_SUPER_ADMIN));
+        $this->assertSame((int) $legacy->id, (int) $operator->id, 'fixture: same id in both tables');
+
+        $tenantTwin = $this->tenantUser('01222222208', 'twin@tenant.test');
+
+        $row = $this->auditRow();
+
+        $this->assertNotContains('#'.$tenantTwin->id, $this->matchedIds($row['phone_matches']));
+        $this->assertSame('-', $row['phone_matches']);
     }
 }

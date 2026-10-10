@@ -3,6 +3,24 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+/*
+| OPS-5: mysqldump options for the tenant + central backups (backup:tenants) and
+| spatie/laravel-backup. stancl builds the `tenant` connection from the central one,
+| so tenant dumps inherit this block. --single-transaction gives a consistent InnoDB
+| snapshot without locking the shop; --no-tablespaces avoids the PROCESS privilege.
+| DB_BACKUP_USERNAME / DB_BACKUP_PASSWORD select the read-only `sroor_backup` MySQL
+| account (vps-runbook.md §5); when they are empty the connection's own user dumps.
+*/
+$mysqlDump = array_filter([
+    'use_single_transaction',
+    'skip_lock_tables',
+    'use_quick',
+    'add_extra_option' => '--no-tablespaces --hex-blob',
+    'timeout' => (int) env('DB_DUMP_TIMEOUT', 3600),
+    'user_name' => env('DB_BACKUP_USERNAME') ?: null,
+    'password' => env('DB_BACKUP_PASSWORD') ?: null,
+], static fn ($value): bool => $value !== null);
+
 return [
 
     /*
@@ -62,6 +80,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => $mysqlDump,
         ],
 
         'mariadb' => [
@@ -82,6 +101,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => $mysqlDump,
         ],
 
         'pgsql' => [

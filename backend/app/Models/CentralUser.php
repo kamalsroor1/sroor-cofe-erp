@@ -31,6 +31,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $email
  * @property string $password
  * @property bool $is_active
+ * @property bool $must_reset_password W2-B3: set by central:migrate-super-admins, cleared by the reset flow
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -94,6 +95,7 @@ class CentralUser extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_reset_password' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];

@@ -8,16 +8,15 @@ use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ItemsApiTest extends TestCase
+class ItemsApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -33,10 +32,11 @@ class ItemsApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->store = Store::create([
+        $this->store = $this->adoptMainStore([
             'name' => 'المخزن الرئيسي',
             'code' => 'MAIN-001',
             'type' => 'warehouse',
@@ -457,5 +457,93 @@ class ItemsApiTest extends TestCase
         $this->assertSoftDeleted('items', [
             'id' => $item->id,
         ]);
+    }
+
+    public function test_low_stock_radar_with_the_spa_store_header(): void
+    {
+        $lowItem = Item::create([
+            'name' => 'بن جواتيمالا أنتيجوا',
+            'code' => 'COF-GUA-002',
+            'category' => 'بن حبوب',
+            'unit' => 'كجم',
+            'cost_price' => '380.000',
+            'selling_price' => '520.000',
+            'current_stock' => '2.000',
+            'min_stock_level' => '10.000',
+            'is_active' => true,
+        ]);
+        StoreStock::create(['store_id' => $this->store->id, 'item_id' => $lowItem->id, 'quantity' => '2.000']);
+
+        // The SPA always sends X-Store-Id (resources/js/Services/api.js).
+        $this->withHeaders(['Authorization' => 'Bearer '.$this->adminToken, 'X-Store-Id' => (string) $this->store->id])
+            ->getJson('/api/v1/items/low-stock')
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'count' => 1,
+                'low_items' => [
+                    [
+                        'id' => $lowItem->id,
+                        'current_stock' => '2.000',
+                        'min_stock_level' => '10.000',
+                        'deficit' => '8.000',
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_items_of_another_tenant_are_invisible_and_immutable(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $foreignId = $this->inTenant($other, function () use ($otherStoreId): int {
+            $item = Item::create([
+                'name' => 'صنف مستأجر آخر',
+                'code' => 'ITEM-FOREIGN',
+                'cost_price' => '10.000',
+                'selling_price' => '20.000',
+                'current_stock' => '20.000',
+                'min_stock_level' => '50.000',
+                'is_active' => true,
+            ]);
+            StoreStock::create(['store_id' => $otherStoreId, 'item_id' => $item->id, 'quantity' => '20.000']);
+
+            return (int) $item->id;
+        });
+        $this->useTenantForTest($this->tenant);
+
+        $auth = ['Authorization' => 'Bearer '.$this->adminToken];
+
+        $list = $this->withHeaders($auth)->getJson('/api/v1/items');
+        $list->assertStatus(200);
+        $this->assertStringNotContainsString('ITEM-FOREIGN', (string) $list->getContent());
+        $this->assertStringNotContainsString('ITEM-FOREIGN', (string) $this->withHeaders($auth)->getJson('/api/v1/items/low-stock')->getContent());
+
+        $this->withHeaders($auth)->getJson('/api/v1/items/'.$foreignId)->assertStatus(404);
+        $this->withHeaders($auth)->getJson('/api/v1/items/'.$foreignId.'/movements')->assertStatus(404);
+        $this->withHeaders($auth)->putJson('/api/v1/items/'.$foreignId, [
+            'name' => 'اختراق',
+            'code' => 'ITEM-FOREIGN',
+            'category' => 'بن',
+            'unit' => 'كجم',
+            'cost_price' => '1.000',
+            'selling_price' => '1.000',
+        ])->assertStatus(404);
+        $this->withHeaders($auth)->patchJson('/api/v1/items/'.$foreignId.'/toggle-active')->assertStatus(404);
+        $adjust = $this->withHeaders($auth)->postJson('/api/v1/items/'.$foreignId.'/adjust-stock', [
+            'store_id' => $this->store->id,
+            'movement_type' => 'stock_adjustment_in',
+            'quantity' => '5.500',
+        ]);
+        $this->assertContains($adjust->status(), [404, 422]);
+        $this->withHeaders($auth)->deleteJson('/api/v1/items/'.$foreignId)->assertStatus(404);
+
+        $this->inTenant($other, function () use ($foreignId): void {
+            $item = Item::query()->findOrFail($foreignId);
+            $this->assertSame('صنف مستأجر آخر', $item->name);
+            $this->assertTrue((bool) $item->is_active);
+            $this->assertSame('20.000', (string) $item->current_stock);
+            $this->assertSame(0, StockMovement::query()->count());
+        });
     }
 }

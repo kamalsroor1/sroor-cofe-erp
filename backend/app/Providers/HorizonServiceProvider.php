@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Models\User;
+use App\Enums\CentralPermission;
 use App\Support\PlatformSuperAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,26 +18,33 @@ use Laravel\Horizon\HorizonApplicationServiceProvider;
  *  - host: only a central (admin) host, never a tenant host. config/horizon.php adds
  *    EnsureCentralContext to the route middleware (tenant host = 404); the auth callback
  *    below re-checks the host as defence in depth.
- *  - user: only the platform super admin (viewHorizon → PlatformSuperAdmin). Unlike the
- *    package default there is NO `local` environment bypass.
+ *  - user: only the platform operator signed in on the `central_web` session guard (the
+ *    same session the Telescope signed link opens, IDEN-1.7) holding
+ *    `super_admin.monitoring.view` on the `central` guard. Never the tenant-side `web`
+ *    guard, whose id may collide with a central_users id. Unlike the package default
+ *    there is NO `local` environment bypass.
  */
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
+    /** Session guard of platform operators (App\Models\CentralUser). */
+    public const GUARD = 'central_web';
+
     protected function authorization(): void
     {
         $this->gate();
 
         Horizon::auth(static function (Request $request): bool {
-            // The gate is evaluated for the request's own user (session on the central host).
             return self::isCentralHost($request)
-                && Gate::forUser($request->user())->check('viewHorizon');
+                && Gate::forUser($request->user(self::GUARD))->check('viewHorizon');
         });
     }
 
     protected function gate(): void
     {
-        Gate::define('viewHorizon', static function (?User $user = null): bool {
-            return PlatformSuperAdmin::check($user);
+        // PlatformSuperAdmin::can is false for null, a tenant/legacy User, an inactive
+        // operator, or inside tenancy — never a TypeError.
+        Gate::define('viewHorizon', static function (mixed $user = null): bool {
+            return PlatformSuperAdmin::can($user, CentralPermission::MonitoringView);
         });
     }
 

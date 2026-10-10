@@ -2,12 +2,8 @@
 
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Auth\TelescopeAccessController;
-use App\Models\Item;
-use App\Models\Setting;
-use App\Models\StockMovement;
-use App\Models\Store;
-use App\Models\StoreStock;
-use App\Support\ReportStoreFilter;
+use App\Http\Middleware\EnsureCentralContext;
+use App\Services\Branding\PlatformBranding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -37,161 +33,28 @@ Route::get('/brochure', function () {
 // NOTE: invoice thermal/A4 and daily-journal print routes live in routes/tenant.php
 // behind auth + permission (+ store.access) middleware. Do not re-add them here.
 
-// 🖨️ Item Movements Audit Ledger Print
-Route::get('/items/{id}/movements/print', function ($id, Request $request) {
-    $item = Item::withTrashed()->findOrFail($id);
-    $storeId = ReportStoreFilter::resolve($request, $request->user()); // access-checked on the value used
-    $fromDate = $request->query('from');
-    $toDate = $request->query('to');
-    $filterType = $request->query('type');
+// NOTE (W2 3F): the item-movements and reports A4 print pages and the session store switch
+// (`/store/switch`) live in routes/tenant.php under domain tenancy (+ auth, permission and
+// store.access). They are excluded from the SPA catch-all below so that route still wins.
 
-    $inTypes = ['purchase_in', 'stock_deposit_in', 'stock_adjustment_in', 'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in'];
-    $outTypes = ['sales_out', 'waste_out', 'stock_adjustment_out', 'transfer_out', 'purchase_cancel_out', 'purchase_return_out'];
-    $adjTypes = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in'];
-
-    $storeName = trans('common.all_stores');
-    if ($storeId) {
-        $st = Store::find($storeId);
-        if ($st) {
-            $storeName = $st->name;
-        }
+// IDEN-1.11: one SPA shell, two contexts. On a platform-console host (central.admin_domains)
+// every path serves the shell with <meta name="app-context" content="central"> (the tenant SPA
+// is never served there); elsewhere the console paths (/super-admin*) are 404 once admin hosts
+// are configured, and the tenant shell carries no app-context meta.
+$spaShell = function (Request $request) {
+    if (EnsureCentralContext::isAdminHost($request)) {
+        return view('app', ['appContext' => 'central']);
     }
 
-    $baseQuery = StockMovement::with(['user', 'store'])
-        ->where('item_id', $item->id)
-        ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-        ->when($fromDate, fn ($q) => $q->whereDate('created_at', '>=', $fromDate))
-        ->when($toDate, fn ($q) => $q->whereDate('created_at', '<=', $toDate))
-        ->when($filterType === 'in', fn ($q) => $q->whereIn('movement_type', $inTypes))
-        ->when($filterType === 'out', fn ($q) => $q->whereIn('movement_type', $outTypes))
-        ->when($filterType === 'adjustments', fn ($q) => $q->whereIn('movement_type', $adjTypes));
+    abort_if(
+        EnsureCentralContext::adminHosts() !== [] && $request->is('super-admin', 'super-admin/*'),
+        404,
+    );
 
-    $allMovements = (clone $baseQuery)->get();
-    $totalIn = '0.000';
-    $totalOut = '0.000';
-    foreach ($allMovements as $mov) {
-        if (in_array($mov->movement_type, $inTypes)) {
-            $totalIn = bcadd($totalIn, (string) $mov->quantity, 3);
-        } elseif (in_array($mov->movement_type, $outTypes)) {
-            $totalOut = bcadd($totalOut, (string) $mov->quantity, 3);
-        }
-    }
-    $netMovement = bcsub($totalIn, $totalOut, 3);
-    $currentScopeStock = $storeId
-        ? (string) (StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->value('quantity') ?: '0.000')
-        : (string) $item->current_stock;
-
-    $movements = $baseQuery->oldest('created_at')->get();
-
-    return view('layouts.print-item-movements-a4', compact(
-        'item', 'storeName', 'fromDate', 'toDate', 'movements',
-        'totalIn', 'totalOut', 'netMovement', 'currentScopeStock'
-    ));
-})->name('items.movements.print')->middleware(['auth', 'can:items.view', 'store.access']);
-
-// 🖨️ General Reports A4 Print
-Route::get('/reports/print', function (Request $request) {
-    $tab = $request->query('tab', 'sales');
-    $storeId = ReportStoreFilter::resolve($request, $request->user()); // access-checked on the value used
-    $fromDate = $request->query('from');
-    $toDate = $request->query('to');
-
-    $storeName = trans('common.all_stores');
-    if ($storeId) {
-        $st = Store::find($storeId);
-        if ($st) {
-            $storeName = $st->name;
-        }
-    }
-
-    $titles = [
-        'sales' => 'تقرير المبيعات والفواتير',
-        'items' => 'تقرير حركة وأرباح الأصناف',
-        'stores' => 'تقرير مقارنة أداء الفروع والمخازن',
-        'customers' => 'تقرير مبيعات ومديونيات العملاء',
-        'expenses' => 'تقرير المصروفات والنفقات التشغيلية',
-        'inventory' => 'تقرير تقييم وجرد المخزون',
-        'treasury' => 'تقرير الخزائن والسيولة وسجل التحويلات المالية',
-    ];
-    $reportTitle = $titles[$tab] ?? 'تقرير عام للنظام';
-
-    $kpis = [
-        ['label' => 'الفترة الزمنية', 'value' => ($fromDate ?: 'البداية').' إلى '.($toDate ?: now()->toDateString())],
-        ['label' => 'النطاق', 'value' => $storeName],
-    ];
-
-    $tableHeaders = [
-        ['title' => 'البيان / الوصف', 'align' => 'text-right'],
-        ['title' => 'التاريخ', 'align' => 'text-center'],
-        ['title' => 'القيمة', 'align' => 'text-center'],
-        ['title' => 'الحالة', 'align' => 'text-center'],
-    ];
-    $tableRows = [];
-
-    if ($tab === 'treasury') {
-        $tableHeaders = [
-            ['title' => 'الخزينة / الحساب', 'align' => 'text-right'],
-            ['title' => 'رصيد البداية', 'align' => 'text-center'],
-            ['title' => 'إجمالي الوارد', 'align' => 'text-center'],
-            ['title' => 'إجمالي المنصرف', 'align' => 'text-center'],
-            ['title' => 'الرصيد الحالي', 'align' => 'text-center'],
-        ];
-        $tableRows = [
-            [
-                ['value' => 'درج النقدية (كاش)', 'class' => 'font-bold'],
-                ['value' => '0.000', 'class' => 'font-mono text-center'],
-                ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
-                ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
-                ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
-            ],
-            [
-                ['value' => 'إنستاباي (InstaPay)', 'class' => 'font-bold'],
-                ['value' => '0.000', 'class' => 'font-mono text-center'],
-                ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
-                ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
-                ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
-            ],
-            [
-                ['value' => 'المحافظ الذكية', 'class' => 'font-bold'],
-                ['value' => '0.000', 'class' => 'font-mono text-center'],
-                ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
-                ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
-                ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
-            ],
-        ];
-    }
-
-    return view('layouts.print-report-a4', compact(
-        'reportTitle', 'storeName', 'fromDate', 'toDate', 'kpis', 'tableHeaders', 'tableRows'
-    ));
-})->name('reports.print')->middleware(['auth', 'can:reports.view', 'store.access']);
-
-Route::get('/stock-transfers', function () {
     return view('app');
-})->name('stock-transfers');
-
-// Session store switch: authenticated, and only to an active store the user may access.
-$switchSessionStore = function (Request $request) {
-    $raw = $request->input('store_id');
-    $storeId = (is_int($raw) || (is_string($raw) && ctype_digit($raw))) ? (int) $raw : 0;
-    $user = $request->user();
-
-    $allowed = $storeId > 0
-        && Store::whereKey($storeId)->where('is_active', true)->exists()
-        && ($user->hasRole('admin')
-            || (int) $user->default_store_id === $storeId
-            || $user->stores()->where('stores.id', $storeId)->exists());
-
-    abort_unless($allowed, 403, __('common.store_access_denied'));
-
-    session(['current_store_id' => $storeId]);
-
-    return response()->json(['success' => true, 'store_id' => $storeId]);
 };
 
-Route::post('/store/switch', $switchSessionStore)->name('store.switch')->middleware('auth');
-
-Route::post('/stores/switch', $switchSessionStore)->middleware('auth');
+Route::get('/stock-transfers', $spaShell)->name('stock-transfers');
 
 Route::post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -209,12 +72,14 @@ Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCs
 // 📱 PWA Manifest & Service Worker
 Route::get('/manifest.json', function () {
     $baseUrl = url('/');
-    $platformName = Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP');
+    // BRND-1: the platform (SaaS operator) brand lives in the CENTRAL platform_settings table.
+    $branding = app(PlatformBranding::class)->get();
+    $platformName = $branding->name;
     $manifest = [
         'id' => 'cloud-erp-pos-app',
         'name' => $platformName.' | '.trans('dashboard.app_badge_sub'),
         'short_name' => $platformName,
-        'description' => Setting::get('platform_subtitle', 'منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع'),
+        'description' => $branding->subtitle,
         'start_url' => $baseUrl.'/',
         'scope' => $baseUrl.'/',
         'display' => 'standalone',
@@ -260,6 +125,8 @@ Route::get('/sw.js', function () {
 });
 
 // 🌐 Pure Vue 3 SPA Catch-All Entry Point
-Route::get('/{any?}', function () {
-    return view('app');
-})->where('any', '(?!api(?:/|$)).*')->name('app'); // never serve the SPA shell for unknown /api/* paths (must 404)
+// Never serve the SPA shell for unknown /api/* paths (must 404), nor for the tenant print pages
+// registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them).
+Route::get('/{any?}', $spaShell)
+    ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$).*')
+    ->name('app');

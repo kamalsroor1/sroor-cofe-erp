@@ -15,6 +15,7 @@ use App\Models\Store;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\PlatformHosts;
 use Database\Seeders\PermissionsSeeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -70,8 +71,7 @@ class TenantProvisionerService implements TenantProvisionerInterface
         $tenant = Tenant::create($tenantData);
 
         // 2. Provision Primary Subdomain
-        $centralDomain = env('CENTRAL_DOMAIN', 'baraa-solutions.com');
-        $primarySubdomain = $dto->slug.'.'.$centralDomain;
+        $primarySubdomain = PlatformHosts::tenantHost($dto->slug);
         $tenant->domains()->create([
             'domain' => $primarySubdomain,
         ]);
@@ -141,7 +141,8 @@ class TenantProvisionerService implements TenantProvisionerInterface
                 ]);
             }
 
-            $adminRole = Role::firstOrCreate(['name' => 'admin']);
+            // Tenant guard pinned explicitly: the provisioning request authenticates on `central`.
+            $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => PermissionsSeeder::GUARD]);
             $user->syncRoles([$adminRole]);
 
             // Automatically set tenant company branding from creation DTO

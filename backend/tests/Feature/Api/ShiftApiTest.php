@@ -6,16 +6,15 @@ namespace Tests\Feature\Api;
 
 use App\Models\CashShift;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ShiftApiTest extends TestCase
+class ShiftApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -31,10 +30,11 @@ class ShiftApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->store = Store::create([
+        $this->store = $this->adoptMainStore([
             'name' => 'المخزن الرئيسي',
             'code' => 'MAIN-001',
             'type' => 'warehouse',
@@ -226,5 +226,45 @@ class ShiftApiTest extends TestCase
                     'cash_difference' => 0.000,
                 ],
             ]);
+    }
+
+    public function test_shifts_of_another_tenant_are_invisible_and_untouched(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $foreignShiftId = $this->inTenant($other, fn (): int => (int) CashShift::create([
+            'user_id' => $otherAdminId,
+            'store_id' => $otherStoreId,
+            'shift_number' => 'SHF-OTHER-001',
+            'status' => 'open',
+            'opened_at' => now(),
+            'opening_cash_balance' => '900.000',
+        ])->id);
+        $this->useTenantForTest($this->tenant);
+
+        // No active shift here, although the other tenant has one open.
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/shifts/current')
+            ->assertStatus(200)
+            ->assertJson(['success' => true, 'has_active' => false]);
+
+        // The other tenant's shift id does not resolve here.
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/shifts/'.$foreignShiftId.'/z-report')
+            ->assertStatus(404);
+
+        // Closing the other tenant's shift by id is rejected and leaves it untouched.
+        $close = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->postJson('/api/v1/shifts/close', ['shift_id' => $foreignShiftId, 'actual_cash_balance' => '900.000']);
+        $this->assertContains($close->status(), [404, 422]);
+
+        $this->inTenant($other, function () use ($foreignShiftId): void {
+            $shift = CashShift::query()->findOrFail($foreignShiftId);
+            $this->assertSame('open', $shift->status);
+            $this->assertSame('900.000', (string) $shift->opening_cash_balance);
+            $this->assertNull($shift->closed_at);
+            $this->assertSame('0.000', (string) $shift->actual_cash_balance);
+        });
     }
 }

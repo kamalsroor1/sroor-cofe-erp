@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCentralContext;
 use Laravel\Telescope\Http\Middleware\Authorize;
 use Laravel\Telescope\Watchers;
 
@@ -17,6 +18,13 @@ return [
     */
 
     'enabled' => env('TELESCOPE_ENABLED', true),
+
+    /*
+    | Security audit (W2 lane 3I): Laravel's default lets ANY visitor in when APP_ENV=local.
+    | Here the viewTelescope gate (central super admin) always applies unless this flag is
+    | explicitly true AND the environment is local (TelescopeServiceProvider::authorization).
+    */
+    'local_open' => (bool) env('TELESCOPE_LOCAL_OPEN', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -94,6 +102,9 @@ return [
 
     'middleware' => [
         'web',
+        // Security audit (W2 lane 3I): platform console host + central context only
+        // (tenant host, tenancy initialised or a tenant identifier => 404).
+        EnsureCentralContext::class,
         Authorize::class,
     ],
 

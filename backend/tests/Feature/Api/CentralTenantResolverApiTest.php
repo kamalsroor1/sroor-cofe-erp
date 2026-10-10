@@ -35,6 +35,8 @@ class CentralTenantResolverApiTest extends TenantTestCase
 
     public function test_resolves_active_tenant_by_id(): void
     {
+        config(['app.url' => 'https://baraa-solutions.com']);
+
         $tenant = Tenant::create([
             'id' => '2m',
             'name' => '2M Coffee Roastery',

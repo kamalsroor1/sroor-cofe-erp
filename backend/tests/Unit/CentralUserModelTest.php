@@ -44,6 +44,7 @@ final class CentralUserModelTest extends TenantTestCase
     private const DEPENDENT_MIGRATIONS = [
         'database/migrations/2026_10_10_200510_create_billing_invoices_table.php',   // issued_by
         'database/migrations/2026_10_10_200520_create_billing_payments_table.php',   // verified_by (+ FK to billing_invoices)
+        'database/migrations/2026_10_10_200710_create_tenant_credit_ledger_table.php', // FK to billing_invoices
         'database/migrations/2026_10_10_400000_create_platform_settings_table.php',  // updated_by
     ];
 

@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class PosApiTest extends TestCase
+class PosApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -37,10 +37,11 @@ class PosApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->store = Store::create([
+        $this->store = $this->adoptMainStore([
             'name' => 'فرع الكافيه الرئيسي',
             'code' => 'POS-MAIN',
             'type' => 'retail',
@@ -223,5 +224,57 @@ class PosApiTest extends TestCase
                 'success',
                 'last_price',
             ]);
+    }
+
+    public function test_pos_never_sees_or_sells_another_tenants_catalog(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $foreign = $this->inTenant($other, function () use ($otherStoreId): array {
+            $customer = Customer::create(['name' => 'عميل مستأجر آخر', 'current_balance' => '0.000', 'is_active' => true]);
+            $item = Item::create([
+                'name' => 'صنف مستأجر آخر',
+                'code' => 'POS-FOREIGN',
+                'cost_price' => '10.000',
+                'selling_price' => '20.000',
+                'current_stock' => '20.000',
+                'is_active' => true,
+            ]);
+            StoreStock::create(['store_id' => $otherStoreId, 'item_id' => $item->id, 'quantity' => '20.000']);
+
+            return ['item' => (int) $item->id, 'customer' => (int) $customer->id];
+        });
+        $this->useTenantForTest($this->tenant);
+
+        $bootstrap = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)->getJson('/api/v1/pos/bootstrap');
+        $bootstrap->assertStatus(200);
+        $this->assertStringNotContainsString('POS-FOREIGN', (string) $bootstrap->getContent());
+        $this->assertStringNotContainsString('عميل مستأجر آخر', (string) $bootstrap->getContent());
+
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->postJson('/api/v1/pos/checkout', [
+                'customer_id' => $foreign['customer'],
+                'payment_type' => 'cash',
+                'payment_method' => 'cash',
+                'items' => [['item_id' => $foreign['item'], 'quantity' => 0.250, 'unit_price' => 20.000]],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['customer_id', 'items.0.item_id']);
+
+        $this->assertSame(0, Invoice::query()->count());
+        $this->inTenant($other, function () use ($foreign): void {
+            $this->assertSame('20.000', (string) Item::query()->findOrFail($foreign['item'])->current_stock);
+            $this->assertSame('20.000', (string) StoreStock::query()->where('item_id', $foreign['item'])->value('quantity'));
+            $this->assertSame(0, Invoice::query()->count());
+        });
+
+        // This tenant's token cannot check out against the other tenant.
+        $this->withHeaders(['X-Tenant' => (string) $other->getTenantKey(), 'Authorization' => 'Bearer '.$this->adminToken])
+            ->postJson('/api/v1/pos/checkout', [
+                'customer_id' => $foreign['customer'],
+                'payment_type' => 'cash',
+                'items' => [['item_id' => $foreign['item'], 'quantity' => 1.000, 'unit_price' => 20.000]],
+            ])
+            ->assertStatus(401);
     }
 }

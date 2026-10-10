@@ -111,6 +111,10 @@ trait InteractsWithTenants
     {
         $this->harnessTenants = [];
 
+        // Order independence: every test starts with spatie's registrar in the central
+        // scope (default cache key) and nothing loaded or cached from an earlier test.
+        $this->resetPermissionRegistrar();
+
         $central = $this->centralConnectionName();
         $driver = (string) config("database.connections.{$central}.driver");
 
@@ -133,6 +137,16 @@ trait InteractsWithTenants
     protected function tearDownInteractsWithTenants(): void
     {
         $this->cleanUpTenants();
+        $this->resetPermissionRegistrar();
+    }
+
+    /** Central cache key, empty in-memory permission map, empty permission cache. */
+    protected function resetPermissionRegistrar(): void
+    {
+        $registrar = app(PermissionRegistrar::class);
+        $registrar->cacheKey = (string) config('permission.cache.key');
+        $registrar->clearPermissionsCollection();
+        $registrar->forgetCachedPermissions();
     }
 
     protected function centralConnectionName(): string
@@ -417,11 +431,15 @@ trait InteractsWithTenants
         $user->forceFill(array_intersect_key($values, array_flip($columns)))->save();
 
         $centralSeeder = 'Database\\Seeders\\CentralPermissionsSeeder';
-        if (class_exists($centralSeeder) && ! Role::query()->where('name', 'super_admin')->exists()) {
+        // Guard-aware: a legacy `web` super_admin row (which several tests create on purpose)
+        // must not skip the seeding and leave a permission-less central role behind.
+        $guard = Guard::getDefaultName($user);
+        $seeded = Role::query()->where('name', 'super_admin')->where('guard_name', $guard)->first();
+        if (class_exists($centralSeeder) && ($seeded === null || $seeded->permissions()->doesntExist())) {
             $this->seed($centralSeeder);
         }
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $guard = Guard::getDefaultName($user);
         $role = Role::findOrCreate('super_admin', $guard);
         $user->assignRole($role);
         app(PermissionRegistrar::class)->forgetCachedPermissions();

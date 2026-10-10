@@ -20,6 +20,7 @@ use App\Http\Resources\StoreResource;
 use App\Http\Resources\StoreStockResource;
 use App\Models\Store;
 use App\Models\User;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -195,7 +196,7 @@ final class StoreController extends Controller
     {
         // store_id is the branch picked on the stores screen (explicit filter, wins over the header);
         // access-checked, and `all` is a 422, never store 0.
-        $storeId = (int) (ClientStoreGuard::concrete($request, preferClient: true) ?: 1);
+        $storeId = ClientStoreGuard::concreteOrDefault($request, preferClient: true);
         $search = trim((string) $request->input('search', ''));
         $stockStatus = (string) $request->input('stock_status', 'all');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
@@ -225,15 +226,9 @@ final class StoreController extends Controller
         $user = $request->user();
         $targetStoreId = (int) $validated['store_id'];
 
-        $isGlobalAdmin = $user->id === 1
-            || $user->hasRole('super-admin')
-            || $user->hasRole('admin')
-            || $user->can('stores.manage');
-
-        $isAssigned = $user->stores()->where('stores.id', $targetStoreId)->exists()
-            || $user->default_store_id === $targetStoreId;
-
-        if (! $isGlobalAdmin && ! $isAssigned) {
+        // Role/permission based (admin role, stores.manage, or an assigned/default store):
+        // never a magic user id.
+        if (! ActiveStore::canAccess($user, $targetStoreId)) {
             return response()->json([
                 'success' => false,
                 'message' => __('common.store_access_denied'),

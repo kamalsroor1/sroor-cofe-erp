@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Actions\Dashboard\GetTenantDashboardAnalyticsAction;
@@ -10,14 +12,13 @@ use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class POSSolidArchitectureTest extends TestCase
+class POSSolidArchitectureTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $user;
 
@@ -31,17 +32,14 @@ class POSSolidArchitectureTest extends TestCase
     {
         parent::setUp();
 
-        // Create Store
-        $this->store = Store::create([
-            'name' => 'الفرع التجريبي الرئيسي',
-            'code' => 'TEST-01',
-            'type' => 'retail',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
+        // Service-level test: the whole test body runs inside the tenant database,
+        // whose main store the harness already created.
+        $this->tenant = $this->createTenant();
+        $this->store = $this->tenantStore($this->tenant);
+        tenancy()->initialize($this->tenant);
 
-        // Create Roles & User
-        $role = Role::firstOrCreate(['name' => 'admin']);
+        // Create User (the admin role is seeded in every tenant)
+        $role = 'admin';
         $this->user = User::factory()->create([
             'name' => 'مدير النظام',
             'phone' => '01000000000',
@@ -184,5 +182,50 @@ class POSSolidArchitectureTest extends TestCase
         $this->assertArrayHasKey('recent_invoices', $data);
         $this->assertArrayHasKey('low_stock_items', $data);
         $this->assertIsArray($data['metrics']);
+    }
+
+    public function test_pos_bootstrap_and_sale_never_see_another_tenants_catalog(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        tenancy()->initialize($this->tenant);
+        $otherItemId = $this->inTenant($other, function (): int {
+            Customer::create(['name' => 'عميل مستأجر آخر', 'current_balance' => '0.000', 'is_active' => true]);
+
+            return (int) Item::create([
+                'name' => 'صنف مستأجر آخر',
+                'code' => 'FOREIGN-01',
+                'unit' => 'كجم',
+                'cost_price' => '10.000',
+                'selling_price' => '20.000',
+                'current_stock' => '7.000',
+                'is_active' => true,
+            ])->id;
+        });
+
+        $data = app(GetPOSBootstrapDataAction::class)->execute($this->user);
+
+        $codes = collect($data['items'])->pluck('code')->all();
+        $this->assertSame(['COFFEE-01'], $codes);
+        $this->assertNotContains('عميل مستأجر آخر', collect($data['customers'])->pluck('name')->all());
+
+        $this->actingAs($this->user);
+        app(ProcessPOSInvoiceAction::class)->execute(POSInvoiceDTO::fromArray([
+            'customer_id' => $this->customer->id,
+            'store_id' => $this->store->id,
+            'invoice_date' => now()->toDateString(),
+            'payment_type' => 'cash',
+            'payment_method' => 'cash',
+            'discount_type' => 'fixed',
+            'discount_value' => '0.000',
+            'paid_amount' => '75.000',
+            'items' => [['item_id' => $this->item->id, 'quantity' => 0.250, 'unit_price' => 300.000]],
+            'additional_expenses' => [],
+        ]));
+
+        $this->assertSame('49.750', (string) $this->item->fresh()?->current_stock);
+        $this->inTenant($other, function () use ($otherItemId): void {
+            $this->assertSame('7.000', (string) Item::query()->findOrFail($otherItemId)->current_stock);
+            $this->assertDatabaseCount('invoices', 0);
+        });
     }
 }

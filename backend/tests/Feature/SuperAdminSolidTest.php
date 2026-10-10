@@ -1,32 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Actions\Plans\UpdatePlanAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
 use App\Actions\Tenants\ToggleTenantStatusAction;
+use App\Enums\TenantLifecycleActor;
+use App\Enums\TenantStatus;
+use App\Exceptions\TenantLifecycleException;
+use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\Tenant;
-use App\Models\User;
+use App\Models\TenantLifecycleEvent;
+use App\Support\Tenancy\TenantSuspensionReason;
 use Database\Seeders\Catalog\PlanCatalog;
 use Database\Seeders\PlansAndFeaturesSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
-use Spatie\Permission\Models\Role;
-use Stancl\Tenancy\Events\CreatingDatabase;
-use Stancl\Tenancy\Events\DatabaseCreated;
-use Stancl\Tenancy\Events\DatabaseMigrated;
-use Stancl\Tenancy\Events\MigratingDatabase;
-use Stancl\Tenancy\Events\TenantCreated;
-use Tests\TestCase;
+use Tests\Concerns\SeedsCentralPlatformRoles;
+use Tests\TenantTestCase;
 
-class SuperAdminSolidTest extends TestCase
+/**
+ * Super-admin actions called directly (no HTTP). IDEN-1.8: the acting operator is an
+ * App\Models\CentralUser (the old fixture was a tenant-style User with the `admin` role) and
+ * every tenant here is a central row only (no database is created for it).
+ */
+class SuperAdminSolidTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    use SeedsCentralPlatformRoles;
 
-    protected User $superAdmin;
+    protected CentralUser $superAdmin;
 
     protected Plan $basicPlan;
 
@@ -34,22 +39,10 @@ class SuperAdminSolidTest extends TestCase
     {
         parent::setUp();
 
-        Event::fake([
-            TenantCreated::class,
-            CreatingDatabase::class,
-            DatabaseCreated::class,
-            MigratingDatabase::class,
-            DatabaseMigrated::class,
-        ]);
-
-        $role = Role::firstOrCreate(['name' => 'admin']);
-        $this->superAdmin = User::factory()->create([
+        $this->superAdmin = $this->centralSuperAdmin([
             'name' => 'مدير المنصة المركزي',
             'email' => 'super@test.com',
-            'phone' => '01000000000',
-            'is_active' => true,
         ]);
-        $this->superAdmin->assignRole($role);
 
         $this->basicPlan = Plan::create([
             'name' => 'الباقة الأساسية',
@@ -66,26 +59,33 @@ class SuperAdminSolidTest extends TestCase
         ]);
     }
 
+    /** @param  array<string, mixed>  $attributes */
+    private function rowTenant(array $attributes): Tenant
+    {
+        return Tenant::create(array_merge([
+            'plan_id' => $this->basicPlan->id,
+            'status' => TenantStatus::Active->value,
+            'tenancy_create_database' => false,
+        ], $attributes));
+    }
+
     public function test_tenants_index_action_with_pipeline_filters(): void
     {
-        Tenant::create([
+        $this->rowTenant([
             'id' => 'cairo-market',
             'name' => 'سوبر ماركت القاهرة',
             'slug' => 'cairo-market',
-            'plan_id' => $this->basicPlan->id,
             'email' => 'cairo@market.test',
             'phone' => '01011111111',
-            'status' => 'active',
         ]);
 
-        Tenant::create([
+        $this->rowTenant([
             'id' => 'alex-spices',
             'name' => 'عطارة الإسكندرية',
             'slug' => 'alex-spices',
-            'plan_id' => $this->basicPlan->id,
             'email' => 'alex@spices.test',
             'phone' => '01022222222',
-            'status' => 'suspended',
+            'status' => TenantStatus::Suspended->value,
         ]);
 
         $action = app(GetTenantsIndexDataAction::class);
@@ -107,31 +107,60 @@ class SuperAdminSolidTest extends TestCase
 
     public function test_toggle_tenant_status_action(): void
     {
-        $tenant = Tenant::create([
+        $tenant = $this->rowTenant([
             'id' => 'test-store',
             'name' => 'متجر تجريبي',
             'slug' => 'test-store',
-            'plan_id' => $this->basicPlan->id,
             'email' => 'store@test.com',
-            'status' => 'active',
         ]);
 
-        $action = app(ToggleTenantStatusAction::class);
-        $action->execute($tenant, 'suspended', 0);
+        $returned = app(ToggleTenantStatusAction::class)->execute(
+            (string) $tenant->id,
+            TenantStatus::Suspended,
+            $this->superAdmin,
+            0,
+            TenantSuspensionReason::CustomerRequest,
+        );
 
+        $this->assertSame(TenantStatus::Suspended->value, $returned->status);
         $tenant->refresh();
         $this->assertEquals('suspended', $tenant->status);
+
+        // Through the state machine: one lifecycle event caused by the central operator.
+        $event = TenantLifecycleEvent::query()->where('tenant_id', 'test-store')->sole();
+        $this->assertSame(TenantLifecycleActor::SuperAdmin, $event->actor);
+        $this->assertSame($this->superAdmin->id, $event->central_user_id);
+    }
+
+    public function test_toggle_tenant_status_action_never_activates_a_tenant(): void
+    {
+        $tenant = $this->rowTenant([
+            'id' => 'blocked-store',
+            'name' => 'متجر موقوف',
+            'slug' => 'blocked-store',
+            'email' => 'blocked@test.com',
+            'status' => TenantStatus::Suspended->value,
+        ]);
+
+        try {
+            app(ToggleTenantStatusAction::class)->execute((string) $tenant->id, TenantStatus::Active, $this->superAdmin);
+            $this->fail('A super-admin must not activate a tenant: only a verified payment does.');
+        } catch (TenantLifecycleException $e) {
+            $this->assertSame(409, $e->getStatusCode());
+            $this->assertSame('subscription.invalid_transition', $e->errorCode());
+        }
+
+        $this->assertSame(TenantStatus::Suspended->value, $tenant->fresh()?->status);
+        $this->assertSame(0, TenantLifecycleEvent::query()->where('tenant_id', 'blocked-store')->count());
     }
 
     public function test_override_tenant_feature_action(): void
     {
-        $tenant = Tenant::create([
+        $tenant = $this->rowTenant([
             'id' => 'test-store-2',
             'name' => 'متجر تجريبي 2',
             'slug' => 'test-store-2',
-            'plan_id' => $this->basicPlan->id,
             'email' => 'store2@test.com',
-            'status' => 'active',
             'enabled_features' => [],
         ]);
 
@@ -152,8 +181,8 @@ class SuperAdminSolidTest extends TestCase
         $action = app(UpdatePlanAction::class);
         $action->execute($this->basicPlan, [
             'name' => 'الباقة الأساسية بلس',
-            'price_monthly' => 599.000,
-            'price_yearly' => 5990.000,
+            'price_monthly' => '599.000',
+            'price_yearly' => '5990.000',
             'max_users' => 5,
             'max_stores' => 2,
             'max_items' => 1000,
@@ -165,7 +194,7 @@ class SuperAdminSolidTest extends TestCase
 
         $this->basicPlan->refresh();
         $this->assertEquals('الباقة الأساسية بلس', $this->basicPlan->name);
-        $this->assertEquals(599.0, (float) $this->basicPlan->price_monthly);
+        $this->assertSame('599.000', $this->basicPlan->price_monthly);
         $this->assertTrue($this->basicPlan->is_popular);
         $this->assertTrue($this->basicPlan->features['mixes.manage']);
     }

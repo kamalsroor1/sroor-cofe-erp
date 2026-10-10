@@ -13,6 +13,10 @@ use Tests\TestCase;
 /**
  * P0-OPS-2 — central Telegram scheduler jobs stay registered but only run when
  * `services.telegram.scheduled_jobs_enabled` is true (default off).
+ *
+ * OPS-5 — the unencrypted `backup:telegram` dump is gone for good; the encrypted
+ * `backup:tenants` backup and the health checks are scheduled and never gated by the
+ * Telegram flag.
  */
 final class ScheduledTelegramJobsGuardTest extends TestCase
 {
@@ -27,7 +31,6 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
     public static function telegramCommands(): array
     {
         return [
-            'backup' => ['backup:telegram'],
             'daily summary' => ['notify:daily-summary'],
             'low stock' => ['notify:low-stock'],
             'overdue shifts' => ['notify:overdue-shifts'],
@@ -41,6 +44,10 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
             'queue work' => ['queue:work'],
             'queue restart' => ['queue:restart'],
             'pulse clear' => ['pulse:clear'],
+            'tenant backups' => ['backup:tenants'],
+            'file backups' => ['backup:run --only-files'],
+            'health check' => ['health:check'],
+            'schedule heartbeat' => ['health:schedule-check-heartbeat'],
         ];
     }
 
@@ -82,6 +89,22 @@ final class ScheduledTelegramJobsGuardTest extends TestCase
         config(['services.telegram.scheduled_jobs_enabled' => false]);
 
         $this->assertTrue($this->singleEvent($command)->filtersPass($this->app));
+    }
+
+    public function test_telegram_database_backup_is_removed(): void
+    {
+        $this->assertSame([], $this->eventsFor('backup:telegram'));
+        $this->assertArrayNotHasKey('backup:telegram', $this->app->make(ConsoleKernel::class)->all());
+        $this->assertFalse(class_exists('App\Console\Commands\SendTelegramDatabaseBackupCommand'));
+        $this->assertFalse(class_exists('App\Jobs\SendTelegramDatabaseBackupJob'));
+    }
+
+    public function test_tenant_backups_run_daily_without_overlapping(): void
+    {
+        $event = $this->singleEvent('backup:tenants');
+
+        $this->assertSame('30 1 * * *', $event->expression);
+        $this->assertTrue($event->withoutOverlapping);
     }
 
     public function test_config_default_is_off(): void

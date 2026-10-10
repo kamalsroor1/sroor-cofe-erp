@@ -12,16 +12,15 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class DashboardApiTest extends TestCase
+class DashboardApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -39,10 +38,15 @@ class DashboardApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and assertions run inside the tenant DB; every HTTP call selects the
+        // tenant with X-Tenant (TenantTestCase ends tenancy around each request).
+        $this->tenant = $this->createTenant();
+        tenancy()->initialize($this->tenant);
+        $this->withHeaders(['X-Tenant' => (string) $this->tenant->getTenantKey()]);
 
-        $this->mainStore = Store::create([
+        // The harness main store, given this test's fixture identity.
+        $this->mainStore = Store::query()->findOrFail($this->tenantStore($this->tenant)->id);
+        $this->mainStore->update([
             'name' => 'المحمصة المركزية',
             'code' => 'ROAST-MAIN',
             'type' => 'retail',
@@ -287,5 +291,51 @@ class DashboardApiTest extends TestCase
         $lowStockItems = $response->json('data.low_stock_items');
         $this->assertNotEmpty($lowStockItems);
         $this->assertEquals('بن إثيوبي هرري', $lowStockItems[0]['name']);
+    }
+
+    public function test_dashboard_never_mixes_in_another_tenants_sales_or_stock(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $this->inTenant($other, function () use ($otherStoreId, $otherAdminId): void {
+            $customer = Customer::create(['name' => 'عميل آخر', 'current_balance' => '5000.000', 'is_active' => true]);
+            Invoice::create([
+                'invoice_number' => 'INV-OTHER-001',
+                'store_id' => $otherStoreId,
+                'customer_id' => $customer->id,
+                'user_id' => $otherAdminId,
+                'invoice_date' => now()->toDateString(),
+                'subtotal' => '9999.000',
+                'net_total' => '9999.000',
+                'paid_amount' => '9999.000',
+                'remaining_amount' => '0.000',
+                'status' => 'confirmed',
+                'payment_type' => 'cash',
+            ]);
+            Item::create([
+                'name' => 'صنف ناقص لمستأجر آخر',
+                'code' => 'BN-OTHER-LOW',
+                'cost_price' => '1.000',
+                'selling_price' => '2.000',
+                'current_stock' => '1.000',
+                'min_stock' => '50.000',
+                'is_active' => true,
+            ]);
+        });
+        tenancy()->initialize($this->tenant);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/dashboard');
+
+        $response->assertStatus(200);
+        $this->assertEquals(0.0, (float) $response->json('data.metrics.today_sales'));
+        $this->assertEquals(750.0, (float) $response->json('data.metrics.customers_debt'));
+        $this->assertNotContains('صنف ناقص لمستأجر آخر', collect($response->json('data.low_stock_items'))->pluck('name')->all());
+
+        // This tenant's token cannot open the other tenant's dashboard.
+        $this->withHeaders(['X-Tenant' => (string) $other->getTenantKey(), 'Authorization' => 'Bearer '.$this->adminToken])
+            ->getJson('/api/v1/dashboard')
+            ->assertStatus(401);
     }
 }

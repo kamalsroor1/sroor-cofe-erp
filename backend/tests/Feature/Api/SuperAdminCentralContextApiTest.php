@@ -4,82 +4,36 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Enums\TenantStatus;
+use App\Http\Middleware\ApiTokenAuth;
+use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
 use App\Http\Middleware\ResolveApiTenancy;
-use App\Models\Plan;
-use App\Models\Store;
 use App\Models\Tenant;
-use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Stancl\Tenancy\Events\CreatingDatabase;
-use Stancl\Tenancy\Events\DatabaseCreated;
-use Stancl\Tenancy\Events\DatabaseMigrated;
-use Stancl\Tenancy\Events\MigratingDatabase;
-use Stancl\Tenancy\Events\TenantCreated;
 use Tests\Concerns\SeedsCentralPlatformRoles;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
- * P0-AUTH-5: the /api/v1/super-admin/* control plane is reachable ONLY in central context.
- * A request arriving on a tenant host (or that would initialise tenancy) must get 404,
- * regardless of who is holding the token.
+ * P0-AUTH-5 / IDEN-1.4 / IDEN-1.11: the /api/v1/super-admin/* control plane is reachable ONLY in
+ * central context, on a control-plane host. A request arriving on a tenant host, naming a tenant
+ * (X-Tenant / ?tenant=) or, with admin hosts configured, on any other host gets 404 before
+ * authentication, regardless of who is holding the token.
+ *
+ * IDEN-1.8: operators are App\Models\CentralUser. Tenant users (cashier / store admin) on the
+ * central host used to get 403; they now get 401 because their Sanctum token is not a central
+ * identity (AuthenticateCentral). That is the intended contract, not a weaker one.
  */
-class SuperAdminCentralContextApiTest extends TestCase
+class SuperAdminCentralContextApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
     use SeedsCentralPlatformRoles;
-
-    private const TENANT_HOST_URL = 'http://acme.tenant-host.test';
-
-    protected Store $store;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        Event::fake([
-            TenantCreated::class,
-            CreatingDatabase::class,
-            DatabaseCreated::class,
-            MigratingDatabase::class,
-            DatabaseMigrated::class,
-        ]);
-
-        $this->seed(PermissionsSeeder::class);
         $this->seedCentralPlatformRoles();
-
-        $this->store = Store::create([
-            'name' => 'الفرع الرئيسي',
-            'code' => 'MAIN',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
-    }
-
-    private function makeUser(string $phone, string $role): User
-    {
-        $user = User::factory()->create([
-            'name' => 'مستخدم '.$role,
-            'phone' => $phone,
-            'email' => $role.$phone.'@sroor.test',
-            'password' => Hash::make('secret123'),
-            'is_active' => true,
-            'default_store_id' => $this->store->id,
-        ]);
-        $user->assignRole($role);
-
-        return $user;
-    }
-
-    /** @return array<string, string> */
-    private function bearer(User $user): array
-    {
-        return ['Authorization' => 'Bearer '.$user->createToken('t')->plainTextToken];
     }
 
     /** @return array<string, array{string}> */
@@ -100,101 +54,110 @@ class SuperAdminCentralContextApiTest extends TestCase
 
     public function test_guest_on_tenant_host_gets_404(): void
     {
-        $this->getJson(self::TENANT_HOST_URL.'/api/v1/super-admin/dashboard')->assertStatus(404);
+        $tenant = $this->createTenant();
+
+        $this->getJson($this->tenantUrl($tenant, '/api/v1/super-admin/dashboard'))->assertStatus(404);
     }
 
     #[DataProvider('superAdminGetEndpoints')]
     public function test_super_admin_token_on_tenant_host_gets_404(string $uri): void
     {
-        $super = $this->makeUser('01000007025', 'super_admin');
+        $tenant = $this->createTenant();
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
 
-        $this->withHeaders($this->bearer($super))
-            ->getJson(self::TENANT_HOST_URL.$uri)
-            ->assertStatus(404);
+        // Sanity: the same token and path answer on the central host.
+        $this->getJson($uri, $headers)->assertStatus(200);
+
+        $this->getJson($this->tenantUrl($tenant, $uri), $headers)->assertStatus(404);
     }
 
     public function test_super_admin_token_on_tenant_host_cannot_mutate_tenants(): void
     {
-        $super = $this->makeUser('01000007026', 'super_admin');
-        $plan = Plan::create([
-            'name' => 'باقة أساسية',
-            'slug' => 'basic-central-ctx',
-            'price_monthly' => '100.000',
-            'price_yearly' => '1000.000',
-            'max_users' => 5,
-            'max_stores' => 1,
-            'max_items' => 100,
-            'max_invoices_per_month' => 1000,
-            'is_active' => true,
-            'is_popular' => false,
-            'sort_order' => 1,
-            'features' => [],
-        ]);
-        $tenant = Tenant::create([
-            'id' => 'victim-tenant',
-            'name' => 'مستأجر ضحية',
-            'slug' => 'victim-tenant',
-            'email' => 'victim@sroor.test',
-            'plan_id' => $plan->id,
-            'status' => 'active',
-        ]);
-        $headers = $this->bearer($super);
+        $tenant = $this->createTenant();
+        $id = (string) $tenant->getTenantKey();
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
 
-        $this->withHeaders($headers)
-            ->postJson(self::TENANT_HOST_URL."/api/v1/super-admin/tenants/{$tenant->id}/toggle-status", [
-                'status' => 'suspended',
-                'extend_days' => 0,
-            ])
-            ->assertStatus(404);
+        $this->postJson($this->tenantUrl($tenant, "/api/v1/super-admin/tenants/{$id}/toggle-status"), [
+            'status' => TenantStatus::Suspended->value,
+            'reason' => 'other',
+        ], $headers)->assertStatus(404);
 
-        $this->withHeaders($headers)
-            ->postJson(self::TENANT_HOST_URL."/api/v1/super-admin/tenants/{$tenant->id}/override-feature", [
-                'feature_key' => 'custom_branding',
-            ])
-            ->assertStatus(404);
+        $this->postJson($this->tenantUrl($tenant, "/api/v1/super-admin/tenants/{$id}/override-feature"), [
+            'feature_key' => 'custom_branding',
+        ], $headers)->assertStatus(404);
 
-        $this->assertSame('active', $tenant->fresh()->status);
+        $this->postJson($this->tenantUrl($tenant, "/api/v1/super-admin/tenants/{$id}/update-db-config"), [
+            'tenancy_db_name' => 'hijack',
+        ], $headers)->assertStatus(404);
+
+        $fresh = Tenant::query()->findOrFail($id);
+        $this->assertSame(TenantStatus::Active->value, $fresh->status);
+        $this->assertNotContains('custom_branding', (array) $fresh->enabled_features);
+        $this->assertNull($fresh->tenancy_db_name);
     }
 
     public function test_super_admin_with_unknown_x_tenant_header_gets_404(): void
     {
-        $super = $this->makeUser('01000007027', 'super_admin');
+        $this->getJson('/api/v1/super-admin/dashboard', $this->centralHeaders($this->centralSuperAdmin()) + ['X-Tenant' => 'no-such-tenant'])
+            ->assertStatus(404);
+    }
 
-        $this->withHeaders($this->bearer($super) + ['X-Tenant' => 'no-such-tenant'])
-            ->getJson('/api/v1/super-admin/dashboard')
+    public function test_super_admin_with_a_real_tenant_selected_gets_404(): void
+    {
+        $tenant = $this->createTenant();
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+
+        $this->getJson('/api/v1/super-admin/dashboard', $headers + ['X-Tenant' => (string) $tenant->getTenantKey()])
+            ->assertStatus(404);
+        $this->getJson('/api/v1/super-admin/dashboard?tenant='.$tenant->getTenantKey(), $headers)
             ->assertStatus(404);
     }
 
     public function test_super_admin_on_central_host_gets_200(): void
     {
-        $super = $this->makeUser('01000007028', 'super_admin');
-        $headers = $this->bearer($super);
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
 
-        $this->withHeaders($headers)
-            ->getJson('/api/v1/super-admin/dashboard')
+        $this->getJson('/api/v1/super-admin/dashboard', $headers)
             ->assertStatus(200)
             ->assertJson(['success' => true]);
 
-        $this->withHeaders($headers)
-            ->getJson('/api/v1/super-admin/tenants')
+        $this->getJson('/api/v1/super-admin/tenants', $headers)
             ->assertStatus(200)
             ->assertJson(['success' => true]);
     }
 
-    public function test_cashier_and_tenant_admin_on_central_host_get_403(): void
+    /** Formerly test_cashier_and_tenant_admin_on_central_host_get_403 (see class docblock). */
+    public function test_cashier_and_tenant_admin_on_central_host_get_401(): void
     {
-        foreach (['cashier' => '01000007029', 'admin' => '01000007030'] as $role => $phone) {
-            $user = $this->makeUser($phone, $role);
-            $headers = $this->bearer($user);
+        $tenant = $this->createTenant();
+        $users = [
+            'cashier' => $this->createTenantUser($tenant, 'cashier'),
+            'admin' => $this->tenantAdmin($tenant),
+        ];
 
-            $this->withHeaders($headers)
-                ->getJson('/api/v1/super-admin/dashboard')
-                ->assertStatus(403);
+        foreach ($users as $role => $user) {
+            $headers = ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$this->tenantToken($tenant, $user)];
 
-            $this->withHeaders($headers)
-                ->getJson('/api/v1/super-admin/tenants')
-                ->assertStatus(403);
+            // Sanity: the token is valid in its own tenant.
+            $this->getJson('/api/v1/auth/me', $this->tenantHeaders($tenant, $user))->assertStatus(200);
+
+            $this->assertSame(401, $this->getJson('/api/v1/super-admin/dashboard', $headers)->getStatusCode(), $role);
+            $this->assertSame(401, $this->getJson('/api/v1/super-admin/tenants', $headers)->getStatusCode(), $role);
         }
+    }
+
+    public function test_admin_host_enforcement_hides_the_control_plane_on_every_other_host(): void
+    {
+        $this->useCentralAdminHost();
+        $headers = $this->centralHeaders($this->centralSuperAdmin());
+
+        $this->getJson($this->centralAdminUrl('/api/v1/super-admin/dashboard'), $headers)->assertStatus(200);
+        $this->getJson($this->centralAdminUrl('/api/v1/super-admin/dashboard'))->assertStatus(401);
+
+        // The central (non-admin) host now answers 404, before authentication. Absolute URL on
+        // purpose: a relative one would reuse the host of the previous request.
+        $this->getJson('http://localhost/api/v1/super-admin/dashboard', $headers)->assertStatus(404);
+        $this->getJson('http://localhost/api/v1/super-admin/dashboard')->assertStatus(404);
     }
 
     public function test_route_list_has_no_resolve_api_tenancy(): void
@@ -217,7 +180,14 @@ class SuperAdminCentralContextApiTest extends TestCase
 
             $middleware = $route->gatherMiddleware();
             $this->assertContains(EnsureCentralContext::class, $middleware, "{$name} must run EnsureCentralContext");
+            $this->assertContains(AuthenticateCentral::class, $middleware, "{$name} must run AuthenticateCentral");
             $this->assertNotContains(ResolveApiTenancy::class, $middleware, "{$name} must not run ResolveApiTenancy");
+            $this->assertNotContains(ApiTokenAuth::class, $middleware, "{$name} must not run ApiTokenAuth");
+            $this->assertLessThan(
+                array_search(AuthenticateCentral::class, $middleware, true),
+                array_search(EnsureCentralContext::class, $middleware, true),
+                "{$name}: the context check must run before authentication",
+            );
         }
     }
 }

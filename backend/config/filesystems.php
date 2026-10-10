@@ -88,6 +88,27 @@ return [
             'report' => false,
         ],
 
+        /*
+         * OPS-5 backup target (CTO decision D3): Google Drive of the owner's account
+         * through OAuth (a service account has no Drive quota). Driver registered in
+         * App\Providers\HealthServiceProvider (masbug/flysystem-google-drive-ext).
+         * The refresh token is created once with the owner's consent and lives ONLY in
+         * the server .env (docs/07-operations/backup-restore.md §2).
+         * GOOGLE_DRIVE_FOLDER_ID = the dedicated backups folder; empty = My Drive root
+         * (the archives still go under backup.tenants.path_prefix).
+         * Never listed in tenancy.filesystem.disks: backups are written from central
+         * context only.
+         */
+        'google' => [
+            'driver' => 'google',
+            'clientId' => env('GOOGLE_DRIVE_CLIENT_ID'),
+            'clientSecret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
+            'refreshToken' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+            'folderId' => env('GOOGLE_DRIVE_FOLDER_ID'),
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

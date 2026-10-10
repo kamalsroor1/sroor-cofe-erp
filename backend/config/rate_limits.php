@@ -35,8 +35,11 @@ return [
     'central_login' => [
         'per_ip_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_IP', 10),
         'per_email_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL', 5),
-        // Ignores the IP: stops distributed guessing against one operator account.
-        'per_email_per_hour' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL_HOURLY', 20),
+        // Per email AND client IP (security audit, W2 lane 3I): one source cannot lock an
+        // operator out everywhere.
+        'per_email_ip_per_hour' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL_IP_HOURLY', 20),
+        // Ignores the IP, deliberately looser: slows distributed guessing against one account.
+        'per_email_per_hour' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL_HOURLY', 100),
     ],
 
     // Public, unauthenticated endpoints (ping, app version/update/APK, translations, auth options),

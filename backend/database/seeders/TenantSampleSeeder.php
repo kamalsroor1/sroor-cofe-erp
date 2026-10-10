@@ -12,15 +12,27 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Env;
 use Illuminate\Support\Str;
 
+/**
+ * Sample tenant for local / demo databases, idempotent.
+ *
+ * Same identity as scripts/local/provision-local-tenant.php: the tenant id and slug are
+ * SEED_DEMO_TENANT_SLUG (default "demo"), its domains are "<slug>.<tenancy.central_domain>"
+ * (added by the provisioner) and "<slug>.localhost". A tenant already holding that id or
+ * slug (e.g. created by scripts/local/setup-local.ps1) is left untouched.
+ */
 class TenantSampleSeeder extends Seeder
 {
+    public const DEFAULT_SLUG = 'demo';
+
     private const DEMO_ADMIN_EMAIL = 'admin@demo.com';
 
     public function run(): void
     {
-        $existing = Tenant::find('tenant_sroor');
-        if ($existing) {
-            $this->command->info(__('console.seed.tenant_exists', ['tenant' => 'tenant_sroor']));
+        $slug = self::slug();
+
+        $existing = Tenant::query()->whereKey($slug)->orWhere('slug', $slug)->first();
+        if ($existing !== null) {
+            $this->command->info(__('console.seed.tenant_exists', ['tenant' => $existing->getTenantKey()]));
 
             return;
         }
@@ -34,19 +46,16 @@ class TenantSampleSeeder extends Seeder
 
         $dto = new CreateTenantDTO(
             name: 'مؤسسة تجارة وتوزيع البضائع',
-            slug: 'demo',
+            slug: $slug,
             email: self::DEMO_ADMIN_EMAIL,
             phone: '01000000099',
             password: $plainPassword,
             planId: $plan->id,
             trialDays: 30,
-            customDomain: 'sroor.localhost'
+            customDomain: $slug.'.localhost'
         );
 
         $tenant = $provisioner->provision($dto);
-
-        // Also add sroor.makhzani.test domain
-        $tenant->domains()->firstOrCreate(['domain' => 'sroor.makhzani.test']);
 
         if ($this->command === null) {
             return;
@@ -61,5 +70,14 @@ class TenantSampleSeeder extends Seeder
             $this->command->warn(__('console.seed.generated_password', ['user' => self::DEMO_ADMIN_EMAIL, 'password' => $plainPassword]));
         }
         $this->command->warn(__('console.seed.change_password_warning'));
+    }
+
+    /** Tenant id/slug: SEED_DEMO_TENANT_SLUG (slugified) or "demo". */
+    public static function slug(): string
+    {
+        // Seed-time operator value: process environment (Env::get), like SEED_DEMO_TENANT_PASSWORD.
+        $slug = Str::slug((string) Env::get('SEED_DEMO_TENANT_SLUG', ''));
+
+        return $slug !== '' ? $slug : self::DEFAULT_SLUG;
     }
 }

@@ -10,6 +10,13 @@ use Spatie\Permission\PermissionRegistrar;
 class PermissionsSeeder extends Seeder
 {
     /**
+     * Tenant roles and permissions always live on the tenant `web` guard, pinned explicitly so
+     * the request's default guard never matters (a super-admin provisioning a tenant runs with
+     * `central` as the default guard; spatie would otherwise stamp the roles `central`).
+     */
+    public const GUARD = 'web';
+
+    /**
      * Tenant permission names grouped by module. The display label of each one lives in
      * lang/{ar,en}/permissions.php under "permissions.<name>". PermissionsParityTest
      * (tests/Feature/Architecture) enforces both the labels and that every name the code
@@ -83,18 +90,20 @@ class PermissionsSeeder extends Seeder
 
         // 1. Every tenant permission (labels: lang/{ar,en}/permissions.php, key "permissions.<name>").
         foreach (self::PERMISSIONS as $name) {
-            Permission::firstOrCreate(['name' => $name], ['guard_name' => 'web']);
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => self::GUARD]);
         }
 
         // 2. Roles Setup & Permission Assignment
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
-        $storeRole = Role::firstOrCreate(['name' => 'storekeeper']);
-        $accountantRole = Role::firstOrCreate(['name' => 'accountant']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => self::GUARD]);
+        $cashierRole = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => self::GUARD]);
+        $storeRole = Role::firstOrCreate(['name' => 'storekeeper', 'guard_name' => self::GUARD]);
+        $accountantRole = Role::firstOrCreate(['name' => 'accountant', 'guard_name' => self::GUARD]);
 
         // Tenant admin gets every local ERP permission. super_admin.* is central-only
         // (see CentralPermissionsSeeder) and is excluded even if a legacy row exists.
-        $storeAdminPermissions = Permission::where('name', 'not like', 'super_admin.%')->get();
+        $storeAdminPermissions = Permission::where('guard_name', self::GUARD)
+            ->where('name', 'not like', 'super_admin.%')
+            ->get();
         $adminRole->syncPermissions($storeAdminPermissions);
 
         // Cashier permissions

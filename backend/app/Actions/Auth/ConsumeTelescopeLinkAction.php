@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Auth;
 
-use App\Models\User;
+use App\Models\CentralUser;
 use App\Support\PlatformSuperAdmin;
 use Illuminate\Support\Facades\Cache;
 
@@ -13,14 +13,16 @@ use Illuminate\Support\Facades\Cache;
  *
  * Single use: the nonce is pulled from the cache, and an atomic Cache::add() marker
  * guarantees that two concurrent requests with the same nonce cannot both succeed.
- * Returns the super admin to log in, or null when the nonce is unknown, expired,
- * already used, or the user is no longer an active platform super admin.
+ * Returns the central super admin (App\Models\CentralUser, central connection) to log
+ * into the `central_web` guard, or null when the nonce is unknown, expired, already
+ * used, or the operator is no longer an active platform super admin. A `users` row
+ * (tenant or legacy central) is never returned, even when it shares the operator's id.
  */
 final class ConsumeTelescopeLinkAction
 {
     private const USED_PREFIX = 'telescope-link-used:';
 
-    public function execute(string $nonce): ?User
+    public function execute(string $nonce): ?CentralUser
     {
         if ($nonce === '') {
             return null;
@@ -36,7 +38,7 @@ final class ConsumeTelescopeLinkAction
             return null;
         }
 
-        $user = User::query()
+        $user = CentralUser::query()
             ->whereKey((int) $userId)
             ->where('is_active', true)
             ->first();

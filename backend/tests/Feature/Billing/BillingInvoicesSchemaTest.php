@@ -14,6 +14,7 @@ use App\Enums\Billing\SubscriptionStatus;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\BillingSequence;
+use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\Tenant;
@@ -43,9 +44,14 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
         'billing_payments' => 'migrations/2026_10_10_200520_create_billing_payments_table.php',
     ];
 
-    /** Later migrations that alter these tables: rolled back first, re-applied last. */
+    /**
+     * Later migrations that alter or reference these tables, oldest first: rolled back
+     * newest-first before the tables are dropped, re-applied in this order afterwards.
+     * 200710 holds a FK to billing_invoices (MySQL 3730 "cannot drop referenced table").
+     */
     private const ALTER_MIGRATIONS = [
         'migrations/2026_10_10_200540_scope_billing_payments_gateway_reference_unique_to_gateway.php',
+        'migrations/2026_10_10_200710_create_tenant_credit_ledger_table.php',
     ];
 
     public function test_billing_invoices_table_has_the_designed_columns_and_indexes(): void
@@ -167,7 +173,9 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
 
         $this->assertSame($tenant->id, $invoice->tenant?->id);
         $this->assertSame($subscription->id, $invoice->subscription?->id);
-        $this->assertSame($superAdmin->id, $invoice->issuer?->id);
+        // IDEN-1.8: the issuer is the central operator, never a (legacy or tenant) User row.
+        $this->assertInstanceOf(CentralUser::class, $invoice->issuer);
+        $this->assertSame($superAdmin->id, $invoice->issuer->id);
 
         $payment = $this->payment($invoice, ['amount' => '1236.9']);
         $this->assertSame([$payment->id], $invoice->payments()->pluck('id')->all());
@@ -199,7 +207,8 @@ final class BillingInvoicesSchemaTest extends TenantTestCase
         $this->assertSame(['note' => 'transfer at 10:00'], $payment->raw_payload);
         $this->assertSame($invoice->id, $payment->invoice->id);
         $this->assertSame($tenant->id, $payment->tenant?->id);
-        $this->assertSame($verifier->id, $payment->verifier?->id);
+        $this->assertInstanceOf(CentralUser::class, $payment->verifier);
+        $this->assertSame($verifier->id, $payment->verifier->id);
 
         $fresh = $this->payment($invoice);
         $fresh = BillingPayment::query()->findOrFail($fresh->id);

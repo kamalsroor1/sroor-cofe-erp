@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Tenants;
 
 use App\Models\Tenant;
+use App\Support\PlatformHosts;
 
 class ResolveTenantWorkspaceAction
 {
@@ -58,13 +59,14 @@ class ResolveTenantWorkspaceAction
         // Resolve primary domain
         $primaryDomain = $tenant->domains->first()?->domain;
         if (! $primaryDomain) {
-            $centralDomain = config('tenancy.central_domains.2', 'baraa-solutions.com');
-            $primaryDomain = "{$tenant->id}.{$centralDomain}";
+            $primaryDomain = PlatformHosts::tenantHost((string) $tenant->id);
         }
 
+        // Scheme (and port) follow config('app.url'): https in production, http on the
+        // local *.test setup. Never hardcoded.
         $serverUrl = str_starts_with($primaryDomain, 'http')
             ? $primaryDomain
-            : "https://{$primaryDomain}";
+            : PlatformHosts::origin($primaryDomain);
 
         $settings = is_array($tenant->settings) ? $tenant->settings : [];
         $logoUrl = $settings['logo_url'] ?? asset('logo.png');

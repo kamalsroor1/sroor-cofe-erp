@@ -15,8 +15,15 @@ use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
 use Stancl\Tenancy\UUIDGenerator;
 
+// Base domain of the platform (env CENTRAL_DOMAIN): tenant subdomains are "<slug>.<domain>".
+// An empty value falls back to the production domain. Read it through
+// config('tenancy.central_domain') / App\Support\PlatformHosts, never env() at runtime.
+$centralDomain = strtolower(trim((string) env('CENTRAL_DOMAIN', ''))) ?: 'baraa-solutions.com';
+
 return [
     'tenant_model' => Tenant::class,
+
+    'central_domain' => $centralDomain,
     'id_generator' => UUIDGenerator::class,
 
     'domain_model' => Domain::class,
@@ -26,14 +33,20 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-    'central_domains' => [
+    // IDEN-1.11: the platform-console host(s) from CENTRAL_ADMIN_DOMAINS (same parsing as
+    // config/central.php) are central too, so no tenant lookup / tenant-miss throttling ever
+    // runs on them. Appended last: code reads central_domains.0 and .2 by index.
+    'central_domains' => array_values(array_unique(array_merge([
         '127.0.0.1',
         'localhost',
         'baraa-solutions.com',
         'www.baraa-solutions.com',
         'sroor.test',
-        env('CENTRAL_DOMAIN', 'baraa-solutions.com'),
-    ],
+        $centralDomain,
+    ], array_values(array_filter(array_map(
+        static fn (string $host): string => strtolower(trim($host)),
+        explode(',', (string) env('CENTRAL_ADMIN_DOMAINS', '')),
+    )))))),
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.

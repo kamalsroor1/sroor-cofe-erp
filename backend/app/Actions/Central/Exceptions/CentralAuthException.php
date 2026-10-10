@@ -25,6 +25,8 @@ final class CentralAuthException extends RuntimeException
 
     public const NOT_ENABLED = 'central_auth.two_factor_not_enabled';
 
+    public const PASSWORD_RESET_REQUIRED = 'central_auth.password_reset_required';
+
     private function __construct(
         string $message,
         private readonly int $status,
@@ -43,6 +45,12 @@ final class CentralAuthException extends RuntimeException
     public static function stepUpRequired(): self
     {
         return new self((string) __('central_auth.step_up_required'), 403, self::STEP_UP_REQUIRED);
+    }
+
+    /** Correct password, but the account must reset it first (migrated operators, W2-B3). */
+    public static function passwordResetRequired(): self
+    {
+        return new self((string) __('central_auth.password_reset_required'), 403, self::PASSWORD_RESET_REQUIRED);
     }
 
     public static function alreadyConfirmed(): self

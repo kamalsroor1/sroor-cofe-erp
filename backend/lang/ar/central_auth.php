@@ -22,6 +22,8 @@ return [
     'password_reset_link_sent' => 'إذا كان هذا البريد مسجلًا لحساب على المنصة، فقد تم إرسال رابط إعادة تعيين كلمة السر إليه.',
     'password_reset_invalid' => 'رابط إعادة تعيين كلمة السر غير صالح أو انتهت صلاحيته.',
     'password_reset_success' => 'تم تغيير كلمة السر، سجّل الدخول من جديد على كل الأجهزة.',
+    // W2-B3 security: accounts moved by central:migrate-super-admins must set a new password first.
+    'password_reset_required' => 'لازم تعيد تعيين كلمة السر قبل الدخول. استخدم «نسيت كلمة السر» لتعيين كلمة سر جديدة.',
     'password_reset_mail' => [
         'subject' => 'إعادة تعيين كلمة سر لوحة إدارة المنصة',
         'greeting' => 'أهلًا :name،',

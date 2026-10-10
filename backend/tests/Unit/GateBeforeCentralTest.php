@@ -8,9 +8,11 @@ use App\Enums\CentralPermission;
 use App\Models\CentralUser;
 use App\Models\User;
 use Database\Seeders\CentralPermissionsSeeder;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Spatie\Permission\Models\Role;
 use Tests\TenantTestCase;
 
 /**
@@ -25,6 +27,8 @@ final class GateBeforeCentralTest extends TenantTestCase
     {
         parent::setUp();
 
+        // Tenant-guard roles (`admin`) come from PermissionsSeeder; CentralPermissionsSeeder only seeds the central guard.
+        $this->seed(PermissionsSeeder::class);
         $this->seed(CentralPermissionsSeeder::class);
     }
 
@@ -124,13 +128,18 @@ final class GateBeforeCentralTest extends TenantTestCase
         }
     }
 
-    /** Legacy expectations: removed with the legacy branch in IDEN-1.4 (W2-B3). */
-    public function test_legacy_central_user_super_admin_still_passes_until_iden_1_4(): void
+    /** IDEN-1.4: an App\Models\User holding the legacy `web` super_admin role gets no bypass any more. */
+    public function test_legacy_web_super_admin_role_no_longer_passes(): void
     {
+        Role::findOrCreate('super_admin', 'web');
         $legacy = $this->webUser('super_admin');
 
-        $this->assertTrue(Gate::forUser($legacy)->allows('super_admin.access'));
-        $this->assertTrue(Gate::forUser($legacy)->allows('customers.manage'));
+        $this->assertFalse(Gate::forUser($legacy)->allows('super_admin.access'));
+        $this->assertFalse(Gate::forUser($legacy)->allows('customers.manage'));
+
+        foreach (CentralPermission::values() as $ability) {
+            $this->assertFalse(Gate::forUser($legacy)->allows($ability), $ability);
+        }
     }
 
     public function test_guest_is_denied(): void

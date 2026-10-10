@@ -10,16 +10,15 @@ use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class InvoiceApiTest extends TestCase
+class InvoiceApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -45,10 +44,11 @@ class InvoiceApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->mainStore = Store::create([
+        $this->mainStore = $this->adoptMainStore([
             'name' => 'المحمصة الرئيسية',
             'code' => 'MAIN-001',
             'type' => 'retail',
@@ -323,5 +323,68 @@ class InvoiceApiTest extends TestCase
 
         // Stock restored back to 50
         $this->assertEquals(50.000, (float) Item::find($this->itemA->id)->current_stock);
+    }
+
+    public function test_invoices_of_another_tenant_are_invisible_and_immutable(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $foreign = $this->inTenant($other, function () use ($otherStoreId, $otherAdminId): array {
+            $customer = Customer::create(['name' => 'عميل مستأجر آخر', 'current_balance' => '0.000', 'is_active' => true]);
+            $item = Item::create([
+                'name' => 'بن مستأجر آخر',
+                'code' => 'BN-FOREIGN',
+                'cost_price' => '100.000',
+                'selling_price' => '200.000',
+                'current_stock' => '20.000',
+                'is_active' => true,
+            ]);
+            StoreStock::create(['store_id' => $otherStoreId, 'item_id' => $item->id, 'quantity' => '20.000']);
+            $invoice = Invoice::create([
+                'invoice_number' => 'INV-FOREIGN-0001',
+                'store_id' => $otherStoreId,
+                'customer_id' => $customer->id,
+                'user_id' => $otherAdminId,
+                'invoice_date' => now()->toDateString(),
+                'subtotal' => '400.000',
+                'net_total' => '400.000',
+                'paid_amount' => '400.000',
+                'remaining_amount' => '0.000',
+                'status' => 'confirmed',
+                'payment_type' => 'cash',
+            ]);
+
+            return ['invoice' => (int) $invoice->id, 'item' => (int) $item->id, 'customer' => (int) $customer->id];
+        });
+        $this->useTenantForTest($this->tenant);
+
+        $list = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)->getJson('/api/v1/invoices');
+        $list->assertStatus(200);
+        $this->assertStringNotContainsString('INV-FOREIGN-0001', (string) $list->getContent());
+
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/invoices/'.$foreign['invoice'])
+            ->assertStatus(404);
+
+        $cancel = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->postJson('/api/v1/invoices/'.$foreign['invoice'].'/cancel', ['reason' => 'محاولة إلغاء فاتورة مستأجر آخر']);
+        $this->assertContains($cancel->status(), [404, 422]);
+
+        // Selling the other tenant's item to its customer fails validation; nothing moves.
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->postJson('/api/v1/invoices', [
+                'customer_id' => $foreign['customer'],
+                'payment_type' => 'cash',
+                'items' => [['item_id' => $foreign['item'], 'quantity' => 1.000, 'unit_price' => 200.000]],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['customer_id', 'items.0.item_id']);
+
+        $this->assertSame(0, Invoice::query()->count());
+        $this->inTenant($other, function () use ($foreign): void {
+            $this->assertSame('confirmed', Invoice::query()->findOrFail($foreign['invoice'])->status);
+            $this->assertSame('20.000', (string) Item::query()->findOrFail($foreign['item'])->current_stock);
+        });
     }
 }

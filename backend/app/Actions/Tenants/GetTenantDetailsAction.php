@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tenants;
 
+use App\Actions\SuperAdmin\GetPlatformSystemUnitsAction;
 use App\Http\Resources\PlanResource;
 use App\Http\Resources\TenantResource;
 use App\Models\Invoice;
@@ -18,6 +19,8 @@ use Stancl\Tenancy\Facades\Tenancy;
 
 class GetTenantDetailsAction
 {
+    public function __construct(private readonly GetPlatformSystemUnitsAction $platformUnits) {}
+
     /**
      * جلب تفاصيل المستأجر مع مصفوفة الفيتشرز والباقات عبر JsonResources
      */
@@ -57,13 +60,17 @@ class GetTenantDetailsAction
             if ($tenantUnits) {
                 $allowedUnits = array_values(array_filter(array_map('trim', explode(',', $tenantUnits))));
             }
-            Tenancy::end();
         } catch (\Throwable $e) {
             Log::warning("Tenant stats query failed for {$tenant->id}: ".$e->getMessage());
+        } finally {
+            // Never leave the super-admin request inside the tenant (a failed query used to).
+            if (tenancy()->initialized) {
+                Tenancy::end();
+            }
         }
 
-        $globalUnitsStr = Setting::get('global_system_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,باكت,حبة,لتر,مل,متر,طقم,زوج,باليتة');
-        $globalUnits = array_values(array_filter(array_map('trim', explode(',', $globalUnitsStr))));
+        // The platform unit catalog is CENTRAL (platform_settings), never a tenant `settings` row.
+        $globalUnits = $this->platformUnits->execute();
 
         return [
             'tenant' => (new TenantResource($tenant))->resolve(),

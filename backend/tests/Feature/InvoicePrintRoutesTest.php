@@ -10,33 +10,34 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
  * P0-X4 / P0-X5 regression: Blade print routes (invoice thermal/A4, daily
  * journal, item movements, reports) must never be reachable by guests and
  * must enforce permission + store access.
  *
- * Domain-tenancy routes cannot be hit directly from the test host (localhost
- * is a central domain), so the controller-level checks re-mount the *real*
- * route action and its non-tenancy middleware on a probe URI. This exercises
- * the production middleware stack + handler without domain identification.
+ * QA-4: every request goes to the harness tenant's own host, so domain tenancy
+ * identifies the tenant exactly as in production. The controller-level checks
+ * still re-mount the *real* route action with its *full* middleware stack
+ * (including InitializeTenancyByDomain) on a probe URI placed ahead of the SPA
+ * catch-all, so the production middleware + handler run end to end.
  */
-class InvoicePrintRoutesTest extends TestCase
+class InvoicePrintRoutesTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     private Store $storeA;
 
@@ -52,10 +53,13 @@ class InvoicePrintRoutesTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
+        // Blade routes identify the tenant by host: send every request to the tenant's domain.
+        URL::forceRootUrl('http://'.$this->tenantDomain($this->tenant));
 
-        $this->storeA = Store::create([
+        $this->storeA = $this->adoptMainStore([
             'name' => 'المخزن الرئيسي',
             'code' => 'MAIN-A',
             'type' => 'warehouse',
@@ -160,17 +164,16 @@ class InvoicePrintRoutesTest extends TestCase
     }
 
     /**
-     * Re-mount a real named route's action + middleware (minus domain tenancy)
-     * on a probe URI, so it can be called from the central test host.
+     * Re-mount a real named route's action + its full middleware (domain tenancy
+     * included) on a probe URI ahead of the SPA catch-all.
      */
     private function mountProbe(string $name, string $probeUri): void
     {
         $route = $this->namedRoute($name);
 
-        $middleware = array_values(array_filter(
-            $route->gatherMiddleware(),
-            fn ($m) => ! in_array($m, [InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class], true)
-        ));
+        $middleware = $route->gatherMiddleware();
+        $this->assertContains(InitializeTenancyByDomain::class, $middleware, "{$name} must identify the tenant by domain.");
+        $this->assertContains(PreventAccessFromCentralDomains::class, $middleware, "{$name} must be unreachable from central domains.");
 
         $action = $route->getAction();
         unset($action['as'], $action['prefix'], $action['domain'], $action['where'], $action['middleware'], $action['excluded_middleware']);
@@ -694,5 +697,49 @@ class InvoicePrintRoutesTest extends TestCase
         $this->actingAs($user)->postJson('/store/switch', ['store_id' => $this->storeB->id])->assertStatus(403);
         $this->actingAs($user)->postJson('/store/switch', ['store_id' => $this->storeA->id])->assertOk();
         $this->assertEquals($this->storeA->id, session('current_store_id'));
+    }
+
+    // ------------------------------------------------------------------
+    // QA-4: tenant isolation of the Blade invoice print pages
+    // ------------------------------------------------------------------
+
+    #[DataProvider('invoicePrintRoutes')]
+    public function test_invoice_of_another_tenant_cannot_be_printed_from_either_host(string $name, string $probe): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $foreignInvoiceId = $this->inTenant($other, function () use ($otherStoreId, $otherAdminId): int {
+            $customer = Customer::create(['name' => 'عميل مستأجر آخر سري', 'phone' => '01000007048', 'current_balance' => '0.000', 'is_active' => true]);
+
+            return (int) Invoice::create([
+                'invoice_number' => 'INV-OTHER-TENANT-5521',
+                'store_id' => $otherStoreId,
+                'customer_id' => $customer->id,
+                'user_id' => $otherAdminId,
+                'invoice_date' => now()->toDateString(),
+                'subtotal' => '250.000',
+                'net_total' => '250.000',
+                'paid_amount' => '250.000',
+                'remaining_amount' => '0.000',
+                'status' => 'confirmed',
+                'payment_method' => 'cash',
+            ])->id;
+        });
+        $this->useTenantForTest($this->tenant);
+        $this->mountProbe($name, $probe);
+
+        // On this tenant's host, the other tenant's invoice id does not exist.
+        $response = $this->actingAs($this->admin)->get(str_replace('{id}', (string) $foreignInvoiceId, $probe));
+        $response->assertStatus(404);
+        $this->assertStringNotContainsString('INV-OTHER-TENANT-5521', (string) $response->getContent());
+        $this->assertStringNotContainsString('عميل مستأجر آخر سري', (string) $response->getContent());
+
+        // On the other tenant's host, this tenant's admin is nobody and this tenant's invoice is unknown.
+        URL::forceRootUrl('http://'.$this->tenantDomain($other));
+        $crossHost = $this->actingAs($this->admin)->get(str_replace('{id}', (string) $this->invoiceA->id, $probe));
+        $this->assertContains($crossHost->getStatusCode(), [302, 401, 403, 404]);
+        $this->assertStringNotContainsString($this->invoiceA->invoice_number, (string) $crossHost->getContent());
+        $this->assertStringNotContainsString('INV-OTHER-TENANT-5521', (string) $crossHost->getContent());
     }
 }

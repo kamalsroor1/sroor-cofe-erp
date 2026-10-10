@@ -12,6 +12,7 @@ use App\Models\Item;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Branding\PlatformBranding;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
 use App\Support\TenantClock;
@@ -24,6 +25,7 @@ final class GetSystemContextAction
         private readonly TreasuryService $treasuryService,
         private readonly TenantSettings $tenantSettings,
         private readonly TenantClock $tenantClock,
+        private readonly PlatformBranding $platformBranding,
     ) {}
 
     /**
@@ -129,7 +131,8 @@ final class GetSystemContextAction
                 'opening_cash_balance' => (float) $activeShift->opening_cash_balance,
             ] : null,
             'system' => [
-                'platform_name' => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', __('common.platform_name')),
+                // BRND-1: the platform brand is central (platform_settings), never a tenant setting.
+                'platform_name' => $this->platformBranding->get()->name,
                 'company_name' => Setting::get('company_name') ?: ($tenant?->name ?? __('auth.default_company_name')),
                 'company_subtitle' => Setting::get('company_subtitle') ?: '',
                 // SETG-7: real legal/contact info for the A4 invoice header ('' = hide the line).

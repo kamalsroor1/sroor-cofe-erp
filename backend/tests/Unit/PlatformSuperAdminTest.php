@@ -9,25 +9,26 @@ use App\Models\CentralUser;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\PlatformSuperAdmin;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\Concerns\SeedsCentralPlatformRoles;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
  * P0-AUTH-3 contract: App\Support\PlatformSuperAdmin::check(mixed $user): bool
  * is the single source of truth for "is this a platform super admin".
- * Legacy branch (removed in IDEN-1.4, W2-B3): an App\Models\User holding the central
- * super_admin role.
+ *
+ * IDEN-1.4 / IDEN-1.8: only an active App\Models\CentralUser holding the central-guard
+ * `super_admin` role is one. The Phase 0 branch (an App\Models\User holding a `super_admin`
+ * role) is gone: such a row, in the central `users` table or in a tenant DB, is never a
+ * platform operator.
  *
  * IDEN-1.2: PlatformSuperAdmin::can(mixed $user, CentralPermission|string): bool is true
  * only for an active App\Models\CentralUser holding that central-guard permission, in
  * central context; null, tenant users and anything else are false, never a TypeError.
  */
-class PlatformSuperAdminTest extends TestCase
+class PlatformSuperAdminTest extends TenantTestCase
 {
-    use RefreshDatabase;
     use SeedsCentralPlatformRoles;
 
     /** Former allowlist (values removed from repo); PlatformSuperAdmin is role-based, so any phone keeps these assertions meaningful. */
@@ -39,14 +40,21 @@ class PlatformSuperAdminTest extends TestCase
         $this->seedCentralPlatformRoles();
     }
 
+    /** A row of the CENTRAL `users` table (Phase 0 operator storage). */
     private function makeUser(string $phone, string $email): User
     {
-        return User::factory()->create([
+        $this->endTenancy();
+
+        $user = new User;
+        $user->forceFill([
+            'name' => 'مستخدم '.$phone,
             'phone' => $phone,
             'email' => $email,
             'password' => Hash::make('secret123'),
             'is_active' => true,
-        ]);
+        ])->save();
+
+        return $user;
     }
 
     public function test_returns_false_for_null(): void
@@ -69,29 +77,35 @@ class PlatformSuperAdminTest extends TestCase
 
     public function test_returns_false_for_tenant_admin_role(): void
     {
-        $user = $this->makeUser('01000007048', 'tenant-admin@sroor.test');
-        $user->assignRole(Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']));
+        $tenant = $this->createTenant();
+        $admin = $this->tenantAdmin($tenant);
+
+        $this->assertTrue($this->inTenant($tenant, static fn (): bool => $admin->hasRole('admin')), 'fixture: a real tenant admin');
+        $this->assertFalse(PlatformSuperAdmin::check($admin));
+        $this->assertFalse($this->inTenant($tenant, static fn (): bool => PlatformSuperAdmin::check($admin)));
+    }
+
+    /**
+     * Was test_returns_true_for_user_with_super_admin_role (Phase 0 contract). IDEN-1.4 removed
+     * the legacy branch on purpose, so the same fixture must now be refused.
+     */
+    public function test_legacy_users_table_super_admin_is_no_longer_a_platform_operator(): void
+    {
+        $legacy = $this->legacyUsersTableSuperAdmin();
+
+        $this->assertTrue($legacy->hasRole('super_admin'), 'fixture: the legacy web-guard role is really held');
+        $this->assertFalse(PlatformSuperAdmin::check($legacy));
+    }
+
+    public function test_tenant_user_holding_a_super_admin_role_in_its_tenant_db_is_not_a_platform_operator(): void
+    {
+        $tenant = $this->createTenant();
+        $this->inTenant($tenant, fn (): Role => $this->webRole('super_admin'));
+        $user = $this->createTenantUser($tenant, 'super_admin');
+        $this->assertTrue($this->inTenant($tenant, static fn (): bool => $user->hasRole('super_admin')), 'fixture: the tenant row really holds it');
 
         $this->assertFalse(PlatformSuperAdmin::check($user));
-    }
-
-    public function test_returns_true_for_user_with_super_admin_role(): void
-    {
-        $user = $this->makeUser('01000007002', 'platform@sroor.test');
-        $user->assignRole('super_admin');
-
-        $this->assertTrue(PlatformSuperAdmin::check($user));
-    }
-
-    private function operator(?string $role, bool $active = true): CentralUser
-    {
-        $user = CentralUser::factory()->create(['is_active' => $active]);
-
-        if ($role !== null) {
-            $user->assignRole($role);
-        }
-
-        return $user->refresh();
+        $this->assertFalse($this->inTenant($tenant, static fn (): bool => PlatformSuperAdmin::check($user)));
     }
 
     public function test_can_returns_false_for_null_and_non_central_values(): void
@@ -104,15 +118,19 @@ class PlatformSuperAdminTest extends TestCase
 
     public function test_can_returns_false_for_tenant_users_even_with_super_admin_role(): void
     {
-        $legacy = $this->makeUser('01000007011', 'legacy-can@sroor.test');
-        $legacy->assignRole('super_admin');
-        $tenantAdmin = $this->makeUser('01000007012', 'tenant-admin-can@sroor.test');
-        $tenantAdmin->assignRole(Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']));
+        $legacy = $this->legacyUsersTableSuperAdmin();
+        $tenant = $this->createTenant();
+        $tenantAdmin = $this->tenantAdmin($tenant);
 
         foreach (CentralPermission::cases() as $permission) {
             $this->assertFalse(PlatformSuperAdmin::can($legacy, $permission), $permission->value);
             $this->assertFalse(PlatformSuperAdmin::can($tenantAdmin, $permission), $permission->value);
         }
+    }
+
+    private function operator(?string $role, bool $active = true): CentralUser
+    {
+        return $this->centralOperator($role, ['is_active' => $active]);
     }
 
     public function test_can_follows_the_central_role_matrix(): void
@@ -156,17 +174,25 @@ class PlatformSuperAdminTest extends TestCase
     public function test_can_and_check_are_false_while_tenancy_is_initialized(): void
     {
         $operator = $this->operator(CentralPermission::ROLE_SUPER_ADMIN);
-        $legacy = $this->makeUser('01000007013', 'legacy-tenancy@sroor.test');
-        $legacy->assignRole('super_admin');
+        $legacy = $this->legacyUsersTableSuperAdmin();
+        $tenant = $this->createTenant();
 
-        // Stub tenant: no database is switched, only the initialized flag matters here.
+        // Sanity outside tenancy, so the in-tenant false below is caused by the context.
+        $this->assertTrue(PlatformSuperAdmin::check($operator));
+
+        $this->inTenant($tenant, function () use ($operator, $legacy): void {
+            $this->assertFalse(PlatformSuperAdmin::can($operator, CentralPermission::TenantsView));
+            $this->assertFalse(PlatformSuperAdmin::check($operator));
+            $this->assertFalse(PlatformSuperAdmin::check($legacy));
+        });
+
+        // Stub tenant too: only the initialized flag matters (no tenant DB behind it).
         tenancy()->initialized = true;
         tenancy()->tenant = new Tenant(['id' => 'stub-tenant']);
 
         try {
             $this->assertFalse(PlatformSuperAdmin::can($operator, CentralPermission::TenantsView));
             $this->assertFalse(PlatformSuperAdmin::check($operator));
-            $this->assertFalse(PlatformSuperAdmin::check($legacy));
         } finally {
             tenancy()->initialized = false;
             tenancy()->tenant = null;

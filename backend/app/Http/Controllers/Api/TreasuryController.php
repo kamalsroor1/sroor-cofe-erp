@@ -34,7 +34,7 @@ final class TreasuryController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = (int) (ClientStoreGuard::concrete($request) ?: session('current_store_id') ?: 1);
+        $storeId = ClientStoreGuard::concreteOrDefault($request);
         // The tenant's calendar day (SETG-2), not the server's.
         $today = $this->tenantClock->today();
 

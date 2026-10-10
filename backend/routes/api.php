@@ -26,17 +26,13 @@ use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\StockTransferController;
 use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StorePosSettingsController;
-use App\Http\Controllers\Api\SuperAdminApiController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\SystemContextApiController;
 use App\Http\Controllers\Api\TrashController;
 use App\Http\Controllers\Api\TreasuryController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\V1\SuperAdmin\SuperAdminAppVersionController;
-use App\Http\Controllers\Api\V1\SuperAdmin\TelescopeLinkController;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\DenyQuickLoginToken;
-use App\Http\Middleware\EnsureCentralContext;
 use App\Http\Middleware\EnsureQuickLoginAllowed;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\ThrottleTenantMisses;
@@ -248,37 +244,11 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
     });
 });
 
-// Super Admin & Multi-Tenant Management (central context only, never tenant-initialised).
-// EnsureCentralContext runs first: tenant host / tenancy => 404 before auth (guest => 404, not 401).
-Route::prefix('v1/super-admin')->middleware([EnsureCentralContext::class, ApiTokenAuth::class, 'can:super_admin.access'])->group(function () {
-    Route::get('/dashboard', [SuperAdminApiController::class, 'dashboard'])->name('api.super_admin.dashboard');
-    Route::get('/tenants', [SuperAdminApiController::class, 'tenants'])->name('api.super_admin.tenants');
-    Route::post('/tenants', [SuperAdminApiController::class, 'storeTenant'])->name('api.super_admin.tenants.store');
-    Route::get('/tenants/{id}', [SuperAdminApiController::class, 'showTenant'])->name('api.super_admin.tenants.show');
-    Route::delete('/tenants/{id}', [SuperAdminApiController::class, 'destroyTenant'])->name('api.super_admin.tenants.destroy');
-    Route::post('/tenants/{id}/update-db-config', [SuperAdminApiController::class, 'updateDatabaseConfig'])->name('api.super_admin.tenants.update_db_config');
-    Route::post('/tenants/{id}/toggle-status', [SuperAdminApiController::class, 'toggleStatus'])->name('api.super_admin.tenants.toggle_status');
-    Route::post('/tenants/{id}/override-feature', [SuperAdminApiController::class, 'overrideFeature'])->name('api.super_admin.tenants.override_feature');
-    Route::post('/tenants/{id}/update-units', [SuperAdminApiController::class, 'updateTenantUnits'])->name('api.super_admin.tenants.update_units');
-    Route::post('/tenants/{id}/run-migrations', [SuperAdminApiController::class, 'runTenantMigrations'])->name('api.super_admin.tenants.run_migrations');
-    Route::get('/plans', [SuperAdminApiController::class, 'plans'])->name('api.super_admin.plans');
-    Route::put('/plans/{id}', [SuperAdminApiController::class, 'updatePlan'])->name('api.super_admin.plans.update');
+// IDEN-1.4: the platform console (control plane) lives in routes/central.php only.
 
-    // Telescope: short-lived single-use signed link (replaces /telescope-access?token=)
-    Route::post('/telescope-link', TelescopeLinkController::class)->middleware('throttle:10,1')->name('api.super_admin.telescope_link');
-
-    // Central Platform Settings & Whitelabel & Units
-    Route::get('/settings', [SuperAdminApiController::class, 'getPlatformSettings'])->name('api.super_admin.settings.get');
-    Route::post('/settings', [SuperAdminApiController::class, 'updatePlatformSettings'])->name('api.super_admin.settings.update');
-    Route::get('/units', [SuperAdminApiController::class, 'getUnits'])->name('api.super_admin.units.get');
-    Route::post('/units', [SuperAdminApiController::class, 'updateUnits'])->name('api.super_admin.units.update');
-
-    // App Versions & APK Releases Management
-    Route::get('/app-versions', [SuperAdminAppVersionController::class, 'index'])->name('api.super_admin.app_versions.index');
-    Route::post('/app-versions', [SuperAdminAppVersionController::class, 'store'])->name('api.super_admin.app_versions.store');
-    Route::patch('/app-versions/{appVersion}/toggle-active', [SuperAdminAppVersionController::class, 'toggleActive'])->name('api.super_admin.app_versions.toggle_active');
-    Route::delete('/app-versions/{appVersion}', [SuperAdminAppVersionController::class, 'destroy'])->name('api.super_admin.app_versions.destroy');
-});
-
-// Direct Central Workspace Resolver alias without v1 prefix
-Route::get('/central/tenants/resolve', [CentralTenantResolverController::class, 'resolve'])->middleware('throttle:tenant-resolve')->name('api.central.tenants.resolve.alias');
+// Direct Central Workspace Resolver alias without v1 prefix. Security audit (W2 lane 3I): same
+// stack as the v1 resolver: ThrottleTenantMisses + ResolveApiTenancy (admin host => 404, never
+// initialises tenancy: listed in ResolveApiTenancy::PUBLIC_CENTRAL_ROUTES) + tenant-resolve.
+Route::get('/central/tenants/resolve', [CentralTenantResolverController::class, 'resolve'])
+    ->middleware([ThrottleTenantMisses::class, ResolveApiTenancy::class, 'throttle:tenant-resolve'])
+    ->name('api.central.tenants.resolve.alias');

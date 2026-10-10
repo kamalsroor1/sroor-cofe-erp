@@ -76,6 +76,16 @@ enum CentralAuditEvent: string
     // W2 batch 2 security: an operator read their 2FA recovery codes
     case RecoveryCodesViewed = 'recovery_codes_viewed';
 
+    // W2 batch 3 (lane 3G): monitoring access and the legacy control-plane endpoints
+    case TelescopeLinkIssued = 'telescope_link_issued';
+    case TenantMigrationsRun = 'tenant_migrations_run';
+    case TenantFeatureOverridden = 'tenant_feature_overridden';
+    case TenantUnitsUpdated = 'tenant_units_updated';
+    case PlatformUnitsUpdated = 'platform_units_updated';
+    case AppVersionCreated = 'app_version_created';
+    case AppVersionToggled = 'app_version_toggled';
+    case AppVersionDeleted = 'app_version_deleted';
+
     public function translationKey(): string
     {
         return 'central_audit.events.'.$this->value;

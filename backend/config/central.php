@@ -68,4 +68,31 @@ return [
         'password_reset_per_email_per_hour' => 5,
     ],
 
+    /*
+    | IDEN-1.11: host(s) of the platform console, from env CENTRAL_ADMIN_DOMAINS only
+    | (comma-separated, e.g. the `admin.` host of the platform domain). Never hardcode
+    | a domain here.
+    |
+    | - /api/v1/super-admin/* (routes/central.php) answers ONLY on these hosts; any other
+    |   host is 404 (EnsureCentralContext).
+    | - The tenant API, the tenant SPA and any X-Tenant / ?tenant= are refused on them.
+    | - Responses on them carry the strict security headers (AdminSecurityHeaders).
+    | - Empty: production fails closed (the control plane is 404 everywhere); local and
+    |   testing fall back to tenancy.central_domains so development keeps working.
+    */
+    'admin_domains' => array_values(array_filter(array_map(
+        static fn (string $host): string => strtolower(trim($host)),
+        explode(',', (string) env('CENTRAL_ADMIN_DOMAINS', '')),
+    ))),
+
+    /*
+    | IDEN-4.6 ext (CTO W1 Q1): caps of a temporary per-tenant rate-limit raise
+    | (POST /api/v1/super-admin/tenants/{id}/rate-limits). A raise never lowers a
+    | limit and always expires.
+    */
+    'rate_limit_override' => [
+        'max_per_minute' => (int) (env('CENTRAL_RATE_LIMIT_OVERRIDE_MAX_PER_MINUTE') ?: 600),
+        'max_duration_minutes' => (int) (env('CENTRAL_RATE_LIMIT_OVERRIDE_MAX_DURATION_MINUTES') ?: 4320),
+    ],
+
 ];
