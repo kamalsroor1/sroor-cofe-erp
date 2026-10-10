@@ -9,12 +9,14 @@
 #
 #   bash scripts/ops/tests/deploy-test.sh
 #
-# Covers: first deploy, second deploy, automatic rollback (health check after
-# the switch fails), failures before the switch (central migrate, tenants
-# migrate, smoke health, grants drift), preflight refusals (TELESCOPE_ENABLED,
-# BACKUP_ARCHIVE_PASSWORD, SMTP, packaged .env, checksum), the deploy lock,
-# manual rollback, pruning old releases without touching shared/, and that no
-# secret ever reaches the output.
+# Covers: first deploy, second deploy, the pre-migration backup (OPS-5: runs
+# before migrate, skipped on the first release, its failure stops the release,
+# explicit emergency skip), the health deploy gate env, automatic rollback
+# (health check after the switch fails), failures before the switch (central
+# migrate, tenants migrate, smoke health, grants drift), preflight refusals
+# (TELESCOPE_ENABLED, BACKUP_ARCHIVE_PASSWORD, backup account, Google Drive,
+# SMTP, packaged .env, checksum), the deploy lock, manual rollback, pruning old
+# releases without touching shared/, and that no secret ever reaches the output.
 
 set -euo pipefail
 
@@ -59,8 +61,10 @@ trap cleanup EXIT
 APP_PW="FixtureAppPasswordOnly000000000000"
 MIGRATOR_PW="FixtureMigratorPasswordOnly0000000"
 PRUNER_PW="FixturePrunerPasswordOnly000000000"
+BACKUP_PW="FixtureBackupPasswordOnly000000000"
+DRIVE_TOKEN="FixtureDriveRefreshTokenOnly000000"
 OTHER_SECRET="fixture-secret-value-must-never-be-printed"
-SECRETS=("$APP_PW" "$MIGRATOR_PW" "$PRUNER_PW" "$OTHER_SECRET")
+SECRETS=("$APP_PW" "$MIGRATOR_PW" "$PRUNER_PW" "$BACKUP_PW" "$DRIVE_TOKEN" "$OTHER_SECRET")
 
 # ---- stubs -----------------------------------------------------------------------
 STUBS="$WORK/stubs"
@@ -74,7 +78,7 @@ set -euo pipefail
 cmd="${2:-}"
 where="$(basename "$(dirname "$PWD")")"
 [[ "$PWD" == */current/backend ]] && where="current"
-printf 'php %s @%s dbuser=%s\n' "$cmd" "$where" "${DB_USERNAME:-}" >>"$FAKE_LOG"
+printf 'php %s @%s dbuser=%s gate=%s\n' "$cmd" "$where" "${DB_USERNAME:-}" "${SROOR_HEALTH_DEPLOY_GATE:-}" >>"$FAKE_LOG"
 for f in ${FAKE_FAIL:-}; do
     if [[ "$f" == "$cmd" ]]; then echo "stub: $cmd failed" >&2; exit 1; fi
 done
@@ -160,6 +164,14 @@ DB_USERNAME=sroor_app
 DB_PASSWORD=${APP_PW}
 DB_AUDIT_PRUNER_USERNAME=sroor_audit_pruner
 DB_AUDIT_PRUNER_PASSWORD=${PRUNER_PW}
+DB_BACKUP_USERNAME=sroor_backup
+DB_BACKUP_PASSWORD=${BACKUP_PW}
+BACKUP_DISKS=google
+BACKUP_NOTIFICATION_EMAIL=ops@example.test
+GOOGLE_DRIVE_CLIENT_ID=fixture-client.apps.googleusercontent.com
+GOOGLE_DRIVE_CLIENT_SECRET=${OTHER_SECRET}
+GOOGLE_DRIVE_REFRESH_TOKEN=${DRIVE_TOKEN}
+GOOGLE_DRIVE_FOLDER_ID=
 SESSION_SECURE_COOKIE=true
 CACHE_STORE=redis
 QUEUE_CONNECTION=redis
@@ -311,6 +323,8 @@ DETAIL="$(cat "$FAKE_LOG")"
 check "migrate ran with the migrator account" log_has "php migrate @$ID1 dbuser=sroor_migrator"
 check "tenants:migrate ran with the app account" log_has "php tenants:migrate @$ID1 dbuser="
 check "storage:link --force ran in the new release" log_has "php storage:link @$ID1"
+check "first release: no pre-migration backup (nothing to back up yet)" bash -c "! grep -q 'php backup:tenants' '$FAKE_LOG'"
+check "artisan runs with the health deploy gate" log_has "php health:check @$ID1 dbuser= gate=1"
 check "order: storage:link > migrate > grants > tenants:migrate > caches > smoke > switch > queue > health > /up" \
     in_order "php storage:link" "php migrate" "mysql --defaults-extra-file=" "php tenants:migrate" "php config:cache" \
     "php route:cache" "php view:cache" "php event:cache" "php health:check @$ID1" "sudo -n /usr/bin/systemctl reload php8.4-fpm" \
@@ -329,6 +343,10 @@ run_deploy "$SHA2" "$WORK/good2.tar.gz" "$WORK/env-two"
 DETAIL="$OUT"
 check "second deploy exits 0" test "$RC" -eq 0
 ID2="$(current_id)"
+DETAIL="$(cat "$FAKE_LOG")"
+check "pre-migration backup ran from the new release" log_has "php backup:tenants @$ID2"
+check "order: storage:link > pre-migration backup > migrate > tenants:migrate" \
+    in_order "php storage:link" "php backup:tenants" "php migrate" "php tenants:migrate"
 check "current switched to the new release" bash -c "[[ '$ID2' == *-222222222222 ]]"
 check "previous release recorded" grep -qx "$ID1" "$ROOT/.previous_release"
 check "first release kept for rollback" test -d "$ROOT/releases/$ID1/backend"
@@ -338,7 +356,7 @@ check "previous shared/.env kept as .env.previous" grep -q 'Retail ERP one' "$RO
 # ------------------------------------------------------------------------------------
 echo "3. Failure before the switch: nothing changes for users"
 # ------------------------------------------------------------------------------------
-for failing in "migrate" "tenants:migrate" "config:cache"; do
+for failing in "backup:tenants" "migrate" "tenants:migrate" "config:cache"; do
     FAKE_FAIL="$failing" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
     DETAIL="$OUT"
     check "[$failing fails] exit 1" test "$RC" -eq 1
@@ -352,6 +370,9 @@ done
 DETAIL="$(cat "$FAKE_LOG")"
 FAKE_FAIL="migrate" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
 check "central migrate failure: tenants:migrate never runs" bash -c "! grep -q 'tenants:migrate' '$FAKE_LOG'"
+FAKE_FAIL="backup:tenants" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
+check "pre-migration backup failure: no migration runs" bash -c "! grep -qE 'php (migrate|tenants:migrate) ' '$FAKE_LOG'"
+check "pre-migration backup failure is recorded" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q 'failed:pre-migration-backup'"
 FAKE_FAIL="tenants:migrate" run_deploy "$SHA3" "$WORK/good3.tar.gz" "$WORK/env-one"
 check "tenants:migrate failure is recorded" bash -c "tail -1 '$ROOT/shared/deploy-history.log' | grep -q 'failed:migrate-tenants'"
 
@@ -394,6 +415,13 @@ FAKE_HEALTH_FAIL_CURRENT=1 run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-on
 DETAIL="$OUT"
 check "first deploy failing after the switch: exit 4 and no current link" bash -c "[[ $RC -eq 4 && ! -e '$ROOT/current' && ! -L '$ROOT/current' ]]"
 
+new_root skip-backup
+run_deploy "$SHA1" "$WORK/good1.tar.gz" "$WORK/env-one"
+FAKE_FAIL="backup:tenants" run_deploy "$SHA2" "$WORK/good2.tar.gz" - --skip-pre-migration-backup
+DETAIL="$OUT"
+check "--skip-pre-migration-backup: the release goes on without a backup" bash -c "[[ $RC -eq 0 ]] && ! grep -q 'php backup:tenants' '$FAKE_LOG'"
+check "--skip-pre-migration-backup is recorded in the history" grep -q 'pre-migration-backup-skipped' "$ROOT/shared/deploy-history.log"
+
 # ------------------------------------------------------------------------------------
 echo "5. Preflight refusals (nothing extracted, no command run)"
 # ------------------------------------------------------------------------------------
@@ -412,6 +440,9 @@ preflight_case "BACKUP_ARCHIVE_PASSWORD empty (D4)" 's/^BACKUP_ARCHIVE_PASSWORD=
 preflight_case "MAIL_HOST empty (SMTP mandatory)" 's/^MAIL_HOST=.*/MAIL_HOST=/'
 preflight_case "MAIL_MAILER=log" 's/^MAIL_MAILER=.*/MAIL_MAILER=log/'
 preflight_case "DB_AUDIT_PRUNER_PASSWORD empty" 's/^DB_AUDIT_PRUNER_PASSWORD=.*/DB_AUDIT_PRUNER_PASSWORD=/'
+preflight_case "DB_BACKUP_PASSWORD empty (OPS-5)" 's/^DB_BACKUP_PASSWORD=.*/DB_BACKUP_PASSWORD=/'
+preflight_case "GOOGLE_DRIVE_REFRESH_TOKEN empty (OPS-5)" 's/^GOOGLE_DRIVE_REFRESH_TOKEN=.*/GOOGLE_DRIVE_REFRESH_TOKEN=/'
+preflight_case "BACKUP_DISKS=local (backups must leave the server)" 's/^BACKUP_DISKS=.*/BACKUP_DISKS=local/'
 preflight_case "APP_DEBUG=true" 's/^APP_DEBUG=.*/APP_DEBUG=true/'
 check "the shared .env was never touched by refused releases" test ! -s "$ROOT/shared/.env"
 

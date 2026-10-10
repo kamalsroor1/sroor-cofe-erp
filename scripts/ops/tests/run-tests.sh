@@ -441,6 +441,14 @@ TELESCOPE_ENABLED=false
 QUICK_LOGIN_ENABLED=false
 DB_AUDIT_PRUNER_USERNAME=sroor_audit_pruner
 DB_AUDIT_PRUNER_PASSWORD=${FAKE_SECRET}
+DB_BACKUP_USERNAME=sroor_backup
+DB_BACKUP_PASSWORD=${FAKE_SECRET}
+BACKUP_DISKS=google
+BACKUP_NOTIFICATION_EMAIL=ops@example.test
+GOOGLE_DRIVE_CLIENT_ID=fixture-client.apps.googleusercontent.com
+GOOGLE_DRIVE_CLIENT_SECRET=${FAKE_SECRET}
+GOOGLE_DRIVE_REFRESH_TOKEN=${FAKE_SECRET}
+GOOGLE_DRIVE_FOLDER_ID=
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.example.test
 MAIL_PORT=587
@@ -450,6 +458,9 @@ MAIL_FROM_ADDRESS=noreply@example.test
 BACKUP_ARCHIVE_PASSWORD=${FAKE_SECRET}
 SENTRY_LARAVEL_DSN=https://fixture@sentry.example.test/1
 SENTRY_SEND_DEFAULT_PII=false
+CENTRAL_DOMAIN=example.test
+CENTRAL_ADMIN_DOMAINS="Admin.example.test, ops.example.test"
+CENTRAL_PASSWORD_RESET_URL=https://admin.example.test/super-admin/reset-password
 EOF
 }
 
@@ -488,7 +499,21 @@ BAD_CASES=(
     "BACKUP_ARCHIVE_PASSWORD missing (D4)|/^BACKUP_ARCHIVE_PASSWORD=/d"
     "DB_AUDIT_PRUNER_PASSWORD empty|s/^DB_AUDIT_PRUNER_PASSWORD=.*/DB_AUDIT_PRUNER_PASSWORD=/"
     "DB_AUDIT_PRUNER_USERNAME == DB_USERNAME|s/^DB_AUDIT_PRUNER_USERNAME=.*/DB_AUDIT_PRUNER_USERNAME=sroor_app/"
+    "DB_BACKUP_PASSWORD empty (OPS-5)|s/^DB_BACKUP_PASSWORD=.*/DB_BACKUP_PASSWORD=/"
+    "DB_BACKUP_USERNAME == DB_USERNAME|s/^DB_BACKUP_USERNAME=.*/DB_BACKUP_USERNAME=sroor_app/"
+    "BACKUP_DISKS=local (backups must leave the server)|s/^BACKUP_DISKS=.*/BACKUP_DISKS=local/"
+    "BACKUP_DISKS missing (defaults to local)|/^BACKUP_DISKS=/d"
+    "GOOGLE_DRIVE_REFRESH_TOKEN empty|s/^GOOGLE_DRIVE_REFRESH_TOKEN=.*/GOOGLE_DRIVE_REFRESH_TOKEN=/"
+    "GOOGLE_DRIVE_CLIENT_SECRET missing|/^GOOGLE_DRIVE_CLIENT_SECRET=/d"
     "SENTRY_SEND_DEFAULT_PII=true|s/^SENTRY_SEND_DEFAULT_PII=.*/SENTRY_SEND_DEFAULT_PII=true/"
+    "CENTRAL_DOMAIN missing|/^CENTRAL_DOMAIN=/d"
+    "CENTRAL_DOMAIN with a scheme|s#^CENTRAL_DOMAIN=.*#CENTRAL_DOMAIN=https://example.test#"
+    "CENTRAL_ADMIN_DOMAINS empty (console 404s)|s/^CENTRAL_ADMIN_DOMAINS=.*/CENTRAL_ADMIN_DOMAINS=/"
+    "CENTRAL_ADMIN_DOMAINS only commas|s/^CENTRAL_ADMIN_DOMAINS=.*/CENTRAL_ADMIN_DOMAINS=\" , \"/"
+    "CENTRAL_ADMIN_DOMAINS missing|/^CENTRAL_ADMIN_DOMAINS=/d"
+    "CENTRAL_PASSWORD_RESET_URL missing (no reset mail)|/^CENTRAL_PASSWORD_RESET_URL=/d"
+    "CENTRAL_PASSWORD_RESET_URL over http|s#^CENTRAL_PASSWORD_RESET_URL=.*#CENTRAL_PASSWORD_RESET_URL=http://admin.example.test/super-admin/reset-password#"
+    "CENTRAL_PASSWORD_RESET_URL host not an admin domain|s#^CENTRAL_PASSWORD_RESET_URL=.*#CENTRAL_PASSWORD_RESET_URL=https://evil.example.test/super-admin/reset-password#"
 )
 
 for case in "${BAD_CASES[@]}"; do
@@ -546,6 +571,14 @@ sed -e "s|^APP_KEY=\$|APP_KEY=base64:${FAKE_SECRET}|" \
     -e "s|^MAIL_PASSWORD=\$|MAIL_PASSWORD=${FAKE_SECRET}|" \
     -e "s|^MAIL_FROM_ADDRESS=\$|MAIL_FROM_ADDRESS=noreply@example.test|" \
     -e "s|^BACKUP_ARCHIVE_PASSWORD=\$|BACKUP_ARCHIVE_PASSWORD=${FAKE_SECRET}|" \
+    -e "s|^BACKUP_NOTIFICATION_EMAIL=\$|BACKUP_NOTIFICATION_EMAIL=ops@example.test|" \
+    -e "s|^DB_BACKUP_PASSWORD=\$|DB_BACKUP_PASSWORD=${FAKE_SECRET}|" \
+    -e "s|^GOOGLE_DRIVE_CLIENT_ID=\$|GOOGLE_DRIVE_CLIENT_ID=fixture-client|" \
+    -e "s|^GOOGLE_DRIVE_CLIENT_SECRET=\$|GOOGLE_DRIVE_CLIENT_SECRET=${FAKE_SECRET}|" \
+    -e "s|^GOOGLE_DRIVE_REFRESH_TOKEN=\$|GOOGLE_DRIVE_REFRESH_TOKEN=${FAKE_SECRET}|" \
+    -e "s|^CENTRAL_DOMAIN=\$|CENTRAL_DOMAIN=example.test|" \
+    -e "s|^CENTRAL_ADMIN_DOMAINS=\$|CENTRAL_ADMIN_DOMAINS=admin.example.test|" \
+    -e "s|^CENTRAL_PASSWORD_RESET_URL=\$|CENTRAL_PASSWORD_RESET_URL=https://admin.example.test/super-admin/reset-password|" \
     "$OPS_DIR/templates/production.env.example" >"$tmpl_env"
 run_capture out rc bash "$CHECK_ENV" "$tmpl_env"
 if [[ "$rc" -eq 0 ]]; then

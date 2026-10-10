@@ -1,0 +1,7 @@
+# Sroor ERP - local test environment (see docs/07-operations/local-testing.md)
+# Added to C:\Windows\System32\drivers\etc\hosts by scripts/local/add-hosts.ps1 (run as Administrator).
+# Windows hosts has no wildcards: every new local tenant needs its own line (<slug>.sroor.test).
+127.0.0.1 sroor.test
+127.0.0.1 admin.sroor.test
+127.0.0.1 demo.sroor.test
+127.0.0.1 shop2.sroor.test

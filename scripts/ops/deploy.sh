@@ -8,13 +8,15 @@
 #                 --deploy-env deploy.env [--env-file production.env] \
 #                 [--php-version 8.4] [--queue-mode horizon|worker] [--keep 5] \
 #                 [--health-url https://host/up|none] [--allow-no-health-checks]
+#                 [--skip-pre-migration-backup]
 #   rollback: bash deploy.sh --app-root /var/www/sroor --rollback \
 #                 [--php-version 8.4] [--queue-mode horizon|worker] [--health-url URL|none]
 #
 # Order (every step must succeed; no failure is ever ignored):
 #   preflight (layout, artifact, check-env.sh on the candidate .env: TELESCOPE_ENABLED=false,
 #   BACKUP_ARCHIVE_PASSWORD set, SMTP...) -> extract releases/<id> -> shared .env + storage
-#   -> storage:link --force -> migrate --force (central, as the migrator account)
+#   -> storage:link --force -> pre-migration backup (`backup:tenants`, not on the 1st
+#   release) -> migrate --force (central, as the migrator account)
 #   -> per-table central grants (append-only audit) -> tenants:migrate --force
 #   -> config/route/view/event cache -> smoke health:check from the new release
 #   -> atomic `current` switch -> php-fpm reload -> horizon:terminate (or
@@ -62,6 +64,7 @@ QUEUE_MODE_ARG="horizon"
 KEEP=5
 HEALTH_URL=""
 ALLOW_NO_HEALTH_CHECKS=0
+SKIP_PRE_MIGRATION_BACKUP=0
 ROLLBACK_ONLY=0
 
 while [[ $# -gt 0 ]]; do
@@ -84,6 +87,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --allow-no-health-checks)
             ALLOW_NO_HEALTH_CHECKS=1
+            shift
+            ;;
+        --skip-pre-migration-backup)
+            SKIP_PRE_MIGRATION_BACKUP=1
             shift
             ;;
         --rollback)
@@ -109,6 +116,10 @@ if [[ "$ROLLBACK_ONLY" -eq 0 ]]; then
 fi
 
 PHP_BIN="${OPS_PHP_BIN:-php}"
+# Health gate: every artisan call of this script runs with SROOR_HEALTH_DEPLOY_GATE=1,
+# so `health:check` only runs the release-level checks (central DB, cache, Redis, disk,
+# archive password) and never answers "warning" (App\Providers\HealthServiceProvider).
+export SROOR_HEALTH_DEPLOY_GATE=1
 HEALTH_DELAY="${OPS_HEALTH_DELAY:-3}"
 HEALTH_ATTEMPTS="${OPS_HEALTH_ATTEMPTS:-10}"
 RELEASES="$APP_ROOT/releases"
@@ -414,6 +425,20 @@ ln -sfn "$SHARED/storage" "$BACKEND/storage"
 
 STAGE="storage-link"
 artisan "$BACKEND" storage:link --force
+
+# Restore point before any schema change (OPS-5). Runs from the NEW release (config is
+# not cached yet, it reads shared/.env) with the read-only backup account. Any failing
+# database fails the release: users stay on the previous release, nothing migrated.
+STAGE="pre-migration-backup"
+if [[ "$SKIP_PRE_MIGRATION_BACKUP" -eq 1 ]]; then
+    warn "pre-migration backup SKIPPED (--skip-pre-migration-backup): this release has no restore point"
+    record_history "pre-migration-backup-skipped"
+elif [[ -z "$PREVIOUS_ID" ]]; then
+    info "first release on this server: no pre-migration backup (run backup:tenants once after it)"
+else
+    info "pre-migration backup: php artisan backup:tenants (central + every tenant DB, encrypted, verified)"
+    artisan "$BACKEND" backup:tenants --no-cleanup
+fi
 
 STAGE="migrate-central"
 info "php artisan migrate --force (central, as the migrator account)"

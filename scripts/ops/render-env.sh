@@ -11,7 +11,8 @@
 #   <output>    file to (re)write atomically with mode 600, e.g. $RUNNER_TEMP/prod.env
 #   --optional  keys that may stay empty (default: every key that is empty in
 #               the template is REQUIRED and must be provided non-empty).
-#               MAIL_* and BACKUP_ARCHIVE_PASSWORD are refused here (exit 2).
+#               MAIL_*, BACKUP_ARCHIVE_PASSWORD, DB_BACKUP_PASSWORD and the
+#               GOOGLE_DRIVE_* OAuth keys are refused here (exit 2).
 #
 # Rules:
 #   - For every KEY in the template: if an environment variable KEY is set,
@@ -40,9 +41,10 @@ OUTPUT="$2"
 shift 2
 
 # Keys that may never be waived with --optional when the template has them:
-# SMTP is mandatory (W1 Q6) and an empty backup password disables backups
-# (CTO decision D4).
-NEVER_OPTIONAL=(MAIL_MAILER MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD)
+# SMTP is mandatory (W1 Q6), an empty backup password disables backups
+# (CTO decision D4) and backups need their account + Drive credentials (OPS-5).
+NEVER_OPTIONAL=(MAIL_MAILER MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD
+    DB_BACKUP_PASSWORD GOOGLE_DRIVE_CLIENT_ID GOOGLE_DRIVE_CLIENT_SECRET GOOGLE_DRIVE_REFRESH_TOKEN)
 
 declare -A OPTIONAL=()
 while [[ $# -gt 0 ]]; do

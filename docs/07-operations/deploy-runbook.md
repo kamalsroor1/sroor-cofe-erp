@@ -33,6 +33,7 @@
 | 2 | `extract` | `tar -xzf` في `releases/<id>`؛ حذف `storage/` و`.env` وcaches الـ build اللي جت مع الـ artifact | exit 1، الـ release يتمسح |
 | 3 | `env` | لو فيه `--env-file`: نسخة من `shared/.env` الحالي ← `shared/.env.previous`، والجديد يتركّب ذريًا (600)؛ ثم `backend/.env` ← `shared/.env` و`backend/storage` ← `shared/storage` (symlinks) | exit 1 + استرجاع `.env` |
 | 4 | `storage-link` | `php artisan storage:link --force` (روابط `public/storage` و`public/central-assets` لازم في **كل** release لأن `public/` جزء منه) | exit 1 |
+| 4b | `pre-migration-backup` | **OPS-5:** `php artisan backup:tenants --no-cleanup` من الـ release الجديد (الـ config مش متخزن لسه، بيقرا `shared/.env`): المركزي + كل مستأجر مش archived، مشفّر AES-256، مرفوع على Google Drive ومتحقق منه (sha256) ومتسجل في `tenant_backups`. **مابيتعملش في أول release** على الخادم (مفيش بيانات). طوارئ بس: `--skip-pre-migration-backup` (بيتسجل `pre-migration-backup-skipped` في `deploy-history.log`). التفاصيل في [`backup-restore.md`](backup-restore.md) | exit 1، مفيش migration اتعملت |
 | 5 | `migrate-central` | `php artisan migrate --force` بحساب **`sroor_migrator`** (`DB_USERNAME`/`DB_PASSWORD` كمتغيرات بيئة للعملية دي بس؛ الـ config مش متخزن لسه) | exit 1، `tenants:migrate` مايشتغلش |
 | 6 | `central-grants` | `sync-central-grants.sh` كـ migrator: صلاحيات الجداول لعقد الـ audit الـ append-only، وكل من `app` و`audit_pruner` يتحقق من `SHOW GRANTS` بتاعه (`vps-runbook.md` §5.1) | exit 1 |
 | 7 | `migrate-tenants` | `php artisan tenants:migrate --force` — **أي مستأجر يفشل يوقف الـ release** | exit 1 |
@@ -45,7 +46,7 @@
 
 **أكواد الخروج:** `0` نجح؛ `1` فشل قبل التبديل (المستخدمين ماشافوش حاجة، الـ release اتمسح، `.env` اترجع)؛ `3` فشل بعد التبديل و**اترجع تلقائيًا** للسابق؛ `4` الـ rollback نفسه محتاج تدخل (مثلًا أول release فشل بعد التبديل: `current` بيتشال)؛ `2` استخدام غلط.
 
-**الـ health check حاليًا:** `spatie/laravel-health` متثبت (PKG-1) لكن **مفيش checks متسجلة في التطبيق** (مفيش `config/health.php` ولا `Health::checks`)، فـ `health:check` بيرجع نجاح فاضي. `deploy.sh` بيرفض ده (مرحلة `smoke`) إلا لو اتطلب صراحةً `--allow-no-health-checks` (input في الـ workflow اليدوي، للبروفة بس). التسجيل (DB المركزي، Redis، Horizon، المساحة، و`BACKUP_ARCHIVE_PASSWORD` حسب D4) شغل الـ app lane (PKG-1/OPS-7).
+**الـ health check:** **[OPS-5/OPS-7]** الفحوص متسجلة في `App\Providers\HealthServiceProvider` (الجدول الكامل في [`backup-restore.md`](backup-restore.md) §7). `deploy.sh` بيعمل `export SROOR_HEALTH_DEPLOY_GATE=1`، فـ `health:check` في المرحلتين 9 و12 (وفي الـ rollback) بيشغّل **فحوص الـ release بس**: DB المركزي، الكاش، Redis، المساحة (فشل فوق 90% بس)، و`BACKUP_ARCHIVE_PASSWORD` (D4)، ومن غير «warning» (spatie بيعتبر الـ warning فشل مع `--fail-command-on-failing-check`). Horizon والـ queue والـ scheduler وعمر آخر backup **مش** في البوابة: بيعتمدوا على الـ cron/supervisor مش على الـ release، ولو دخلوا كان أول deploy هيبقى مستحيل وrelease سليم ممكن يترجع وHorizon بيعيد التشغيل؛ بيتراقبوا بـ `health:check` المجدول كل 5 دقايق (إيميل). `--allow-no-health-checks` لسه موجود للبروفة بس، ومابقاش له لازمة بعد OPS-5.
 
 ---
 
@@ -85,6 +86,7 @@ bash /var/www/sroor/current/scripts/ops/deploy.sh --app-root /var/www/sroor --ro
 - [ ] rollback يدوي ← الـ release السابق يعمل، والملفات المرفوعة بعد الـ release الثاني ما زالت ظاهرة (لأنها في `shared/storage`).
 - [ ] release بـ migration فاشلة عمدًا على مستأجر تجريبي ← exit 1 قبل تبديل `current`.
 - [ ] health فاشل بعد التبديل ← exit 3 والرجوع للسابق تلقائيًا.
+- [ ] **OPS-5:** تاني deploy ← `backup:tenants` اشتغل قبل `migrate`، والأرشيفات ظهرت في مجلد `sroor-backups` على Drive وفي `tenant_backups` بـ `verified_at`. وتجربة سحب صلاحية Drive مؤقتًا ← الـ release يقف عند `pre-migration-backup` (exit 1، مفيش migration).
 - [ ] `.env` بـ `TELESCOPE_ENABLED=true` أو `BACKUP_ARCHIVE_PASSWORD` فاضي ← الـ workflow يفشل قبل الاتصال بالخادم.
 
 ---
@@ -95,4 +97,4 @@ bash /var/www/sroor/current/scripts/ops/deploy.sh --app-root /var/www/sroor --ro
 bash scripts/ops/tests/deploy-test.sh
 ```
 
-offline بالكامل: stubs لـ `php` و`mysql` و`sudo` و`curl` في أول الـ PATH، و`APP_ROOT` مؤقت. يغطي: أول deploy وتاني، الترتيب الكامل للأوامر، الحساب المستخدم في كل migrate، فشل قبل التبديل (central migrate، `tenants:migrate`، `config:cache`، مفيش health checks، صلاحيات audit غلط)، rollback تلقائي (health بعد التبديل، `/up`، restart الـ queue)، أول release يفشل بعد التبديل، رفض الـ preflight (Telescope، D4، SMTP، pruner، `APP_DEBUG`، `.env` جوه الـ artifact، checksum، sha غلط)، الـ lock، الـ rollback اليدوي والرجوع منه، الـ pruning من غير ما يمشي ورا الـ symlinks، وإن مفيش سر ظهر في أي output.
+offline بالكامل: stubs لـ `php` و`mysql` و`sudo` و`curl` في أول الـ PATH، و`APP_ROOT` مؤقت. يغطي: أول deploy وتاني، الترتيب الكامل للأوامر، **[OPS-5]** الـ backup قبل الـ migrations (مش في أول release، فشله يوقف الـ release من غير أي migration، و`--skip-pre-migration-backup` بيتسجل)، وإن كل استدعاء artisan بـ `SROOR_HEALTH_DEPLOY_GATE=1`، ورفض الـ preflight لـ `DB_BACKUP_PASSWORD` فاضي و`GOOGLE_DRIVE_REFRESH_TOKEN` فاضي و`BACKUP_DISKS=local`، الحساب المستخدم في كل migrate، فشل قبل التبديل (central migrate، `tenants:migrate`، `config:cache`، مفيش health checks، صلاحيات audit غلط)، rollback تلقائي (health بعد التبديل، `/up`، restart الـ queue)، أول release يفشل بعد التبديل، رفض الـ preflight (Telescope، D4، SMTP، pruner، `APP_DEBUG`، `.env` جوه الـ artifact، checksum، sha غلط)، الـ lock، الـ rollback اليدوي والرجوع منه، الـ pruning من غير ما يمشي ورا الـ symlinks، وإن مفيش سر ظهر في أي output.

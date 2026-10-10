@@ -231,6 +231,7 @@ mysql -N -B -r -e "SHOW GRANTS FOR \`sroor_audit_pruner\`@\`localhost\`"   # USA
 - **بديل** (`QUEUE_MODE=worker`): `sroor-worker` × `QUEUE_WORKER_PROCESSES` بـ `queue:work redis --max-time=3600`؛ الـ deploy ينفّذ `queue:restart`.
 - قبل أول deploy يكون البرنامج في `BACKOFF/FATAL` لأن `current` غير موجود — طبيعي.
 - **الـ scheduler:** cron كل دقيقة كمستخدم `sroor`. أي job تخص المستأجرين يجب أن تدور عليهم داخل tenancy (`tenancy()->runForMultiple`)، ولا تلمس بيانات مستأجر من السياق المركزي.
+- **[OPS-5/OPS-7] الـ backups والـ health:** `backup:tenants` الساعة 01:30، `backup:run --only-files` 02:30، `backup:clean` 03:00، `health:check` كل 5 دقايق، والـ heartbeats (`health:schedule-check-heartbeat` و`health:queue-check-heartbeat`) كل دقيقة. بعد **أول** deploy على الخادم شغّل `php artisan backup:tenants` مرة يدوي (الـ health check `Backup Freshness` بيبقى أحمر لحد أول نسخة). الـ runbook: [`backup-restore.md`](backup-restore.md).
 - Redis بـ `noeviction`: إن امتلأت الذاكرة تفشل الكتابة بدل حذف jobs بصمت. راقب `INFO memory` وارفع `REDIS_MAXMEMORY` عند الحاجة.
 
 ---
@@ -264,6 +265,9 @@ mysql -N -B -r -e "SHOW GRANTS FOR \`sroor_audit_pruner\`@\`localhost\`"   # USA
 | `DB_AUDIT_PRUNER_USERNAME` / `DB_AUDIT_PRUNER_PASSWORD` | **[CTO-2026-10-09]** موجودين، والحساب مش `root` ومش هو `DB_USERNAME` (§5.1) |
 | `MAIL_MAILER` / `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM_ADDRESS` | **[CTO-2026-10-09] W1 Q6:** `smtp`، وكلهم موجودين (`MAIL_PORT` رقم، `MAIL_FROM_ADDRESS` إيميل). `render-env.sh` يرفض `--optional` لأي منهم |
 | `BACKUP_ARCHIVE_PASSWORD` | **[CTO-2026-10-09] D4:** موجود (فاضي = فشل)؛ أقل من 24 حرف = تحذير |
+| `DB_BACKUP_USERNAME` / `DB_BACKUP_PASSWORD` | **[OPS-5]** موجودين، والحساب (`sroor_backup`) مش `root` ومش `DB_USERNAME` |
+| `BACKUP_DISKS` / `GOOGLE_DRIVE_CLIENT_ID` / `_CLIENT_SECRET` / `_REFRESH_TOKEN` | **[OPS-5]** `BACKUP_DISKS` (أو `BACKUP_TENANT_DISKS`) لازم فيه `google` (معيار #8: الـ backup يطلع بره الخادم)، والـ 3 مفاتيح OAuth موجودين. `BACKUP_NOTIFICATION_EMAIL` فاضي = تحذير. الإعداد في [`backup-restore.md`](backup-restore.md) §2 |
+| `CENTRAL_DOMAIN` / `CENTRAL_ADMIN_DOMAINS` / `CENTRAL_PASSWORD_RESET_URL` | **[W2 batch 3]** الثلاثة موجودين. `CENTRAL_DOMAIN` اسم host بس (من غير `https://` ولا `/`)، والـ tenants على `<slug>.<CENTRAL_DOMAIN>`. `CENTRAL_ADMIN_DOMAINS` فيها host واحد على الأقل (مفصولة بفاصلة)؛ فاضية = كل routes الـ super-admin بترجع 404 في production. `CENTRAL_PASSWORD_RESET_URL` تبدأ بـ `https://` والـ host بتاعها واحد من `CENTRAL_ADMIN_DOMAINS`؛ فاضية = إيميلات استرجاع كلمة سر الـ super-admin مابتتبعتش. الثلاثة GitHub Environment **variables** (`vars.*`) مش secrets |
 | `SENTRY_SEND_DEFAULT_PII` | `false` أو غائب. و`SENTRY_LARAVEL_DSN` فاضي = **تحذير** (`WARN`) مش فشل |
 
 ```bash
@@ -306,7 +310,7 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 - [ ] **[CTO-2026-10-09]** `php -v` = 8.4، و`mysql -e 'SELECT VERSION()'` = 8.4.x، و`verify.sh` يعدّي سطري الإصدار.
 - [ ] **[CTO-2026-10-09]** §5.1 checklist كامل بعد أول deploy (الجداول المركزية موجودة).
 - [ ] **[CTO-2026-10-09]** إيميل تجريبي يوصل عن طريق الـ SMTP (مثلًا reset password لحساب super-admin تجريبي)، وخطأ تجريبي يظهر في Sentry من غير PII.
-- [ ] من OPS-5: backup يومي مشفّر ← restore إلى DB منفصلة يطابق عدد الصفوف.
+- [ ] من OPS-5: backup يومي مشفّر ← restore إلى DB منفصلة يطابق عدد الصفوف (`php artisan backup:restore-tenant <id> --drop-after-verify --db-user=sroor_provisioner`، [`backup-restore.md`](backup-restore.md) §6).
 - [ ] `reboot` ← كل الخدمات تعود (`verify.sh`).
 - [ ] **قبل go-live: مسح كامل** — Rebuild للخادم من Hetzner على صورة Ubuntu 24.04 نظيفة، **أسرار جديدة كلها** (أسرار البروفة تُعتبر محروقة)، `CERTBOT_STAGING=0`، ثم التهيئة والتحقق من جديد.
 
