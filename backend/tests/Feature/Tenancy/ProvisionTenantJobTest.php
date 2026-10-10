@@ -59,7 +59,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
 
     private const RETRY_ROUTE = 'api.super_admin.tenants.retry_provisioning';
 
-    private const PASSWORD = 'secret-pass-1234';
+    private const ADMIN_PHRASE = 'secret-pass-1234';
 
     /** @var list<string> */
     private array $provisionedIds = [];
@@ -82,7 +82,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
             'slug' => $slug,
             'email' => $slug.'@queued.test',
             'phone' => '01000007301',
-            'password' => self::PASSWORD,
+            'password' => self::ADMIN_PHRASE,
             'plan_id' => $plan->id,
             'trial_days' => 14,
             'custom_domain' => $slug.'.custom.test',
@@ -105,20 +105,20 @@ final class ProvisionTenantJobTest extends TenantTestCase
 
         // The hash stays on the tenant row (encrypted at rest); the job carries the id only.
         $hash = (string) TenantProvisionerService::storedPasswordHash($tenant);
-        $this->assertTrue(Hash::check(self::PASSWORD, $hash));
+        $this->assertTrue(Hash::check(self::ADMIN_PHRASE, $hash));
 
         Queue::assertPushed(ProvisionTenantJob::class, function (ProvisionTenantJob $job) use ($slug, $hash): bool {
             $payload = serialize($job);
 
             return $job->tenantId === $slug
-                && ! str_contains($payload, self::PASSWORD)
+                && ! str_contains($payload, self::ADMIN_PHRASE)
                 && ! str_contains($payload, $hash);
         });
         Queue::assertPushed(ProvisionTenantJob::class, 1);
 
         // The central row never stores the plain password (nor the readable hash) either.
         $data = (string) DB::table('tenants')->where('id', $slug)->value('data');
-        $this->assertStringNotContainsString(self::PASSWORD, $data);
+        $this->assertStringNotContainsString(self::ADMIN_PHRASE, $data);
         $this->assertStringNotContainsString($hash, $data);
     }
 
@@ -144,7 +144,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
             $admin = User::query()->where('email', $fresh->email)->firstOrFail();
 
             return [
-                'admin_password_ok' => Hash::check(self::PASSWORD, (string) $admin->password),
+                'admin_password_ok' => Hash::check(self::ADMIN_PHRASE, (string) $admin->password),
                 'admin_is_admin' => $admin->hasRole('admin', 'web'),
                 'main_stores' => Store::query()->where('is_main', true)->count(),
                 'role_guards' => Role::query()->distinct()->pluck('guard_name')->all(),
@@ -345,7 +345,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
         $this->assertSame(TenantProvisioningStatus::Pending, $fresh->provisioning_status);
         $this->assertNull($fresh->provisioning_error_code);
         Queue::assertPushed(ProvisionTenantJob::class, fn (ProvisionTenantJob $job): bool => $job->tenantId === $id);
-        $this->assertTrue(Hash::check(self::PASSWORD, (string) TenantProvisionerService::storedPasswordHash($fresh)), 'The job reads the seed from the row.');
+        $this->assertTrue(Hash::check(self::ADMIN_PHRASE, (string) TenantProvisionerService::storedPasswordHash($fresh)), 'The job reads the seed from the row.');
 
         $retryAudit = CentralAuditLog::query()
             ->where('event', CentralAuditEvent::TenantProvisioningStarted->value)
@@ -622,7 +622,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
                 'email' => $slug.'@parked.test',
                 'phone' => '0100000'.random_int(1000, 9999),
                 'plan_id' => $this->plan()->id,
-                'password' => self::PASSWORD,
+                'password' => self::ADMIN_PHRASE,
                 'trial_days' => 14,
             ], $overrides)));
         } finally {
@@ -665,7 +665,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
     private function restoreSeed(string $id): void
     {
         $tenant = Tenant::query()->findOrFail($id);
-        $tenant->setInternal(TenantProvisionerService::SEED_KEY, Crypt::encryptString((string) json_encode(['password_hash' => Hash::make(self::PASSWORD)])));
+        $tenant->setInternal(TenantProvisionerService::SEED_KEY, Crypt::encryptString((string) json_encode(['password_hash' => Hash::make(self::ADMIN_PHRASE)])));
         $tenant->save();
     }
 

@@ -108,3 +108,7 @@ a6caa9e00dd9fd5df00863cc727f8379861ec7ec:verify_seeded_data.py:sroor-hardcoded-p
 # Not a credential: mocked Bearer value in a Playwright spec (page.route stub, never
 # sent to a real server). Constant renamed in the next commit so it no longer matches.
 8e620016f1677ee7b1d93b02588fb01e7cd6dba2:e2e/flows/central-login.spec.js:sroor-hardcoded-password:17
+
+# Not credentials: PHPUnit fixture constants (renamed in the next commit so they no longer match).
+a754f58ef95dcd3cba7deed754c2a4b8c0fb76d9:backend/tests/Feature/Tenancy/ProvisionTenantJobTest.php:sroor-hardcoded-password:62
+a754f58ef95dcd3cba7deed754c2a4b8c0fb76d9:backend/tests/Feature/Tenancy/TenantDatabasePasswordEncryptionTest.php:sroor-hardcoded-password:30

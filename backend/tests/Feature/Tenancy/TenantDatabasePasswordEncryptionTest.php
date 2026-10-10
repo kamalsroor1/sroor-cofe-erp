@@ -27,7 +27,7 @@ final class TenantDatabasePasswordEncryptionTest extends TenantTestCase
 {
     use SeedsCentralPlatformRoles;
 
-    private const SECRET = 'operator-db-secret-123';
+    private const OPERATOR_DB_PHRASE = 'operator-db-secret-123';
 
     public function test_operator_credentials_given_at_creation_are_encrypted_at_rest(): void
     {
@@ -46,7 +46,7 @@ final class TenantDatabasePasswordEncryptionTest extends TenantTestCase
             'password' => 'first-admin-pass-1',
             'trial_days' => 14,
             'tenancy_db_username' => 'op_user',
-            'tenancy_db_password' => self::SECRET,
+            'tenancy_db_password' => self::OPERATOR_DB_PHRASE,
         ]));
         (new UniqueLock(app(Repository::class)))->release(new ProvisionTenantJob($slug));
 
@@ -61,7 +61,7 @@ final class TenantDatabasePasswordEncryptionTest extends TenantTestCase
         $id = (string) $tenant->getTenantKey();
 
         $this->postJson("/api/v1/super-admin/tenants/{$id}/update-db-config", [
-            'tenancy_db_password' => self::SECRET,
+            'tenancy_db_password' => self::OPERATOR_DB_PHRASE,
         ], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))->assertOk();
 
         $this->assertEncryptedAtRest($id);
@@ -74,7 +74,7 @@ final class TenantDatabasePasswordEncryptionTest extends TenantTestCase
         $id = (string) $tenant->getTenantKey();
 
         $data = json_decode((string) DB::table('tenants')->where('id', $id)->value('data'), true) ?: [];
-        $data['tenancy_db_password'] = self::SECRET; // written before S-sec3
+        $data['tenancy_db_password'] = self::OPERATOR_DB_PHRASE; // written before S-sec3
         DB::table('tenants')->where('id', $id)->update(['data' => json_encode($data)]);
 
         $this->assertReadsDecrypted($id);
@@ -90,7 +90,7 @@ final class TenantDatabasePasswordEncryptionTest extends TenantTestCase
     {
         $this->assertNull(Tenant::sealDatabasePassword(null));
         $this->assertSame('', Tenant::sealDatabasePassword(''));
-        $this->assertSame(self::SECRET, Crypt::decryptString((string) Tenant::sealDatabasePassword(self::SECRET)));
+        $this->assertSame(self::OPERATOR_DB_PHRASE, Crypt::decryptString((string) Tenant::sealDatabasePassword(self::OPERATOR_DB_PHRASE)));
     }
 
     // ------------------------------------------------------------------ helpers
@@ -98,22 +98,22 @@ final class TenantDatabasePasswordEncryptionTest extends TenantTestCase
     private function assertEncryptedAtRest(string $id): void
     {
         $raw = (string) DB::table('tenants')->where('id', $id)->value('data');
-        $this->assertStringNotContainsString(self::SECRET, $raw, 'Never stored in plaintext.');
+        $this->assertStringNotContainsString(self::OPERATOR_DB_PHRASE, $raw, 'Never stored in plaintext.');
 
         $stored = json_decode($raw, true)['tenancy_db_password'] ?? null;
         $this->assertIsString($stored);
-        $this->assertSame(self::SECRET, Crypt::decryptString($stored));
+        $this->assertSame(self::OPERATOR_DB_PHRASE, Crypt::decryptString($stored));
     }
 
     private function assertReadsDecrypted(string $id): void
     {
         $tenant = Tenant::query()->findOrFail($id);
 
-        $this->assertSame(self::SECRET, $tenant->tenancy_db_password);
-        $this->assertSame(self::SECRET, $tenant->getInternal('db_password'));
-        $this->assertSame(self::SECRET, $tenant->database()->getPassword());
+        $this->assertSame(self::OPERATOR_DB_PHRASE, $tenant->tenancy_db_password);
+        $this->assertSame(self::OPERATOR_DB_PHRASE, $tenant->getInternal('db_password'));
+        $this->assertSame(self::OPERATOR_DB_PHRASE, $tenant->database()->getPassword());
         // What stancl's DatabaseTenancyBootstrapper connects with.
-        $this->assertSame(self::SECRET, $tenant->database()->connection()['password'] ?? null);
+        $this->assertSame(self::OPERATOR_DB_PHRASE, $tenant->database()->connection()['password'] ?? null);
     }
 
     private function plan(): Plan
