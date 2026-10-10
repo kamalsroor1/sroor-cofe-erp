@@ -139,7 +139,16 @@ $dto = new CreateTenantDTO(
     trialDays: 365,
 );
 
+// OPS-2: provisioning is a queued job. With QUEUE_CONNECTION=database (local .env) and
+// no worker running the tenant would stay `pending`: provision inline for this script.
+config(['tenancy.provisioning.queue_connection' => 'sync']);
+
 $tenant = app(ProvisionTenantAction::class)->execute($dto);
+$tenant->refresh();
+if (! $tenant->isProvisioned()) {
+    fail("tenant '{$slug}' was created but provisioning ended as '{$tenant->provisioningStatus()->value}'"
+        .' (code: '.($tenant->provisioning_error_code ?? '-').'). Check storage/logs, then retry from the console.');
+}
 unset($password, $dto);
 
 foreach ($localDomains as $domain) {

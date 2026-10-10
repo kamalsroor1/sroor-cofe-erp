@@ -234,6 +234,28 @@ mysql -N -B -r -e "SHOW GRANTS FOR \`sroor_audit_pruner\`@\`localhost\`"   # USA
 - **[OPS-5/OPS-7] الـ backups والـ health:** `backup:tenants` الساعة 01:30، `backup:run --only-files` 02:30، `backup:clean` 03:00، `health:check` كل 5 دقايق، والـ heartbeats (`health:schedule-check-heartbeat` و`health:queue-check-heartbeat`) كل دقيقة. بعد **أول** deploy على الخادم شغّل `php artisan backup:tenants` مرة يدوي (الـ health check `Backup Freshness` بيبقى أحمر لحد أول نسخة). الـ runbook: [`backup-restore.md`](backup-restore.md).
 - Redis بـ `noeviction`: إن امتلأت الذاكرة تفشل الكتابة بدل حذف jobs بصمت. راقب `INFO memory` وارفع `REDIS_MAXMEMORY` عند الحاجة.
 
+### 6.1 queue الـ provisioning (OPS-2)
+
+إنشاء مستأجر جديد بقى job في الـ queue (`App\Jobs\ProvisionTenantJob`: `tries=3`، `timeout=900` ثانية). المستأجر بيفضل `provisioning_status=pending` لحد ما worker يشيل الـ job؛ من غير worker على الـ queue الصح **مفيش مستأجر جديد هيشتغل**.
+
+- **connection مخصوص:** `config/queue.php` → `provisioning` (redis، `retry_after` = `TENANT_PROVISIONING_RETRY_AFTER`، الافتراضي 1000، وأقل قيمة 960). لازم `retry_after` > timeout الـ job (900)، وإلا الـ job بيتسلّم مرتين وهو لسه شغال. الـ connection الافتراضي (`retry_after=90`) **مش** مناسب.
+- **supervisor في Horizon:** `config/horizon.php` → `supervisor-provisioning` (process واحد، `timeout=930`، `tries=3`) على connection `provisioning` والـ queue `TENANT_PROVISIONING_QUEUE` (الافتراضي `provisioning`). مفيش برنامج supervisor جديد: نفس `sroor-horizon` بيشغّله.
+- **الـ `.env` على الـ VPS** (من القالب `scripts/ops/templates/production.env.example`):
+  - `TENANT_PROVISIONING_QUEUE_CONNECTION=provisioning`
+  - `TENANT_PROVISIONING_QUEUE=provisioning` (نفس اسم queue الـ supervisor)
+  - `TENANT_DB_PER_TENANT_USER=true` (**إلزامي** هنا: `sroor_app` مالوش صلاحية على DBs المستأجرين، فكل مستأجر بيتعمله مستخدم MySQL على الـ DB بتاعته بس، §5)
+  - `TENANT_DB_USER_HOST=localhost`
+  - `DB_PROVISIONER_USERNAME=sroor_provisioner` و`DB_PROVISIONER_PASSWORD` = `MYSQL_PROVISIONER_PASSWORD` من `/root/sroor-provision.env` (§5).
+- **ربط الأسرار:** `DB_PROVISIONER_PASSWORD` بيتضاف كـ Environment secret في GitHub (`production`)، ومفتاحه في `production.env.example`، ويتربط في `env:` بتاع خطوة «Render the production .env» في `release.yml` (القاعدة في [`secrets.md`](secrets.md) §2 بند 6). لحد ما يتربط، المفاتيح دي متعلّقة (commented) في القالب والـ provisioning على الـ VPS مش هيشتغل.
+- **QUEUE_MODE=worker** (البديل المؤقت): لازم worker منفصل `queue:work provisioning --queue=provisioning --timeout=930 --tries=3`؛ الـ workers العادية مش بتسمع الـ queue دي.
+- **محليًا / CI:** المفاتيح فاضية = الـ connection والـ queue الافتراضيين. `scripts/local/provision-local-tenant.php` و`TenantSampleSeeder` بيجهّزوا inline (`sync`)، فـ `QUEUE_CONNECTION=database` من غير worker مابقاش بيسيب الـ demo `pending`.
+- **كل loop على «كل المستأجرين» بيتخطى اللي مش `ready`** (مالهمش DB): `tenants:migrate`/`rollback`/`seed`/`run` من غير `--tenants` (subclasses في `app/Console/Tenancy/`، متسجلة في `AppServiceProvider`)، و`backup:tenants`، وفحص `Backup Freshness`، و`tenants:audit-super-admin`. `--tenants`/`--tenant` صريح بيتنفّذ زي ما هو (ده اللي الـ job نفسه بيستخدمه). `tenants:migrate-fresh` ماتغيّرش (مدمّر وبيتشغّل بنية صريحة بس).
+- **تحذير: `tenants:migrate-fresh` مش متفلتر** (مش بيتخطّى اللي مش `ready`): بيمسح ويعيد بناء DB **كل** مستأجر، بما فيهم اللي الـ job شغال عليهم دلوقتي. **ممنوع تشغيله على الإنتاج نهائيًا** (القاعدة العامة في `.claude/rules/security-and-operations.md`)؛ محليًا بس، وعلى `--tenants` صريح.
+- **مستأجر `failed`:** الصف المركزي بيفضل؛ إعادة المحاولة من الكونسول (`POST /super-admin/tenants/{id}/retry-provisioning`). `provisioning_error_code` بيوضح المرحلة اللي فشلت.
+- **مستأجر واقف على `pending`/`running`** (الـ dispatch ضاع، أو الـ worker مات): لو مفيش أي نشاط على الصف (`updated_at` و`provisioning_started_at`) أطول من الـ unique window (`TENANT_PROVISIONING_UNIQUE_FOR`، الافتراضي 3600 ثانية، أقل قيمة 2850) الـ retry بيتقبل كمان، وبيفك الـ unique lock والـ overlap lock قبل ما يبعت الـ job. قبل كده بيرجع 409 (لسه شغال). و`failed()` بيفك الـ overlap lock (`laravel-queue-overlap:App\Jobs\ProvisionTenantJob:<id>`) بنفسه، فالـ retry بعد timeout مابيتبلعش.
+- **اللي الـ job بيمسحه عند الفشل:** الـ DB واليوزر اللي **هو** عملهم بس، وبشرط إنهم لسه نفس اسم الـ DB ونفس الـ username الحاليين للمستأجر (الاسم متخزّن، مش flag). لو حد غيّر الاسم أو حوّل الـ username لحساب مشترك، الـ job مابيلمسهمش وبيكتب warning في الـ log بالاسم بس. تعديل `update-db-config` و`run-migrations` و`update-units` على مستأجر مش `ready` بيرجع 409 `provisioning.workspace_not_ready`.
+- **باسورد DB المستأجر** (`tenancy_db_password` في `tenants.data`) بيتخزن مشفّر بـ `APP_KEY` (الصفوف القديمة plaintext لسه شغالة). تغيير `APP_KEY` من غير re-encrypt = المستأجرين اللي ليهم يوزر خاص مش هيتصلوا.
+
 ---
 
 ## 7. شهادة wildcard (DNS-01)

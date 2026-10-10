@@ -244,6 +244,7 @@ jobs:
           APP_KEY: ${{ secrets.APP_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_AUDIT_PRUNER_PASSWORD: ${{ secrets.DB_AUDIT_PRUNER_PASSWORD }}
+          DB_PROVISIONER_PASSWORD: ${{ secrets.DB_PROVISIONER_PASSWORD }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
