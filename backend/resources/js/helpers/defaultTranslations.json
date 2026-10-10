@@ -291,6 +291,21 @@
                 "immutable": "لا يمكن تعديل أو حذف حركات الرصيد."
             }
         },
+        "branding": {
+            "logo_uploaded": "تم حفظ اللوجو بنجاح.",
+            "logo_deleted": "تم حذف اللوجو.",
+            "logo_not_found": "اللوجو غير موجود.",
+            "receipt_header_too_many_lines": "ترويسة الإيصال لا تزيد عن :max أسطر.",
+            "receipt_header_line_too_long": "كل سطر في ترويسة الإيصال لا يزيد عن :max حرف.",
+            "receipt_text_no_markup": "نص الإيصال لازم يكون نص عادي بدون علامات < أو >.",
+            "theme_color_invalid": "لون النظام لازم يكون من الألوان المتاحة أو كود لون بالشكل #RRGGBB.",
+            "attributes": {
+                "logo_file": "ملف اللوجو",
+                "receipt_header_lines": "ترويسة الإيصال",
+                "receipt_footer_text": "تذييل الإيصال",
+                "system_theme_color": "لون النظام"
+            }
+        },
         "central_audit": {
             "immutable": "سجل مراجعة المنصة للإضافة فقط، ولا يمكن تعديل أو حذف أي قيد فيه.",
             "events": {
@@ -662,6 +677,10 @@
                 "backup_fresh": ":count قاعدة بيانات لها نسخة احتياطية متحقق منها أحدث من :hours ساعة.",
                 "disk_unknown": "تعذرت قراءة المساحة الفاضية على القرص.",
                 "disk_usage": "القرص ممتلئ بنسبة :percent%."
+            },
+            "tenants": {
+                "skipped_not_provisioned": "تم تخطي :count مستأجر لسه ما اتجهزش (في الانتظار أو جاري التجهيز أو فشل: مفيش قاعدة بيانات).",
+                "none_provisioned": "مفيش مستأجرين جاهزين: مفيش حاجة تتنفذ."
             }
         },
         "contacts": {
@@ -1606,6 +1625,10 @@
             "payment_ewallet": "محفظة إلكترونية",
             "total_net": "الصافي"
         },
+        "items": {
+            "unit_not_in_list": ":unit (غير موجودة في قائمة الوحدات)",
+            "printer_test_date_time": "الوقت والتاريخ"
+        },
         "media": {
             "invalid_image": "الملف ليس صورة صالحة أو أنه تالف.",
             "svg_forbidden": "غير مسموح برفع صور SVG. ارفع صورة عادية بدلًا منها.",
@@ -2217,6 +2240,31 @@
             "theme_light_shell": "الوضع الفاتح (Light Shell)",
             "profile_updated_success": "تم تحديث بيانات الملف الشخصي بنجاح ✓",
             "save_changes": "حفظ التعديلات"
+        },
+        "provisioning": {
+            "workspace_not_ready": "مساحة العمل هذه قيد التجهيز. حاول مرة أخرى بعد قليل، وإن استمرت المشكلة تواصل مع الدعم.",
+            "retry_not_allowed": "لا يمكن إعادة التجهيز الآن: حالة التجهيز الحالية \":status\". إعادة المحاولة متاحة بعد الفشل فقط، أو إذا توقف التجهيز دون تقدم لفترة طويلة.",
+            "retry_unavailable": "لا يمكن إعادة التجهيز: بيانات المدير الأول لم تعد متاحة. أنشئ المستأجر من جديد أو تواصل مع فريق التشغيل.",
+            "requires_ready_workspace": "هذا الإجراء يتطلب مساحة عمل جاهزة. حالة التجهيز الحالية \":status\".",
+            "retry_queued": "تمت إعادة طلب تجهيز مساحة العمل، وستكون جاهزة خلال دقائق.",
+            "forbidden": "غير مسموح لك بإدارة تجهيز المستأجرين.",
+            "company_subtitle_default": "لإدارة المبيعات والمخزون والفروع",
+            "statuses": {
+                "pending": "في انتظار التجهيز",
+                "running": "جارٍ التجهيز",
+                "ready": "جاهز",
+                "failed": "فشل التجهيز"
+            },
+            "errors": {
+                "database_exists": "توجد قاعدة بيانات بنفس الاسم غير فارغة أو لم ينشئها النظام.",
+                "invalid_database_name": "اسم قاعدة البيانات غير صالح.",
+                "database_create_failed": "تعذّر إنشاء قاعدة البيانات أو الوصول إليها.",
+                "database_user_failed": "تعذّر إنشاء مستخدم قاعدة البيانات الخاص بالمستأجر.",
+                "migration_failed": "فشل تجهيز جداول قاعدة البيانات.",
+                "seed_failed": "فشل تجهيز البيانات الأساسية (الصلاحيات، الفرع الرئيسي، المدير).",
+                "timeout": "استغرق التجهيز وقتًا أطول من المسموح.",
+                "unexpected": "حدث خطأ غير متوقع أثناء التجهيز."
+            }
         },
         "purchases": {
             "title": "فاتورة مشتريات وتوريد بضاعة جديدة",
@@ -3280,7 +3328,13 @@
                 "note_placeholder": "تفاصيل تساعد الفريق بعدين",
                 "note_too_long": "الملاحظة طويلة جدًا."
             },
-            "version_status_toggled": "تم تغيير حالة الإصدار بنجاح"
+            "version_status_toggled": "تم تغيير حالة الإصدار بنجاح",
+            "platform_branding": {
+                "unknown_field": "الحقل ده مش مسموح بتعديله هنا.",
+                "nothing_to_update": "ابعت إعداد واحد على الأقل للتعديل.",
+                "asset_uploaded": "تم رفع الصورة وتحديث هوية المنصة.",
+                "asset_deleted": "تم حذف الصورة والرجوع للصورة الافتراضية."
+            }
         },
         "trash": {
             "title": "سلة المحذوفات المركزية واسترجاع البيانات",
@@ -4108,6 +4162,21 @@
                 "immutable": "Credit movements cannot be changed or deleted."
             }
         },
+        "branding": {
+            "logo_uploaded": "Logo saved.",
+            "logo_deleted": "Logo removed.",
+            "logo_not_found": "Logo not found.",
+            "receipt_header_too_many_lines": "The receipt header can have at most :max lines.",
+            "receipt_header_line_too_long": "Each receipt header line can have at most :max characters.",
+            "receipt_text_no_markup": "Receipt text must be plain text without < or > characters.",
+            "theme_color_invalid": "The theme color must be one of the palette colors or a #RRGGBB code.",
+            "attributes": {
+                "logo_file": "Logo file",
+                "receipt_header_lines": "Receipt header",
+                "receipt_footer_text": "Receipt footer",
+                "system_theme_color": "Theme color"
+            }
+        },
         "central_audit": {
             "immutable": "The platform audit log is append-only. Entries cannot be changed or deleted.",
             "events": {
@@ -4479,6 +4548,10 @@
                 "backup_fresh": ":count database(s) have a verified backup younger than :hours hours.",
                 "disk_unknown": "The free disk space could not be read.",
                 "disk_usage": "The disk is :percent% full."
+            },
+            "tenants": {
+                "skipped_not_provisioned": "Skipped :count tenant(s) that are not provisioned yet (pending, running or failed: no database).",
+                "none_provisioned": "No provisioned tenants: nothing to run."
             }
         },
         "contacts": {
@@ -5423,6 +5496,10 @@
             "payment_ewallet": "E-wallet",
             "total_net": "Net total"
         },
+        "items": {
+            "unit_not_in_list": ":unit (not in the unit list)",
+            "printer_test_date_time": "Date and time"
+        },
         "media": {
             "invalid_image": "The file is not a valid image or it is corrupted.",
             "svg_forbidden": "SVG images are not allowed. Upload a raster image instead.",
@@ -6034,6 +6111,31 @@
             "theme_light_shell": "Light Mode (Light Shell)",
             "profile_updated_success": "Profile updated successfully ✓",
             "save_changes": "Save Changes"
+        },
+        "provisioning": {
+            "workspace_not_ready": "This workspace is still being set up. Please try again shortly, and contact support if it persists.",
+            "retry_not_allowed": "Provisioning cannot be retried now: its current status is \":status\". Retry is only available after a failure, or when setup has made no progress for too long.",
+            "retry_unavailable": "Provisioning cannot be retried: the first admin's data is no longer available. Create the tenant again or contact operations.",
+            "requires_ready_workspace": "This action needs a ready workspace. Its setup status is currently \":status\".",
+            "retry_queued": "Workspace provisioning has been queued again and will be ready in a few minutes.",
+            "forbidden": "You are not allowed to manage tenant provisioning.",
+            "company_subtitle_default": "Sales, inventory and branch management",
+            "statuses": {
+                "pending": "Waiting for setup",
+                "running": "Setting up",
+                "ready": "Ready",
+                "failed": "Setup failed"
+            },
+            "errors": {
+                "database_exists": "A database with this name already exists and is not empty, or was not created by us.",
+                "invalid_database_name": "The database name is not valid.",
+                "database_create_failed": "The database could not be created or reached.",
+                "database_user_failed": "The tenant's database user could not be created.",
+                "migration_failed": "Setting up the database tables failed.",
+                "seed_failed": "Setting up the base data (permissions, main branch, admin) failed.",
+                "timeout": "Setup took longer than allowed.",
+                "unexpected": "An unexpected error happened during setup."
+            }
         },
         "purchases": {
             "title": "New Purchase & Stock Supply Invoice",
@@ -7097,7 +7199,13 @@
                 "note_placeholder": "Details that will help the team later",
                 "note_too_long": "The note is too long."
             },
-            "version_status_toggled": "Release status changed successfully"
+            "version_status_toggled": "Release status changed successfully",
+            "platform_branding": {
+                "unknown_field": "This field cannot be changed here.",
+                "nothing_to_update": "Send at least one setting to update.",
+                "asset_uploaded": "Image uploaded and platform branding updated.",
+                "asset_deleted": "Image removed; the default image is used again."
+            }
         },
         "trash": {
             "title": "Central Trash & Data Recovery",
