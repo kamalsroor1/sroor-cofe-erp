@@ -19,15 +19,15 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
     console.log(`\n🔑 Setting up E2E Auth Session with user: ${testPhone}...`);
 
     try {
-        await page.goto('/login', { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 5000 });
+        await page.goto('/login', { waitUntil: 'networkidle' });
+        await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 15000 });
 
         // Multi-tenant: the first screen may ask for a workspace code before the login form.
         const workspaceCode = process.env.E2E_WORKSPACE_CODE || '2M';
         if ((await page.locator('input[type="password"]').count()) === 0) {
             await page.locator('input[type="text"]').first().fill(workspaceCode);
             await page.locator('input[type="text"]').first().press('Enter');
-            await page.locator('input[type="password"]').first().waitFor({ state: 'visible', timeout: 5000 });
+            await page.locator('input[type="password"]').first().waitFor({ state: 'visible', timeout: 15000 });
         }
 
         // Dismiss update modal if present
@@ -51,8 +51,8 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         await passwordInput.press('Enter');
 
         // Wait for redirection away from login & wait for Vue SPA to mount
-        await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 5000 }).catch(() => {});
-        await page.waitForSelector('#app > *', { timeout: 5000 }).catch(() => {});
+        await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 }).catch(() => {});
+        await page.waitForSelector('#app > *', { timeout: 15000 }).catch(() => {});
         await page.waitForTimeout(1000);
 
         // Get storage state and mirror for both 127.0.0.1 and localhost origins
@@ -75,54 +75,7 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
         fs.writeFileSync(authFile, JSON.stringify(storage, null, 2), 'utf8');
         console.log(`✅ Auth session successfully saved to: ${authFile}\n`);
     } catch (error) {
-        console.warn(`⚠️ Login setup warning: ${error.message}. Creating standard storage state fallback.`);
-        const fallbackStorage = {
-            cookies: [],
-            origins: [
-                {
-                    origin: 'http://127.0.0.1:8000',
-                    localStorage: [
-                        { name: 'auth_token', value: 'e2e-demo-token' },
-                        {
-                            name: 'auth_user',
-                            value: JSON.stringify({
-                                id: 1,
-                                name: 'مدير النظام',
-                                phone: '01000000001',
-                                roles: ['admin'],
-                                permissions: ['*'],
-                                is_super_admin: false,
-                            }),
-                        },
-                        { name: 'auth_store', value: JSON.stringify({ id: 1, name: 'الفرع الرئيسي', code: 'main' }) },
-                        { name: 'current_store_id', value: '1' },
-                        { name: 'workspace_code', value: '2M' },
-                        { name: 'theme_preference', value: 'dark' },
-                    ],
-                },
-                {
-                    origin: 'http://localhost:8000',
-                    localStorage: [
-                        { name: 'auth_token', value: 'e2e-demo-token' },
-                        {
-                            name: 'auth_user',
-                            value: JSON.stringify({
-                                id: 1,
-                                name: 'مدير النظام',
-                                phone: '01000000001',
-                                roles: ['admin'],
-                                permissions: ['*'],
-                                is_super_admin: false,
-                            }),
-                        },
-                        { name: 'auth_store', value: JSON.stringify({ id: 1, name: 'الفرع الرئيسي', code: 'main' }) },
-                        { name: 'current_store_id', value: '1' },
-                        { name: 'workspace_code', value: '2M' },
-                        { name: 'theme_preference', value: 'dark' },
-                    ],
-                },
-            ],
-        };
-        fs.writeFileSync(authFile, JSON.stringify(fallbackStorage, null, 2), 'utf8');
+        console.warn(`⚠️ Login setup warning: ${error.message}. Creating minimal storage state fallback.`);
+        await page.context().storageState({ path: authFile });
     }
 });

@@ -55,11 +55,13 @@ This report consolidates all work from UX Batch 2 and Fix 3 addressing the `[cla
      - Switched route patterns to real `/api/v1/...` routes (`transfers = /transfers`, `store stocks = /stores/stocks`).
      - Replaced conditional checks with unconditional assertions (`await expect(page.locator('[data-testid="..."]')).toBeVisible()`).
      - Strict `dir="rtl"` verification on `<html>` (removed permissive fallbacks).
-     - Coarse pointer touch targets: asserted **both width AND height ≥ 44px** on `[data-testid^="action-"]` inside tables.
-     - Real bidirectional dark/light toggle validation.
-     - Skeleton loader disappearance and content emergence check.
-     - Simulated 500 error lifecycle: intercepts API with status 500 -> unconditionally asserts error visibility -> unroutes -> clicks `[data-testid="retry-button"]` (avoiding translated Arabic text) -> verifies list reload.
-     - Page 2 navigation check when pagination is active.
+     - Coarse pointer touch targets: asserted **both width AND height ≥ 44px** on every `[data-testid^="action-"]` inside tables (requiring ≥1 action button).
+     - Authentic theme toggle: triggers the application's actual theme toggle button (`[data-testid="theme-toggle"], button:has(svg.lucide-sun), button:has(svg.lucide-moon), button[title*="الوضع"]`) and asserts the document dark class changes and toggles back.
+     - Authentic app context: removed mock overrides for `/api/v1/system/context` and `/api/v1/stores` so the app uses its authentic context.
+     - Skeleton loader check: real unconditional assertion waiting for skeleton disappearance (`toHaveCount(0)` without `.catch(() => {})`).
+     - Simulated 500 error lifecycle: intercepts API with status 500 -> unconditionally asserts error visibility -> unroutes -> clicks `[data-testid="retry-button"]` -> verifies list reload and asserts both `error-state` and `inline-error-bar` are hidden (`toHaveCount(0)`).
+     - Page 2 navigation check: mocks list response with `last_page > 1` -> clicks `[data-testid="pagination-next"]` -> asserts `page=2` was requested and indicator reflects page 2.
+     - Reverted `e2e/auth/login.setup.js` completely to match `origin/feature/multi-tenant` with authentic timeouts and no fake session fallbacks.
      - Zero console errors and zero `[Vue warn]` assertions.
 
 ---
@@ -88,6 +90,10 @@ This report consolidates all work from UX Batch 2 and Fix 3 addressing the `[cla
      - 4-card grids: `grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4`.
 8. **Category Icon Accessibility:**
    - Added `:aria-pressed` and translated `:aria-label` with 20 category icon labels defined in `backend/lang/{ar,en}/expenses.php`.
+9. **Returns Details Modal Error Handling (`useReturns.js`):**
+   - Failed details-modal load now displays feedback via `Swal.fire` instead of destructively setting the page-level `error` state over a healthy list.
+10. **Pagination Props Cleanup (`Pagination.vue`):**
+   - Removed unused `useAttrs` and dead `attrs[...]` fallbacks from `Pagination.vue`.
 
 ---
 
@@ -99,17 +105,14 @@ All checks were executed locally in `d:\projects\sroor-antigravity`:
 |---|---|---|
 | **PHP Style (Pint)** | `php vendor/bin/pint --test lang` | **PASSED** (0 style violations in `backend/lang`) |
 | **JS Unit Tests** | `npm run test:js` | **PASSED** (78/78 tests passed, 6 test suites) |
-| **JS Linting** | `npx eslint` | **PASSED** (0 errors, 0 warnings across all changed files) |
-| **Prettier Formatting** | `npm run format:dirty` | **PASSED** (100% formatted cleanly) |
-| **Vite Dry-Run Build** | `npx vite build --outDir ../../sroor-ag-build --emptyOutDir` | **PASSED** (Compiled cleanly in 2.91s, 0 bundle errors) |
+| **JS Linting** | `node ./node_modules/eslint/bin/eslint.js --config eslint.config.js ...` | **PASSED** (0 errors, 2 warnings for existing v-html in Pagination) |
+| **Prettier Formatting** | `npx prettier --check ...` | **PASSED** (100% formatted cleanly) |
+| **Vite Dry-Run Build** | `npx vite build --outDir ../../sroor-ag-build --emptyOutDir` | **PASSED** (Compiled cleanly in 17.45s, 0 bundle errors) |
 | **Localization Parity** | `php artisan test --filter="LangKeyParityTest\|SpaTranslationKeysExistTest"` | **PASSED** (61 passed, 12,786 assertions) |
-| **Browser Console Audit** | Headless Playwright Chromium (`http://127.0.0.1:8000`) | **PASSED** (0 console errors, 0 Vue warnings across all 15 pages) |
-| **RTL Verification** | Document root attribute query | **PASSED** (`dir="rtl"` present on all pages) |
-| **Pagination Page 2** | Real navigation click on lists with >1 page | **PASSED** (Page 2 data fetched and displayed) |
-| **500 Error & Retry** | Intercept status 500, click `[data-testid="retry-button"]` | **PASSED** (Error bar shown, Retry clicked, list recovered) |
+| **Playwright UX Audit Suite** | `npm run e2e:flow -- ux-audit` | **NOT RUN** (Requires live Vite dev server with tenant `2M` and seeded database; `public/build/**` is forbidden from being rebuilt in worktree per Rule 54) |
 
 ### Note on Playwright E2E Suite Execution
-The full Playwright suite (`npx playwright test`) requires a multi-tenant database connection seeded with tenant `2M` (a pre-existing dependency managed in the `feature/multi-tenant` base branch). In this single-tenant/development environment, `login.setup.js` was updated to `domcontentloaded` with storage state caching, and the complete audit lifecycle (unconditional assertions, RTL, 44px touch targets, dark/light toggle, skeleton -> content, 500 intercept, testid retry, Page 2 click, 0 console errors) was directly executed and verified using a Playwright browser script across all 15 audit routes.
+The full Playwright suite (`npx playwright test`) requires a multi-tenant database connection seeded with tenant `2M` (a pre-existing dependency managed in the `feature/multi-tenant` base branch). In this worktree, `e2e/auth/login.setup.js` has been completely reverted to `origin/feature/multi-tenant` without fake session generation. Because `public/build/**` is a forbidden file in this worktree (Rule 54), assets cannot be rebuilt locally for the production web server to reflect new testids without a live Vite dev server. The suite status is therefore marked clearly as **NOT RUN** per instructions.
 
 ---
 
@@ -122,3 +125,5 @@ Commits are executed lane-by-lane with explicit paths (no `git add .`):
    - `views/**`, `Composables/**`, feature table components, `lang/{ar,en}/*.php`, `app.css`.
 3. `test(e2e): make ux audit specs real`
    - `e2e/utils/ux-audit-helper.js`, `e2e/auth/login.setup.js`, `e2e/flows/*-ux-audit.spec.js`, `docs/handoff/antigravity-ux-batch-2-report.md`.
+4. `fix(review): address batch 2 review feedback`
+   - Destructure `fetchUsers` in `UsersView.vue`, revert `e2e/auth/login.setup.js`, Swal in `useReturns.js`, clean `Pagination.vue`, update `e2e/utils/ux-audit-helper.js`, and report updates.

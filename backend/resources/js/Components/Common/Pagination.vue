@@ -1,5 +1,5 @@
 <script setup>
-import { computed, useAttrs } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
   links: {
@@ -37,7 +37,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['page-change']);
-const attrs = useAttrs();
 
 const activeLinks = computed(() => {
   if (props.links && props.links.length > 0) {
@@ -54,35 +53,17 @@ const hasFullLinks = computed(() => {
 });
 
 const currentPage = computed(() => {
-  const val =
-    props.currentPage ||
-    props.pagination?.current_page ||
-    props.pagination?.currentPage ||
-    attrs['current-page'] ||
-    attrs.currentPage ||
-    1;
+  const val = props.currentPage || props.pagination?.current_page || props.pagination?.currentPage || 1;
   return Number(val) || 1;
 });
 
 const lastPage = computed(() => {
-  const val =
-    props.lastPage ||
-    props.pagination?.last_page ||
-    props.pagination?.lastPage ||
-    attrs['last-page'] ||
-    attrs.lastPage ||
-    1;
+  const val = props.lastPage || props.pagination?.last_page || props.pagination?.lastPage || 1;
   return Number(val) || 1;
 });
 
 const perPage = computed(() => {
-  const val =
-    props.perPage ||
-    props.pagination?.per_page ||
-    props.pagination?.perPage ||
-    attrs['per-page'] ||
-    attrs.perPage ||
-    15;
+  const val = props.perPage || props.pagination?.per_page || props.pagination?.perPage || 15;
   return Number(val) || 15;
 });
 
@@ -101,6 +82,20 @@ const to = computed(() => {
   const val = props.to || props.pagination?.to || Math.min(currentPage.value * perPage.value, total.value);
   return Number(val) || 0;
 });
+
+const isNextLink = (link, idx) => {
+  if (!activeLinks.value || activeLinks.value.length === 0) return false;
+  if (idx === activeLinks.value.length - 1) return true;
+  const label = String(link?.label || '').toLowerCase();
+  return label.includes('next') || label.includes('&raquo;') || label.includes('»') || label.includes('›');
+};
+
+const isPrevLink = (link, idx) => {
+  if (!activeLinks.value || activeLinks.value.length === 0) return false;
+  if (idx === 0) return true;
+  const label = String(link?.label || '').toLowerCase();
+  return label.includes('previous') || label.includes('&laquo;') || label.includes('«') || label.includes('‹');
+};
 
 const extractPage = (url) => {
   if (!url) return null;
@@ -137,6 +132,9 @@ const handlePageClick = (link) => {
         <button
           v-if="link.url"
           type="button"
+          :data-testid="
+            isNextLink(link, lIdx) ? 'pagination-next' : isPrevLink(link, lIdx) ? 'pagination-prev' : undefined
+          "
           @click="handlePageClick(link)"
           class="h-9 min-w-[36px] coarse:min-h-[44px] coarse:min-w-[44px] px-3 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer active:scale-95 shadow-xs"
           :class="[
@@ -148,6 +146,9 @@ const handlePageClick = (link) => {
         />
         <span
           v-else
+          :data-testid="
+            isNextLink(link, lIdx) ? 'pagination-next' : isPrevLink(link, lIdx) ? 'pagination-prev' : undefined
+          "
           class="h-9 min-w-[36px] coarse:min-h-[44px] coarse:min-w-[44px] px-3 rounded-xl text-xs text-slate-400 dark:text-slate-600 font-bold flex items-center justify-center opacity-60"
           v-html="link.label"
         />
@@ -158,6 +159,7 @@ const handlePageClick = (link) => {
     <div v-else-if="lastPage > 1" class="flex items-center gap-2 flex-wrap justify-center font-tajawal">
       <button
         type="button"
+        data-testid="pagination-prev"
         :disabled="currentPage <= 1"
         @click="$emit('page-change', currentPage - 1)"
         class="min-h-[44px] min-w-[44px] px-3.5 rounded-xl text-xs font-bold transition flex items-center justify-center bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95 shadow-xs"
@@ -165,12 +167,16 @@ const handlePageClick = (link) => {
         {{ $t('common.previous') }}
       </button>
 
-      <span class="text-slate-600 dark:text-slate-400 font-bold text-xs px-2 select-none">
+      <span
+        data-testid="pagination-page-indicator"
+        class="text-slate-600 dark:text-slate-400 font-bold text-xs px-2 select-none"
+      >
         {{ $t('pagination.page_of', { current: currentPage, total: lastPage }) }}
       </span>
 
       <button
         type="button"
+        data-testid="pagination-next"
         :disabled="currentPage >= lastPage"
         @click="$emit('page-change', currentPage + 1)"
         class="min-h-[44px] min-w-[44px] px-3.5 rounded-xl text-xs font-bold transition flex items-center justify-center bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95 shadow-xs"

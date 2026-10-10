@@ -106,8 +106,11 @@ export function useReturns() {
             selectedReturnDetails.value = response.data?.data;
             showDetailsModal.value = true;
         } catch (err) {
-            error.value = true;
-            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: err.response?.data?.message || err.userMessage || err.message || t('common.error_occurred'),
+            });
             console.error('Failed to load return details:', err);
         }
     };

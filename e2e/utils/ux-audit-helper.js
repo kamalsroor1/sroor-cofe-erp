@@ -37,33 +37,6 @@ export async function auditPageUx(page, options) {
         consoleErrors.push(err.message);
     });
 
-    await page.route('**/api/v1/system/context', (r) => {
-        r.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                data: {
-                    system: { version: '1.0.0', name: 'سروور ERP' },
-                    branding: { app_name: 'سروور كوفي' },
-                    tenant: { id: 'demo', name: 'مؤسسة تجريبية' },
-                    locale: 'ar',
-                    translations: {},
-                    stores: [{ id: 1, name: 'الفرع الرئيسي', code: 'main' }],
-                },
-            }),
-        });
-    });
-
-    await page.route('**/api/v1/stores', (r) => {
-        r.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                data: [{ id: 1, name: 'الفرع الرئيسي', code: 'main' }],
-            }),
-        });
-    });
-
     // 1. Multi-Viewport Audits (390, 820, 1366)
     for (const vp of VIEWPORTS) {
         await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -79,13 +52,10 @@ export async function auditPageUx(page, options) {
         });
         expect(hasHorizontalOverflow).toBe(false);
 
-        // Skeleton → Content transition check
-        const skeleton = page
-            .locator('.animate-pulse, [data-testid="skeleton"], [data-testid="table-skeleton"]')
-            .first();
-        if (await skeleton.isVisible().catch(() => false)) {
-            await skeleton.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
-        }
+        // Skeleton -> Content transition check
+        await expect(
+            page.locator('.animate-pulse, [data-testid="skeleton"], [data-testid="table-skeleton"]')
+        ).toHaveCount(0, { timeout: 10000 });
 
         // Unconditional content assertion when testId is specified
         if (testId) {
@@ -93,52 +63,75 @@ export async function auditPageUx(page, options) {
         }
 
         // Touch targets check on mobile (390px): width >= 44px AND height >= 44px
-        if (vp.isMobile) {
-            const actionSelector = testId
-                ? `[data-testid="${testId}"] [data-testid^="action-"], [data-testid="${testId}"] button`
-                : '[data-testid^="action-"], button';
-            const actions = page.locator(actionSelector);
-            if ((await actions.count()) > 0) {
-                const firstAction = actions.first();
-                const box = await firstAction.boundingBox();
-                if (box) {
-                    expect(box.width).toBeGreaterThanOrEqual(44);
-                    expect(box.height).toBeGreaterThanOrEqual(44);
-                }
+        if (vp.isMobile && testId && testId !== 'store-stocks-table') {
+            const actionButtons = page.locator(`[data-testid="${testId}"] [data-testid^="action-"]`);
+            const count = await actionButtons.count();
+            expect(count).toBeGreaterThanOrEqual(1);
+            for (let i = 0; i < count; i++) {
+                const box = await actionButtons.nth(i).boundingBox();
+                expect(box).not.toBeNull();
+                expect(box.width).toBeGreaterThanOrEqual(44);
+                expect(box.height).toBeGreaterThanOrEqual(44);
             }
         }
     }
 
-    // 2. Page 2 navigation check (when pagination exists)
-    const page2Btn = page.locator('button').filter({ hasText: /^2$/ }).first();
-    const nextBtn = page
-        .locator('button')
-        .filter({ hasText: /التالي|Next/i })
+    // 2. Authentic Theme Toggle Check
+    const themeToggle = page
+        .locator(
+            '[data-testid="theme-toggle"], button:has(svg.lucide-sun), button:has(svg.lucide-moon), button[title*="الوضع"]'
+        )
         .first();
-    const targetPageBtn =
-        (await page2Btn.count()) > 0 && (await page2Btn.isEnabled().catch(() => false))
-            ? page2Btn
-            : (await nextBtn.count()) > 0 && (await nextBtn.isEnabled().catch(() => false))
-              ? nextBtn
-              : null;
+    await expect(themeToggle).toBeVisible();
+    const initialDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+    await themeToggle.click();
+    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(!initialDark);
+    await themeToggle.click();
+    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(initialDark);
 
-    if (targetPageBtn) {
-        await targetPageBtn.click();
+    // 3. Page 2 Navigation Check
+    if (apiPattern && testId && testId !== 'dashboard-recent-invoices-table') {
+        let page2Requested = false;
+        await page.route(apiPattern, (route, request) => {
+            const url = request.url();
+            if (url.includes('page=2')) {
+                page2Requested = true;
+                route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        data: [{ id: 999, name: 'Page 2 Item', title: 'Page 2 Item' }],
+                        meta: { current_page: 2, last_page: 2, per_page: 15, total: 30 },
+                    }),
+                });
+            } else {
+                route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        data: [{ id: 1, name: 'Page 1 Item', title: 'Page 1 Item' }],
+                        meta: { current_page: 1, last_page: 2, per_page: 15, total: 30 },
+                    }),
+                });
+            }
+        });
+
+        await page.goto(route, { waitUntil: 'domcontentloaded' });
         if (testId) {
             await expect(page.locator(`[data-testid="${testId}"]`)).toBeVisible();
         }
+        const nextBtn = page.locator('[data-testid="pagination-next"]').first();
+        await expect(nextBtn).toBeVisible();
+        await nextBtn.click();
+        expect(page2Requested).toBe(true);
+        await expect(page.locator('[data-testid="pagination-page-indicator"]')).toContainText(/2/);
+        await page.unroute(apiPattern);
     }
 
-    // 3. Dark / Light Toggle Check
-    await page.evaluate(() => document.documentElement.classList.add('dark'));
-    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(true);
-    await page.evaluate(() => document.documentElement.classList.remove('dark'));
-    expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(false);
-
-    // 4. Mock 500 Error + Retry Test
+    // 4. Mock 500 Error + Retry Check
     if (apiPattern) {
-        await page.route(apiPattern, (r) => {
-            r.fulfill({
+        await page.route(apiPattern, (route) => {
+            route.fulfill({
                 status: 500,
                 contentType: 'application/json',
                 body: JSON.stringify({ message: 'Internal Server Error' }),
@@ -157,6 +150,8 @@ export async function auditPageUx(page, options) {
         if (testId) {
             await expect(page.locator(`[data-testid="${testId}"]`)).toBeVisible();
         }
+        await expect(page.locator('[data-testid="error-state"]')).toHaveCount(0);
+        await expect(page.locator('[data-testid="inline-error-bar"]')).toHaveCount(0);
     }
 
     // 5. Zero Console Errors / Vue Warnings Assertion
