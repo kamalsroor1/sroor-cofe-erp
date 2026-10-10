@@ -1,92 +1,68 @@
-# 👥 وثيقة المكون والصفحة: دليل وإدارة العملاء والزبائن (`CustomersView.vue`)
+# 👥 وثيقة المكون والصفحة: دليل وإدارة العملاء والزبائن (`CustomersView`)
 
-> **المسار (Route):** `/customers`  
-> **الملف الرئيسي:** `resources/js/views/Customers/CustomersView.vue` (Thin Orchestrator: ~70 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **دليل وإدارة العملاء والزبائن (Customers Management & Receivables Ledger)** القلب النابض لإدارة حسابات مبيعات الآجل وسندات التحصيل وقاعدة عملاء المؤسسة:
-1. **سجل بيانات العملاء:** حفظ واستعراض بيانات العملاء (الاسم، رقم الهاتف، العنوان، الرقم الضريبي، والرصيد الافتتاحي).
-2. **متابعة المديونيات والتحصيل:** بطاقات KPI إحصائية حية لحساب إجمالي المديونيات المطلوبة من العملاء (`total_debt`)، عدد العملاء المدينين (`debtors_count`)، وإجمالي العملاء المسجلين (`total_customers`).
-3. **تصفية حسابات الآجل والمسواة:** فلترة فورية للعملاء (الكل، عليهم مديونية 🚨، الحسابات المسددة بالكامل ✅، أو العملاء الدائنون 💳).
-4. **تحصيل الدفعات وسندات القبض (Collect Payment Modal):** إمكانية تحصيل دفعات نقدية أو إلكترونية (إنستاباي / محفظة / بنك) مباشرة من الجدول وتحديث رصيد العميل وتسجيل سند القبض في الخزينة والوردية النشطة.
-5. **الانتقال لكشف الحساب (Customer Statement Ledger):** زر مباشر لاستعراض كشف الحساب التفصيلي وتتبع الفواتير وسندات التحصيل والمرتجعات لكل عميل (`/customers/:id/statement`).
-6. **إضافة وتعديل وحذف العملاء:** نوافذ مودال موحدة وسريعة عبر `AppModal.vue` و `BaseButton.vue` مع حماية الحسابات التي تحتوي على حركات من الحذف العشوائي.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** دليل وإدارة العملاء وحسابات الذمم (Customers Management)
+* **المسار (Route):** `/customers`
+* **اسم المسار (Route Name):** `customers.index`
+* **الصلاحية المطلوبة (Permission):** `customers.manage`
+* **الملف الرئيسي:** `resources/js/views/Customers/CustomersView.vue` (~104 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * المستودع المركزي لبيانات العملاء التجاريين والأفراد والشركات.
+  * إدارة التسهيلات الائتمانية وتحديد سقف وحد الائتمان الأقصى (`Credit Limit`) لكل عميل لمنع تجاوز المديونيات.
+  * مؤشرات KPI مالية فورية تلخص إجمالي عدد العملاء، العملاء المدينين، إجمالي المديونيات المستحقة، والمتحصلات الشهرية.
+  * نافذة تحصيل الدفعات وسندات القبض المباشرة (`Collect Payment Modal`) لقيد السداد في حساب العميل وتوريده للخزينة.
+  * زر انتقال مباشر لكشف حساب وأستاذ العميل التفصيلي (`Customer Statement`).
+  * تصفية متقدمة حسب حالة المديونية (جميع العملاء، عليهم مستحقات، رصيد صفري، أرصدة دائنة).
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم بـ 751 سطرًا إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Customers/
-│   └── CustomersView.vue                        <-- Thin Orchestrator (~70 lines)
-├── Components/Customers/
-│   ├── CustomersMetricsGrid.vue                 <-- بطاقات المؤشرات المالية لمديونيات العملاء والمدينين
-│   ├── CustomersFilterBar.vue                   <-- شريط البحث النصي وأقراص تصفية حالة المديونية
-│   ├── CustomersTable.vue                       <-- جدول البيانات المزدوج (Desktop Table + Mobile Cards)
-│   ├── CustomerFormModal.vue                    <-- نافذة إضافة وتعديل بيانات العميل
-│   └── CustomerPaymentModal.vue                 <-- نافذة تحصيل وتسجيل دفعة وسند قبض من العميل
-└── Composables/
-    └── useCustomers.js                          <-- كبسولة المنطق والاتصال بالـ API وإدارة النوافذ
+CustomersView.vue (~104 lines)
+├── CustomersHeader.vue               <-- رأس الصفحة مع زر إضافة عميل جديد، وتصدير البيانات
+├── CustomersMetricsGrid.vue          <-- بطاقات المؤشرات: إجمالي العملاء، المدينين، إجمالي الديون المستحقة
+├── CustomersFilterBar.vue            <-- شريط الفلاتر: البحث بالاسم/الهاتف، حالة الرصيد، والفرع
+├── CustomersTable.vue                <-- جدول العملاء مع الهواتف، الأرصدة، الحدود الائتمانية، وقائمة الإجراءات
+├── CustomerFormModal.vue             <-- نافذة إضافة وتعديل بيانات العميل (الاسم، الهاتف، العنوان، السجل، حد الائتمان)
+└── CustomerPaymentModal.vue          <-- نافذة تحصيل وقيد دفعة سداد نقدية أو بنكية في حساب العميل
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر إضافة عميل جديد.
-* `BaseSearchInput.vue`: شريط البحث النصي المتجاوب.
-* `BaseButton.vue`: أزرار الإجراءات والحفظ مع مؤشرات التحميل.
-* `StatCardSkeleton.vue`: هياكل تحميل بطاقات المؤشرات الوميضية.
-* `TableSkeleton.vue`: هيكل التحميل الوميضي للجدول.
-* `EmptyState.vue`: حالة عدم وجود عملاء أو نتائج مطابقة.
-* `AppModal.vue`: الحاوية الموحدة لنوافذ الإدخال والتحصيل.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `DataTable.vue`, `StatusBadge.vue`, `AppModal.vue`.
+* **المخازن المستخدمة:** `useAuthStore` (فحص صلاحية `customers.manage` و `customers.statement`)، `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`) وأرقام الهواتف.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب قائمة العملاء** | `GET /api/v1/customers` | `search`, `balance_type`, `page`, `per_page` | بيانات العملاء + إحصائيات `metrics` + `meta` |
-| **إضافة عميل جديد** | `POST /api/v1/customers` | `name`, `phone`, `address`, `tax_number`, `opening_balance`, `notes` | رسالة نجاح وكائن العميل |
-| **تعديل بيانات عميل** | `PUT /api/v1/customers/{id}` | `name`, `phone`, `address`, `tax_number`, `notes` | رسالة نجاح وتحديث البيانات |
-| **تحصيل دفعة من العميل** | `POST /api/v1/customers/{id}/payments` | `amount`, `payment_method`, `payment_date`, `notes` | تسجيل سند القبض وتحديث رصيد العميل |
-| **حذف عميل** | `DELETE /api/v1/customers/{id}` | - | حذف السجل أو رفض إذا كان يحتوي رصيد |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * تراص بطاقات العملاء التفاعلية بوضوح، إظهار الاسم ورقم الهاتف والعنوان والرصيد المستحق، مع أزرار لمس مريحة للإبهام للتحصيل وكشف الحساب والتعديل والحذف بارتفاع $\ge 44	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * جدول بيانات عالي الكثافة مع تمييز لوني واضح للحسابات المدينة والدائنة وأرقام الهواتف ومبالغ العملة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/customers`: جلب قائمة العملاء مع الفلاتر وترقيم الصفحات:
+  * **الكنترولر:** `App\Http\Controllers\Api\CustomerController@index`
+  * **Resource:** `App\Http\Resources\CustomerResource`
+* `POST /api/v1/customers`: إضافة عميل جديد (`customers.manage`):
+  * **Form Request:** `App\Http\Requests\StoreCustomerRequest`
+  * **Action:** `App\Actions\Customers\StoreCustomerAction`
+* `GET /api/v1/customers/{id}`: جلب بيانات العميل التفصيلية.
+* `PUT /api/v1/customers/{id}`: تعديل بيانات العميل وحدوده الائتمانية:
+  * **Form Request:** `App\Http\Requests\UpdateCustomerRequest`
+  * **Action:** `App\Actions\Customers\UpdateCustomerAction`
+* `DELETE /api/v1/customers/{id}`: نقل العميل لسلة المحذوفات (`customers.manage`).
+* `PATCH /api/v1/customers/{id}/toggle-active`: تفعيل/تعطيل العميل.
+* `POST /api/v1/customers/{id}/collect-payment`: تسجيل سند قبض وتحصيل دفعة سداد:
+  * **Form Request:** `App\Http\Requests\CollectCustomerPaymentRequest`
+  * **Action:** `App\Actions\Customers\CollectCustomerPaymentAction`
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/contacts.php` و `lang/en/contacts.php`:
-* `contacts.customers_title`: دليل العملاء والزبائن / Customers Directory
-* `contacts.total_receivables`: إجمالي مديونيات العملاء المطلوبة / Total Outstanding Customer Debts
-* `contacts.debtors_count`: عدد العملاء المدينين / Debtor Customers Count
-* `contacts.collect_payment`: تحصيل / Collect
-* `contacts.debtors_only`: عليهم مديونية 🚨 / With Outstanding Debt 🚨
-* `contacts.settled_only`: الحسابات المسواة (رصيد 0) ✅ / Settled Accounts (0.00) ✅
+## 5. مصفوفة الصلاحيات ونطاق الفروع:
+* **الصلاحيات (`PermissionsSeeder.php`):**
+  * `customers.manage`: إدارة وتعديل وتحصيل دفعات العملاء (متاحة للمدير، الكاشير، والمحاسب).
+  * `customers.statement`: استعراض وطباعة كشف الحساب.
+* **نطاق الفروع:** ترسل طلبات التحصيل ترويسة `X-Store-Id` لإيداع النقدية في خزينة الفرع النشط؛ ويتم التدقيق عبر `ClientStoreGuard::concrete($request)`. أي مخالفة تُرجع **HTTP 403** مع كود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/customers-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.15 ثانية.
+## 6. القواعد المالية الصارمة والمحاسبية:
+1. **تحديث الرصيد التراكمي الذري:** تسجيل الفواتير الآجلة وسندات القبض ينفذ داخل `DB::transaction()` مع استخدام `lockForUpdate()` على سجل العميل لمنع تضارب الأرصدة.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:** كافة حسابات مديونيات العملاء والحدود الائتمانية تُحسب بدقة 3 خانات عشرية متطابقة مع كشف الحساب وبتقريب متماثل للنصف للأعلى (`half-up rounding at 3 dp`).

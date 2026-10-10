@@ -1,61 +1,78 @@
 # 📦 توثيق وتحليل صفحة دليل الأصناف والمخزون الحي (Items)
 
 ## 1. النظرة العامة والتحليل التشغيلي:
-* **اسم الصفحة:** إدارة دليل الأصناف والمخزون الحي (Inventory & Items Catalog)
+* **اسم الصفحة:** دليل الأصناف والمخزون (Items & Live Catalog)
 * **المسار (Route):** `/items`
-* **الملف الرئيسي:** `resources/js/views/Items/ItemsView.vue` (منسق نحيف: ~75 سطرًا).
+* **اسم المسار (Route Name):** `items.index`
+* **الصلاحية المطلوبة (Permission):** `items.view`
+* **الملف الرئيسي:** `resources/js/views/Items/ItemsView.vue` (~310 سطرًا).
 * **الغرض والتحليل التشغيلي:**
-  * المركز الرئيسي لتعريف وإدارة كافة المنتجات والمواد الخام والمشروبات.
-  * ضبط الأسعار المتعددة: تكلفة الشراء، سعر البيع القطاعي، وأدنى سعر بيع (الجملة).
-  * مراقبة الرصيد المخزني الحي وتحديد حد إعادة الطلب الأدنى (Min Stock Level) وتنبيه النواقص.
-  * إجراء تسوية جردية سريعة لرصيد الصنف مع توثيق سبب التسوية والمسؤول.
-  * الوصول لكارت حركة الصنف وسجل العمليات الصادرة والواردة.
-  * إضافة وتعديل وحذف الأصناف مع ربطها بالفئات والمخازن.
+  * المستودع المركزي لتعريف المنتجات والمواد الخام، وضبط أسعار البيع القطاعي والجملة، وإدارة تكاليف الشراء.
+  * مراقبة المخزون اللحظي عبر الفروع ونقاط البيع، واستعراض رادار النواقص والأصناف التي بلغت حد الطلب الأدنى.
+  * محرك متقدم للبحث بالاسم، الباركود، الكود الدولي SKU، وتصفية الأصناف حسب التصنيفات وحالة المخزون.
+  * بطاقات KPI تعرض إجمالي عدد الأصناف، الأصناف المفعلة، تنبيهات النواقص، والقيمة التقديرية للمخزون.
+  * إدارة التسويات الجردية المباشرة (`Stock Adjustments`) لمعالجة العجز والتلف والزيادة الجردية.
+  * إخفاء أسعار التكلفة وهوامش الربح تلقائياً للمستخدمين الذين لا يمتلكون صلاحية `items.view_cost`.
 
 ---
 
 ## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-ItemsView.vue (Thin Orchestrator ~75 lines)
-├── ItemsMetricsGrid.vue         <-- بطاقات KPI الثلاث (قيمة المخزون الإجمالية، النواقص، إجمالي الأصناف)
-├── ItemsSearchFilterBar.vue     <-- شريط البحث السريع، فلتر الفئات، وفلتر حالة المخزون
-├── ItemsTable.vue               <-- جدول الأصناف العالي الكثافة (ديسكتوب) / كروت اللمس التفاعلية (موبايل)
-│   ├── BaseButton.vue           <-- زر التسوية السريعة
-│   └── ActionMenu.vue           <-- قائمة الإجراءات المنسدلة العائمة (تسوية، كارت حركة، تعديل، حذف)
-├── ItemFormModal.vue            <-- نافذة إضافة وتعديل الصنف الكاملة (الأسعار، المخزون، الفئة، الكود)
-└── ItemStockAdjustModal.vue     <-- نافذة تسوية الرصيد الجردية السريعة
+ItemsView.vue (~310 lines)
+├── ItemsHeader.vue                   <-- رأس الصفحة مع زر إضافة صنف جديد، وتصدير الأصناف
+├── ItemsMetricsGrid.vue              <-- بطاقات المؤشرات: إجمالي الأصناف، الأصناف النشطة، النواقص، إجمالي التقييم
+├── ItemsFilterBar.vue                <-- شريط الفلاتر: البحث، التصنيف، حالة المخزون (متوفر، نواقص، نفد)، والفرع
+├── ItemsTable.vue                    <-- جدول الأصناف مع الباركود، الأسعار، الأرصدة، وزر العمليات السريعة
+├── ItemFormModal.vue                 <-- نافذة إضافة وتعديل الصنف (الاسم، الباركود، الفئة، التكلفة، البيع، حد الطلب)
+└── ItemAdjustStockModal.vue          <-- نافذة التسوية الجردية (نوع التسوية: عجز/زيادة/تلف، الكمية، والسبب الموثق)
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة:
-* `BaseInput.vue`: اسم الصنف، الكود، الباركود، والوحدة.
-* `BaseNumberInput.vue`: سعر البيع، تكلفة الشراء، حد الطلب، والرصيد الافتتاحي.
-* `BaseSelect.vue`: اختيار فئة الصنف ونوع الوحدة.
-* `BaseTextarea.vue`: ملاحظات ووصف الصنف.
-* `BaseButton.vue`: أزرار الحفظ والإجراءات والتسوية.
-* `ActionMenu.vue`: القائمة العائمة (Floating Teleport).
-* `MetricCard.vue` / `EmptyState.vue` / `Pagination.vue`.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `DataTable.vue`, `AppModal.vue`, `StatusBadge.vue`.
+* **المخازن المستخدمة:** `useAuthStore` (فحص صلاحيات `items.create`, `items.edit`, `items.delete`, `items.view_cost`, `inventory.adjust`).
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`) والكميات بدقة 3 خانات عشرية.
 
 ---
 
 ## 4. الاعتماديات والـ APIs:
-* **Endpoints:**
-  * `GET /api/v1/items` (مع فلاتر البحث، الفئة، وحالة النواقص).
-  * `POST /api/v1/items` (إضافة صنف جديد).
-  * `PUT /api/v1/items/:id` (تعديل بيانات الصنف).
-  * `DELETE /api/v1/items/:id` (حذف الصنف بنظام Soft Delete).
-  * `POST /api/v1/items/:id/adjust-stock` (تسوية الرصيد الجردي داخل Transaction).
-* **Actions:** `App\Actions\Items\CreateItemAction`, `UpdateItemAction`, `AdjustItemStockAction`.
+* `GET /api/v1/items`: جلب قائمة الأصناف مع الفلاتر وترقيم الصفحات:
+  * **الكنترولر:** `App\Http\Controllers\Api\ItemController@index`
+  * **Resource:** `App\Http\Resources\ItemResource`
+* `POST /api/v1/items`: إضافة صنف جديد (`items.create`):
+  * **Form Request:** `App\Http\Requests\StoreItemRequest`
+  * **Action:** `App\Actions\Items\StoreItemAction`
+* `PUT /api/v1/items/{id}`: تعديل بيانات وأسعار الصنف (`items.edit`):
+  * **Form Request:** `App\Http\Requests\UpdateItemRequest`
+  * **Action:** `App\Actions\Items\UpdateItemAction`
+* `DELETE /api/v1/items/{id}`: نقل الصنف لسلة المحذوفات (`items.delete`).
+* `PATCH /api/v1/items/{id}/toggle-active`: تفعيل/تعطيل الصنف السريع (`items.edit`).
+* `POST /api/v1/items/{id}/adjust-stock`: تسوية رصيد المخزون (`inventory.adjust`):
+  * **Form Request:** `App\Http\Requests\AdjustStockRequest`
+  * **Action:** `App\Actions\Items\AdjustStockAction`
+* `GET /api/v1/items/low-stock`: قائمة الأصناف التي وصلت للحد الأدنى من المخزون.
 
 ---
 
-## 5. فحص التجاوب واللمس والوضعين الداكن والفاتح:
-* **الهواتف (360px - 430px):** كروت لمسية واضحة بألوان مميزة لتنبيه النواقص باللون الأحمر وقائمة سفلية للإجراءات.
-* **التابلت والديسكتوب (768px - 1280px+):** جدول متناسق عالي الكثافة بدون أي scrollbar داخلي مزعج.
+## 5. مصفوفة الصلاحيات وتوزيع الأدوار:
+* **الصلاحيات الرسمية (`PermissionsSeeder.php`):**
+  * `items.view`, `items.create`, `items.edit`, `items.delete`, `items.view_cost`, `inventory.adjust`.
+* **توزيع الأدوار:**
+  * `admin`: يمتلك كافة صلاحيات الأصناف والتسويات.
+  * `storekeeper`: يمتلك `items.view` فقط (صلاحيات `items.create` و `items.edit` مسحوبة ومحصورة بالإدارة لمنع التلاعب بالأسعار والتكاليف).
+  * `accountant`: يمتلك `items.view` و `items.view_cost`.
+  * `cashier`: يمتلك `items.view` دون أسعار التكلفة.
 
 ---
 
-## 6. سجل الاختبارات والتحقق:
-* ✅ **Playwright E2E:** نجاح 6/6 اختبارات في `items-full-page-audit.spec.js`.
-* ✅ **Feature API Test:** نجاح 9/9 اختبارات في `ItemsApiTest.php`.
+## 6. نطاق الفروع وعزل البيانات (Store Scoping):
+* يتم تمرير ترويسة `X-Store-Id` مع كل استدعاء لجلب رصيد الصنف الخاص بالفرع النشط.
+* يتولى `ClientStoreGuard::verified($request)` مطابقة الفرع؛ ومحاولة الاستعلام عن أرصدة فروع غير مصرح بها تُرجع **HTTP 403** مع كود `store_access_denied`.
+
+---
+
+## 7. القواعد المالية الصارمة والمخزون:
+1. **القفل السطري أثناء التسوية (`lockForUpdate()`):** أي تعديل على رصيد المخزون في `adjustStock` يتم داخل `DB::transaction()` مع قفل سطري مباشر للسجل.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:** كافة الكميات والأسعار والتكاليف تُخزن وتُعالج بدقة 3 خانات عشرية وبتقريب متماثل للنصف للأعلى (`half-up rounding at 3 dp`).
+3. **التوثيق الإلزامي للتسويات الجردية:** تسجيل نوع الحركة، المستخدم المنفذ، والسبب في جدول سجل حركات المخزون `stock_movements`.

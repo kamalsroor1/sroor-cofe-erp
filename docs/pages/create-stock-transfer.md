@@ -1,81 +1,57 @@
-# 🚚 وثيقة المكون والصفحة: إنشاء إذن تحويل مخزني ونقل بضاعة (`CreateStockTransferView.vue`)
+# 🚚 وثيقة المكون والصفحة: إنشاء إذن تحويل مخزني ونقل بضاعة (`CreateStockTransferView`)
 
-> **المسار (Route):** `/stock-transfers/create`  
-> **الملف الرئيسي:** `resources/js/views/StockTransfers/CreateStockTransferView.vue` (Thin Orchestrator: ~55 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **إنشاء إذن تحويل مخزني جديد (Create Stock Transfer)** مركز إدارة تدفق البضائع ونقل الأصناف والمواد الخام بين المستودعات المركزية وفروع البيع:
-1. **تحديد المخزن المصدر والمخزن المستلم:** اختيار الفرع المُرسل والمستلم من القوائم المنسدلة مع منع التحويل لنفس المخزن تلقائياً.
-2. **تاريخ الإذن والملاحظات التشغيلية:** تسجيل تاريخ التحويل وأي ملاحظات أو أرقام بوالص شحن.
-3. **اختيار الأصناف والكميات المحولة:** اختيار الأصناف مع استعراض الرصيد المتاح حالياً لمنع تجاوز الرصيد الفعلي، وضبط الكميات المحولة بدقة `DECIMAL(12,3)`.
-4. **التنفيذ الذري والمعاملة الآمنة (Atomic Transaction):** إرسال طلب `POST /api/v1/transfers` ليتم خصم المخزن المصدر وإيداع المخزن المستلم ذرياً داخل `DB::transaction()` مع استخدام `lockForUpdate()` لمنع البيع المزدوج أو التضارب.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** إنشاء إذن تحويل مخزني (Create Stock Transfer Document)
+* **المسار (Route):** `/stock-transfers/create`
+* **اسم المسار (Route Name):** `stock_transfers.create`
+* **الصلاحية المطلوبة (Permission):** `stores.manage` في مسار الواجهة و `transfers.create` في الباك إند
+* **الملف الرئيسي:** `resources/js/views/StockTransfers/CreateStockTransferView.vue` (~69 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * شاشة المعالجة التنفيذية لإصدار أذون نقل وصرف البضائع والمنتجات بين المستودعات والفروع وسيارات التوزيع.
+  * اختيار الفرع المصدر (`From Store`) والفرع المستلم (`To Store`) مع منع اختيار نفس الفرع كمصدر ووجهة.
+  * جدول تفاعلي لإضافة الأصناف المراد نقلها، مع فحص فوري للرصيد الحي المتاح بالفرع المصدر قبل تأكيد النقل.
+  * منع التحويل إذا كانت الكمية المطلوبة تتجاوز الرصيد الفعلي المتوفر بالفرع المصدر لتفادي المخزون السالب.
+  * إدخال ملاحظات النقل وبيانات السائق أو المندوب المسلم.
+  * تنفيذ القيد المزدوج الفوري وتحديث كروت حركة الأصناف بمجرد الحفظ والاعتماد.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/StockTransfers/
-│   └── CreateStockTransferView.vue              <-- Thin Orchestrator (~55 lines)
-├── Components/StockTransfers/
-│   ├── CreateStockTransferHeaderCard.vue        <-- بطاقة الفروع المصدر/الوجهة وتاريخ الإذن والملاحظات
-│   └── CreateStockTransferItemsCard.vue         <-- بطاقة إضافة الأصناف وجدول وتراص بطاقات البنود
-└── Composables/
-    └── useCreateStockTransfer.js                <-- كبسولة المنطق الحسابي والاتصال بالـ APIs
+CreateStockTransferView.vue (~69 lines)
+├── CreateStockTransferHeaderCard.vue <-- كارد بيانات إذن التحويل: رقم المستند، التاريخ، الفرع المصدر، الفرع المستلم، والملاحظات
+├── CreateStockTransferItemsCard.vue  <-- جدول اختيار الأصناف، عرض الرصيد المتاح، حقل الكمية المحولة، وزر حذف البند
+└── StockTransferDetailsModal.vue     <-- نافذة معاينة وطباعة ملخص الإذن بعد الاعتماد
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر العودة لسجل التحويلات.
-* `BaseSelect.vue`: القوائم المنسدلة لاختيار المخازن والأصناف.
-* `BaseInput.vue`: حقول التاريخ والملاحظات.
-* `BaseButton.vue`: زر إضافة البند وزر التنفيذ النهائي.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseSelect.vue`.
+* **المخازن المستخدمة:** `useAuthStore` (قائمة الفروع المصرح بها وفحص الصلاحيات)، `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق الكميات بدقة 3 خانات عشرية (`formatQty`).
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب الفروع والأصناف** | `GET /api/v1/stores`, `GET /api/v1/items` | — | قائمة المخازن والأصناف وأرصدتها |
-| **تنفيذ التحويل المخزني** | `POST /api/v1/transfers` | `from_store_id`, `to_store_id`, `transfer_date`, `items: [{item_id, quantity}]` | إشعار نجاح وتحديث الأرصدة |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي كامل للنماذج، حقول إدخال عريضة بارتفاع $\ge 44	ext{px}$، بطاقات لمسية متراصة للأصناف المحولة مع زر حذف مريح للإبهام وحقل كمية واضح.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * شبكة ثلاثية لحقول المخازن والتاريخ، وجدول بيانات متناسق للأصناف.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات وخلفيات الحقول وتأثيرات التمرير.
+## 4. الاعتماديات والـ APIs:
+* `POST /api/v1/transfers`: حفظ واعتماد إذن التحويل المخزني:
+  * **الكنترولر:** `App\Http\Controllers\Api\StockTransferController@store`
+  * **Form Request:** `App\Http\Requests\StoreStockTransferRequest`
+  * **Action:** `App\Actions\Transfers\StoreStockTransferAction`
+  * **DTO:** `App\DTOs\Transfers\StockTransferDTO`
+  * **Resource:** `App\Http\Resources\StockTransferResource`
+* `GET /api/v1/stores`: جلب قائمة الفروع النشطة للاختيار منها.
+* `GET /api/v1/items`: جلب قائمة الأصناف وأرصدتها المتوفرة بالفرع المصدر.
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/inventory.php` و `lang/en/inventory.php`:
-* `inventory.new_transfer`: عملية تحويل مخزني جديدة / New Stock Transfer
-* `inventory.from_store_label`: من مخزن / فرع / From Store / Branch
-* `inventory.to_store_label`: إلى مخزن / فرع / To Store / Branch
-* `inventory.transfer_date_label`: تاريخ إذن التحويل / Transfer Date
-* `inventory.transferred_items_section`: الأصناف المحولة / Transferred Items
-* `inventory.execute_transfer_now_btn`: تنفيذ التحويل المخزني ونقل البضاعة فوراً / Execute Stock Transfer Now
+## 5. نطاق الفروع وعزل البيانات (Store Scoping):
+* يتحقق الطلب عبر `StoreStockTransferRequest` وحارس `ClientStoreGuard` من أن المستخدم يمتلك تصريحاً سارياً على الفرع المصدر والفرع الوجهة.
+* إذا حاول المستخدم التحويل من أو إلى فرع لا يمتلك صلاحية عليه، يتم رفض الطلب فوراً برمز **HTTP 403** مع كود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/create-stock-transfer-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.88 ثانية.
+## 6. القواعد المخزنية والمالية الصارمة:
+1. **القفل السطري المتزامن (`lockForUpdate()`):** يتم قفل أرصدة الصنف في كلا المستودعين (المصدر والمستقبل) داخل `DB::transaction()` لمنع حدوث Race Condition أثناء حركة النقل.
+2. **منع الأرصدة السالبة:** يفحص الباك إند برمجياً أن $qty \le balance_{source}$ قبل خصم أي كمية.
+3. **الدقة العددية `DECIMAL(12,3)` و `bcmath`:** كافة كميات التحويل تُعالج بدقة 3 خانات عشرية متطابقة في قاعدة البيانات.

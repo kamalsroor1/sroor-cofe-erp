@@ -1,85 +1,58 @@
-# 👑 وثيقة المكون والصفحة: لوحة تحكم السوبر أدمن المركزية (`SuperAdminDashboardView.vue`)
+# 👑 وثيقة المكون والصفحة: لوحة تحكم السوبر أدمن المركزية (`SuperAdminDashboardView`)
 
-> **المسار (Route):** `/super-admin`  
-> **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminDashboardView.vue` (Thin Orchestrator: ~75 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **لوحة تحكم السوبر أدمن المركزية (`/super-admin`)** مركز القيادة والتحكم لمنظومة الـ Multi-Tenant SaaS:
-1. **مؤشرات المنصة الحيوية (Platform KPI Metrics):** إجمالي المستأجرين، المستأجرين النشطين، الحسابات التجريبية، الحسابات الموقوفة، والإيراد الشهري المتكرر (MRR).
-2. **توزيع الباقات والاشتراكات (Plans Distribution):** عدد المشتركين في كل باقة مع الأسعار الشهرية.
-3. **أحدث المستأجرين المسجلين (Recent Tenants Stream):** أحدث المستأجرين مع الدومين والباقة وحالة الاشتراك وتاريخ الإنشاء.
-4. **إعدادات الهوية والمنصة المركزية (Platform Branding & Whitelabel):** اسم المنصة، الوصف، بريد الدعم، ورقم هاتف الدعم الفني مع تحديث لحظي لـ Pinia Store.
-5. **معلومات بيئة السيرفر والنظام المركزي (Central Server Specs):** إصدار PHP، إصدار Laravel، محرك قاعدة البيانات MySQL، وبيئة التشغيل Environment.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** لوحة تحكم السوبر أدمن (Super Admin Dashboard)
+* **المسار (Route):** `/super-admin/dashboard`
+* **اسم المسار (Route Name):** `super_admin.dashboard`
+* **الصلاحية المطلوبة (Permission):** `super_admin.access` (أو `super_admin.dashboard.view` لمستخدمي مشغلي المنصة `CentralUser`).
+* **الملف الرئيسي:** `resources/js/views/SuperAdmin/SuperAdminDashboardView.vue` (~83 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * مركز القيادة والتحكم لمنظومة المنصة متعددة المستأجرين (SaaS Control Plane).
+  * مراقبة المؤشرات التشغيلية الحية: إجمالي المستأجرين، النشطين، الحسابات التجريبية، والموقوفة، وتقديرات الإيراد الشهري المتكرر (MRR).
+  * استعراض توزيع الباقات والاشتراكات وعدد المشتركين في كل باقة.
+  * متابعة أحدث المستأجرين المسجلين في المنصة وحالاتهم ونطاقاتهم.
+  * إدارة إعدادات الهوية والمنصة المركزية (Platform White-labeling & Support Contacts).
+  * استعراض مواصفات وبيئة الخادم المركزي (PHP, Laravel, MySQL, Environment).
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف بـ 425 سطراً إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/SuperAdmin/
-│   └── SuperAdminDashboardView.vue            <-- Thin Orchestrator (~75 lines)
-├── Components/SuperAdmin/
-│   ├── SuperAdminMetricsGrid.vue              <-- بطاقات المؤشرات الخمسة للمنصة
-│   ├── SuperAdminPlansDistribution.vue        <-- بطاقة توزيع الباقات والمشتركين والأسعار
-│   ├── SuperAdminRecentTenants.vue            <-- بطاقة أحدث المستأجرين المسجلين وحالاتهم
-│   ├── SuperAdminPlatformSettingsCard.vue     <-- بطاقة إعدادات المنصة المركزية والهوية
-│   └── SuperAdminServerSpecsCard.vue          <-- بطاقة مواصفات السيرفر المركزي (PHP, Laravel, MySQL, Env)
-└── Composables/
-    └── useSuperAdminDashboard.js              <-- كبسولة المنطق وجلب المؤشرات وتحديث الإعدادات
+SuperAdminDashboardView.vue (~83 lines)
+├── PageHeader.vue                         <-- رأس الصفحة مع أزرار الإجراءات السريعة
+├── SuperAdminMetricsGrid.vue              <-- شبكة بطاقات مؤشرات المنصة الخمسة
+├── SuperAdminPlansDistribution.vue        <-- توزيع الباقات والمشتركين والإيرادات
+├── SuperAdminRecentTenants.vue            <-- قائمة أحدث المستأجرين المسجلين
+├── SuperAdminPlatformSettingsCard.vue     <-- نموذج إعدادات المنصة المركزية وبيانات الدعم
+└── SuperAdminServerSpecsCard.vue          <-- بطاقة مواصفات السيرفر المركزي والبيئة
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة الموحدة وأزرار الانتقال السريع لإدارة المستأجرين والباقات.
-* `BaseButton.vue`: زر حفظ إعدادات المنصة مع مؤشرات التحميل.
-* `BaseInput.vue`: حقول إدخال اسم المنصة والوصف وبريد وهاتف الدعم.
-* `StatCardSkeleton.vue`: هياكل تحميل وميضية لبطاقات المؤشرات.
-
----
-
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب مؤشرات لوحة السوبر أدمن** | `GET /api/v1/super-admin/dashboard` | - | المؤشرات، إحصائيات الباقات، أحدث المستأجرين، وبيانات السيرفر |
-| **جلب إعدادات المنصة المركزية** | `GET /api/v1/super-admin/settings` | - | اسم المنصة، الوصف، وبيانات الدعم |
-| **حفظ إعدادات المنصة والهوية** | `POST /api/v1/super-admin/settings` | `platform_name`, `platform_subtitle`, `support_email`, `support_phone` | حفظ الإعدادات وتحديث الهوية المركزية |
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `StatCardSkeleton.vue`.
+* **القالب العام:** `SuperAdminLayout.vue` المخصص لإدارة المنصة المركزية والمفصول تماماً عن قوالب المستأجرين.
+* **الـ Composable:** `useSuperAdminDashboard.js` لجلب مؤشرات لوحة السوبر أدمن وتحديث إعدادات المنصة.
+* **المخازن المستخدمة:** `useAuthStore` للتحقق من صلاحيات السوبر أدمن وتوجيه مسارات الإدارة المركزية.
 
 ---
 
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي لبطاقات المؤشرات، بطاقات المستأجرين والباقات متراصة، حقول إدخال وأزرار بارتفاع $\ge 40	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * شبكة خماسية لبطاقات المؤشرات، تقسيم 1/3 لتوزيع الباقات و 2/3 لأحدث المستأجرين، وشبكة رباعية لمعلومات السيرفر.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
-
----
-
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/super.php` و `lang/en/super.php`:
-* `super.super_admin_title`: لوحة تحكم السوبر أدمن / Super Admin Dashboard
-* `super.total_tenants`: إجمالي الشركات المسجلة / Total Registered Tenants
-* `super.active_tenants`: المستأجرين النشطين / Active Tenants
-* `super.mrr`: الإيراد الشهري المتكرر (MRR) / Monthly Recurring Revenue
-* `super.platform_settings_title`: الهوية واسم المنصة العام / Platform Whitelabel & Branding
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/super-admin/dashboard`:
+  * **الوصف:** جلب مؤشرات المنصة، توزيع الباقات، أحدث المستأجرين، ومواصفات السيرفر.
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@dashboard`
+  * **الخدمة:** `App\Contracts\SuperAdminDashboardAnalyticsInterface`
+* `GET /api/v1/super-admin/settings`:
+  * **الوصف:** جلب إعدادات المنصة المركزية وهوية النظام.
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@getPlatformSettings`
+* `POST /api/v1/super-admin/settings`:
+  * **الوصف:** تحديث إعدادات المنصة المركزية (اسم المنصة، الوصف، بريد وهاتف الدعم الفني).
+  * **الكنترولر:** `App\Http\Controllers\Api\SuperAdminApiController@updatePlatformSettings`
+  * **Form Request:** `App\Http\Requests\UpdatePlatformSettingsRequest`
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/super-admin-dashboard-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.16 ثانية.
+## 5. الحماية الأمنية وعزل المنصة المركزية (Central Context Isolation):
+* **عزل النطاق المركزي (`EnsureCentralContext`):** كافة مسارات السوبر أدمن محمية بـ Middleware يمنع طلبها من نطاقات المستأجرين (إذا كان الطلب من نطاق مستأجر يعيد `404 Not Found` بدلاً من `401/403` لمنع استكشاف المسارات).
+* **معمارية المصادقة المركزية والـ 2FA:** تدعم المنصة مصادقة مشغلي المنصة المركزية `CentralUser` عبر `routes/central.php` مع التحقق الثنائي الإلزامي (Mandatory 2FA) والرموز البديلة (`recovery-codes`) وإمكانية طلب التوثيق الإضافي (`step-up`).
+* **الاتصال المركزي:** النماذج المركزية تستخدم الاتصال المركزي `central` لضمان عدم خلط البيانات المركزية مع قواعد بيانات المستأجرين.

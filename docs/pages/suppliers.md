@@ -1,92 +1,68 @@
-# 🏭 وثيقة المكون والصفحة: دليل وإدارة الموردين والتجار (`SuppliersView.vue`)
+# 🏭 وثيقة المكون والصفحة: دليل وإدارة الموردين والتجار (`SuppliersView`)
 
-> **المسار (Route):** `/suppliers`  
-> **الملف الرئيسي:** `resources/js/views/Suppliers/SuppliersView.vue` (Thin Orchestrator: ~70 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **دليل وإدارة الموردين والتجار (Suppliers Management & Payables Ledger)** الركيزة الأساسية في إدارة الحسابات الدائنة والتعاملات التجارية مع الشركات الموردة:
-1. **سجل بيانات الموردين:** حفظ واستعراض بيانات الموردين (الاسم، اسم الشركة، رقم الهاتف، العنوان، والملاحظات).
-2. **متابعة المديونية الإجمالية والدائنين:** بطاقات KPI إحصائية حية لحساب إجمالي المبالغ المستحقة للموردين (`total_payable`)، عدد الموردين الدائنين (`creditors_count`)، وإجمالي الموردين المسجلين (`total_suppliers`).
-3. **تصفية الحسابات الدائنة والمسواة:** فلترة فورية للموردين (الكل، من لهم مستحقات دائنة 🚨، أو الحسابات المسددة بالكامل ✅).
-4. **سداد الدفعات النقدية والبنكية (Pay Supplier Modal):** إمكانية صرف دفعات نقدية أو عبر إنستاباي أو المحفظة أو البنك للمورد مباشرة من الجدول مع تحديث الرصيد الدائن وتسجيل سند الصرف داخل الخزينة.
-5. **الانتقال لكشف الحساب (Supplier Statement Ledger):** زر مباشر لاستعراض كشف الحساب التفصيلي وتتبع الفواتير وسندات الصرف والمرتجعات لكل مورد (`/suppliers/:id/statement`).
-6. **إضافة وتعديل وحذف الموردين:** نوافذ مودال موحدة وسريعة عبر `AppModal.vue` و `BaseButton.vue` مع حماية الحسابات التي تحتوي على حركات من الحذف العشوائي.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** دليل وإدارة الموردين والتجار (Suppliers Management)
+* **المسار (Route):** `/suppliers`
+* **اسم المسار (Route Name):** `suppliers.index`
+* **الصلاحية المطلوبة (Permission):** `suppliers.manage`
+* **الملف الرئيسي:** `resources/js/views/Suppliers/SuppliersView.vue` (~104 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * المستودع المركزي لبيانات الموردين والشركات وتجار الجملة المعتمدين لتوريد المواد الخام والبن والمستلزمات.
+  * متابعة أرصدة المديونيات المستحقة للموردين والمتحصلات ومواعيد السداد لتفادي توقف التوريدات.
+  * بطاقات إحصائية تلخص إجمالي الموردين، إجمالي الديون المستحقة للموردين، والمبالغ المسددة خلال الشهر الجاري.
+  * نافذة تسجيل سندات الصرف وسداد الدفعات (`Supplier Payment Modal`) لقيد السداد المالي للمورد من الخزينة أو الحساب البنكي.
+  * زر وصول مباشر لكشف حساب وأستاذ المورد التفصيلي (`Supplier Statement`).
+  * تصفية متقدمة حسب حالة المديونية (جميع الموردين، مستحق لهم مبالغ، أرصدة صفرية).
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم بـ 742 سطرًا إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Suppliers/
-│   └── SuppliersView.vue                        <-- Thin Orchestrator (~70 lines)
-├── Components/Suppliers/
-│   ├── SuppliersMetricsGrid.vue                 <-- بطاقات المؤشرات المالية للدائنين والمستحقات
-│   ├── SuppliersFilterBar.vue                   <-- شريط البحث النصي وأقراص تصفية حالة المديونية
-│   ├── SuppliersTable.vue                       <-- جدول البيانات المزدوج (Desktop Table + Mobile Cards)
-│   ├── SupplierFormModal.vue                    <-- نافذة إضافة وتعديل بيانات المورد
-│   └── SupplierPaymentModal.vue                 <-- نافذة تسجيل وسداد دفعة نقدية/بنكية للمورد
-└── Composables/
-    └── useSuppliers.js                          <-- كبسولة المنطق والاتصال بالـ API وإدارة النوافذ
+SuppliersView.vue (~104 lines)
+├── SuppliersHeader.vue               <-- رأس الصفحة مع زر إضافة مورد جديد، وتصدير البيانات
+├── SuppliersMetricsGrid.vue          <-- بطاقات المؤشرات: إجمالي الموردين، المستحقات للموردين، المدفوعات الشهرية
+├── SuppliersFilterBar.vue            <-- شريط الفلاتر: البحث بالاسم/الشركة/الهاتف، وحالة الرصيد
+├── SuppliersTable.vue                <-- جدول الموردين مع بيانات الاتصال، الأرصدة المستحقة، وقائمة الإجراءات
+├── SupplierFormModal.vue             <-- نافذة إضافة وتعديل بيانات المورد (الاسم، الشركة، الهاتف، العنوان، السجل التجاري)
+└── SupplierPaymentModal.vue          <-- نافذة تسجيل سند صرف وسداد دفعة للمورد من الخزينة
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر إضافة مورد جديد.
-* `BaseSearchInput.vue`: شريط البحث النصي المتجاوب.
-* `BaseButton.vue`: أزرار الإجراءات والحفظ مع مؤشرات التحميل.
-* `StatCardSkeleton.vue`: هياكل تحميل بطاقات المؤشرات الوميضية.
-* `TableSkeleton.vue`: هيكل التحميل الوميضي للجدول.
-* `EmptyState.vue`: حالة عدم وجود موردين أو نتائج مطابقة.
-* `AppModal.vue`: الحاوية الموحدة لنوافذ الإدخال والسداد.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `DataTable.vue`, `StatusBadge.vue`, `AppModal.vue`.
+* **المخازن المستخدمة:** `useAuthStore` (فحص صلاحية `suppliers.manage` و `suppliers.statement`)، `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`).
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب قائمة الموردين** | `GET /api/v1/suppliers` | `search`, `balance_type`, `page`, `per_page` | بيانات الموردين + إحصائيات `metrics` + `meta` |
-| **إضافة مورد جديد** | `POST /api/v1/suppliers` | `name`, `company_name`, `phone`, `address`, `opening_balance`, `notes` | رسالة نجاح وكائن المورد |
-| **تعديل بيانات مورد** | `PUT /api/v1/suppliers/{id}` | `name`, `company_name`, `phone`, `address`, `notes` | رسالة نجاح وتحديث البيانات |
-| **صرف دفعة للمورد** | `POST /api/v1/suppliers/{id}/payments` | `amount`, `payment_method`, `payment_date`, `notes` | تسجيل سند الصرف وتحديث رصيد المورد |
-| **حذف مورد** | `DELETE /api/v1/suppliers/{id}` | - | حذف السجل أو رفض إذا كان يحتوي رصيد |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * تراص بطاقات الموردين التفاعلية بوضوح، إظهار الاسم والشركة ورقم الهاتف والرصيد المستحق، مع أزرار لمس مريحة للإبهام لسداد الدفعة وكشف الحساب والتعديل والحذف بارتفاع $\ge 44	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * جدول بيانات عالي الكثافة مع تمييز لوني واضح للموردين الدائنين وأرقام الهواتف ومبالغ العملة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/suppliers`: جلب قائمة الموردين مع الفلاتر وترقيم الصفحات:
+  * **الكنترولر:** `App\Http\Controllers\Api\SupplierController@index`
+  * **Resource:** `App\Http\Resources\SupplierResource`
+* `POST /api/v1/suppliers`: إضافة مورد جديد (`suppliers.manage`):
+  * **Form Request:** `App\Http\Requests\StoreSupplierRequest`
+  * **Action:** `App\Actions\Suppliers\StoreSupplierAction`
+* `GET /api/v1/suppliers/{id}`: جلب تفاصيل المورد.
+* `PUT /api/v1/suppliers/{id}`: تعديل بيانات المورد:
+  * **Form Request:** `App\Http\Requests\UpdateSupplierRequest`
+  * **Action:** `App\Actions\Suppliers\UpdateSupplierAction`
+* `DELETE /api/v1/suppliers/{id}`: نقل المورد لسلة المحذوفات (`suppliers.manage`).
+* `PATCH /api/v1/suppliers/{id}/toggle-active`: تفعيل/تعطيل المورد.
+* `POST /api/v1/suppliers/{id}/pay`: تسجيل سند صرف وسداد دفعة للمورد:
+  * **Form Request:** `App\Http\Requests\PaySupplierRequest`
+  * **Action:** `App\Actions\Suppliers\PaySupplierAction`
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/contacts.php` و `lang/en/contacts.php`:
-* `contacts.suppliers_title`: دليل الموردين والتجار / Suppliers Directory
-* `contacts.total_payables`: إجمالي مستحقات الموردين / Total Supplier Payables Due
-* `contacts.creditors_count`: موردون لهم مستحقات قائمة / Active Creditor Suppliers
-* `contacts.pay_supplier`: سداد دفعة / Pay Supplier
-* `contacts.supplier_creditors_only`: مستحق له (دائن) 🚨 / Due Balance (Creditor) 🚨
-* `contacts.supplier_settled_only`: مسدد بالكامل ✅ / Fully Settled ✅
+## 5. مصفوفة الصلاحيات ونطاق الفروع:
+* **الصلاحيات (`PermissionsSeeder.php`):**
+  * `suppliers.manage`: إدارة الموردين وتسجيل الدفعات (متاحة للمدير، أمين المخزن، والمحاسب).
+  * `suppliers.statement`: استعراض وطباعة كشف الحساب.
+* **نطاق الفروع:** ترسل طلبات الصرف المالي ترويسة `X-Store-Id` لخصم القيمة من خزينة الفرع النشط؛ ويتم التدقيق عبر `ClientStoreGuard::concrete($request)`. أي انتهاك يُرجع **HTTP 403** بكود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/suppliers-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.69 ثانية.
+## 6. القواعد المالية الصارمة والمحاسبية:
+1. **تحديث رصيد المورد التراكمي:** فواتير الشراء وسندات الصرف تسجل داخل `DB::transaction()` مع استخدام `lockForUpdate()` على سجل المورد.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:** كافة حسابات أرصدة الموردين تُحسب بدقة 3 خانات عشرية وبتقريب متماثل للنصف للأعلى (`half-up rounding at 3 dp`).

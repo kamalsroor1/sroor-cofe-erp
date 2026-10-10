@@ -1,80 +1,59 @@
-# 🔄 وثيقة المكون والصفحة: إنشاء وتسجيل مستند مرتجع جديد (`CreateReturnView.vue`)
+# 🔄 وثيقة المكون والصفحة: إنشاء وتسجيل مستند مرتجع جديد (`CreateReturnView`)
 
-> **المسار (Route):** `/returns/create`  
-> **الملف الرئيسي:** `resources/js/views/Returns/CreateReturnView.vue` (Thin Orchestrator: ~65 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **إنشاء وتسجيل مستند مرتجع مبيعات أو مشتريات (`/returns/create`)** واجهة المعالجة العكسية للمبيعات والمشتريات:
-1. **تسجيل العمليات العكسية (Reverse Transactions):** اختيار نوع المرتجع (مرتجع مبيعات من عميل أو مرتجع مشتريات إلى مورد) مع ضبط آلي للأسعار (سعر البيع لمرتجع المبيعات وسعر التكلفة لمرتجع المشتريات).
-2. **ربط الأطراف والتاريخ والسبب:** اختيار العميل أو المورد مع تحديد تاريخ الإرجاع وسبب الإرجاع.
-3. **جدول الأصناف والكميات:** اختيار الصنف وإضافته مع تعديل الكمية وسعر الوحدة واحتساب إجمالي السطر فورياً.
-4. **الملخص المالي وصرف النقدية:** عرض إجمالي القيمة وتحديد المبلغ المسترد نقداً من الدرج/الخزينة (Refund Cash) أو قيده كرصيد آجل.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** تسجيل مرتجع جديد (Create Return Document)
+* **المسار (Route):** `/returns/create`
+* **اسم المسار (Route Name):** `returns.create`
+* **الصلاحية المطلوبة (Permission):** `returns.manage`
+* **الملف الرئيسي:** `resources/js/views/Returns/CreateReturnView.vue` (~76 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * شاشة المعالجة التنفيذية لإنشاء واعتماد مرتجعات المبيعات (من العملاء) أو مرتجعات المشتريات (إلى الموردين).
+  * ربط المرتجع بالفاتورة الأصلية عبر البحث الفوري برقم الفاتورة أو الباركود لمنع تكرار الإرجاع.
+  * التحقق التلقائي من الكميات المتبقية القابلة للإرجاع (`Remaining Returnable Quantity`) لمنع إرجاع كميات أكبر من المباعة/المشتراة.
+  * تحديد سبب الإرجاع لكل بند (تالف، خطأ في الطلب، عيب تصنيع، رغبة العميل).
+  * خيارات رد القيمة المالية: نقداً من الخزينة، إيداع في رصيد حساب العميل/المورد، أو تحويل بنكي.
+  * تنفيذ عكس المخزون الفوري وقيد الحركة المحاسبية في معاملة ذرية موحدة.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف بـ 404 أسطر إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Returns/
-│   └── CreateReturnView.vue                   <-- Thin Orchestrator (~65 lines)
-├── Components/Returns/
-│   ├── ReturnPartySection.vue                 <-- محول نوع المرتجع والطرف والتاريخ والسبب
-│   ├── ReturnItemsTable.vue                   <-- محدد إضافة الأصناف وجدول الكميات والأسعار
-│   └── ReturnFinancialSummary.vue             <-- بطاقة الملخص المالي واسترداد النقدية والاعتماد
-└── Composables/
-    └── useCreateReturn.js                     <-- كبسولة المنطق والاعتماديات والعمليات الحسابية
+CreateReturnView.vue (~76 lines)
+├── CreateReturnHeaderCard.vue        <-- تحديد نوع المرتجع (مبيعات/مشتريات)، البحث عن الفاتورة الأصلية، واختيار الفرع
+├── CreateReturnItemsCard.vue         <-- جدول بنود الفاتورة الأصلية، الكميات المباعة، والكميات المراد إرجاعها
+└── CreateReturnSummaryCard.vue       <-- ملخص المبالغ المرتجعة، تحديد طريقة الاسترداد المالي، وزر الحفظ والاعتماد
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر العودة لسجل المرتجعات.
-* `BaseButton.vue`: زر الحفظ والاعتماد مع مؤشرات التحميل.
-* `BaseInput.vue`: حقل سبب الإرجاع والملاحظات.
-
----
-
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **تحميل بيانات النموذج** | `GET /api/v1/customers`, `GET /api/v1/suppliers`, `GET /api/v1/items` | `per_page=100` | قوائم العملاء والموردين والأصناف |
-| **حفظ واعتماد مستند المرتجع** | `POST /api/v1/returns` | `return_type`, `customer_id`, `supplier_id`, `return_date`, `refund_amount`, `reason`, `items` | إنشاء المرتجع وتعديل المخزن والحسابات |
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseSelect.vue`.
+* **المخازن المستخدمة:** `useAuthStore`, `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ (`formatMoney`) والكميات (`formatQty`).
 
 ---
 
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي للنموذج والملخص المالي، حقول إدخال وأزرار بارتفاع $\ge 40	ext{px}$، ونمط لمسي سهل الاستخدام.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * تخطيط 2/3 للنموذج وجدول الأصناف و 1/3 للملخص المالي الثابت.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
-
----
-
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/returns.php` و `lang/en/returns.php`:
-* `returns.create_title`: تسجيل مستند مرتجع وإشعار تسوية مخزنية / Create Return Document
-* `returns.back_to_returns`: العودة للمرتجعات / Back to Returns
-* `returns.sales_return_option`: ↩️ مرتجع مبيعات (من عميل) / Sales Return (from Customer)
-* `returns.purchase_return_option`: ↪️ مرتجع مشتريات (إلى مورد) / Purchase Return (to Supplier)
-* `returns.confirm_return_save_btn`: حفظ واعتماد المرتجع / Confirm & Save Return
+## 4. الاعتماديات والـ APIs:
+* `GET /api/v1/invoices/{id}`: جلب الفاتورة الأصلية للتحقق من بنودها وأسعارها.
+* `POST /api/v1/returns`: حفظ واعتماد مستند المرتجع:
+  * **الكنترولر:** `App\Http\Controllers\Api\ReturnController@store`
+  * **Form Request:** `App\Http\Requests\StoreReturnRequest`
+  * **Action:** `App\Actions\Returns\StoreReturnAction`
+  * **Resource:** `App\Http\Resources\ReturnResource`
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
+## 5. نطاق الفروع وعزل البيانات (Store Scoping):
+* يتم تمرير ترويسة `X-Store-Id` ومعرف الفرع `store_id` في الطلب.
+* يتولى `ClientStoreGuard::concrete($request)` التحقق من أن المستخدم يمتلك صلاحية التعامل على هذا الفرع.
+* أي محاولة للإرجاع على فرع غير مصرح للمستخدم به تقابل برفض **HTTP 403** مع كود `store_access_denied`.
 
-* ✅ **Playwright E2E Test:** `e2e/flows/create-return-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 2.94 ثانية.
+---
+
+## 6. القواعد المالية الصارمة والمخزنية:
+1. **القفل السطري وعكس الرصيد (`lockForUpdate()`):**
+   * تُقفل سجلات الأصناف في جدول المخزون برمجياً، وتُعاد الكميات المرتجعة إلى المخزن فورياً داخل `DB::transaction()`.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:**
+   * حساب قيمة المرتجع وحصته من الخصومات والضرائب المطبقة في الفاتورة الأصلية يتم عبر `App\Support\Money\Decimal` مع التقريب المتماثل للنصف للأعلى (`symmetric half-up at 3 dp`).
+3. **تحديث رصيد العميل/المورد:**
+   * يتم خصم قيمة المرتجع من مديونية العميل في الفواتير الآجلة، أو إضافتها كرصيد دائن.

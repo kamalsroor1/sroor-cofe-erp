@@ -1,81 +1,58 @@
-# 🛒 وثيقة المكون والصفحة: إنشاء واعتماد فاتورة شراء جديدة (`CreatePurchaseView.vue`)
+# 🛒 وثيقة المكون والصفحة: إنشاء واعتماد فاتورة شراء جديدة (`CreatePurchaseView`)
 
-> **المسار (Route):** `/purchases/create`  
-> **الملف الرئيسي:** `resources/js/views/Purchases/CreatePurchaseView.vue` (Thin Orchestrator: ~55 سطر)  
-> **تاريخ المراجعة الشاملة:** 2026-08-24  
-> **الحالة:** ✅ مكتملة وموثقة 100% عبر المحاور الأربعة المتزامنة.
-
----
-
-## 1. التحليل التشغيلي والمعماري (Operational & Architectural Analysis)
-
-### 🎯 الغرض من الصفحة:
-تُمثل شاشة **إنشاء واعتماد فاتورة شراء جديدة وتوريد المخزون (Create Purchase Invoice & Stock Receiving)** حجر الأساس في دورة المشتريات والتوريد:
-1. **تحديد المورد وبيانات الفاتورة:** اختيار المورد من القائمة المنسدلة، تحديد تاريخ الاستلام، وإدخال رقم الفاتورة الدفترية للمورد (`supplier_invoice_ref`).
-2. **جدول بنود الأصناف والتسعير:** إضافة الأصناف المستلمة وتحديد الكميات بدقة `DECIMAL(12,3)` مع الجلب التلقائي لأسعار التكلفة المعتمدة، واحتساب إجمالي كل سطر لحظياً.
-3. **التكامل مع رادار الطلب الذكي (Smart Reorder Prefill):** دعم الاستيراد التلقائي للأصناف المقترحة والكميات المطلوبة عند تحويل أوامر الشراء من `/purchases/smart-reorder`.
-4. **ملخص الحسابات والمديونية:** احتساب قيمة البضاعة، الخصومات المكتسبة، صافي الفاتورة، المبلغ المسدد، والمتبقي آجل على المنشأة.
-5. **التنفيذ الذري والمعاملة الآمنة (Atomic Transaction):** إرسال طلب `POST /api/v1/purchases` لإيداع الأصناف في المخزن الرئيسي/المستهدف، تسجيل أثر الأستاذ المخزني، وتحديث رصيد المورد داخل `DB::transaction()`.
+## 1. النظرة العامة والتحليل التشغيلي:
+* **اسم الصفحة:** فاتورة مشتريات جديدة (Create Purchase Invoice)
+* **المسار (Route):** `/purchases/create`
+* **اسم المسار (Route Name):** `purchases.create`
+* **الصلاحية المطلوبة (Permission):** `purchases.create`
+* **الملف الرئيسي:** `resources/js/views/Purchases/CreatePurchaseView.vue` (~85 سطرًا).
+* **الغرض والتحليل التشغيلي:**
+  * شاشة المعالجة التنفيذية لإدخال وتوريد فواتير الشراء والبضائع الواردة إلى المستودعات والفروع.
+  * اختيار المورد، تسجيل رقم فاتورة المورد، تاريخ التوريد، والفرع/المستودع المستلم.
+  * جدول تفاعلي لإضافة الأصناف، تحديد الكميات الموردة، سعر تكلفة الشراء للوحدة، ونسب الضرائب والخصومات.
+  * إعادة احتساب متوسط التكلفة المرجح (`Weighted Average Cost`) للصنف آلياً وتحديث كارت الصنف.
+  * تحديد شروط السداد (نقدي مخصوم من الخزينة، آجل يضاف لمديونية المورد، أو دفعة جزئية).
+  * زيادة رصيد المخزون الفعلي في الفرع المستلم فور الاعتماد داخل معاملة آمنة.
 
 ---
 
-## 2. هيكلية وشجرة المكونات (Component Tree & Architecture)
-
-تم تفكيك الصفحة من ملف ضخم إلى **Thin Orchestrator** ومكونات أحادية المسؤولية:
-
+## 2. هيكلية وشجرة المكونات (Component Tree):
 ```text
-resources/js/
-├── views/Purchases/
-│   └── CreatePurchaseView.vue                   <-- Thin Orchestrator (~55 lines)
-├── Components/Purchases/
-│   ├── CreatePurchaseSupplierCard.vue           <-- بطاقة بيانات المورد وتاريخ الفاتورة والمرجع الدفتري
-│   ├── CreatePurchaseItemsCard.vue              <-- بطاقة وجدول وتراص بطاقات بنود الأصناف المستلمة
-│   └── CreatePurchaseSummaryCard.vue            <-- بطاقة ملخص الحسابات والملاحظات والمدفوع والخصم
-└── Composables/
-    └── useCreatePurchase.js                     <-- كبسولة المنطق الحسابي والاتصال بالـ APIs
+CreatePurchaseView.vue (~85 lines)
+├── CreatePurchaseHeaderCard.vue      <-- بيانات الفاتورة: المورد، رقم فاتورة الشراء، التاريخ، المستودع المستلم، وطريقة الدفع
+├── CreatePurchaseItemsCard.vue       <-- جدول البنود: اختيار الصنف، الكمية الموردة، سعر الشراء، الخصم، والضريبة
+└── CreatePurchaseSummaryCard.vue     <-- ملخص المبالغ (الإجمالي، الخصم، الضريبة، مصروفات الشحن، المدفوع، المتبقي، وزر الاعتماد)
 ```
 
 ---
 
-## 3. عناصر النماذج والواجهات المشتركة المستخدمة
-
-* `PageHeader.vue`: ترويسة الصفحة وزر العودة لسجل المشتريات.
-* `BaseSelect.vue`: القوائم المنسدلة لاختيار المورد والأصناف.
-* `BaseInput.vue`: حقول التاريخ، المرجع الدفتري، والملاحظات.
-* `BaseButton.vue`: زر إضافة سطر الصنف وزر تأكيد واعتماد التوريد.
+## 3. العناصر المشتركة ومخازن الحالة:
+* **المكونات المشتركة:** `PageHeader.vue`, `BaseButton.vue`, `BaseInput.vue`, `BaseSelect.vue`.
+* **المخازن المستخدمة:** `useAuthStore`, `useAppConfigStore`.
+* **الـ Composables:** `useFormatters.js` لتنسيق المبالغ المالية (`formatMoney`) والكميات.
 
 ---
 
-## 4. الاعتماديات والـ APIs المرتبطة
-
-| العملية | الـ Endpoint | الطلب (Request Payload) | الاستجابة |
-| :--- | :--- | :--- | :--- |
-| **جلب الموردين والأصناف** | `GET /api/v1/suppliers`, `GET /api/v1/items` | `per_page=100` | قائمة الموردين والأصناف وأسعار التكلفة |
-| **اعتماد فاتورة الشراء** | `POST /api/v1/purchases` | `supplier_id`, `purchase_date`, `paid_amount`, `discount_amount`, `items: [{item_id, quantity, unit_cost}]` | إشعار نجاح وتحديث المخزون والحسابات |
-
----
-
-## 5. فحص التجاوب وتجربة اللمس والوضعين (Responsive & Touch Ergonomics)
-
-* **📱 هواتف (360px - 430px):**
-  * ترتيب عمودي كامل للنماذج، بطاقات لمسية متراصة للأصناف تشمل اختيار الصنف والكمية وسعر التكلفة مع إجمالي السطر، وزر حذف واضح ومريح للإبهام بارتفاع $\ge 44	ext{px}$.
-* **💻 تابلت وديسكتوب (768px - 1280px+):**
-  * شبكة ثلاثية لحقول المورد، وجدول بيانات متناسق عالي الكثافة.
-* **🌓 الوضع الداكن والفاتح:** تباين كامل للبطاقات والصفوف وحقول الإدخال.
+## 4. الاعتماديات والـ APIs:
+* `POST /api/v1/purchases`: حفظ واعتماد فاتورة الشراء وتحديث المخزون:
+  * **الكنترولر:** `App\Http\Controllers\Api\PurchaseController@store`
+  * **Form Request:** `App\Http\Requests\StorePurchaseRequest`
+  * **Action:** `App\Actions\Purchases\StorePurchaseAction`
+  * **DTO:** `App\DTOs\Purchases\PurchaseDTO`
+  * **Resource:** `App\Http\Resources\PurchaseResource`
+* `GET /api/v1/suppliers`: جلب قائمة الموردين النشطين.
+* `GET /api/v1/items`: جلب قائمة الأصناف لسهولة الإضافة والبحث.
+* `GET /api/v1/stores`: جلب الفروع والمستودعات المتاحة للاستلام.
 
 ---
 
-## 6. قاموس الترجمة (100% Zero Hardcoded Localization)
-
-كافة النصوص تستند إلى ملفات الترجمة المركزية في `lang/ar/purchases.php` و `lang/en/purchases.php`:
-* `purchases.new_purchase`: تسجيل فاتورة شراء / New Purchase Invoice
-* `purchases.supplier_po_section`: بيانات المورد وأمر الشراء / Supplier & PO Details
-* `purchases.supply_items_section`: بنود وأصناف التوريد / Supply Items & Quantities
-* `purchases.confirm_and_supply_btn`: حفظ واعتماد الفاتورة وتوريد المخزون / Save & Confirm Purchase Supply
+## 5. نطاق الفروع وعزل البيانات (Store Scoping):
+* يتم تحديد الفرع المستلم `store_id` في الطلب ويتم التحقق منه عبر `ClientStoreGuard::concrete($request)`.
+* محاولة توريد بضاعة على فرع لا يمتلك المستخدم تصريحاً عليه تقابل برفض **HTTP 403** مع كود `store_access_denied`.
 
 ---
 
-## 7. سجل الاختبارات والتحقق (Test Results)
-
-* ✅ **Playwright E2E Test:** `e2e/flows/create-purchase-full-page-audit.spec.js` -> نجاح 7/7 اختبارات عبر كافة مقاسات الشاشات الـ 5 بدون أي خطأ Console.
-* ✅ **Build Verification:** `npm run build` -> تم البناء بنجاح 100% في 4.16 ثانية.
+## 6. القواعد المالية والمخزنية الصارمة:
+1. **زيادة المخزون المتزامنة (`lockForUpdate()`):** يتم قفل سجلات الأصناف في جدول المخزون وإضافة الكميات الموردة وتحديث متوسط التكلفة داخل `DB::transaction()`.
+2. **الدقة المالية `DECIMAL(12,3)` و `bcmath`:** كافة حسابات الإجمالي والضرائب والخصومات وسعر التكلفة للوحدة تُحسب بدقة 3 خانات عشرية وبتقريب متماثل للنصف للأعلى (`half-up rounding at 3 dp`).
+3. **تحديث حساب المورد:** قيد المبلغ الآجل في كشف حساب المورد، أو قيد المنصرف النقدي من الخزينة اليومية.
