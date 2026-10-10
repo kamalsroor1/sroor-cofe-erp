@@ -17,7 +17,7 @@
     </div>
 
     <!-- Theme Color Palette Grid -->
-    <div class="space-y-3">
+    <div id="setting-system_theme_color" class="space-y-3">
       <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
         {{ $t('settings.preset_palettes_label') }}
       </label>
@@ -27,13 +27,14 @@
           v-for="color in colorPalettes"
           :key="color.id"
           type="button"
-          @click="$emit('select-color', color.id)"
-          class="p-3.5 rounded-2xl border transition-all flex flex-col items-center gap-2.5 cursor-pointer relative active:scale-95 select-none"
-          :class="
+          @click="canManage && $emit('select-color', color.id)"
+          class="p-3.5 rounded-2xl border transition-all flex flex-col items-center gap-2.5 relative active:scale-95 select-none"
+          :class="[
+            canManage ? 'cursor-pointer' : 'cursor-not-allowed opacity-60',
             themeColor === color.id
               ? 'border-theme-primary bg-theme-light ring-2 ring-theme-primary shadow-sm'
-              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700'
-          "
+              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700',
+          ]"
         >
           <div
             class="w-8 h-8 rounded-full shadow-md flex items-center justify-center"
@@ -54,8 +55,9 @@
             <input
               type="color"
               :value="customColor"
+              :disabled="!canManage"
               @input="$emit('update:custom-color', $event.target.value)"
-              class="w-11 h-11 rounded-2xl cursor-pointer border-2 border-slate-300 dark:border-slate-700 p-0.5 bg-transparent overflow-hidden shadow-md"
+              class="w-11 h-11 rounded-2xl cursor-pointer border-2 border-slate-300 dark:border-slate-700 p-0.5 bg-transparent overflow-hidden shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               title="اختر لون مخصص"
             />
           </div>
@@ -80,18 +82,20 @@
             <input
               type="text"
               :value="customColor"
+              :disabled="!canManage"
               @input="$emit('update:custom-color', $event.target.value)"
               placeholder="#10b981"
               maxlength="7"
               dir="ltr"
-              class="w-full h-10 px-3 font-mono font-bold text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+              class="w-full h-10 px-3 font-mono font-bold text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
 
           <button
             type="button"
+            :disabled="!canManage"
             @click="$emit('pick-screen')"
-            class="px-3.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95"
+            class="px-3.5 h-10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             :title="$t('settings.eyedropper_title')"
           >
             <Pipette class="w-4 h-4 text-theme-primary" />
@@ -102,7 +106,7 @@
     </div>
 
     <!-- Light / Dark Mode Toggle -->
-    <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+    <div id="setting-theme_mode" class="pt-4 border-t border-slate-200 dark:border-slate-800">
       <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
         {{ $t('settings.theme_mode_label') }}
       </label>
@@ -224,6 +228,7 @@ defineProps({
   customColor: { type: String, default: '#10b981' },
   colorPalettes: { type: Array, default: () => [] },
   isDark: { type: Boolean, default: false },
+  canManage: { type: Boolean, default: true },
 });
 
 defineEmits(['select-color', 'update:custom-color', 'pick-screen', 'set-theme']);
