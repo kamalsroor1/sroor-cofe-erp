@@ -35,10 +35,10 @@ function divRoundHalfUp(numerator, divisor) {
 }
 
 /**
- * Parse a decimal string (optionally in exponent notation) into thousandths,
- * rounding any digits beyond scale 3 half-up.
+ * Parse a decimal string (optionally in exponent notation) into an integer at
+ * `scale` decimals, rounding any digits beyond `scale` half-up.
  */
-function parseToMilli(raw) {
+function parseScaled(raw, scale) {
     const match = NUMBER_PATTERN.exec(raw.trim());
     if (!match) return 0n;
 
@@ -54,14 +54,19 @@ function parseToMilli(raw) {
     }
 
     const wholeDigits = digits.slice(0, pointPos).padEnd(pointPos, '0');
-    const fracDigits = digits.slice(pointPos, pointPos + SCALE).padEnd(SCALE, '0');
-    const nextDigit = digits.charAt(pointPos + SCALE);
-    let milli = BigInt((wholeDigits || '0') + fracDigits);
+    const fracDigits = digits.slice(pointPos, pointPos + scale).padEnd(scale, '0');
+    const nextDigit = digits.charAt(pointPos + scale);
+    let scaled = BigInt((wholeDigits || '0') + fracDigits);
     if (nextDigit !== '' && nextDigit >= '5') {
-        milli += 1n;
+        scaled += 1n;
     }
 
-    return sign === '-' ? -milli : milli;
+    return sign === '-' ? -scaled : scaled;
+}
+
+/** Parse a decimal string into thousandths (half-up at scale 3). */
+function parseToMilli(raw) {
+    return parseScaled(raw, SCALE);
 }
 
 /**
@@ -142,4 +147,58 @@ export function isPositive(value) {
 
 export function isZero(value) {
     return toMilli(value) === 0n;
+}
+
+const MAX_DISPLAY_DECIMALS = 6;
+
+function clampDecimals(decimals) {
+    const places = Number.parseInt(decimals, 10);
+    if (!Number.isFinite(places) || places < 0) return 0;
+    return Math.min(places, MAX_DISPLAY_DECIMALS);
+}
+
+/**
+ * Integer at `places` decimals from any input, rounded half-up once from the full
+ * input precision (no double rounding through scale 3). A bigint is thousandths.
+ */
+function toScaled(value, places) {
+    if (typeof value === 'bigint') {
+        if (places >= SCALE) return value * 10n ** BigInt(places - SCALE);
+        return divRoundHalfUp(value, 10n ** BigInt(SCALE - places));
+    }
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? parseScaled(String(value), places) : 0n;
+    }
+    if (typeof value === 'string') return parseScaled(value, places);
+    return 0n;
+}
+
+function scaledToString(scaled, places) {
+    const negative = scaled < 0n;
+    const abs = (negative ? -scaled : scaled).toString().padStart(places + 1, '0');
+    const whole = abs.slice(0, abs.length - places);
+    const frac = abs.slice(abs.length - places);
+    return `${negative ? '-' : ''}${whole}${places > 0 ? `.${frac}` : ''}`;
+}
+
+/**
+ * SETG-13 display rounding: half-up (away from zero on a tie) to `decimals`
+ * places, e.g. dRoundTo('2.345', 2) === '2.35', dRoundTo('-0.005', 2) === '-0.01'.
+ * Returns a plain string (no grouping) with exactly `decimals` fraction digits.
+ */
+export function dRoundTo(value, decimals) {
+    const places = clampDecimals(decimals);
+    return scaledToString(toScaled(value, places), places);
+}
+
+/**
+ * Display text for an amount: rounded with dRoundTo() and grouped by thousands
+ * with Western digits ('1,234,567.50'). Never goes through floats or Intl.
+ */
+export function formatDecimal(value, decimals) {
+    const rounded = dRoundTo(value, decimals);
+    const negative = rounded.startsWith('-');
+    const [whole, frac] = (negative ? rounded.slice(1) : rounded).split('.');
+    const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `${negative ? '-' : ''}${grouped}${frac !== undefined ? `.${frac}` : ''}`;
 }

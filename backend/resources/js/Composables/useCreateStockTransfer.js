@@ -3,8 +3,10 @@ import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useUnits } from './useUnits';
 
 export function useCreateStockTransfer() {
+    const { unitLabel } = useUnits();
     const router = useRouter();
     const { t } = useTrans();
 
@@ -75,7 +77,7 @@ export function useCreateStockTransfer() {
             item_id: it.id,
             name: it.name,
             code: it.code,
-            unit: it.unit || 'كجم',
+            unit: unitLabel(it.unit),
             quantity: 1,
         });
 

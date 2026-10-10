@@ -1,35 +1,25 @@
+import { formatMoneyAmount } from '../helpers/formatters';
+import { readDisplayContext } from './useFormatters';
+
+const QTY_DECIMALS = 2;
+
 /**
- * Composable for formatting currency and financial decimals
+ * Money and quantity display (SETG-13): half-up through helpers/decimal.js, the
+ * tenant currency decimals from /system/context, Western digits. No floats.
  */
 export function useMoney() {
     const formatMoney = (amount, decimals = null) => {
-        const num = Number(amount || 0);
         if (decimals !== null) {
-            return num.toLocaleString('en-US', {
-                minimumFractionDigits: decimals,
-                maximumFractionDigits: decimals,
-            });
+            return formatMoneyAmount(amount, { decimals, fixed: true });
         }
-        const hasFraction = num % 1 !== 0;
-        return num.toLocaleString('en-US', {
-            minimumFractionDigits: hasFraction ? 2 : 0,
-            maximumFractionDigits: hasFraction ? 2 : 0,
-        });
+        return formatMoneyAmount(amount, { decimals: readDisplayContext().currencyDecimals });
     };
 
     const formatQty = (qty, decimals = null) => {
-        const num = Number(qty || 0);
         if (decimals !== null) {
-            return num.toLocaleString('en-US', {
-                minimumFractionDigits: decimals,
-                maximumFractionDigits: decimals,
-            });
+            return formatMoneyAmount(qty, { decimals, fixed: true });
         }
-        const hasFraction = num % 1 !== 0;
-        return num.toLocaleString('en-US', {
-            minimumFractionDigits: hasFraction ? 2 : 0,
-            maximumFractionDigits: hasFraction ? 2 : 0,
-        });
+        return formatMoneyAmount(qty, { decimals: QTY_DECIMALS });
     };
 
     return {

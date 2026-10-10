@@ -11,7 +11,7 @@ export function useInvoiceShow() {
     const route = useRoute();
     const router = useRouter();
     const appConfigStore = useAppConfigStore();
-    const { formatMoney } = useFormatters();
+    const { formatMoney, formatTime } = useFormatters();
     const { t } = useTrans();
 
     const invoice = ref(null);
@@ -55,16 +55,9 @@ export function useInvoiceShow() {
         };
     });
 
-    const invoiceTime = computed(() => {
-        if (!invoice.value?.formatted_created_at && !invoice.value?.created_at) return '';
-        try {
-            const dateStr = invoice.value.formatted_created_at || invoice.value.created_at;
-            const d = new Date(dateStr);
-            return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-        } catch (e) {
-            return '';
-        }
-    });
+    const invoiceTime = computed(() =>
+        formatTime(invoice.value?.formatted_created_at || invoice.value?.created_at || '')
+    );
 
     const isCancelled = computed(() => invoice.value?.status === 'cancelled');
 

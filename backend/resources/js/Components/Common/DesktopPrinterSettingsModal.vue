@@ -159,8 +159,10 @@ import { useAppConfigStore } from '../../stores/appConfig';
 import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
 
 const appConfigStore = useAppConfigStore();
+const { formatDateTime } = useFormatters();
 
 defineProps({
   show: { type: Boolean, default: false },
@@ -192,7 +194,7 @@ const handleTestPrint = async () => {
       <table style="width: 100%; font-size: 10px; text-align: right;">
         <tr><td>حالة الاتصال:</td><td style="text-align: left; font-weight: bold;">متصل ومطابق ✅</td></tr>
         <tr><td>عرض الورق:</td><td style="text-align: left;">${paperWidth.value}</td></tr>
-        <tr><td>الوقت والتاريخ:</td><td style="text-align: left;">${new Date().toLocaleTimeString('ar-EG')}</td></tr>
+        <tr><td>${trans('items.printer_test_date_time')}:</td><td style="text-align: left;">${formatDateTime(new Date(), { second: '2-digit' })}</td></tr>
       </table>
       <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
       <p style="font-size: 9px; margin-top: 6px;">تمت الطباعة الصامتة عبر Electron Desktop Shell بنجاح.</p>

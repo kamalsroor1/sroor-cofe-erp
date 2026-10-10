@@ -41,28 +41,9 @@ export function useSuperAdminTenantShow() {
                 tenant.value = data.tenant;
                 stats.value = data.stats || {};
                 allFeatures.value = data.features || [];
-                globalUnitsList.value = data.global_units || [
-                    'قطعة',
-                    'علبة',
-                    'كرتونة',
-                    'كجم',
-                    'جرام',
-                    'شيكارة',
-                    'طرد',
-                    'دستة',
-                    'لتر',
-                ];
-                tenantAllowedUnits.value = data.allowed_units || [
-                    'قطعة',
-                    'علبة',
-                    'كرتونة',
-                    'كجم',
-                    'جرام',
-                    'شيكارة',
-                    'طرد',
-                    'دستة',
-                    'لتر',
-                ];
+                // SETG-10: both lists come from the server (it owns the defaults).
+                globalUnitsList.value = Array.isArray(data.global_units) ? data.global_units : [];
+                tenantAllowedUnits.value = Array.isArray(data.allowed_units) ? data.allowed_units : [];
             }
         } catch (e) {
             DarkSwal.fire({

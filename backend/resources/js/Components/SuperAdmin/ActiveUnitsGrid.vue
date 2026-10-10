@@ -4,24 +4,17 @@
       <div
         v-for="(u, idx) in units"
         :key="u"
-        class="px-4 py-2 rounded-xl text-xs font-bold bg-purple-500/10 dark:bg-purple-950/40 border border-purple-500/30 text-purple-700 dark:text-purple-300 flex items-center gap-2.5 shadow-2xs group"
+        class="ps-4 pe-1 min-h-11 rounded-xl text-xs font-bold bg-purple-500/10 dark:bg-purple-950/40 border border-purple-500/30 text-purple-700 dark:text-purple-300 flex items-center gap-1 shadow-2xs"
       >
         <span class="text-sm font-black">{{ u }}</span>
-        <span
-          class="px-1.5 py-0.5 rounded text-[10px] font-bold"
-          :class="
-            isDiscrete(u) ? 'bg-theme-light text-theme-primary' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
-          "
-        >
-          {{ isDiscrete(u) ? $t('super.discrete_unit_badge') : $t('super.continuous_unit_badge') }}
-        </span>
         <button
           type="button"
           @click="$emit('remove', idx)"
-          class="w-5 h-5 rounded-full hover:bg-rose-500/20 hover:text-rose-500 flex items-center justify-center text-xs transition cursor-pointer text-slate-400 active:scale-95"
+          class="w-11 h-11 rounded-full text-slate-500 dark:text-slate-400 hover:bg-rose-500/20 hover:text-rose-500 focus-visible:ring-2 focus-visible:ring-rose-500/50 flex items-center justify-center transition cursor-pointer active:scale-95"
           :title="$t('common.delete')"
+          :aria-label="$t('common.delete')"
         >
-          ✕
+          <X class="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -29,39 +22,13 @@
 </template>
 
 <script setup>
+// SETG-10: a unit is just a name from the platform catalog. Whether an item is sold by
+// weight is the item's own flag (POSB-2), so no name-based "discrete / continuous" badge.
+import { X } from 'lucide-vue-next';
+
 defineProps({
   units: { type: Array, default: () => [] },
 });
 
 defineEmits(['remove']);
-
-const isDiscrete = (unit) => {
-  if (!unit) return true;
-  const u = unit.toString().trim().toLowerCase();
-  const discrete = [
-    'قطعة',
-    'حبة',
-    'علبة',
-    'باكت',
-    'كرتونة',
-    'شيكارة',
-    'طرد',
-    'دستة',
-    'جوال',
-    'طقم',
-    'زوج',
-    'باليتة',
-    'صندوق',
-    'برميل',
-    'شريحة',
-    'piece',
-    'pcs',
-    'box',
-    'carton',
-    'pack',
-    'unit',
-    'item',
-  ];
-  return discrete.includes(u);
-};
 </script>

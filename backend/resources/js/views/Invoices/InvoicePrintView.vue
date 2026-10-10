@@ -179,7 +179,7 @@ import { useTrans } from '../../Composables/useTrans';
 const route = useRoute();
 const router = useRouter();
 const appConfigStore = useAppConfigStore();
-const { formatMoney } = useFormatters();
+const { formatMoney, formatTime } = useFormatters();
 const { t } = useTrans();
 
 const invoice = ref(null);
@@ -202,15 +202,7 @@ const customerPhone = computed(() => {
   return invoice.value?.customer?.phone || invoice.value?.customer_phone || '';
 });
 
-const invoiceTime = computed(() => {
-  if (!invoice.value?.created_at) return '';
-  try {
-    const d = new Date(invoice.value.created_at);
-    return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {
-    return '';
-  }
-});
+const invoiceTime = computed(() => formatTime(invoice.value?.formatted_created_at || invoice.value?.created_at || ''));
 
 const calculatedSubtotal = computed(() => {
   return parseFloat(invoice.value?.subtotal || invoice.value?.total_amount || 0);

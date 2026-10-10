@@ -6,57 +6,22 @@ import DarkSwal from '../helpers/alert';
 export function useSuperAdminUnits() {
     const { t } = useTrans();
 
-    const units = ref([
-        'قطعة',
-        'علبة',
-        'كرتونة',
-        'كجم',
-        'جرام',
-        'شيكارة',
-        'طرد',
-        'دستة',
-        'باكت',
-        'حبة',
-        'لتر',
-        'مل',
-        'متر',
-        'طقم',
-        'زوج',
-        'باليتة',
-    ]);
-    const presets = [
-        'قطعة',
-        'علبة',
-        'كرتونة',
-        'كجم',
-        'جرام',
-        'شيكارة',
-        'طرد',
-        'دستة',
-        'باكت',
-        'حبة',
-        'لتر',
-        'مل',
-        'متر',
-        'طقم',
-        'زوج',
-        'باليتة',
-        'صندوق',
-        'رول',
-        'برميل',
-        'شريحة',
-    ];
+    // SETG-10: the catalog comes from the server (GET /super-admin/units); no built-in list here.
+    const units = ref([]);
+    // Suggestions: the server's `presets` when it sends them, otherwise the catalog as
+    // loaded, so a unit removed by mistake can be added back before saving.
+    const presets = ref([]);
     const newUnitInput = ref('');
-    const isLoading = ref(false);
+    const isLoading = ref(true);
     const isSaving = ref(false);
 
     const fetchUnits = async () => {
         isLoading.value = true;
         try {
             const res = await api.get('/super-admin/units');
-            if (res.data?.units && Array.isArray(res.data.units) && res.data.units.length > 0) {
-                units.value = res.data.units;
-            }
+            const loaded = Array.isArray(res.data?.units) ? res.data.units : [];
+            units.value = [...loaded];
+            presets.value = Array.isArray(res.data?.presets) ? res.data.presets : [...loaded];
         } catch (e) {
             console.error('Failed to load super admin units:', e);
         } finally {

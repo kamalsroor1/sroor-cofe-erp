@@ -38,7 +38,7 @@
                       >{{ item.code || '—' }}</span
                     >
                     <span>•</span>
-                    <span class="text-slate-500 font-tajawal">{{ item.unit || 'قطعة' }}</span>
+                    <span class="text-slate-500 font-tajawal">{{ unitLabel(item.unit) }}</span>
                   </div>
 
                   <!-- Dual Price Badges -->
@@ -182,7 +182,7 @@
                 <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-mono">
                   <span class="font-bold text-slate-400">{{ item.code || '—' }}</span>
                   <span>•</span>
-                  <span class="text-slate-500 font-tajawal">{{ item.unit || 'قطعة' }}</span>
+                  <span class="text-slate-500 font-tajawal">{{ unitLabel(item.unit) }}</span>
                 </div>
 
                 <!-- Dual Price Badges -->
@@ -313,8 +313,10 @@
 <script setup>
 import { Trash2 } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
+import { useUnits } from '../../Composables/useUnits';
 
 const { formatMoney } = useFormatters();
+const { unitLabel } = useUnits();
 
 defineProps({
   cart: { type: Array, default: () => [] },

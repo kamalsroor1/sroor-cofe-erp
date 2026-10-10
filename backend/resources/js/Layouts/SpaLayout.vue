@@ -555,6 +555,7 @@ import { useModules } from '../Composables/useModules';
 import { useNavigation } from '../Composables/useNavigation';
 import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
+import { useFormatters } from '../Composables/useFormatters';
 import { useTabsStore } from '../stores/tabs';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
@@ -589,6 +590,7 @@ const tabsStore = useTabsStore();
 const isDesktopSettingsOpen = ref(false);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+const { formatDate, formatTime } = useFormatters();
 const { isModuleEnabled } = useModules();
 const { navigationSections, isItemActive } = useNavigation();
 
@@ -655,27 +657,9 @@ const toggleSidebarCollapse = () => {
 
 const updateLiveClock = () => {
   const now = new Date();
-  const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  const months = [
-    'يناير',
-    'فبراير',
-    'مارس',
-    'أبريل',
-    'مايو',
-    'يونيو',
-    'يوليو',
-    'أغسطس',
-    'سبتمبر',
-    'أكتوبر',
-    'نوفمبر',
-    'ديسمبر',
-  ];
-  const dayName = days[now.getDay()];
-  const day = now.getDate();
-  const monthName = months[now.getMonth()];
-  const year = now.getFullYear();
-  const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-  currentTimeStr.value = `${dayName}، ${day} ${monthName} ${year} | ${time}`;
+  const date = formatDate(now, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const time = formatTime(now, { second: '2-digit', hour12: true });
+  currentTimeStr.value = `${date} | ${time}`;
 };
 
 const toggleTheme = () => {
