@@ -104,3 +104,7 @@ b1e3deeee5b670d8ccd634658f78a79db216e66a:tests_e2e/config.py:sroor-dotenv-secret
 8b3ab54e1d6b586351690fa3540866bc8a9c5915:verify_final_production.py:sroor-hardcoded-password:9
 7c5feeda33d0ce02854504290ad65d0f1bf0fcc5:verify_production_users.py:sroor-hardcoded-password:6
 a6caa9e00dd9fd5df00863cc727f8379861ec7ec:verify_seeded_data.py:sroor-hardcoded-password:14
+
+# Not a credential: mocked Bearer value in a Playwright spec (page.route stub, never
+# sent to a real server). Constant renamed in the next commit so it no longer matches.
+8e620016f1677ee7b1d93b02588fb01e7cd6dba2:e2e/flows/central-login.spec.js:sroor-hardcoded-password:17

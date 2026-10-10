@@ -14,7 +14,7 @@ import { test, expect } from "@playwright/test";
  *  5. tenant mode (no meta tag): /super-admin/* does not exist.
  */
 
-const CENTRAL_TOKEN = "central-test-token";
+const MOCK_CENTRAL_BEARER = "central-test-token";
 const OPERATOR = {
   id: 1,
   name: "Platform Operator",
@@ -110,7 +110,7 @@ async function mockCentralApi(page, log) {
         data: {
           two_factor_required: false,
           two_factor_setup_required: false,
-          token: CENTRAL_TOKEN,
+          token: MOCK_CENTRAL_BEARER,
           token_type: "Bearer",
           expires_at: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
           abilities: ["central:*"],
@@ -119,7 +119,8 @@ async function mockCentralApi(page, log) {
       });
     }
 
-    const authorized = headers.authorization === `Bearer ${CENTRAL_TOKEN}`;
+    const authorized =
+      headers.authorization === `Bearer ${MOCK_CENTRAL_BEARER}`;
 
     if (path === "/super-admin/auth/me") {
       return authorized
@@ -171,7 +172,7 @@ test.describe("Flow: platform console on central auth (IDEN-1.9)", () => {
       central: localStorage.getItem("central_auth_token"),
       tenant: localStorage.getItem("auth_token"),
     }));
-    expect(storage.central).toBe(CENTRAL_TOKEN);
+    expect(storage.central).toBe(MOCK_CENTRAL_BEARER);
     expect(storage.tenant).toBeNull();
 
     await page.getByTestId("central-logout").click();
@@ -213,7 +214,9 @@ test.describe("Flow: platform console on central auth (IDEN-1.9)", () => {
     const tenantsCall = log.find(
       (entry) => entry.path === "/super-admin/tenants",
     );
-    expect(tenantsCall?.headers.authorization).toBe(`Bearer ${CENTRAL_TOKEN}`);
+    expect(tenantsCall?.headers.authorization).toBe(
+      `Bearer ${MOCK_CENTRAL_BEARER}`,
+    );
   });
 
   test("tenant mode has no /super-admin routes", async ({ page }) => {

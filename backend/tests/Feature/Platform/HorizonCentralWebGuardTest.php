@@ -39,7 +39,11 @@ final class HorizonCentralWebGuardTest extends TenantTestCase
         $superAdmin = $this->centralSuperAdmin();
 
         $this->actingAs($superAdmin, 'central_web')->get(self::CENTRAL_URL.'/horizon')->assertOk();
-        $this->actingAs($superAdmin, 'central_web')->get(self::CENTRAL_URL.'/horizon/api/stats')->assertOk();
+        // The API controllers need Redis (absent in CI); the gate is what this test pins.
+        $this->actingAs($superAdmin, 'central_web');
+        $request = Request::create(self::CENTRAL_URL.'/horizon/api/stats');
+        $request->setUserResolver(fn (?string $guard = null) => auth()->guard($guard)->user());
+        $this->assertTrue(Horizon::check($request));
     }
 
     public function test_guest_and_operator_without_monitoring_permission_are_403(): void
