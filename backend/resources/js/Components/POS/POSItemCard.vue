@@ -126,7 +126,7 @@ const onAddQty = (qty) => {
         class="h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs font-mono transition-all duration-150 active:scale-90 flex items-center justify-center cursor-pointer shadow-xs"
         :title="$t('inventory.weight_kilo')"
       >
-        1ك
+        {{ $t('pos.one_kilo_short') }}
       </button>
     </div>
   </div>

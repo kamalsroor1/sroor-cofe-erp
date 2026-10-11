@@ -138,7 +138,7 @@ const saveCategory = async () => {
 const deleteCategory = async (cat) => {
   const result = await Swal.fire({
     title: trans('common.confirm_delete'),
-    text: `سيتم حذف الفئة "${cat.name}" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.`,
+    text: trans('inventory.delete_category_confirm_text', { name: cat.name }),
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#ef4444',

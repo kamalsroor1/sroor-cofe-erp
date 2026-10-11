@@ -1,5 +1,4 @@
 import { ref } from 'vue';
-import axios from 'axios';
 
 export const PRESET_PALETTES = {
     amber: {
@@ -174,11 +173,6 @@ export function useTheme(defaultTheme = 'dark', defaultColor = 'amber') {
         applyTheme(currentTheme.value);
         try {
             localStorage.setItem('theme_preference', currentTheme.value);
-        } catch (e) {}
-
-        // Async sync with backend (0 UI latency)
-        try {
-            axios.post('/theme-toggle', { theme: currentTheme.value });
         } catch (e) {}
     };
 

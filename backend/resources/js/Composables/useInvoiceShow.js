@@ -100,15 +100,20 @@ export function useInvoiceShow() {
         window.addEventListener('afterprint', cleanup);
     };
 
+    const shareReplacements = () => ({
+        number: invoice.value.invoice_number,
+        company: companyInfo.value.name,
+        customer: customerInfo.value.name,
+        date: invoice.value.invoice_date,
+        net: formatMoney(invoice.value.net_total),
+        paid: formatMoney(invoice.value.paid_amount),
+        remaining: formatMoney(invoice.value.remaining_amount),
+        currency: t('common.currency'),
+    });
+
     const copyInvoiceDetails = async () => {
         if (!invoice.value) return;
-        const text = `🧾 فاتورة رقم: #${invoice.value.invoice_number}
-🏢 المؤسسة: ${companyInfo.value.name}
-👤 العميل: ${customerInfo.value.name}
-📅 التاريخ: ${invoice.value.invoice_date}
-💰 الصافي المطلوب: ${formatMoney(invoice.value.net_total)} ${t('common.currency')}
-💵 المدفوع: ${formatMoney(invoice.value.paid_amount)} ${t('common.currency')}
-📝 المتبقي: ${formatMoney(invoice.value.remaining_amount)} ${t('common.currency')}`;
+        const text = t('invoices.share.copy_text', shareReplacements());
 
         try {
             await navigator.clipboard.writeText(text);
@@ -128,12 +133,7 @@ export function useInvoiceShow() {
     const openWhatsApp = () => {
         if (!invoice.value) return;
         const phone = customerInfo.value.phone?.replace(/[^0-9]/g, '') || '';
-        const text = encodeURIComponent(`مرحباً بك ${customerInfo.value.name}،
-مرفق تفاصيل فاتورتك رقم #${invoice.value.invoice_number} من ${companyInfo.value.name}:
-الإجمالي الصافي: ${formatMoney(invoice.value.net_total)} ${t('common.currency')}
-المدفوع: ${formatMoney(invoice.value.paid_amount)} ${t('common.currency')}
-المتبقي: ${formatMoney(invoice.value.remaining_amount)} ${t('common.currency')}
-شكراً لتعاملكم معنا! ☕`);
+        const text = encodeURIComponent(t('invoices.share.whatsapp_text', shareReplacements()));
 
         const url = phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
         window.open(url, '_blank');

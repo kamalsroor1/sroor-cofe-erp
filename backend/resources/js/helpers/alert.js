@@ -1,6 +1,7 @@
 import Swal from 'sweetalert2';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, NotificationType } from '@capacitor/haptics';
+import { trans } from './trans';
 
 const triggerToastHaptic = async (type = 'success') => {
     try {
@@ -97,10 +98,10 @@ export const DANGER_CONFIRM_BUTTON_CLASS =
  * Returns Promise<boolean> (true if confirmed, false otherwise)
  */
 export const confirmDialog = async ({
-    title = 'هل أنت متأكد؟',
-    text = 'لن تتمكن من التراجع عن هذه العملية!',
-    confirmButtonText = 'نعم، تابع التنفيذ',
-    cancelButtonText = 'إلغاء الأمر',
+    title = trans('common.confirm_dialog.title'),
+    text = trans('common.confirm_dialog.text'),
+    confirmButtonText = trans('common.confirm_dialog.confirm'),
+    cancelButtonText = trans('common.confirm_dialog.cancel'),
     icon = 'warning',
     isDanger = false,
 } = {}) => {
@@ -126,12 +127,12 @@ export const confirmDialog = async ({
 /**
  * Specialized Confirmation for Delete Operations
  */
-export const confirmDelete = async (itemName = 'هذا العنصر', customWarning = '') => {
+export const confirmDelete = async (itemName = trans('common.confirm_dialog.this_item'), customWarning = '') => {
     return confirmDialog({
-        title: `تأكيد حذف ${itemName}`,
-        text: customWarning || 'هل أنت متأكد من الحذف؟ سيتم نقل العنصر إلى سلة المحذوفات أو حذفه نهائياً.',
-        confirmButtonText: '🗑️ نعم، احذف الآن',
-        cancelButtonText: 'تراجع',
+        title: trans('common.confirm_dialog.delete_title', { name: itemName }),
+        text: customWarning || trans('common.confirm_dialog.delete_text'),
+        confirmButtonText: trans('common.confirm_dialog.delete_confirm'),
+        cancelButtonText: trans('common.confirm_dialog.delete_cancel'),
         icon: 'warning',
         isDanger: true,
     });

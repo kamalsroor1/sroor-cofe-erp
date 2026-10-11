@@ -157,7 +157,9 @@ const cancelTransferDoc = async (trf) => {
 
   if (reason !== undefined) {
     try {
-      await api.post(`/transfers/${trf.id}/cancel`, { reason: reason || 'إلغاء من النظام' });
+      await api.post(`/transfers/${trf.id}/cancel`, {
+        reason: reason || trans('inventory.transfer_cancel_reason_default'),
+      });
       Swal.fire({
         icon: 'success',
         title: trans('common.success'),

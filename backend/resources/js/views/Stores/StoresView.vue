@@ -223,7 +223,7 @@ const deleteStore = async (store) => {
     Swal.fire({
       icon: 'warning',
       title: t('inventory.cannot_delete_store'),
-      text: `يوجد ارتباطات عمليات تمنع الحذف:\n- ${blockers}`,
+      text: t('inventory.store_delete_blockers', { blockers }),
     });
     return;
   }

@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import router from '../router';
+import { trans } from '../helpers/trans';
 
 export const useTabsStore = defineStore('tabs', () => {
     // 🏠 Default initial pinned tab (Dashboard)
     const initialTab = {
         id: 'dashboard',
-        title: 'لوحة التحكم',
+        title: trans('nav.dashboard'),
+        titleKey: 'nav.dashboard',
         path: '/',
         fullPath: '/',
         name: 'dashboard',
@@ -51,7 +53,9 @@ export const useTabsStore = defineStore('tabs', () => {
      * Helper to get tab title from route meta or translation
      */
     const getRouteTitle = (route) => {
-        return route.meta?.title || route.name || 'شاشة';
+        return route.meta?.titleKey
+            ? trans(route.meta.titleKey)
+            : route.name || trans('nav.page_titles.untitled_screen');
     };
 
     /**
@@ -84,6 +88,7 @@ export const useTabsStore = defineStore('tabs', () => {
         const newTab = {
             id: `tab_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
             title: getRouteTitle(route),
+            titleKey: route.meta?.titleKey || null,
             path: route.path,
             fullPath: fullPath,
             name: route.name || route.matched?.[0]?.components?.default?.name,

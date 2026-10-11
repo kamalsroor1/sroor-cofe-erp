@@ -23,14 +23,14 @@ export function useSettings() {
     const isTestingTelegram = ref(false);
 
     const colorPalettes = [
-        { id: 'amber', labelKey: 'settings.palette_amber', name: 'عنبري ذهبي (Gold)', hex: '#f59e0b' },
-        { id: 'emerald', labelKey: 'settings.palette_emerald', name: 'أخضر زمردي (Emerald)', hex: '#10b981' },
-        { id: 'blue', labelKey: 'settings.palette_blue', name: 'أزرق عصري (Sky Blue)', hex: '#3b82f6' },
-        { id: 'purple', labelKey: 'settings.palette_purple', name: 'بنفسجي ملكي (Purple)', hex: '#a855f7' },
-        { id: 'rose', labelKey: 'settings.palette_rose', name: 'وردي ياقوتي (Rose)', hex: '#f43f5e' },
-        { id: 'orange', labelKey: 'settings.palette_orange', name: 'برتقالي مشرق (Orange)', hex: '#f97316' },
-        { id: 'teal', labelKey: 'settings.palette_teal', name: 'فيروزي هادئ (Teal)', hex: '#14b8a6' },
-        { id: 'indigo', labelKey: 'settings.palette_indigo', name: 'نيلي داكن (Indigo)', hex: '#6366f1' },
+        { id: 'amber', labelKey: 'settings.palette_amber', hex: '#f59e0b' },
+        { id: 'emerald', labelKey: 'settings.palette_emerald', hex: '#10b981' },
+        { id: 'blue', labelKey: 'settings.palette_blue', hex: '#3b82f6' },
+        { id: 'purple', labelKey: 'settings.palette_purple', hex: '#a855f7' },
+        { id: 'rose', labelKey: 'settings.palette_rose', hex: '#f43f5e' },
+        { id: 'orange', labelKey: 'settings.palette_orange', hex: '#f97316' },
+        { id: 'teal', labelKey: 'settings.palette_teal', hex: '#14b8a6' },
+        { id: 'indigo', labelKey: 'settings.palette_indigo', hex: '#6366f1' },
     ];
 
     const sections = computed(() => [

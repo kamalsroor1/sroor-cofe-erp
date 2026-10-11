@@ -17,7 +17,7 @@
           type="button"
           @click="isSidebarOpen = true"
           class="min-h-[40px] min-w-[40px] p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition md:hidden cursor-pointer active:scale-95 flex items-center justify-center"
-          title="القائمة"
+          :title="$t('nav.layout.menu')"
         >
           <Menu class="w-5 h-5" />
         </button>
@@ -34,7 +34,7 @@
             <span class="font-black truncate max-w-[100px] sm:max-w-[200px]">
               {{ authStore.userName }}
               <span class="hidden sm:inline text-slate-500 dark:text-slate-400 font-normal">
-                - {{ authStore.roles?.[0] || 'المدير' }}</span
+                - {{ authStore.roles?.[0] || $t('nav.admin_role') }}</span
               >
             </span>
             <ChevronDown
@@ -53,7 +53,7 @@
                 class="p-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1"
               >
                 <div class="font-black text-xs text-slate-900 dark:text-white">
-                  {{ authStore.userName }} - {{ authStore.roles?.[0] || 'المدير العام' }}
+                  {{ authStore.userName }} - {{ authStore.roles?.[0] || $t('nav.admin_role') }}
                 </div>
                 <div
                   v-if="authStore.user?.phone || authStore.user?.email"
@@ -69,7 +69,7 @@
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
                 <User class="w-4 h-4 text-slate-400" />
-                <span>الملف الشخصي والأمان</span>
+                <span>{{ $t('nav.layout.profile_security') }}</span>
               </router-link>
 
               <router-link
@@ -78,7 +78,7 @@
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
                 <Users class="w-4 h-4 text-slate-400" />
-                <span>إدارة المستخدمين والصلاحيات</span>
+                <span>{{ $t('nav.layout.users_permissions') }}</span>
               </router-link>
 
               <router-link
@@ -87,7 +87,7 @@
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
                 <ShieldCheck class="w-4 h-4 text-slate-400" />
-                <span>مصفوفة الصلاحيات والأدوار</span>
+                <span>{{ $t('nav.layout.roles_matrix') }}</span>
               </router-link>
 
               <router-link
@@ -96,7 +96,7 @@
                 class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition"
               >
                 <FileText class="w-4 h-4 text-slate-400" />
-                <span>سجل العمليات والرقابة</span>
+                <span>{{ $t('nav.layout.activity_audit') }}</span>
               </router-link>
 
               <div class="border-t border-slate-100 dark:border-slate-800/80 pt-1">
@@ -106,7 +106,7 @@
                   class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer text-start"
                 >
                   <LogOut class="w-4 h-4 text-rose-500" />
-                  <span>تسجيل الخروج</span>
+                  <span>{{ $t('nav.logout') }}</span>
                 </button>
               </div>
             </div>
@@ -118,11 +118,13 @@
           type="button"
           @click="toggleTheme"
           class="min-h-[38px] min-w-[38px] px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 text-theme-primary flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
-          :title="appConfigStore.isDark ? 'التحويل للوضع النهاري' : 'التحويل للوضع الليلي'"
+          :title="appConfigStore.isDark ? $t('nav.switch_to_light') : $t('nav.switch_to_dark')"
         >
           <Sun v-if="appConfigStore.isDark" class="w-3.5 h-3.5 text-theme-primary" />
           <Moon v-else class="w-3.5 h-3.5 text-indigo-600" />
-          <span class="hidden lg:inline">{{ appConfigStore.isDark ? 'الوضع النهاري' : 'الوضع الليلي' }}</span>
+          <span class="hidden lg:inline">{{
+            appConfigStore.isDark ? $t('nav.layout.light_mode') : $t('nav.layout.dark_mode')
+          }}</span>
         </button>
 
         <!-- 🖨️ Desktop Hardware & Thermal Printer Settings (Desktop Mode Only) -->
@@ -143,7 +145,7 @@
             type="button"
             @click="isNotificationsOpen = !isNotificationsOpen"
             class="min-h-[38px] min-w-[38px] p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-xl sm:rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer active:scale-95 shadow-2xs flex items-center justify-center relative"
-            title="الإشعارات والتنبيهات"
+            :title="$t('nav.layout.notifications')"
           >
             <Bell class="w-3.5 h-3.5 text-theme-primary" />
             <span
@@ -162,10 +164,10 @@
               <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <div class="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
                   <Bell class="w-4 h-4 text-theme-primary" />
-                  <span>مركز التنبيهات والإشعارات</span>
+                  <span>{{ $t('nav.notifications_title') }}</span>
                 </div>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-theme-light text-theme-primary">
-                  {{ notificationsList.length }} تنبيهات
+                  {{ $t('nav.layout.notifications_count', { count: notificationsList.length }) }}
                 </span>
               </div>
 
@@ -190,7 +192,7 @@
                   @click="isNotificationsOpen = false"
                   class="text-[11px] font-bold text-theme-primary hover:underline"
                 >
-                  عرض كافة سجلات النشاط والرقابة ←
+                  {{ $t('nav.layout.view_all_activity') }}
                 </router-link>
               </div>
             </div>
@@ -217,7 +219,7 @@
             class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 shadow-2xs"
           >
             <StoreIcon class="w-3.5 h-3.5" />
-            <span>{{ authStore.activeStoreName || 'المخزن والفرع الرئيسي' }}</span>
+            <span>{{ authStore.activeStoreName || $t('common.main_store_default') }}</span>
           </div>
 
           <!-- 🔴/🟢 Shift Status Badge -->
@@ -229,14 +231,18 @@
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
             "
-            :title="appConfigStore.hasOpenShift ? 'يومية مفتوحة' : 'اضغط لفتح يومية جديدة'"
+            :title="
+              appConfigStore.hasOpenShift ? $t('nav.layout.journal_open') : $t('nav.layout.journal_open_cta_hint')
+            "
           >
             <span
               class="w-2 h-2 rounded-full"
               :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"
             ></span>
             <span>{{
-              appConfigStore.hasOpenShift ? `• يومية (#${appConfigStore.currentShiftNumber})` : '• فتح يومية'
+              appConfigStore.hasOpenShift
+                ? $t('nav.layout.journal_number', { number: appConfigStore.currentShiftNumber })
+                : $t('nav.layout.open_journal')
             }}</span>
           </router-link>
         </div>
@@ -256,7 +262,7 @@
           type="button"
           @click="confirmLogout"
           class="min-h-[38px] min-w-[38px] p-2 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer flex items-center justify-center"
-          title="تسجيل الخروج"
+          :title="$t('nav.logout')"
         >
           <LogOut class="w-4 h-4" />
         </button>
@@ -322,7 +328,7 @@
                   appConfigStore.companyName
                 }}</span>
                 <span class="text-[10px] text-slate-400 font-bold truncate block"
-                  >{{ authStore.userName }} ({{ authStore.roles?.[0] || 'المدير' }})</span
+                  >{{ authStore.userName }} ({{ authStore.roles?.[0] || $t('nav.admin_role') }})</span
                 >
               </div>
             </div>
@@ -345,13 +351,13 @@
               :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
             >
               <Plus class="w-4 h-4 stroke-[3]" />
-              <span>+ نقطة البيع السريعة (POS)</span>
+              <span>{{ $t('nav.layout.quick_pos') }}</span>
             </router-link>
 
             <!-- 📁 LEVEL 1: MODULES CATEGORIES HUB (When No Category Selected) -->
             <div v-if="!activeMobileSection" class="space-y-2.5">
               <div class="px-1 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                أقسام وموديولات المنظومة
+                {{ $t('nav.layout.modules_heading') }}
               </div>
 
               <!-- Module Cards Grid/List -->
@@ -378,7 +384,7 @@
                           {{ section.title }}
                         </div>
                         <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
-                          {{ section.subtitle || 'الرئيسية' }}
+                          {{ section.subtitle || $t('nav.dashboard_short') }}
                         </div>
                       </div>
                     </div>
@@ -418,7 +424,7 @@
                           {{
                             section.comingSoon
                               ? $t('nav.coming_soon')
-                              : section.subtitle || `${section.items?.length || 0} روابط`
+                              : section.subtitle || $t('nav.layout.links_count', { count: section.items?.length || 0 })
                           }}
                         </div>
                       </div>
@@ -435,7 +441,7 @@
                         <span
                           class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold"
                         >
-                          {{ section.items?.length || 0 }} روابط
+                          {{ $t('nav.layout.links_count', { count: section.items?.length || 0 }) }}
                         </span>
                         <ChevronLeft
                           class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition"
@@ -459,7 +465,7 @@
                   class="flex items-center gap-1.5 text-xs font-black text-theme-primary hover:opacity-80 transition cursor-pointer active:scale-95"
                 >
                   <ChevronRight class="w-4 h-4 stroke-[3]" />
-                  <span>العودة لجميع الأقسام</span>
+                  <span>{{ $t('nav.layout.back_to_sections') }}</span>
                 </button>
 
                 <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -519,7 +525,9 @@
             class="p-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between text-xs font-mono"
           >
             <div class="flex items-center gap-2">
-              <span class="font-tajawal font-bold text-slate-700 dark:text-slate-300">الإصدار الحالي:</span>
+              <span class="font-tajawal font-bold text-slate-700 dark:text-slate-300">{{
+                $t('nav.layout.current_version')
+              }}</span>
               <span class="px-2 py-0.5 rounded-lg bg-theme-primary/10 text-theme-primary font-black font-mono"
                 >v{{ currentVersionName }}</span
               >
@@ -530,7 +538,7 @@
               class="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold font-tajawal transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
             >
               <span>🚀</span>
-              <span>فحص التحديثات</span>
+              <span>{{ $t('nav.layout.check_updates') }}</span>
             </button>
           </div>
         </aside>
@@ -563,6 +571,7 @@ import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
 import Swal from 'sweetalert2';
+import { trans } from '../helpers/trans';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import {
   Store as StoreIcon,
@@ -677,12 +686,12 @@ const handleStoreSwitch = (storeId) => {
 const confirmLogout = async () => {
   isUserDropdownOpen.value = false;
   const result = await Swal.fire({
-    title: 'تسجيل الخروج؟',
-    text: 'هل أنت متأكد من رغبتك في تسجيل الخروج وإنهاء الجلسة؟',
+    title: trans('nav.layout.logout_confirm_title'),
+    text: trans('nav.layout.logout_confirm_text'),
     icon: 'question',
     showCancelButton: true,
-    confirmButtonText: 'نعم، تسجيل الخروج',
-    cancelButtonText: 'إلغاء',
+    confirmButtonText: trans('nav.layout.logout_confirm_btn'),
+    cancelButtonText: trans('common.cancel'),
     confirmButtonColor: '#e11d48',
     cancelButtonColor: '#64748b',
   });

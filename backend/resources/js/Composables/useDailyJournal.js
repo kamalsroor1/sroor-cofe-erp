@@ -153,7 +153,7 @@ export function useDailyJournal() {
         try {
             await api.post('/expenses', {
                 ...expenseForm,
-                category: 'مصاريف يومية',
+                category: t('expenses.daily_category'),
                 expense_date: selectedDate.value,
             });
             Swal.fire({

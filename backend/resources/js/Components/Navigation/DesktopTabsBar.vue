@@ -20,7 +20,7 @@
             ? 'bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white border-slate-300 dark:border-slate-700 font-black shadow-xs'
             : 'bg-slate-200/60 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400 border-transparent'
         "
-        :title="tab.title"
+        :title="tab.titleKey ? $t(tab.titleKey) : tab.title"
       >
         <!-- Active Bottom Glowing Indicator -->
         <span
@@ -35,7 +35,7 @@
         />
 
         <!-- Tab Title -->
-        <span class="truncate max-w-[130px] sm:max-w-[160px]">{{ tab.title }}</span>
+        <span class="truncate max-w-[130px] sm:max-w-[160px]">{{ tab.titleKey ? $t(tab.titleKey) : tab.title }}</span>
 
         <!-- Close Tab Button (x) -->
         <button

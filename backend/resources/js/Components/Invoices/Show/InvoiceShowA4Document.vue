@@ -231,7 +231,7 @@
           <div
             class="w-14 h-14 rounded-full border-2 border-dashed border-slate-400 mx-auto flex items-center justify-center text-[10px] text-slate-400 font-bold"
           >
-            ختم
+            {{ $t('invoices.stamp_placeholder') }}
           </div>
         </div>
       </div>

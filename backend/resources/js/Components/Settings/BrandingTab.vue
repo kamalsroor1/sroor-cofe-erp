@@ -220,7 +220,7 @@
             "
           >
             <span class="w-4 h-4 rounded-full shrink-0 shadow-xs" :style="{ backgroundColor: color.hex }"></span>
-            <span class="truncate text-[11px]">{{ color.labelKey ? $t(color.labelKey) : color.name }}</span>
+            <span class="truncate text-[11px]">{{ $t(color.labelKey) }}</span>
           </button>
         </div>
 

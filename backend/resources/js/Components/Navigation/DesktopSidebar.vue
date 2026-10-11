@@ -34,7 +34,7 @@
           type="button"
           @click="toggleCollapse"
           class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-          :title="isCollapsed ? 'توسيع القائمة (Ctrl+B)' : 'تصغير القائمة (Ctrl+B)'"
+          :title="isCollapsed ? $t('nav.layout.expand_menu') : $t('nav.layout.collapse_menu')"
         >
           <ChevronRight class="w-4 h-4 stroke-[2.5]" />
         </button>
@@ -52,7 +52,7 @@
           type="button"
           @click="toggleCollapse"
           class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-          title="توسيع القائمة (Ctrl+B)"
+          :title="$t('nav.layout.expand_menu')"
         >
           <ChevronLeft class="w-4 h-4 stroke-[2.5]" />
         </button>
@@ -63,7 +63,7 @@
     <div class="px-3 pt-3 shrink-0" v-if="isModuleEnabled('pos_and_sales')">
       <div
         class="relative"
-        @mouseenter="handleItemHover($event, '+ نقطة البيع السريعة (POS) - F2')"
+        @mouseenter="handleItemHover($event, $t('nav.layout.quick_pos_hint'))"
         @mouseleave="handleItemLeave"
       >
         <router-link
@@ -73,7 +73,7 @@
           :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
         >
           <Plus class="w-4 h-4 stroke-[3] shrink-0" />
-          <span v-if="!isCollapsed" class="truncate">+ نقطة البيع السريعة (POS)</span>
+          <span v-if="!isCollapsed" class="truncate">{{ $t('nav.layout.quick_pos') }}</span>
           <kbd
             v-if="!isCollapsed"
             class="font-mono text-[10px] bg-black/15 px-1.5 py-0.5 rounded-md text-slate-950 font-black"
@@ -90,7 +90,7 @@
         v-if="!isCollapsed"
         class="px-1 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider"
       >
-        أقسام وموديولات المنظومة
+        {{ $t('nav.layout.modules_heading') }}
       </div>
 
       <template v-for="section in navigationSections" :key="section.key">
@@ -124,7 +124,7 @@
                   {{ section.title }}
                 </div>
                 <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
-                  {{ section.subtitle || 'الرئيسية' }}
+                  {{ section.subtitle || $t('nav.dashboard_short') }}
                 </div>
               </div>
             </div>
@@ -189,7 +189,7 @@
                     {{
                       section.comingSoon
                         ? $t('nav.coming_soon')
-                        : section.subtitle || `${section.items?.length || 0} روابط`
+                        : section.subtitle || $t('nav.layout.links_count', { count: section.items?.length || 0 })
                     }}
                   </div>
                 </div>
@@ -206,7 +206,7 @@
                   <span
                     class="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-bold"
                   >
-                    {{ section.items?.length || 0 }} روابط
+                    {{ $t('nav.layout.links_count', { count: section.items?.length || 0 }) }}
                   </span>
                   <ChevronDown
                     class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition-transform duration-200"
@@ -315,16 +315,20 @@
               :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"
             ></span>
             <span class="font-bold truncate">{{
-              appConfigStore.hasOpenShift ? `الوردية (#${appConfigStore.currentShiftNumber})` : 'الوردية مغلقة'
+              appConfigStore.hasOpenShift
+                ? $t('nav.layout.shift_number', { number: appConfigStore.currentShiftNumber })
+                : $t('nav.closed_shift')
             }}</span>
           </div>
-          <span class="font-mono text-[10px] font-black">{{ appConfigStore.hasOpenShift ? 'مفتوحة' : 'فتح ←' }}</span>
+          <span class="font-mono text-[10px] font-black">{{
+            appConfigStore.hasOpenShift ? $t('nav.layout.shift_open_badge') : $t('nav.layout.open_shift_cta')
+          }}</span>
         </router-link>
 
         <!-- Version & Update Button -->
         <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1 pt-1">
           <div class="flex items-center gap-1.5">
-            <span class="font-tajawal text-slate-500 dark:text-slate-400">الإصدار</span>
+            <span class="font-tajawal text-slate-500 dark:text-slate-400">{{ $t('nav.layout.version') }}</span>
             <span class="px-1.5 py-0.5 rounded-md bg-theme-primary/10 text-theme-primary font-bold"
               >v{{ currentVersionName }}</span
             >
@@ -335,7 +339,7 @@
             class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-sans font-bold text-[10px] border border-slate-200 dark:border-slate-700 transition cursor-pointer active:scale-95 shadow-2xs flex items-center gap-1"
           >
             <Sparkles class="w-3 h-3 text-theme-primary" />
-            <span>تحديث</span>
+            <span>{{ $t('nav.layout.update') }}</span>
           </button>
         </div>
       </div>
@@ -350,7 +354,7 @@
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
               : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
           "
-          :title="appConfigStore.hasOpenShift ? 'الوردية مفتوحة' : 'الوردية مغلقة'"
+          :title="appConfigStore.hasOpenShift ? $t('nav.active_shift') : $t('nav.closed_shift')"
         >
           <span
             class="w-2.5 h-2.5 rounded-full"
@@ -362,7 +366,7 @@
           type="button"
           @click="checkForUpdates(true)"
           class="text-[9px] font-mono font-bold text-theme-primary opacity-80 hover:opacity-100 transition cursor-pointer"
-          :title="'v' + currentVersionName + ' (انقر للفحص)'"
+          :title="$t('nav.layout.version_click_to_check', { version: currentVersionName })"
         >
           v{{ currentVersionName }}
         </button>

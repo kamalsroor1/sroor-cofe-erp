@@ -35,14 +35,7 @@
       </div>
     </div>
 
-    <!-- Central Platform Whitelabel & Branding Card -->
-    <SuperAdminPlatformSettingsCard
-      :platform-settings="platformSettings"
-      :is-saving-settings="isSavingSettings"
-      :save-success-message="saveSuccessMessage"
-      @update:field="updatePlatformField"
-      @save-settings="savePlatformSettings"
-    />
+    <PlatformSettingsLinkCard v-if="canViewSettings" />
 
     <!-- Central Server & System Information Section -->
     <SuperAdminServerSpecsCard :system-info="systemInfo" />
@@ -50,25 +43,20 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Building2, Layers, Crown } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import SuperAdminMetricsGrid from '../../Components/SuperAdmin/SuperAdminMetricsGrid.vue';
 import SuperAdminPlansDistribution from '../../Components/SuperAdmin/SuperAdminPlansDistribution.vue';
 import SuperAdminRecentTenants from '../../Components/SuperAdmin/SuperAdminRecentTenants.vue';
-import SuperAdminPlatformSettingsCard from '../../Components/SuperAdmin/SuperAdminPlatformSettingsCard.vue';
+import PlatformSettingsLinkCard from '../../Components/SuperAdmin/PlatformSettings/PlatformSettingsLinkCard.vue';
 import SuperAdminServerSpecsCard from '../../Components/SuperAdmin/SuperAdminServerSpecsCard.vue';
 import { useSuperAdminDashboard } from '../../Composables/useSuperAdminDashboard';
+import { useCentralAuthStore } from '../../stores/centralAuth';
+import { CENTRAL_PERMISSIONS } from '../../helpers/centralPermissions';
 
-const {
-  metrics,
-  planStats,
-  recentTenants,
-  systemInfo,
-  isLoading,
-  platformSettings,
-  isSavingSettings,
-  saveSuccessMessage,
-  updatePlatformField,
-  savePlatformSettings,
-} = useSuperAdminDashboard();
+const { metrics, planStats, recentTenants, systemInfo, isLoading } = useSuperAdminDashboard();
+
+const centralAuth = useCentralAuthStore();
+const canViewSettings = computed(() => centralAuth.can(CENTRAL_PERMISSIONS.settingsView));
 </script>

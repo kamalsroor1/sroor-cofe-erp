@@ -5,6 +5,7 @@ import { useCentralAuthStore } from '../stores/centralAuth';
 import { CENTRAL_STORAGE_KEYS, isCentralAppContext, setCentralSessionHandlers } from '../Services/centralApi';
 import { safeCentralRedirect } from '../Composables/useSuperAdminLogin';
 import { trans } from '../helpers/trans';
+import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 
 /**
  * Two disjoint route tables (IDEN-1.9). The server decides the mode:
@@ -21,7 +22,7 @@ const tenantRoutes = [
         name: 'workspace.connect',
         component: () => import('../views/Auth/WorkspaceConnectView.vue'),
         meta: {
-            title: 'الاتصال ببيئة العمل',
+            titleKey: 'nav.page_titles.workspace_connect',
             guestOnly: true,
         },
     },
@@ -30,7 +31,7 @@ const tenantRoutes = [
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),
         meta: {
-            title: 'تسجيل الدخول',
+            titleKey: 'nav.page_titles.login',
             guestOnly: true,
         },
     },
@@ -40,7 +41,7 @@ const tenantRoutes = [
         name: 'dashboard',
         component: () => import('../views/DashboardView.vue'),
         meta: {
-            title: 'لوحة التحكم الرئيسية',
+            titleKey: 'nav.page_titles.dashboard',
             requiresAuth: true,
         },
     },
@@ -49,7 +50,7 @@ const tenantRoutes = [
         name: 'stores.index',
         component: () => import('../views/Stores/StoresView.vue'),
         meta: {
-            title: 'إدارة الفروع والمخازن',
+            titleKey: 'nav.page_titles.stores_index',
             requiresAuth: true,
             permission: 'stores.manage',
         },
@@ -59,7 +60,7 @@ const tenantRoutes = [
         name: 'stores.stocks',
         component: () => import('../views/Stores/StoreStocksView.vue'),
         meta: {
-            title: 'أرصدة الفروع والمخازن',
+            titleKey: 'nav.page_titles.stores_stocks',
             requiresAuth: true,
         },
     },
@@ -68,7 +69,7 @@ const tenantRoutes = [
         name: 'customers.index',
         component: () => import('../views/Customers/CustomersView.vue'),
         meta: {
-            title: 'العملاء وكشوف الحساب',
+            titleKey: 'nav.page_titles.customers_index',
             requiresAuth: true,
             permission: 'customers.manage',
         },
@@ -78,7 +79,7 @@ const tenantRoutes = [
         name: 'customers.statement',
         component: () => import('../views/Customers/CustomerStatementView.vue'),
         meta: {
-            title: 'كشف حساب عميل',
+            titleKey: 'nav.page_titles.customers_statement',
             requiresAuth: true,
             permission: 'customers.manage',
         },
@@ -88,7 +89,7 @@ const tenantRoutes = [
         name: 'suppliers.index',
         component: () => import('../views/Suppliers/SuppliersView.vue'),
         meta: {
-            title: 'الموردين وكشوف الحساب',
+            titleKey: 'nav.page_titles.suppliers_index',
             requiresAuth: true,
             permission: 'suppliers.manage',
         },
@@ -98,7 +99,7 @@ const tenantRoutes = [
         name: 'suppliers.statement',
         component: () => import('../views/Suppliers/SupplierStatementView.vue'),
         meta: {
-            title: 'كشف حساب مورد',
+            titleKey: 'nav.page_titles.suppliers_statement',
             requiresAuth: true,
             permission: 'suppliers.manage',
         },
@@ -108,7 +109,7 @@ const tenantRoutes = [
         name: 'expenses.index',
         component: () => import('../views/Expenses/ExpensesView.vue'),
         meta: {
-            title: 'المصروفات والعهد',
+            titleKey: 'nav.page_titles.expenses_index',
             requiresAuth: true,
             permission: 'expenses.manage',
         },
@@ -118,7 +119,7 @@ const tenantRoutes = [
         name: 'items.index',
         component: () => import('../views/Items/ItemsView.vue'),
         meta: {
-            title: 'الأصناف والمخزون',
+            titleKey: 'nav.page_titles.items_index',
             requiresAuth: true,
             permission: 'items.view',
         },
@@ -128,7 +129,7 @@ const tenantRoutes = [
         name: 'categories.index',
         component: () => import('../views/Items/CategoriesView.vue'),
         meta: {
-            title: 'فئات الأصناف',
+            titleKey: 'nav.page_titles.categories_index',
             requiresAuth: true,
             permission: 'items.view',
         },
@@ -138,7 +139,7 @@ const tenantRoutes = [
         name: 'items.movements',
         component: () => import('../views/Items/ItemMovementsView.vue'),
         meta: {
-            title: 'حركات مخزون الصنف',
+            titleKey: 'nav.page_titles.items_movements',
             requiresAuth: true,
             permission: 'items.view',
         },
@@ -148,7 +149,7 @@ const tenantRoutes = [
         name: 'daily_journal.index',
         component: () => import('../views/DailyJournal/DailyJournalView.vue'),
         meta: {
-            title: 'دفتر اليومية والخزينة',
+            titleKey: 'nav.page_titles.daily_journal_index',
             requiresAuth: true,
             permission: 'daily_journal.view',
         },
@@ -158,7 +159,7 @@ const tenantRoutes = [
         name: 'purchases.index',
         component: () => import('../views/Purchases/PurchasesView.vue'),
         meta: {
-            title: 'المشتريات والتوريد',
+            titleKey: 'nav.page_titles.purchases_index',
             requiresAuth: true,
             permission: 'purchases.view',
         },
@@ -168,7 +169,7 @@ const tenantRoutes = [
         name: 'purchases.create',
         component: () => import('../views/Purchases/CreatePurchaseView.vue'),
         meta: {
-            title: 'فاتورة مشتريات جديدة',
+            titleKey: 'nav.page_titles.purchases_create',
             requiresAuth: true,
             permission: 'purchases.create',
         },
@@ -179,7 +180,7 @@ const tenantRoutes = [
         name: 'purchases.smart_reorder',
         component: () => import('../views/Purchases/SmartReorderView.vue'),
         meta: {
-            title: 'رادار إعادة الطلب الذكي',
+            titleKey: 'nav.page_titles.purchases_smart_reorder',
             requiresAuth: true,
             permission: 'purchases.view',
         },
@@ -189,7 +190,7 @@ const tenantRoutes = [
         name: 'invoices.index',
         component: () => import('../views/Invoices/InvoicesView.vue'),
         meta: {
-            title: 'فواتير المبيعات',
+            titleKey: 'nav.page_titles.invoices_index',
             requiresAuth: true,
             permission: 'invoices.view',
         },
@@ -199,7 +200,7 @@ const tenantRoutes = [
         name: 'invoices.show',
         component: () => import('../views/Invoices/InvoiceShowView.vue'),
         meta: {
-            title: 'معاينة الفاتورة والطباعة',
+            titleKey: 'nav.page_titles.invoices_show',
             requiresAuth: true,
             permission: 'invoices.view',
         },
@@ -209,7 +210,7 @@ const tenantRoutes = [
         name: 'invoices.print',
         component: () => import('../views/Invoices/InvoicePrintView.vue'),
         meta: {
-            title: 'طباعة الفاتورة',
+            titleKey: 'nav.page_titles.invoices_print',
             requiresAuth: true,
             layout: 'blank',
             isPrintView: true,
@@ -221,7 +222,7 @@ const tenantRoutes = [
         name: 'pos.index',
         component: () => import('../views/POS/PosView.vue'),
         meta: {
-            title: 'نقطة البيع السريعة (POS)',
+            titleKey: 'nav.page_titles.pos_index',
             requiresAuth: true,
             permission: 'pos.access',
         },
@@ -231,7 +232,7 @@ const tenantRoutes = [
         name: 'returns.index',
         component: () => import('../views/Returns/ReturnsView.vue'),
         meta: {
-            title: 'مرتجعات المبيعات والمشتريات',
+            titleKey: 'nav.page_titles.returns_index',
             requiresAuth: true,
             permission: 'returns.manage',
         },
@@ -241,7 +242,7 @@ const tenantRoutes = [
         name: 'returns.create',
         component: () => import('../views/Returns/CreateReturnView.vue'),
         meta: {
-            title: 'تسجيل مرتجع جديد',
+            titleKey: 'nav.page_titles.returns_create',
             requiresAuth: true,
             permission: 'returns.manage',
         },
@@ -251,7 +252,7 @@ const tenantRoutes = [
         name: 'stock_transfers.index',
         component: () => import('../views/StockTransfers/StockTransfersView.vue'),
         meta: {
-            title: 'التحويلات المخزنية',
+            titleKey: 'nav.page_titles.stock_transfers_index',
             requiresAuth: true,
             permission: 'transfers.view',
         },
@@ -261,7 +262,7 @@ const tenantRoutes = [
         name: 'stock_transfers.create',
         component: () => import('../views/StockTransfers/CreateStockTransferView.vue'),
         meta: {
-            title: 'إذن تحويل مخزني جديد',
+            titleKey: 'nav.page_titles.stock_transfers_create',
             requiresAuth: true,
             permission: 'stores.manage',
         },
@@ -271,7 +272,7 @@ const tenantRoutes = [
         name: 'coffee_blender.index',
         component: () => import('../views/CoffeeBlender/CoffeeBlenderView.vue'),
         meta: {
-            title: 'معمل تركيب وتجميع المنتجات',
+            titleKey: 'nav.page_titles.coffee_blender_index',
             requiresAuth: true,
             permission: 'items.create',
         },
@@ -281,7 +282,7 @@ const tenantRoutes = [
         name: 'reports.index',
         component: () => import('../views/Reports/ReportsView.vue'),
         meta: {
-            title: 'التقارير المالية والأرباح',
+            titleKey: 'nav.page_titles.reports_index',
             requiresAuth: true,
             permission: 'reports.view',
         },
@@ -291,7 +292,7 @@ const tenantRoutes = [
         name: 'users.index',
         component: () => import('../views/Users/UsersView.vue'),
         meta: {
-            title: 'إدارة المستخدمين والموظفين',
+            titleKey: 'nav.page_titles.users_index',
             requiresAuth: true,
             permission: 'roles.manage',
         },
@@ -301,7 +302,7 @@ const tenantRoutes = [
         name: 'roles.index',
         component: () => import('../views/Roles/RolesView.vue'),
         meta: {
-            title: 'مصفوفة الصلاحيات والأدوار',
+            titleKey: 'nav.page_titles.roles_index',
             requiresAuth: true,
             permission: 'roles.manage',
         },
@@ -311,7 +312,7 @@ const tenantRoutes = [
         name: 'activity-logs.index',
         component: () => import('../views/ActivityLogs/ActivityLogsView.vue'),
         meta: {
-            title: 'سجل التدقيق الأمني والنشاطات',
+            titleKey: 'nav.page_titles.activity_logs_index',
             requiresAuth: true,
             permission: 'logs.view',
         },
@@ -321,7 +322,7 @@ const tenantRoutes = [
         name: 'settings.index',
         component: () => import('../views/Settings/SettingsView.vue'),
         meta: {
-            title: 'إعدادات النظام والمؤسسة',
+            titleKey: 'nav.page_titles.settings_index',
             requiresAuth: true,
             permission: 'settings.manage',
         },
@@ -331,7 +332,7 @@ const tenantRoutes = [
         name: 'profile.show',
         component: () => import('../views/Profile/ProfileView.vue'),
         meta: {
-            title: 'الملف الشخصي والحساب',
+            titleKey: 'nav.page_titles.profile_show',
             requiresAuth: true,
         },
     },
@@ -340,7 +341,7 @@ const tenantRoutes = [
         name: 'trash.index',
         component: () => import('../views/Trash/TrashView.vue'),
         meta: {
-            title: 'سلة المحذوفات',
+            titleKey: 'nav.page_titles.trash_index',
             requiresAuth: true,
             permission: 'trash.access',
         },
@@ -367,11 +368,11 @@ const centralGuest = (path, name, titleKey, loader) => ({
     meta: { titleKey, guestOnly: true, centralGuest: true },
 });
 
-const centralPage = (path, name, titleKey, loader) => ({
+const centralPage = (path, name, titleKey, loader, centralPermission = null) => ({
     path,
     name,
     component: loader,
-    meta: { titleKey, requiresCentralAuth: true },
+    meta: { titleKey, requiresCentralAuth: true, centralPermission },
 });
 
 const centralRoutes = [
@@ -429,6 +430,13 @@ const centralRoutes = [
         'super.page_titles.units',
         () => import('../views/SuperAdmin/SuperAdminUnitsView.vue')
     ),
+    centralPage(
+        '/super-admin/settings',
+        'super_admin.settings',
+        'super.page_titles.settings',
+        () => import('../views/SuperAdmin/SuperAdminSettingsView.vue'),
+        CENTRAL_PERMISSIONS.settingsView
+    ),
     { path: '/:pathMatch(.*)*', name: 'super_admin.not_found', redirect: '/super-admin/dashboard' },
 ];
 
@@ -463,8 +471,8 @@ async function tenantGuard(to, from, next) {
     }
 
     // 2. Set document title
-    const appName = appConfigStore.platformName || 'منظومة ERP';
-    document.title = to.meta.title ? `${to.meta.title} - ${appName}` : appName;
+    const appName = appConfigStore.platformName || trans('nav.page_titles.default_app_name');
+    document.title = to.meta.titleKey ? `${trans(to.meta.titleKey)} - ${appName}` : appName;
 
     // 3. Guest-only check (e.g. Login page)
     if (to.meta.guestOnly && authStore.isAuthenticated) {
@@ -516,6 +524,11 @@ async function centralGuard(to) {
 
     if (to.meta.requiresCentralAuth && !authenticated) {
         return { name: 'super_admin.login', query: { redirect: safeCentralRedirect(to.fullPath) } };
+    }
+
+    // UI gating only; the API enforces the same ability.
+    if (to.meta.centralPermission && !centralAuth.can(to.meta.centralPermission)) {
+        return { name: 'super_admin.dashboard' };
     }
 
     return true;

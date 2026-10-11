@@ -276,7 +276,7 @@ const deleteItem = async (item) => {
   }
 
   const result = await Swal.fire({
-    title: trans('inventory.delete_item_confirm_title', { name: item.name }) || `حذف الصنف (${item.name})؟`,
+    title: trans('inventory.delete_item_confirm_title', { name: item.name }),
     text: trans('inventory.delete_item_confirm_text'),
     icon: 'warning',
     showCancelButton: true,

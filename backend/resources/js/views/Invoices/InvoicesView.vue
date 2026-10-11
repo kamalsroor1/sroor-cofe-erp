@@ -299,9 +299,7 @@ const openPrintReceipt = (id) => {
 
 const cancelInvoice = async (inv) => {
   const result = await Swal.fire({
-    title:
-      trans('invoices.cancel_invoice_confirm_title', { number: inv.invoice_number }) ||
-      `هل أنت متأكد من إلغاء الفاتورة ${inv.invoice_number}؟`,
+    title: trans('invoices.cancel_invoice_confirm_title', { number: inv.invoice_number }),
     text: trans('invoices.cancel_invoice_confirm_text'),
     icon: 'warning',
     showCancelButton: true,
@@ -333,9 +331,12 @@ const cancelInvoice = async (inv) => {
 const bulkPrintReceipts = () =>
   selectedInvoiceIds.value.forEach((id) => window.open(`/invoices/${id}/print`, '_blank'));
 
+const CSV_COLUMN_KEYS = ['number', 'customer', 'phone', 'date', 'payment_method', 'net', 'paid', 'remaining', 'status'];
+const csvHeaderRow = () => CSV_COLUMN_KEYS.map((key) => trans(`invoices.csv_columns.${key}`)).join(',') + '\n';
+
 const bulkExportSelected = () => {
   const selected = invoices.value.filter((inv) => selectedInvoiceIds.value.includes(inv.id));
-  let csv = 'رقم الفاتورة,العميل,الهاتف,التاريخ,طريقة الدفع,الصافي,المدفوع,المتبقي,الحالة\n';
+  let csv = csvHeaderRow();
   selected.forEach((inv) => {
     csv += `"${inv.invoice_number}","${inv.customer_name || ''}","${inv.customer_phone || ''}","${inv.invoice_date}","${inv.payment_type}","${inv.net_total}","${inv.paid_amount}","${inv.remaining_amount}","${inv.status}"\n`;
   });
@@ -349,7 +350,7 @@ const bulkExportSelected = () => {
 const bulkCancelSelected = async () => {
   const count = selectedInvoiceIds.value.length;
   const res = await Swal.fire({
-    title: trans('invoices.bulk_cancel_confirm_title', { count }) || `إلغاء ${count} فواتير محددة؟`,
+    title: trans('invoices.bulk_cancel_confirm_title', { count }),
     text: trans('invoices.bulk_cancel_confirm_text'),
     icon: 'warning',
     showCancelButton: true,
@@ -361,7 +362,7 @@ const bulkCancelSelected = async () => {
     let successCount = 0;
     for (const id of selectedInvoiceIds.value) {
       try {
-        await api.post(`/invoices/${id}/cancel`, { reason: 'إلغاء مجمع من لوحة المبيعات' });
+        await api.post(`/invoices/${id}/cancel`, { reason: trans('invoices.bulk_cancel_reason') });
         successCount++;
       } catch (e) {
         console.error(`Failed to cancel invoice ${id}:`, e);
@@ -370,7 +371,7 @@ const bulkCancelSelected = async () => {
     Swal.fire({
       icon: 'success',
       title: trans('common.success'),
-      text: trans('invoices.bulk_cancel_success', { count: successCount }) || `تم إلغاء ${successCount} فواتير بنجاح.`,
+      text: trans('invoices.bulk_cancel_success', { count: successCount }),
     });
     selectedInvoiceIds.value = [];
     await fetchInvoices(pagination.value.current_page);
@@ -378,7 +379,7 @@ const bulkCancelSelected = async () => {
 };
 
 const exportToExcel = () => {
-  let csv = 'رقم الفاتورة,العميل,الهاتف,التاريخ,طريقة الدفع,الصافي,المدفوع,المتبقي,الحالة\n';
+  let csv = csvHeaderRow();
   invoices.value.forEach((inv) => {
     csv += `"${inv.invoice_number}","${inv.customer_name || ''}","${inv.customer_phone || ''}","${inv.invoice_date}","${inv.payment_type}","${inv.net_total}","${inv.paid_amount}","${inv.remaining_amount}","${inv.status}"\n`;
   });

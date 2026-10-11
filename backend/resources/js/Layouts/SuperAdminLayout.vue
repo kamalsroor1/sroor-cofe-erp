@@ -22,7 +22,9 @@ import {
   X,
   Zap,
   ExternalLink,
+  Settings,
 } from 'lucide-vue-next';
+import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 
 const centralAuth = useCentralAuthStore();
 const route = useRoute();
@@ -55,39 +57,48 @@ const openTelescope = async () => {
   }
 };
 
-const navItems = computed(() => [
-  {
-    name: trans('super.dashboard'),
-    href: '/super-admin/dashboard',
-    icon: BarChart3,
-    active: route.path === '/super-admin' || route.path === '/super-admin/dashboard',
-  },
-  {
-    name: trans('super.tenants'),
-    href: '/super-admin/tenants',
-    icon: Store,
-    active: route.path.startsWith('/super-admin/tenants'),
-  },
-  {
-    name: trans('super.plans'),
-    href: '/super-admin/plans',
-    icon: Layers,
-    active: route.path.startsWith('/super-admin/plans'),
-  },
-  {
-    name: trans('super.nav_units'),
-    href: '/super-admin/units',
-    icon: Scale,
-    active: route.path.startsWith('/super-admin/units'),
-  },
-  {
-    name: trans('super.app_versions'),
-    href: '/super-admin/app-versions',
-    icon: Smartphone,
-    active: route.path.startsWith('/super-admin/app-versions'),
-  },
-  { name: trans('super.nav_telescope'), icon: Activity, external: true, active: false },
-]);
+const navItems = computed(() =>
+  [
+    {
+      name: trans('super.dashboard'),
+      href: '/super-admin/dashboard',
+      icon: BarChart3,
+      active: route.path === '/super-admin' || route.path === '/super-admin/dashboard',
+    },
+    {
+      name: trans('super.tenants'),
+      href: '/super-admin/tenants',
+      icon: Store,
+      active: route.path.startsWith('/super-admin/tenants'),
+    },
+    {
+      name: trans('super.plans'),
+      href: '/super-admin/plans',
+      icon: Layers,
+      active: route.path.startsWith('/super-admin/plans'),
+    },
+    {
+      name: trans('super.nav_units'),
+      href: '/super-admin/units',
+      icon: Scale,
+      active: route.path.startsWith('/super-admin/units'),
+    },
+    {
+      name: trans('super.app_versions'),
+      href: '/super-admin/app-versions',
+      icon: Smartphone,
+      active: route.path.startsWith('/super-admin/app-versions'),
+    },
+    {
+      name: trans('super.nav_settings'),
+      href: '/super-admin/settings',
+      icon: Settings,
+      active: route.path.startsWith('/super-admin/settings'),
+      permission: CENTRAL_PERMISSIONS.settingsView,
+    },
+    { name: trans('super.nav_telescope'), icon: Activity, external: true, active: false },
+  ].filter((item) => !item.permission || centralAuth.can(item.permission))
+);
 
 const handleLogout = async () => {
   await centralAuth.logout();
