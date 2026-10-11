@@ -14,7 +14,7 @@ const JS_ROOT = fileURLToPath(new URL('../../resources/js/', import.meta.url));
 const HELPER = 'helpers/formatters.js';
 
 // TEMPORARY allowlist — Antigravity-owned settings files this lane may not edit.
-const ALLOWLIST = new Set(['Composables/useSettings.js']);
+const ALLOWLIST = new Set([]);
 
 const RAW_AR_LOCALE = [
     /\.toLocale(?:Date|Time)?String\s*\(\s*(['"`])ar\b/,

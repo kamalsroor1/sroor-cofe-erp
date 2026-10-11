@@ -17,17 +17,27 @@ setup('Authenticate & Save Storage State', async ({ page }) => {
     const testPhone = E2E_USER_PHONE;
     const testPassword = E2E_USER_PASSWORD;
 
-    console.log(`\n🔑 Setting up E2E Auth Session with user: ${testPhone}...`);
-
     try {
-        await page.goto('/login', { waitUntil: 'networkidle' });
+        await page.addInitScript(({ tenant }) => {
+            try {
+                localStorage.setItem('active_tenant', tenant);
+                localStorage.setItem('tenant_id', tenant);
+            } catch (_) {}
+        }, { tenant: E2E_WORKSPACE_CODE || 'demo' });
+
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
         await page.waitForSelector('input[type="text"], input[type="tel"], input[name="phone"]', { timeout: 15000 });
 
         // Multi-tenant: the first screen may ask for a workspace code before the login form.
         const workspaceCode = E2E_WORKSPACE_CODE;
         if ((await page.locator('input[type="password"]').count()) === 0) {
-            await page.locator('input[type="text"]').first().fill(workspaceCode);
-            await page.locator('input[type="text"]').first().press('Enter');
+            const codeInput = page.locator('input[type="text"]').first();
+            await codeInput.fill(workspaceCode);
+            await codeInput.press('Enter');
+            const submitBtn = page.locator('button[type="submit"]');
+            if (await submitBtn.isVisible().catch(() => false)) {
+                await submitBtn.click().catch(() => {});
+            }
             await page.locator('input[type="password"]').first().waitFor({ state: 'visible', timeout: 15000 });
         }
 
