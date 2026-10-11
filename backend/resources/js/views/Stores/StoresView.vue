@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
-    <!-- 1. 🔝 Page Header & Action Buttons -->
+    <!-- 1. Page Header & Action Buttons -->
     <PageHeader
       :title="$t('inventory.stores_branches')"
       :subtitle="$t('inventory.stores_branches_subtitle')"
-      :icon="'🏬'"
+      :icon="StoreIcon"
     >
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
@@ -41,24 +41,24 @@
       @manage-staff="openStaffModal"
     />
 
-    <!-- 5. 📝 Create / Edit Store Modal -->
+    <!-- 5. Create / Edit Store Modal -->
     <StoreFormModal
       :show="showStoreModal"
       :editing-store="editingStore"
       :form="form"
       @update:form="Object.assign(form, $event)"
-      :is-submitting="isSubmitting"
+      :submitting="isSubmitting"
       @close="showStoreModal = false"
       @submit="saveStore"
     />
 
-    <!-- 6. 👥 Staff Assignment Modal -->
+    <!-- 6. Staff Assignment Modal -->
     <StoreStaffModal
       :show="showStaffModal"
       :target-store="targetStore"
       :all-users="allUsers"
       v-model="assignedUserIds"
-      :is-submitting="isSubmitting"
+      :submitting="isSubmitting"
       @close="showStaffModal = false"
       @submit="saveStaffAssignment"
     />
@@ -67,7 +67,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
-import { Plus, Package } from 'lucide-vue-next';
+import { Plus, Package, Store as StoreIcon } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
 import api from '../../Services/api';
 import { useTrans } from '../../Composables/useTrans';

@@ -24,18 +24,27 @@
     <TrashFilterBar :search="search" @update:search="updateSearch" />
 
     <!-- Records Table & Mobile Cards -->
-    <TrashTable
-      :records="records"
-      :pagination="pagination"
-      :loading="isLoading"
-      @restore="restoreRecord"
-      @force-delete="forceDeleteRecord"
-      @page-change="changePage"
-    />
+
+    <template v-if="error && (!records || records.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchRecords()" />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchRecords()" />
+      <TrashTable
+        :records="records"
+        :pagination="pagination"
+        :loading="isLoading"
+        @restore="restoreRecord"
+        @force-delete="forceDeleteRecord"
+        @page-change="changePage"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { RefreshCw } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -49,6 +58,8 @@ const {
   search,
   records,
   counts,
+  error,
+  errorMessage,
   isLoading,
   tabsList,
   pagination,

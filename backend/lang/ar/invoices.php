@@ -23,7 +23,7 @@ return [
     'print_a4' => 'طباعة فاتورة رسمية A4',
     'status_confirmed' => 'معتمدة ومسجلة',
     'status_cancelled' => 'ملغاة ومعكوسة',
-    'payment_cash' => 'نقدي (كاش)',
+    'payment_cash' => 'نقدي',
     'payment_credit' => 'آجل (مديونية)',
     'payment_partial' => 'سداد جزئي',
     'cash' => 'نقدي',
@@ -227,4 +227,5 @@ return [
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'payment_ewallet' => 'محفظة إلكترونية',
     'total_net' => 'الصافي',
+    'invoice_with_number' => 'فاتورة #:number',
 ];

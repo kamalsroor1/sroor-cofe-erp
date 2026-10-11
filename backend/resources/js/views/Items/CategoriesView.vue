@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6 font-tajawal transition-colors duration-300">
-    <!-- 1. 🔝 Page Header & Actions -->
+    <!-- 1. Page Header & Actions -->
     <PageHeader
       :title="$t('inventory.categories_management')"
       :subtitle="$t('inventory.categories_subtitle')"
-      :icon="'🗂️'"
+      :icon="Folder"
     >
       <template #actions>
         <BaseButton
@@ -18,7 +18,7 @@
       </template>
     </PageHeader>
 
-    <!-- 2. 🗂️ Categories Grid (With Loading & Empty State) -->
+    <!-- 2. Categories Grid (With Loading & Empty State) -->
     <CategoriesGrid
       :categories="categories"
       :is-loading="isLoading"
@@ -27,7 +27,7 @@
       @delete="deleteCategory"
     />
 
-    <!-- 3. 📝 Create / Edit Category Modal -->
+    <!-- 3. Create / Edit Category Modal -->
     <CategoryFormModal
       :show="showModal"
       :editing-category="editingCategory"
@@ -43,7 +43,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { Plus } from 'lucide-vue-next';
+import { Plus, Folder } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import CategoriesGrid from '../../Components/Categories/CategoriesGrid.vue';
@@ -61,7 +61,7 @@ const formErrors = reactive({});
 
 const form = reactive({
   name: '',
-  icon: '☕',
+  icon: 'Folder',
   sort_order: 0,
   is_active: true,
 });
@@ -81,7 +81,7 @@ const fetchCategories = async () => {
 const openCreateModal = () => {
   editingCategory.value = null;
   form.name = '';
-  form.icon = '☕';
+  form.icon = 'Folder';
   form.sort_order = categories.value.length;
   form.is_active = true;
   Object.keys(formErrors).forEach((k) => delete formErrors[k]);
@@ -91,7 +91,7 @@ const openCreateModal = () => {
 const openEditModal = (cat) => {
   editingCategory.value = cat;
   form.name = cat.name;
-  form.icon = cat.icon || '☕';
+  form.icon = cat.icon || 'Folder';
   form.sort_order = cat.sort_order ?? 0;
   form.is_active = !!cat.is_active;
   Object.keys(formErrors).forEach((k) => delete formErrors[k]);

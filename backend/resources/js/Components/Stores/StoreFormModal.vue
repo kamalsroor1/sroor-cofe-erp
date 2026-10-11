@@ -114,8 +114,8 @@ const emit = defineEmits(['close', 'submit', 'update:form']);
 const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });
 
 const storeTypeOptions = [
-  { value: 'retail_shop', label: '🏬 ' + t('inventory.retail_shop') },
-  { value: 'warehouse', label: '🏭 ' + t('inventory.warehouse') },
-  { value: 'van', label: '🚚 ' + t('inventory.distribution_van') },
+  { value: 'retail_shop', label: t('inventory.retail_shop') },
+  { value: 'warehouse', label: t('inventory.warehouse') },
+  { value: 'van', label: t('inventory.distribution_van') },
 ];
 </script>

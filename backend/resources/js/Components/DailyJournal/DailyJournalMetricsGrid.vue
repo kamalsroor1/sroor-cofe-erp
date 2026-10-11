@@ -12,7 +12,7 @@
         $t('treasury.total_receipts_in')
       }}</span>
       <div class="text-xl font-black text-emerald-500 dark:text-emerald-400 font-mono">
-        +{{ formatMoney(summary.total_cash_in || 0) }}
+        {{ totalInflow > 0 ? '+' : '' }}{{ formatMoney(totalInflow) }}
         <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.inflow_details_sub') }}</span>
@@ -26,7 +26,7 @@
         $t('treasury.total_disbursements_out')
       }}</span>
       <div class="text-xl font-black text-rose-500 dark:text-rose-400 font-mono">
-        -{{ formatMoney(summary.total_cash_out || 0) }}
+        {{ totalOutflow > 0 ? '-' : '' }}{{ formatMoney(totalOutflow) }}
         <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.outflow_details_sub') }}</span>
@@ -39,11 +39,8 @@
       <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">{{
         $t('treasury.net_cash_flow')
       }}</span>
-      <div
-        class="text-xl font-black font-mono"
-        :class="(summary.net_cash_today || 0) >= 0 ? 'text-cyan-500 dark:text-cyan-400' : 'text-theme-primary'"
-      >
-        {{ (summary.net_cash_today || 0) > 0 ? '+' : '' }}{{ formatMoney(summary.net_cash_today || 0) }}
+      <div class="text-xl font-black font-mono" :class="netCashClass">
+        {{ netCashDisplay }}
         <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.net_cash_flow_sub') }}</span>
@@ -64,13 +61,41 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
 
-defineProps({
+const props = defineProps({
   summary: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
+});
+
+const totalInflow = computed(() => {
+  const val = Number(props.summary.total_cash_in || 0);
+  return Math.abs(val) < 0.0005 ? 0 : val;
+});
+
+const totalOutflow = computed(() => {
+  const val = Number(props.summary.total_cash_out || 0);
+  return Math.abs(val) < 0.0005 ? 0 : val;
+});
+
+const netCash = computed(() => {
+  const val = Number(props.summary.net_cash_today || 0);
+  return Math.abs(val) < 0.0005 ? 0 : val;
+});
+
+const netCashClass = computed(() => {
+  if (netCash.value > 0) return 'text-emerald-500 dark:text-emerald-400';
+  if (netCash.value < 0) return 'text-rose-500 dark:text-rose-400';
+  return 'text-slate-700 dark:text-slate-300';
+});
+
+const netCashDisplay = computed(() => {
+  if (netCash.value > 0) return `+${formatMoney(netCash.value)}`;
+  if (netCash.value < 0) return formatMoney(netCash.value);
+  return formatMoney(0);
 });
 </script>

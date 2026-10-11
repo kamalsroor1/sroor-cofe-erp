@@ -4,11 +4,13 @@
     :to="to"
     :type="to ? undefined : type"
     :disabled="to ? undefined : disabled || loading"
-    class="font-tajawal font-bold inline-flex items-center justify-center gap-2 transition-all duration-150 select-none cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+    :aria-label="ariaLabel || undefined"
+    class="base-btn font-tajawal font-bold inline-flex items-center justify-center gap-2 transition-all duration-150 select-none cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
     :class="[
       sizeClasses[size] || sizeClasses.md,
       active ? activeClasses : variantClasses[variant] || variantClasses.default,
       fullWidth ? 'w-full' : '',
+      isIconOnly ? 'coarse:min-w-[44px] coarse:min-h-[44px]' : '',
       customClass,
     ]"
     @click="$emit('click', $event)"
@@ -40,10 +42,13 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed, useSlots } from 'vue';
+
+const props = defineProps({
   to: { type: [String, Object], default: null },
   type: { type: String, default: 'button' },
   label: { type: String, default: '' },
+  ariaLabel: { type: String, default: '' },
   variant: {
     type: String,
     default: 'default', // 'primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost' | 'gradient' | 'default'
@@ -66,10 +71,13 @@ defineProps({
 
 defineEmits(['click']);
 
+const slots = useSlots();
+const isIconOnly = computed(() => !props.label && !slots.default);
+
 const sizeClasses = {
-  sm: 'min-h-[36px] px-3 py-1.5 text-xs rounded-xl',
-  md: 'min-h-[44px] px-4 py-2.5 text-xs rounded-xl',
-  lg: 'min-h-[52px] px-6 py-3 text-sm rounded-2xl font-black',
+  sm: 'min-h-[36px] coarse:min-h-[44px] coarse:min-w-[44px] base-btn-sm px-3 py-1.5 text-xs rounded-xl',
+  md: 'min-h-[44px] coarse:min-w-[44px] px-4 py-2.5 text-xs rounded-xl',
+  lg: 'min-h-[52px] coarse:min-w-[44px] px-6 py-3 text-sm rounded-2xl font-black',
   icon: 'min-h-[44px] min-w-[44px] p-2.5 rounded-xl',
 };
 

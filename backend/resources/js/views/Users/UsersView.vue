@@ -36,15 +36,26 @@
     />
 
     <!-- Users Table & Mobile Cards -->
-    <UsersTable
-      :users="users"
-      :pagination="pagination"
-      :loading="isLoading"
-      @edit="openEditModal"
-      @delete="deleteUser"
-      @toggle-active="toggleActive"
-      @page-change="changePage"
-    />
+
+    <template v-if="error && (!users || users.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchUsers(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchUsers(pagination?.current_page || 1)" />
+      <UsersTable
+        :users="users"
+        :pagination="pagination"
+        :loading="isLoading"
+        @edit="openEditModal"
+        @delete="deleteUser"
+        @toggle-active="toggleActive"
+        @page-change="changePage"
+      />
+    </template>
 
     <!-- Create / Edit User Modal -->
     <UserFormModal
@@ -62,6 +73,8 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ShieldCheck, UserPlus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -74,6 +87,8 @@ const {
   users,
   rolesList,
   storesList,
+  error,
+  errorMessage,
   isLoading,
   isSubmitting,
   filters,
@@ -81,6 +96,7 @@ const {
   showModal,
   isEditing,
   form,
+  fetchUsers,
   updateSearch,
   updateRoleFilter,
   updateFormField,

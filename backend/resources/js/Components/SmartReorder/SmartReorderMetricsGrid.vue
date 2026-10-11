@@ -1,9 +1,9 @@
 <template>
-  <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div v-if="loading" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
     <StatCardSkeleton v-for="i in 4" :key="i" />
   </div>
 
-  <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
     <!-- Critical Items -->
     <div
       class="p-4 rounded-2xl bg-rose-50/60 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-500/30 shadow-sm dark:shadow-md space-y-1"

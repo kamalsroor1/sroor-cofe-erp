@@ -47,18 +47,27 @@
     />
 
     <!-- Reorder Suggestions Table & Mobile Cards -->
-    <SmartReorderTable
-      :suggestions="suggestions"
-      :selected-ids="selectedIds"
-      :is-all-selected="isAllSelected"
-      :loading="isLoading"
-      @toggle-select-all="toggleSelectAll"
-      @toggle-item="toggleItem"
-    />
+
+    <template v-if="error && (!suggestions || suggestions.length === 0)">
+      <ErrorState data-testid="error-state" :message="errorMessage" @retry="fetchSuggestions()" />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchSuggestions()" />
+      <SmartReorderTable
+        :suggestions="suggestions"
+        :selected-ids="selectedIds"
+        :is-all-selected="isAllSelected"
+        :loading="isLoading"
+        @toggle-select-all="toggleSelectAll"
+        @toggle-item="toggleItem"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
 import { ArrowRight, ShoppingCart } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
@@ -74,6 +83,8 @@ const {
   targetCoverDays,
   selectedUrgency,
   searchQuery,
+  error,
+  errorMessage,
   isLoading,
   selectedItems,
   selectedIds,

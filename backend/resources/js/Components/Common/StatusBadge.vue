@@ -4,7 +4,15 @@ import { computed } from 'vue';
 const props = defineProps({
   label: {
     type: String,
-    required: true,
+    default: '',
+  },
+  shortLabel: {
+    type: String,
+    default: '',
+  },
+  short: {
+    type: Boolean,
+    default: false,
   },
   variant: {
     type: String,
@@ -20,6 +28,20 @@ const props = defineProps({
   },
 });
 
+const displayLabel = computed(() => {
+  if (props.shortLabel) {
+    return props.shortLabel;
+  }
+  const text = props.label || '';
+  if (!text) return '';
+
+  // Shorter labels normalization (G9)
+  if (props.short) {
+    return text.replace(/\s*\([^)]*\)/g, '').trim();
+  }
+  return text;
+});
+
 const variantClasses = computed(() => {
   switch (props.variant) {
     case 'success':
@@ -27,7 +49,7 @@ const variantClasses = computed(() => {
     case 'danger':
       return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20';
     case 'warning':
-      return 'bg-theme-light text-theme-primary text-theme-primary border-theme-border';
+      return 'bg-theme-light text-theme-primary border-theme-border';
     case 'info':
       return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
     case 'primary':
@@ -74,10 +96,13 @@ const sizeClass = computed(() => {
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 font-tajawal font-black border tracking-tight shrink-0 select-none"
+    class="inline-flex items-center gap-1.5 font-tajawal font-black border tracking-tight shrink-0 select-none whitespace-nowrap"
     :class="[variantClasses, sizeClass]"
+    :title="label || undefined"
   >
     <span v-if="dot" class="w-1.5 h-1.5 rounded-full shrink-0" :class="dotColor"></span>
-    <span>{{ label }}</span>
+    <slot>
+      <span>{{ displayLabel }}</span>
+    </slot>
   </span>
 </template>
