@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Models\User;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +38,22 @@ class PaymentService
     }
 
     /**
+     * BUG-01: the branch whose drawer handled the cash: an explicit store_id, else the
+     * active store of the request (X-Store-Id, via the session), else the store of the
+     * linked invoice / purchase. Shift and daily-journal cash totals are per store.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function drawerStoreId(array $data, mixed $documentStoreId): ?int
+    {
+        $user = Auth::user();
+        $activeStoreId = $user instanceof User ? $user->getCurrentStore()?->id : null;
+        $storeId = $data['store_id'] ?? $activeStoreId ?? $documentStoreId;
+
+        return is_numeric($storeId) ? (int) $storeId : null;
+    }
+
+    /**
      * Record a payment voucher from a customer (for an invoice or on account)
      */
     public function recordCustomerPayment(array $data): Payment
@@ -46,8 +63,10 @@ class PaymentService
             $amount = $data['amount'];
 
             $invoiceId = $data['invoice_id'] ?? null;
+            $documentStoreId = null;
             if ($invoiceId) {
                 $invoice = Invoice::where('id', $invoiceId)->lockForUpdate()->firstOrFail();
+                $documentStoreId = $invoice->store_id;
                 $newPaid = bcadd($invoice->paid_amount, $amount, 3);
                 $newRemaining = bcsub($invoice->net_total, $newPaid, 3);
 
@@ -71,6 +90,7 @@ class PaymentService
                 'supplier_id' => null,
                 'invoice_id' => $invoiceId,
                 'purchase_id' => null,
+                'store_id' => $this->drawerStoreId($data, $documentStoreId),
                 'user_id' => $this->actorId($data),
                 'amount' => $amount,
                 'payment_date' => $data['payment_date'] ?? $this->tenantClock->businessDate(),
@@ -102,8 +122,10 @@ class PaymentService
             $amount = $data['amount'];
 
             $purchaseId = $data['purchase_id'] ?? null;
+            $documentStoreId = null;
             if ($purchaseId) {
                 $purchase = Purchase::where('id', $purchaseId)->lockForUpdate()->firstOrFail();
+                $documentStoreId = $purchase->store_id;
                 $newPaid = bcadd($purchase->paid_amount, $amount, 3);
                 $newRemaining = bcsub($purchase->net_total, $newPaid, 3);
 
@@ -127,6 +149,7 @@ class PaymentService
                 'supplier_id' => $supplier->id,
                 'invoice_id' => null,
                 'purchase_id' => $purchaseId,
+                'store_id' => $this->drawerStoreId($data, $documentStoreId),
                 'user_id' => $this->actorId($data),
                 'amount' => $amount,
                 'payment_date' => $data['payment_date'] ?? $this->tenantClock->businessDate(),

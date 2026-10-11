@@ -81,6 +81,8 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
         'api.super_admin.tenants.retry_provisioning',
         // W2 batch 4 review: the legacy platform units write.
         'api.super_admin.units.update',
+        // W2 batch 5 (OPS-9): unarchive (DELETE = archive is listed above).
+        'api.super_admin.tenants.unarchive',
     ];
 
     protected function setUp(): void
@@ -289,6 +291,7 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
             'toggle status' => ['POST', '/toggle-status'],
             'override feature' => ['POST', '/override-feature'],
             'update tenant units' => ['POST', '/update-units'],
+            'unarchive' => ['POST', '/unarchive'],
         ];
     }
 
@@ -308,11 +311,12 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
         $tenant = $this->createTenant();
         $headers = $this->steppedUpHeaders($this->centralSuperAdmin());
 
-        // Deletion stays disabled (OPS-11): past the step-up gate the controller answers its own 403.
+        // OPS-9: past the step-up gate the archive request is validated (typed shop code +
+        // expected status), never a step-up refusal.
         $this->deleteJson('/api/v1/super-admin/tenants/'.$tenant->getTenantKey(), [], $headers)
-            ->assertForbidden()
+            ->assertUnprocessable()
             ->assertJsonMissingPath('error_code')
-            ->assertJsonPath('message', __('super.tenant_delete_disabled'));
+            ->assertJsonValidationErrors(['confirm_code', 'expected_status']);
     }
 
     public function test_unknown_tenant_is_a_translated_404_without_internals(): void

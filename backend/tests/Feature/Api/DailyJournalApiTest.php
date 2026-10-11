@@ -113,8 +113,8 @@ class DailyJournalApiTest extends TenantTestCase
             'is_active' => true,
         ]);
 
-        // 2. Cash Invoice: Net 300, Paid 300
-        Invoice::create([
+        // 2. Cash Invoice: Net 300, Paid 300 (+ the sale voucher InvoiceService writes with it)
+        $cashInvoice = Invoice::create([
             'store_id' => $this->mainStore->id,
             'customer_id' => $customer->id,
             'user_id' => $this->adminUser->id,
@@ -128,6 +128,15 @@ class DailyJournalApiTest extends TenantTestCase
             'remaining_amount' => 0.000,
             'payment_type' => 'cash',
             'status' => 'confirmed',
+        ]);
+        Payment::create([
+            'payment_number' => Payment::SALE_NUMBER_PREFIX.'101',
+            'user_id' => $this->adminUser->id,
+            'customer_id' => $customer->id,
+            'invoice_id' => $cashInvoice->id,
+            'amount' => '300.000',
+            'payment_method' => 'cash',
+            'payment_date' => $today,
         ]);
 
         // 3. Customer Cash Payment: 200

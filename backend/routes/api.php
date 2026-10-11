@@ -50,8 +50,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
     Route::get('/central/tenants/resolve', [CentralTenantResolverController::class, 'resolve'])->middleware('throttle:tenant-resolve')->name('api.central.tenants.resolve');
     Route::get('/app/version', [AppUpdateController::class, 'checkVersion'])->middleware('throttle:public-api')->name('api.app.version');
     Route::get('/app/check-update', [AppUpdateController::class, 'checkVersion'])->middleware('throttle:public-api')->name('api.app.check_update');
-    Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->middleware('throttle:public-api')->name('api.app.download_apk');
-    Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->middleware('throttle:public-api')->name('api.app.download_latest_apk');
+    Route::get('/app/download-apk', [AppUpdateController::class, 'downloadApk'])->middleware(['throttle:public-api', 'throttle:app-download'])->name('api.app.download_apk');
+    Route::get('/app/download-latest-apk', [AppUpdateController::class, 'downloadApk'])->middleware(['throttle:public-api', 'throttle:app-download'])->name('api.app.download_latest_apk');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:tenant-login')->name('api.auth.login');
     Route::get('/auth/options', [AuthController::class, 'authOptions'])->middleware('throttle:public-api')->name('api.auth.options');
 
@@ -81,9 +81,11 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // Permissions & Roles Tree
         Route::get('/permissions', [PermissionApiController::class, 'index'])->name('api.permissions.index');
 
+        // STOR-2: `store.active` resolves + access-checks the branch (X-Store-Id) of every branch-scoped
+        // route below; `store.active:concrete` (single-branch writes) also refuses `all` with 403.
         // High-Performance Consolidated Dashboard Summary
-        Route::get('/dashboard', [DashboardApiController::class, 'index'])->name('api.dashboard.index');
-        Route::get('/dashboard/summary', [DashboardApiController::class, 'index'])->name('api.dashboard.summary');
+        Route::get('/dashboard', [DashboardApiController::class, 'index'])->name('api.dashboard.index')->middleware('store.active');
+        Route::get('/dashboard/summary', [DashboardApiController::class, 'index'])->name('api.dashboard.summary')->middleware('store.active');
 
         // Stores & Branches (CRUD, Stocks & Switching)
         Route::get('/stores', [StoreController::class, 'index'])->name('api.stores.index');
@@ -111,7 +113,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('api.customers.update');
         Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('api.customers.destroy');
         Route::patch('/customers/{id}/toggle-active', [CustomerController::class, 'toggleActive'])->name('api.customers.toggle_active');
-        Route::post('/customers/{id}/collect-payment', [CustomerController::class, 'collectPayment'])->name('api.customers.collect_payment');
+        Route::post('/customers/{id}/collect-payment', [CustomerController::class, 'collectPayment'])->name('api.customers.collect_payment')->middleware('store.active:concrete');
         Route::get('/customers/{id}/statement', [CustomerController::class, 'statement'])->name('api.customers.statement');
 
         // Suppliers & Statements
@@ -121,14 +123,14 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->name('api.suppliers.update');
         Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('api.suppliers.destroy');
         Route::patch('/suppliers/{id}/toggle-active', [SupplierController::class, 'toggleActive'])->name('api.suppliers.toggle_active');
-        Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('api.suppliers.pay');
+        Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('api.suppliers.pay')->middleware('store.active:concrete');
         Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->name('api.suppliers.statement');
         // Purchases & Coffee Bean Inbound & Smart Reorder
-        Route::get('/purchases', [PurchaseController::class, 'index'])->name('api.purchases.index');
-        Route::get('/purchases/smart-reorder', [PurchaseController::class, 'smartReorder'])->name('api.purchases.smart_reorder');
-        Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->name('api.purchases.show');
-        Route::post('/purchases', [PurchaseController::class, 'store'])->name('api.purchases.store');
-        Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->name('api.purchases.cancel');
+        Route::get('/purchases', [PurchaseController::class, 'index'])->name('api.purchases.index')->middleware('store.active');
+        Route::get('/purchases/smart-reorder', [PurchaseController::class, 'smartReorder'])->name('api.purchases.smart_reorder')->middleware('store.active');
+        Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->name('api.purchases.show')->middleware('store.active');
+        Route::post('/purchases', [PurchaseController::class, 'store'])->name('api.purchases.store')->middleware('store.active:concrete');
+        Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->name('api.purchases.cancel')->middleware('store.active');
 
         // Items & Stock by Branch & Low Stock Radar & Movements
         Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
@@ -148,66 +150,66 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::delete('/categories/{id}', [CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
 
         // POS & Sales Invoices & WhatsApp
-        Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index');
-        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show');
-        Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store');
-        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel');
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index')->middleware('store.active');
+        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('api.invoices.show')->middleware('store.active');
+        Route::post('/invoices', [InvoiceController::class, 'store'])->name('api.invoices.store')->middleware('store.active:concrete');
+        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('api.invoices.cancel')->middleware('store.active');
 
         // POS Fast Operations
-        Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap');
-        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout');
+        Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap')->middleware('store.active');
+        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout')->middleware('store.active:concrete');
         Route::post('/pos/quick-customer', [PosController::class, 'quickCustomer'])->name('api.pos.quick_customer');
-        Route::get('/pos/last-price', [PosController::class, 'lastPrice'])->name('api.pos.last_price');
+        Route::get('/pos/last-price', [PosController::class, 'lastPrice'])->name('api.pos.last_price')->middleware('store.active');
         // POSB-6: quick keys of the active store (pos.access + store access).
-        Route::get('/pos/quick-keys', [PosQuickKeyController::class, 'index'])->name('api.pos.quick_keys.index');
+        Route::get('/pos/quick-keys', [PosQuickKeyController::class, 'index'])->name('api.pos.quick_keys.index')->middleware('store.active');
 
         // Payments & Vouchers (Customer Receipts / Supplier Disbursements)
-        Route::get('/payments', [PaymentController::class, 'index'])->name('api.payments.index');
-        Route::post('/payments/customer-receipt', [PaymentController::class, 'customerReceipt'])->name('api.payments.customer_receipt');
-        Route::post('/payments/supplier-voucher', [PaymentController::class, 'supplierVoucher'])->name('api.payments.supplier_voucher');
+        Route::get('/payments', [PaymentController::class, 'index'])->name('api.payments.index')->middleware('store.active');
+        Route::post('/payments/customer-receipt', [PaymentController::class, 'customerReceipt'])->name('api.payments.customer_receipt')->middleware('store.active:concrete');
+        Route::post('/payments/supplier-voucher', [PaymentController::class, 'supplierVoucher'])->name('api.payments.supplier_voucher')->middleware('store.active:concrete');
 
         // Cashier Shifts & Z-Report & Daily Journal
-        Route::get('/shifts', [ShiftController::class, 'index'])->name('api.shifts.index');
-        Route::get('/shifts/current', [ShiftController::class, 'current'])->name('api.shifts.current');
+        Route::get('/shifts', [ShiftController::class, 'index'])->name('api.shifts.index')->middleware('store.active');
+        Route::get('/shifts/current', [ShiftController::class, 'current'])->name('api.shifts.current')->middleware('store.active');
         // QA-2 / Q10 (CTO): opening and closing a shift requires daily_journal.close_shift.
-        Route::post('/shifts/open', [ShiftController::class, 'open'])->name('api.shifts.open')->middleware('can:daily_journal.close_shift');
-        Route::post('/shifts/close', [ShiftController::class, 'close'])->name('api.shifts.close')->middleware('can:daily_journal.close_shift');
-        Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport'])->name('api.shifts.z_report');
-        Route::get('/daily-journal', [DailyJournalController::class, 'index'])->name('api.daily_journal.index');
+        Route::post('/shifts/open', [ShiftController::class, 'open'])->name('api.shifts.open')->middleware('store.active:concrete')->middleware('can:daily_journal.close_shift');
+        Route::post('/shifts/close', [ShiftController::class, 'close'])->name('api.shifts.close')->middleware('store.active:concrete')->middleware('can:daily_journal.close_shift');
+        Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport'])->name('api.shifts.z_report')->middleware('store.active');
+        Route::get('/daily-journal', [DailyJournalController::class, 'index'])->name('api.daily_journal.index')->middleware('store.active');
 
         // Expenses & Petty Cash
-        Route::get('/expenses', [ExpenseController::class, 'index'])->name('api.expenses.index');
-        Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->name('api.expenses.show');
-        Route::post('/expenses', [ExpenseController::class, 'store'])->name('api.expenses.store');
-        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('api.expenses.update');
-        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('api.expenses.destroy');
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('api.expenses.index')->middleware('store.active');
+        Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->name('api.expenses.show')->middleware('store.active');
+        Route::post('/expenses', [ExpenseController::class, 'store'])->name('api.expenses.store')->middleware('store.active:concrete');
+        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('api.expenses.update')->middleware('store.active');
+        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('api.expenses.destroy')->middleware('store.active');
 
         // Treasury & Quick Financial Stats
-        Route::get('/treasury/summary', [TreasuryController::class, 'summary'])->name('api.treasury.summary');
+        Route::get('/treasury/summary', [TreasuryController::class, 'summary'])->name('api.treasury.summary')->middleware('store.active');
 
         // Profit & Loss Reports & Business Analytics
-        Route::get('/reports/summary', [ReportController::class, 'summary'])->name('api.reports.summary');
-        Route::get('/reports/comprehensive', [ReportController::class, 'comprehensive'])->name('api.reports.comprehensive');
-        Route::get('/reports/items', [ReportController::class, 'items'])->name('api.reports.items');
-        Route::get('/reports/stores', [ReportController::class, 'stores'])->name('api.reports.stores');
-        Route::get('/reports/customers', [ReportController::class, 'customers'])->name('api.reports.customers');
-        Route::get('/reports/expenses', [ReportController::class, 'expenses'])->name('api.reports.expenses');
-        Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('api.reports.inventory');
-        Route::get('/reports/treasury', [ReportController::class, 'treasury'])->name('api.reports.treasury');
-        Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items');
-        Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card');
+        Route::get('/reports/summary', [ReportController::class, 'summary'])->name('api.reports.summary')->middleware('store.active');
+        Route::get('/reports/comprehensive', [ReportController::class, 'comprehensive'])->name('api.reports.comprehensive')->middleware('store.active');
+        Route::get('/reports/items', [ReportController::class, 'items'])->name('api.reports.items')->middleware('store.active');
+        Route::get('/reports/stores', [ReportController::class, 'stores'])->name('api.reports.stores')->middleware('store.active');
+        Route::get('/reports/customers', [ReportController::class, 'customers'])->name('api.reports.customers')->middleware('store.active');
+        Route::get('/reports/expenses', [ReportController::class, 'expenses'])->name('api.reports.expenses')->middleware('store.active');
+        Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('api.reports.inventory')->middleware('store.active');
+        Route::get('/reports/treasury', [ReportController::class, 'treasury'])->name('api.reports.treasury')->middleware('store.active');
+        Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items')->middleware('store.active');
+        Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card')->middleware('store.active');
 
         // Returns (Sales & Purchase Returns)
-        Route::get('/returns', [ReturnController::class, 'index'])->name('api.returns.index');
-        Route::get('/returns/{id}', [ReturnController::class, 'show'])->name('api.returns.show');
-        Route::post('/returns', [ReturnController::class, 'store'])->name('api.returns.store');
-        Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->name('api.returns.destroy');
+        Route::get('/returns', [ReturnController::class, 'index'])->name('api.returns.index')->middleware('store.active');
+        Route::get('/returns/{id}', [ReturnController::class, 'show'])->name('api.returns.show')->middleware('store.active');
+        Route::post('/returns', [ReturnController::class, 'store'])->name('api.returns.store')->middleware('store.active:concrete');
+        Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->name('api.returns.destroy')->middleware('store.active');
 
         // Stock Transfers between stores/branches
-        Route::get('/transfers', [StockTransferController::class, 'index'])->name('api.transfers.index');
-        Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->name('api.transfers.show');
-        Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store');
-        Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel');
+        Route::get('/transfers', [StockTransferController::class, 'index'])->name('api.transfers.index')->middleware('store.active');
+        Route::get('/transfers/{id}', [StockTransferController::class, 'show'])->name('api.transfers.show')->middleware('store.active');
+        Route::post('/transfers', [StockTransferController::class, 'store'])->name('api.transfers.store')->middleware('store.active:concrete');
+        Route::post('/transfers/{id}/cancel', [StockTransferController::class, 'cancel'])->name('api.transfers.cancel')->middleware('store.active');
 
         // Coffee Blender Engine & Custom Roasting Studio
         Route::post('/coffee-blender/calculate', [CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate');

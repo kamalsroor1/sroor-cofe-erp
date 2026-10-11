@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
+use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\StoreAccess;
@@ -15,6 +16,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
@@ -78,6 +80,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             before: AuthenticatesRequests::class,
             prepend: AuthenticateCentral::class,
+        );
+        // N6: the step-up check (403 central_auth.step_up_required) runs before any route
+        // throttle, so requests refused for a missing second factor never spend the tight
+        // budget of a destructive route (archive: throttle:6,1). Only central routes use it.
+        $middleware->prependToPriorityList(
+            before: ThrottleRequests::class,
+            prepend: RequireRecentTwoFactor::class,
         );
 
         $middleware->alias([

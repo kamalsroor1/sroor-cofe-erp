@@ -247,6 +247,11 @@ class AppServiceProvider extends ServiceProvider
                 ->by('public-api|'.$endpoint.'|'.$request->ip());
         });
 
+        // L2: release binary downloads, one bucket per IP shared by both download routes (each hit
+        // streams a large file). config rate_limits.app_download.per_hour (default 10).
+        RateLimiter::for('app-download', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.app_download.per_hour', 10))
+            ->by('app-download|'.$request->ip()));
+
         // Central workspace resolver: caps workspace-code enumeration (CTO W1 Q1: 30/min per IP).
         // IDEN-4.6 ext: the code of a tenant with a raised limit uses its own bucket, so the raise
         // never helps probing other codes (those keep spending the shared per-IP bucket).

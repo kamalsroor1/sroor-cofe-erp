@@ -7,8 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Shifts\GetDailyJournalAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GetDailyJournalRequest;
-use App\Models\Store;
-use App\Support\ClientStoreGuard;
+use App\Support\ActiveStore;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 
@@ -22,14 +21,13 @@ final class DailyJournalController extends Controller
     /**
      * Get Daily Journal ledger and cash metrics
      */
-    public function index(GetDailyJournalRequest $request): JsonResponse
+    public function index(GetDailyJournalRequest $request, ActiveStore $activeStore): JsonResponse
     {
         $date = (string) $request->input('date', $this->tenantClock->today());
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
 
-        $journal = $this->getDailyJournalAction->execute($date, $storeId ? (int) $storeId : null);
+        // STOR-2: one branch's journal: the active store (a store_id is access-checked, 403;
+        // `all` without a concrete store_id is 422).
+        $journal = $this->getDailyJournalAction->execute($date, $activeStore->singleStoreId($request));
 
         return response()->json([
             'success' => true,

@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Models\AppVersion;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TenantTestCase;
 
 /**
@@ -20,11 +21,35 @@ class AppUpdateApiTest extends TenantTestCase
     {
         parent::setUp();
         AppVersion::query()->delete();
+        // APP-3 extension: binaries live on the private release disk (legacy public root faked too).
+        Storage::fake(AppVersion::RELEASE_DISK);
+        Storage::fake(AppVersion::LEGACY_RELEASE_DISK);
+    }
+
+    /**
+     * A release as the upload flow stores it: binary on the private release disk, size and
+     * SHA-256 of that binary. Only such releases are ever advertised (W1 Q7).
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function publishedRelease(array $attributes, string $content = 'FAKE_RELEASE_BINARY'): AppVersion
+    {
+        $platform = (string) ($attributes['platform'] ?? 'android');
+        $path = 'apks/'.$platform.'/'.strtolower((string) Str::ulid()).($platform === 'windows' ? '.exe' : '.apk');
+        Storage::disk(AppVersion::RELEASE_DISK)->put($path, $content);
+
+        return AppVersion::create($attributes + [
+            'apk_path' => $path,
+            'apk_filename' => 'release-'.$platform.'.bin',
+            'apk_size_bytes' => strlen($content),
+            'apk_checksum' => hash('sha256', $content),
+            'published_at' => now(),
+        ]);
     }
 
     public function test_check_version_returns_no_update_when_app_is_current(): void
     {
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '1.0.0',
             'version_code' => 1,
@@ -46,7 +71,7 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_check_version_returns_optional_update_when_newer_version_exists(): void
     {
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '1.1.0',
             'version_code' => 2,
@@ -70,7 +95,7 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_check_version_returns_force_update_when_below_min_version(): void
     {
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '2.0.0',
             'version_code' => 10,
@@ -91,7 +116,7 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_inactive_releases_are_ignored(): void
     {
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '2.0.0-beta',
             'version_code' => 99,
@@ -110,7 +135,7 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_platform_isolation(): void
     {
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'windows',
             'version_name' => '3.0.0',
             'version_code' => 30,
@@ -135,26 +160,23 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_check_version_exposes_sha256_checksum_for_windows_release(): void
     {
-        $checksum = hash('sha256', 'FAKE_WINDOWS_INSTALLER');
-
-        AppVersion::create([
+        $release = $this->publishedRelease([
             'platform' => 'windows',
             'version_name' => '3.1.0',
-            'version_code' => 31,
+            'version_code' => 3001000,
             'release_notes_ar' => 'تحديث ويندوز موقع',
-            'apk_path' => 'apks/sroor-erp-setup-3.1.0.exe',
-            'apk_filename' => 'sroor-erp-setup-3.1.0.exe',
-            'apk_size_bytes' => 22,
-            'apk_checksum' => $checksum,
             'is_active' => true,
-            'published_at' => now(),
-        ]);
+        ], 'FAKE_WINDOWS_INSTALLER');
+        $checksum = hash('sha256', 'FAKE_WINDOWS_INSTALLER');
+        $this->assertSame($checksum, $release->apk_checksum);
 
         $response = $this->getJson('/api/v1/app/check-update?platform=windows&version_code=1&version_name=1.0.0');
 
         $response->assertStatus(200)
             ->assertJsonPath('has_update', true)
-            ->assertJsonPath('checksum', $checksum);
+            ->assertJsonPath('checksum', $checksum)
+            ->assertJsonPath('checksum_algorithm', 'sha256')
+            ->assertJsonPath('file_size_bytes', 22);
 
         $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', (string) $response->json('checksum'));
     }
@@ -169,34 +191,41 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_download_apk_serves_binary_when_file_exists(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->put('apks/sroor-erp-v1.1.apk', 'FAKE_APK_CONTENT');
-
-        AppVersion::create([
+        $release = $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '1.1.0',
             'version_code' => 2,
             'release_notes_ar' => 'إصدار للتنزيل',
-            'apk_path' => 'apks/sroor-erp-v1.1.apk',
             'apk_filename' => 'sroor-erp-v1.1.apk',
             'is_active' => true,
             'download_count' => 0,
-            'published_at' => now(),
-        ]);
+        ], 'FAKE_APK_CONTENT');
 
         $response = $this->get('/api/v1/app/download-apk?platform=android');
 
         $response->assertStatus(200)
-            ->assertHeader('Content-Type', 'application/vnd.android.package-archive');
+            ->assertHeader('Content-Type', 'application/vnd.android.package-archive')
+            ->assertHeader('X-Checksum-Sha256', hash('sha256', 'FAKE_APK_CONTENT'));
+        $this->assertSame(1, (int) $release->fresh()?->download_count);
     }
 
     public function test_download_apk_throws_404_when_valid_platform_has_no_apk_file(): void
     {
-        Storage::fake('public');
+        // A valid platform whose only release row has no binary on any release disk.
+        AppVersion::create([
+            'platform' => 'windows',
+            'version_name' => '1.0.0',
+            'version_code' => 1000000,
+            'release_notes_ar' => 'بدون ملف',
+            'apk_path' => 'apks/windows/missing.exe',
+            'apk_size_bytes' => 10,
+            'apk_checksum' => hash('sha256', 'missing'),
+            'is_active' => true,
+        ]);
 
-        $response = $this->getJson('/api/v1/app/download-apk?platform=ios');
-
-        $response->assertStatus(404);
+        $this->getJson('/api/v1/app/download-apk?platform=windows')
+            ->assertStatus(404)
+            ->assertJson(['message' => __('app_update.file_not_available')]);
     }
 
     /**
@@ -224,7 +253,6 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_download_windows_returns_404_when_no_release_even_if_legacy_fallback_files_exist(): void
     {
-        Storage::fake('public');
         $this->assertSame(0, AppVersion::query()->count());
 
         $this->withLegacyFallbackFile(public_path('desktop-setup.exe'), function (): void {
@@ -234,27 +262,23 @@ class AppUpdateApiTest extends TenantTestCase
         });
     }
 
+    /** CTO Q7 (W2 batch 5): iOS is not a release platform, so the request itself is a 422. */
     public function test_download_ios_never_serves_android_release(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->put('apks/sroor-erp-v1.1.apk', 'FAKE_APK_CONTENT');
-
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '1.1.0',
             'version_code' => 2,
             'release_notes_ar' => 'إصدار أندرويد فقط',
-            'apk_path' => 'apks/sroor-erp-v1.1.apk',
             'apk_filename' => 'sroor-erp-v1.1.apk',
             'is_active' => true,
             'download_count' => 0,
-            'published_at' => now(),
-        ]);
+        ], 'FAKE_APK_CONTENT');
 
         $this->withLegacyFallbackFile(public_path('app.apk'), function (): void {
             $this->getJson('/api/v1/app/download-apk?platform=ios')
-                ->assertStatus(404)
-                ->assertJson(['message' => __('app_update.file_not_available')]);
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['platform']);
         });
 
         // The android release must not have been counted as downloaded by an iOS request.
@@ -263,8 +287,6 @@ class AppUpdateApiTest extends TenantTestCase
 
     public function test_download_404_message_is_translated_not_a_hardcoded_literal(): void
     {
-        Storage::fake('public');
-
         $this->assertNotSame('app_update.file_not_available', __('app_update.file_not_available'), 'Missing lang key app_update.file_not_available.');
         app()->setLocale('en');
         $this->assertNotSame('app_update.file_not_available', __('app_update.file_not_available'), 'Missing en lang key app_update.file_not_available.');
@@ -274,7 +296,7 @@ class AppUpdateApiTest extends TenantTestCase
     {
         $tenant = $this->createTenant();
 
-        AppVersion::create([
+        $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '1.4.0',
             'version_code' => 14,
@@ -282,7 +304,6 @@ class AppUpdateApiTest extends TenantTestCase
             'is_force_update' => false,
             'release_notes_ar' => 'إصدار مركزي واحد لكل المحلات',
             'is_active' => true,
-            'published_at' => now(),
         ]);
 
         $this->getJson('/api/v1/app/check-update?platform=android&version_code=1&version_name=1.0.0', ['X-Tenant' => (string) $tenant->getTenantKey()])
@@ -297,27 +318,23 @@ class AppUpdateApiTest extends TenantTestCase
     /**
      * The client journey on a tenant host: check-update returns download_url built from the
      * request host, and the app then downloads from that URL. The binary is a central
-     * release (central public disk), so it must be served whichever tenant asks.
+     * release (central private release disk, never re-rooted by tenancy), so it must be
+     * served whichever tenant asks.
      */
     public function test_download_url_returned_on_a_tenant_host_serves_the_central_release(): void
     {
-        Storage::fake('public');
-        Storage::fake(AppVersion::CENTRAL_RELEASE_DISK);
-        Storage::disk(AppVersion::CENTRAL_RELEASE_DISK)->put('apks/sroor-erp-v1.5.apk', 'FAKE_APK_CONTENT');
         $tenantA = $this->createTenant();
         $tenantB = $this->createTenant();
 
-        $release = AppVersion::create([
+        $release = $this->publishedRelease([
             'platform' => 'android',
             'version_name' => '1.5.0',
             'version_code' => 15,
             'release_notes_ar' => 'إصدار للتنزيل',
-            'apk_path' => 'apks/sroor-erp-v1.5.apk',
             'apk_filename' => 'sroor-erp-v1.5.apk',
             'is_active' => true,
             'download_count' => 0,
-            'published_at' => now(),
-        ]);
+        ], 'FAKE_APK_CONTENT');
 
         foreach ([$tenantA, $tenantB] as $tenant) {
             $downloadUrl = (string) $this->getJson($this->tenantUrl($tenant, '/api/v1/app/check-update?platform=android&version_code=1&version_name=1.0.0'))
@@ -328,7 +345,8 @@ class AppUpdateApiTest extends TenantTestCase
 
             $this->get($downloadUrl)
                 ->assertStatus(200)
-                ->assertHeader('Content-Type', 'application/vnd.android.package-archive');
+                ->assertHeader('Content-Type', 'application/vnd.android.package-archive')
+                ->assertHeader('X-Checksum-Sha256', hash('sha256', 'FAKE_APK_CONTENT'));
         }
 
         $this->assertSame(2, (int) $release->fresh()->download_count, 'Both tenants must count on the one central release row.');

@@ -222,18 +222,6 @@ final class SuperAdminApiController extends Controller
     }
 
     /**
-     * Tenant deletion is disabled (OPS-11 / Q-B13): always 403, nothing is deleted.
-     * Super admins must suspend the tenant via toggle-status instead.
-     */
-    public function destroyTenant(string $id): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => __('super.tenant_delete_disabled'),
-        ], 403);
-    }
-
-    /**
      * Update Tenant Database Credentials
      */
     public function updateDatabaseConfig(UpdateTenantDatabaseConfigRequest $request, string $id, UpdateTenantDatabaseConfigAction $action): JsonResponse

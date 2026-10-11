@@ -73,7 +73,7 @@ final class TenantClockServerTimeTest extends TenantTestCase
         $this->getJson('/api/v1/treasury/summary', $this->tenantHeaders($this->tenant))
             ->assertOk()
             ->assertJsonPath('today.date', '2026-10-09')
-            ->assertJsonPath('today.sales_total', 250.5);
+            ->assertJsonPath('today.sales_total', '250.500');
     }
 
     public function test_another_tenants_timezone_and_sales_do_not_leak_into_the_summary(): void
@@ -85,12 +85,12 @@ final class TenantClockServerTimeTest extends TenantTestCase
         $this->getJson('/api/v1/treasury/summary', $this->tenantHeaders($other))
             ->assertOk()
             ->assertJsonPath('today.date', '2026-10-08')
-            ->assertJsonPath('today.sales_total', 0);
+            ->assertJsonPath('today.sales_total', '0.000');
 
         $this->getJson('/api/v1/treasury/summary', $this->tenantHeaders($this->tenant))
             ->assertOk()
             ->assertJsonPath('today.date', '2026-10-09')
-            ->assertJsonPath('today.sales_total', 250.5);
+            ->assertJsonPath('today.sales_total', '250.500');
     }
 
     public function test_reorder_analysis_window_ends_on_the_tenant_day(): void

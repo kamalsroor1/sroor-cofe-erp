@@ -50,6 +50,9 @@ class ResolveApiTenancy
         // 1. Check if tenancy is already initialized (e.g. by domain)
         if (function_exists('tenancy') && tenancy()->initialized) {
             $current = tenancy()->tenant;
+            if ($current instanceof Tenant && $current->isPurged()) {
+                return $this->notFound();
+            }
             if ($current instanceof Tenant && ! $current->isProvisioned()) {
                 return $this->notReady($current);
             }
@@ -65,6 +68,11 @@ class ResolveApiTenancy
                 ?? Tenant::whereHas('domains', fn ($q) => $q->where('domain', $tenantIdentifier))->first();
 
             if ($tenant) {
+                // OPS-9: a purged (or purging) workspace no longer exists for clients.
+                if ($tenant->isPurged()) {
+                    return $this->notFound();
+                }
+
                 // OPS-2: a workspace still being provisioned (or failed) has no usable
                 // database yet: refuse before initializing tenancy.
                 if (! $tenant->isProvisioned()) {
@@ -102,6 +110,10 @@ class ResolveApiTenancy
             }
 
             if ($tenant) {
+                if ($tenant->isPurged()) {
+                    return $this->notFound();
+                }
+
                 if (! $tenant->isProvisioned()) {
                     return $this->notReady($tenant);
                 }

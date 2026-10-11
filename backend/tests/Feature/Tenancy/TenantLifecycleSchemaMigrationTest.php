@@ -303,6 +303,56 @@ final class TenantLifecycleSchemaMigrationTest extends TenantTestCase
         }
     }
 
+    /**
+     * OPS-9 (W2 batch 5): archive / purge columns on `tenants` and `kind` on `tenant_backups`
+     * are reversible, guarded, and existing archived tenants get archived_at = status_changed_at.
+     */
+    public function test_archive_purge_and_backup_kind_migrations_are_reversible_and_backfill_archived_at(): void
+    {
+        $archive = 'migrations/2026_10_10_500300_add_archive_and_purge_columns_to_tenants_table.php';
+        $kind = 'migrations/2026_10_10_500310_add_kind_to_tenant_backups_table.php';
+        $columns = ['archive_state', 'archive_requested_at', 'archive_error_code', 'archived_at', 'final_backup_id', 'purge_started_at', 'purged_at', 'purged_by'];
+        $schema = Schema::connection($this->centralConnectionName());
+
+        foreach ($columns as $column) {
+            $this->assertTrue($schema->hasColumn('tenants', $column), "tenants.{$column} is missing.");
+            $this->assertContains($column, Tenant::getCustomColumns(), "{$column} must be a stancl custom column, not part of `data`.");
+        }
+        $this->assertTrue($schema->hasIndex('tenants', ['purged_at']));
+        $this->assertTrue($schema->hasIndex('tenants', ['archive_state']));
+        $this->assertTrue($schema->hasColumn('tenant_backups', 'kind'));
+        $this->assertTrue($schema->hasIndex('tenant_backups', ['tenant_id', 'kind', 'verified_at']));
+
+        $id = $this->centralOnlyTenantId();
+        $changedAt = '2026-09-01 08:00:00';
+
+        try {
+            $this->migrateDown($kind);
+            $this->migrateDown($archive);
+            foreach ($columns as $column) {
+                $this->assertFalse($schema->hasColumn('tenants', $column), "down() must drop tenants.{$column}.");
+            }
+            $this->assertFalse($schema->hasColumn('tenant_backups', 'kind'));
+
+            DB::table('tenants')->where('id', $id)->update(['status' => TenantStatus::Archived->value, 'status_changed_at' => $changedAt]);
+
+            $this->migrateUp($archive);
+            $this->migrateUp($archive); // guarded: a second run is a no-op
+            $this->migrateUp($kind);
+            $this->migrateUp($kind);
+
+            $this->assertSame($changedAt, (string) DB::table('tenants')->where('id', $id)->value('archived_at'));
+            $this->assertNull(DB::table('tenants')->where('id', $id)->value('purged_at'));
+        } finally {
+            if (! $schema->hasColumn('tenants', 'purged_at')) {
+                $this->migrateUp($archive);
+            }
+            if (! $schema->hasColumn('tenant_backups', 'kind')) {
+                $this->migrateUp($kind);
+            }
+        }
+    }
+
     public function test_provisioned_trial_has_no_paid_period(): void
     {
         $plan = $this->plan('lifecycle-trial');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\TenantBackupKind;
 use App\Health\Notifications\BackupFailedNotification;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
@@ -43,6 +44,10 @@ use ZipArchive;
  *   5. retention 7 daily / 4 weekly / 3 monthly, per subject and disk, only for the
  *      subjects that succeeded in this run.
  *
+ * OPS-9: `--kind=final|pre_purge` (internal, used by the archive flow and tenants:purge for ONE
+ * tenant, without the central DB) records the kind in the ledger and suffixes the file name
+ * with it; retention never deletes those archives (CTO Q6). A purged tenant is never backed up.
+ *
  * One failing subject never stops the others. Any failure = exit 1, a log entry and a
  * mail to backup.tenants.notify_mail (subject + exception class only; the details are in
  * the log). CTO decision D4: no archive password outside local/testing = refuse to run
@@ -67,7 +72,8 @@ final class BackupTenantsCommand extends Command
         {--skip-central : Do not back up the central database}
         {--only-central : Back up the central database only}
         {--disk=* : Target disks (default: backup.tenants.disks)}
-        {--no-cleanup : Do not apply the retention policy after the run}';
+        {--no-cleanup : Do not apply the retention policy after the run}
+        {--kind=scheduled : Internal (OPS-9): scheduled, manual, or final / pre_purge for one --tenant with --skip-central}';
 
     /** Environments where a missing BACKUP_ARCHIVE_PASSWORD only warns (archives unencrypted). */
     public const UNENCRYPTED_ENVIRONMENTS = ['local', 'testing'];
@@ -80,6 +86,11 @@ final class BackupTenantsCommand extends Command
      * @var array<string, string>
      */
     private array $failures = [];
+
+    private TenantBackupKind $kind = TenantBackupKind::Scheduled;
+
+    /** The ledger has the OPS-9 `kind` column (false on a release that runs before its migration). */
+    private bool $kindColumn = false;
 
     public function __construct()
     {
@@ -123,6 +134,11 @@ final class BackupTenantsCommand extends Command
             $this->warn((string) __('console.backups.ledger_missing'));
         }
 
+        $refusal = $this->resolveKind($ledger);
+        if ($refusal !== null) {
+            return $this->refuse($refusal);
+        }
+
         $succeeded = [];
         $total = 0;
 
@@ -141,6 +157,13 @@ final class BackupTenantsCommand extends Command
                 $subject = (string) $tenant->getTenantKey();
                 $seen[] = $subject;
                 $total++;
+                if ($tenant->purged_at !== null || ($tenant->isPurged() && $this->kind !== TenantBackupKind::PrePurge)) {
+                    // OPS-9: requested by id, but its database is gone (or going). Only a resumed
+                    // tenants:purge may still take its pre_purge backup while the database exists.
+                    $this->recordFailure($subject, new RuntimeException((string) __('console.backups.tenant_purged', ['tenant' => $subject])));
+
+                    continue;
+                }
                 if ($this->backupSubject($subject, $tenant, $disks, $password, $ledger)) {
                     $succeeded[] = $subject;
                 }
@@ -403,7 +426,9 @@ final class BackupTenantsCommand extends Command
                 'encrypted' => $password !== null,
             ] + $manifest;
 
-            $name = $subject.'-'.$createdAt->format(self::TIMESTAMP_FORMAT).'.zip';
+            // Protected kinds carry their kind in the name: the retention pattern never matches them.
+            $name = $subject.'-'.$createdAt->format(self::TIMESTAMP_FORMAT)
+                .($this->kind->isProtected() ? '-'.$this->kind->value : '').'.zip';
             $archive = $work.DIRECTORY_SEPARATOR.$name;
             $this->writeArchive($archive, $dumpFile, $manifest, $password);
 
@@ -652,7 +677,7 @@ final class BackupTenantsCommand extends Command
             'path' => $path,
             'sha256' => $sha256,
             'size_bytes' => $size,
-        ]) : null;
+        ] + ($this->kindColumn ? ['kind' => $this->kind] : [])) : null;
 
         if (! (bool) config('backup.tenants.verify_after_upload', true)) {
             return;
@@ -678,6 +703,17 @@ final class BackupTenantsCommand extends Command
                 if ($createdAt instanceof CarbonImmutable) {
                     $dated[$file] = $createdAt;
                 }
+            }
+
+            // OPS-9 (CTO Q6): final / pre_purge archives are never pruned, whatever their name.
+            if ($ledger && $this->kindColumn) {
+                $protected = TenantBackup::query()
+                    ->where('disk', $disk)
+                    ->whereIn('path', array_keys($dated))
+                    ->kind(...TenantBackupKind::finalKinds())
+                    ->pluck('path')
+                    ->all();
+                $dated = array_diff_key($dated, array_flip($protected));
             }
 
             $retention = (array) config('backup.tenants.retention', []);
@@ -717,6 +753,45 @@ final class BackupTenantsCommand extends Command
             ->when($ids === [] && $skip !== [], fn ($query) => $query->whereNotIn('status', $skip))
             ->orderBy('id')
             ->cursor();
+    }
+
+    /**
+     * --kind (OPS-9). A final / pre_purge backup is one tenant's last copy: exactly one
+     * --tenant, no central DB, and a ledger that can record the kind (else it could be pruned
+     * or not be found by the archive guard). Returns a translated refusal, or null.
+     */
+    private function resolveKind(bool $ledger): ?string
+    {
+        $this->kindColumn = $ledger && self::ledgerHasKind();
+
+        $kind = TenantBackupKind::tryFrom(trim((string) ($this->option('kind') ?? TenantBackupKind::Scheduled->value)));
+        if ($kind === null) {
+            return (string) __('console.backups.kind_invalid', ['kinds' => implode(', ', TenantBackupKind::values())]);
+        }
+        $this->kind = $kind;
+
+        if (! $kind->isProtected()) {
+            return null;
+        }
+
+        if (count($this->requestedTenantIds()) !== 1 || ! $this->option('skip-central') || $this->option('only-central')) {
+            return (string) __('console.backups.kind_needs_single_tenant', ['kind' => $kind->value]);
+        }
+
+        if (! $this->kindColumn) {
+            return (string) __('console.backups.kind_needs_ledger', ['kind' => $kind->value]);
+        }
+
+        return null;
+    }
+
+    public static function ledgerHasKind(): bool
+    {
+        try {
+            return Schema::connection((new TenantBackup)->getConnectionName())->hasColumn('tenant_backups', 'kind');
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /** @return list<string> */

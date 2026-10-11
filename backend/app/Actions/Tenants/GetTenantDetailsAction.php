@@ -3,6 +3,7 @@
 namespace App\Actions\Tenants;
 
 use App\Actions\SuperAdmin\GetPlatformSystemUnitsAction;
+use App\Http\Resources\Central\TenantArchiveResource;
 use App\Http\Resources\PlanResource;
 use App\Http\Resources\TenantResource;
 use App\Models\Invoice;
@@ -91,6 +92,8 @@ class GetTenantDetailsAction
 
         return [
             'tenant' => (new TenantResource($tenant))->resolve(),
+            // OPS-9: archive request / final backup / purge eligibility (codes and dates only).
+            'archive' => (new TenantArchiveResource($tenant))->resolve(),
             'stats' => $stats,
             'allowed_units' => $allowedUnits,
             'global_units' => $globalUnits,

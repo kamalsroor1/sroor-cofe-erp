@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TenantAccessLevel;
+use App\Enums\TenantArchiveState;
 use App\Enums\TenantProvisioningStatus;
 use App\Enums\TenantStatus;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
@@ -17,11 +18,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 use SensitiveParameter;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use Throwable;
 
 /**
  * Virtual attributes stored in stancl's `data` JSON column (not custom columns):
@@ -51,6 +54,14 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * @property string|null $provisioning_error_code a App\Support\Tenancy\ProvisioningErrorCode value
  * @property Carbon|null $provisioning_started_at
  * @property Carbon|null $provisioned_at
+ * @property TenantArchiveState|null $archive_state OPS-9: async archive request in flight / failed
+ * @property Carbon|null $archive_requested_at
+ * @property string|null $archive_error_code why the last archive attempt failed (a code)
+ * @property Carbon|null $archived_at when the tenant became archived (purge eligibility anchor)
+ * @property int|null $final_backup_id tenant_backups row proven before the archive (no FK)
+ * @property Carbon|null $purge_started_at OPS-9: `tenants:purge` started (the workspace is going)
+ * @property Carbon|null $purged_at OPS-9: purge finished; the row is a tombstone
+ * @property string|null $purged_by `central_user:<id>` or `cli:<os user>`
  * @property array|null $enabled_features
  * @property array|null $settings
  * @property Carbon|null $created_at
@@ -63,6 +74,10 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
+
+    private static ?bool $provisioningColumnExists = null;
+
+    private static ?bool $purgeColumnsExist = null;
 
     protected $casts = [
         'settings' => 'array',
@@ -80,6 +95,12 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'provisioning_attempts' => 'integer',
         'provisioning_started_at' => 'datetime',
         'provisioned_at' => 'datetime',
+        'archive_state' => TenantArchiveState::class,
+        'archive_requested_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'final_backup_id' => 'integer',
+        'purge_started_at' => 'datetime',
+        'purged_at' => 'datetime',
     ];
 
     public static function getCustomColumns(): array
@@ -108,6 +129,15 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'provisioning_error_code',
             'provisioning_started_at',
             'provisioned_at',
+            // Archive / purge (OPS-9): real columns, never inside `data`.
+            'archive_state',
+            'archive_requested_at',
+            'archive_error_code',
+            'archived_at',
+            'final_backup_id',
+            'purge_started_at',
+            'purged_at',
+            'purged_by',
             // Every other real column of `tenants`: anything missing here is copied into `data`
             // on save and the copy overrides the column on hydration (stale updated_at, and an
             // array-cast `settings` re-encoded into ever-growing nested JSON on each save).
@@ -134,10 +164,23 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->provisioning_status ?? TenantProvisioningStatus::Ready;
     }
 
-    /** Only a provisioned workspace may be served (ResolveApiTenancy, workspace resolver). */
+    /**
+     * Only a provisioned workspace may be served (ResolveApiTenancy, workspace resolver).
+     * A purged (or purging, OPS-9) tenant has no database any more: never provisioned.
+     */
     public function isProvisioned(): bool
     {
-        return $this->provisioningStatus()->isReady();
+        return $this->provisioningStatus()->isReady() && ! $this->isPurged();
+    }
+
+    /**
+     * OPS-9: `tenants:purge` started or finished. The workspace is gone (or going): it is
+     * never served (404), backed up, migrated or transitioned again, and the central row
+     * stays as a tombstone.
+     */
+    public function isPurged(): bool
+    {
+        return $this->purge_started_at !== null || $this->purged_at !== null;
     }
 
     /**
@@ -204,14 +247,71 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     /**
      * Tenants whose database exists and is fully set up (`ready`). Every loop over "all
      * tenants" (tenants:* commands, backups, health, audits) must use it: a pending,
-     * running or failed tenant has no usable database.
+     * running or failed tenant has no usable database, and a purged / purging one (OPS-9)
+     * has none any more.
      *
      * @param  Builder<Tenant>  $query
      * @return Builder<Tenant>
      */
     public function scopeProvisioned(Builder $query): Builder
     {
-        return $query->where($query->qualifyColumn('provisioning_status'), TenantProvisioningStatus::Ready->value);
+        // Same deploy-ordering guard as the purge columns: before the OPS-2 migration every
+        // tenant is provisioned, and filtering on the missing column would fail the release.
+        if (self::provisioningColumnExists()) {
+            $query->where($query->qualifyColumn('provisioning_status'), TenantProvisioningStatus::Ready->value);
+        }
+
+        if (self::purgeColumnsExist()) {
+            $query->whereNull($query->qualifyColumn('purge_started_at'))
+                ->whereNull($query->qualifyColumn('purged_at'));
+        }
+
+        return $query;
+    }
+
+    /**
+     * The OPS-9 purge columns exist (memoized per process). scripts/ops/deploy.sh runs
+     * `backup:tenants` from the NEW release BEFORE `migrate`: until the migration ran no
+     * tenant can be purged, and filtering on a missing column would fail the release.
+     */
+    public static function provisioningColumnExists(): bool
+    {
+        if (self::$provisioningColumnExists === null) {
+            try {
+                $exists = Schema::connection((new self)->getConnectionName())->hasColumn('tenants', 'provisioning_status');
+            } catch (Throwable) {
+                $exists = false;
+            }
+
+            if (! $exists) {
+                return false;
+            }
+
+            self::$provisioningColumnExists = true;
+        }
+
+        return self::$provisioningColumnExists;
+    }
+
+    public static function purgeColumnsExist(): bool
+    {
+        if (self::$purgeColumnsExist === null) {
+            try {
+                $exists = Schema::connection((new self)->getConnectionName())->hasColumn('tenants', 'purged_at');
+            } catch (Throwable) {
+                $exists = false;
+            }
+
+            // Only a positive answer is memoized: a release that runs before its migration
+            // starts filtering as soon as the columns appear (long-running workers).
+            if (! $exists) {
+                return false;
+            }
+
+            self::$purgeColumnsExist = true;
+        }
+
+        return self::$purgeColumnsExist;
     }
 
     // ========================================================================

@@ -48,6 +48,14 @@ return [
         'per_minute' => (int) env('RATE_LIMIT_PUBLIC_API', 60),
     ],
 
+    // Release binary downloads (GET /api/v1/app/download-apk and /download-latest-apk), L2:
+    // one bucket per client IP across both routes. Much tighter than public_api: every hit
+    // streams a 20-150 MB file. A shop updating many devices behind one NAT can raise it.
+    // An empty env value keeps the default (an empty string must never become a limit of 1).
+    'app_download' => [
+        'per_hour' => (int) (env('RATE_LIMIT_APP_DOWNLOAD_HOURLY') ?: 10),
+    ],
+
     // Central workspace resolver (shop-code lookup) and the tenant-miss bucket of
     // ThrottleTenantMisses: caps workspace-code enumeration per client IP.
     // CTO decision W1 Q1 (2026-10-09): 30 per minute (was 10), so a shop installing

@@ -66,10 +66,24 @@ return [
             'report' => false,
         ],
 
-        // App release binaries (APK / desktop installer) read from a tenant host. Same
-        // physical root as the central 'public' disk, where the super-admin uploads them,
-        // but never re-rooted by tenancy (not in tenancy.filesystem.disks). Read through
-        // App\Models\AppVersion::releaseDisk() only.
+        // APP-3 extension (W2 batch 5): app release binaries (APK / desktop installer).
+        // PRIVATE: outside public/ and storage/app/public, so never served by the web
+        // server; downloaded only through GET /api/v1/app/download-apk (checksum header).
+        // Central: never listed in tenancy.filesystem.disks, so tenancy never re-roots it.
+        // Used through App\Support\AppReleases\ReleaseFileLocator only.
+        'app_releases_private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/releases'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // LEGACY, read-only: binaries uploaded before W2 batch 5 sit on the old public
+        // root (storage/app/public/apks). Read as a fallback until
+        // `php artisan app-releases:relocate` (a deploy step) has moved them to
+        // app_releases_private. Never written to. Remove once every server has run it.
         'app_releases' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

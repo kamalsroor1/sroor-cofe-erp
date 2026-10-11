@@ -36,7 +36,9 @@ final class SettingController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user && ! $user->hasRole('admin') && ! $user->can('roles.manage') && ! $user->can('settings.manage')) {
+        // R2: the settings dictionary carries secrets (Telegram bot token): settings.manage or admin only,
+        // like UpdateSettingsRequest. roles.manage alone (user administration) does not read it.
+        if ($user && ! $user->hasRole('admin') && ! $user->can('settings.manage')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 

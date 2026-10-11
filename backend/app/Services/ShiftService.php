@@ -8,8 +8,11 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\ReturnDocument;
 use App\Models\Store;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -98,86 +101,86 @@ class ShiftService
 
     /**
      * Calculate current live metrics for open shift (scoped by store)
+     *
+     * BUG-01: drawer cash comes from the cash payment vouchers only. Every cash amount that
+     * reaches the drawer is exactly one voucher: the invoice writes one per paid line at the
+     * sale (PAY-INV-*), a debt collection writes its own. Summing invoices.paid_amount as
+     * well counted every sale twice, also counted non-cash split lines as cash and later
+     * collections against the invoice again. Vouchers are limited to the shift's store and
+     * to the shift's window [opened_at, closed_at ?? now].
      */
     public function calculateShiftTotals(CashShift $shift): array
     {
         $openedAt = $shift->opened_at;
-        $storeId = $shift->store_id;
+        $closesAt = $shift->closed_at ?? now();
+        $storeId = $shift->store_id !== null ? (int) $shift->store_id : null;
 
-        // Total cash sales (invoices paid in cash in this store)
-        $cashSales = Invoice::where('status', 'confirmed')
-            ->where('payment_type', 'cash')
-            ->where('created_at', '>=', $openedAt)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->sum('paid_amount') ?: '0.000';
+        $cashVouchers = fn () => Payment::query()
+            ->where('payments.payment_method', 'cash')
+            ->where('payments.created_at', '>=', $openedAt)
+            ->where('payments.created_at', '<=', $closesAt)
+            ->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId));
+
+        // Cash taken at the sale (cash invoices and the paid part of partial invoices)
+        $cashSales = $this->sumDecimal($cashVouchers()->collectedAtSale()->excludingCancelledInvoices(), 'payments.amount');
+
+        // Cash collected from customers afterwards (receipts / debt collection)
+        $customerReceipts = $this->sumDecimal($cashVouchers()->customerReceipts()->excludingCancelledInvoices(), 'payments.amount');
 
         // Credit sales on account
-        $creditSales = Invoice::where('status', 'confirmed')
+        $creditSales = $this->sumDecimal(Invoice::where('status', 'confirmed')
             ->whereIn('payment_type', ['credit', 'partial'])
             ->where('created_at', '>=', $openedAt)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->sum('remaining_amount') ?: '0.000';
+            ->where('created_at', '<=', $closesAt)
+            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'remaining_amount');
 
-        // Partial cash collected from partial invoices
-        $partialCashSales = Invoice::where('status', 'confirmed')
-            ->where('payment_type', 'partial')
-            ->where('created_at', '>=', $openedAt)
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->sum('paid_amount') ?: '0.000';
-
-        // Total cash inflows from customer payment vouchers
-        $paymentsCollected = Payment::where('created_at', '>=', $openedAt)
-            ->whereNotNull('customer_id')
-            ->where('payment_method', 'cash')
-            ->sum('amount') ?: '0.000';
-
-        $totalCashSalesInflow = bcadd((string) $cashSales, (string) $partialCashSales, 3);
-
-        $totalCashIn = bccomp((string) $paymentsCollected, '0.000', 3) > 0
-            ? bcadd((string) $paymentsCollected, (string) $totalCashSalesInflow, 3)
-            : (string) $totalCashSalesInflow;
+        $totalCashIn = bcadd($cashSales, $customerReceipts, 3);
 
         // Cash outflows: Operational expenses paid in cash
-        $expenses = Expense::where('created_at', '>=', $openedAt)
+        $expenses = $this->sumDecimal(Expense::where('created_at', '>=', $openedAt)
+            ->where('created_at', '<=', $closesAt)
             ->where('payment_method', 'cash')
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->sum('amount') ?: '0.000';
+            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'amount');
 
-        // Cash outflows: Supplier payments paid in cash
-        $supplierPaid = Payment::where('created_at', '>=', $openedAt)
-            ->whereNotNull('supplier_id')
-            ->where('payment_method', 'cash')
-            ->sum('amount') ?: '0.000';
+        // Cash outflows: Supplier payments paid in cash from this drawer
+        $supplierPaid = $this->sumDecimal($cashVouchers()->whereNotNull('payments.supplier_id'), 'payments.amount');
 
         // Sales Returns refunded in cash
-        $refunds = ReturnDocument::where('created_at', '>=', $openedAt)
+        $refunds = $this->sumDecimal(ReturnDocument::where('created_at', '>=', $openedAt)
+            ->where('created_at', '<=', $closesAt)
             ->where('return_type', 'sales_return')
-            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-            ->sum('total_amount') ?: '0.000';
+            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'total_amount');
 
-        $cashSales = bcadd((string) $cashSales, '0.000', 3);
-        $creditSales = bcadd((string) $creditSales, '0.000', 3);
-        $expenses = bcadd((string) $expenses, '0.000', 3);
-        $supplierPaid = bcadd((string) $supplierPaid, '0.000', 3);
-        $refunds = bcadd((string) $refunds, '0.000', 3);
-
-        $totalOutflows = bcadd((string) $expenses, (string) $supplierPaid, 3);
-        $totalOutflows = bcadd($totalOutflows, (string) $refunds, 3);
+        $totalOutflows = bcadd($expenses, $supplierPaid, 3);
+        $totalOutflows = bcadd($totalOutflows, $refunds, 3);
 
         // Expected in drawer = Opening Cash + Total Cash In - Total Cash Out
-        $expectedCash = bcadd((string) $shift->opening_cash_balance, $totalCashIn, 3);
+        $openingCash = Decimal::normalize((string) $shift->opening_cash_balance);
+        $expectedCash = bcadd($openingCash, $totalCashIn, 3);
         $expectedCash = bcsub($expectedCash, $totalOutflows, 3);
 
         return [
-            'opening_cash_balance' => (string) $shift->opening_cash_balance,
-            'total_cash_sales' => (string) $cashSales,
-            'total_credit_sales' => (string) $creditSales,
+            'opening_cash_balance' => $openingCash,
+            'total_cash_sales' => $cashSales,
+            'total_customer_receipts' => $customerReceipts,
+            'total_credit_sales' => $creditSales,
             'total_payments_collected' => $totalCashIn,
-            'total_expenses' => (string) $expenses,
-            'total_supplier_paid' => (string) $supplierPaid,
-            'total_refunds' => (string) $refunds,
-            'expected_cash_balance' => (string) $expectedCash,
+            'total_expenses' => $expenses,
+            'total_supplier_paid' => $supplierPaid,
+            'total_refunds' => $refunds,
+            'expected_cash_balance' => $expectedCash,
         ];
+    }
+
+    /**
+     * SUM of a DECIMAL(12,3) column as a scale-3 string. MySQL returns an exact decimal
+     * string; sqlite may return int/float, which Decimal::normalize settles half-up.
+     *
+     * @param  Builder<covariant Model>  $query
+     */
+    private function sumDecimal(Builder $query, string $column): string
+    {
+        return Decimal::normalize((string) $query->sum($column));
     }
 
     /**

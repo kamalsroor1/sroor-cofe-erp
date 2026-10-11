@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\TenantArchiveState;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +28,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | archiveNotAllowed()           | 409  | subscription.archive_not_allowed         |
  * | notArchived()                 | 409  | subscription.not_archived                |
  * | reasonRequired()              | 422  | subscription.suspension_reason_required  |
+ * | finalBackupRequired()  OPS-9  | 409  | subscription.final_backup_required       |
+ * | archiveInProgress()    OPS-9  | 409  | subscription.archive_in_progress         |
+ * | alreadyArchived()      OPS-9  | 409  | subscription.already_archived            |
+ * | tenantPurged()         OPS-9  | 409  | subscription.tenant_purged               |
+ * | archiveFailed()        OPS-9  | 409  | subscription.archive_failed              |
+ * | purgeRefused()         OPS-9  | 409  | subscription.purge_refused               |
  *
  * It extends HttpException so it is never reported as a server error, and so the status
  * is kept even if something renders it without calling render().
@@ -121,6 +128,62 @@ final class TenantLifecycleException extends HttpException
     {
         return new self(Response::HTTP_CONFLICT, 'subscription.not_archived', (string) __('subscription.errors.not_archived'), [
             'current' => $current,
+        ]);
+    }
+
+    /**
+     * OPS-9: `archived` needs a verified final / pre_purge backup of the same tenant, recent
+     * enough (tenant_lifecycle.archive.final_backup_max_age_minutes), HTTP 409.
+     */
+    public static function finalBackupRequired(?int $backupId): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.final_backup_required', (string) __('subscription.archive_errors.final_backup_required'), [
+            'final_backup_id' => $backupId,
+        ]);
+    }
+
+    /** OPS-9: an archive request is already queued or running (HTTP 409). */
+    public static function archiveInProgress(?TenantArchiveState $state): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.archive_in_progress', (string) __('subscription.archive_errors.archive_in_progress'), [
+            'archive_state' => $state?->value,
+        ]);
+    }
+
+    /** OPS-9: the tenant is already archived (HTTP 409). */
+    public static function alreadyArchived(): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.already_archived', (string) __('subscription.archive_errors.already_archived'), [
+            'status' => TenantStatus::Archived->value,
+        ]);
+    }
+
+    /** OPS-9: the tenant was purged (or its purge started); nothing may change it (HTTP 409). */
+    public static function tenantPurged(): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.tenant_purged', (string) __('subscription.archive_errors.tenant_purged'));
+    }
+
+    /**
+     * OPS-9: the archive job / `tenants:archive` stopped; the status is untouched and
+     * `tenants.archive_error_code` holds $code (HTTP 409).
+     */
+    public static function archiveFailed(string $code): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.archive_failed', (string) __('subscription.archive_errors.archive_failed', [
+            'reason' => (string) __('subscription.archive_error_codes.'.$code),
+        ]), [
+            'archive_error_code' => $code,
+        ]);
+    }
+
+    /** OPS-9: the purge re-check under the row lock refused (eligibility $reason, HTTP 409). */
+    public static function purgeRefused(string $reason): self
+    {
+        return new self(Response::HTTP_CONFLICT, 'subscription.purge_refused', (string) __('subscription.archive_errors.purge_refused', [
+            'reason' => (string) __('console.purge.reasons.'.$reason),
+        ]), [
+            'reason' => $reason,
         ]);
     }
 

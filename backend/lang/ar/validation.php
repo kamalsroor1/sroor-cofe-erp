@@ -190,6 +190,11 @@ return [
     ],
 
     'attributes' => [
+        // App releases (super-admin upload)
+        'apk_file' => 'ملف التطبيق',
+        'version_code' => 'رقم الإصدار الداخلي',
+        'version_name' => 'اسم الإصدار',
+        'min_version_code' => 'أقل إصدار مدعوم',
         // System & Users
         'name' => 'الاسم',
         'email' => 'البريد الإلكتروني',

@@ -31,6 +31,11 @@ class TenantResource extends JsonResource
             'provisioning_status' => $this->resource->provisioningStatus()->value,
             'provisioning_error_code' => $this->provisioning_error_code,
             'provisioned_at' => $this->provisioned_at?->toIso8601String(),
+            // OPS-9: archive / purge state from the row's own columns (no extra query); the full
+            // block (final backup, purge eligibility) is on the tenant page (TenantArchiveResource).
+            'archive_state' => $this->archive_state?->value,
+            'archived_at' => $this->archived_at?->toIso8601String(),
+            'purged_at' => $this->purged_at?->toIso8601String(),
             'created_at' => $this->created_at?->toDateString(),
             'created_at_human' => $this->created_at?->diffForHumans(),
             // BRND-5: the shop's legal info (tenant settings), only when this resource is the

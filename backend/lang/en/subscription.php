@@ -78,4 +78,28 @@ return [
         'limit_reached' => 'You have reached your plan limit for :resource (:max). Upgrade your plan or buy an add-on.',
         'feature_unavailable' => 'This feature is not included in your current plan.',
     ],
+
+    // OPS-9: asynchronous archive (DELETE /super-admin/tenants/{id}) and the CLI purge.
+    'archive_states' => [
+        'queued' => 'Archive queued',
+        'running' => 'Archiving: taking the final backup',
+        'failed' => 'Archive failed',
+    ],
+
+    'archive_error_codes' => [
+        'final_backup_failed' => 'The final backup could not be taken or verified',
+        'status_changed' => 'The account status changed before the archive finished',
+        'purged' => 'The account was purged',
+        'unknown' => 'Unexpected error (see the server log)',
+    ],
+
+    'archive_errors' => [
+        'final_backup_required' => 'An account can only be archived after its final backup is uploaded and verified.',
+        'archive_in_progress' => 'An archive request for this account is already in progress.',
+        'already_archived' => 'This account is already archived.',
+        'tenant_purged' => 'This account was permanently deleted and can no longer be changed.',
+        'archive_failed' => 'The archive did not complete and the account status was not changed: :reason.',
+        'purge_refused' => 'Permanent deletion refused: :reason.',
+        'confirm_code_mismatch' => 'Type the shop code exactly to confirm.',
+    ],
 ];

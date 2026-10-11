@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\Tenant;
@@ -473,6 +474,57 @@ class InvoicePrintRoutesTest extends TenantTestCase
             'status' => 'confirmed',
             'payment_method' => 'cash',
         ]);
+    }
+
+    /**
+     * BUG-01: the A4 journal summed invoices.total_amount (not a column: sales printed 0), added
+     * the cash sale's own PAY-INV voucher on top of the invoice and took every store's customer
+     * and supplier vouchers. It now prints the branch's cash vouchers only.
+     */
+    public function test_daily_journal_print_counts_each_cash_sale_once_and_only_the_printed_store(): void
+    {
+        $today = now()->toDateString();
+        $foreign = $this->invoiceInStoreB();
+
+        // Sale vouchers written with the invoices + one later receipt per store.
+        foreach ([
+            ['PAY-INV-QA-A', $this->storeA->id, $this->invoiceA->id, '1000.000'],
+            ['PAY-INV-QA-B', $this->storeB->id, $foreign->id, '500.000'],
+            ['PAY-CUST-QA-A', $this->storeA->id, null, '12.500'],
+            ['PAY-CUST-QA-B', $this->storeB->id, null, '70.000'],
+        ] as [$number, $storeId, $invoiceId, $amount]) {
+            Payment::create([
+                'payment_number' => $number,
+                'store_id' => $storeId,
+                'customer_id' => $this->customer->id,
+                'invoice_id' => $invoiceId,
+                'user_id' => $this->admin->id,
+                'amount' => $amount,
+                'payment_date' => $today,
+                'payment_method' => 'cash',
+            ]);
+        }
+
+        $this->mountProbe('daily.journal.print', '/__qa/daily-journal/print');
+        $user = $this->userWithPermissions(['daily_journal.view'], $this->storeA);
+
+        $this->actingAs($user)->get('/__qa/daily-journal/print?date='.$today)
+            ->assertOk()
+            ->assertViewHas('totalSales', '1000.000')
+            ->assertViewHas('cashSales', '1000.000')
+            ->assertViewHas('customerPayments', '12.500')
+            ->assertViewHas('totalCashCollected', '1012.500')
+            ->assertViewHas('netCashToday', '1012.500')
+            ->assertViewHas('expectedCashInDrawer', '1012.500')
+            ->assertDontSee($foreign->invoice_number);
+
+        // Admin without store_id prints every branch, still counting each sale once.
+        $this->actingAs($this->admin)->get('/__qa/daily-journal/print?date='.$today)
+            ->assertOk()
+            ->assertViewHas('totalSales', '1500.000')
+            ->assertViewHas('cashSales', '1500.000')
+            ->assertViewHas('customerPayments', '82.500')
+            ->assertViewHas('totalCashCollected', '1582.500');
     }
 
     public function test_daily_journal_print_without_store_id_is_scoped_to_users_store(): void

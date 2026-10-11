@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Http\Middleware\ApiTokenAuth;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
+use App\Models\Expense;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
@@ -125,6 +126,44 @@ final class ResolveActiveStoreTest extends TenantTestCase
             ->assertOk()
             ->assertJsonPath('store_id', $branchId)
             ->assertJsonPath('session_store_id', $branchId);
+    }
+
+    public function test_concrete_mode_refuses_an_inactive_store_but_reads_still_accept_it(): void
+    {
+        Route::middleware(['api', ResolveApiTenancy::class, ApiTokenAuth::class, 'store.active:concrete'])
+            ->post('api/v1/__stor1/concrete', fn (ActiveStore $active) => response()->json(['store_id' => $active->id()]));
+
+        $tenant = $this->createTenant();
+        $closedId = $this->createStore($tenant, 'CLOSED-01', active: false);
+
+        // Reading a closed branch is still allowed.
+        $this->getJson(self::PROBE, $this->headers($tenant, null, $closedId))
+            ->assertOk()
+            ->assertJsonPath('store_id', $closedId);
+
+        // A single-branch write on it is refused with a translated 403.
+        $this->postJson('/api/v1/__stor1/concrete', [], $this->headers($tenant, null, $closedId))
+            ->assertStatus(403)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'store_inactive')
+            ->assertJsonPath('message', trans('store_scope.store_inactive', [], 'en'));
+
+        // A real write endpoint: no expense is booked on the closed branch.
+        $this->postJson('/api/v1/expenses', [
+            'title' => 'مصروف فرع مقفول',
+            'category' => 'تشغيل',
+            'cost_center' => 'operational',
+            'amount' => '10.000',
+            'expense_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+        ], $this->headers($tenant, null, $closedId))
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'store_inactive');
+        $this->assertSame(0, $this->inTenant($tenant, fn (): int => Expense::query()->count()));
+
+        // An active branch still works.
+        $this->postJson('/api/v1/__stor1/concrete', [], $this->headers($tenant, null, (int) $this->tenantStore($tenant)->id))
+            ->assertOk();
     }
 
     public function test_header_for_a_store_the_user_cannot_access_is_forbidden(): void

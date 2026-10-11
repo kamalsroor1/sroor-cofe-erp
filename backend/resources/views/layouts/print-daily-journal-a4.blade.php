@@ -387,7 +387,7 @@
                         @else {{ __('invoices.partial') }}
                         @endif
                     </td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$inv->total_amount, 2) }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$inv->net_total, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$inv->paid_amount, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$inv->remaining_amount, 2) }}</td>
                     <td>{{ $inv->store?->name ?? __('common.main_store_default') }}</td>
@@ -396,7 +396,7 @@
                 <tr class="table-total">
                     <td colspan="4" style="text-align: left; font-weight: 900;">{{ __('common.total') }}:</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalSales, 2) }}</td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$cashSales, 2) }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalPaid, 2) }}</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$creditSales, 2) }}</td>
                     <td>-</td>
                 </tr>

@@ -8,6 +8,7 @@ use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
@@ -205,7 +206,7 @@ class ShiftsAndDailyJournalApiTest extends TenantTestCase
             'is_active' => true,
         ]);
 
-        Invoice::create([
+        $cashInvoice = Invoice::create([
             'invoice_number' => 'INV-260821-001',
             'customer_id' => $customer->id,
             'user_id' => $this->adminUser->id,
@@ -219,6 +220,16 @@ class ShiftsAndDailyJournalApiTest extends TenantTestCase
             'remaining_amount' => '0.000',
             'payment_type' => 'cash',
             'status' => 'confirmed',
+        ]);
+        // The sale voucher InvoiceService writes with every paid invoice: the drawer's cash source.
+        Payment::create([
+            'payment_number' => Payment::SALE_NUMBER_PREFIX.'260821-001',
+            'customer_id' => $customer->id,
+            'invoice_id' => $cashInvoice->id,
+            'user_id' => $this->adminUser->id,
+            'amount' => '500.000',
+            'payment_date' => $today,
+            'payment_method' => 'cash',
         ]);
 
         Expense::create([

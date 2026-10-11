@@ -11,10 +11,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReturnRequest;
 use App\Http\Resources\ReturnResource;
 use App\Models\ReturnDocument;
-use App\Models\Store;
+use App\Models\User;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class ReturnController extends Controller
 {
@@ -26,7 +29,7 @@ final class ReturnController extends Controller
     /**
      * List returns with filters and totals
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('returns.manage')) {
@@ -39,16 +42,14 @@ final class ReturnController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $clientStoreId = ClientStoreGuard::verified($request);
-        $storeId = $request->header('X-Store-Id')
-            ?: $clientStoreId
-            ?: $user?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2: the active store (X-Store-Id); a query store_id is an access-checked branch
+        // filter (403). Null (every store) only through a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
         $query = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item']);
 
-        if ($storeId && $storeId !== 'all') {
-            $query->where('store_id', (int) $storeId);
+        if ($storeId !== null) {
+            $query->where('store_id', $storeId);
         }
 
         if ($type !== 'all' && $type !== '') {
@@ -106,6 +107,10 @@ final class ReturnController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        if ($user instanceof User) {
+            $this->findReturnOr404($user, $id, 'view');
+        }
+
         $returnDoc = ReturnDocument::with(['customer', 'supplier', 'user', 'store', 'items.item'])->findOrFail($id);
 
         return response()->json([
@@ -117,18 +122,18 @@ final class ReturnController extends Controller
     /**
      * Create and confirm return document via Form Request
      */
-    public function store(StoreReturnRequest $request): JsonResponse
+    public function store(StoreReturnRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2 (CTO Q14): the return is booked on the active store only (store.active:concrete).
+        // A body store_id is still access-checked (403) but never chooses the store.
+        ClientStoreGuard::verified($request);
 
-        $dto = ReturnDocumentDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
+        $dto = ReturnDocumentDTO::fromArray($request->validated(), (int) $activeStore->requireStore()->id);
         $returnDoc = $this->createReturnAction->execute($dto);
 
         return response()->json([
             'success' => true,
-            'message' => __('returns.created_success', ['number' => $returnDoc->return_number]) ?: "تم تسجيل مستند المرتجع رقم {$returnDoc->return_number} بنجاح ✓",
+            'message' => __('returns.created_success', ['number' => $returnDoc->return_number]),
             'data' => (new ReturnResource($returnDoc))->resolve(),
         ], 201);
     }
@@ -143,11 +148,28 @@ final class ReturnController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        if ($user instanceof User) {
+            $this->findReturnOr404($user, $id, 'delete');
+        }
+
         $this->deleteReturnAction->execute($id);
 
         return response()->json([
             'success' => true,
-            'message' => __('returns.deleted_success') ?: 'تم حذف مستند المرتجع بنجاح ✓',
+            'message' => __('returns.deleted_success'),
         ], 200);
+    }
+
+    /**
+     * STOR-2 (CTO Q13): the permission was already checked (403), so a policy denial here can only
+     * be the document's store: answered exactly like a missing document (404), never revealing it.
+     */
+    private function findReturnOr404(User $user, int $id, string $ability): void
+    {
+        $returnDoc = ReturnDocument::query()->select(['id', 'store_id'])->find($id);
+
+        if (! $returnDoc instanceof ReturnDocument || ! Gate::forUser($user)->allows($ability, $returnDoc)) {
+            throw (new ModelNotFoundException)->setModel(ReturnDocument::class, [$id]);
+        }
     }
 }

@@ -39,7 +39,8 @@ class ResolveTenantWorkspaceAction
             })
             ->first();
 
-        if (! $tenant) {
+        // OPS-9: a purged (or being purged) workspace no longer exists for its users.
+        if (! $tenant || $tenant->isPurged()) {
             return [
                 'success' => false,
                 'status' => 404,

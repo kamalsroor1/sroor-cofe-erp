@@ -59,6 +59,9 @@ return [
         'app_version_created' => 'App version created',
         'app_version_toggled' => 'App version toggled',
         'app_version_deleted' => 'App version deleted',
+        'tenant_archive_requested' => 'Tenant archive requested',
+        'tenant_purge_started' => 'Tenant purge started',
+        'tenant_purge_failed' => 'Tenant purge failed',
     ],
     'prune' => [
         'done' => 'Deleted :count platform audit rows older than :date.',

@@ -396,4 +396,7 @@ return [
         'asset_uploaded' => 'Image uploaded and platform branding updated.',
         'asset_deleted' => 'Image removed; the default image is used again.',
     ],
+    // OPS-9: tenant archive (DELETE) and unarchive.
+    'tenant_archive_queued' => 'Archive requested: the final backup is being taken. The account is archived once it is uploaded and verified.',
+    'tenant_unarchived' => 'The account was restored to its previous status.',
 ];

@@ -7,6 +7,9 @@ namespace App\Support;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Container\Attributes\Scoped;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * STOR-1: the store (branch) the current request operates on, resolved and access-checked
@@ -24,6 +27,9 @@ use Illuminate\Container\Attributes\Scoped;
 final class ActiveStore
 {
     public const ALL = 'all';
+
+    /** error_code of the 403 a single-store operation returns for `X-Store-Id: all` (STOR-2). */
+    public const CONCRETE_REQUIRED_CODE = 'concrete_store_required';
 
     private ?Store $store = null;
 
@@ -66,6 +72,83 @@ final class ActiveStore
     public function id(): ?int
     {
         return $this->store?->id;
+    }
+
+    /**
+     * STOR-2: the concrete store of a single-store operation (checkout, invoice, shift, transfer).
+     * Translated 403 when the request runs on every store (`all`) or was never resolved, so a
+     * write can never fall back to some other branch.
+     */
+    public function requireStore(): Store
+    {
+        if ($this->store instanceof Store) {
+            return $this->store;
+        }
+
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => __($this->allStores ? 'store_scope.concrete_store_required' : 'store_scope.store_not_resolved'),
+            'error_code' => self::CONCRETE_REQUIRED_CODE,
+        ], 403));
+    }
+
+    /**
+     * STOR-2: store filter of a list/report read. A client `store_id` (query/body) is an explicit
+     * branch filter, access-checked by ClientStoreGuard (403); `all` there needs canViewAll. Without
+     * it the active store applies. Null means every store, only reachable through a verified `all`.
+     */
+    public function readFilter(Request $request): ?int
+    {
+        $client = ClientStoreGuard::verified($request);
+
+        if (is_int($client)) {
+            return $client;
+        }
+
+        if ($client === self::ALL || $this->allStores) {
+            return null;
+        }
+
+        return (int) $this->requireStore()->id;
+    }
+
+    /**
+     * STOR-2: the one store of a single-store read (current shift, daily journal, treasury). The
+     * active store wins; a client `store_id` is still access-checked (403). In `all` mode an
+     * accessible client store id is used, else 422 on store_id: `all` never becomes "store 0".
+     */
+    public function singleStoreId(Request $request): int
+    {
+        $client = ClientStoreGuard::verified($request);
+
+        if ($this->store instanceof Store) {
+            return (int) $this->store->id;
+        }
+
+        if (is_int($client)) {
+            return $client;
+        }
+
+        if ($this->allStores) {
+            throw ValidationException::withMessages([
+                'store_id' => __('validation.integer', ['attribute' => 'store_id']),
+            ]);
+        }
+
+        return (int) $this->requireStore()->id;
+    }
+
+    /**
+     * STOR-2 (CTO Q13): may $user READ a record of store $storeId? Users who may see every store,
+     * or who may access that store. Callers answer a record outside this rule as "not found" (404).
+     */
+    public static function canRead(User $user, ?int $storeId): bool
+    {
+        if (self::canViewAll($user)) {
+            return true;
+        }
+
+        return $storeId !== null && self::canAccess($user, $storeId);
     }
 
     public static function canViewAll(User $user): bool

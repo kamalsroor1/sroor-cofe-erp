@@ -59,6 +59,9 @@ return [
         'app_version_created' => 'إضافة إصدار تطبيق',
         'app_version_toggled' => 'تفعيل أو إيقاف إصدار تطبيق',
         'app_version_deleted' => 'حذف إصدار تطبيق',
+        'tenant_archive_requested' => 'طلب أرشفة محل',
+        'tenant_purge_started' => 'بدء المسح النهائي لمحل',
+        'tenant_purge_failed' => 'فشل المسح النهائي لمحل',
     ],
     'prune' => [
         'done' => 'تم حذف :count من سجلات مراجعة المنصة الأقدم من :date.',

@@ -11,8 +11,10 @@ use App\Models\CentralUser;
 use App\Models\Plan;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Concerns\SeedsCentralPlatformRoles;
+use Tests\Support\FakeReleaseBinaries;
 use Tests\TenantTestCase;
 
 /**
@@ -150,20 +152,27 @@ final class SuperAdminControlPlaneAuditTest extends TenantTestCase
 
     public function test_app_version_store_toggle_and_destroy_are_audited(): void
     {
-        $id = (int) $this->post('/api/v1/super-admin/app-versions', [
-            'platform' => 'android',
-            'version_name' => '7.1.0',
-            'version_code' => 710,
-            'release_notes_ar' => 'تحسينات',
-        ], $this->headers)->assertCreated()->json('version.id');
-        $this->assertSame('7.1.0', $this->auditRow(CentralAuditEvent::AppVersionCreated)->properties['version_name'] ?? null);
+        Storage::fake(AppVersion::RELEASE_DISK);
 
-        $this->patchJson("/api/v1/super-admin/app-versions/{$id}/toggle-active", [], $this->headers)->assertOk();
-        $this->auditRow(CentralAuditEvent::AppVersionToggled);
+        try {
+            $id = (int) $this->post('/api/v1/super-admin/app-versions', [
+                'platform' => 'android',
+                'version_name' => '7.1.0',
+                'version_code' => 710,
+                'release_notes_ar' => 'تحسينات',
+                'apk_file' => FakeReleaseBinaries::upload(FakeReleaseBinaries::apk(), 'r.apk'),
+            ], $this->headers)->assertCreated()->json('version.id');
+            $this->assertSame('7.1.0', $this->auditRow(CentralAuditEvent::AppVersionCreated)->properties['version_name'] ?? null);
 
-        $this->deleteJson("/api/v1/super-admin/app-versions/{$id}", [], $this->headers)->assertOk();
-        $this->assertSame(710, $this->auditRow(CentralAuditEvent::AppVersionDeleted)->properties['version_code'] ?? null);
-        $this->assertNull(AppVersion::query()->find($id));
+            $this->patchJson("/api/v1/super-admin/app-versions/{$id}/toggle-active", [], $this->headers)->assertOk();
+            $this->auditRow(CentralAuditEvent::AppVersionToggled);
+
+            $this->deleteJson("/api/v1/super-admin/app-versions/{$id}", [], $this->headers)->assertOk();
+            $this->assertSame(710, $this->auditRow(CentralAuditEvent::AppVersionDeleted)->properties['version_code'] ?? null);
+            $this->assertNull(AppVersion::query()->find($id));
+        } finally {
+            FakeReleaseBinaries::cleanup();
+        }
     }
 
     public function test_store_tenant_returns_a_resource_without_db_credentials_and_is_audited(): void

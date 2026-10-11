@@ -6,8 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Dashboard\GetDashboardOverviewAction;
 use App\Http\Controllers\Controller;
-use App\Models\Store;
-use App\Support\ClientStoreGuard;
+use App\Support\ActiveStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,20 +19,17 @@ final class DashboardApiController extends Controller
     /**
      * Get real-time consolidated dashboard analytics
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if (! $user) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 401);
         }
 
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: $user->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2: the active store (or an access-checked store_id); every store only for a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
-        $storeId = $storeId ? (int) $storeId : null;
-
-        $data = $this->getDashboardOverviewAction->execute($user, $storeId);
+        $data = $this->getDashboardOverviewAction->execute($user, $storeId, allStores: $storeId === null);
 
         return response()->json([
             'success' => true,

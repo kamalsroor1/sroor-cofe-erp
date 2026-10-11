@@ -73,6 +73,20 @@ class SettingApiTest extends TenantTestCase
         $this->inTenant($this->tenant, fn () => $this->assertNotSame('اسم ممنوع', Setting::get('company_name')));
     }
 
+    public function test_roles_manage_alone_cannot_read_the_settings_dictionary(): void
+    {
+        $this->inTenant($this->tenant, fn () => Setting::set('telegram_bot_token', 'fixture-bot-token-not-a-secret'));
+
+        $rolesManager = $this->createTenantUser($this->tenant, null, ['roles.manage']);
+        $this->getJson('/api/v1/settings', $this->tenantHeaders($this->tenant, $rolesManager))
+            ->assertStatus(403)
+            ->assertJsonMissing(['telegram_bot_token' => 'fixture-bot-token-not-a-secret']);
+
+        $settingsManager = $this->createTenantUser($this->tenant, null, ['settings.manage']);
+        $this->getJson('/api/v1/settings', $this->tenantHeaders($this->tenant, $settingsManager))
+            ->assertOk();
+    }
+
     public function test_can_get_settings_dictionary(): void
     {
         $response = $this->getJson('/api/v1/settings', $this->adminHeaders);

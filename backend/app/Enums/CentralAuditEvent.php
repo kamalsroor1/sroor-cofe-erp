@@ -86,6 +86,11 @@ enum CentralAuditEvent: string
     case AppVersionToggled = 'app_version_toggled';
     case AppVersionDeleted = 'app_version_deleted';
 
+    // W2 batch 5 (OPS-9): asynchronous archive and the CLI purge
+    case TenantArchiveRequested = 'tenant_archive_requested';
+    case TenantPurgeStarted = 'tenant_purge_started';
+    case TenantPurgeFailed = 'tenant_purge_failed';
+
     public function translationKey(): string
     {
         return 'central_audit.events.'.$this->value;

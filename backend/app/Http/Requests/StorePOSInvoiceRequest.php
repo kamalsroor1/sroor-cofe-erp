@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Customer;
-use App\Models\Store;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\TenantClock;
@@ -39,20 +38,14 @@ final class StorePOSInvoiceRequest extends FormRequest
             ]);
         }
 
-        // Security (interim until STOR-2): a body store_id is access-checked like the header
-        // (403 otherwise), and the already-verified X-Store-Id wins when both are sent.
-        $bodyStoreId = ClientStoreGuard::verified($this);
-        if ($bodyStoreId === ActiveStore::ALL) {
+        // STOR-2 (CTO Q14): the sale is made from the active store only (store.active:concrete
+        // resolved and access-checked X-Store-Id). A body store_id is access-checked (403, and
+        // `all` is never a store to sell from) and otherwise ignored until STOR-4 stops sending it.
+        if (ClientStoreGuard::verified($this) === ActiveStore::ALL) {
             ClientStoreGuard::deny();
         }
 
-        $headerStoreId = ActiveStore::parseHeader($this->header('X-Store-Id'));
-
-        $storeId = (is_int($headerStoreId) ? $headerStoreId : null)
-            ?? $bodyStoreId
-            ?? session('current_store_id')
-            ?? $this->user()?->getCurrentStore()?->id
-            ?? Store::first()?->id;
+        $storeId = (int) app(ActiveStore::class)->requireStore()->id;
 
         $paymentType = $this->input('payment_type') ?? $this->input('invoice_type') ?? 'cash';
         $paymentMethod = $this->input('payment_method') ?? 'cash';
@@ -81,7 +74,7 @@ final class StorePOSInvoiceRequest extends FormRequest
 
         $this->merge([
             'customer_id' => $customerId ? (int) $customerId : null,
-            'store_id' => $storeId ? (int) $storeId : null,
+            'store_id' => $storeId,
             // SETG-2 ext: the business date on the tenant clock (timezone + cutoff), not the server date.
             'invoice_date' => $this->input('invoice_date') ?? app(TenantClock::class)->businessDate(),
             'payment_type' => $paymentType,

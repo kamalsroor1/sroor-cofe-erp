@@ -12,11 +12,11 @@ use App\Http\Requests\AppVersions\StoreAppVersionRequest;
 use App\Models\AppVersion;
 use App\Models\CentralUser;
 use App\Services\CentralAuditLogger;
+use App\Support\AppReleases\ReleaseFileLocator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
-class SuperAdminAppVersionController extends Controller
+final class SuperAdminAppVersionController extends Controller
 {
     public function __construct(private readonly CentralAuditLogger $auditLogger) {}
 
@@ -42,9 +42,10 @@ class SuperAdminAppVersionController extends Controller
      */
     public function store(StoreAppVersionRequest $request, CreateAppVersionAction $action): JsonResponse
     {
-        $dto = StoreAppVersionDTO::fromRequest(
+        $dto = StoreAppVersionDTO::fromArray(
             $request->validated(),
-            $request->file('apk_file')
+            $request->upload(),
+            $request->binaryReport(),
         );
 
         $version = $action->execute($dto);
@@ -80,11 +81,11 @@ class SuperAdminAppVersionController extends Controller
         // Audited before the delete so the subject id and version are still readable.
         $this->audit($request, CentralAuditEvent::AppVersionDeleted, $appVersion);
 
-        if ($appVersion->apk_path && Storage::disk('public')->exists($appVersion->apk_path)) {
-            Storage::disk('public')->delete($appVersion->apk_path);
-        }
-
         $appVersion->delete();
+
+        // After the row is gone: the binary is removed from the private release disk (and
+        // from the legacy public root, if app-releases:relocate has not moved it yet).
+        ReleaseFileLocator::delete($appVersion);
 
         return response()->json([
             'message' => __('super.version_deleted_success'),

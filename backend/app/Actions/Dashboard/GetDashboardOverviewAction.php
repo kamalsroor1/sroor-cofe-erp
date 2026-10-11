@@ -10,10 +10,10 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
-use App\Models\Payment;
 use App\Models\Store;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Services\DailyCashFlowService;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
 use App\Services\Settings\TenantSettings;
@@ -29,12 +29,17 @@ final class GetDashboardOverviewAction
         private readonly TenantClock $tenantClock,
         private readonly TenantSettings $tenantSettings,
         private readonly ShiftService $shiftService,
+        private readonly DailyCashFlowService $dailyCashFlow,
     ) {}
 
     /**
      * Compute comprehensive dashboard performance metrics for SPA
+     *
+     * STOR-2: $storeId is the request's already access-checked store and is used as is (also a
+     * closed branch the user explicitly selected). $allStores (a verified `X-Store-Id: all`)
+     * aggregates every store. Without either, the legacy fallback picks the user's store.
      */
-    public function execute(?User $user = null, ?int $storeId = null): array
+    public function execute(?User $user = null, ?int $storeId = null, bool $allStores = false): array
     {
         // SETG-2 (+ ext): "today" is the tenant's current business day (timezone + cutoff).
         $today = $this->tenantClock->today();
@@ -42,15 +47,21 @@ final class GetDashboardOverviewAction
         // 1. Resolve Store
         $activeStore = null;
         if ($storeId) {
-            $activeStore = Store::where('id', $storeId)->where('is_active', true)->first();
+            $activeStore = Store::query()->whereKey($storeId)->first();
+            if (! $activeStore instanceof Store) {
+                // Never widen an unknown store id into "every store".
+                $storeId = null;
+            }
         }
-        if (! $activeStore && $user) {
+        if ($allStores && ! $activeStore) {
+            $storeId = null;
+        } elseif (! $activeStore && $user) {
             $activeStore = $user->getCurrentStore();
             if ($activeStore) {
                 $storeId = $activeStore->id;
             }
         }
-        if (! $activeStore) {
+        if (! $activeStore && ! $allStores) {
             $activeStore = Store::getMainStore();
             if ($activeStore) {
                 $storeId = $activeStore->id;
@@ -75,7 +86,6 @@ final class GetDashboardOverviewAction
         $cashSales = '0.000';
         $creditSales = '0.000';
         $partialSales = '0.000';
-        $partialPaid = '0.000';
         $invoicesCount = $todayInvoices->count();
 
         foreach ($todayInvoices as $inv) {
@@ -89,31 +99,24 @@ final class GetDashboardOverviewAction
                 $creditSales = bcadd($creditSales, (string) $inv->net_total, 3);
             } elseif ($inv->payment_type === 'partial') {
                 $partialSales = bcadd($partialSales, (string) $inv->net_total, 3);
-                $partialPaid = bcadd($partialPaid, (string) $inv->paid_amount, 3);
             }
         }
 
-        // 4. Customer Voucher Payments Today
-        $customerPayments = (string) (Payment::whereDate('payment_date', $today)
-            ->whereNotNull('customer_id')
-            ->sum('amount') ?: '0.000');
+        // 4. Cash collected today (BUG-01): the cash vouchers of the store(s) in scope only. The
+        // invoice writes its own sale voucher, so adding invoices.paid_amount counted it twice.
+        $cashFlow = $this->dailyCashFlow->forDate($today, $storeFilter);
+        $totalCashCollected = $cashFlow['total_cash_in'];
 
-        $totalCashCollected = bcadd(bcadd($cashSales, $partialPaid, 3), $customerPayments, 3);
-
-        // 5. Operating Expenses Today
+        // 5. Operating Expenses Today (all methods; only the cash ones leave the drawer)
         $expensesQuery = Expense::whereDate('expense_date', $today)
             ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter));
 
         $totalExpenses = (string) ($expensesQuery->sum('amount') ?: '0.000');
         $expensesCount = $expensesQuery->count();
 
-        // 6. Supplier Payments Today
-        $supplierPaid = (string) (Payment::whereDate('payment_date', $today)
-            ->whereNotNull('supplier_id')
-            ->sum('amount') ?: '0.000');
-
-        $totalOutflows = bcadd($totalExpenses, $supplierPaid, 3);
-        $netCashToday = bcsub($totalCashCollected, $totalOutflows, 3);
+        // 6. Supplier cash payments today and the day's net drawer cash
+        $supplierPaid = $cashFlow['supplier_paid'];
+        $netCashToday = $cashFlow['net_cash'];
 
         // 7. Customers & Suppliers Totals
         $customersCount = (int) Customer::where('is_active', true)->count();

@@ -13,10 +13,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Resources\PurchaseResource;
 use App\Models\Purchase;
-use App\Models\Store;
+use App\Models\User;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class PurchaseController extends Controller
 {
@@ -29,7 +32,7 @@ final class PurchaseController extends Controller
     /**
      * List Purchases with filters and totals
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view')) {
@@ -43,16 +46,14 @@ final class PurchaseController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $clientStoreId = ClientStoreGuard::verified($request);
-        $storeId = $request->header('X-Store-Id')
-            ?: $clientStoreId
-            ?: $user?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2: the active store (X-Store-Id); a query store_id is an access-checked branch
+        // filter (403). Null (every store) only through a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
         $query = Purchase::with(['supplier', 'user', 'store', 'items.item']);
 
-        if ($storeId && $storeId !== 'all') {
-            $query->where('store_id', (int) $storeId);
+        if ($storeId !== null) {
+            $query->where('store_id', $storeId);
         }
 
         if ($search !== '') {
@@ -113,6 +114,10 @@ final class PurchaseController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        if ($user instanceof User) {
+            $this->findPurchaseOr404($user, $id, 'view');
+        }
+
         $purchase = Purchase::with(['supplier', 'user', 'store', 'items.item', 'additionalExpenses'])->findOrFail($id);
 
         return response()->json([
@@ -124,18 +129,18 @@ final class PurchaseController extends Controller
     /**
      * Store new purchase invoice
      */
-    public function store(StorePurchaseRequest $request): JsonResponse
+    public function store(StorePurchaseRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2 (CTO Q14): goods are received into the active store only (store.active:concrete).
+        // A body store_id is still access-checked (403) but never chooses the store.
+        ClientStoreGuard::verified($request);
 
-        $dto = PurchaseDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
+        $dto = PurchaseDTO::fromArray($request->validated(), (int) $activeStore->requireStore()->id);
         $purchase = $this->createPurchaseAction->execute($dto);
 
         return response()->json([
             'success' => true,
-            'message' => __('purchases.created_success', ['number' => $purchase->purchase_number]) ?: "تم تسجيل وتأكيد فاتورة المشتريات رقم {$purchase->purchase_number} وتوريد الخامات للمخزن بنجاح ✓",
+            'message' => __('purchases.created_success', ['number' => $purchase->purchase_number]),
             'data' => (new PurchaseResource($purchase))->resolve(),
         ], 201);
     }
@@ -150,6 +155,10 @@ final class PurchaseController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        if ($user instanceof User) {
+            $this->findPurchaseOr404($user, $id, 'cancel');
+        }
+
         $dto = CancelPurchaseDTO::fromArray($id, [
             'reason' => $request->input('reason', 'إلغاء من النظام'),
         ]);
@@ -158,7 +167,7 @@ final class PurchaseController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('purchases.cancelled_success', ['number' => $purchase->purchase_number]) ?: "تم إلغاء فاتورة المشتريات رقم {$purchase->purchase_number} وعكس المخزن والمديونية بنجاح ✓",
+            'message' => __('purchases.cancelled_success', ['number' => $purchase->purchase_number]),
             'data' => (new PurchaseResource($purchase))->resolve(),
         ], 200);
     }
@@ -166,17 +175,15 @@ final class PurchaseController extends Controller
     /**
      * Smart Reorder AI Suggestions
      */
-    public function smartReorder(Request $request): JsonResponse
+    public function smartReorder(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('purchases.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $clientStoreId = ClientStoreGuard::verified($request);
-        $storeId = $request->header('X-Store-Id')
-            ?: $clientStoreId;
-        $storeFilter = ($storeId && $storeId !== 'all') ? (int) $storeId : null;
+        // STOR-2: the active store, an access-checked ?store_id, or every store via a verified `all`.
+        $storeFilter = $activeStore->readFilter($request);
 
         $analysisDays = (int) $request->input('analysis_days', 14);
         $targetCoverDays = (int) $request->input('target_cover_days', 15);
@@ -195,5 +202,18 @@ final class PurchaseController extends Controller
             'success' => true,
             'data' => $result,
         ], 200);
+    }
+
+    /**
+     * STOR-2 (CTO Q13): the permission was already checked (403), so a policy denial here can only
+     * be the purchase's store: answered exactly like a missing purchase (404), never revealing it.
+     */
+    private function findPurchaseOr404(User $user, int $id, string $ability): void
+    {
+        $purchase = Purchase::query()->select(['id', 'store_id'])->find($id);
+
+        if (! $purchase instanceof Purchase || ! Gate::forUser($user)->allows($ability, $purchase)) {
+            throw (new ModelNotFoundException)->setModel(Purchase::class, [$id]);
+        }
     }
 }

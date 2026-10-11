@@ -96,6 +96,23 @@ class CentralTenantResolverApiTest extends TenantTestCase
             ->assertJsonPath('data.tenant_id', 'test-cafe');
     }
 
+    public function test_a_purged_workspace_is_not_found(): void
+    {
+        $tenant = Tenant::create([
+            'id' => 'gone',
+            'name' => 'Gone Shop',
+            'slug' => 'gone',
+            'email' => 'gone@example.test',
+            'status' => 'archived',
+        ]);
+        $tenant->forceFill(['purged_at' => now()])->save();
+
+        $this->getJson('/api/v1/central/tenants/resolve?code=gone')
+            ->assertNotFound()
+            ->assertJsonPath('success', false)
+            ->assertJsonMissingPath('tenant');
+    }
+
     public function test_returns_404_when_tenant_does_not_exist(): void
     {
         $response = $this->getJson('/api/v1/central/tenants/resolve?code=non-existent-shop');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Enums\TenantStatus;
+use App\Jobs\ArchiveTenantJob;
 use App\Models\Tenant;
 use App\Providers\TenancyServiceProvider;
 use Illuminate\Support\Facades\Bus;
@@ -23,8 +24,10 @@ use Tests\TenantTestCase;
  * Regression for commit 606da74b, which stripped every $variable from
  * DeleteTenantAction and UpdateTenantDatabaseConfigAction (ParseError -> 500).
  *
- * Covers DELETE /api/v1/super-admin/tenants/{id} (disabled since OPS-11 / Q-B13: always 403,
- * nothing deleted, no DeleteDatabase job) and
+ * Covers DELETE /api/v1/super-admin/tenants/{id} (OPS-11 / Q-B13 made it a safety stop; since
+ * OPS-9 it requests an ASYNC ARCHIVE and never drops anything: an active tenant is refused
+ * with 409 archive_not_allowed, nothing deleted, no DeleteDatabase / archive job; the archive
+ * flow itself is covered by Tests\Feature\Central\TenantArchiveApiTest) and
  * POST /api/v1/super-admin/tenants/{id}/update-db-config.
  *
  * IDEN-1.8: operators are App\Models\CentralUser. Both routes demand a recent second factor
@@ -97,24 +100,29 @@ class SuperAdminTenantMaintenanceApiTest extends TenantTestCase
 
     // ---------------------------------------------------------------- delete
 
-    public function test_super_admin_delete_is_disabled_and_deletes_nothing(): void
+    public function test_super_admin_delete_of_an_active_tenant_is_refused_and_deletes_nothing(): void
     {
         Bus::fake();
         Queue::fake();
 
-        $this->deleteJson($this->deleteUri(), [], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
-            ->assertStatus(403)
+        $this->deleteJson($this->deleteUri(), [
+            'confirm_code' => $this->tenant->slug,
+            'expected_status' => TenantStatus::Suspended->value,
+        ], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
+            ->assertStatus(409)
             ->assertJson([
                 'success' => false,
-                'message' => __('super.tenant_delete_disabled'),
+                'error_code' => 'subscription.archive_not_allowed',
             ]);
 
         $this->assertTenantUntouched();
         $this->assertSame(1, $this->tenant->domains()->count());
+        $this->assertSame(TenantStatus::Active->value, $this->freshTenant()->status);
         Event::assertNotDispatched(DeletingDatabase::class);
         Event::assertNotDispatched(DatabaseDeleted::class);
         Bus::assertNotDispatched(DeleteDatabase::class);
         Queue::assertNotPushed(DeleteDatabase::class);
+        Queue::assertNotPushed(ArchiveTenantJob::class);
     }
 
     public function test_delete_without_a_recent_second_factor_is_step_up_required(): void

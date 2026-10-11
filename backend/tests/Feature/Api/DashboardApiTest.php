@@ -10,6 +10,7 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
@@ -210,7 +211,7 @@ class DashboardApiTest extends TenantTestCase
             'opening_cash_balance' => '1000.000',
         ]);
 
-        Invoice::create([
+        $cashInvoice = Invoice::create([
             'invoice_number' => 'INV-DASH-CASH',
             'store_id' => $this->mainStore->id,
             'customer_id' => $this->customer->id,
@@ -224,6 +225,16 @@ class DashboardApiTest extends TenantTestCase
             'remaining_amount' => '0.000',
             'status' => 'confirmed',
             'payment_type' => 'cash',
+        ]);
+        // The sale voucher InvoiceService writes with every paid invoice: the drawer's cash source.
+        Payment::create([
+            'payment_number' => Payment::SALE_NUMBER_PREFIX.'DASH-CASH',
+            'customer_id' => $this->customer->id,
+            'invoice_id' => $cashInvoice->id,
+            'user_id' => $this->adminUser->id,
+            'amount' => '1300.000',
+            'payment_date' => $today,
+            'payment_method' => 'cash',
         ]);
 
         Expense::create([

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\TenantBackupKind;
 use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int $size_bytes
  * @property Carbon|null $created_at
  * @property Carbon|null $verified_at the uploaded copy was read back and its sha256 matched
+ * @property TenantBackupKind $kind why it was taken (OPS-9); final / pre_purge are never pruned
  */
 class TenantBackup extends Model
 {
@@ -43,6 +45,7 @@ class TenantBackup extends Model
         'sha256',
         'size_bytes',
         'verified_at',
+        'kind',
     ];
 
     protected function casts(): array
@@ -51,6 +54,7 @@ class TenantBackup extends Model
             'size_bytes' => 'integer',
             'created_at' => 'datetime',
             'verified_at' => 'datetime',
+            'kind' => TenantBackupKind::class,
         ];
     }
 
@@ -76,6 +80,20 @@ class TenantBackup extends Model
     public function scopeVerified(Builder $query): Builder
     {
         return $query->whereNotNull('verified_at');
+    }
+
+    /**
+     * Rows of the given kinds (OPS-9).
+     *
+     * @param  Builder<TenantBackup>  $query
+     * @return Builder<TenantBackup>
+     */
+    public function scopeKind(Builder $query, TenantBackupKind ...$kinds): Builder
+    {
+        return $query->whereIn(
+            $query->qualifyColumn('kind'),
+            array_map(static fn (TenantBackupKind $kind): string => $kind->value, $kinds),
+        );
     }
 
     public function subject(): string

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Tenants;
 
 use App\Enums\CentralAuditEvent;
+use App\Enums\TenantStatus;
+use App\Exceptions\TenantLifecycleException;
 use App\Exceptions\TenantProvisioningException;
 use App\Models\CentralUser;
 use App\Models\Tenant;
@@ -21,6 +23,11 @@ use SensitiveParameter;
  * database name or username under a pending/running/failed provisioning would point the
  * job (and its cleanup) at another database or account. The row is locked while checked
  * and updated. The password is stored encrypted (Tenant::sealDatabasePassword()).
+ *
+ * M1 (OPS-9): also refused (409) on a purged tenant, while an archive request is queued or
+ * running (the job backs up and archives THIS database), and on an archived tenant (its final
+ * backup and a later purge both target the recorded database: repointing it would make
+ * `tenants:purge` drop something else).
  */
 class UpdateTenantDatabaseConfigAction
 {
@@ -42,6 +49,18 @@ class UpdateTenantDatabaseConfigAction
 
         return DB::connection($tenant->getConnectionName())->transaction(function () use ($tenant, $update, $operator): Tenant {
             $locked = Tenant::query()->whereKey($tenant->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->isPurged()) {
+                throw TenantLifecycleException::tenantPurged();
+            }
+
+            if ($locked->archive_state?->isInProgress() === true) {
+                throw TenantLifecycleException::archiveInProgress($locked->archive_state);
+            }
+
+            if ((string) $locked->status === TenantStatus::Archived->value) {
+                throw TenantLifecycleException::alreadyArchived();
+            }
 
             if (! $locked->isProvisioned()) {
                 throw TenantProvisioningException::requiresReadyWorkspace($locked->provisioningStatus());

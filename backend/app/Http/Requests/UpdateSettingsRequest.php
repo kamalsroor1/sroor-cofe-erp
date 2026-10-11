@@ -30,7 +30,6 @@ class UpdateSettingsRequest extends FormRequest
     {
         return (bool) ($this->user() && (
             $this->user()->hasRole('admin')
-            || $this->user()->can('roles.manage')
             || $this->user()->can('settings.manage')
         ));
     }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Central\CentralPasswordResetController;
 use App\Http\Controllers\Api\Central\CentralTwoFactorController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
+use App\Http\Controllers\Api\Central\TenantArchiveController;
 use App\Http\Controllers\Api\Central\TenantProvisioningController;
 use App\Http\Controllers\Api\Central\TenantRateLimitController;
 use App\Http\Controllers\Api\SuperAdminApiController;
@@ -55,7 +56,8 @@ use Illuminate\Support\Facades\Route;
 |                                   store / toggle-active / destroy (security audit, W2 3I),
 |                                   platform-settings update + asset upload/delete (BRND-2),
 |                                   tenant retry-provisioning (OPS-2), platform units
-|                                   update (W2 batch 4 review).
+|                                   update (W2 batch 4 review), tenant archive (DELETE)
+|                                   and unarchive (OPS-9).
 |                                   The `can:` check runs first: a read-only operator
 |                                   still gets a plain 403, never a step-up prompt.
 |
@@ -126,8 +128,12 @@ Route::prefix('v1/super-admin')
             ->middleware($can(CentralPermission::TenantsManage))->name('tenants.store');
         Route::get('/tenants/{id}', [SuperAdminApiController::class, 'showTenant'])
             ->middleware($can(CentralPermission::TenantsView))->name('tenants.show');
-        Route::delete('/tenants/{id}', [SuperAdminApiController::class, 'destroyTenant'])
-            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.destroy');
+        // OPS-9: "delete" = asynchronous archive with a verified final backup (202). Nothing is
+        // dropped here: the database is only ever dropped by `php artisan tenants:purge` (CLI).
+        Route::delete('/tenants/{id}', [TenantArchiveController::class, 'destroy'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:6,1'])->name('tenants.destroy');
+        Route::post('/tenants/{id}/unarchive', [TenantArchiveController::class, 'unarchive'])
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:6,1'])->name('tenants.unarchive');
         Route::post('/tenants/{id}/update-db-config', [SuperAdminApiController::class, 'updateDatabaseConfig'])
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.update_db_config');
         Route::post('/tenants/{id}/toggle-status', [SuperAdminApiController::class, 'toggleStatus'])
@@ -140,7 +146,7 @@ Route::prefix('v1/super-admin')
             ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.run_migrations');
         // OPS-2: re-queue a failed provisioning (409 unless the tenant is `failed`).
         Route::post('/tenants/{id}/retry-provisioning', [TenantProvisioningController::class, 'retry'])
-            ->middleware([$can(CentralPermission::TenantsManage), 'throttle:6,1', RequireRecentTwoFactor::class])->name('tenants.retry_provisioning');
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:6,1'])->name('tenants.retry_provisioning');
 
         // IDEN-4.6 ext: temporary per-tenant rate-limit raise (expiring, audited).
         Route::get('/tenants/{id}/rate-limits', [TenantRateLimitController::class, 'show'])

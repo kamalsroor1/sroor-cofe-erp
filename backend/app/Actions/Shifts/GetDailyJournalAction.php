@@ -7,14 +7,17 @@ namespace App\Actions\Shifts;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\Store;
+use App\Services\DailyCashFlowService;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
+use Illuminate\Support\Collection;
 
 final class GetDailyJournalAction
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly DailyCashFlowService $dailyCashFlow,
     ) {}
 
     /**
@@ -41,36 +44,28 @@ final class GetDailyJournalAction
             ->get();
 
         $confirmedInvoices = $invoices->where('status', '!=', 'cancelled');
-        $totalSales = (float) $confirmedInvoices->sum('net_total');
-        $cashSales = (float) $confirmedInvoices->where('payment_type', 'cash')->sum('paid_amount');
-        $creditSales = (float) $confirmedInvoices->whereIn('payment_type', ['credit', 'partial'])->sum('remaining_amount');
-        $partialSales = (float) $confirmedInvoices->where('payment_type', 'partial')->sum('paid_amount');
+        $totalSales = $this->sumDecimal($confirmedInvoices->pluck('net_total'));
+        $creditSales = $this->sumDecimal($confirmedInvoices->whereIn('payment_type', ['credit', 'partial'])->pluck('remaining_amount'));
 
-        // Customer Payments on selected date
-        $customerPayments = (float) Payment::whereNotNull('customer_id')
-            ->whereDate('payment_date', $date)
-            ->where('payment_method', 'cash')
-            ->sum('amount');
+        // BUG-01: drawer cash comes from the cash vouchers of the selected store only (shared
+        // with the A4 print, dashboards and treasury summary through DailyCashFlowService).
+        $cashFlow = $this->dailyCashFlow->forDate($date, $storeId !== null ? (int) $storeId : null);
+        $cashSales = $cashFlow['cash_sales'];
+        $customerPayments = $cashFlow['customer_receipts'];
+        $supplierPayments = $cashFlow['supplier_paid'];
+        $cashExpenses = $cashFlow['cash_expenses'];
 
-        // Supplier Payments on selected date
-        $supplierPayments = (float) Payment::whereNotNull('supplier_id')
-            ->whereDate('payment_date', $date)
-            ->where('payment_method', 'cash')
-            ->sum('amount');
-
-        // Expenses on selected date
+        // Expenses on selected date (the list and the all-methods total)
         $expenses = Expense::whereDate('expense_date', $date)
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->latest('id')
             ->get();
 
-        $totalExpenses = (float) $expenses->sum('amount');
-        $cashExpenses = (float) $expenses->where('payment_method', 'cash')->sum('amount');
+        $totalExpenses = $this->sumDecimal($expenses->pluck('amount'));
 
-        // Net Cash calculations with bcmath
-        $totalCashIn = bcadd(bcadd((string) $cashSales, (string) $partialSales, 3), (string) $customerPayments, 3);
-        $totalCashOut = bcadd((string) $supplierPayments, (string) $cashExpenses, 3);
-        $netCashToday = bcsub((string) $totalCashIn, (string) $totalOut = (string) $totalCashOut, 3);
+        $totalCashIn = $cashFlow['total_cash_in'];
+        $totalCashOut = $cashFlow['total_cash_out'];
+        $netCashToday = $cashFlow['net_cash'];
 
         $openingCashBalance = $activeShift ? (string) $activeShift->opening_cash_balance : '0.000';
         $expectedCashInDrawer = bcadd($openingCashBalance, (string) $netCashToday, 3);
@@ -88,7 +83,7 @@ final class GetDailyJournalAction
             ] : null,
             'summary' => [
                 'total_sales' => (float) $totalSales,
-                'cash_sales' => (float) bcadd((string) $cashSales, (string) $partialSales, 3),
+                'cash_sales' => (float) $cashSales,
                 'credit_sales' => (float) $creditSales,
                 'customer_payments' => (float) $customerPayments,
                 'total_cash_in' => (float) $totalCashIn,
@@ -121,5 +116,18 @@ final class GetDailyJournalAction
                 'payment_method' => $e->payment_method,
             ]),
         ];
+    }
+
+    /**
+     * Exact scale-3 sum of DECIMAL(12,3) values (bcmath, never float).
+     *
+     * @param  Collection<array-key, mixed>  $values
+     */
+    private function sumDecimal(Collection $values): string
+    {
+        return $values->reduce(
+            fn (string $carry, mixed $value): string => bcadd($carry, Decimal::normalize(is_numeric($value) ? (string) $value : '0'), 3),
+            '0.000',
+        );
     }
 }
