@@ -365,6 +365,22 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 - **صلاحيات MySQL انحرفت:** `--only 41-mysql-users` يعيدها حرفيًا كما في §5 (REVOKE ثم GRANT)، ولا يمس مستخدمي المستأجرين ولا البيانات.
 - لا سكريبت هنا يحذف بيانات (لا `DROP DATABASE`، لا `migrate:fresh`). الحذف الوحيد: الحسابات المجهولة في MySQL على تثبيت جديد.
 
+### 11.1 خطوة لمرة واحدة: مسح توكنات `personal_access_tokens` في الـ DB المركزي — **[W2 batch 6، SEC-1 M1] (لم تُنفَّذ)**
+
+قبل SEC-1 كانت مسارات الـ tenant API على الدومين المركزي (بدون `X-Tenant`) تشتغل على الـ DB **المركزي**: `POST /api/v1/auth/login` كان يقدر يدوّر في جدول `users` المركزي ويصدر توكن Sanctum في جدول `personal_access_tokens` **المركزي**. بعد SEC-1 المسارات دي بترجع 404 من غير tenant، ومشغّلو المنصة بيستخدموا `central_personal_access_tokens` بس (IDEN-1.4). أي صف في `personal_access_tokens` المركزي بقى بقايا ولازم يتمسح مرة واحدة بعد نشر SEC-1:
+
+1. Snapshot / backup للـ DB المركزي الأول (§11).
+2. على الـ DB **المركزي فقط** (مش أي DB مستأجر — توكنات المستخدمين الحقيقية جوه DB كل مستأجر ولازم تفضل):
+   ```sql
+   -- راجع العدد الأول:
+   SELECT COUNT(*) FROM personal_access_tokens;
+   -- ثم امسح:
+   DELETE FROM personal_access_tokens;
+   ```
+3. تأكد إن `central_personal_access_tokens` ماتلمسش، وإن دخول الـ console والتطبيقات على دومينات المستأجرين شغال.
+
+الخطوة دي بيد الـ CTO بعد الـ deploy، ومش جزء من أي سكريبت.
+
 ---
 
 ## 12. مخاطر معروفة
