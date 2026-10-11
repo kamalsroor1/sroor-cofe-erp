@@ -76,7 +76,7 @@ test.describe("Business Flow 1: POS cash sale with weighted item and change", ()
 
     // 3. Drive POS sale through UI:
     // Navigate to /pos, add product via UI tile
-    await page.goto("/pos", { waitUntil: "networkidle" });
+    await page.goto("/pos", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator('[data-testid="pos-product-tile"]').first(),
     ).toBeVisible({
@@ -155,7 +155,7 @@ test.describe("Business Flow 1: POS cash sale with weighted item and change", ()
 
     // 6. UI Verification: Receipt view renders and print trigger works
     await page.goto(`/invoices/${invoice.id}/print`, {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
     await expect(page.locator("#receipt-print-area")).toBeVisible({
       timeout: 15000,
