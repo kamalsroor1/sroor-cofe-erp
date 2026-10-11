@@ -50,6 +50,66 @@
             "details_btn": "التفاصيل",
             "total_records": "إجمالي السجلات:"
         },
+        "app_releases": {
+            "version_not_newer": "رقم الإصدار (version code) لازم يكون أكبر من كل إصدارات :platform الموجودة (أعلى رقم حاليًا: :max).",
+            "version_code_taken": "فيه إصدار :platform بنفس رقم الإصدار ده بالفعل.",
+            "windows_code_mismatch": "في ويندوز لازم رقم الإصدار يطابق اسم الإصدار (:name يساوي :code).",
+            "version_name_format": "اسم الإصدار لازم يكون بالشكل 1.2.3 (ثلاث أرقام، كل رقم لحد 3 خانات).",
+            "platform_not_supported": "نشر الإصدارات متاح لأندرويد وويندوز بس.",
+            "extension_mismatch": "نوع الملف مش مناسب للمنصة: أندرويد محتاج ملف apk وويندوز محتاج برنامج تثبيت exe.",
+            "min_version_too_high": "أقل رقم إصدار مدعوم مينفعش يكون أكبر من رقم الإصدار نفسه.",
+            "invalid_binary": "الملف المرفوع مش حزمة إصدار صالحة للمنصة دي.",
+            "binary_errors": {
+                "mime_not_allowed": "محتوى الملف مش حزمة أندرويد ولا برنامج ويندوز.",
+                "unreadable": "مقدرناش نقرا الملف المرفوع.",
+                "zip_magic": "الملف مش حزمة أندرويد بصيغة ZIP.",
+                "zip_unreadable": "مقدرناش نفتح حزمة الأندرويد كملف ZIP.",
+                "unsafe_entry": "حزمة الأندرويد فيها مسار ملف غير آمن.",
+                "manifest_missing": "حزمة الأندرويد مفيهاش AndroidManifest.xml.",
+                "dex_missing": "حزمة الأندرويد مفيهاش كود مُجمَّع (classes.dex).",
+                "signing_block_missing": "حزمة الأندرويد مش موقّعة بنظام توقيع APK الإصدار 2 أو 3.",
+                "signing_block_too_large": "جزء التوقيع في حزمة الأندرويد أكبر من إنه يكون توقيع حقيقي.",
+                "mz_magic": "الملف مش برنامج ويندوز (ناقصه ترويسة MZ).",
+                "pe_header": "ترويسة PE في برنامج الويندوز تالفة.",
+                "machine_not_allowed": "برنامج الويندوز مش مبني لمعالج x64 أو x86 أو ARM64.",
+                "not_executable": "ملف الويندوز مش متعلَّم كبرنامج قابل للتشغيل.",
+                "is_dll": "ملف الويندوز ده مكتبة (DLL) مش برنامج تثبيت."
+            },
+            "platforms": {
+                "android": "أندرويد",
+                "windows": "ويندوز"
+            },
+            "store_failed": "مقدرناش نحفظ ملف الإصدار. حاول تاني.",
+            "binary_write_failed": "مقدرناش نكتب ملف الإصدار على القرص الخاص بالإصدارات.",
+            "check": {
+                "title_force": "فيه تحديث إجباري متاح",
+                "title_optional": "فيه تحديث جديد متاح",
+                "title_up_to_date": "التطبيق محدَّث",
+                "message_available": "الإصدار :version من التطبيق متاح دلوقتي.",
+                "message_force": "لازم تحدّث للإصدار :version عشان تكمل استخدام التطبيق. حدّث دلوقتي.",
+                "message_up_to_date": "إنت بتستخدم أحدث إصدار من التطبيق."
+            },
+            "size": {
+                "bytes": ":size بايت",
+                "kilobytes": ":size ك.ب",
+                "megabytes": ":size م.ب"
+            },
+            "relocate": {
+                "description": "نسخ ملفات إصدارات التطبيق من القرص العام للقرص الخاص بالإصدارات، و--prune-legacy يمسح النسخ العامة اللي اتأكدنا منها (آمن لو اتشغّل أكتر من مرة)",
+                "tenant_context": "شغّل الأمر ده من السياق المركزي، مش جوه محل.",
+                "dry_run": "تجربة بس: مفيش أي ملف هيتنسخ أو يتمسح.",
+                "nothing_to_do": "مفيش ملفات إصدارات متبقية على القرص العام.",
+                "would_copy": "هيتنسخ :path",
+                "copied": "اتنسخ واتأكدنا منه :path (النسخة العامة لسه موجودة)",
+                "already_private": "موجود بالفعل على القرص الخاص بنفس الـ SHA-256: :path",
+                "pruned": "اتمسحت النسخة العامة المتأكد منها لـ :path",
+                "prune_skipped": "النسخة العامة من :path فضلت زي ما هي: النسخة الخاصة مش مطابقة للـ SHA-256 بتاعها.",
+                "conflict": "متنسخش: :path موجود على القرصين بمحتوى مختلف. لازم يتحل يدويًا.",
+                "failed": "فشل نسخ :path",
+                "public_binary_found": "لسه متاح للتحميل العام، امسحه يدويًا: public\/:file",
+                "summary": "اتنسخ: :copied، موجود خاص بالفعل: :verified، نسخ عامة اتمسحت: :pruned، تعارضات: :conflicts، فشل: :failed."
+            }
+        },
         "app_update": {
             "download_success_title": "تم تنزيل حزمة التحديث بنجاح! 🎉",
             "download_success_desc": "تم تنزيل ملف APK على جهازك. يرجى فتح الإشعار أو الضغط على ملف التثبيت للمتابعة.",
@@ -94,7 +154,7 @@
             "web_auto_updated": "أنت تستخدم نسخة الويب (v:version) وهي تتحدث تلقائيًا من السيرفر، والتحديثات اليدوية خاصة بتطبيق الموبايل وبرنامج الكمبيوتر.",
             "check_failed": "تعذر الاتصال بسيرفر التحديثات، تأكد من اتصالك بالإنترنت وحاول مرة أخرى.",
             "error_checksum_mismatch": "تم رفض التثبيت: ملف التحديث لا يطابق البصمة المنشورة (SHA-256). قد يكون الملف تالفًا أو معدّلًا، أعد المحاولة.",
-            "error_signature_mismatch": "تم رفض التثبيت: ملف التحديث غير موقّع بنفس شهادة التطبيق المثبّت.",
+            "error_signature_mismatch": "تم رفض التثبيت: ملف التحديث غير موقّع بنفس شهادة التطبيق المثبّت. ماتثبتوش، وكلم الدعم الفني.",
             "error_package_mismatch": "تم رفض التثبيت: ملف التحديث يخص تطبيقًا آخر.",
             "error_install_permission": "اسمح للتطبيق بتثبيت التحديثات من شاشة الإعدادات التي فُتحت، ثم ارجع واضغط «إعادة المحاولة».",
             "error_install_failed": "تعذر فتح شاشة التثبيت، حاول مرة أخرى.",
@@ -105,7 +165,44 @@
             "stage_downloading": "جاري تنزيل التحديث...",
             "stage_verifying": "جاري التحقق من سلامة الملف وتوقيعه...",
             "stage_installer_opened": "تم فتح شاشة التثبيت",
-            "stage_error": "فشل التحديث"
+            "stage_error": "فشل التحديث",
+            "error_signature_unverifiable": "الجهاز ده مش قادر يتأكد من توقيع التحديث، فماتثبتش. نزّل آخر إصدار يدويًا من صفحة التحميل.",
+            "error_size_mismatch": "تم رفض التثبيت: حجم الملف اللي اتنزل مش مطابق للإصدار المنشور. حاول تاني.",
+            "error_manifest_invalid": "سيرفر التحديثات بعت بيانات إصدار ناقصة. حاول تاني بعدين أو كلم الدعم الفني.",
+            "error_installer_signature": "تم رفض التثبيت: ملف التثبيت مش موقّع من الناشر المعتمد. كلم الدعم الفني.",
+            "error_update_attempts_exhausted": "التحديث فشل كذا مرة النهارده. فتحنا صفحة التحميل في المتصفح عشان تثبّت آخر إصدار يدويًا.",
+            "error_update_in_progress": "فيه تحديث شغال بالفعل. استنى لحد ما يخلص.",
+            "already_latest": "إنت شغال على آخر إصدار بالفعل.",
+            "download_manually": "التحميل اليدوي",
+            "manual_download_hint": "صفحة التحميل فيها آخر إصدار وبصمة SHA-256 بتاعته.",
+            "download_page": {
+                "title": "تحميل التطبيق",
+                "subtitle": "الإصدارات الرسمية لأندرويد وويندوز. قارن بصمة SHA-256 قبل التثبيت.",
+                "load_failed": "تعذر تحميل الإصدارات المتاحة.",
+                "empty_title": "مفيش إصدارات متاحة لسه",
+                "empty_desc": "الإصدارات المنشورة هتظهر هنا.",
+                "android_title": "تطبيق أندرويد",
+                "windows_title": "برنامج ويندوز",
+                "your_device": "جهازك",
+                "size_mb": ":size ميجابايت",
+                "download_button": "تحميل",
+                "checksum_title": "بصمة SHA-256",
+                "copy_checksum": "نسخ البصمة",
+                "checksum_hint": "بعد التحميل احسب بصمة الملف واتأكد إنها مطابقة للقيمة اللي فوق بالظبط:",
+                "android_install_hint": "افتح الملف اللي اتنزل، ولو أندرويد طلب، اسمح بتثبيت التطبيقات من المصدر ده. بياناتك محفوظة على السيرفر.",
+                "windows_install_hint": "شغّل ملف التثبيت اللي اتنزل وكمّل خطوات معالج التثبيت. اقفل البرنامج المفتوح الأول."
+            },
+            "upload": {
+                "platform_android": "تطبيق الموبايل (Android APK)",
+                "platform_windows": "برنامج سطح المكتب (Windows EXE)",
+                "file_label_android": "ملف التطبيق (Android .apk)",
+                "file_label_windows": "ملف تثبيت سطح المكتب (Windows .exe)",
+                "file_hint_android": "اختار ملف .apk الموقّع (حد أقصى 150 ميجابايت).",
+                "file_hint_windows": "اختار ملف تثبيت ويندوز .exe (حد أقصى 150 ميجابايت).",
+                "release_notes_placeholder": "كل تغيير في سطر",
+                "windows_code_hint": "في ويندوز لازم كود الإصدار يبقى :code (محسوب من اسم الإصدار).",
+                "windows_code_rule": "في ويندوز كود الإصدار بيتحسب من اسم الإصدار (1.2.3 = 1002003)."
+            }
         },
         "auth": {
             "failed": "بيانات الاعتماد المدخلة غير صحيحة.",
@@ -364,7 +461,10 @@
                 "platform_units_updated": "تعديل وحدات القياس العامة للمنصة",
                 "app_version_created": "إضافة إصدار تطبيق",
                 "app_version_toggled": "تفعيل أو إيقاف إصدار تطبيق",
-                "app_version_deleted": "حذف إصدار تطبيق"
+                "app_version_deleted": "حذف إصدار تطبيق",
+                "tenant_archive_requested": "طلب أرشفة محل",
+                "tenant_purge_started": "بدء المسح النهائي لمحل",
+                "tenant_purge_failed": "فشل المسح النهائي لمحل"
             },
             "prune": {
                 "done": "تم حذف :count من سجلات مراجعة المنصة الأقدم من :date."
@@ -642,7 +742,11 @@
                 "mail_intro": "الأمر :command انتهى بـ :count حالة فشل:",
                 "mail_line": ":subject: :reason",
                 "mail_outro": "راجع سجل الخادم وdocs\/07-operations\/backup-restore.md. مفيش نسخة احتياطية اتاخدت للعناصر اللي فوق.",
-                "google_not_configured": "قرص Google Drive للنسخ الاحتياطي مش مضبوط: اضبط GOOGLE_DRIVE_CLIENT_ID وGOOGLE_DRIVE_CLIENT_SECRET وGOOGLE_DRIVE_REFRESH_TOKEN في ملف .env على الخادم."
+                "google_not_configured": "قرص Google Drive للنسخ الاحتياطي مش مضبوط: اضبط GOOGLE_DRIVE_CLIENT_ID وGOOGLE_DRIVE_CLIENT_SECRET وGOOGLE_DRIVE_REFRESH_TOKEN في ملف .env على الخادم.",
+                "tenant_purged": "المحل :tenant اتمسح نهائيًا (أو المسح بدأ): مفيش نسخ احتياطي ليه.",
+                "kind_invalid": "قيمة --kind مش معروفة. المسموح: :kinds.",
+                "kind_needs_single_tenant": "نسخة :kind بتتعمل لمحل واحد بس (--tenant) مع --skip-central.",
+                "kind_needs_ledger": "نسخة :kind محتاجة سجل tenant_backups بعمود kind (شغّل الـ migrations)."
             },
             "restore": {
                 "description": "استعادة أرشيف نسخة احتياطية في قاعدة بيانات جديدة منفصلة والتحقق من عدد الصفوف (تمرين الاستعادة OPS-5).",
@@ -681,6 +785,73 @@
             "tenants": {
                 "skipped_not_provisioned": "تم تخطي :count مستأجر لسه ما اتجهزش (في الانتظار أو جاري التجهيز أو فشل: مفيش قاعدة بيانات).",
                 "none_provisioned": "مفيش مستأجرين جاهزين: مفيش حاجة تتنفذ."
+            },
+            "archive": {
+                "description": "أرشفة محل موقوف أو ملغي بعد نسخة احتياطية نهائية متأكدين منها (من غير مسح أي حاجة)",
+                "note_too_long": "الملاحظة أقصاها 500 حرف.",
+                "started": "جاري أرشفة :tenant: بناخد النسخة الاحتياطية النهائية…",
+                "failed": "أرشفة :tenant فشلت وحالته ماتغيرتش (راجع السجل).",
+                "done": "المحل :tenant اتأرشف. النسخة النهائية: #:backup.",
+                "backup_failed": "النسخة الاحتياطية النهائية لـ :tenant فشلت (راجع مخرجات النسخ والسجل).",
+                "backup_not_verified": "مفيش نسخة نهائية متأكدين منها لـ :tenant متسجلة على الـ disk :disk."
+            },
+            "purge": {
+                "description": "مسح نهائي لقاعدة بيانات وملفات محل مستحق بعد نسخة احتياطية متأكدين منها ومجرّبة استعادتها (من سطر الأوامر بس)",
+                "tenant_not_found": "المحل :tenant مش موجود.",
+                "already_purged": "المحل :tenant اتمسح نهائيًا قبل كده. مفيش حاجة تتعمل.",
+                "resuming": "مسح :tenant بدأ قبل كده: هنكمّل الخطوات اللي فاضلة.",
+                "taking_backup": "جاري أخذ نسخة pre_purge جديدة لـ :tenant…",
+                "verifying_backup": "جاري التأكد من النسخة #:backup: الـ checksum وفك التشفير وتجربة الاستعادة…",
+                "backup_verified": "النسخة #:backup متأكدين منها واستعادتها اتجربت.",
+                "backup_will_be_taken": "هتتاخد نسخة pre_purge",
+                "database_missing": "قاعدة البيانات :database مش موجودة خلاص: هتتنفذ الخطوات الباقية بس.",
+                "dry_run_done": "تجربة بس (dry run): كل الفحوص نجحت. ماتمسحش أي حاجة.",
+                "type_slug": "اكتب كود المحل (:slug) لتأكيد المسح النهائي",
+                "confirm_drop": "قاعدة البيانات والملفات هتتمسح نهائيًا. نكمّل؟",
+                "irreversible": "العملية دي مالهاش رجوع. النسخة الاحتياطية اللي فوق هي الطريقة الوحيدة لرجوع المحل.",
+                "refused": "المسح النهائي اترفض: :reason.",
+                "failed": "مسح :tenant وقف: :reason. شغّل الأمر تاني عشان يكمّل.",
+                "done": "المحل :tenant اتمسح نهائيًا: قاعدة البيانات :database وملفاتها اتمسحت، وسجل الحساب فاضل كأثر (tombstone).",
+                "locked": "فيه أرشفة أو مسح تاني لـ :tenant شغال دلوقتي. جرّب بعدين.",
+                "database_still_exists": "قاعدة البيانات :database لسه موجودة بعد المسح.",
+                "database_unsafe": "رفضنا مسح قاعدة البيانات \":database\" (اسم فاضي أو غير آمن أو دي قاعدة البيانات المركزية).",
+                "database_shared": "رفضنا مسح قاعدة البيانات :database: فيه محل تاني بيستخدمها.",
+                "database_unexpected_name": "رفضنا مسح قاعدة البيانات \":database\": اسمها مش الاسم اللي النظام عمله للمحل ده (:expected) ومش متسجلة إن النظام هو اللي أنشأها.",
+                "storage_unsafe": "رفضنا مسح مجلد ملفات بره storage\/.",
+                "storage_not_deleted": "مجلد ملفات المحل ماتمسحش.",
+                "backup_wrong_tenant": "النسخة #:backup مش بتاعة المحل ده.",
+                "backup_unverified": "النسخة #:backup عمرها ما اتأكدنا منها بعد الرفع.",
+                "backup_checksum_mismatch": "النسخة #:backup اللي على الـ disk مش مطابقة للـ sha256 المتسجل.",
+                "backup_undecryptable": "النسخة #:backup مش بتتفك بـ BACKUP_ARCHIVE_PASSWORD.",
+                "restore_drill_failed": "تجربة استعادة النسخة #:backup فشلت.",
+                "yes": "أيوه",
+                "no": "لأ",
+                "col_item": "البند",
+                "col_value": "القيمة",
+                "row_tenant": "المحل (id \/ الكود \/ الاسم)",
+                "row_status": "الحالة",
+                "row_archived_at": "تاريخ الأرشفة",
+                "row_database": "قاعدة البيانات (موجودة؟)",
+                "row_domains": "الدومينات اللي هتتمسح",
+                "row_backup": "النسخة (id \/ النوع \/ الـ disk \/ التاريخ \/ sha256)",
+                "row_resume": "استكمال مسح بدأ قبل كده",
+                "reasons": {
+                    "purged": "المحل اتمسح نهائيًا قبل كده",
+                    "violation": "الإيقاف بسبب مخالفة عمره ما يتمسح",
+                    "status_not_eligible": "المسح النهائي للمحلات المؤرشفة أو الموقوفة أو الملغية بس",
+                    "too_recent": "المحل لسه ماكملش المدة في حالته (أرشفة 30 يوم أو إيقاف\/إلغاء 90 يوم)",
+                    "no_anchor": "تاريخ دخول المحل في حالته الحالية مش معروف",
+                    "conflicting_options": "مينفعش تستخدم --backup و--take-backup مع بعض",
+                    "backup_failed": "نسخة pre_purge فشلت",
+                    "backup_missing": "مفيش نسخة احتياطية متأكدين منها للمحل ده",
+                    "backup_wrong_tenant": "النسخة بتاعة محل تاني",
+                    "backup_unverified": "النسخة عمرها ما اتأكدنا منها",
+                    "backup_too_old": "النسخة أقدم من 24 ساعة (استخدم --take-backup)",
+                    "backup_verification_failed": "ماقدرناش نتأكد من النسخة أو نجرّب استعادتها",
+                    "confirmation_missing": "التشغيل من غير تفاعل محتاج --confirm=<كود المحل> و--yes-i-understand",
+                    "confirmation_mismatch": "كود المحل اللي اتكتب مش مطابق",
+                    "not_confirmed": "المشغّل ماأكدش"
+                }
             }
         },
         "contacts": {
@@ -963,6 +1134,24 @@
             "search_screens_placeholder": "🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...",
             "no_screens_found": "لم يتم العثور على أي شاشة مطابقة لبحثك",
             "company_title": "مؤسستي"
+        },
+        "desktop_hardware": {
+            "drawer_pin_label": "طرف توصيل درج الكاش (Pin)",
+            "drawer_pin_option": "Pin :pin",
+            "drawer_pin_hint": "بيتحفظ على الجهاز ده بس. أغلب الأدراج بتشتغل على pin 2، ولو الدرج ماتفتحش جرّب pin 5.",
+            "drawer_pin_saved": "اتحفظ pin :pin للدرج على الجهاز ده.",
+            "drawer_pin_save_failed": "تعذر حفظ pin الدرج على الجهاز ده.",
+            "drawer_testing": "جاري فتح الدرج...",
+            "drawer_test_success_escpos": "أمر الفتح (pin :pin) اتبعت لطابعة الإيصالات. لو الدرج ماتفتحش جرّب الـ pin التاني.",
+            "drawer_test_success_driver": "الطابعة رفضت الأمر المباشر، فإشارة الدرج اتبعتت عن طريق تعريف الطابعة. اتأكد إن التعريف مضبوط يفتح الدرج بعد الطباعة.",
+            "drawer_error_no_printer": "مفيش أي طابعة متعرّفة على الجهاز ده.",
+            "drawer_error_printer_not_found": "طابعة الإيصالات المختارة مش موجودة. اختارها تاني من القايمة.",
+            "drawer_error_failed": "تعذر فتح الدرج. راجع توصيل الطابعة وكابل الدرج.",
+            "test_slip_title": "تجربة الطباعة الحرارية المباشرة",
+            "test_slip_connection": "حالة الاتصال",
+            "test_slip_connected": "متصل",
+            "test_slip_paper_width": "عرض الورق",
+            "test_slip_footer": "اتطبعت بصمت من برنامج سطح المكتب."
         },
         "expenses": {
             "title": "المصاريف والخدمات الإضافية",
@@ -2889,6 +3078,11 @@
             "low_stock_default_threshold": "حد النواقص الافتراضي",
             "inventory_units": "وحدات القياس"
         },
+        "store_scope": {
+            "concrete_store_required": "اختر فرعاً واحداً لتنفيذ هذه العملية؛ لا يُسمح بـ \"كل الفروع\" هنا.",
+            "store_not_resolved": "لم يتم تحديد فرع لهذا الطلب.",
+            "store_inactive": "هذا الفرع موقوف: لا يمكن تسجيل مبيعات أو مشتريات أو مرتجعات أو مصروفات أو ورديات أو تحويلات عليه."
+        },
         "subscription": {
             "statuses": {
                 "trial": "فترة تجريبية",
@@ -2950,6 +3144,26 @@
                 "suspension_reason_required": "اختار سبب الإيقاف.",
                 "limit_reached": "وصلت للحد الأقصى المسموح في باقتك من :resource (:max). رقّي باقتك أو أضف إضافة.",
                 "feature_unavailable": "الميزة دي مش متاحة في باقتك الحالية."
+            },
+            "archive_states": {
+                "queued": "الأرشفة في الانتظار",
+                "running": "جاري الأرشفة: بناخد النسخة الاحتياطية النهائية",
+                "failed": "الأرشفة فشلت"
+            },
+            "archive_error_codes": {
+                "final_backup_failed": "النسخة الاحتياطية النهائية ماتعملتش أو ماتأكدناش منها",
+                "status_changed": "حالة الحساب اتغيرت قبل ما الأرشفة تخلص",
+                "purged": "الحساب اتمسح نهائيًا",
+                "unknown": "خطأ غير متوقع (راجع سجل الخادم)"
+            },
+            "archive_errors": {
+                "final_backup_required": "مينفعش نأرشف الحساب غير بعد ما نسخته الاحتياطية النهائية تترفع ونتأكد منها.",
+                "archive_in_progress": "فيه طلب أرشفة للحساب ده شغال بالفعل.",
+                "already_archived": "الحساب ده متأرشف بالفعل.",
+                "tenant_purged": "الحساب ده اتمسح نهائيًا ومينفعش يتعدل.",
+                "archive_failed": "الأرشفة ماكملتش وحالة الحساب ماتغيرتش: :reason.",
+                "purge_refused": "المسح النهائي اترفض: :reason.",
+                "confirm_code_mismatch": "اكتب كود المحل بالظبط للتأكيد."
             }
         },
         "super": {
@@ -3334,6 +3548,61 @@
                 "nothing_to_update": "ابعت إعداد واحد على الأقل للتعديل.",
                 "asset_uploaded": "تم رفع الصورة وتحديث هوية المنصة.",
                 "asset_deleted": "تم حذف الصورة والرجوع للصورة الافتراضية."
+            },
+            "tenant_archive_queued": "اتطلبت الأرشفة: بناخد النسخة الاحتياطية النهائية، والحساب هيتأرشف بعد ما تترفع ونتأكد منها.",
+            "tenant_unarchived": "الحساب رجع لحالته اللي كان عليها قبل الأرشفة."
+        },
+        "tenant_archive": {
+            "confirm_title": "أرشفة المستأجر ده؟",
+            "confirm_desc": "\":name\" هيتأرشف بعد نسخة احتياطية نهائية متأكَّد منها. المستخدمين هيفقدوا الدخول، والبيانات محفوظة وممكن تترجع لحد ما تتمسح نهائيًا.",
+            "type_slug_label": "اكتب كود المستأجر \":slug\" للتأكيد",
+            "slug_mismatch": "الكود مش مطابق. اكتب \":slug\" بالظبط.",
+            "confirm_btn": "أرشفة المستأجر",
+            "suspend_first": "الأرشفة متاحة للمستأجرين الموقوفين أو الملغيين بس. أوقف المستأجر أو ألغيه الأول.",
+            "already_in_progress": "فيه أرشفة للمستأجر ده شغالة بالفعل.",
+            "queued_title": "تم طلب الأرشفة",
+            "queued_desc": "جاري أخذ نسخة احتياطية نهائية والتأكد منها. المستأجر هيتأرشف لما تخلص.",
+            "archive_failed": "فشل طلب الأرشفة.",
+            "step_up_cancelled": "تم إلغاء التأكيد",
+            "unarchive_confirm_title": "استرجاع المستأجر ده؟",
+            "unarchive_confirm_desc": "\":name\" هيخرج من الأرشيف. راجع حالته بعدها.",
+            "unarchive_btn": "استرجاع المستأجر",
+            "unarchived": "تم استرجاع المستأجر من الأرشيف.",
+            "unarchive_failed": "تعذر استرجاع المستأجر.",
+            "block_title": "الأرشفة",
+            "requested_at": "وقت الطلب",
+            "archived_at": "وقت الأرشفة",
+            "final_backup": "النسخة الاحتياطية النهائية",
+            "purge_eligible_at": "متاح للمسح النهائي من",
+            "purged_at": "وقت المسح النهائي",
+            "error_code": "سبب الفشل",
+            "state": "حالة الأرشفة",
+            "state_archived": "متأرشف",
+            "state_purged": "اتمسح نهائيًا",
+            "final_backup_id": "رقم النسخة",
+            "final_backup_created_at": "وقت أخذ النسخة",
+            "final_backup_sha": "SHA-256 (أول الأحرف)",
+            "final_backup_disk": "مكان التخزين",
+            "no_final_backup": "مفيش نسخة احتياطية نهائية متأكد منها.",
+            "not_set": "غير مسجل",
+            "purge_not_eligible": "غير متاح للمسح النهائي",
+            "purge_cli_hint": "المسح النهائي عمره ما بيحصل تلقائي: مسؤول المنصة بس هو اللي بيعمله من كونسول السيرفر.",
+            "in_progress_hint": "الصفحة هتتحدث لوحدها لحد ما الأرشفة تخلص.",
+            "states": {
+                "queued": "الأرشفة في الطابور",
+                "running": "جاري الأرشفة (أخذ النسخة النهائية)",
+                "failed": "فشلت الأرشفة"
+            },
+            "errors": {
+                "conflict_title": "تم رفض الطلب",
+                "not_allowed_title": "مينفعش أرشفة المستأجر ده",
+                "in_progress_title": "الأرشفة شغالة بالفعل",
+                "already_archived_title": "متأرشف بالفعل",
+                "purged_title": "المستأجر اتمسح نهائيًا",
+                "final_backup_title": "لازم نسخة احتياطية نهائية",
+                "archive_failed_title": "فشلت الأرشفة",
+                "not_archived_title": "المستأجر مش متأرشف",
+                "not_provisioned_title": "مساحة العمل مش جاهزة"
             }
         },
         "trash": {
@@ -3773,6 +4042,10 @@
                 }
             },
             "attributes": {
+                "apk_file": "ملف التطبيق",
+                "version_code": "رقم الإصدار الداخلي",
+                "version_name": "اسم الإصدار",
+                "min_version_code": "أقل إصدار مدعوم",
                 "name": "الاسم",
                 "email": "البريد الإلكتروني",
                 "password": "كلمة المرور",
@@ -3921,6 +4194,66 @@
             "details_btn": "Details",
             "total_records": "Total records:"
         },
+        "app_releases": {
+            "version_not_newer": "The version code must be higher than every existing :platform release (current highest: :max).",
+            "version_code_taken": "A :platform release with this version code already exists.",
+            "windows_code_mismatch": "For Windows the version code must match the version name (:name gives :code).",
+            "version_name_format": "The version name must look like 1.2.3 (three numbers of up to 3 digits each).",
+            "platform_not_supported": "Releases can only be published for Android or Windows.",
+            "extension_mismatch": "The file type does not match the platform: Android needs an .apk file and Windows an .exe installer.",
+            "min_version_too_high": "The minimum supported version code cannot be higher than the release version code.",
+            "invalid_binary": "The uploaded file is not a valid release package for this platform.",
+            "binary_errors": {
+                "mime_not_allowed": "The file content type is not an Android package or a Windows executable.",
+                "unreadable": "The uploaded file could not be read.",
+                "zip_magic": "The file is not a ZIP-based Android package.",
+                "zip_unreadable": "The Android package could not be opened as a ZIP archive.",
+                "unsafe_entry": "The Android package contains an unsafe file path.",
+                "manifest_missing": "The Android package has no AndroidManifest.xml.",
+                "dex_missing": "The Android package has no compiled code (classes.dex).",
+                "signing_block_missing": "The Android package is not signed with APK Signature Scheme v2 or v3.",
+                "signing_block_too_large": "The Android package signing block is too large to be a real signature.",
+                "mz_magic": "The file is not a Windows executable (missing MZ header).",
+                "pe_header": "The Windows executable has a damaged PE header.",
+                "machine_not_allowed": "The Windows executable is not built for x64, x86 or ARM64.",
+                "not_executable": "The Windows file is not marked as an executable program.",
+                "is_dll": "The Windows file is a library (DLL), not an installer."
+            },
+            "platforms": {
+                "android": "Android",
+                "windows": "Windows"
+            },
+            "store_failed": "The release file could not be saved. Please try again.",
+            "binary_write_failed": "The release binary could not be written to the private release disk.",
+            "check": {
+                "title_force": "Required update available",
+                "title_optional": "New update available",
+                "title_up_to_date": "Your app is up to date",
+                "message_available": "Version :version of the app is available.",
+                "message_force": "Version :version is required to keep using the app. Please update now.",
+                "message_up_to_date": "You are using the latest version of the app."
+            },
+            "size": {
+                "bytes": ":size B",
+                "kilobytes": ":size KB",
+                "megabytes": ":size MB"
+            },
+            "relocate": {
+                "description": "Copy app release binaries from the public disk to the private release disk; --prune-legacy then deletes verified public copies (idempotent)",
+                "tenant_context": "Run this command from the central context, not inside a tenant.",
+                "dry_run": "Dry run: nothing is copied or deleted.",
+                "nothing_to_do": "No release binaries left on the public disk.",
+                "would_copy": "Would copy :path",
+                "copied": "Copied and verified :path (public copy kept)",
+                "already_private": "Already on the private disk with the same SHA-256: :path",
+                "pruned": "Deleted the verified public copy of :path",
+                "prune_skipped": "Public copy of :path kept: the private copy does not match its SHA-256.",
+                "conflict": "Not copied: :path exists on both disks with different content. Resolve it by hand.",
+                "failed": "Failed to copy :path",
+                "public_binary_found": "Still web-served, delete it by hand: public\/:file",
+                "summary": "Copied: :copied, already private: :verified, public copies deleted: :pruned, conflicts: :conflicts, failed: :failed."
+            }
+        },
         "app_update": {
             "download_success_title": "Update package downloaded successfully! 🎉",
             "download_success_desc": "The APK package has been downloaded. Please open notification or click the install file to proceed.",
@@ -3965,7 +4298,7 @@
             "web_auto_updated": "You are using the web version (v:version), which updates automatically from the server. Manual updates are for the mobile and desktop apps.",
             "check_failed": "Could not reach the update server. Check your internet connection and try again.",
             "error_checksum_mismatch": "Install refused: the update file does not match the published SHA-256 checksum. It may be corrupted or tampered with. Please try again.",
-            "error_signature_mismatch": "Install refused: the update is not signed with the same certificate as the installed app.",
+            "error_signature_mismatch": "Install refused: the update is not signed with the same certificate as the installed app. Do not install it; contact support.",
             "error_package_mismatch": "Install refused: the update file belongs to a different app.",
             "error_install_permission": "Allow this app to install updates in the settings screen that just opened, then come back and tap Try again.",
             "error_install_failed": "Could not open the installer. Please try again.",
@@ -3976,7 +4309,44 @@
             "stage_downloading": "Downloading update...",
             "stage_verifying": "Verifying file integrity and signature...",
             "stage_installer_opened": "Installer opened",
-            "stage_error": "Update failed"
+            "stage_error": "Update failed",
+            "error_signature_unverifiable": "This device cannot verify who signed the update, so it was not installed. Download the latest version manually from the download page.",
+            "error_size_mismatch": "Install refused: the downloaded file size does not match the published release. Please try again.",
+            "error_manifest_invalid": "The update server sent incomplete release details. Please try again later or contact support.",
+            "error_installer_signature": "Install refused: the installer is not signed by the trusted publisher. Please contact support.",
+            "error_update_attempts_exhausted": "The update failed several times today. The download page has been opened in your browser so you can install the latest version manually.",
+            "error_update_in_progress": "An update is already in progress. Please wait for it to finish.",
+            "already_latest": "You are already running the latest version.",
+            "download_manually": "Download manually",
+            "manual_download_hint": "The download page shows the latest version and its SHA-256 checksum.",
+            "download_page": {
+                "title": "Download the app",
+                "subtitle": "Official releases for Android and Windows. Compare the SHA-256 checksum before you install.",
+                "load_failed": "Could not load the available releases.",
+                "empty_title": "No releases available yet",
+                "empty_desc": "Published releases will appear here.",
+                "android_title": "Android app",
+                "windows_title": "Windows desktop app",
+                "your_device": "Your device",
+                "size_mb": ":size MB",
+                "download_button": "Download",
+                "checksum_title": "SHA-256 checksum",
+                "copy_checksum": "Copy checksum",
+                "checksum_hint": "After downloading, calculate the file checksum and make sure it matches the value above exactly:",
+                "android_install_hint": "Open the downloaded file and allow installing apps from this source if Android asks. Your data stays on the server.",
+                "windows_install_hint": "Run the downloaded installer and follow the setup wizard. Close the running app first."
+            },
+            "upload": {
+                "platform_android": "Mobile app (Android APK)",
+                "platform_windows": "Desktop app (Windows installer EXE)",
+                "file_label_android": "App package (Android .apk)",
+                "file_label_windows": "Desktop installer (Windows .exe)",
+                "file_hint_android": "Choose the signed .apk file (150 MB max).",
+                "file_hint_windows": "Choose the Windows setup .exe file (150 MB max).",
+                "release_notes_placeholder": "One change per line",
+                "windows_code_hint": "For Windows the version code must be :code (derived from the version name).",
+                "windows_code_rule": "For Windows the version code is derived from the version name (1.2.3 = 1002003)."
+            }
         },
         "auth": {
             "failed": "These credentials do not match our records.",
@@ -4235,7 +4605,10 @@
                 "platform_units_updated": "Platform units updated",
                 "app_version_created": "App version created",
                 "app_version_toggled": "App version toggled",
-                "app_version_deleted": "App version deleted"
+                "app_version_deleted": "App version deleted",
+                "tenant_archive_requested": "Tenant archive requested",
+                "tenant_purge_started": "Tenant purge started",
+                "tenant_purge_failed": "Tenant purge failed"
             },
             "prune": {
                 "done": "Deleted :count platform audit rows older than :date."
@@ -4513,7 +4886,11 @@
                 "mail_intro": "The command :command finished with :count failure(s):",
                 "mail_line": ":subject: :reason",
                 "mail_outro": "Check the server log and docs\/07-operations\/backup-restore.md. No backup was taken for the subjects above.",
-                "google_not_configured": "The Google Drive backup disk is not configured: set GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET and GOOGLE_DRIVE_REFRESH_TOKEN in the server .env."
+                "google_not_configured": "The Google Drive backup disk is not configured: set GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET and GOOGLE_DRIVE_REFRESH_TOKEN in the server .env.",
+                "tenant_purged": "Tenant :tenant was purged (or its purge started): it is never backed up.",
+                "kind_invalid": "Unknown --kind. Allowed: :kinds.",
+                "kind_needs_single_tenant": "A :kind backup is for exactly one --tenant, with --skip-central.",
+                "kind_needs_ledger": "A :kind backup needs the tenant_backups ledger with its kind column (run the migrations)."
             },
             "restore": {
                 "description": "Restore a backup archive into a new, separate database and verify its row counts (OPS-5 restore drill).",
@@ -4552,6 +4929,73 @@
             "tenants": {
                 "skipped_not_provisioned": "Skipped :count tenant(s) that are not provisioned yet (pending, running or failed: no database).",
                 "none_provisioned": "No provisioned tenants: nothing to run."
+            },
+            "archive": {
+                "description": "Archive one suspended or cancelled tenant after a verified final backup (nothing is dropped)",
+                "note_too_long": "The note is limited to 500 characters.",
+                "started": "Archiving :tenant: taking the final backup…",
+                "failed": "Archiving :tenant failed; its status was not changed (see the log).",
+                "done": "Tenant :tenant archived. Final backup: #:backup.",
+                "backup_failed": "The final backup of :tenant failed (see the backup output and the log).",
+                "backup_not_verified": "No verified final backup of :tenant was recorded on the disk :disk."
+            },
+            "purge": {
+                "description": "IRREVERSIBLY drop one eligible tenant database and files after a verified, restore-drilled backup (CLI only)",
+                "tenant_not_found": "Tenant :tenant not found.",
+                "already_purged": "Tenant :tenant is already purged. Nothing to do.",
+                "resuming": "The purge of :tenant already started: resuming the remaining steps.",
+                "taking_backup": "Taking a fresh pre_purge backup of :tenant…",
+                "verifying_backup": "Verifying backup #:backup: checksum, decryption and restore drill…",
+                "backup_verified": "Backup #:backup verified and restore-drilled.",
+                "backup_will_be_taken": "a pre_purge backup will be taken",
+                "database_missing": "The database :database no longer exists: only the remaining steps run.",
+                "dry_run_done": "Dry run: every check passed. Nothing was dropped.",
+                "type_slug": "Type the shop code (:slug) to confirm the permanent deletion",
+                "confirm_drop": "The database and files will be deleted permanently. Continue?",
+                "irreversible": "This cannot be undone. Only the verified backup above can bring this shop back.",
+                "refused": "Purge refused: :reason.",
+                "failed": "The purge of :tenant stopped: :reason. Run the command again to resume.",
+                "done": "Tenant :tenant purged: the database :database and its files were deleted; the account row is kept as a tombstone.",
+                "locked": "Another archive or purge of :tenant is running. Try again later.",
+                "database_still_exists": "The database :database still exists after the drop.",
+                "database_unsafe": "Refusing to drop the database \":database\" (empty, unsafe name, or the central database).",
+                "database_shared": "Refusing to drop the database :database: another tenant uses it.",
+                "database_unexpected_name": "Refusing to drop the database \":database\": it is neither the name the platform generates for this tenant (:expected) nor the database the provisioner recorded creating.",
+                "storage_unsafe": "Refusing to delete a storage directory outside storage\/.",
+                "storage_not_deleted": "The tenant storage directory could not be deleted.",
+                "backup_wrong_tenant": "Backup #:backup does not belong to this tenant.",
+                "backup_unverified": "Backup #:backup was never verified after its upload.",
+                "backup_checksum_mismatch": "Backup #:backup on the disk no longer matches its recorded sha256.",
+                "backup_undecryptable": "Backup #:backup cannot be decrypted with BACKUP_ARCHIVE_PASSWORD.",
+                "restore_drill_failed": "The restore drill of backup #:backup failed.",
+                "yes": "yes",
+                "no": "no",
+                "col_item": "Item",
+                "col_value": "Value",
+                "row_tenant": "Tenant (id \/ code \/ name)",
+                "row_status": "Status",
+                "row_archived_at": "Archived at",
+                "row_database": "Database (exists)",
+                "row_domains": "Domains to delete",
+                "row_backup": "Backup (id \/ kind \/ disk \/ date \/ sha256)",
+                "row_resume": "Resuming a started purge",
+                "reasons": {
+                    "purged": "the tenant is already purged",
+                    "violation": "a violation suspension is never purged",
+                    "status_not_eligible": "only archived, suspended or cancelled tenants can be purged",
+                    "too_recent": "the tenant is not old enough in its status (archived 30 days or suspended\/cancelled 90 days)",
+                    "no_anchor": "the date the tenant entered its status is unknown",
+                    "conflicting_options": "--backup and --take-backup cannot be used together",
+                    "backup_failed": "the pre_purge backup failed",
+                    "backup_missing": "no verified backup of this tenant was found",
+                    "backup_wrong_tenant": "the backup belongs to another tenant",
+                    "backup_unverified": "the backup was never verified",
+                    "backup_too_old": "the backup is older than 24 hours (use --take-backup)",
+                    "backup_verification_failed": "the backup could not be verified or restore-drilled",
+                    "confirmation_missing": "non-interactive runs need --confirm=<shop code> and --yes-i-understand",
+                    "confirmation_mismatch": "the typed shop code does not match",
+                    "not_confirmed": "the operator did not confirm"
+                }
             }
         },
         "contacts": {
@@ -4834,6 +5278,24 @@
             "search_screens_placeholder": "🔍 Search any screen or document (e.g. sale, purchase, stock)...",
             "no_screens_found": "No screens matching your search query",
             "company_title": "My business"
+        },
+        "desktop_hardware": {
+            "drawer_pin_label": "Cash drawer connector pin",
+            "drawer_pin_option": "Pin :pin",
+            "drawer_pin_hint": "Saved on this device only. Most drawers use pin 2; try pin 5 if the drawer does not open.",
+            "drawer_pin_saved": "Drawer pin :pin saved on this device.",
+            "drawer_pin_save_failed": "Could not save the drawer pin on this device.",
+            "drawer_testing": "Opening drawer...",
+            "drawer_test_success_escpos": "The open command (pin :pin) was sent to the receipt printer. If the drawer did not open, try the other pin.",
+            "drawer_test_success_driver": "The printer refused the direct command, so the drawer signal was sent through the printer driver. Make sure the driver is set to open the drawer after printing.",
+            "drawer_error_no_printer": "No printer is installed on this device.",
+            "drawer_error_printer_not_found": "The selected receipt printer was not found. Choose it again from the list.",
+            "drawer_error_failed": "The drawer could not be opened. Check the printer connection and the drawer cable.",
+            "test_slip_title": "Direct thermal print test",
+            "test_slip_connection": "Connection",
+            "test_slip_connected": "Connected",
+            "test_slip_paper_width": "Paper width",
+            "test_slip_footer": "Printed silently by the desktop app."
         },
         "expenses": {
             "title": "Operational Expenses & Cost Centers",
@@ -6760,6 +7222,11 @@
             "low_stock_default_threshold": "Default low-stock threshold",
             "inventory_units": "Units of measure"
         },
+        "store_scope": {
+            "concrete_store_required": "Select a single branch for this operation; \"all branches\" is not allowed here.",
+            "store_not_resolved": "No branch is selected for this request.",
+            "store_inactive": "This branch is deactivated: sales, purchases, returns, expenses, shifts and transfers cannot be recorded on it."
+        },
         "subscription": {
             "statuses": {
                 "trial": "Trial",
@@ -6821,6 +7288,26 @@
                 "suspension_reason_required": "Choose a suspension reason.",
                 "limit_reached": "You have reached your plan limit for :resource (:max). Upgrade your plan or buy an add-on.",
                 "feature_unavailable": "This feature is not included in your current plan."
+            },
+            "archive_states": {
+                "queued": "Archive queued",
+                "running": "Archiving: taking the final backup",
+                "failed": "Archive failed"
+            },
+            "archive_error_codes": {
+                "final_backup_failed": "The final backup could not be taken or verified",
+                "status_changed": "The account status changed before the archive finished",
+                "purged": "The account was purged",
+                "unknown": "Unexpected error (see the server log)"
+            },
+            "archive_errors": {
+                "final_backup_required": "An account can only be archived after its final backup is uploaded and verified.",
+                "archive_in_progress": "An archive request for this account is already in progress.",
+                "already_archived": "This account is already archived.",
+                "tenant_purged": "This account was permanently deleted and can no longer be changed.",
+                "archive_failed": "The archive did not complete and the account status was not changed: :reason.",
+                "purge_refused": "Permanent deletion refused: :reason.",
+                "confirm_code_mismatch": "Type the shop code exactly to confirm."
             }
         },
         "super": {
@@ -7205,6 +7692,61 @@
                 "nothing_to_update": "Send at least one setting to update.",
                 "asset_uploaded": "Image uploaded and platform branding updated.",
                 "asset_deleted": "Image removed; the default image is used again."
+            },
+            "tenant_archive_queued": "Archive requested: the final backup is being taken. The account is archived once it is uploaded and verified.",
+            "tenant_unarchived": "The account was restored to its previous status."
+        },
+        "tenant_archive": {
+            "confirm_title": "Archive this tenant?",
+            "confirm_desc": "\":name\" will be archived after a verified final backup. Its users lose access; the data is kept and can be restored until it is purged.",
+            "type_slug_label": "Type the tenant code \":slug\" to confirm",
+            "slug_mismatch": "The code does not match. Type \":slug\" exactly.",
+            "confirm_btn": "Archive tenant",
+            "suspend_first": "Only suspended or cancelled tenants can be archived. Suspend or cancel the tenant first.",
+            "already_in_progress": "An archive of this tenant is already in progress.",
+            "queued_title": "Archive requested",
+            "queued_desc": "A final backup is being taken and verified. The tenant is archived when it finishes.",
+            "archive_failed": "The archive request failed.",
+            "step_up_cancelled": "Confirmation cancelled",
+            "unarchive_confirm_title": "Restore this tenant?",
+            "unarchive_confirm_desc": "\":name\" will leave the archive. Review its status afterwards.",
+            "unarchive_btn": "Restore tenant",
+            "unarchived": "The tenant was restored from the archive.",
+            "unarchive_failed": "The tenant could not be restored.",
+            "block_title": "Archive",
+            "requested_at": "Requested at",
+            "archived_at": "Archived at",
+            "final_backup": "Final backup",
+            "purge_eligible_at": "Eligible for purge from",
+            "purged_at": "Purged at",
+            "error_code": "Failure reason",
+            "state": "Archive state",
+            "state_archived": "Archived",
+            "state_purged": "Purged",
+            "final_backup_id": "Backup no.",
+            "final_backup_created_at": "Backup taken at",
+            "final_backup_sha": "SHA-256 (prefix)",
+            "final_backup_disk": "Storage disk",
+            "no_final_backup": "No verified final backup is recorded.",
+            "not_set": "Not recorded",
+            "purge_not_eligible": "Not eligible for purge",
+            "purge_cli_hint": "A final purge is never automatic: it is run by the platform operator from the server console only.",
+            "in_progress_hint": "This page refreshes on its own until the archive finishes.",
+            "states": {
+                "queued": "Archive queued",
+                "running": "Archiving (taking final backup)",
+                "failed": "Archive failed"
+            },
+            "errors": {
+                "conflict_title": "Request refused",
+                "not_allowed_title": "Cannot archive this tenant",
+                "in_progress_title": "Archive already in progress",
+                "already_archived_title": "Already archived",
+                "purged_title": "Tenant purged",
+                "final_backup_title": "Final backup required",
+                "archive_failed_title": "Archive failed",
+                "not_archived_title": "Tenant is not archived",
+                "not_provisioned_title": "Workspace not ready"
             }
         },
         "trash": {
@@ -7644,6 +8186,10 @@
                 }
             },
             "attributes": {
+                "apk_file": "app file",
+                "version_code": "version code",
+                "version_name": "version name",
+                "min_version_code": "minimum supported version",
                 "name": "name",
                 "email": "email",
                 "password": "password",
