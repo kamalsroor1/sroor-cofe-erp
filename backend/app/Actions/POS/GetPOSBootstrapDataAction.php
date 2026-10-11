@@ -19,16 +19,15 @@ class GetPOSBootstrapDataAction
     public function __construct(
         private readonly GetStorePosSettingsAction $getStorePosSettingsAction,
         private readonly GetPosQuickKeysAction $getPosQuickKeysAction,
-        private readonly ActiveStore $activeStore,
     ) {}
 
     /**
      * تجميع وتهيئة بيانات شاشة الكاشير ونقاط البيع السريعة عبر JsonResources
      */
-    public function execute(?User $user): array
+    public function execute(?User $user, ?Store $requestStore = null): array
     {
-        // 1. Resolve Active Store (STOR-1: access-checked; drives the WHOLE payload)
-        $activeStore = $this->resolveActiveStore($user);
+        // 1. Resolve Active Store (STOR-1/2: access-checked; drives the WHOLE payload)
+        $activeStore = $this->resolveActiveStore($user, $requestStore);
         $storeId = $activeStore?->id;
 
         // 2. Active Cashier Shift
@@ -184,18 +183,20 @@ class GetPOSBootstrapDataAction
     /**
      * STOR-1: the store whose stock, open shift, pos_settings and quick keys are returned.
      *
-     * Order: the store resolved by ResolveActiveStore (once STOR-2 mounts it), then the session
-     * store written by ApiTokenAuth (re-checked here as defence in depth, because the payload
-     * exposes stock and the open shift), then the user's own default accessible store. A store
-     * the user may not access is never returned; no user means no store-specific data.
+     * Order: the store ResolveActiveStore resolved for this request (passed in by the controller;
+     * STOR-2 mounts `store.active` on /pos/bootstrap), then the session store written by the
+     * middleware (re-checked here as defence in depth, because the payload exposes stock and the
+     * open shift), then the user's own default accessible store (also for `X-Store-Id: all`, the
+     * POS always works on one branch). A store the user may not access is never returned; no user
+     * means no store-specific data. The store is passed in, not constructor-injected, because
+     * ActiveStore is request-scoped and this action may outlive a request on a cached controller.
      */
-    private function resolveActiveStore(?User $user): ?Store
+    private function resolveActiveStore(?User $user, ?Store $resolved): ?Store
     {
         if (! $user instanceof User) {
             return null;
         }
 
-        $resolved = $this->activeStore->store();
         if ($resolved instanceof Store && $resolved->is_active && ActiveStore::canAccess($user, (int) $resolved->id)) {
             return $resolved;
         }

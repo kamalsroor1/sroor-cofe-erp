@@ -13,12 +13,12 @@ use App\Http\Requests\CancelStockTransferRequest;
 use App\Http\Requests\StoreStockTransferRequest;
 use App\Http\Resources\StockTransferResource;
 use App\Models\StockTransfer;
-use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
-use App\Support\ClientStoreGuard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class StockTransferController extends Controller
 {
@@ -30,7 +30,7 @@ final class StockTransferController extends Controller
     /**
      * List Stock Transfers with filters and summary totals
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('stores.manage') && ! $user->can('transfers.view')) {
@@ -45,9 +45,8 @@ final class StockTransferController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: $user?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2: the active store (or an access-checked store_id); every store only for a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
         $query = StockTransfer::query()->with(['fromStore', 'toStore', 'user', 'items.item']);
 
@@ -56,7 +55,7 @@ final class StockTransferController extends Controller
         $restrictToActiveStore = (! $fromStore && ! $toStore)
             || ($user instanceof User && ! ActiveStore::canViewAll($user));
 
-        if ($storeId && $restrictToActiveStore) {
+        if ($storeId !== null && $restrictToActiveStore) {
             $query->where(function ($q) use ($storeId) {
                 $q->where('from_store_id', (int) $storeId)
                     ->orWhere('to_store_id', (int) $storeId);
@@ -125,6 +124,8 @@ final class StockTransferController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        $this->findTransferOr404($request, $id, 'view');
+
         $transfer = StockTransfer::with(['fromStore', 'toStore', 'user', 'items.item'])->findOrFail($id);
 
         return response()->json([
@@ -153,6 +154,8 @@ final class StockTransferController extends Controller
      */
     public function cancel(CancelStockTransferRequest $request, int $id): JsonResponse
     {
+        $this->findTransferOr404($request, $id, 'cancel');
+
         $dto = CancelTransferDTO::fromArray($id, $request->validated());
         $cancelled = $this->cancelStockTransferAction->execute($dto);
 
@@ -161,5 +164,19 @@ final class StockTransferController extends Controller
             'message' => __('inventory.cancel_transfer') ?: "تم إلغاء إذن التحويل رقم {$cancelled->transfer_number} وعكس حركة الأصناف للفرع المصدر بنجاح ✓",
             'data' => (new StockTransferResource($cancelled->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
         ], 200);
+    }
+
+    /**
+     * STOR-2 (CTO Q13): the permission was already checked (403), so a policy denial here can only
+     * be the transfer's stores: answered exactly like a missing transfer (404).
+     */
+    private function findTransferOr404(Request $request, int $id, string $ability): void
+    {
+        $user = $request->user();
+        $transfer = StockTransfer::query()->select(['id', 'from_store_id', 'to_store_id'])->find($id);
+
+        if (! $transfer instanceof StockTransfer || ! $user instanceof User || ! Gate::forUser($user)->allows($ability, $transfer)) {
+            throw (new ModelNotFoundException)->setModel(StockTransfer::class, [$id]);
+        }
     }
 }

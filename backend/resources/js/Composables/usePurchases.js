@@ -18,6 +18,8 @@ export function usePurchases() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const pagination = ref({
         current_page: 1,
@@ -39,6 +41,8 @@ export function usePurchases() {
 
     const fetchPurchases = async (page = 1) => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/purchases', {
                 params: {
@@ -62,8 +66,10 @@ export function usePurchases() {
                 per_page: 15,
                 total: purchases.value.length,
             };
-        } catch (error) {
-            console.error('Failed to load purchases:', error);
+        } catch (err) {
+            error.value = true;
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load purchases:', err);
         } finally {
             isLoading.value = false;
         }
@@ -103,11 +109,11 @@ export function usePurchases() {
                     showConfirmButton: false,
                 });
                 await fetchPurchases(pagination.value.current_page);
-            } catch (error) {
+            } catch (err) {
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
-                    text: error.userMessage || t('purchases.purchase_cancelled_failed'),
+                    text: err.userMessage || t('purchases.purchase_cancelled_failed'),
                 });
             }
         }
@@ -118,6 +124,8 @@ export function usePurchases() {
     });
 
     return {
+        error,
+        errorMessage,
         purchases,
         metrics,
         searchQuery,

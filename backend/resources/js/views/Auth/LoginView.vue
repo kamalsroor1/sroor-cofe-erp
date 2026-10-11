@@ -219,6 +219,7 @@ import { useQuickLogin } from '../../Composables/Auth/useQuickLogin';
 import { AlertTriangle, Building2, Phone, Lock, LogIn, Sun, Moon, Fingerprint, RefreshCw } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
+import { isCentralHost } from '../../helpers/platformHosts';
 
 const router = useRouter();
 const route = useRoute();
@@ -267,12 +268,8 @@ const toggleTheme = () => {
   appConfigStore.setTheme(nextTheme);
 };
 
-const isCentralHub = computed(() => {
-  const host = window.location.hostname;
-  return (
-    host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com' || host === 'localhost' || host === '127.0.0.1'
-  );
-});
+// Central hosts come from the server (<meta name="central-domains">), never hardcoded.
+const isCentralHub = computed(() => isCentralHost(window.location.hostname));
 
 const isExplicitCentralAdmin = computed(() => {
   return isCentralHub.value && route.query.central === '1';
@@ -394,14 +391,8 @@ const completeLogin = async () => {
   // Initialize system context in background
   await appConfigStore.fetchBootstrapContext();
 
-  // Redirect to intended route or super admin / tenant dashboard
-  if (authStore.isSuperAdmin) {
-    const redirectPath =
-      route.query.redirect && route.query.redirect !== '/' ? route.query.redirect : '/super-admin/dashboard';
-    router.push(redirectPath);
-  } else {
-    const redirectPath = route.query.redirect || '/';
-    router.push(redirectPath);
-  }
+  // Redirect to the intended route or the tenant dashboard (the platform console signs in on
+  // the admin host, never through this tenant login).
+  router.push(route.query.redirect || '/');
 };
 </script>

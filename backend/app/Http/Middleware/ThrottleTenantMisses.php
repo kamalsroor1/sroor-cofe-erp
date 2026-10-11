@@ -59,17 +59,24 @@ final class ThrottleTenantMisses
 
     /**
      * True when the request selects a tenant the same way ResolveApiTenancy does
-     * (header, query, body, or a non-central host). Central platform routes are skipped,
-     * mirroring the resolver's bypass; they carry their own limiters.
+     * (header, query, body, or a non-central host). The public workspace resolver is skipped
+     * by route name, mirroring ResolveApiTenancy::PUBLIC_CENTRAL_ROUTES (it has its own
+     * `tenant-resolve` limiter). The control plane (routes/central.php) never runs this
+     * middleware, and its admin hosts are listed in tenancy.central_domains (IDEN-1.11).
      */
     private function namesTenant(Request $request): bool
     {
-        if ($request->is('api/v1/central/*') || $request->is('api/central/*')) {
+        if ($request->routeIs(ResolveApiTenancy::PUBLIC_CENTRAL_ROUTES)) {
             return false;
         }
 
         if ($request->header('X-Tenant') || $request->query('tenant') || $request->input('tenant')) {
             return true;
+        }
+
+        // A platform-console host is never a tenant lookup (ResolveApiTenancy step 0).
+        if (EnsureCentralContext::isAdminHost($request)) {
+            return false;
         }
 
         $centralDomains = config('tenancy.central_domains', []);

@@ -6,7 +6,6 @@ namespace App\Support;
 
 use App\Enums\CentralPermission;
 use App\Models\CentralUser;
-use App\Models\User;
 
 /**
  * Single source of truth for platform-operator rights.
@@ -18,8 +17,9 @@ use App\Models\User;
  *  - can(): IDEN-1.2 granular check for an App\Models\CentralUser holding a
  *    CentralPermission on the `central` guard. Anything else (null, a tenant User, a
  *    string, an unknown ability) is false, never a TypeError.
- *  - check(): "is a platform super admin" (role `super_admin`). Accepts a CentralUser
- *    (central guard) and, until IDEN-1.4, the legacy App\Models\User branch.
+ *  - check(): "is a platform super admin": an active CentralUser holding the central-guard
+ *    role `super_admin`. IDEN-1.4 removed the legacy App\Models\User branch: a row of a
+ *    `users` table (tenant or central) is never a platform operator, whatever its roles.
  */
 final class PlatformSuperAdmin
 {
@@ -29,12 +29,9 @@ final class PlatformSuperAdmin
             return false;
         }
 
-        if ($user instanceof CentralUser) {
-            return $user->is_active
-                && $user->hasRole(CentralPermission::ROLE_SUPER_ADMIN, CentralPermission::GUARD);
-        }
-
-        return self::legacyCheck($user);
+        return $user instanceof CentralUser
+            && $user->is_active
+            && $user->hasRole(CentralPermission::ROLE_SUPER_ADMIN, CentralPermission::GUARD);
     }
 
     /**
@@ -54,21 +51,6 @@ final class PlatformSuperAdmin
         }
 
         return $user->checkPermissionTo($ability->value, CentralPermission::GUARD);
-    }
-
-    /**
-     * Phase 0 operator: an App\Models\User in the central `users` table holding the
-     * `web`-guard `super_admin` role. Still used by the current SPA and /api/v1/super-admin/*.
-     *
-     * @deprecated removed in IDEN-1.4 (W2-B3)
-     */
-    private static function legacyCheck(mixed $user): bool
-    {
-        if (! $user instanceof User) {
-            return false;
-        }
-
-        return $user->hasRole('super_admin');
     }
 
     private static function tenancyInitialized(): bool

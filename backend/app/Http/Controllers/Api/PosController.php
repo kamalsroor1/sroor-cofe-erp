@@ -14,8 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Http\Resources\InvoiceResource;
-use App\Models\Store;
-use App\Support\ClientStoreGuard;
+use App\Support\ActiveStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,14 +31,14 @@ final class PosController extends Controller
     /**
      * Bootstrap fast POS data (categories, items with stock, customers, active shift)
      */
-    public function bootstrap(Request $request): JsonResponse
+    public function bootstrap(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $data = $this->getPOSBootstrapDataAction->execute($user);
+        $data = $this->getPOSBootstrapDataAction->execute($user, $activeStore->store());
 
         return response()->json([
             'success' => true,
@@ -90,7 +89,7 @@ final class PosController extends Controller
     /**
      * Get Last Sold Price for customer on specific item
      */
-    public function lastPrice(Request $request): JsonResponse
+    public function lastPrice(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('pos.access') && ! $user->can('invoices.create')) {
@@ -99,14 +98,13 @@ final class PosController extends Controller
 
         $customerId = (int) $request->query('customer_id');
         $itemId = (int) $request->query('item_id');
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: $user?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2: active store (or an access-checked store_id filter); null only for a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
         $lastPrice = $this->getCustomerLastSoldPriceAction->execute(
             customerId: $customerId,
             itemId: $itemId,
-            storeId: $storeId ? (int) $storeId : null
+            storeId: $storeId
         );
 
         return response()->json([

@@ -32,12 +32,24 @@ use Spatie\DbDumper\Compressors\GzipCompressor;
 | exclude list names them explicitly, so re-adding base_path() to `include`
 | still cannot leak them. tests/Unit/BackupConfigTest.php enforces this.
 |
-| Tenant DB dumps, the Google Drive disk and Telegram alerts are OPS-5
-| (docs/05-planning/phase-1-plan.md). Every sensitive value comes from .env.
+| Database backups (central + every tenant, one encrypted archive each) are
+| made by `php artisan backup:tenants` (OPS-5, the `tenants` block below);
+| spatie's own `backup:run --only-files` is scheduled for the user files.
+| Runbook: docs/07-operations/backup-restore.md. Every sensitive value comes
+| from .env.
 */
 
 $backupName = (string) env('BACKUP_NAME', env('APP_NAME', 'sroor'));
 $backupDisks = array_values(array_filter(array_map('trim', explode(',', (string) env('BACKUP_DISKS', 'local')))));
+
+// CTO decision D4: no archive password = no destination at all, so spatie's backup:run
+// fails loudly (and notifies) instead of uploading a plain zip. Security audit (W2 lane 3I):
+// enforced everywhere except local/testing (staging included), like backup:tenants.
+// The application itself still boots; the BackupArchivePassword health check is red.
+if (! in_array((string) env('APP_ENV', 'production'), ['local', 'testing'], true)
+    && (string) env('BACKUP_ARCHIVE_PASSWORD', '') === '') {
+    $backupDisks = [];
+}
 
 return [
 
@@ -117,7 +129,7 @@ return [
 
         /*
          * Archive encryption. MUST be set in the server .env before any backup
-         * leaves the machine; an empty value means an unencrypted zip.
+         * leaves the machine. Empty in production = backups refuse to run (D4).
          */
         'password' => env('BACKUP_ARCHIVE_PASSWORD'),
 
@@ -180,6 +192,74 @@ return [
                 MaximumStorageInMegabytes::class => 50000,
             ],
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | OPS-5: per-tenant + central database backups (`php artisan backup:tenants`)
+    |--------------------------------------------------------------------------
+    |
+    | One encrypted zip (AES-256, BACKUP_ARCHIVE_PASSWORD) per database per run:
+    | the central DB and every tenant DB that is not archived. Each archive holds
+    | the dump plus a manifest (row count per table) used by backup:restore-tenant
+    | to prove a restore is complete. Every upload is recorded in the central
+    | `tenant_backups` ledger with its sha256, then re-downloaded and verified.
+    |
+    | Layout on the disk: <path_prefix>/<subject>/<subject>-<Y-m-d-H-i-s>.zip where
+    | <subject> is `central` or the tenant id. Retention (7 daily / 4 weekly /
+    | 3 monthly) is applied per subject after a successful run.
+    |
+    | D4 (CTO): an empty BACKUP_ARCHIVE_PASSWORD outside local/testing makes
+    | backup:tenants refuse to run (exit 1); the app itself still boots. Failure
+    | mails carry the subject and exception class only, details go to the log.
+    */
+    'tenants' => [
+        // Comma separated disk names: `google` on the VPS, `local` for dev/staging.
+        'disks' => array_values(array_filter(array_map('trim', explode(',', (string) env('BACKUP_TENANT_DISKS', env('BACKUP_DISKS', 'local')))))),
+
+        'path_prefix' => trim((string) env('BACKUP_PATH_PREFIX', 'sroor-backups'), '/'),
+
+        // Local scratch directory for dumps and archives (deleted after each subject).
+        'temporary_directory' => storage_path('app/backup-temp/tenants'),
+
+        // Back up the central DB too (`--skip-central` turns it off for one run).
+        'include_central' => true,
+
+        // Connection dumped as "the central DB". null = tenancy.database.central_connection.
+        'central_connection' => null,
+
+        // Tenants in these statuses are skipped (their final backup is OPS-9's job).
+        'skip_statuses' => ['archived'],
+
+        // Re-download every archive after the upload and compare its sha256.
+        'verify_after_upload' => (bool) env('BACKUP_VERIFY_AFTER_UPLOAD', true),
+
+        'retention' => [
+            'keep_all_backups_for_days' => 7,
+            'keep_weekly_backups_for_weeks' => 4,
+            'keep_monthly_backups_for_months' => 3,
+        ],
+
+        // Failure alerts: always to the log; mail when an address is configured.
+        'notify_mail' => env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS')),
+
+        // Health: a subject without a verified backup younger than this is red (OPS-7).
+        'max_age_hours' => (int) env('BACKUP_MAX_AGE_HOURS', 26),
+
+        /*
+         * backup:restore-tenant creates a NEW database named
+         * <restore_database_prefix><subject>_<Y-m-d-H-i-s>. On MySQL the prefix
+         * must start with TENANT_DB_PREFIX so the provisioner account may create it
+         * (vps-runbook.md §5). Restoring over an existing database is refused.
+         */
+        'restore_database_prefix' => (string) env('BACKUP_RESTORE_DB_PREFIX', env('TENANT_DB_PREFIX', 'tenant_').'zz_restore_'),
+
+        // MySQL account for the restore drill (CREATE + INSERT on the new database).
+        // Empty = the central connection's credentials.
+        'restore_username' => env('DB_RESTORE_USERNAME'),
+        'restore_password' => env('DB_RESTORE_PASSWORD'),
+
+        'mysql_binary_path' => (string) env('BACKUP_MYSQL_BINARY_PATH', ''),
     ],
 
     'cleanup' => [

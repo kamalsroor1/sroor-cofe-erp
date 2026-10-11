@@ -15,10 +15,13 @@ use App\Http\Requests\StoreSalesInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\InvoiceSummaryResource;
 use App\Models\Invoice;
-use App\Models\Store;
+use App\Models\User;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class InvoiceController extends Controller
 {
@@ -31,18 +34,16 @@ final class InvoiceController extends Controller
     /**
      * List Invoices for active store with filters and summary totals
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        // A body/query store_id is a store filter: access-checked (403) before it is used.
-        $rawStoreId = ClientStoreGuard::verified($request) ?: $request->header('X-Store-Id');
-        $storeId = ($rawStoreId && $rawStoreId !== 'all' && is_numeric($rawStoreId) && (int) $rawStoreId > 0)
-            ? (int) $rawStoreId
-            : null;
+        // STOR-2: the active store (X-Store-Id); a query store_id is an access-checked branch
+        // filter (403). Null (every store) only through a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
         $search = trim((string) $request->input('search', ''));
         $status = (string) $request->input('status', 'all');
@@ -128,6 +129,8 @@ final class InvoiceController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        $this->findInvoiceOr404($user, $id, 'view');
+
         $result = $this->getInvoiceDetailsAction->execute($id);
 
         return response()->json([
@@ -140,15 +143,15 @@ final class InvoiceController extends Controller
     /**
      * Create & confirm new Sales Invoice via Form Request
      */
-    public function store(StoreSalesInvoiceRequest $request): JsonResponse
+    public function store(StoreSalesInvoiceRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        // The validated body store_id also wins inside CreateInvoiceDTO, so it is access-checked
-        // even with a header; `all` is never a store to sell from (422).
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2 (CTO Q14): the invoice is sold from the active store only (store.active:concrete).
+        // A body store_id is still access-checked (403) but never chooses the store.
+        ClientStoreGuard::verified($request);
+        $data = $request->validated();
+        unset($data['store_id']);
 
-        $dto = CreateInvoiceDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
+        $dto = CreateInvoiceDTO::fromArray($data, (int) $activeStore->requireStore()->id);
         $invoice = $this->createSalesInvoiceAction->execute($dto);
 
         $details = $this->getInvoiceDetailsAction->execute($invoice->id);
@@ -168,6 +171,11 @@ final class InvoiceController extends Controller
      */
     public function cancel(CancelInvoiceRequest $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user instanceof User) {
+            $this->findInvoiceOr404($user, $id, 'cancel');
+        }
+
         $dto = CancelInvoiceDTO::fromArray($id, $request->validated());
         $cancelled = $this->cancelSalesInvoiceAction->execute($dto);
 
@@ -176,5 +184,18 @@ final class InvoiceController extends Controller
             'message' => __('invoices.invoice_cancelled') ?: "تم إلغاء الفاتورة رقم {$cancelled->invoice_number} بنجاح وعكس رصيد المخزن والحساب ✓",
             'data' => (new InvoiceResource($cancelled))->resolve(),
         ], 200);
+    }
+
+    /**
+     * STOR-2 (CTO Q13): the permission was already checked (403), so a policy denial here can only
+     * be the invoice's store: answered exactly like a missing invoice (404), never revealing it.
+     */
+    private function findInvoiceOr404(User $user, int $id, string $ability): void
+    {
+        $invoice = Invoice::query()->select(['id', 'store_id'])->find($id);
+
+        if (! $invoice instanceof Invoice || ! Gate::forUser($user)->allows($ability, $invoice)) {
+            throw (new ModelNotFoundException)->setModel(Invoice::class, [$id]);
+        }
     }
 }

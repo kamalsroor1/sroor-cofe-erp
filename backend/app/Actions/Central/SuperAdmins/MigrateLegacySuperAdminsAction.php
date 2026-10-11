@@ -11,6 +11,9 @@ use App\Models\CentralUser;
 use App\Models\User;
 use App\Services\CentralAuditLogger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -21,10 +24,13 @@ use Spatie\Permission\PermissionRegistrar;
  *
  * Per operator, in ONE central transaction (legacy row locked):
  *  - CentralUser found by lowercase email, or created with the legacy password hash copied
- *    VERBATIM (raw attributes: the `hashed` cast never re-hashes or re-checks it), so the
- *    operator keeps the same password; is_active is carried over;
+ *    VERBATIM (raw attributes: the `hashed` cast never re-hashes or re-checks it); a created
+ *    account is flagged `must_reset_password` (login refused until the reset flow, W2-B3);
+ *    is_active is carried over;
  *  - the central-guard `super_admin` role is ensured (CentralPermissionsSeeder must have run);
  *  - every `super_admin` role assignment of the legacy user is removed, on EVERY guard;
+ *  - the legacy row is retired (security audit, W2 lane 3I): ALL its roles and direct
+ *    permissions (any guard) removed, password scrambled, deactivated, API tokens revoked;
  *  - `super_admin_migrated` is audited (ids and email only).
  *
  * Idempotent: an existing CentralUser is never overwritten, the role is only added when
@@ -110,6 +116,7 @@ final class MigrateLegacySuperAdminsAction
             }
 
             $revoked = $this->directory->revoke($legacyUserId);
+            $this->retireLegacy($connection, $legacyUserId);
             $legacy->unsetRelation('roles');
 
             $this->auditLogger->record(
@@ -128,6 +135,38 @@ final class MigrateLegacySuperAdminsAction
         });
     }
 
+    /**
+     * Security audit (W2 lane 3I): once moved, the legacy central `users` row is retired for
+     * good: every role / direct permission on every guard is removed, its password is replaced
+     * by an unknown random hash, it is deactivated and its API tokens are revoked. Runs after
+     * createFromLegacy() copied the original hash. Query builder on purpose: no model events.
+     */
+    private function retireLegacy(string $connection, int $legacyUserId): void
+    {
+        $this->directory->revokeEverything($legacyUserId);
+
+        $values = ['password' => Hash::make(Str::random(64))];
+        $schema = Schema::connection($connection);
+        if ($schema->hasColumn('users', 'is_active')) {
+            $values['is_active'] = false;
+        }
+        if ($schema->hasColumn('users', 'api_token')) {
+            $values['api_token'] = null;
+        }
+        if ($schema->hasColumn('users', 'remember_token')) {
+            $values['remember_token'] = null;
+        }
+
+        DB::connection($connection)->table('users')->where('id', $legacyUserId)->update($values);
+
+        if ($schema->hasTable('personal_access_tokens')) {
+            DB::connection($connection)->table('personal_access_tokens')
+                ->where('tokenable_type', (new User)->getMorphClass())
+                ->where('tokenable_id', $legacyUserId)
+                ->delete();
+        }
+    }
+
     private function createFromLegacy(User $legacy, string $email): CentralUser
     {
         $isActive = $legacy->getAttribute('is_active');
@@ -140,6 +179,8 @@ final class MigrateLegacySuperAdminsAction
             'email' => $email,
             'password' => (string) $legacy->getRawOriginal('password'),
             'is_active' => $isActive === null ? true : (bool) $isActive,
+            // W2-B3 security: the copied legacy password must be replaced before the first sign-in.
+            'must_reset_password' => true,
         ]);
         $central->save();
 

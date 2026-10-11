@@ -56,6 +56,27 @@ final class LegacySuperAdminDirectory
         return $this->assignments()->where('model_id', $userId)->delete();
     }
 
+    /**
+     * Security audit (W2 lane 3I): strips EVERY role and direct permission (any guard) of one
+     * migrated legacy user, so the central `users` row can never again act as an `admin`
+     * anywhere. Returns the number of role assignments removed.
+     */
+    public function revokeEverything(int $userId): int
+    {
+        $connection = DB::connection($this->connection());
+        $morph = (new User)->getMorphClass();
+
+        $connection->table('model_has_permissions')
+            ->where('model_type', $morph)
+            ->where('model_id', $userId)
+            ->delete();
+
+        return $connection->table('model_has_roles')
+            ->where('model_type', $morph)
+            ->where('model_id', $userId)
+            ->delete();
+    }
+
     public function connection(): string
     {
         return (string) config('tenancy.database.central_connection', config('database.default'));

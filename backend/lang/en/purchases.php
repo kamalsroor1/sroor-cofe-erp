@@ -117,7 +117,7 @@ return [
     'cancel_reason_default' => 'Cancelled from UI',
     'purchase_cancelled_success' => 'Purchase invoice cancelled and stock reversed successfully',
     'purchase_cancelled_failed' => 'Failed to cancel purchase invoice',
-    'create_subtitle' => 'Receive raw materials, calculate landed costs and Weighted Average Cost (WAC)',
+    'create_subtitle' => 'Receive raw materials, calculate landed costs and weighted average cost',
     'supplier_po_section' => 'Supplier & Purchase Order Info',
     'supplier_invoice_ref_label' => 'Supplier Invoice Ref #',
     'supply_items_section' => 'Receiving Items & Goods',
@@ -172,4 +172,8 @@ return [
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'final_net_total' => 'Net total',
     'remaining_debt' => 'Remaining owed to supplier',
+
+    // Tooltips for technical financial terms (UX review 2026-10-09, G12)
+    'wac_tooltip' => 'Weighted Average Cost (WAC)',
+    'landed_cost_tooltip' => 'Landed cost includes purchase price plus shipping, customs, and delivery fees',
 ];

@@ -23,11 +23,12 @@ class DatabaseSeeder extends Seeder
         $this->call(CentralPermissionsSeeder::class);
         $this->call(PlansAndFeaturesSeeder::class);
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 
         // 2. Platform super admin. Identity and password come from the environment;
-        //    an existing user is never modified (password included).
-        $this->seedSuperAdmin()->syncRoles([$superAdminRole, $adminRole]);
+        //    an existing user is never modified (password included). No central `admin` role:
+        //    it only fed the removed central-admin → tenant login fallback (security audit, W2 3I),
+        //    and syncRoles() strips it from a previously seeded user.
+        $this->seedSuperAdmin()->syncRoles([$superAdminRole]);
 
         // 3. Base demo/sample tenant (isolated store & database)
         $this->call(TenantSampleSeeder::class);

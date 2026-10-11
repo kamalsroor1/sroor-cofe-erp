@@ -53,4 +53,43 @@ return [
         'at' => '01:00',
     ],
 
+    /*
+    | OPS-9 archive (CTO Q1, Q4, Q6): DELETE /super-admin/tenants/{id} queues ArchiveTenantJob,
+    | which takes a FINAL backup (backup:tenants --kind=final), proves it uploaded + verified,
+    | then moves the tenant to `archived`. The single status writer (TransitionTenantStatusAction)
+    | refuses `archived` without a verified final / pre_purge backup of the same tenant that is
+    | at most `final_backup_max_age_minutes` old. Nothing is ever dropped by an archive.
+    */
+    'archive' => [
+        'final_backup_max_age_minutes' => 120,
+
+        // ArchiveTenantJob: one attempt, killed (→ archive_state failed) after this.
+        'job_timeout_seconds' => 1800,
+
+        // null = the default queue connection / queue.
+        'queue_connection' => null,
+        'queue' => null,
+
+        // A queued / running archive with no progress for this long may be requested again
+        // (lost dispatch, dead worker). Must stay above job_timeout_seconds.
+        'stale_after_minutes' => 60,
+    ],
+
+    /*
+    | OPS-9 purge (CTO Q2, Q3, Q4, Q5): `php artisan tenants:purge {tenant}` ONLY, never
+    | scheduled, never from the API, no --force. Eligible: archived for archived_min_days, or
+    | suspended / cancelled for blocked_min_days; a `violation` suspension never. Before the
+    | drop: a verified backup at most backup_max_age_hours old, sha256 re-checked on the disk,
+    | decrypted, and (require_restore_drill) restored into a scratch database and counted.
+    */
+    'purge' => [
+        'archived_min_days' => 30,
+        'blocked_min_days' => 90,
+        'backup_max_age_hours' => 24,
+        'require_restore_drill' => true,
+
+        // Cache lock shared with the archive flow (tenant-lifecycle:{id}).
+        'lock_seconds' => 3600,
+    ],
+
 ];

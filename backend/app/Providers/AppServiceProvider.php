@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Console\Tenancy\MigrateProvisionedTenants;
+use App\Console\Tenancy\RollbackProvisionedTenants;
+use App\Console\Tenancy\RunForProvisionedTenants;
+use App\Console\Tenancy\SeedProvisionedTenants;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\Contracts\TenantFeatureManagerInterface;
 use App\Contracts\TenantProvisionerInterface;
@@ -22,13 +26,19 @@ use App\Services\TenantProvisionerService;
 use App\Support\PlatformSuperAdmin;
 use App\Support\QuickLogin;
 use App\Support\RateLimitKey;
+use App\Support\TenantRateLimitOverrides;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Commands\Migrate as StanclMigrate;
+use Stancl\Tenancy\Commands\Rollback as StanclRollback;
+use Stancl\Tenancy\Commands\Run as StanclRun;
+use Stancl\Tenancy\Commands\Seed as StanclSeed;
 use Stancl\Tenancy\Events\TenancyEnded;
 use Stancl\Tenancy\Events\TenancyInitialized;
 
@@ -66,6 +76,23 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(PlatformBranding::class);
+
+        $this->defaultTenantCommandsToProvisionedTenants();
+    }
+
+    /**
+     * OPS-2: stancl's tenants:migrate / rollback / seed / run default to every tenant row,
+     * including pending or failed ones without a database. Container extenders (applied
+     * whatever the provider order) swap in subclasses that default to ready tenants only;
+     * an explicit --tenants list is kept. tenants:migrate-fresh (final, destructive,
+     * always run with explicit intent) is left as is.
+     */
+    private function defaultTenantCommandsToProvisionedTenants(): void
+    {
+        $this->app->extend(StanclMigrate::class, static fn (StanclMigrate $command, Application $app): StanclMigrate => new MigrateProvisionedTenants($app->make('migrator'), $app->make('events')));
+        $this->app->extend(StanclRollback::class, static fn (StanclRollback $command, Application $app): StanclRollback => new RollbackProvisionedTenants($app->make('migrator')));
+        $this->app->extend(StanclSeed::class, static fn (StanclSeed $command, Application $app): StanclSeed => new SeedProvisionedTenants($app->make('db')));
+        $this->app->extend(StanclRun::class, static fn (StanclRun $command): StanclRun => new RunForProvisionedTenants);
     }
 
     /**
@@ -76,19 +103,22 @@ class AppServiceProvider extends ServiceProvider
         // IDEN-4.1 / CTO Q-B11: quick login switched on in production = refuse to serve HTTP.
         QuickLogin::guardAgainstProduction($this->app);
 
-        // Implicitly grant Super Admin all permissions, and Store Admin all standard ERP permissions
+        // Store Admin gets all standard ERP permissions; platform operators only their own.
         Gate::before(function ($user, $ability) {
-            // IDEN-1.2: a platform operator never holds a tenant ability. Only its own granular
-            // CentralPermission abilities (and the monitoring gates defined below) fall through
-            // to the regular checks; everything else is denied outright.
+            // IDEN-1.2 / IDEN-1.4: a platform operator never holds a tenant ability. Its granular
+            // CentralPermission abilities are decided here by PlatformSuperAdmin::can (central
+            // guard, active operator, never inside tenancy) — this is what every `can:` on
+            // routes/central.php resolves to. Monitoring gates fall through to their definitions;
+            // everything else is denied outright.
             if ($user instanceof CentralUser) {
+                if (CentralPermission::tryFrom((string) $ability) !== null) {
+                    return PlatformSuperAdmin::can($user, (string) $ability);
+                }
+
                 return self::isOperatorAbility((string) $ability) ? null : false;
             }
 
-            // @deprecated removed in IDEN-1.4 (W2-B3): legacy App\Models\User super admin.
-            if (PlatformSuperAdmin::check($user)) {
-                return true;
-            }
+            // IDEN-1.4: no legacy App\Models\User super-admin bypass any more.
             // Platform-only abilities: a store `admin` must never pass these through the
             // blanket grant below (Telescope/Pulse/Horizon expose cross-tenant data).
             if (str_starts_with((string) $ability, 'super_admin.')
@@ -164,19 +194,33 @@ class AppServiceProvider extends ServiceProvider
         // Tenant login: one ceiling per client IP across every login and tenant (credential
         // spraying), plus a cap per tenant + login + IP. The per-login cap stays above
         // ApiLoginRequest's failure counter so that counter still answers first with its 422.
+        // IDEN-4.6 ext: a super-admin raise (TenantRateLimitOverrides) lifts both caps for THIS
+        // tenant only; a raised per-IP ceiling gets its own tenant-scoped bucket so other tenants
+        // reached from the same IP keep the shared default ceiling.
         RateLimiter::for('tenant-login', function (Request $request): array {
             $identifier = RateLimitKey::identifier($request->input('login') ?? $request->input('phone') ?? $request->input('email'));
+            $override = $this->currentTenantOverride();
+
+            $perIp = $this->limit('rate_limits.tenant_login.per_ip_per_minute', 30);
+            $ipKey = 'tenant-login-ip|'.$request->ip();
+            if (isset($override['tenant_login_per_ip_per_minute']) && $override['tenant_login_per_ip_per_minute'] > $perIp) {
+                $perIp = $override['tenant_login_per_ip_per_minute'];
+                $ipKey = 'tenant-login-ip|'.RateLimitKey::scope().'|'.$request->ip();
+            }
 
             return [
-                Limit::perMinute($this->limit('rate_limits.tenant_login.per_ip_per_minute', 30))
-                    ->by('tenant-login-ip|'.$request->ip()),
-                Limit::perMinute($this->limit('rate_limits.tenant_login.per_login_per_minute', 10))
-                    ->by('tenant-login-id|'.RateLimitKey::scope().'|'.$identifier.'|'.$request->ip()),
+                Limit::perMinute($perIp)->by($ipKey),
+                Limit::perMinute(max(
+                    $this->limit('rate_limits.tenant_login.per_login_per_minute', 10),
+                    $override['tenant_login_per_login_per_minute'] ?? 0,
+                ))->by('tenant-login-id|'.RateLimitKey::scope().'|'.$identifier.'|'.$request->ip()),
             ];
         });
 
-        // Central (platform operator) login, consumed by IDEN-1.3. The hourly per-email cap
-        // ignores the IP so a distributed attack on one operator account is still stopped.
+        // Central (platform operator) login, consumed by IDEN-1.3. Security audit (W2 lane 3I):
+        // the tight hourly cap is per email AND IP, so one attacker can no longer lock an
+        // operator out from everywhere; a looser hourly cap per email that ignores the IP still
+        // slows distributed guessing against one operator account.
         RateLimiter::for('central-login', function (Request $request): array {
             $email = RateLimitKey::identifier($request->input('email'));
 
@@ -185,7 +229,9 @@ class AppServiceProvider extends ServiceProvider
                     ->by('central-login-ip|'.$request->ip()),
                 Limit::perMinute($this->limit('rate_limits.central_login.per_email_per_minute', 5))
                     ->by('central-login-id|'.$email.'|'.$request->ip()),
-                Limit::perHour($this->limit('rate_limits.central_login.per_email_per_hour', 20))
+                Limit::perHour($this->limit('rate_limits.central_login.per_email_ip_per_hour', 20))
+                    ->by('central-login-email-ip|'.$email.'|'.$request->ip()),
+                Limit::perHour($this->limit('rate_limits.central_login.per_email_per_hour', 100))
                     ->by('central-login-email|'.$email),
             ];
         });
@@ -201,13 +247,43 @@ class AppServiceProvider extends ServiceProvider
                 ->by('public-api|'.$endpoint.'|'.$request->ip());
         });
 
+        // L2: release binary downloads, one bucket per IP shared by both download routes (each hit
+        // streams a large file). config rate_limits.app_download.per_hour (default 10).
+        RateLimiter::for('app-download', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.app_download.per_hour', 10))
+            ->by('app-download|'.$request->ip()));
+
         // Central workspace resolver: caps workspace-code enumeration (CTO W1 Q1: 30/min per IP).
-        RateLimiter::for('tenant-resolve', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.tenant_resolve.per_minute', self::TENANT_RESOLVE_PER_MINUTE))
-            ->by('tenant-resolve|'.$request->ip()));
+        // IDEN-4.6 ext: the code of a tenant with a raised limit uses its own bucket, so the raise
+        // never helps probing other codes (those keep spending the shared per-IP bucket).
+        RateLimiter::for('tenant-resolve', function (Request $request): Limit {
+            $default = $this->limit('rate_limits.tenant_resolve.per_minute', self::TENANT_RESOLVE_PER_MINUTE);
+            $override = TenantRateLimitOverrides::forWorkspaceCode(
+                $request->query('code') ?? $request->query('tenant') ?? $request->input('code') ?? $request->input('tenant'),
+            );
+            $raised = $override['limits']['tenant_resolve_per_minute'] ?? 0;
+
+            if ($override !== null && $raised > $default) {
+                return Limit::perMinute($raised)->by('tenant-resolve|t:'.$override['tenant_id'].'|'.$request->ip());
+            }
+
+            return Limit::perMinute($default)->by('tenant-resolve|'.$request->ip());
+        });
 
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.
         RateLimiter::for('quick-login', fn (Request $request): Limit => Limit::perMinute($this->limit('auth.quick_login.per_minute', 5))
             ->by('quick-login|'.RateLimitKey::scope().'|'.$request->ip()));
+    }
+
+    /**
+     * IDEN-4.6 ext: the active rate-limit raise of the tenant this request resolved to.
+     *
+     * @return array<string, int>|null
+     */
+    private function currentTenantOverride(): ?array
+    {
+        $tenant = tenancy()->initialized ? tenant() : null;
+
+        return $tenant !== null ? TenantRateLimitOverrides::forTenant((string) $tenant->getTenantKey()) : null;
     }
 
     /** A positive per-period limit from config (a misconfigured 0 or negative never disables a limiter). */

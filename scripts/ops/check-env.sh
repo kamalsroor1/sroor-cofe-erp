@@ -7,7 +7,9 @@
 #
 # Reused by the release pipeline (OPS-3, scripts/ops/deploy.sh preflight) as
 # the gate for: TELESCOPE_ENABLED=false, BACKUP_ARCHIVE_PASSWORD set (CTO
-# decision D4), mandatory SMTP (W1 Q6) and the audit_pruner account (IDEN-1.15).
+# decision D4), the backup account + Google Drive destination (OPS-5),
+# mandatory SMTP (W1 Q6), the audit_pruner account (IDEN-1.15) and the
+# central hosts CENTRAL_DOMAIN / CENTRAL_ADMIN_DOMAINS / CENTRAL_PASSWORD_RESET_URL.
 # WARN lines never fail the run.
 
 set -euo pipefail
@@ -109,6 +111,42 @@ if [[ -n "$pruner_user" && ("${pruner_user,,}" == "root" || "$pruner_user" == "$
     violation "DB_AUDIT_PRUNER_USERNAME must be its own account (not root, not DB_USERNAME)"
 fi
 
+# Central / platform hosts (IDEN-1.11). config/tenancy.php falls back to a
+# hardcoded domain when CENTRAL_DOMAIN is empty; with CENTRAL_ADMIN_DOMAINS
+# empty EnsureCentralContext 404s the whole super-admin console in production;
+# with CENTRAL_PASSWORD_RESET_URL empty central reset mails are never sent.
+central_domain="${ENV_VALUES[CENTRAL_DOMAIN]:-}"
+if [[ -z "$central_domain" ]]; then
+    violation "CENTRAL_DOMAIN must be set (platform root domain; tenants live on <slug>.<CENTRAL_DOMAIN>)"
+elif [[ "$central_domain" == *"://"* || "$central_domain" == *"/"* || "$central_domain" == *" "* ]]; then
+    violation "CENTRAL_DOMAIN must be a bare host name (no scheme, path or spaces)"
+fi
+
+declare -A ADMIN_HOSTS=()
+admin_domains_raw="${ENV_VALUES[CENTRAL_ADMIN_DOMAINS]:-}"
+IFS=',' read -r -a _admin_hosts <<<"$admin_domains_raw"
+for _h in "${_admin_hosts[@]}"; do
+    _h="${_h#"${_h%%[![:space:]]*}"}"
+    _h="${_h%"${_h##*[![:space:]]}"}"
+    if [[ -n "$_h" ]]; then ADMIN_HOSTS["${_h,,}"]=1; fi
+done
+if [[ ${#ADMIN_HOSTS[@]} -eq 0 ]]; then
+    violation "CENTRAL_ADMIN_DOMAINS must be set (empty = every super-admin route returns 404 in production)"
+fi
+
+reset_url="${ENV_VALUES[CENTRAL_PASSWORD_RESET_URL]:-}"
+if [[ -z "$reset_url" ]]; then
+    violation "CENTRAL_PASSWORD_RESET_URL must be set (empty = central password-reset mails are never sent)"
+elif [[ "$reset_url" != https://* ]]; then
+    violation "CENTRAL_PASSWORD_RESET_URL must start with https://"
+else
+    reset_host="${reset_url#https://}"
+    reset_host="${reset_host%%[/:?#]*}"
+    if [[ -z "${ADMIN_HOSTS[${reset_host,,}]:-}" ]]; then
+        violation "CENTRAL_PASSWORD_RESET_URL host must be one of CENTRAL_ADMIN_DOMAINS"
+    fi
+fi
+
 # Mandatory SMTP (W1 Q6): password resets, 2FA and billing mails must leave the box.
 must_equal MAIL_MAILER smtp "W1 Q6: SMTP is mandatory (Brevo or SES SMTP)"
 must_be_set MAIL_HOST "SMTP host"
@@ -127,6 +165,27 @@ if [[ -z "$backup_password" ]]; then
     violation "BACKUP_ARCHIVE_PASSWORD must be set (D4: backups refuse to run without it)"
 elif [[ ${#backup_password} -lt 24 ]]; then
     warning "BACKUP_ARCHIVE_PASSWORD is shorter than 24 characters (generate with: openssl rand -hex 32)"
+fi
+
+# Backups (OPS-5): dumps run with the read-only `sroor_backup` account and the
+# archives must leave the server (production standard #8: Google Drive).
+must_be_set DB_BACKUP_USERNAME "read-only mysqldump account (vps-runbook.md §5)"
+must_be_set DB_BACKUP_PASSWORD "fresh secret"
+backup_user="${ENV_VALUES[DB_BACKUP_USERNAME]:-}"
+if [[ -n "$backup_user" && ("${backup_user,,}" == "root" || "$backup_user" == "$db_username") ]]; then
+    violation "DB_BACKUP_USERNAME must be its own read-only account (not root, not DB_USERNAME)"
+fi
+backup_disks="${ENV_VALUES[BACKUP_TENANT_DISKS]:-${ENV_VALUES[BACKUP_DISKS]:-local}}"
+backup_disks=",${backup_disks// /},"
+if [[ "$backup_disks" == *",google,"* ]]; then
+    must_be_set GOOGLE_DRIVE_CLIENT_ID "OAuth client of the backup Drive (backup-restore.md §2)"
+    must_be_set GOOGLE_DRIVE_CLIENT_SECRET "OAuth client secret"
+    must_be_set GOOGLE_DRIVE_REFRESH_TOKEN "one-time owner consent (backup-restore.md §2)"
+    if [[ -z "${ENV_VALUES[BACKUP_NOTIFICATION_EMAIL]:-}" ]]; then
+        warning "BACKUP_NOTIFICATION_EMAIL is empty: backup failures are mailed to MAIL_FROM_ADDRESS"
+    fi
+else
+    violation "BACKUP_DISKS (or BACKUP_TENANT_DISKS) must include google: backups must leave the server (production standard #8)"
 fi
 
 # Sentry (OPS-7): DSN only in this file; never send PII.

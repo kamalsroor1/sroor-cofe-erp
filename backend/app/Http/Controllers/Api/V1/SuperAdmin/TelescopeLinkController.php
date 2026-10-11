@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api\V1\SuperAdmin;
 
 use App\Actions\Auth\IssueTelescopeLinkAction;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\CentralUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,7 +22,8 @@ final class TelescopeLinkController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
-        /** @var User $user */
+        // AuthenticateCentral (routes/central.php) resolves the request user to a CentralUser.
+        /** @var CentralUser $user */
         $user = $request->user();
 
         return response()->json([

@@ -6,16 +6,16 @@ namespace Tests\Feature\Api;
 
 use App\Models\ActivityLog;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class AuthApiTest extends TestCase
+class AuthApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected Store $mainStore;
 
@@ -25,13 +25,14 @@ class AuthApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // QA-4: the tenant DB comes from the harness (PermissionsSeeder matrix, main store,
+        // admin user). Fixtures and DB assertions run inside it; requests send X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->mainStore = Store::create([
+        $this->mainStore = $this->adoptMainStore([
             'name' => 'الفرع الرئيسي',
             'code' => 'MAIN',
-            'is_main' => true,
             'is_active' => true,
         ]);
 
@@ -526,6 +527,157 @@ class AuthApiTest extends TestCase
             ->assertJsonPath('data.user.id', $user->id);
     }
 
+    /**
+     * QA-4 isolation: a second tenant, created after useTenantForTest() so tenant A stays
+     * the test's context (createTenant() ends tenancy).
+     */
+    private function createOtherTenant(): Tenant
+    {
+        $other = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
+
+        return $other;
+    }
+
+    /** @return array<string, string> */
+    private function otherTenantHeaders(Tenant $other, ?string $token = null): array
+    {
+        $headers = ['X-Tenant' => (string) $other->getTenantKey()];
+
+        if ($token !== null) {
+            $headers['Authorization'] = 'Bearer '.$token;
+        }
+
+        return $headers;
+    }
+
+    public function test_tenant_a_credentials_are_rejected_on_tenant_b(): void
+    {
+        $tenantB = $this->createOtherTenant();
+        $this->makeActiveUser('01000007020');
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'login' => '01000007020',
+            'password' => 'secret123',
+            'device_name' => 'test-spa',
+        ], $this->otherTenantHeaders($tenantB));
+
+        $response->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonValidationErrors(['login']);
+        $this->assertNull($response->json('data.token'));
+        $this->assertSame(0, $this->inTenant($tenantB, fn (): int => PersonalAccessToken::query()->count()));
+        $this->assertSame(0, PersonalAccessToken::query()->count(), 'a failed login on B must not mint a token in A');
+
+        // Control: the same credentials are valid on their own tenant.
+        $this->postJson('/api/v1/auth/login', [
+            'login' => '01000007020',
+            'password' => 'secret123',
+            'device_name' => 'test-spa',
+        ])->assertStatus(200)->assertJsonPath('success', true);
+    }
+
+    public function test_tenant_a_token_is_rejected_by_tenant_b_me(): void
+    {
+        $tenantB = $this->createOtherTenant();
+        $user = $this->makeActiveUser('01000007021');
+        $token = $user->createToken('tenant-a')->plainTextToken;
+
+        $this->getJson('/api/v1/auth/me', $this->otherTenantHeaders($tenantB, $token))
+            ->assertStatus(401)
+            ->assertJsonPath('success', false)
+            ->assertJsonMissingPath('data.user');
+
+        // Control: the token is alive on its own tenant.
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/auth/me')
+            ->assertStatus(200)
+            ->assertJsonPath('data.user.id', $user->id);
+    }
+
+    public function test_tenant_a_token_cannot_log_out_on_tenant_b(): void
+    {
+        $tenantB = $this->createOtherTenant();
+        $user = $this->makeActiveUser('01000007022');
+        $token = $user->createToken('tenant-a')->plainTextToken;
+        $tokensInB = $this->inTenant($tenantB, fn (): int => PersonalAccessToken::query()->count());
+
+        $this->postJson('/api/v1/auth/logout', [], $this->otherTenantHeaders($tenantB, $token))
+            ->assertStatus(401)
+            ->assertJsonPath('success', false);
+
+        $this->assertSame(1, PersonalAccessToken::query()->where('tokenable_id', $user->id)->count(), "B's logout must not revoke A's token");
+        $this->assertSame($tokensInB, $this->inTenant($tenantB, fn (): int => PersonalAccessToken::query()->count()));
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/auth/me')
+            ->assertStatus(200);
+    }
+
+    /**
+     * IDEN-4.6: ApiLoginRequest's failure counter (6 failures -> 422) is keyed by tenant +
+     * login + IP, so locking a login string on tenant A leaves the same login on B usable.
+     */
+    public function test_failed_login_lockout_on_tenant_a_does_not_lock_the_same_login_on_tenant_b(): void
+    {
+        $tenantB = $this->createOtherTenant();
+        $this->makeActiveUser('01000007023');
+        $this->createTenantUser($tenantB, 'cashier', attributes: [
+            'phone' => '01000007023',
+            'password' => Hash::make('secret-b'),
+        ]);
+
+        for ($i = 0; $i < 6; $i++) {
+            $this->postJson('/api/v1/auth/login', ['login' => '01000007023', 'password' => 'wrong-pass']);
+        }
+
+        // A is locked even for the right password…
+        $this->postJson('/api/v1/auth/login', ['login' => '01000007023', 'password' => 'secret123'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['login']);
+
+        // …while B serves the same login string normally.
+        $this->postJson('/api/v1/auth/login', [
+            'login' => '01000007023',
+            'password' => 'secret-b',
+            'device_name' => 'test-spa',
+        ], $this->otherTenantHeaders($tenantB))
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
+    }
+
+    /**
+     * IDEN-4.6: the tenant-login per-login limiter (default 10/min -> 429) is keyed by tenant
+     * + login + IP, so exhausting it on A does not 429 the same login on B.
+     */
+    public function test_login_429_throttle_on_tenant_a_does_not_throttle_tenant_b(): void
+    {
+        $tenantB = $this->createOtherTenant();
+        $this->createTenantUser($tenantB, 'cashier', attributes: [
+            'phone' => '01000007024',
+            'password' => Hash::make('secret-b'),
+        ]);
+
+        $cap = (int) config('rate_limits.tenant_login.per_login_per_minute');
+        $this->assertGreaterThan(0, $cap);
+        $this->assertLessThan((int) config('rate_limits.tenant_login.per_ip_per_minute') - 1, $cap, 'test needs the per-login cap to answer before the per-IP cap');
+
+        for ($i = 0; $i < $cap; $i++) {
+            $this->postJson('/api/v1/auth/login', ['login' => '01000007024', 'password' => 'wrong-pass']);
+        }
+
+        $this->postJson('/api/v1/auth/login', ['login' => '01000007024', 'password' => 'wrong-pass'])
+            ->assertStatus(429);
+
+        $this->postJson('/api/v1/auth/login', [
+            'login' => '01000007024',
+            'password' => 'secret-b',
+            'device_name' => 'test-spa',
+        ], $this->otherTenantHeaders($tenantB))
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
+    }
+
     private function makeActiveUser(string $phone): User
     {
         $user = User::factory()->create([
@@ -544,5 +696,7 @@ class AuthApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
         $this->flushHeaders();
+        // flushHeaders() also drops the X-Tenant header set by useTenantForTest().
+        $this->withHeaders(['X-Tenant' => (string) $this->tenant->getTenantKey()]);
     }
 }

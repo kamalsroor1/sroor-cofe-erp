@@ -8,6 +8,7 @@ use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\Tenant;
+use App\Support\PlatformHosts;
 
 class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterface
 {
@@ -61,8 +62,6 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
      */
     public function getRecentTenants(int $limit = 5): array
     {
-        $centralDomain = config('tenancy.central_domains.0', request()->getHost() ?: 'baraa-solutions.com');
-
         return Tenant::with(['plan', 'domains'])
             ->latest()
             ->take($limit)
@@ -71,7 +70,7 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
                 'id' => $t->id,
                 'name' => $t->name,
                 'slug' => $t->slug,
-                'domain' => $t->domains->first()?->domain ?? ($t->slug.'.'.$centralDomain),
+                'domain' => $t->domains->first()?->domain ?? PlatformHosts::tenantHost((string) $t->slug),
                 'plan_name' => $t->plan?->name ?? __('common.unspecified', [], 'ar') ?: 'غير محدد',
                 'status' => $t->status,
                 'created_at' => $t->created_at->diffForHumans(),

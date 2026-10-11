@@ -10,31 +10,38 @@ use App\Actions\Tenants\GetTenantDetailsAction;
 use App\Actions\Tenants\GetTenantsIndexDataAction;
 use App\Actions\Tenants\OverrideTenantFeatureAction;
 use App\Actions\Tenants\ProvisionTenantAction;
+use App\Actions\Tenants\RunTenantMigrationsAction;
 use App\Actions\Tenants\ToggleTenantStatusAction;
 use App\Actions\Tenants\UpdateTenantDatabaseConfigAction;
 use App\Contracts\SuperAdminDashboardAnalyticsInterface;
 use App\DTOs\CreateTenantDTO;
+use App\Enums\CentralAuditEvent;
+use App\Enums\TenantStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OverrideTenantFeatureRequest;
 use App\Http\Requests\StoreTenantRequest;
 use App\Http\Requests\ToggleTenantStatusRequest;
 use App\Http\Requests\UpdatePlanRequest;
-use App\Http\Requests\UpdatePlatformSettingsRequest;
-use App\Http\Requests\UpdateSystemUnitsRequest;
 use App\Http\Requests\UpdateTenantDatabaseConfigRequest;
-use App\Http\Requests\UpdateTenantUnitsRequest;
 use App\Http\Resources\PlanResource;
+use App\Http\Resources\TenantResource;
+use App\Models\CentralUser;
 use App\Models\Plan;
-use App\Models\Setting;
 use App\Models\Tenant;
+use App\Services\CentralAuditLogger;
+use App\Support\Tenancy\TenantSuspensionReason;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Stancl\Tenancy\Facades\Tenancy;
 use Throwable;
 
+/**
+ * Legacy platform-console endpoints, mounted by routes/central.php (IDEN-1.4) behind
+ * EnsureCentralContext → AuthenticateCentral → granular `can:` (CentralPermission).
+ * The authenticated user is always an App\Models\CentralUser. Errors are translated; raw
+ * exception messages are logged, never returned.
+ */
 final class SuperAdminApiController extends Controller
 {
     public function __construct(
@@ -45,7 +52,8 @@ final class SuperAdminApiController extends Controller
         private readonly ToggleTenantStatusAction $toggleStatusAction,
         private readonly OverrideTenantFeatureAction $overrideFeatureAction,
         private readonly GetSuperAdminPlansDataAction $getPlansDataAction,
-        private readonly UpdatePlanAction $updatePlanAction
+        private readonly UpdatePlanAction $updatePlanAction,
+        private readonly CentralAuditLogger $auditLogger,
     ) {}
 
     /**
@@ -96,23 +104,33 @@ final class SuperAdminApiController extends Controller
      */
     public function storeTenant(StoreTenantRequest $request): JsonResponse
     {
+        // Tenant roles/permissions pin the `web` guard (PermissionsSeeder::GUARD), so the
+        // `central` default guard of this request does not leak into the tenant DB.
         try {
             $dto = CreateTenantDTO::fromArray($request->validated());
             $tenant = $this->provisionTenantAction->execute($dto);
-
-            return response()->json([
-                'success' => true,
-                'message' => __('super.tenant_created_success', ['name' => $tenant->name]) ?: 'تم إنشاء وتهيئة المستأجر بنجاح ✓',
-                'tenant' => $tenant,
-            ], 201);
         } catch (Throwable $e) {
-            Log::error('Tenant Provisioning Failed: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Tenant provisioning failed', ['exception' => $e]);
 
             return response()->json([
                 'success' => false,
                 'message' => $this->formatTenantException($e),
             ], 422);
         }
+
+        $this->auditLogger->record(
+            CentralAuditEvent::TenantCreated,
+            ['slug' => $tenant->slug, 'plan_id' => $dto->planId, 'custom_domain' => $dto->customDomain],
+            actor: $this->operator($request),
+            subject: $tenant,
+        );
+
+        // A resource, never the raw model: Tenant carries virtual `tenancy_db_*` attributes.
+        return response()->json([
+            'success' => true,
+            'message' => __('super.tenant_created_success', ['name' => $tenant->name]),
+            'tenant' => (new TenantResource($tenant->loadMissing(['plan', 'domains'])))->resolve(),
+        ], 201);
     }
 
     /**
@@ -120,43 +138,43 @@ final class SuperAdminApiController extends Controller
      */
     public function showTenant(string $id): JsonResponse
     {
-        try {
-            $data = $this->getTenantDetailsAction->execute($id);
+        $tenant = $this->findTenant($id);
 
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'تعذر العثور على المستأجر: '.$e->getMessage(),
-            ], 404);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $this->getTenantDetailsAction->execute((string) $tenant->getKey()),
+        ]);
     }
 
     /**
-     * Toggle Tenant Account Status (Active, Suspended, Trial, Expired)
+     * Legacy status toggle, routed through the tenant state machine (ToggleTenantStatusAction).
+     * Refusals render themselves (TenantLifecycleException: 403/409/422 with error_code).
      */
     public function toggleStatus(ToggleTenantStatusRequest $request, string $id): JsonResponse
     {
-        try {
-            $tenant = Tenant::findOrFail($id);
-            $status = (string) $request->validated('status');
-            $extendDays = (int) ($request->validated('extend_days') ?? 0);
+        $tenant = $this->findTenant($id);
+        $reason = $request->validated('reason');
+        $note = $request->validated('note');
 
-            $this->toggleStatusAction->execute($tenant, $status, $extendDays);
+        $tenant = $this->toggleStatusAction->execute(
+            (string) $tenant->getKey(),
+            TenantStatus::from((string) $request->validated('status')),
+            $this->operator($request),
+            (int) ($request->validated('extend_days') ?? 0),
+            is_string($reason) ? TenantSuspensionReason::from($reason) : null,
+            is_string($note) ? $note : null,
+        );
 
-            return response()->json([
-                'success' => true,
-                'message' => __('super.status_updated_success') ?: 'تم تحديث حالة المستأجر بنجاح ✓',
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => __('super.status_updated_success'),
+            'data' => [
+                'id' => (string) $tenant->getKey(),
+                'status' => (string) $tenant->status,
+                'trial_ends_at' => $tenant->trial_ends_at?->toIso8601String(),
+                'subscription_ends_at' => $tenant->subscription_ends_at?->toIso8601String(),
+            ],
+        ]);
     }
 
     /**
@@ -164,98 +182,43 @@ final class SuperAdminApiController extends Controller
      */
     public function overrideFeature(OverrideTenantFeatureRequest $request, string $id): JsonResponse
     {
-        try {
-            $tenant = Tenant::findOrFail($id);
-            $featureKey = (string) $request->validated('feature_key');
+        $tenant = $this->findTenant($id);
+        $featureKey = (string) $request->validated('feature_key');
 
-            $this->overrideFeatureAction->execute($tenant, $featureKey);
+        $overrides = $this->overrideFeatureAction->execute($tenant, $featureKey);
 
-            return response()->json([
-                'success' => true,
-                'message' => __('super.feature_updated_success', ['feature' => $featureKey]) ?: 'تم تحديث الميزة بنجاح ✓',
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
+        $this->auditLogger->record(
+            CentralAuditEvent::TenantFeatureOverridden,
+            ['feature_key' => $featureKey, 'overrides' => $overrides],
+            actor: $this->operator($request),
+            subject: $tenant,
+        );
 
-    /**
-     * Update allowed units for a specific tenant
-     */
-    public function updateTenantUnits(UpdateTenantUnitsRequest $request, string $id): JsonResponse
-    {
-        try {
-            $tenant = Tenant::findOrFail($id);
-            $unitsList = $request->validated('units');
-            $unitsStr = implode(',', $unitsList);
-
-            // 1. Save in tenant custom data
-            $data = $tenant->data ?? [];
-            $data['allowed_units'] = $unitsList;
-            $tenant->data = $data;
-            $tenant->save();
-
-            // 2. Initialize tenant and sync to settings table
-            try {
-                Tenancy::initialize($tenant);
-                Setting::set('inventory_units', $unitsStr);
-                Setting::clearCache();
-                Tenancy::end();
-            } catch (Throwable $te) {
-                Log::warning('Tenant units sync exception: '.$te->getMessage());
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'تم حفظ وتخصيص وحدات القياس للمستأجر بنجاح ✓',
-                'allowed_units' => $unitsList,
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'تعذر تحديث الوحدات للمستأجر: '.$e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Run migrations specifically for this tenant
-     */
-    public function runTenantMigrations(string $id): JsonResponse
-    {
-        try {
-            $tenant = Tenant::findOrFail($id);
-            Artisan::call('tenants:migrate', [
-                '--tenants' => [$tenant->id],
-            ]);
-            $output = Artisan::output();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'تم تشغيل وتحديث ميجريشن المستأجر بنجاح ✓',
-                'output' => $output,
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل تشغيل الميجريشن: '.$e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Tenant deletion is disabled (OPS-11 / Q-B13): always 403, nothing is deleted.
-     * Super admins must suspend the tenant via toggle-status instead.
-     */
-    public function destroyTenant(string $id): JsonResponse
-    {
         return response()->json([
-            'success' => false,
-            'message' => __('super.tenant_delete_disabled'),
-        ], 403);
+            'success' => true,
+            'message' => __('super.feature_updated_success', ['feature' => $featureKey]),
+        ]);
+    }
+
+    /**
+     * Run migrations specifically for this tenant. Returns a status only: the console
+     * output (paths, SQL, connection names) is logged, never returned.
+     */
+    public function runTenantMigrations(Request $request, string $id, RunTenantMigrationsAction $action): JsonResponse
+    {
+        $tenant = $this->findTenant($id);
+
+        if (! $action->execute($tenant, $this->operator($request))) {
+            return response()->json([
+                'success' => false,
+                'message' => __('super.migrations_failed'),
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('super.migrations_completed_success'),
+        ]);
     }
 
     /**
@@ -263,20 +226,13 @@ final class SuperAdminApiController extends Controller
      */
     public function updateDatabaseConfig(UpdateTenantDatabaseConfigRequest $request, string $id, UpdateTenantDatabaseConfigAction $action): JsonResponse
     {
-        try {
-            $tenant = Tenant::findOrFail($id);
-            $action->execute($tenant, $request->validated());
+        $tenant = $this->findTenant($id);
+        $action->execute($tenant, $request->validated(), $this->operator($request));
 
-            return response()->json([
-                'success' => true,
-                'message' => 'تم تحديث بيانات قاعدة بيانات المستأجر بنجاح ✓',
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => __('super.db_config_updated_success'),
+        ]);
     }
 
     /**
@@ -297,136 +253,57 @@ final class SuperAdminApiController extends Controller
      */
     public function updatePlan(UpdatePlanRequest $request, int $id): JsonResponse
     {
-        try {
-            $plan = Plan::findOrFail($id);
-            $this->updatePlanAction->execute($plan, $request->validated());
+        $plan = Plan::query()->find($id);
+        abort_unless($plan instanceof Plan, 404, __('super.plan_not_found'));
 
-            return response()->json([
-                'success' => true,
-                'message' => __('super.plan_updated_success', ['name' => $plan->name]) ?: 'تم تحديث بيانات الباقة بنجاح ✓',
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Get Central Platform Branding & Settings
-     */
-    public function getPlatformSettings(): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'platform_name' => Setting::get('platform_name') ?: Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية'),
-                'platform_subtitle' => Setting::get('platform_subtitle', 'منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع'),
-                'support_email' => Setting::get('support_email', 'support@baraa-solutions.com'),
-                'support_phone' => Setting::get('support_phone', '01000000000'),
-            ],
-        ]);
-    }
-
-    /**
-     * Update Central Platform Branding & Settings
-     */
-    public function updatePlatformSettings(UpdatePlatformSettingsRequest $request): JsonResponse
-    {
         $validated = $request->validated();
+        $this->updatePlanAction->execute($plan, $validated);
 
-        Setting::set('platform_name', $validated['platform_name']);
-        Setting::set('app_name', $validated['platform_name']);
-        if (isset($validated['platform_subtitle'])) {
-            Setting::set('platform_subtitle', $validated['platform_subtitle']);
-        }
-        if (isset($validated['support_email'])) {
-            Setting::set('support_email', $validated['support_email']);
-        }
-        if (isset($validated['support_phone'])) {
-            Setting::set('support_phone', $validated['support_phone']);
-        }
-
-        Setting::clearCache();
+        $this->auditLogger->record(
+            CentralAuditEvent::PlanUpdated,
+            ['changed' => array_keys($validated), 'values' => $validated],
+            actor: $this->operator($request),
+            subject: $plan,
+        );
 
         return response()->json([
             'success' => true,
-            'message' => __('common.success') ?: 'تم حفظ إعدادات واسم المنصة بنجاح ✓',
-            'data' => [
-                'platform_name' => Setting::get('platform_name'),
-                'platform_subtitle' => Setting::get('platform_subtitle'),
-                'support_email' => Setting::get('support_email'),
-                'support_phone' => Setting::get('support_phone'),
-            ],
+            'message' => __('super.plan_updated_success', ['name' => $plan->name]),
         ]);
     }
 
     /**
-     * Get system units configuration (Super Admin)
-     */
-    public function getUnits(): JsonResponse
-    {
-        $unitsStr = Setting::get('global_system_units', 'قطعة,علبة,كرتونة,كجم,جرام,شيكارة,طرد,دستة,باكت,حبة,لتر,مل,متر,طقم,زوج,باليتة');
-        $units = array_values(array_filter(array_map('trim', explode(',', $unitsStr))));
-
-        return response()->json([
-            'success' => true,
-            'units' => $units,
-        ]);
-    }
-
-    /**
-     * Update system units configuration (Super Admin)
-     */
-    public function updateUnits(UpdateSystemUnitsRequest $request): JsonResponse
-    {
-        $units = $request->validated('units');
-        $unitsStr = implode(',', $units);
-        Setting::set('global_system_units', $unitsStr);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم حفظ وتحديث وحدات القياس للنظام بنجاح ✓',
-            'units' => $units,
-        ]);
-    }
-
-    /**
-     * تحويل الأخطاء البرمجية وقواعد البيانات إلى رسائل عربية واضحة ومفهومة للمستخدم
+     * Map a provisioning failure to a translated, operator-facing message. The raw exception
+     * (SQL, credentials, paths) is logged, never returned.
      */
     private function formatTenantException(Throwable $e): string
     {
         $message = $e->getMessage();
 
-        // 1. Unknown Database (قاعدة البيانات غير موجودة في هوستنجر)
-        if (str_contains($message, 'Unknown database') || str_contains($message, '1049')) {
-            preg_match("/database '([^']+)'/", $message, $matches);
-            $dbName = $matches[1] ?? 'المحددة';
+        return (string) match (true) {
+            str_contains($message, 'Unknown database') || str_contains($message, '1049') => __('super.tenant_db_missing'),
+            str_contains($message, 'Access denied') || str_contains($message, '1044') || str_contains($message, '1045') => __('super.tenant_db_access_denied'),
+            str_contains($message, 'Duplicate entry') || str_contains($message, 'UNIQUE constraint') => __('super.tenant_identifier_taken'),
+            str_contains($message, 'Connection refused') || str_contains($message, '2002') => __('super.tenant_db_unreachable'),
+            default => __('super.tenant_provisioning_failed'),
+        };
+    }
 
-            return "قاعدة البيانات ($dbName) غير موجودة في MySQL على هوستنجر. يرجى إنشاؤها أولاً من لوحة الاستضافة (Databases) والتأكد من تطابق الاسم.";
-        }
+    /** Translated 404 for an unknown tenant id (never the model class or query in the message). */
+    private function findTenant(string $id): Tenant
+    {
+        $tenant = Tenant::query()->find($id);
+        abort_unless($tenant instanceof Tenant, 404, __('super.tenant_not_found'));
 
-        // 2. Access Denied / Missing Privileges (الصلاحيات غير ممنوحة)
-        if (str_contains($message, 'Access denied') || str_contains($message, '1044') || str_contains($message, '1045')) {
-            return 'تعذر الاتصال بقاعدة البيانات بسبب عدم منح الصلاحيات لمستخدم MySQL. يرجى التأكد من ربط المستخدم بالقاعدة في هوستنجر واختيار (All Privileges).';
-        }
+        return $tenant;
+    }
 
-        // 3. Duplicate domain or slug
-        if (str_contains($message, 'Duplicate entry') || str_contains($message, 'UNIQUE constraint')) {
-            return 'اسم النطاق أو المعرف البرمجي مستخدم بالفعل لمستأجر آخر. يرجى اختيار اسم معرف مختلف.';
-        }
+    /** AuthenticateCentral guarantees an active CentralUser on every routes/central.php route. */
+    private function operator(Request $request): CentralUser
+    {
+        $user = $request->user();
+        abort_unless($user instanceof CentralUser, 401, __('central_auth.unauthenticated'));
 
-        // 4. Connection refused
-        if (str_contains($message, 'Connection refused') || str_contains($message, '2002')) {
-            return 'تعذر الاتصال بخادم MySQL. يرجى التحقق من حالة خادم قواعد البيانات.';
-        }
-
-        // Generic fallback without raw SQL keywords
-        if (str_contains($message, 'SQLSTATE')) {
-            return 'حدث خطأ أثناء إعداد قاعدة بيانات المستأجر. يرجى التأكد من إنشاء قاعدة البيانات في هوستنجر وربط المستخدم بها.';
-        }
-
-        return 'تعذر إتمام تهيئة المستأجر: '.$message;
+        return $user;
     }
 }

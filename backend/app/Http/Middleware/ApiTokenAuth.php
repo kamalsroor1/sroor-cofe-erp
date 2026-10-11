@@ -10,7 +10,6 @@ use App\Support\ClientStoreGuard;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,8 +42,7 @@ final class ApiTokenAuth
         // 1. Resolve through Sanctum PersonalAccessToken (hashed, revocable).
         $accessToken = PersonalAccessToken::findToken($token);
         if ($accessToken && $accessToken->expires_at !== null && $accessToken->expires_at->isPast()) {
-            // Expired (e.g. testing-only quick-login tokens): delete the dead row and stop here,
-            // so no fallback below can resurrect the session.
+            // Expired (e.g. testing-only quick-login tokens): delete the dead row and stop here.
             $accessToken->delete();
 
             return response()->json([
@@ -62,29 +60,6 @@ final class ApiTokenAuth
             }
         }
 
-        // 2. Fallback: central admin token mirrored onto the tenant user with the same phone.
-        // TODO(Phase 1 central identity, docs/reviews/2026-10-07-saas-analysis/00-REPORT.md row 8): remove central master-key mirroring
-        if (! $user && function_exists('tenant') && tenant()) {
-            $centralUser = tenancy()->central(function () use ($token) {
-                $centralToken = PersonalAccessToken::findToken($token);
-                if (! $centralToken) {
-                    return null;
-                }
-
-                if ($centralToken->expires_at !== null && $centralToken->expires_at->isPast()) {
-                    $centralToken->delete();
-
-                    return null;
-                }
-
-                return $centralToken->tokenable instanceof User ? $centralToken->tokenable : null;
-            });
-
-            if ($centralUser instanceof User && $centralUser->is_active && $centralUser->hasRole('admin')) {
-                $user = User::where('phone', $centralUser->phone)->where('is_active', true)->first();
-            }
-        }
-
         if (! $user) {
             return response()->json([
                 'success' => false,
@@ -94,9 +69,8 @@ final class ApiTokenAuth
 
         // Set authenticated user for this request across guards
         Auth::setUser($user);
-        // IDEN-1.1: the `super_admin` guard is gone and `central` belongs to CentralUser
-        // only, so a legacy App\Models\User is never placed on an operator guard. The
-        // Phase 0 central flow keeps working through the default guard until IDEN-1.3/1.4.
+        // IDEN-1.4: tenant users only. Platform operators authenticate on routes/central.php
+        // through AuthenticateCentral; no token of this middleware reaches the control plane.
         if (function_exists('tenant') && tenant()) {
             Auth::guard('tenant')->setUser($user);
         }
@@ -105,7 +79,7 @@ final class ApiTokenAuth
         // STOR-1 (security): X-Store-Id is trusted only after an access check. An explicit header
         // the user may not use is a 403, never a silent fallback; without the header nothing is
         // written and readers fall back to the user's own default store.
-        if (! $this->isCentralRoute($request) && ! $this->isStoreRecoveryRoute($request)) {
+        if (! $this->isStoreRecoveryRoute($request)) {
             $storeHeader = $request->header('X-Store-Id');
 
             if (is_string($storeHeader) && trim($storeHeader) !== '') {
@@ -124,18 +98,6 @@ final class ApiTokenAuth
         }
 
         return $next($request);
-    }
-
-    /**
-     * The /api/v1/super-admin control plane runs in the central DB (no `stores` table), so the
-     * store header the SPA attaches to every call is ignored there.
-     */
-    private function isCentralRoute(Request $request): bool
-    {
-        $route = $request->route();
-
-        return $route instanceof Route
-            && in_array(EnsureCentralContext::class, $route->gatherMiddleware(), true);
     }
 
     /**

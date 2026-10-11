@@ -279,7 +279,7 @@ final class ItemController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $storeId = (int) (ClientStoreGuard::concrete($request) ?: session('current_store_id') ?: 1);
+        $storeId = ClientStoreGuard::concreteOrDefault($request);
 
         $threshold = $this->tenantSettings->lowStockDefaultThreshold();
 

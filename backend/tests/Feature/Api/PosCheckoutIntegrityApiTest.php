@@ -12,9 +12,8 @@ use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +21,7 @@ use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
 /**
  * Regression tests for Phase 0 POS hotfixes:
@@ -31,9 +30,9 @@ use Tests\TestCase;
  *
  * Fixture: one item priced 550.000 per kg, stock 50.000; selling 2.000 kg gives net 1100.000.
  */
-class PosCheckoutIntegrityApiTest extends TestCase
+class PosCheckoutIntegrityApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     private const INVOICES_URL = '/api/v1/invoices';
 
@@ -63,10 +62,11 @@ class PosCheckoutIntegrityApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->store = Store::create([
+        $this->store = $this->adoptMainStore([
             'name' => 'الفرع الرئيسي',
             'code' => 'MAIN-INT',
             'type' => 'retail',
@@ -183,6 +183,8 @@ class PosCheckoutIntegrityApiTest extends TestCase
     {
         $this->flushHeaders();
         $this->app['auth']->forgetGuards();
+        // Every client still talks to this test's tenant.
+        $this->withHeaders(['X-Tenant' => (string) $this->tenant->getTenantKey()]);
     }
 
     private function storeStockQty(?int $storeId = null): string
@@ -1281,5 +1283,66 @@ class PosCheckoutIntegrityApiTest extends TestCase
         $migration->up();
 
         $this->assertTrue(Schema::hasColumn('invoices', 'client_uuid'));
+    }
+
+    // ------------------------------------------------------------------
+    // QA-4: tenant isolation of checkout + idempotency
+    // ------------------------------------------------------------------
+
+    public function test_same_client_uuid_in_another_tenant_never_replays_this_tenants_invoice(): void
+    {
+        $uuid = (string) Str::uuid();
+        $first = $this->postAs(self::INVOICES_URL, $this->payload(['client_uuid' => $uuid]));
+        $first->assertStatus(201);
+
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherToken = $this->tenantToken($other);
+        $foreign = $this->inTenant($other, function () use ($otherStoreId): array {
+            $customer = Customer::create(['name' => 'عميل مستأجر آخر', 'current_balance' => '0.000', 'is_active' => true]);
+            $item = Item::create([
+                'name' => 'بن مستأجر آخر',
+                'code' => 'BN-COL-INT',
+                'unit' => 'كجم',
+                'cost_price' => '400.000',
+                'selling_price' => '550.000',
+                'current_stock' => '50.000',
+                'is_active' => true,
+            ]);
+            StoreStock::create(['store_id' => $otherStoreId, 'item_id' => $item->id, 'quantity' => '50.000']);
+
+            return ['customer' => (int) $customer->id, 'item' => (int) $item->id];
+        });
+        $this->useTenantForTest($this->tenant);
+
+        // Same client_uuid, other tenant: a brand-new invoice there, never this tenant's replay.
+        $second = $this->postAs(self::POS_URL, [
+            'client_uuid' => $uuid,
+            'customer_id' => $foreign['customer'],
+            'payment_type' => 'cash',
+            'payment_method' => 'cash',
+            'items' => [['item_id' => $foreign['item'], 'quantity' => '0.250', 'unit_price' => '550.000']],
+        ], $otherToken, ['X-Tenant' => (string) $other->getTenantKey(), 'X-Store-Id' => (string) $otherStoreId]);
+
+        $second->assertStatus(201);
+        // The resource serialises money as a JSON number; exact decimal strings are asserted on the rows below.
+        $this->assertEquals(137.5, $second->json('data.net_total'));
+        $this->assertNotSame($first->json('data.id'), $second->json('data.id'));
+
+        // This tenant: still exactly the first invoice and its stock.
+        $this->assertSame(1, Invoice::count());
+        $this->assertSame('48.000', $this->storeStockQty());
+        $this->assertSame('1100.000', (string) Invoice::query()->findOrFail($first->json('data.id'))->net_total);
+
+        $this->inTenant($other, function () use ($foreign, $otherStoreId): void {
+            $this->assertSame(1, Invoice::count());
+            $this->assertSame('137.500', (string) Invoice::query()->firstOrFail()->net_total);
+            $this->assertSame('49.750', (string) StoreStock::where('store_id', $otherStoreId)->where('item_id', $foreign['item'])->value('quantity'));
+        });
+
+        // This tenant's token cannot check out against the other tenant at all.
+        $this->postAs(self::POS_URL, $this->payload(), null, ['X-Tenant' => (string) $other->getTenantKey()])
+            ->assertStatus(401);
+        $this->inTenant($other, fn () => $this->assertSame(1, Invoice::count()));
     }
 }

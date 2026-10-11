@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue';
-import api from '../Services/api';
+import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
 
@@ -12,6 +12,21 @@ export function useSuperAdminAppVersions() {
     const isCreateModalOpen = ref(false);
     const isSubmitting = ref(false);
     const selectedApkFile = ref(null);
+    // 422 `errors` ({ field: [messages] }) and any non-field refusal of the last upload attempt.
+    const formErrors = ref({});
+    const formGeneralError = ref('');
+
+    const resetFormErrors = () => {
+        formErrors.value = {};
+        formGeneralError.value = '';
+    };
+
+    const clearFieldError = (field) => {
+        if (!formErrors.value[field]) return;
+        const next = { ...formErrors.value };
+        delete next[field];
+        formErrors.value = next;
+    };
 
     const form = ref({
         platform: 'android',
@@ -25,6 +40,7 @@ export function useSuperAdminAppVersions() {
 
     const handleFileUpload = (e) => {
         selectedApkFile.value = e.target.files[0] || null;
+        clearFieldError('apk_file');
     };
 
     const fetchVersions = async () => {
@@ -48,19 +64,22 @@ export function useSuperAdminAppVersions() {
             version_code: nextCode,
             min_version_code: 1,
             is_force_update: false,
-            release_notes_ar: '• تحسينات عامة في الأداء والسرعة واستقرار النظام.',
+            release_notes_ar: '',
             is_active: true,
         };
         selectedApkFile.value = null;
+        resetFormErrors();
         isCreateModalOpen.value = true;
     };
 
     const updateFormField = (field, val) => {
         form.value[field] = val;
+        clearFieldError(field);
     };
 
     const submitCreateVersion = async () => {
         isSubmitting.value = true;
+        resetFormErrors();
         try {
             const formData = new FormData();
             formData.append('platform', form.value.platform);
@@ -90,11 +109,14 @@ export function useSuperAdminAppVersions() {
             isCreateModalOpen.value = false;
             fetchVersions();
         } catch (e) {
-            DarkSwal.fire({
-                icon: 'error',
-                title: t('common.error'),
-                text: e.response?.data?.message || t('super.release_publish_failed'),
-            });
+            const status = e.response?.status;
+            const data = e.response?.data;
+            if (status === 422 && data?.errors && typeof data.errors === 'object') {
+                // Field errors render inside the modal next to their inputs; no extra toast.
+                formErrors.value = data.errors;
+                return;
+            }
+            formGeneralError.value = e.userMessage || data?.message || t('super.release_publish_failed');
         } finally {
             isSubmitting.value = false;
         }
@@ -146,6 +168,8 @@ export function useSuperAdminAppVersions() {
         isCreateModalOpen,
         isSubmitting,
         form,
+        formErrors,
+        formGeneralError,
         fetchVersions,
         openCreateModal,
         updateFormField,

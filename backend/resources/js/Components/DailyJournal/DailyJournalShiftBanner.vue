@@ -64,16 +64,17 @@
       <button
         type="button"
         @click="$emit('open-shift')"
-        class="min-h-[38px] px-4 py-1.5 bg-theme-primary text-white font-black text-xs rounded-xl shadow-sm cursor-pointer active:scale-95"
+        class="min-h-[44px] px-5 py-2.5 bg-theme-primary text-white font-black text-xs rounded-xl shadow-md shadow-theme-primary/25 hover:opacity-95 cursor-pointer active:scale-95 flex items-center gap-2 shrink-0"
       >
-        {{ $t('treasury.open_shift_now') }}
+        <Play class="w-4 h-4 fill-white text-white" />
+        <span>{{ $t('treasury.open_shift') }}</span>
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ShieldCheck, AlertCircle, Printer } from 'lucide-vue-next';
+import { ShieldCheck, AlertCircle, Printer, Play } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();

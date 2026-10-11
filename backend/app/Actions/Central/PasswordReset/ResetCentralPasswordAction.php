@@ -49,6 +49,8 @@ final class ResetCentralPasswordAction
                 $locked->forceFill([
                     'password' => $password,
                     'remember_token' => Str::random(60),
+                    // W2-B3: a migrated operator may sign in once it chose its own password.
+                    'must_reset_password' => false,
                 ])->save();
 
                 $revoked = $locked->tokens()->delete();

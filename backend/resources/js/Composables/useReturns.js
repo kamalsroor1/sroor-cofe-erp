@@ -19,6 +19,8 @@ export function useReturns() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
+    const error = ref(false);
+    const errorMessage = ref('');
 
     const typeOptions = computed(() => [
         { value: 'all', label: t('returns.all_return_types') },
@@ -40,6 +42,8 @@ export function useReturns() {
 
     const fetchReturns = async (page = 1) => {
         isLoading.value = true;
+        error.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/returns', {
                 params: {
@@ -64,8 +68,10 @@ export function useReturns() {
                 per_page: 15,
                 total: returnsList.value.length,
             };
-        } catch (error) {
-            console.error('Failed to load returns:', error);
+        } catch (err) {
+            error.value = true;
+            errorMessage.value = err.userMessage || err.message || t('common.error_occurred');
+            console.error('Failed to load returns:', err);
         } finally {
             isLoading.value = false;
         }
@@ -99,8 +105,13 @@ export function useReturns() {
             const response = await api.get(`/returns/${ret.id}`);
             selectedReturnDetails.value = response.data?.data;
             showDetailsModal.value = true;
-        } catch (error) {
-            console.error('Failed to load return details:', error);
+        } catch (err) {
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: err.response?.data?.message || err.userMessage || err.message || t('common.error_occurred'),
+            });
+            console.error('Failed to load return details:', err);
         }
     };
 
@@ -126,11 +137,11 @@ export function useReturns() {
                     showConfirmButton: false,
                 });
                 await fetchReturns(pagination.value.current_page);
-            } catch (error) {
+            } catch (err) {
                 Swal.fire({
                     icon: 'error',
                     title: t('common.error'),
-                    text: error.response?.data?.message || t('returns.archive_failed'),
+                    text: err.response?.data?.message || t('returns.archive_failed'),
                 });
             }
         }
@@ -141,6 +152,8 @@ export function useReturns() {
     });
 
     return {
+        error,
+        errorMessage,
         returnsList,
         summary,
         searchQuery,

@@ -1,9 +1,23 @@
 import { defineStore } from 'pinia';
 import api from '../Services/api';
 import { trans } from '../helpers/trans';
+import { isCentralAppContext } from '../Services/centralApi';
 
 export const useAuthStore = defineStore('auth', {
     state: () => {
+        // The platform console (central mode) never reads or uses a tenant session.
+        if (isCentralAppContext()) {
+            return {
+                user: null,
+                token: null,
+                currentStore: null,
+                stores: [],
+                roles: [],
+                permissions: [],
+                isLoading: false,
+            };
+        }
+
         let savedUser;
         let savedStore;
         try {
@@ -26,11 +40,9 @@ export const useAuthStore = defineStore('auth', {
     },
 
     getters: {
+        // Tenant session only. Platform operators sign in separately (stores/centralAuth.js, IDEN-1.9).
         isAuthenticated: (state) => !!state.token && !!state.user,
-        // Platform super admin comes only from the backend central flag (PlatformSuperAdmin::check()).
-        // Tenant role names / permissions must never grant it.
-        isSuperAdmin: (state) => state.user?.is_super_admin === true,
-        isAdmin: (state) => state.roles.includes('admin') || state.user?.is_super_admin === true,
+        isAdmin: (state) => state.roles.includes('admin'),
         userName: (state) => state.user?.name || trans('common.default_user_name'),
         activeStoreName: (state) => state.currentStore?.name || trans('common.main_branch'),
         themePreference: (state) => state.user?.theme_preference || 'dark',
@@ -143,10 +155,7 @@ export const useAuthStore = defineStore('auth', {
          */
         hasPermission(permissionName) {
             if (!this.user) return false;
-            if (permissionName === 'super_admin.access' || permissionName === 'view_telescope') {
-                return this.user?.is_super_admin === true;
-            }
-            if (this.roles.includes('admin') || this.user?.is_super_admin === true) return true;
+            if (this.roles.includes('admin')) return true;
             return this.permissions.includes(permissionName);
         },
 

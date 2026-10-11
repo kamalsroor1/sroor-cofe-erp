@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\TenantProvisioningException;
 use App\Models\Tenant;
 use Closure;
 use Illuminate\Http\Request;
@@ -12,17 +13,50 @@ use Symfony\Component\HttpFoundation\Response;
 class ResolveApiTenancy
 {
     /**
+     * IDEN-1.4: the ONLY routes of this group that never initialise tenancy: the public
+     * workspace resolver (shop-code lookup, central DB, own throttle). Matched by route
+     * name, so no other `api/v1/central/*` path can ride on the exception. The un-versioned
+     * alias (/api/central/tenants/resolve) runs the same stack (security audit, W2 lane 3I).
+     */
+    public const PUBLIC_CENTRAL_ROUTES = ['api.central.tenants.resolve', 'api.central.tenants.resolve.alias'];
+
+    /**
+     * IDEN-1.11: the only routes of this group that answer on the platform-console host
+     * (central-safe, no tenant data). Everything else there is 404. `api.branding` (BRND-3)
+     * answers there with platform branding only (tenant = null).
+     */
+    public const ADMIN_HOST_ROUTES = ['api.ping', 'api.system.translations', 'api.branding'];
+
+    /**
      * Handle incoming API request and dynamically initialize tenant context if requested
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 0. Bypass tenancy initialization for central platform routes
-        if ($request->is('api/v1/central/*') || $request->is('api/central/*')) {
+        // 0. IDEN-1.11: on the admin host no tenant is ever resolved and the tenant API is
+        //    refused; only a few central-safe public endpoints answer, without X-Tenant.
+        if (EnsureCentralContext::isAdminHost($request)) {
+            if (! $request->routeIs(self::ADMIN_HOST_ROUTES) || $this->namesTenant($request)) {
+                return $this->notFound();
+            }
+
+            return $next($request);
+        }
+
+        // 0b. Explicit exception: the public workspace resolver never initialises tenancy.
+        if ($request->routeIs(self::PUBLIC_CENTRAL_ROUTES)) {
             return $next($request);
         }
 
         // 1. Check if tenancy is already initialized (e.g. by domain)
         if (function_exists('tenancy') && tenancy()->initialized) {
+            $current = tenancy()->tenant;
+            if ($current instanceof Tenant && $current->isPurged()) {
+                return $this->notFound();
+            }
+            if ($current instanceof Tenant && ! $current->isProvisioned()) {
+                return $this->notReady($current);
+            }
+
             return $next($request);
         }
 
@@ -34,6 +68,17 @@ class ResolveApiTenancy
                 ?? Tenant::whereHas('domains', fn ($q) => $q->where('domain', $tenantIdentifier))->first();
 
             if ($tenant) {
+                // OPS-9: a purged (or purging) workspace no longer exists for clients.
+                if ($tenant->isPurged()) {
+                    return $this->notFound();
+                }
+
+                // OPS-2: a workspace still being provisioned (or failed) has no usable
+                // database yet: refuse before initializing tenancy.
+                if (! $tenant->isProvisioned()) {
+                    return $this->notReady($tenant);
+                }
+
                 tenancy()->initialize($tenant);
             } else {
                 return response()->json([
@@ -65,10 +110,37 @@ class ResolveApiTenancy
             }
 
             if ($tenant) {
+                if ($tenant->isPurged()) {
+                    return $this->notFound();
+                }
+
+                if (! $tenant->isProvisioned()) {
+                    return $this->notReady($tenant);
+                }
+
                 tenancy()->initialize($tenant);
             }
         }
 
         return $next($request);
+    }
+
+    /** OPS-2: 503 `provisioning.workspace_not_ready` (+ Retry-After while in progress). */
+    private function notReady(Tenant $tenant): Response
+    {
+        return TenantProvisioningException::workspaceNotReady($tenant->provisioningStatus())->render();
+    }
+
+    private function namesTenant(Request $request): bool
+    {
+        return (bool) ($request->header('X-Tenant') ?: $request->query('tenant') ?: $request->input('tenant'));
+    }
+
+    private function notFound(): Response
+    {
+        return response()->json([
+            'success' => false,
+            'message' => __('auth.tenant_not_found'),
+        ], 404);
     }
 }

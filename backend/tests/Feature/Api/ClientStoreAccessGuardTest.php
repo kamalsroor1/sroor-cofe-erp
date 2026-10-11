@@ -248,8 +248,8 @@ final class ClientStoreAccessGuardTest extends TenantTestCase
         $headers['X-Store-Id'] = 'all';
 
         $this->postJson('/api/v1/shifts/open', ['opening_cash_balance' => '100.000'], $headers)
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('store_id');
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'concrete_store_required');
 
         $this->assertSame(0, $this->inTenant($tenant, fn (): int => CashShift::query()->count()));
     }

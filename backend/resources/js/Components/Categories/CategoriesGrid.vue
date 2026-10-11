@@ -5,12 +5,12 @@
       <CardSkeleton v-for="n in 8" :key="n" />
     </div>
 
-    <!-- 🚫 Empty State -->
+    <!-- Empty State -->
     <EmptyState
       v-else-if="categories.length === 0"
       :title="$t('inventory.no_categories_yet')"
       :description="$t('inventory.create_first_category_hint')"
-      :icon="'🗂️'"
+      :icon="Folder"
     >
       <template #action>
         <BaseButton
@@ -24,7 +24,7 @@
       </template>
     </EmptyState>
 
-    <!-- 🗂️ Categories Responsive Grid -->
+    <!-- Categories Responsive Grid -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <CategoryCard
         v-for="cat in categories"
@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { Plus } from 'lucide-vue-next';
+import { Plus, Folder } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import CardSkeleton from '../Common/Skeletons/CardSkeleton.vue';

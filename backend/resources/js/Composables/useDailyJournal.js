@@ -9,6 +9,8 @@ export function useDailyJournal() {
     const selectedDate = ref(new Date().toISOString().split('T')[0]);
     const activeTab = ref('invoices');
     const isLoading = ref(false);
+    const hasError = ref(false);
+    const errorMessage = ref('');
     const isSubmitting = ref(false);
 
     const activeShift = ref(null);
@@ -53,6 +55,8 @@ export function useDailyJournal() {
 
     const fetchDailyJournal = async () => {
         isLoading.value = true;
+        hasError.value = false;
+        errorMessage.value = '';
         try {
             const response = await api.get('/daily-journal', {
                 params: {
@@ -68,6 +72,8 @@ export function useDailyJournal() {
             }
         } catch (error) {
             console.error('Failed to load daily journal:', error);
+            hasError.value = true;
+            errorMessage.value = error?.response?.data?.message || '';
         } finally {
             isLoading.value = false;
         }
@@ -193,6 +199,8 @@ export function useDailyJournal() {
         selectedDate,
         activeTab,
         isLoading,
+        hasError,
+        errorMessage,
         isSubmitting,
         activeShift,
         summary,

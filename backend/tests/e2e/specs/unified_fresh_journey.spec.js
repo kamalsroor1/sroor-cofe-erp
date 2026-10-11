@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { resetFreshDatabase } from '../utils/db-reset.js';
 
-// Dummy fallback matches the dev seeder's default super admin (DatabaseSeeder::DEFAULT_SUPER_ADMIN_PHONE).
-const E2E_USER_PHONE = process.env.E2E_USER_PHONE || '01000000001';
+// Default: the local `demo` tenant admin (scripts/local/setup-local.ps1); the central admin no longer logs into a tenant.
+const E2E_USER_PHONE = process.env.E2E_USER_PHONE || '01000000201';
 
 /**
  * 🌟 رحلة المستخدم الشاملة والمتكاملة لكافة مميزات وموديولات النظام الـ 17

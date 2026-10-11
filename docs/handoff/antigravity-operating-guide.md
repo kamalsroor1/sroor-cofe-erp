@@ -45,10 +45,10 @@ Ignore the `model:`/`tools:`/`skills:` frontmatter lines — they are Claude Cod
 The coordinator (Claude Code, working in `D:\projects\sroor` on `feature/multi-tenant`) reviews and merges your work. Communication happens **on one draft Pull Request**.
 
 1. When your commits are ready (after the lead's review and verify step), push **only your branch**:
-   `git push -u origin <your branch>`
+   `git push -u origin feature/ux-fixes-antigravity`
    Never push any other branch. Never push to `main` or `feature/multi-tenant`. Never force-push.
 2. Open a **draft** PR with the GitHub CLI:
-   `gh pr create --draft --base feature/multi-tenant --head <your branch> --title "<conventional title>" --body-file <your report>`
+   `gh pr create --draft --base feature/multi-tenant --head feature/ux-fixes-antigravity --title "fix(ui): ux review fixes (batch 1)" --body-file docs/handoff/antigravity-ux-fixes-report.md`
    Never target `main` (pushing/merging to `main` deploys to a live shop).
 3. The PR body is your report. CI (`.github/workflows/ci.yml`) runs automatically on the PR; if a job fails, follow `ci-pipeline` SKILL, fix, commit, push again.
 4. **Message protocol** (PR comments, English):

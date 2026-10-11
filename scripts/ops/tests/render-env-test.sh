@@ -183,7 +183,7 @@ run_render bash "$RENDER" "$TEMPLATE" "$WORK/out/x.env" --optional 'bad key'
 if [[ $RC -eq 2 ]]; then ok "invalid --optional key -> usage error (2)"; else ko "invalid --optional" "rc=$RC"; fi
 
 # 8b. SMTP (W1 Q6) and the backup archive password (D4) can never be waived.
-for never in MAIL_HOST MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD; do
+for never in MAIL_HOST MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD DB_BACKUP_PASSWORD GOOGLE_DRIVE_REFRESH_TOKEN; do
     run_render bash "$RENDER" "$TEMPLATE" "$WORK/out/never.env" --optional "SESSION_DOMAIN,$never"
     if [[ $RC -eq 2 && "$OUT" == *"$never is mandatory"* && ! -e "$WORK/out/never.env" ]]; then
         ok "--optional $never is refused (mandatory in production)"
@@ -211,12 +211,14 @@ if [[ -f "$PROD_TEMPLATE" ]]; then
         ko "production template renders" "$OUT"
     fi
     # The keys W2 made mandatory are required by the real template.
-    for must in MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD DB_AUDIT_PRUNER_PASSWORD; do
+    for must in MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_FROM_ADDRESS BACKUP_ARCHIVE_PASSWORD DB_AUDIT_PRUNER_PASSWORD \
+        DB_BACKUP_PASSWORD GOOGLE_DRIVE_CLIENT_ID GOOGLE_DRIVE_CLIENT_SECRET GOOGLE_DRIVE_REFRESH_TOKEN BACKUP_NOTIFICATION_EMAIL \
+        CENTRAL_DOMAIN CENTRAL_ADMIN_DOMAINS CENTRAL_PASSWORD_RESET_URL; do
         missing_vars=()
         for v in "${vars[@]}"; do
             [[ "$v" == "$must="* ]] || missing_vars+=("$v")
         done
-        run_render "${missing_vars[@]}" bash "$RENDER" "$PROD_TEMPLATE" "$WORK/out/prod-missing.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN
+        run_render "${missing_vars[@]}" bash "$RENDER" "$PROD_TEMPLATE" "$WORK/out/prod-missing.env" --optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN,GOOGLE_DRIVE_FOLDER_ID
         if [[ $RC -eq 1 && "$OUT" == *"$must is required"* ]]; then
             ok "production template requires $must"
         else

@@ -36,6 +36,10 @@ final class MigrateSuperAdminsCommandTest extends TenantTestCase
         parent::setUp();
 
         $this->seed(CentralPermissionsSeeder::class);
+
+        // The seeder no longer creates the Phase 0 `web` super_admin role, but real central DBs
+        // still hold it and LegacySuperAdminDirectory finds the legacy operators through it.
+        Role::findOrCreate('super_admin', 'web');
     }
 
     /** A Phase 0 operator: App\Models\User in the central `users` table with the web-guard role. */
@@ -133,10 +137,13 @@ final class MigrateSuperAdminsCommandTest extends TenantTestCase
         $this->assertSame('created', $log->properties['status'] ?? null);
         $this->assertStringNotContainsString($hash, (string) json_encode($log->properties));
 
-        // Same password as before, through the central login (setup token: 2FA not set up yet).
+        // W2-B3 security finding: the copied legacy password is accepted (no uniform 422) but the
+        // account must complete the reset-password flow first; no token is issued
+        // (the full flow is covered by MustResetPasswordTest).
         $this->postJson('/api/v1/super-admin/auth/login', ['email' => $central->email, 'password' => self::LEGACY_PASSWORD])
-            ->assertOk()
-            ->assertJsonPath('data.two_factor_setup_required', true);
+            ->assertForbidden()
+            ->assertJsonPath('error_code', 'central_auth.password_reset_required')
+            ->assertJsonMissingPath('data.token');
     }
 
     public function test_running_twice_is_idempotent(): void

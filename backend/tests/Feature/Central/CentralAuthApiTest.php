@@ -241,7 +241,9 @@ final class CentralAuthApiTest extends TenantTestCase
     {
         $user = $this->operator();
         $limit = (int) config('rate_limits.central_login.per_email_per_hour');
-        $this->assertSame(20, $limit);
+        // Security audit (W2 lane 3I): the IP-blind cap is the looser one (100/h); the tight
+        // 20/h cap is per email + IP (CentralLoginLimiterKeyTest).
+        $this->assertSame(100, $limit);
 
         for ($i = 0; $i < $limit; $i++) {
             $this->withServerVariables(['REMOTE_ADDR' => '10.0.'.intdiv($i, 200).'.'.($i % 200 + 1)])

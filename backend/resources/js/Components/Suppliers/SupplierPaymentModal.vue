@@ -62,7 +62,7 @@
           type="submit"
           variant="primary"
           size="md"
-          :loading="savingPayment"
+          :loading="submitting"
           class="font-black shadow-lg shadow-theme-primary/20"
         >
           {{ $t('contacts.confirm_payment') }}
@@ -89,7 +89,7 @@ defineProps({
   show: { type: Boolean, default: false },
   targetSupplier: { type: Object, default: null },
   paymentForm: { type: Object, default: () => ({}) },
-  savingPayment: { type: Boolean, default: false },
+  submitting: { type: Boolean, default: false },
 });
 
 defineEmits(['close', 'save', 'update:field']);

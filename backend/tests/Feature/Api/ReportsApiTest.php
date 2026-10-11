@@ -11,16 +11,15 @@ use App\Models\InvoiceItem;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ReportsApiTest extends TestCase
+class ReportsApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -42,10 +41,11 @@ class ReportsApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->storeMain = Store::create([
+        $this->storeMain = $this->adoptMainStore([
             'name' => 'المقر الرئيسي',
             'code' => 'MAIN',
             'type' => 'warehouse',
@@ -293,5 +293,74 @@ class ReportsApiTest extends TestCase
                     'expected_stock_profit' => 16000.0,
                 ],
             ]);
+    }
+
+    public function test_reports_never_include_another_tenants_sales_expenses_or_stock(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $this->inTenant($other, function () use ($otherStoreId, $otherAdminId): void {
+            $customer = Customer::create(['name' => 'عميل مستأجر آخر', 'current_balance' => '0.000', 'is_active' => true]);
+            $item = Item::create([
+                'name' => 'بن مستأجر آخر',
+                'code' => 'BN-MIX-01',
+                'cost_price' => '1000.000',
+                'selling_price' => '2000.000',
+                'current_stock' => '500.000',
+                'is_active' => true,
+            ]);
+            StoreStock::create(['store_id' => $otherStoreId, 'item_id' => $item->id, 'quantity' => '500.000']);
+            Invoice::create([
+                'invoice_number' => 'INV-OTHER-001',
+                'store_id' => $otherStoreId,
+                'customer_id' => $customer->id,
+                'user_id' => $otherAdminId,
+                'invoice_date' => now()->toDateString(),
+                'net_total' => '7777.000',
+                'paid_amount' => '7777.000',
+                'remaining_amount' => '0.000',
+                'total_cost' => '1000.000',
+                'status' => 'confirmed',
+                'payment_method' => 'cash',
+            ]);
+            Expense::create([
+                'expense_number' => 'EXP-OTHER-0001',
+                'title' => 'مصروف مستأجر آخر',
+                'store_id' => $otherStoreId,
+                'user_id' => $otherAdminId,
+                'category' => 'نثريات وضيافة',
+                'amount' => '999.000',
+                'expense_date' => now()->toDateString(),
+            ]);
+        });
+        $this->useTenantForTest($this->tenant);
+
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/reports/summary?preset=this_month')
+            ->assertStatus(200)
+            ->assertJson([
+                'summary' => [
+                    'total_sales' => 1000.0,
+                    'total_expenses' => 150.0,
+                    'net_profit' => 250.0,
+                    'invoices_count' => 1,
+                ],
+            ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/reports/inventory?stock_filter=all')
+            ->assertStatus(200)
+            ->assertJson(['data' => ['stock_cost_valuation' => 24000.0]]);
+
+        $stores = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/reports/stores?period=this_month')
+            ->assertStatus(200);
+        $this->assertStringNotContainsString('7777', (string) $stores->getContent());
+
+        // This tenant's token is rejected when the request selects the other tenant.
+        $this->withHeaders(['X-Tenant' => (string) $other->getTenantKey(), 'Authorization' => 'Bearer '.$this->adminToken])
+            ->getJson('/api/v1/reports/summary?preset=this_month')
+            ->assertStatus(401);
     }
 }

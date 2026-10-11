@@ -3,6 +3,24 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+/*
+| OPS-5: mysqldump options for the tenant + central backups (backup:tenants) and
+| spatie/laravel-backup. stancl builds the `tenant` connection from the central one,
+| so tenant dumps inherit this block. --single-transaction gives a consistent InnoDB
+| snapshot without locking the shop; --no-tablespaces avoids the PROCESS privilege.
+| DB_BACKUP_USERNAME / DB_BACKUP_PASSWORD select the read-only `sroor_backup` MySQL
+| account (vps-runbook.md §5); when they are empty the connection's own user dumps.
+*/
+$mysqlDump = array_filter([
+    'use_single_transaction',
+    'skip_lock_tables',
+    'use_quick',
+    'add_extra_option' => '--no-tablespaces --hex-blob',
+    'timeout' => (int) env('DB_DUMP_TIMEOUT', 3600),
+    'user_name' => env('DB_BACKUP_USERNAME') ?: null,
+    'password' => env('DB_BACKUP_PASSWORD') ?: null,
+], static fn ($value): bool => $value !== null);
+
 return [
 
     /*
@@ -62,6 +80,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => $mysqlDump,
         ],
 
         'mariadb' => [
@@ -82,6 +101,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => $mysqlDump,
         ],
 
         'pgsql' => [
@@ -139,6 +159,34 @@ return [
             'strict' => true,
             'engine' => null,
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        /*
+        | OPS-2: the tenant provisioner (App\Services\Tenancy\ProvisionerMySQLDatabaseManager,
+        | config('tenancy.provisioning.connection')). Production: the `sroor_provisioner`
+        | account (CREATE USER + ALL on the escaped pattern `tenant\_%` WITH GRANT OPTION,
+        | vps-runbook.md §5), never root. Connects WITHOUT a default schema: it only runs
+        | CREATE/DROP DATABASE, CREATE/DROP USER, GRANT and information_schema lookups.
+        | DB_PROVISIONER_USERNAME/PASSWORD empty = the central DB_* account (dev/CI/Hostinger).
+        | Only used when the central driver is mysql/mariadb.
+        */
+        'provisioner' => [
+            'driver' => in_array(env('DB_CONNECTION'), ['mysql', 'mariadb'], true) ? env('DB_CONNECTION') : 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => null,
+            'username' => env('DB_PROVISIONER_USERNAME') ?: env('DB_USERNAME', 'root'),
+            'password' => env('DB_PROVISIONER_USERNAME') ? env('DB_PROVISIONER_PASSWORD', '') : env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

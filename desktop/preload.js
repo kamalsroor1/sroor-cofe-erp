@@ -37,6 +37,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 🚀 Native In-App Auto-Updater
     updater: {
         downloadAndInstall: () => ipcRenderer.invoke('updater:download-and-install'),
+        // Attempts / pending install / boot guard summary (codes and counters only).
+        getState: () => ipcRenderer.invoke('updater:get-state'),
         onProgress: (callback) => {
             const listener = (event, progress) => callback(progress);
             ipcRenderer.on('updater:progress', listener);

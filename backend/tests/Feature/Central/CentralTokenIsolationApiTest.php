@@ -10,6 +10,7 @@ use App\Models\CentralUser;
 use App\Models\User;
 use Database\Seeders\CentralPermissionsSeeder;
 use Illuminate\Support\Str;
+use Tests\Concerns\SeedsCentralPlatformRoles;
 use Tests\TenantTestCase;
 
 /**
@@ -18,12 +19,27 @@ use Tests\TenantTestCase;
  *  - a tenant token (or a legacy central App\Models\User Sanctum token) is 401 on the
  *    central routes (AuthenticateCentral only reads central_personal_access_tokens and only
  *    accepts a CentralUser owner).
+ *
+ * IDEN-1.8: the same holds for the whole /api/v1/super-admin/* control plane moved by IDEN-1.4.
+ * Intended changes: a tenant token used to be 403 there (ApiTokenAuth + gate) and is now 401;
+ * a tenant token WITH X-Tenant is 404 (EnsureCentralContext runs before authentication).
  */
 final class CentralTokenIsolationApiTest extends TenantTestCase
 {
+    use SeedsCentralPlatformRoles;
+
     private const CENTRAL_ME = '/api/v1/super-admin/auth/me';
 
     private const CENTRAL_LOGOUT = '/api/v1/super-admin/auth/logout';
+
+    /** Control-plane reads moved to routes/central.php by IDEN-1.4. */
+    private const CONTROL_PLANE_READS = [
+        '/api/v1/super-admin/dashboard',
+        '/api/v1/super-admin/tenants',
+        '/api/v1/super-admin/plans',
+        '/api/v1/super-admin/settings',
+        '/api/v1/super-admin/app-versions',
+    ];
 
     protected function setUp(): void
     {
@@ -40,19 +56,13 @@ final class CentralTokenIsolationApiTest extends TenantTestCase
         return $operator->createToken('ops')->plainTextToken;
     }
 
-    /** A Phase 0 operator: App\Models\User in the central `users` table with the legacy web-guard role. */
+    /**
+     * A Phase 0 operator: App\Models\User in the central `users` table with the legacy web-guard
+     * role (created by the helper: CentralPermissionsSeeder no longer seeds that role).
+     */
     private function legacyCentralSuperAdmin(): User
     {
-        $user = new User;
-        $user->forceFill([
-            'name' => 'legacy operator',
-            'email' => 'legacy-'.Str::lower(Str::random(8)).'@central.test',
-            'password' => 'not-used',
-            'is_active' => true,
-        ])->save();
-        $user->assignRole('super_admin');
-
-        return $user;
+        return $this->legacyUsersTableSuperAdmin();
     }
 
     public function test_central_token_is_401_on_tenant_routes(): void
@@ -70,6 +80,14 @@ final class CentralTokenIsolationApiTest extends TenantTestCase
         $this->withHeaders($headers)->getJson($this->tenantUrl($tenant, '/api/v1/auth/me'))->assertStatus(401);
 
         $this->assertSame(1, CentralPersonalAccessToken::query()->count(), 'Rejection must not consume the central token.');
+
+        // Sanity the other way: the same central token does work on the control plane (absolute
+        // central URL: a relative one would reuse the tenant host of the previous request; and
+        // without the X-Tenant header that withHeaders() kept from the calls above).
+        $this->flushHeaders();
+        $this->withHeaders(['Accept' => 'application/json', 'Authorization' => 'Bearer '.$centralToken])
+            ->getJson('http://localhost/api/v1/super-admin/dashboard')
+            ->assertOk();
     }
 
     public function test_tenant_token_is_401_on_central_routes(): void
@@ -82,9 +100,18 @@ final class CentralTokenIsolationApiTest extends TenantTestCase
         $this->withHeaders($bare)->getJson(self::CENTRAL_ME)->assertStatus(401);
         $this->withHeaders($bare)->postJson(self::CENTRAL_LOGOUT)->assertStatus(401);
 
+        // IDEN-1.4: the whole control plane refuses the tenant token the same way.
+        foreach (self::CONTROL_PLANE_READS as $uri) {
+            $this->withHeaders($bare)->getJson($uri)->assertStatus(401);
+        }
+        $this->withHeaders($bare)->postJson('/api/v1/super-admin/tenants', [])->assertStatus(401);
+
         // Selecting the (existing) tenant does not help: central routes never resolve tenancy.
+        // Since IDEN-1.4 EnsureCentralContext refuses any tenant identifier with 404 BEFORE
+        // authentication (was 401 from the authenticator): the control plane is invisible.
         $withTenant = array_merge($bare, ['X-Tenant' => (string) $tenant->getTenantKey()]);
-        $this->withHeaders($withTenant)->getJson(self::CENTRAL_ME)->assertStatus(401);
+        $this->withHeaders($withTenant)->getJson(self::CENTRAL_ME)->assertStatus(404);
+        $this->withHeaders($withTenant)->getJson('/api/v1/super-admin/dashboard')->assertStatus(404);
 
         // The tenant token itself is untouched and still valid in its tenant.
         $this->withHeaders($this->tenantHeaders($tenant))->getJson('/api/v1/auth/me')->assertOk();
@@ -95,10 +122,12 @@ final class CentralTokenIsolationApiTest extends TenantTestCase
         $legacy = $this->legacyCentralSuperAdmin();
         $token = $legacy->createToken('legacy-super-admin', ['*'], now()->addHour())->plainTextToken;
 
-        // Sanity: that token still drives the Phase 0 control plane until IDEN-1.4.
-        $this->withHeaders(['Accept' => 'application/json', 'Authorization' => 'Bearer '.$token])
-            ->getJson('/api/v1/super-admin/dashboard')
-            ->assertOk();
+        // IDEN-1.4: that token no longer drives the control plane either (it was 200 before).
+        foreach (self::CONTROL_PLANE_READS as $uri) {
+            $this->withHeaders(['Accept' => 'application/json', 'Authorization' => 'Bearer '.$token])
+                ->getJson($uri)
+                ->assertStatus(401);
+        }
 
         $this->withHeaders(['Accept' => 'application/json', 'Authorization' => 'Bearer '.$token])
             ->getJson(self::CENTRAL_ME)

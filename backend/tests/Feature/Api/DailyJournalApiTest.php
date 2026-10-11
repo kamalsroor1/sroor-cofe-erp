@@ -10,16 +10,15 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class DailyJournalApiTest extends TestCase
+class DailyJournalApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -37,10 +36,11 @@ class DailyJournalApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->mainStore = Store::create([
+        $this->mainStore = $this->adoptMainStore([
             'name' => 'الفرع الرئيسي',
             'code' => 'MAIN-001',
             'type' => 'retail',
@@ -113,8 +113,8 @@ class DailyJournalApiTest extends TestCase
             'is_active' => true,
         ]);
 
-        // 2. Cash Invoice: Net 300, Paid 300
-        Invoice::create([
+        // 2. Cash Invoice: Net 300, Paid 300 (+ the sale voucher InvoiceService writes with it)
+        $cashInvoice = Invoice::create([
             'store_id' => $this->mainStore->id,
             'customer_id' => $customer->id,
             'user_id' => $this->adminUser->id,
@@ -128,6 +128,15 @@ class DailyJournalApiTest extends TestCase
             'remaining_amount' => 0.000,
             'payment_type' => 'cash',
             'status' => 'confirmed',
+        ]);
+        Payment::create([
+            'payment_number' => Payment::SALE_NUMBER_PREFIX.'101',
+            'user_id' => $this->adminUser->id,
+            'customer_id' => $customer->id,
+            'invoice_id' => $cashInvoice->id,
+            'amount' => '300.000',
+            'payment_method' => 'cash',
+            'payment_date' => $today,
         ]);
 
         // 3. Customer Cash Payment: 200
@@ -231,5 +240,39 @@ class DailyJournalApiTest extends TestCase
                     ],
                 ],
             ]);
+    }
+
+    public function test_daily_journal_never_includes_another_tenants_movements(): void
+    {
+        $today = now()->toDateString();
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $this->inTenant($other, fn () => Expense::create([
+            'store_id' => $otherStoreId,
+            'user_id' => $otherAdminId,
+            'expense_number' => 'EXP-OTHER-01',
+            'title' => 'مصروف مستأجر آخر',
+            'amount' => '4321.000',
+            'category' => 'إيجارات',
+            'cost_center' => 'فرع آخر',
+            'expense_date' => $today,
+            'payment_method' => 'cash',
+        ]));
+        $this->useTenantForTest($this->tenant);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->getJson('/api/v1/daily-journal?date='.$today);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.store_id', $this->mainStore->id);
+        $this->assertEquals(0, $response->json('data.summary.total_expenses'));
+        $this->assertStringNotContainsString('مصروف مستأجر آخر', (string) $response->getContent());
+
+        $this->withHeaders(['X-Tenant' => (string) $other->getTenantKey(), 'Authorization' => 'Bearer '.$this->adminToken])
+            ->getJson('/api/v1/daily-journal?date='.$today)
+            ->assertStatus(401);
     }
 }

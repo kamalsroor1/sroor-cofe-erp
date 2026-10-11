@@ -96,7 +96,8 @@ defineEmits(['close', 'submit', 'update:field']);
 const diff = computed(() => {
   const actual = parseFloat(props.form.actual_cash_balance);
   if (isNaN(actual)) return 0;
-  return actual - props.expectedCashInDrawer;
+  const val = actual - props.expectedCashInDrawer;
+  return Math.abs(val) < 0.0005 ? 0 : val;
 });
 
 const diffClass = computed(() => {

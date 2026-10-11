@@ -37,7 +37,10 @@ final class AuditTenantSuperAdminRolesCommand extends Command
         $query = Tenant::query();
         $tenantId = $this->option('tenant');
 
-        if ($tenantId !== null && $tenantId !== '') {
+        if ($tenantId === null || $tenantId === '') {
+            // OPS-2: a pending / running / failed tenant has no database to audit.
+            $query->provisioned();
+        } else {
             $query->whereKey($tenantId);
 
             if (! (clone $query)->exists()) {

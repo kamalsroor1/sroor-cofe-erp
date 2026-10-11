@@ -59,6 +59,7 @@ const onAddQty = (qty) => {
       @click="onSelect"
       role="button"
       tabindex="0"
+      data-testid="pos-product-tile"
       class="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between active:bg-slate-100 dark:active:bg-slate-800/80 transition-colors"
     >
       <div>

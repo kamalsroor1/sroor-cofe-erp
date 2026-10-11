@@ -1,137 +1,167 @@
 <template>
   <div class="space-y-6 max-w-6xl mx-auto font-tajawal pb-12">
-    <!-- Page Header (Master Level) -->
-    <PageHeader :title="currentSectionTitle" :subtitle="currentSectionSubtitle" icon="⚙️">
-      <template #actions>
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button
-            v-if="selectedSection && isMobileView"
-            type="button"
-            @click="selectedSection = null"
-            class="min-h-[38px] px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 text-xs font-bold active:scale-95"
-          >
-            <ArrowRight class="w-4 h-4" />
-            <span>{{ $t('settings.back_to_hub') }}</span>
-          </button>
+    <!-- Shimmer Skeleton Loading State -->
+    <SettingsSkeletonLoader v-if="isLoading" :is-mobile="isMobileView" :has-selected-tab="!!selectedTab" />
 
-          <BaseButton
-            type="button"
-            variant="primary"
-            size="md"
-            :loading="isSaving"
-            @click="saveSettings"
-            class="font-black shadow-theme-primary shadow-lg flex items-center gap-2"
-          >
-            <Save class="w-4 h-4" />
-            <span>{{ $t('profile.save_changes') }}</span>
-          </BaseButton>
-        </div>
-      </template>
-    </PageHeader>
+    <!-- Load Error State with Retry Button (Must Fix #6) -->
+    <div
+      v-else-if="loadError"
+      class="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/50 shadow-sm text-center space-y-4"
+    >
+      <div
+        class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center mx-auto"
+      >
+        <AlertCircle class="w-6 h-6" />
+      </div>
+      <div>
+        <h2 class="text-base font-black text-slate-900 dark:text-white">{{ $t('settings.load_error_title') }}</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+          {{ loadErrorMessage || $t('settings.load_error_desc') }}
+        </p>
+      </div>
+      <BaseButton type="button" variant="primary" size="md" @click="fetchSettings" class="min-h-[44px]">
+        {{ $t('settings.retry_loading') }}
+      </BaseButton>
+    </div>
 
-    <!-- Main Navigation & Sub-Pages Layout -->
-    <div v-if="!isLoading">
-      <!-- 📱 Mobile Hub View -->
-      <SettingsMobileHub
-        v-if="!selectedSection && isMobileView"
-        :sections="sections"
-        @select-section="selectedSection = $event"
+    <!-- Main Settings Shell Content -->
+    <div v-else class="space-y-6">
+      <SettingsShellHeader
+        :title="currentTitle"
+        :subtitle="currentSubtitle"
+        :is-mobile="isMobileView"
+        :has-selected-tab="!!selectedTab"
+        :show-advanced="showAdvanced"
+        :has-unsaved-changes="hasUnsavedChanges"
+        :is-saving="isSaving"
+        :can-manage="canManage && !!initialForm"
+        v-model:search-query="searchQuery"
+        :search-results="searchResults"
+        @back="backToHub"
+        @toggle-advanced="toggleAdvanced"
+        @save="saveSettings"
+        @select-search-result="selectSetting"
       />
 
-      <!-- 💻 Desktop Split View & Mobile Drill-Down Active Page -->
+      <!-- Mobile Hub Cards Grid -->
+      <SettingsTabsNav
+        v-if="isMobileView && !selectedTab"
+        :selected-tab="selectedTab"
+        :is-mobile="isMobileView"
+        @select-tab="selectTab"
+      />
+
+      <!-- Desktop Split Layout (Sidebar 4 cols + Main Content 8 cols) or Mobile Drill-Down -->
       <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Desktop Sidebar Menu -->
-        <div class="hidden lg:block lg:col-span-4">
-          <SettingsNavigationSidebar
-            :sections="sections"
-            :selected-section="selectedSection"
-            @select-section="selectedSection = $event"
-          />
-        </div>
+        <aside class="hidden lg:block lg:col-span-4">
+          <SettingsTabsNav :selected-tab="selectedTab" :is-mobile="false" @select-tab="selectTab" />
+        </aside>
 
-        <!-- Settings Sub-Page Content Area -->
-        <div class="lg:col-span-8">
-          <SettingsBrandingSection v-if="selectedSection === 'branding'" :form="form" @update:field="updateFormField" />
-
-          <SettingsAppearanceSection
-            v-else-if="selectedSection === 'appearance'"
-            :theme-color="form.system_theme_color"
-            :custom-color="customHexColor"
+        <main class="lg:col-span-8">
+          <SettingsTabContent
+            :selected-tab="selectedTab || 'general'"
+            :form="form"
+            :errors="errors"
+            :can-manage="canManage"
+            :is-saving="isSaving"
+            :initial-form="initialForm"
             :color-palettes="colorPalettes"
-            :is-dark="appConfigStore.isDark"
-            @select-color="selectThemeColor"
-            @update:custom-color="onCustomColorChange"
-            @pick-screen="pickFromScreen"
-            @set-theme="appConfigStore.setTheme"
-          />
-
-          <SettingsPrintingSection
-            v-else-if="selectedSection === 'printing'"
-            :form="form"
-            @update:field="updateFormField"
-          />
-
-          <SettingsTelegramSection
-            v-else-if="selectedSection === 'telegram'"
-            :form="form"
-            :is-testing="isTestingTelegram"
-            @update:field="updateFormField"
-            @test-telegram="sendTestTelegram"
-          />
-
-          <SettingsUnitsSection
-            v-else-if="selectedSection === 'units'"
+            :logo-light-url="logo_light_url"
+            :logo-dark-url="logo_dark_url"
+            :logo-light-error="logoLightError"
+            :logo-dark-error="logoDarkError"
+            :is-uploading-light="isUploadingLogoLight"
+            :is-uploading-dark="isUploadingLogoDark"
             :active-units-list="activeUnitsList"
             :default-presets="defaultPresets"
             :new-unit-input="newUnitInput"
+            :is-testing-telegram="isTestingTelegram"
+            @update:field="updateFormField"
+            @update:custom-color="onCustomColorChange"
+            @upload-logo="uploadLogo"
+            @remove-logo="(variant) => removeLogo(variant)"
+            @select-color="selectThemeColor"
             @update:new-unit="newUnitInput = $event"
             @add-unit="addCustomUnit"
             @add-preset="addPresetUnit"
             @remove-unit="removeUnit"
+            @reorder-units="reorderUnits"
+            @test-telegram="sendTestTelegram"
+            @save="saveSettings"
+            @reset-default="resetFieldToDefault"
+            @set-theme="appConfigStore.setTheme"
           />
-        </div>
+        </main>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { Save, ArrowRight } from 'lucide-vue-next';
-import PageHeader from '../../Components/Common/PageHeader.vue';
+import { onMounted } from 'vue';
+import { AlertCircle } from 'lucide-vue-next';
 import BaseButton from '../../Components/Common/BaseButton.vue';
-import SettingsNavigationSidebar from '../../Components/Settings/SettingsNavigationSidebar.vue';
-import SettingsMobileHub from '../../Components/Settings/SettingsMobileHub.vue';
-import SettingsBrandingSection from '../../Components/Settings/SettingsBrandingSection.vue';
-import SettingsAppearanceSection from '../../Components/Settings/SettingsAppearanceSection.vue';
-import SettingsPrintingSection from '../../Components/Settings/SettingsPrintingSection.vue';
-import SettingsTelegramSection from '../../Components/Settings/SettingsTelegramSection.vue';
-import SettingsUnitsSection from '../../Components/Settings/SettingsUnitsSection.vue';
 import { useSettings } from '../../Composables/useSettings';
+import { useSettingsShell } from '../../Composables/useSettingsShell';
+import { useSettingsSearch } from '../../Composables/useSettingsSearch';
+
+import SettingsShellHeader from '../../Components/Settings/Shell/SettingsShellHeader.vue';
+import SettingsTabsNav from '../../Components/Settings/Shell/SettingsTabsNav.vue';
+import SettingsSkeletonLoader from '../../Components/Settings/Shell/SettingsSkeletonLoader.vue';
+import SettingsTabContent from '../../Components/Settings/Shell/SettingsTabContent.vue';
 
 const {
-  appConfigStore,
-  isMobileView,
-  selectedSection,
+  form,
+  initialForm,
+  errors,
   isLoading,
+  loadError,
+  loadErrorMessage,
+  fetchSettings,
   isSaving,
   isTestingTelegram,
   colorPalettes,
-  sections,
-  currentSectionTitle,
-  currentSectionSubtitle,
-  form,
   newUnitInput,
   defaultPresets,
   activeUnitsList,
-  customHexColor,
   addCustomUnit,
   addPresetUnit,
   removeUnit,
+  reorderUnits,
   onCustomColorChange,
-  pickFromScreen,
   selectThemeColor,
   updateFormField,
-  saveSettings,
+  resetFieldToDefault,
   sendTestTelegram,
+  logo_light_url,
+  logo_dark_url,
+  logoLightError,
+  logoDarkError,
+  isUploadingLogoLight,
+  isUploadingLogoDark,
+  uploadLogo,
+  removeLogo,
+  saveSettings,
+  appConfigStore,
 } = useSettings();
+
+const {
+  selectedTab,
+  selectTab,
+  backToHub,
+  isMobileView,
+  showAdvanced,
+  toggleAdvanced,
+  canManage,
+  hasUnsavedChanges,
+  currentTitle,
+  currentSubtitle,
+} = useSettingsShell({ form, initialForm });
+
+const { searchQuery, searchResults, selectSetting, handleDeepLink } = useSettingsSearch({
+  onSelectTab: selectTab,
+  isLoading,
+});
+
+onMounted(handleDeepLink);
 </script>

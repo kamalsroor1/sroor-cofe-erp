@@ -74,6 +74,12 @@ server {
         deny all;
     }
 
+    # App release binaries live on a private disk and are served only through
+    # /api/v1/app/download-apk (checksum header). Stray copies under public/ are never served.
+    location ~* \.(apk|exe|ipa)$ {
+        return 404;
+    }
+
     # Only the front controller executes. Any other *.php under public/
     # (legacy webhook scripts included) returns 404 on the VPS.
     location = /index.php {

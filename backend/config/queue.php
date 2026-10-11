@@ -73,6 +73,19 @@ return [
             'after_commit' => false,
         ],
 
+        // OPS-2: dedicated connection for App\Jobs\ProvisionTenantJob (timeout 900 s), so
+        // retry_after stays above the job timeout without slowing down every other job.
+        // Used only when TENANT_PROVISIONING_QUEUE_CONNECTION=provisioning (the VPS);
+        // dev / CI keep the default connection.
+        'provisioning' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('TENANT_PROVISIONING_QUEUE') ?: 'provisioning',
+            'retry_after' => max(960, (int) env('TENANT_PROVISIONING_RETRY_AFTER', 1000)),
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],

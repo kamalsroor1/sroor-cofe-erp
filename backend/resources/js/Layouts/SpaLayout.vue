@@ -198,7 +198,7 @@
         </div>
 
         <!-- 🏬 Store Switcher (Branch context dropdown / badge - Desktop/Tablet) -->
-        <div v-if="!isSuperAdminPanel" class="hidden lg:flex items-center gap-2">
+        <div class="hidden lg:flex items-center gap-2">
           <!-- Multi-store selector -->
           <div v-if="authStore.stores?.length > 1" class="relative">
             <select
@@ -242,7 +242,7 @@
         </div>
       </div>
 
-      <!-- Left Side (in RTL): Live Clock & Super Admin / Logout -->
+      <!-- Left Side (in RTL): Live Clock & Logout -->
       <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
         <!-- Live Realtime Clock (Full on desktop/tablet, hidden on small phone to prevent clutter) -->
         <div
@@ -250,16 +250,6 @@
         >
           <span>{{ currentTimeStr }}</span>
         </div>
-
-        <!-- Super Admin Switcher (If Permitted) -->
-        <router-link
-          v-if="canAccessSuperAdmin"
-          to="/super-admin/dashboard"
-          class="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-black transition shadow-2xs"
-        >
-          <Crown class="w-3.5 h-3.5" />
-          <span>السوبر أدمن</span>
-        </router-link>
 
         <!-- Logout Button -->
         <button
@@ -454,29 +444,6 @@
                     </div>
                   </button>
                 </template>
-
-                <!-- Super Admin Section (If Allowed) -->
-                <router-link
-                  v-if="canAccessSuperAdmin"
-                  to="/super-admin/dashboard"
-                  @click="isSidebarOpen = false"
-                  class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 hover:border-purple-500 flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
-                >
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div
-                      class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-lg"
-                    >
-                      👑
-                    </div>
-                    <div class="min-w-0">
-                      <div class="text-xs font-black text-purple-400 truncate">لوحة السوبر أدمن</div>
-                      <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">
-                        إدارة المستأجرين والباقات والمنصة
-                      </div>
-                    </div>
-                  </div>
-                  <ChevronLeft class="w-4 h-4 text-purple-400 shrink-0" />
-                </router-link>
               </div>
             </div>
 
@@ -588,6 +555,7 @@ import { useModules } from '../Composables/useModules';
 import { useNavigation } from '../Composables/useNavigation';
 import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
+import { useFormatters } from '../Composables/useFormatters';
 import { useTabsStore } from '../stores/tabs';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
@@ -612,7 +580,6 @@ import {
   ShieldCheck,
   FileText,
   Printer,
-  Crown,
   Coffee,
   X,
 } from 'lucide-vue-next';
@@ -623,6 +590,7 @@ const tabsStore = useTabsStore();
 const isDesktopSettingsOpen = ref(false);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
+const { formatDate, formatTime } = useFormatters();
 const { isModuleEnabled } = useModules();
 const { navigationSections, isItemActive } = useNavigation();
 
@@ -682,12 +650,6 @@ const notificationsList = computed(() => [
   { icon: '🛡️', title: 'جلسة تسجيل دخول', desc: 'تم تسجيل الدخول بنجاح من لوحة الإدارة' },
 ]);
 
-const isSuperAdminPanel = computed(() => {
-  return route.path.startsWith('/super-admin');
-});
-
-const canAccessSuperAdmin = computed(() => authStore.isSuperAdmin);
-
 const toggleSidebarCollapse = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
   localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? 'true' : 'false');
@@ -695,27 +657,9 @@ const toggleSidebarCollapse = () => {
 
 const updateLiveClock = () => {
   const now = new Date();
-  const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-  const months = [
-    'يناير',
-    'فبراير',
-    'مارس',
-    'أبريل',
-    'مايو',
-    'يونيو',
-    'يوليو',
-    'أغسطس',
-    'سبتمبر',
-    'أكتوبر',
-    'نوفمبر',
-    'ديسمبر',
-  ];
-  const dayName = days[now.getDay()];
-  const day = now.getDate();
-  const monthName = months[now.getMonth()];
-  const year = now.getFullYear();
-  const time = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-  currentTimeStr.value = `${dayName}، ${day} ${monthName} ${year} | ${time}`;
+  const date = formatDate(now, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const time = formatTime(now, { second: '2-digit', hour12: true });
+  currentTimeStr.value = `${date} | ${time}`;
 };
 
 const toggleTheme = () => {

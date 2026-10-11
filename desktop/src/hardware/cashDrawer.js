@@ -17,6 +17,8 @@ function anyLiveWindow() {
 const kicker = createDrawerKicker({
     listPrinters: () => printerManager.getPrinters(anyLiveWindow()),
     getConfiguredPrinter: () => settingsStore.get('thermalPrinterName'),
+    // Per-device pin (2 or 5), read on every kick.
+    getKickOptions: () => ({ pin: settingsStore.get('cashDrawerPin') }),
     sendRaw: (printerName, bytes) => sendRaw(printerName, bytes),
     printDriverPulse: (printerName) =>
         printerManager.printThermalSilent(DRIVER_PULSE_HTML, { printerName, paperWidth: '80mm', copies: 1 }),

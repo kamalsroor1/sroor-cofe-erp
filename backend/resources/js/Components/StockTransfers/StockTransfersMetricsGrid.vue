@@ -1,12 +1,18 @@
 <template>
   <div class="font-tajawal">
     <!-- 🔄 Skeleton Loading State -->
-    <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div
+      v-if="isLoading"
+      class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 [&>:last-child:nth-child(odd)]:col-span-2 sm:[&>:last-child:nth-child(odd)]:col-span-1"
+    >
       <StatCardSkeleton v-for="n in 3" :key="n" />
     </div>
 
     <!-- 📊 Summary Metrics Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div
+      v-else
+      class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 [&>:last-child:nth-child(odd)]:col-span-2 sm:[&>:last-child:nth-child(odd)]:col-span-1"
+    >
       <!-- Total Transfers Count -->
       <MetricCard
         :title="$t('inventory.total_transfers_count')"

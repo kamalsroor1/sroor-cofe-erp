@@ -7,21 +7,20 @@ namespace Tests\Feature\Api;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class SystemContextApiTest extends TestCase
+class SystemContextApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
-    protected string $adminToken;
+    /** @var array<string, string> */
+    protected array $adminHeaders;
 
     protected Store $store;
 
@@ -29,20 +28,18 @@ class SystemContextApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/tenant']);
-        $this->seed(PermissionsSeeder::class);
+        $this->tenant = $this->createTenant();
 
-        $this->store = Store::create([
-            'name' => 'المخزن الرئيسي',
-            'code' => 'MAIN-001',
-            'type' => 'warehouse',
-            'is_main' => true,
-            'is_active' => true,
-        ]);
+        $storeId = $this->inTenant($this->tenant, function (): int {
+            // The harness main store, renamed to this test's fixture.
+            $store = Store::query()->where('is_main', true)->firstOrFail();
+            $store->update(['name' => 'المخزن الرئيسي', 'code' => 'MAIN-001', 'type' => 'warehouse']);
 
-        $adminRole = Role::findByName('admin');
+            return (int) $store->id;
+        });
+        $this->store = $this->inTenant($this->tenant, fn (): Store => Store::query()->findOrFail($storeId));
 
-        $this->adminUser = User::factory()->create([
+        $this->adminUser = $this->createTenantUser($this->tenant, 'admin', attributes: [
             'name' => 'كمال سرور',
             'phone' => self::ADMIN_PHONE,
             'email' => 'kamal@sroor.com',
@@ -50,8 +47,10 @@ class SystemContextApiTest extends TestCase
             'is_active' => true,
             'default_store_id' => $this->store->id,
         ]);
-        $this->adminUser->assignRole($adminRole);
-        $this->adminToken = $this->adminUser->createToken('test-spa')->plainTextToken;
+        $this->adminHeaders = $this->tenantHeaders($this->tenant, $this->adminUser);
+
+        // Every request of this class targets the tenant (as a guest unless the test adds a token).
+        $this->withHeaders($this->tenantGuestHeaders($this->tenant));
     }
 
     public function test_unauthenticated_request_is_rejected(): void
@@ -62,7 +61,7 @@ class SystemContextApiTest extends TestCase
 
     public function test_authenticated_user_can_get_system_context_bootstrap_payload(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+        $response = $this->withHeaders($this->adminHeaders)
             ->getJson('/api/v1/system/context');
 
         $response->assertStatus(200)
@@ -86,7 +85,7 @@ class SystemContextApiTest extends TestCase
 
     public function test_system_context_includes_active_store_and_stores_list(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+        $response = $this->withHeaders($this->adminHeaders)
             ->withHeader('X-Store-Id', (string) $this->store->id)
             ->getJson('/api/v1/system/context');
 
@@ -104,25 +103,9 @@ class SystemContextApiTest extends TestCase
 
     public function test_system_context_includes_low_stock_and_debt_alerts(): void
     {
-        Item::create([
-            'name' => 'بن كولومبي ناقص',
-            'code' => 'BN-LOW',
-            'category' => 'coffee_beans',
-            'cost_price' => '400.000',
-            'selling_price' => '550.000',
-            'current_stock' => '5.000',
-            'min_stock_level' => '20.000',
-            'is_active' => true,
-        ]);
+        $this->seedAlerts($this->tenant, 'بن كولومبي ناقص', 'عميل مدين');
 
-        Customer::create([
-            'name' => 'عميل مدين',
-            'phone' => '01000007002',
-            'current_balance' => '1500.000',
-            'is_active' => true,
-        ]);
-
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+        $response = $this->withHeaders($this->adminHeaders)
             ->getJson('/api/v1/system/context');
 
         $response->assertStatus(200)
@@ -134,7 +117,7 @@ class SystemContextApiTest extends TestCase
 
     public function test_can_fetch_translation_dictionary(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+        $response = $this->withHeaders($this->adminHeaders)
             ->getJson('/api/v1/system/translations?locale=ar');
 
         $response->assertStatus(200)
@@ -269,7 +252,7 @@ class SystemContextApiTest extends TestCase
     {
         $secrets = $this->secretsThatMustNotLeak();
 
-        $response = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+        $response = $this->withHeaders($this->adminHeaders)
             ->withHeader('X-Locale', '../config')
             ->getJson('/api/v1/system/context');
 
@@ -296,5 +279,52 @@ class SystemContextApiTest extends TestCase
             ->assertJsonPath('message', __('auth.too_many_requests'));
 
         $this->assertNotSame('auth.too_many_requests', __('auth.too_many_requests'), 'auth.too_many_requests lang key must exist');
+    }
+
+    public function test_system_context_never_exposes_another_tenants_stores_or_alerts(): void
+    {
+        $other = $this->createTenant();
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $this->seedAlerts($other, 'بن المستأجر الآخر الناقص', 'مدين المستأجر الآخر');
+
+        $response = $this->withHeaders($this->adminHeaders)->getJson('/api/v1/system/context');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.active_store.id', $this->store->id);
+        $this->assertNotContains($otherStoreId, collect($response->json('data.stores'))->pluck('id')->all());
+        $body = (string) $response->getContent();
+        $this->assertStringNotContainsString('بن المستأجر الآخر الناقص', $body);
+        $this->assertStringNotContainsString('مدين المستأجر الآخر', $body);
+
+        // The other tenant's store id is not an acceptable X-Store-Id here.
+        $foreignStore = $this->getJson('/api/v1/system/context', array_merge($this->adminHeaders, ['X-Store-Id' => (string) $otherStoreId]));
+        $this->assertNotSame($otherStoreId, $foreignStore->json('data.active_store.id'));
+
+        // And this tenant's token is rejected when the request selects the other tenant.
+        $this->getJson('/api/v1/system/context', array_merge($this->adminHeaders, ['X-Tenant' => (string) $other->getTenantKey()]))
+            ->assertStatus(401);
+    }
+
+    private function seedAlerts(Tenant $tenant, string $itemName, string $customerName): void
+    {
+        $this->inTenant($tenant, function () use ($itemName, $customerName): void {
+            Item::create([
+                'name' => $itemName,
+                'code' => 'BN-LOW',
+                'category' => 'coffee_beans',
+                'cost_price' => '400.000',
+                'selling_price' => '550.000',
+                'current_stock' => '5.000',
+                'min_stock_level' => '20.000',
+                'is_active' => true,
+            ]);
+
+            Customer::create([
+                'name' => $customerName,
+                'phone' => '01000007002',
+                'current_balance' => '1500.000',
+                'is_active' => true,
+            ]);
+        });
     }
 }

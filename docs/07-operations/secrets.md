@@ -39,7 +39,7 @@
 | `DEPLOY_SSH_PRIVATE_KEY` | المفتاح الخاص لمستخدم الـ deploy (OPS-1 §SSH)، يُولَّد خصيصًا للـ CI |
 | `DEPLOY_SSH_KNOWN_HOSTS` | ناتج `ssh-keyscan -p <port> <host>` بعد التحقق من الـ fingerprint يدويًا |
 
-5. أضف **Environment variables** (ليست سرية، لكن تختلف حسب البيئة): `APP_URL`، `SESSION_DOMAIN`، `SANCTUM_STATEFUL_DOMAINS`، `MAIL_HOST`، `MAIL_PORT`، `MAIL_FROM_ADDRESS`، `DEPLOY_HOST`، `DEPLOY_PORT`، `DEPLOY_USER`، و**[CTO-2026-10-09]** `DEPLOY_APP_ROOT` (اختياري، الافتراضي `/var/www/sroor`).
+5. أضف **Environment variables** (ليست سرية، لكن تختلف حسب البيئة): `APP_URL`، `SESSION_DOMAIN`، `SANCTUM_STATEFUL_DOMAINS`، `MAIL_HOST`، `MAIL_PORT`، `MAIL_FROM_ADDRESS`، `CENTRAL_DOMAIN` (مثال `example.com`)، `CENTRAL_ADMIN_DOMAINS` (مثال `admin.example.com`، أكتر من host بفاصلة)، `CENTRAL_PASSWORD_RESET_URL` (مثال `https://admin.example.com/super-admin/reset-password`، الـ host لازم يكون من `CENTRAL_ADMIN_DOMAINS`)، `DEPLOY_HOST`، `DEPLOY_PORT`، `DEPLOY_USER`، و**[CTO-2026-10-09]** `DEPLOY_APP_ROOT` (اختياري، الافتراضي `/var/www/sroor`).
 6. لاحقًا (OPS-5/OPS-2) تُضاف بنفس الطريقة أسرار الـ backup (Google OAuth client/refresh token) وأي حساب DB إضافي، **ومفتاحها يُضاف أولًا إلى `production.env.example` بقيمة فارغة** و**يتربط في `env:` بتاع خطوة «Render the production .env» في `release.yml`**؛ القالب هو الـ allowlist لما يصل للخادم.
 
 قاعدة القرار: أي مفتاح قيمته فارغة في `scripts/ops/templates/production.env.example` = **مطلوب** وقت الـ render، إلا إن مُرّر صراحةً في `--optional`. **[CTO-2026-10-09]** `MAIL_MAILER`/`MAIL_HOST`/`MAIL_PORT`/`MAIL_USERNAME`/`MAIL_PASSWORD`/`MAIL_FROM_ADDRESS`/`BACKUP_ARCHIVE_PASSWORD` مايتعملوش `--optional` أبدًا (`render-env.sh` يخرج بـ 2). `release.yml` بيمرّر `--optional SESSION_DOMAIN,SENTRY_LARAVEL_DSN` بس.
@@ -67,6 +67,9 @@
           MAIL_HOST: ${{ vars.MAIL_HOST }}
           MAIL_PORT: ${{ vars.MAIL_PORT }}
           MAIL_FROM_ADDRESS: ${{ vars.MAIL_FROM_ADDRESS }}
+          CENTRAL_DOMAIN: ${{ vars.CENTRAL_DOMAIN }}
+          CENTRAL_ADMIN_DOMAINS: ${{ vars.CENTRAL_ADMIN_DOMAINS }}
+          CENTRAL_PASSWORD_RESET_URL: ${{ vars.CENTRAL_PASSWORD_RESET_URL }}
         run: |
           bash scripts/ops/render-env.sh scripts/ops/templates/production.env.example \
             "$RUNNER_TEMP/production.env" --optional SESSION_DOMAIN

@@ -6,10 +6,12 @@ namespace App\Actions\Tenants;
 
 use App\Enums\CentralAuditEvent;
 use App\Enums\TenantAccessLevel;
+use App\Enums\TenantBackupKind;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
 use App\Exceptions\TenantLifecycleException;
 use App\Models\Tenant;
+use App\Models\TenantBackup;
 use App\Models\TenantLifecycleEvent;
 use App\Services\CentralAuditLogger;
 use App\Support\Tenancy\TenantLifecyclePolicy;
@@ -29,6 +31,10 @@ use Throwable;
  *       - only actor Billing makes a tenant `active` (anyone else → 403);
  *       - archive only from suspended / cancelled (else 409 + TenantArchiveRefused audit);
  *       - an archived tenant only leaves through unarchive, back to status_before_archive;
+ *       - OPS-9: `archived` needs a verified final / pre_purge backup of THIS tenant, at most
+ *         tenant_lifecycle.archive.final_backup_max_age_minutes old (else 409
+ *         final_backup_required + TenantArchiveRefused audit); a purged / purging tenant
+ *         never changes again (409 tenant_purged);
  *       - any other move missing from the table → 409;
  *  3. updates the lifecycle columns, appends a `tenant_lifecycle_events` row, and writes
  *     the central audit (TenantStatusChanged / TenantArchived / TenantUnarchived);
@@ -58,6 +64,10 @@ final class TransitionTenantStatusAction
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            if ($tenant->isPurged()) {
+                throw TenantLifecycleException::tenantPurged();
+            }
+
             $fromRaw = (string) $tenant->status;
             $from = TenantStatus::tryFrom($fromRaw);
 
@@ -69,9 +79,13 @@ final class TransitionTenantStatusAction
                 ? $this->unarchiveTarget($tenant, $from, $fromRaw)
                 : $this->checkedTarget($transition, $tenant, $from, $fromRaw);
 
+            $finalBackup = ! $transition->isUnarchive() && $to === TenantStatus::Archived
+                ? $this->provenFinalBackup($transition, $tenant, $fromRaw)
+                : null;
+
             $reason = $this->reasonFor($transition, $tenant, $to);
 
-            $this->applyColumns($tenant, $from, $to, $reason, $transition->isUnarchive());
+            $this->applyColumns($tenant, $from, $to, $reason, $transition->isUnarchive(), $finalBackup);
 
             $event = TenantLifecycleEvent::query()->create([
                 'tenant_id' => (string) $tenant->getKey(),
@@ -93,6 +107,9 @@ final class TransitionTenantStatusAction
                     'reason' => $reason?->value,
                     'note' => $transition->note,
                     'lifecycle_event_id' => (int) $event->getKey(),
+                ], $finalBackup === null ? [] : [
+                    'final_backup_id' => (int) $finalBackup->getKey(),
+                    'final_backup_sha256' => $finalBackup->sha256,
                 ]),
                 $transition->causer,
                 $tenant,
@@ -146,6 +163,43 @@ final class TransitionTenantStatusAction
         return $to;
     }
 
+    /**
+     * OPS-9 (CTO Q-B13): no `archived` without a proven final backup. The row must belong to
+     * THIS tenant, be a final / pre_purge archive, be verified (re-downloaded, sha256 matched)
+     * and be recent. Read from the central ledger inside the same central transaction.
+     */
+    private function provenFinalBackup(TenantStatusTransition $transition, Tenant $tenant, string $fromRaw): TenantBackup
+    {
+        $maxAge = max(1, (int) config('tenant_lifecycle.archive.final_backup_max_age_minutes', 120));
+
+        $backup = $transition->finalBackupId === null ? null : TenantBackup::query()
+            ->whereKey($transition->finalBackupId)
+            ->where('tenant_id', (string) $tenant->getKey())
+            ->kind(...TenantBackupKind::finalKinds())
+            ->whereNotNull('verified_at')
+            ->where('created_at', '>=', now()->subMinutes($maxAge))
+            ->first();
+
+        if (! $backup instanceof TenantBackup) {
+            // Survives the rollback of this transaction (recordAttempt semantics).
+            $this->audit->recordAttempt(
+                CentralAuditEvent::TenantArchiveRefused,
+                [
+                    'from' => $fromRaw,
+                    'actor' => $transition->actor->value,
+                    'reason' => 'final_backup_required',
+                    'final_backup_id' => $transition->finalBackupId,
+                ],
+                $transition->causer,
+                $tenant,
+            );
+
+            throw TenantLifecycleException::finalBackupRequired($transition->finalBackupId);
+        }
+
+        return $backup;
+    }
+
     private function unarchiveTarget(Tenant $tenant, ?TenantStatus $from, string $fromRaw): TenantStatus
     {
         if ($from !== TenantStatus::Archived) {
@@ -176,7 +230,7 @@ final class TransitionTenantStatusAction
         };
     }
 
-    private function applyColumns(Tenant $tenant, ?TenantStatus $from, TenantStatus $to, ?TenantSuspensionReason $reason, bool $unarchive): void
+    private function applyColumns(Tenant $tenant, ?TenantStatus $from, TenantStatus $to, ?TenantSuspensionReason $reason, bool $unarchive, ?TenantBackup $finalBackup): void
     {
         $now = now();
 
@@ -192,8 +246,16 @@ final class TransitionTenantStatusAction
 
         if ($to === TenantStatus::Archived) {
             $tenant->status_before_archive = $from;
+            $tenant->archived_at = $now;
+            $tenant->final_backup_id = $finalBackup !== null ? (int) $finalBackup->getKey() : null;
+            $tenant->archive_state = null;
+            $tenant->archive_error_code = null;
         } elseif ($unarchive) {
             $tenant->status_before_archive = null;
+            $tenant->archived_at = null;
+            $tenant->final_backup_id = null;
+            $tenant->archive_state = null;
+            $tenant->archive_error_code = null;
         }
 
         $tenant->save();

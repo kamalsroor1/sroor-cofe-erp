@@ -123,7 +123,7 @@
                 {{ item.name || item.item_name }}
               </td>
               <td class="py-2 px-2 text-center font-sans text-slate-600 border-l border-slate-200">
-                {{ item.unit || 'قطعة' }}
+                {{ unitLabel(item.unit) }}
               </td>
               <td class="py-2 px-2 text-center font-black text-slate-950 border-l border-slate-200">
                 {{ formatMoney(item.quantity) }}
@@ -242,7 +242,9 @@
 <script setup>
 import { Coffee, MapPin, Phone } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
+import { useUnits } from '../../../Composables/useUnits';
 const { formatMoney } = useFormatters();
+const { unitLabel } = useUnits();
 defineProps({
   invoice: { type: Object, default: null },
   items: { type: Array, default: () => [] },

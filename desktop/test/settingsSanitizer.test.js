@@ -86,3 +86,24 @@ test('accepts LoginView "switch workspace" payload (central connect page + empty
     assert.equal(res.settings.tenantId, '');
     assert.equal(res.settings.serverUrl, 'https://baraa-solutions.com/connect');
 });
+
+// APP-5 ext: cash drawer pin is a per-device setting, exactly 2 or 5.
+test('accepts cashDrawerPin 2 and 5', () => {
+    for (const pin of [2, 5]) {
+        const res = sanitizer()({ cashDrawerPin: pin });
+        assert.equal(res.ok, true);
+        assert.equal(res.settings.cashDrawerPin, pin);
+    }
+});
+
+test('rejects any other cashDrawerPin (3, "5", null, 2.5)', () => {
+    for (const pin of [3, '5', null, 2.5, 0, [5]]) {
+        assert.equal(sanitizer()({ cashDrawerPin: pin }).ok, false, `pin ${JSON.stringify(pin)} must be rejected`);
+    }
+});
+
+test('never accepts updateState from the renderer', () => {
+    const res = sanitizer()({ updateState: { failedAttempts: [] }, theme: 'dark' });
+    assert.equal(res.ok, true);
+    assert.equal(Object.hasOwn(res.settings, 'updateState'), false);
+});

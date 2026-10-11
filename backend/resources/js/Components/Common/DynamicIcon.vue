@@ -24,9 +24,12 @@ import {
   Flame,
   Droplet,
   Folder,
+  FolderKanban,
   ShoppingBag,
   ShoppingCart,
   Users,
+  User,
+  Shield,
   ShieldCheck,
   Trash2,
   Sliders,
@@ -46,6 +49,14 @@ import {
   Lock,
   Calendar,
   AlertTriangle,
+  Warehouse,
+  Gift,
+  Bookmark,
+  Archive,
+  Utensils,
+  CupSoda,
+  Phone,
+  PackageOpen,
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -62,7 +73,7 @@ const props = defineProps({
     default: () => ({}),
   },
   fallback: {
-    type: [Object, Function],
+    type: [Object, Function, String],
     default: () => Folder,
   },
 });
@@ -80,6 +91,7 @@ const emojiMap = {
   '🍯': Droplet,
   '⭐': Star,
   '🏪': Store,
+  '🏬': Store,
   '💵': Banknote,
   '💳': CreditCard,
   '📱': Smartphone,
@@ -88,14 +100,17 @@ const emojiMap = {
   '🛍️': ShoppingBag,
   '🛒': ShoppingCart,
   '👥': Users,
+  '👤': User,
   '📊': BarChart3,
   '📈': BarChart3,
   '📉': BarChart3,
   '⚙️': Sliders,
   '🚚': Truck,
+  '🏭': Warehouse,
   '↩️': RotateCcw,
   '📄': FileText,
   '🧾': Receipt,
+  '💸': Receipt,
   '🗑️': Trash2,
   '🛡️': ShieldCheck,
   '🔒': Lock,
@@ -110,6 +125,8 @@ const emojiMap = {
   '📤': ArrowUpRight,
   '🔄': ArrowLeftRight,
   '⚠️': AlertTriangle,
+  '🗂️': Folder,
+  '📞': Phone,
 };
 
 const stringNameMap = {
@@ -121,27 +138,41 @@ const stringNameMap = {
   crown: Crown,
   flame: Flame,
   package: Package,
+  'package-open': PackageOpen,
+  packageopen: PackageOpen,
   boxes: Boxes,
   layers: Layers,
+  folder: Folder,
+  'folder-kanban': FolderKanban,
+  folderkanban: FolderKanban,
   star: Star,
   store: Store,
   banknote: Banknote,
   'credit-card': CreditCard,
+  creditcard: CreditCard,
   smartphone: Smartphone,
   building2: Building2,
   tag: Tag,
   tags: Tag,
   'shopping-bag': ShoppingBag,
+  shoppingbag: ShoppingBag,
   'shopping-cart': ShoppingCart,
+  shoppingcart: ShoppingCart,
   users: Users,
+  user: User,
   'bar-chart3': BarChart3,
+  barchart3: BarChart3,
   sliders: Sliders,
   truck: Truck,
+  warehouse: Warehouse,
   'rotate-ccw': RotateCcw,
   'file-text': FileText,
+  filetext: FileText,
   receipt: Receipt,
   trash2: Trash2,
+  shield: Shield,
   'shield-check': ShieldCheck,
+  shieldcheck: ShieldCheck,
   lock: Lock,
   scale: Scale,
   printer: Printer,
@@ -149,20 +180,36 @@ const stringNameMap = {
   monitor: Monitor,
   server: Server,
   calendar: Calendar,
+  droplet: Droplet,
+  gift: Gift,
+  bookmark: Bookmark,
+  archive: Archive,
+  utensils: Utensils,
+  'cup-soda': CupSoda,
+  cupsoda: CupSoda,
+  phone: Phone,
 };
 
-const resolvedIcon = computed(() => {
-  if (!props.name) return props.fallback;
-  if (typeof props.name === 'object' || typeof props.name === 'function') {
-    return props.name;
+const resolveIcon = (val) => {
+  if (!val) return null;
+  if (typeof val === 'object' || typeof val === 'function') {
+    return val;
   }
-  if (typeof props.name === 'string') {
-    const trimmed = props.name.trim();
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
     if (emojiMap[trimmed]) return emojiMap[trimmed];
     const lower = trimmed.toLowerCase();
     if (stringNameMap[lower]) return stringNameMap[lower];
+    const kebab = lower.replace(/\s+/g, '-');
+    if (stringNameMap[kebab]) return stringNameMap[kebab];
+    const plain = lower.replace(/[-_\s]/g, '');
+    if (stringNameMap[plain]) return stringNameMap[plain];
   }
-  return props.fallback;
+  return null;
+};
+
+const resolvedIcon = computed(() => {
+  return resolveIcon(props.name) || resolveIcon(props.fallback) || Folder;
 });
 
 const iconClass = computed(() => props.class);

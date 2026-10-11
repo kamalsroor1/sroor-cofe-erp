@@ -35,14 +35,25 @@ return [
     'central_login' => [
         'per_ip_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_IP', 10),
         'per_email_per_minute' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL', 5),
-        // Ignores the IP: stops distributed guessing against one operator account.
-        'per_email_per_hour' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL_HOURLY', 20),
+        // Per email AND client IP (security audit, W2 lane 3I): one source cannot lock an
+        // operator out everywhere.
+        'per_email_ip_per_hour' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL_IP_HOURLY', 20),
+        // Ignores the IP, deliberately looser: slows distributed guessing against one account.
+        'per_email_per_hour' => (int) env('RATE_LIMIT_CENTRAL_LOGIN_PER_EMAIL_HOURLY', 100),
     ],
 
     // Public, unauthenticated endpoints (ping, app version/update/APK, translations, auth options),
     // counted per endpoint and client IP.
     'public_api' => [
         'per_minute' => (int) env('RATE_LIMIT_PUBLIC_API', 60),
+    ],
+
+    // Release binary downloads (GET /api/v1/app/download-apk and /download-latest-apk), L2:
+    // one bucket per client IP across both routes. Much tighter than public_api: every hit
+    // streams a 20-150 MB file. A shop updating many devices behind one NAT can raise it.
+    // An empty env value keeps the default (an empty string must never become a limit of 1).
+    'app_download' => [
+        'per_hour' => (int) (env('RATE_LIMIT_APP_DOWNLOAD_HOURLY') ?: 10),
     ],
 
     // Central workspace resolver (shop-code lookup) and the tenant-miss bucket of

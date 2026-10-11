@@ -125,6 +125,24 @@ bash provision.sh --env-file /root/sroor-provision.env
 
 إعادة خطوة واحدة: `bash provision.sh --env-file /root/sroor-provision.env --only 41-mysql-users`.
 
+### 4.4 ملفات إصدارات التطبيقات (APK / EXE) — **[W2 batch 5، APP-3، CTO Q9]**
+
+ملفات التطبيقات (Android `.apk` وبرنامج تثبيت Windows `.exe`) **مابتتقدمش أبدًا كملفات static**. التحميل الوحيد عن طريق `GET /api/v1/app/download-apk?platform=&version_code=` اللي بيرجّع header ‏`X-Checksum-Sha256`، والتطبيق بيرفض أي تحديث من غير checksum.
+
+- **مكان التخزين:** القرص الخاص `app_releases_private` ‏= `shared/storage/app/private/releases/apks/<platform>/<ulid>.<ext>` (خارج `public/` وخارج `storage/app/public`، فمش متاح عن طريق symlink الـ `/storage`). مركزي، ومش في `tenancy.filesystem.disks`.
+- **النقل من القرص العام:** الإصدارات القديمة كانت في `storage/app/public/apks` (متاحة للعامة على `/storage/apks/...`). **[R1] على مرحلتين:** `php artisan app-releases:relocate` **بينسخ** الملفات للقرص الخاص بنفس المسار النسبي ويتأكد من الـ SHA-256 (من غير أي تعديل في الـ DB) **ويسيب النسخة العامة** (الـ release القديم لسه بيقرا منها)؛ بيشتغل تلقائيًا في كل deploy بعد الـ migrations (`deploy-runbook.md` §2، المرحلة 7b). وبعد ما الـ release الجديد يعدّي الـ health check بعد التبديل، الـ deploy بيشغّل `php artisan app-releases:relocate --prune-legacy` (المرحلة 12b) اللي بيمسح النسخة العامة **بس** لما الـ SHA-256 بتاع النسخة الخاصة يطابقها؛ فشله مش fatal (تحذير بس). الاتنين **آمنين لو اتشغّلوا أكتر من مرة**. تجربة من غير تغيير: `php artisan app-releases:relocate --dry-run` (أو مع `--prune-legacy`). الكود الجديد بيقرا القرص الخاص الأول وبعدين العام كـ fallback (قراءة بس).
+- **nginx (لازم يتضاف لـ `templates/nginx-site.conf.tmpl` قبل أول deploy على الـ VPS):** أي ملف `.apk` / `.exe` / `.ipa` تحت `public/` (أو `public/storage`) يرجع 404:
+
+  ```nginx
+  # APP-3: release binaries are downloaded only through /api/v1/app/download-apk (checksum header).
+  location ~* \.(apk|exe|ipa)$ {
+      return 404;
+  }
+  ```
+
+  الـ regex ده مايمسّش `/api/v1/app/download-apk` (الـ URI مابينتهيش بـ `.apk`). على Apache نفس القاعدة موجودة في `backend/public/.htaccess`.
+- **بيد الـ CTO على الخادم الحالي (مرة واحدة، بعد أول deploy فيه الأمر):** امسح الملفات القديمة اللي في جذر `public/` مباشرة، زي `public/app.apk` و`public/sroor-cofe-erp-2m.apk` — دي مش مسجلة في `app_versions` فالأمر **مابيمسحهاش**، بيطبع تحذير بس (`Still web-served, delete it by hand`). خد نسخة منها الأول لو محتاجها، وارفع أي إصدار لسه مستخدم من صفحة الإصدارات في السوبر أدمن (هيتفحص ويتخزن في القرص الخاص).
+
 ---
 
 ## 5. مستخدمو MySQL بأقل صلاحية
@@ -231,7 +249,30 @@ mysql -N -B -r -e "SHOW GRANTS FOR \`sroor_audit_pruner\`@\`localhost\`"   # USA
 - **بديل** (`QUEUE_MODE=worker`): `sroor-worker` × `QUEUE_WORKER_PROCESSES` بـ `queue:work redis --max-time=3600`؛ الـ deploy ينفّذ `queue:restart`.
 - قبل أول deploy يكون البرنامج في `BACKOFF/FATAL` لأن `current` غير موجود — طبيعي.
 - **الـ scheduler:** cron كل دقيقة كمستخدم `sroor`. أي job تخص المستأجرين يجب أن تدور عليهم داخل tenancy (`tenancy()->runForMultiple`)، ولا تلمس بيانات مستأجر من السياق المركزي.
+- **[OPS-5/OPS-7] الـ backups والـ health:** `backup:tenants` الساعة 01:30، `backup:run --only-files` 02:30، `backup:clean` 03:00، `health:check` كل 5 دقايق، والـ heartbeats (`health:schedule-check-heartbeat` و`health:queue-check-heartbeat`) كل دقيقة. بعد **أول** deploy على الخادم شغّل `php artisan backup:tenants` مرة يدوي (الـ health check `Backup Freshness` بيبقى أحمر لحد أول نسخة). الـ runbook: [`backup-restore.md`](backup-restore.md).
 - Redis بـ `noeviction`: إن امتلأت الذاكرة تفشل الكتابة بدل حذف jobs بصمت. راقب `INFO memory` وارفع `REDIS_MAXMEMORY` عند الحاجة.
+
+### 6.1 queue الـ provisioning (OPS-2)
+
+إنشاء مستأجر جديد بقى job في الـ queue (`App\Jobs\ProvisionTenantJob`: `tries=3`، `timeout=900` ثانية). المستأجر بيفضل `provisioning_status=pending` لحد ما worker يشيل الـ job؛ من غير worker على الـ queue الصح **مفيش مستأجر جديد هيشتغل**.
+
+- **connection مخصوص:** `config/queue.php` → `provisioning` (redis، `retry_after` = `TENANT_PROVISIONING_RETRY_AFTER`، الافتراضي 1000، وأقل قيمة 960). لازم `retry_after` > timeout الـ job (900)، وإلا الـ job بيتسلّم مرتين وهو لسه شغال. الـ connection الافتراضي (`retry_after=90`) **مش** مناسب.
+- **supervisor في Horizon:** `config/horizon.php` → `supervisor-provisioning` (process واحد، `timeout=930`، `tries=3`) على connection `provisioning` والـ queue `TENANT_PROVISIONING_QUEUE` (الافتراضي `provisioning`). مفيش برنامج supervisor جديد: نفس `sroor-horizon` بيشغّله.
+- **الـ `.env` على الـ VPS** (من القالب `scripts/ops/templates/production.env.example`):
+  - `TENANT_PROVISIONING_QUEUE_CONNECTION=provisioning`
+  - `TENANT_PROVISIONING_QUEUE=provisioning` (نفس اسم queue الـ supervisor)
+  - `TENANT_DB_PER_TENANT_USER=true` (**إلزامي** هنا: `sroor_app` مالوش صلاحية على DBs المستأجرين، فكل مستأجر بيتعمله مستخدم MySQL على الـ DB بتاعته بس، §5)
+  - `TENANT_DB_USER_HOST=localhost`
+  - `DB_PROVISIONER_USERNAME=sroor_provisioner` و`DB_PROVISIONER_PASSWORD` = `MYSQL_PROVISIONER_PASSWORD` من `/root/sroor-provision.env` (§5).
+- **ربط الأسرار:** `DB_PROVISIONER_PASSWORD` بيتضاف كـ Environment secret في GitHub (`production`)، ومفتاحه في `production.env.example`، ويتربط في `env:` بتاع خطوة «Render the production .env» في `release.yml` (القاعدة في [`secrets.md`](secrets.md) §2 بند 6). لحد ما يتربط، المفاتيح دي متعلّقة (commented) في القالب والـ provisioning على الـ VPS مش هيشتغل.
+- **QUEUE_MODE=worker** (البديل المؤقت): لازم worker منفصل `queue:work provisioning --queue=provisioning --timeout=930 --tries=3`؛ الـ workers العادية مش بتسمع الـ queue دي.
+- **محليًا / CI:** المفاتيح فاضية = الـ connection والـ queue الافتراضيين. `scripts/local/provision-local-tenant.php` و`TenantSampleSeeder` بيجهّزوا inline (`sync`)، فـ `QUEUE_CONNECTION=database` من غير worker مابقاش بيسيب الـ demo `pending`.
+- **كل loop على «كل المستأجرين» بيتخطى اللي مش `ready`** (مالهمش DB): `tenants:migrate`/`rollback`/`seed`/`run` من غير `--tenants` (subclasses في `app/Console/Tenancy/`، متسجلة في `AppServiceProvider`)، و`backup:tenants`، وفحص `Backup Freshness`، و`tenants:audit-super-admin`. `--tenants`/`--tenant` صريح بيتنفّذ زي ما هو (ده اللي الـ job نفسه بيستخدمه). `tenants:migrate-fresh` ماتغيّرش (مدمّر وبيتشغّل بنية صريحة بس).
+- **تحذير: `tenants:migrate-fresh` مش متفلتر** (مش بيتخطّى اللي مش `ready`): بيمسح ويعيد بناء DB **كل** مستأجر، بما فيهم اللي الـ job شغال عليهم دلوقتي. **ممنوع تشغيله على الإنتاج نهائيًا** (القاعدة العامة في `.claude/rules/security-and-operations.md`)؛ محليًا بس، وعلى `--tenants` صريح.
+- **مستأجر `failed`:** الصف المركزي بيفضل؛ إعادة المحاولة من الكونسول (`POST /super-admin/tenants/{id}/retry-provisioning`). `provisioning_error_code` بيوضح المرحلة اللي فشلت.
+- **مستأجر واقف على `pending`/`running`** (الـ dispatch ضاع، أو الـ worker مات): لو مفيش أي نشاط على الصف (`updated_at` و`provisioning_started_at`) أطول من الـ unique window (`TENANT_PROVISIONING_UNIQUE_FOR`، الافتراضي 3600 ثانية، أقل قيمة 2850) الـ retry بيتقبل كمان، وبيفك الـ unique lock والـ overlap lock قبل ما يبعت الـ job. قبل كده بيرجع 409 (لسه شغال). و`failed()` بيفك الـ overlap lock (`laravel-queue-overlap:App\Jobs\ProvisionTenantJob:<id>`) بنفسه، فالـ retry بعد timeout مابيتبلعش.
+- **اللي الـ job بيمسحه عند الفشل:** الـ DB واليوزر اللي **هو** عملهم بس، وبشرط إنهم لسه نفس اسم الـ DB ونفس الـ username الحاليين للمستأجر (الاسم متخزّن، مش flag). لو حد غيّر الاسم أو حوّل الـ username لحساب مشترك، الـ job مابيلمسهمش وبيكتب warning في الـ log بالاسم بس. تعديل `update-db-config` و`run-migrations` و`update-units` على مستأجر مش `ready` بيرجع 409 `provisioning.workspace_not_ready`.
+- **باسورد DB المستأجر** (`tenancy_db_password` في `tenants.data`) بيتخزن مشفّر بـ `APP_KEY` (الصفوف القديمة plaintext لسه شغالة). تغيير `APP_KEY` من غير re-encrypt = المستأجرين اللي ليهم يوزر خاص مش هيتصلوا.
 
 ---
 
@@ -264,6 +305,9 @@ mysql -N -B -r -e "SHOW GRANTS FOR \`sroor_audit_pruner\`@\`localhost\`"   # USA
 | `DB_AUDIT_PRUNER_USERNAME` / `DB_AUDIT_PRUNER_PASSWORD` | **[CTO-2026-10-09]** موجودين، والحساب مش `root` ومش هو `DB_USERNAME` (§5.1) |
 | `MAIL_MAILER` / `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM_ADDRESS` | **[CTO-2026-10-09] W1 Q6:** `smtp`، وكلهم موجودين (`MAIL_PORT` رقم، `MAIL_FROM_ADDRESS` إيميل). `render-env.sh` يرفض `--optional` لأي منهم |
 | `BACKUP_ARCHIVE_PASSWORD` | **[CTO-2026-10-09] D4:** موجود (فاضي = فشل)؛ أقل من 24 حرف = تحذير |
+| `DB_BACKUP_USERNAME` / `DB_BACKUP_PASSWORD` | **[OPS-5]** موجودين، والحساب (`sroor_backup`) مش `root` ومش `DB_USERNAME` |
+| `BACKUP_DISKS` / `GOOGLE_DRIVE_CLIENT_ID` / `_CLIENT_SECRET` / `_REFRESH_TOKEN` | **[OPS-5]** `BACKUP_DISKS` (أو `BACKUP_TENANT_DISKS`) لازم فيه `google` (معيار #8: الـ backup يطلع بره الخادم)، والـ 3 مفاتيح OAuth موجودين. `BACKUP_NOTIFICATION_EMAIL` فاضي = تحذير. الإعداد في [`backup-restore.md`](backup-restore.md) §2 |
+| `CENTRAL_DOMAIN` / `CENTRAL_ADMIN_DOMAINS` / `CENTRAL_PASSWORD_RESET_URL` | **[W2 batch 3]** الثلاثة موجودين. `CENTRAL_DOMAIN` اسم host بس (من غير `https://` ولا `/`)، والـ tenants على `<slug>.<CENTRAL_DOMAIN>`. `CENTRAL_ADMIN_DOMAINS` فيها host واحد على الأقل (مفصولة بفاصلة)؛ فاضية = كل routes الـ super-admin بترجع 404 في production. `CENTRAL_PASSWORD_RESET_URL` تبدأ بـ `https://` والـ host بتاعها واحد من `CENTRAL_ADMIN_DOMAINS`؛ فاضية = إيميلات استرجاع كلمة سر الـ super-admin مابتتبعتش. الثلاثة GitHub Environment **variables** (`vars.*`) مش secrets |
 | `SENTRY_SEND_DEFAULT_PII` | `false` أو غائب. و`SENTRY_LARAVEL_DSN` فاضي = **تحذير** (`WARN`) مش فشل |
 
 ```bash
@@ -306,7 +350,7 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 - [ ] **[CTO-2026-10-09]** `php -v` = 8.4، و`mysql -e 'SELECT VERSION()'` = 8.4.x، و`verify.sh` يعدّي سطري الإصدار.
 - [ ] **[CTO-2026-10-09]** §5.1 checklist كامل بعد أول deploy (الجداول المركزية موجودة).
 - [ ] **[CTO-2026-10-09]** إيميل تجريبي يوصل عن طريق الـ SMTP (مثلًا reset password لحساب super-admin تجريبي)، وخطأ تجريبي يظهر في Sentry من غير PII.
-- [ ] من OPS-5: backup يومي مشفّر ← restore إلى DB منفصلة يطابق عدد الصفوف.
+- [ ] من OPS-5: backup يومي مشفّر ← restore إلى DB منفصلة يطابق عدد الصفوف (`php artisan backup:restore-tenant <id> --drop-after-verify --db-user=sroor_provisioner`، [`backup-restore.md`](backup-restore.md) §6).
 - [ ] `reboot` ← كل الخدمات تعود (`verify.sh`).
 - [ ] **قبل go-live: مسح كامل** — Rebuild للخادم من Hetzner على صورة Ubuntu 24.04 نظيفة، **أسرار جديدة كلها** (أسرار البروفة تُعتبر محروقة)، `CERTBOT_STAGING=0`، ثم التهيئة والتحقق من جديد.
 
@@ -329,7 +373,7 @@ curl -sI https://unknown-shop.<domain> | head -1                                
 2. **نمط stancl غير المهرَّب — شرط صلب (blocking) لـ OPS-2، TODO(CTO):** الـ slug يقبل `_` و`-`، فمنحة stancl الأصلية `tenant_shop_a` (بلا escape) تطابق DB المستأجر `shop-a` أيضًا = ثغرة عزل بين المستأجرين. OPS-1 يغلقها بالفشل: الـ provisioner على `tenant\_%` فيُرفض الـ GRANT غير المهرَّب (`ERROR 1044`) ولا يُنشأ مستأجر بهذا الـ manager. **OPS-2 لا يُعتبر منتهيًا** حتى يوجد subclass لـ `PermissionControlledMySQLDatabaseManager` يهرّب `\` و`_` و`%` في هدف الـ `GRANT` (مع اختبار `@group mysql` لمستأجرين `x_y`/`x-y`). بديل أضعف يحتاج قرار CTO: منع `_` في الـ slug (`StoreTenantRequest`) مع إرجاع نمط الـ provisioner إلى `tenant_%` — يعتمد على أن كل مسار ينشئ slug يطبّق نفس الـ validation وعلى عدم وجود slugs قديمة فيها `_`، لذلك الـ escape هو الافتراضي الآمن.
 3. **أسرار الاتصال بالمستأجرين** (اسم/كلمة مرور مستخدم كل مستأجر) يخزنها stancl في `tenants.data` في DB المركزي — قرار OPS-2.
 4. **`opcache.validate_timestamps=0`:** أي تعديل يدوي على الكود لا يظهر بدون `systemctl reload php8.4-fpm` (OPS-3 يعمله تلقائيًا).
-5. سكريبتات `public/*.php` القديمة (مثل webhooks) **لا تعمل على الـ VPS** عمدًا (nginx ينفّذ `index.php` فقط).
+5. سكريبتات `public/*.php` القديمة (مثل webhooks) **لا تعمل على الـ VPS** عمدًا (nginx ينفّذ `index.php` فقط). **[W2 batch 5]** ونفس الشيء لملفات `.apk`/`.exe`/`.ipa` تحت `public/` (§4.4): لحد ما قاعدة nginx تتضاف للـ template، أي ملف من دول في `public/` متاح للتحميل العام من غير checksum.
 6. إن وُضع الدومين خلف proxy (مثل Cloudflare orange-cloud) يجب ضبط real IP في nginx و`TrustProxies` — غير مفعّل حاليًا.
 7. **[CTO-2026-10-09] كلمة مرور `audit_pruner` في `shared/.env`:** الـ scheduler بيشتغل كمستخدم التطبيق، فاختراق التطبيق يقدر يوصل لها ويمسح صفوف audit (مش يعدّلها). البديل الأقوى: تشغيل الـ prune من cron لـ root بملف env منفصل — محتاج قرار CTO وتعديل في IDEN-1.15.
 8. **[CTO-2026-10-09] الـ repos الخارجية (ondrej/php، repo.mysql.com) مش داخلة في unattended-upgrades** (بيغطي Ubuntu security بس): تحديث أمني يدوي شهري لـ PHP/MySQL (`apt upgrade` في نافذة صيانة بعد snapshot). ترقية MySQL تلقائية كانت هتعمل restart للـ DB في أي وقت.

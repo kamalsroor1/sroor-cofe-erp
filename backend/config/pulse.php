@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCentralContext;
 use Laravel\Pulse\Http\Middleware\Authorize;
 use Laravel\Pulse\Pulse;
 use Laravel\Pulse\Recorders;
@@ -122,6 +123,9 @@ return [
 
     'middleware' => [
         'web',
+        // Security audit (W2 lane 3I): platform console host + central context only
+        // (tenant host, tenancy initialised or a tenant identifier => 404).
+        EnsureCentralContext::class,
         Authorize::class,
     ],
 

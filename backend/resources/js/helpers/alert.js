@@ -86,6 +86,13 @@ export const notifyWarning = (title, message = '') => {
 };
 
 /**
+ * Theme classes of a destructive confirm button (the `isDanger` look of confirmDialog). Use through
+ * `customClass.confirmButton` instead of a hardcoded `confirmButtonColor` hex.
+ */
+export const DANGER_CONFIRM_BUTTON_CLASS =
+    'px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg shadow-rose-600/30 transition cursor-pointer mx-1.5 font-tajawal';
+
+/**
  * Show Modern Interactive Confirmation Dialog
  * Returns Promise<boolean> (true if confirmed, false otherwise)
  */
@@ -108,7 +115,7 @@ export const confirmDialog = async ({
         customClass: {
             ...DarkSwal.params.customClass,
             confirmButton: isDanger
-                ? 'px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg shadow-rose-600/30 transition cursor-pointer mx-1.5 font-tajawal'
+                ? DANGER_CONFIRM_BUTTON_CLASS
                 : 'px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 transition cursor-pointer mx-1.5 font-tajawal',
         },
     });

@@ -63,7 +63,8 @@ const makeUpdater = ({
     current = { name: '1.0.2', code: 3 },
     response = serverUpdate(),
     native = fakeNative(),
-    legacyDownload = null,
+    openManualDownload = null,
+    manualDownloadFallback = null,
     desktop = null,
     storage = memoryStorage(),
     session = memoryStorage(),
@@ -79,7 +80,8 @@ const makeUpdater = ({
             return response;
         },
         native,
-        legacyDownload,
+        openManualDownload,
+        manualDownloadFallback,
         desktop,
         storage,
         session,
@@ -198,23 +200,51 @@ describe('createAppUpdater', () => {
         assert.equal(reloaded.updater.isModalOpen.value, false);
     });
 
-    test('native plugin unavailable + force update leads to the legacy download path, not a dead end', async () => {
+    // CTO W1 Q7: an install that skips the SHA-256 / signer check is refused. Without the native plugin the
+    // updater never hands the APK URL to the WebView; it offers the manual download page instead (not a dead end).
+    test('native plugin unavailable + force update refuses the unverified install and offers the manual page', async () => {
+        const MANUAL_URL = 'https://central.example.test/download';
         const opened = [];
         const { updater } = makeUpdater({
-            response: serverUpdate({ force_update: true }),
+            response: serverUpdate({ force_update: true, manual_download_url: MANUAL_URL }),
             native: null,
-            legacyDownload: (url) => opened.push(url),
+            openManualDownload: (url) => opened.push(url),
         });
         await updater.checkForUpdates();
         assert.equal(updater.isModalOpen.value, true);
         await updater.startDownloadAndInstall();
-        assert.deepEqual(opened, [serverUpdate().download_url]);
+        assert.deepEqual(opened, []);
+        assert.equal(updater.stage.value, 'error');
         assert.equal(updater.errorKey.value, 'app_update.error_updater_unavailable');
         assert.equal(updater.isDownloading.value, false);
+        assert.equal(updater.isDownloaded.value, false);
+        assert.equal(updater.canDownloadManually.value, true);
 
-        // retrying re-opens the legacy download instead of locking the POS behind a network error
+        // retrying still refuses: the APK URL is never opened directly
         await updater.startDownloadAndInstall();
-        assert.equal(opened.length, 2);
+        assert.deepEqual(opened, []);
+        assert.equal(updater.errorKey.value, 'app_update.error_updater_unavailable');
+
+        // the way out is the manual download page, and the forced prompt stays up
+        assert.equal(updater.openManualDownloadPage(), true);
+        assert.deepEqual(opened, [MANUAL_URL]);
+        assert.notEqual(opened[0], serverUpdate().download_url);
+        updater.closeModal();
+        assert.equal(updater.isModalOpen.value, true);
+    });
+
+    test('manual page falls back to the configured URL when the server sends none', async () => {
+        const opened = [];
+        const { updater } = makeUpdater({
+            native: null,
+            openManualDownload: (url) => opened.push(url),
+            manualDownloadFallback: 'https://central.example.test/download',
+        });
+        await updater.checkForUpdates();
+        await updater.startDownloadAndInstall();
+        assert.equal(updater.canDownloadManually.value, true);
+        assert.equal(updater.openManualDownloadPage(), true);
+        assert.deepEqual(opened, ['https://central.example.test/download']);
     });
 
     test('forced update cannot be dismissed', async () => {
@@ -224,17 +254,34 @@ describe('createAppUpdater', () => {
         assert.equal(updater.isModalOpen.value, true);
     });
 
-    test('dismissed optional update is not auto-prompted again for that version', async () => {
+    // CTO W1 Q7: no permanent dismissal. An optional update is prompted once per app launch: closing it hides it
+    // for the rest of this launch (reloads included); the next launch prompts again.
+    test('dismissed optional update is prompted once per launch, never dismissed forever', async () => {
         const storage = memoryStorage();
-        const a = makeUpdater({ storage });
+        storage.setItem('app_update_dismissed:android', '6');
+        const session = memoryStorage();
+
+        const a = makeUpdater({ storage, session });
+        // the permanent flag of older builds is cleaned up
+        assert.equal(storage.getItem('app_update_dismissed:android'), null);
         await a.updater.checkForUpdates();
+        assert.equal(a.updater.isModalOpen.value, true);
         a.updater.closeModal();
         assert.equal(a.updater.isModalOpen.value, false);
 
-        const b = makeUpdater({ storage });
-        await b.updater.checkForUpdates();
-        assert.equal(b.updater.hasUpdate.value, true);
-        assert.equal(b.updater.isModalOpen.value, false);
+        // same launch (reload): not auto-prompted again
+        const reloaded = makeUpdater({ storage, session });
+        await reloaded.updater.checkForUpdates();
+        assert.equal(reloaded.requests.length, 0);
+        assert.equal(reloaded.updater.isModalOpen.value, false);
+
+        // next launch (fresh session): prompted again for the same version
+        const relaunched = makeUpdater({ storage, session: memoryStorage() });
+        await relaunched.updater.checkForUpdates();
+        assert.equal(relaunched.requests.length, 1);
+        assert.equal(relaunched.updater.hasUpdate.value, true);
+        assert.equal(relaunched.updater.isModalOpen.value, true);
+        assert.deepEqual(Object.keys(storage.dump()), []);
     });
 
     test('passes url + checksum + size from the API to the native installer', async () => {

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Policies\ReturnPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $store_id
  * @property Carbon|null $deleted_at
  */
+#[UsePolicy(ReturnPolicy::class)]
 class ReturnDocument extends Model
 {
     use HasFactory, SoftDeletes;

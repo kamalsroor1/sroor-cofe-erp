@@ -1,9 +1,15 @@
 <template>
-  <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div
+    v-if="loading"
+    class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 [&>:last-child:nth-child(odd)]:col-span-2 sm:[&>:last-child:nth-child(odd)]:col-span-1"
+  >
     <StatCardSkeleton v-for="i in 3" :key="i" />
   </div>
 
-  <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div
+    v-else
+    class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 [&>:last-child:nth-child(odd)]:col-span-2 sm:[&>:last-child:nth-child(odd)]:col-span-1"
+  >
     <!-- Total Payables -->
     <div
       class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-lg space-y-2"

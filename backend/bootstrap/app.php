@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
+use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\StoreAccess;
@@ -14,6 +16,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
@@ -27,8 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-        // IDEN-1.3: central control-plane API (/api/v1/super-admin/auth/*). Only the `api`
-        // group: no ResolveApiTenancy, no ApiTokenAuth (see routes/central.php).
+        // IDEN-1.3 / IDEN-1.4: the whole central control-plane API (/api/v1/super-admin/*).
+        // Only the `api` group: no ResolveApiTenancy, no ApiTokenAuth (see routes/central.php).
         then: function (): void {
             Route::middleware('api')
                 ->prefix('api')
@@ -39,9 +42,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));
 
+        // On tenant web routes (routes/tenant.php: ['web', InitializeTenancyByDomain, ...]) the
+        // tenancy initializer still runs BEFORE StoreScope: TenancyServiceProvider puts the
+        // stancl initializers at the top of the middleware priority list. Pinned by
+        // Tests\Feature\Platform\TenantWebMiddlewareOrderTest.
         $middleware->web(append: [
             StoreScope::class,
         ]);
+
+        // IDEN-1.11: strict CSP / HSTS / Referrer-Policy on the platform-console host only
+        // (no-op on every other host). Global, so API, SPA and error responses all carry it.
+        $middleware->append(AdminSecurityHeaders::class);
 
         // IDEN-4.6: the tenant must be resolved before any named limiter runs (tenant-login and
         // quick-login key by tenant) and before route-model binding. Without this entry the
@@ -69,6 +80,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             before: AuthenticatesRequests::class,
             prepend: AuthenticateCentral::class,
+        );
+        // N6: the step-up check (403 central_auth.step_up_required) runs before any route
+        // throttle, so requests refused for a missing second factor never spend the tight
+        // budget of a destructive route (archive: throttle:6,1). Only central routes use it.
+        $middleware->prependToPriorityList(
+            before: ThrottleRequests::class,
+            prepend: RequireRecentTwoFactor::class,
         );
 
         $middleware->alias([

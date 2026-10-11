@@ -4,28 +4,83 @@ declare(strict_types=1);
 
 namespace App\Actions\Tenants;
 
+use App\Enums\CentralAuditEvent;
+use App\Enums\TenantStatus;
+use App\Exceptions\TenantLifecycleException;
+use App\Exceptions\TenantProvisioningException;
+use App\Models\CentralUser;
 use App\Models\Tenant;
+use App\Services\CentralAuditLogger;
+use Illuminate\Support\Facades\DB;
+use SensitiveParameter;
 
+/**
+ * Changes a tenant's database coordinates (CENTRAL `tenants.data`) and audits it in the
+ * central audit log. The audit row lists which keys changed and the new database name;
+ * the username and password values are never recorded.
+ *
+ * Only on a `ready` tenant (409 provisioning.workspace_not_ready otherwise): changing the
+ * database name or username under a pending/running/failed provisioning would point the
+ * job (and its cleanup) at another database or account. The row is locked while checked
+ * and updated. The password is stored encrypted (Tenant::sealDatabasePassword()).
+ *
+ * M1 (OPS-9): also refused (409) on a purged tenant, while an archive request is queued or
+ * running (the job backs up and archives THIS database), and on an archived tenant (its final
+ * backup and a later purge both target the recorded database: repointing it would make
+ * `tenants:purge` drop something else).
+ */
 class UpdateTenantDatabaseConfigAction
 {
+    private const KEYS = ['tenancy_db_name', 'tenancy_db_username', 'tenancy_db_password'];
+
+    public function __construct(private readonly CentralAuditLogger $auditLogger) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
-    public function execute(Tenant $tenant, array $data): Tenant
+    public function execute(Tenant $tenant, #[SensitiveParameter] array $data, ?CentralUser $operator = null): Tenant
     {
-        $update = [];
-        if (array_key_exists('tenancy_db_name', $data)) {
-            $update['tenancy_db_name'] = $data['tenancy_db_name'];
-        }
-        if (array_key_exists('tenancy_db_username', $data)) {
-            $update['tenancy_db_username'] = $data['tenancy_db_username'];
-        }
-        if (array_key_exists('tenancy_db_password', $data)) {
-            $update['tenancy_db_password'] = $data['tenancy_db_password'];
+        $update = array_intersect_key($data, array_flip(self::KEYS));
+
+        if (array_key_exists('tenancy_db_password', $update)) {
+            $password = $update['tenancy_db_password'];
+            $update['tenancy_db_password'] = Tenant::sealDatabasePassword(is_string($password) ? $password : null);
         }
 
-        $tenant->update($update);
+        return DB::connection($tenant->getConnectionName())->transaction(function () use ($tenant, $update, $operator): Tenant {
+            $locked = Tenant::query()->whereKey($tenant->getKey())->lockForUpdate()->firstOrFail();
 
-        return $tenant;
+            if ($locked->isPurged()) {
+                throw TenantLifecycleException::tenantPurged();
+            }
+
+            if ($locked->archive_state?->isInProgress() === true) {
+                throw TenantLifecycleException::archiveInProgress($locked->archive_state);
+            }
+
+            if ((string) $locked->status === TenantStatus::Archived->value) {
+                throw TenantLifecycleException::alreadyArchived();
+            }
+
+            if (! $locked->isProvisioned()) {
+                throw TenantProvisioningException::requiresReadyWorkspace($locked->provisioningStatus());
+            }
+
+            $locked->update($update);
+
+            $properties = ['changed' => array_keys($update)];
+            if (array_key_exists('tenancy_db_name', $update)) {
+                $properties['database'] = $update['tenancy_db_name'];
+            }
+
+            $this->auditLogger->record(
+                CentralAuditEvent::TenantDbConfigUpdated,
+                $properties,
+                actor: $operator,
+                subject: $locked,
+            );
+
+            return $locked;
+        });
     }
 }

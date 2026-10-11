@@ -22,10 +22,10 @@ Schedule::command('queue:restart')
 Schedule::command('pulse:clear --force')
     ->weekly();
 
-// Telegram jobs (#4-#7) run in central context. They are DISABLED by default
+// Telegram jobs (#4-#6) run in central context. They are DISABLED by default
 // (services.telegram.scheduled_jobs_enabled / TELEGRAM_SCHEDULED_JOBS_ENABLED)
-// until they are tenant-aware and backups are encrypted. The check runs at
-// schedule time, so the entries stay registered and config:cache is respected.
+// until they are tenant-aware (OPS-10). The check runs at schedule time, so the
+// entries stay registered and config:cache is respected.
 $telegramScheduledJobsEnabled = static fn (): bool => (bool) config('services.telegram.scheduled_jobs_enabled', false);
 
 // 4. Send daily EOD business summary report to Telegram at 11:59 PM (disabled by default)
@@ -43,10 +43,31 @@ Schedule::command('notify:overdue-shifts')
     ->everyTwoHours()
     ->when($telegramScheduledJobsEnabled);
 
-// 7. Send daily gzipped SQL database backup to Telegram at 00:05 AM (disabled by default)
-Schedule::command('backup:telegram')
-    ->dailyAt('00:05')
-    ->when($telegramScheduledJobsEnabled);
+// 7. OPS-5: encrypted backup of the central DB + every tenant DB to the backup disks
+// (Google Drive on the VPS), verified, retention 7/4/3. It mails and logs every failure
+// itself and refuses to run in production without BACKUP_ARCHIVE_PASSWORD (D4).
+// The old unencrypted `backup:telegram` dump was removed for good.
+Schedule::command('backup:tenants')
+    ->dailyAt('01:30')
+    ->withoutOverlapping(720);
+
+// User files (storage/: uploads, receipts, logos) through spatie/laravel-backup, same
+// password and disks; D4 leaves it without a destination, so it fails loudly.
+Schedule::command('backup:run --only-files')
+    ->dailyAt('02:30')
+    ->withoutOverlapping(720);
+Schedule::command('backup:clean')
+    ->dailyAt('03:00')
+    ->withoutOverlapping(120);
+
+// OPS-7: health checks (mail on failure, throttled) + the heartbeats they watch.
+Schedule::command('health:check')
+    ->everyFiveMinutes()
+    ->withoutOverlapping(10);
+Schedule::command('health:schedule-check-heartbeat')
+    ->everyMinute();
+Schedule::command('health:queue-check-heartbeat')
+    ->everyMinute();
 
 // 8. IDEN-1.15: platform audit retention (2 years, CTO W1 Q2). Deletes ONLY rows strictly
 // older than config('activitylog.central_audit.retention_days') from central_audit_logs and

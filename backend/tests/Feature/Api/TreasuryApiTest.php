@@ -8,6 +8,7 @@ use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
@@ -182,7 +183,7 @@ class TreasuryApiTest extends TenantTestCase
             'is_active' => true,
         ]);
 
-        Invoice::create([
+        $invoice = Invoice::create([
             'store_id' => $storeId,
             'customer_id' => $customer->id,
             'user_id' => $userId,
@@ -197,6 +198,17 @@ class TreasuryApiTest extends TenantTestCase
             'payment_type' => 'cash',
             'status' => 'confirmed',
             'payment_status' => 'paid',
+        ]);
+        // The sale voucher InvoiceService writes with every paid invoice: the drawer's cash source.
+        Payment::create([
+            'payment_number' => Payment::SALE_NUMBER_PREFIX.'100',
+            'store_id' => $storeId,
+            'customer_id' => $customer->id,
+            'invoice_id' => $invoice->id,
+            'user_id' => $userId,
+            'amount' => '1000.000',
+            'payment_date' => now()->toDateString(),
+            'payment_method' => 'cash',
         ]);
 
         Expense::create([

@@ -15,6 +15,7 @@
         "laravel/sanctum": "*",
         "laravel/telescope": "*",
         "laravel/tinker": "^3.0",
+        "masbug/flysystem-google-drive-ext": "^2.5",
         "sentry/sentry-laravel": "^4.28",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-backup": "^10.3",
@@ -70,6 +71,9 @@
             "Composer\\Config::disableProcessTimeout",
             "@php vendor/bin/phpstan analyse --memory-limit=2G --no-progress --generate-baseline=phpstan-baseline.neon --allow-empty-baseline"
         ],
+        "pre-autoload-dump": [
+            "Google\\Task\\Composer::cleanup"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
@@ -95,7 +99,10 @@
                 "laravel/fortify",
                 "laravel/passkeys"
             ]
-        }
+        },
+        "google/apiclient-services": [
+            "Drive"
+        ]
     },
     "config": {
         "platform": {

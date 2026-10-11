@@ -66,10 +66,24 @@ return [
             'report' => false,
         ],
 
-        // App release binaries (APK / desktop installer) read from a tenant host. Same
-        // physical root as the central 'public' disk, where the super-admin uploads them,
-        // but never re-rooted by tenancy (not in tenancy.filesystem.disks). Read through
-        // App\Models\AppVersion::releaseDisk() only.
+        // APP-3 extension (W2 batch 5): app release binaries (APK / desktop installer).
+        // PRIVATE: outside public/ and storage/app/public, so never served by the web
+        // server; downloaded only through GET /api/v1/app/download-apk (checksum header).
+        // Central: never listed in tenancy.filesystem.disks, so tenancy never re-roots it.
+        // Used through App\Support\AppReleases\ReleaseFileLocator only.
+        'app_releases_private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/releases'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // LEGACY, read-only: binaries uploaded before W2 batch 5 sit on the old public
+        // root (storage/app/public/apks). Read as a fallback until
+        // `php artisan app-releases:relocate` (a deploy step) has moved them to
+        // app_releases_private. Never written to. Remove once every server has run it.
         'app_releases' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
@@ -85,6 +99,27 @@ return [
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/central-assets',
             'visibility' => 'public',
             'throw' => false,
+            'report' => false,
+        ],
+
+        /*
+         * OPS-5 backup target (CTO decision D3): Google Drive of the owner's account
+         * through OAuth (a service account has no Drive quota). Driver registered in
+         * App\Providers\HealthServiceProvider (masbug/flysystem-google-drive-ext).
+         * The refresh token is created once with the owner's consent and lives ONLY in
+         * the server .env (docs/07-operations/backup-restore.md §2).
+         * GOOGLE_DRIVE_FOLDER_ID = the dedicated backups folder; empty = My Drive root
+         * (the archives still go under backup.tenants.path_prefix).
+         * Never listed in tenancy.filesystem.disks: backups are written from central
+         * context only.
+         */
+        'google' => [
+            'driver' => 'google',
+            'clientId' => env('GOOGLE_DRIVE_CLIENT_ID'),
+            'clientSecret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
+            'refreshToken' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+            'folderId' => env('GOOGLE_DRIVE_FOLDER_ID'),
+            'throw' => true,
             'report' => false,
         ],
 

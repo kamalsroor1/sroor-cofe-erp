@@ -291,41 +291,6 @@
           </div>
         </div>
       </template>
-
-      <!-- 👑 Super Admin Card Entry -->
-      <div
-        v-if="canAccessSuperAdmin"
-        class="pt-2 border-t border-purple-500/20"
-        @mouseenter="handleItemHover($event, 'لوحة السوبر أدمن 👑')"
-        @mouseleave="handleItemLeave"
-      >
-        <router-link
-          v-if="!isCollapsed"
-          to="/super-admin/dashboard"
-          class="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 hover:border-purple-500 flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
-        >
-          <div class="flex items-center gap-3 min-w-0">
-            <div
-              class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-base shadow-2xs"
-            >
-              👑
-            </div>
-            <div class="min-w-0">
-              <div class="text-xs font-black text-purple-400 truncate">لوحة السوبر أدمن</div>
-              <div class="text-[10px] text-slate-400 font-bold truncate mt-0.5">إدارة المستأجرين والباقات</div>
-            </div>
-          </div>
-          <ChevronLeft class="w-4 h-4 text-purple-400 shrink-0" />
-        </router-link>
-
-        <router-link
-          v-else
-          to="/super-admin/dashboard"
-          class="w-12 h-12 mx-auto rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg shadow-2xs hover:bg-purple-500/30 transition"
-        >
-          <ShieldCheck class="w-6 h-6 stroke-[2.2]" />
-        </router-link>
-      </div>
     </div>
 
     <!-- 📌 4. BOTTOM FOOTER: SHIFT STATUS & APP VERSION -->
@@ -421,15 +386,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNavigation } from '../../Composables/useNavigation';
 import { useModules } from '../../Composables/useModules';
 import { useAppConfigStore } from '../../stores/appConfig';
-import { useAuthStore } from '../../stores/auth';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import versionData from '../../version.json';
-import { ChevronRight, ChevronLeft, ChevronDown, Plus, Coffee, ShieldCheck, Sparkles } from 'lucide-vue-next';
+import { ChevronRight, ChevronLeft, ChevronDown, Plus, Coffee, Sparkles } from 'lucide-vue-next';
 
 const props = defineProps({
   isCollapsed: { type: Boolean, default: false },
@@ -439,13 +403,11 @@ const emit = defineEmits(['toggle-collapse']);
 
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
-const authStore = useAuthStore();
 const { navigationSections } = useNavigation();
 const { isModuleEnabled } = useModules();
 const { checkForUpdates } = useAppUpdate();
 
 const currentVersionName = ref(versionData?.version || '1.0.10');
-const canAccessSuperAdmin = computed(() => authStore.isSuperAdmin);
 
 // 📂 Accordion state for categories
 const expandedSections = ref({

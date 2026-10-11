@@ -6,12 +6,9 @@ namespace Tests\Feature\Billing;
 
 use App\Models\Plan;
 use App\Models\PlanFeature;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\Group;
-use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\SeedsCentralPlatformRoles;
 use Tests\TenantTestCase;
 
@@ -366,51 +363,40 @@ final class PlansSchemaMigrationTest extends TenantTestCase
 
         // A tenant token is not a central identity at all.
         $tenant = $this->createTenant();
-        $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $this->tenantHeaders($tenant))
+        $tenantBearer = ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$this->tenantToken($tenant)];
+        $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $tenantBearer)
             ->assertStatus(401);
 
-        // A central user without the super_admin role is authenticated but forbidden.
+        // With the tenant selected (X-Tenant, as the tenant clients send it) the control plane
+        // is not even there: EnsureCentralContext answers 404 before authentication (IDEN-1.4).
+        $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $this->tenantHeaders($tenant))
+            ->assertStatus(404);
+
+        // The Phase 0 operator (central `users` row with the web-guard super_admin role) is gone.
+        $legacyBearer = ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$this->legacyUsersTableSuperAdmin()->createToken('legacy')->plainTextToken];
+        $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $legacyBearer)
+            ->assertStatus(401);
+
+        // A central user without the super_admin role is authenticated but forbidden; so is the
+        // read-only support role.
         $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $this->superAdminHeaders(withRole: false))
+            ->assertStatus(403);
+        $this->putJson("/api/v1/super-admin/plans/{$plan->id}", $this->updatePayload(), $this->centralHeaders($this->centralSupport()))
             ->assertStatus(403);
 
         $this->assertSame('Plan editable', Plan::query()->findOrFail($plan->id)->name);
     }
 
     /**
-     * Bearer headers for a central operator through the auth path that exists in W1:
-     * `/api/v1/super-admin/*` runs ApiTokenAuth + PlatformSuperAdmin, which accept the
-     * legacy central App\Models\User only (CentralUser tokens arrive with IDEN-1.3/1.4).
-     * Same fixture shape as Tests\Feature\Api\SuperAdminApiTest.
+     * IDEN-1.8: Bearer headers for a central operator (App\Models\CentralUser, central token,
+     * routes/central.php → AuthenticateCentral → can:super_admin.plans.*). Before IDEN-1.4 this
+     * was a legacy central App\Models\User through ApiTokenAuth.
      *
      * @return array<string, string>
      */
     private function superAdminHeaders(bool $withRole = true): array
     {
-        $this->endTenancy();
-
-        $role = $this->seedCentralPlatformRoles();
-
-        $user = new User;
-        $columns = Schema::connection((string) $user->getConnectionName())->getColumnListing($user->getTable());
-        $sequence = User::query()->count() + 1;
-
-        $user->forceFill(array_intersect_key([
-            'name' => 'مشرف المنصة '.$sequence,
-            'email' => 'plans-operator-'.$sequence.'@central.harness.test',
-            'phone' => '0100000'.str_pad((string) (600 + $sequence), 4, '0', STR_PAD_LEFT),
-            'password' => Hash::make('password'),
-            'is_active' => true,
-        ], array_flip($columns)))->save();
-
-        if ($withRole) {
-            $user->assignRole($role);
-            app(PermissionRegistrar::class)->forgetCachedPermissions();
-        }
-
-        return [
-            'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$user->createToken('plans-operator')->plainTextToken,
-        ];
+        return $this->steppedUpCentralHeaders($withRole ? $this->centralSuperAdmin() : $this->centralOperator(null));
     }
 
     /**

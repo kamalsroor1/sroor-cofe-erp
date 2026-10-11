@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Models\Customer;
@@ -7,16 +9,15 @@ use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\InvoiceService;
 use Exception;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class InvoiceServiceTest extends TestCase
+class InvoiceServiceTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected InvoiceService $invoiceService;
 
@@ -26,10 +27,13 @@ class InvoiceServiceTest extends TestCase
     {
         parent::setUp();
 
+        // Service-level test: the whole test body runs inside the tenant database.
+        $this->tenant = $this->createTenant();
+        tenancy()->initialize($this->tenant);
+
         $this->invoiceService = app(InvoiceService::class);
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $this->user = User::factory()->create();
-        $this->user->assignRole($adminRole);
+        $this->user->assignRole('admin');
         $this->actingAs($this->user);
     }
 
@@ -320,5 +324,65 @@ class InvoiceServiceTest extends TestCase
         $this->assertEquals("INV-SHOPMAADI-{$today}-0001", $invMaadi1->invoice_number);
         $this->assertEquals("INV-VAN01-{$today}-0001", $invVan1->invoice_number);
         $this->assertEquals("INV-SHOPMAADI-{$today}-0002", $invMaadi2->invoice_number);
+    }
+
+    public function test_invoices_and_numbering_are_isolated_per_tenant(): void
+    {
+        $item = Item::create([
+            'code' => 'ITM-ISO',
+            'name' => 'صنف عزل المستأجرين',
+            'current_stock' => '10.000',
+            'cost_price' => '100.000',
+            'selling_price' => '150.000',
+            'is_active' => true,
+        ]);
+        $customer = Customer::create(['name' => 'عميل المستأجر الأول', 'is_active' => true]);
+
+        $invoice = $this->invoiceService->confirmInvoice([
+            'customer_id' => $customer->id,
+            'payment_type' => 'cash',
+            'items' => [['item_id' => $item->id, 'quantity' => '0.250', 'unit_price' => '150.000']],
+        ]);
+        $this->assertSame('37.500', (string) $invoice->net_total);
+        $this->assertSame('9.750', (string) $item->fresh()?->current_stock);
+
+        $other = $this->createTenant(); // ends tenancy
+        tenancy()->initialize($this->tenant);
+        $otherAdmin = $this->tenantAdmin($other);
+        $tenantInvoiceNumber = (string) $invoice->invoice_number;
+        $tenantInvoiceId = (int) $invoice->id;
+        $tenantItemId = (int) $item->id;
+
+        $this->inTenant($other, function () use ($otherAdmin, $tenantInvoiceNumber, $tenantInvoiceId, $tenantItemId): void {
+            // Nothing written in the first tenant exists here.
+            $this->assertSame(0, Invoice::withTrashed()->count());
+            $this->assertNull(Invoice::withTrashed()->find($tenantInvoiceId));
+            $this->assertNull(Item::query()->find($tenantItemId));
+            $this->assertSame(0, StockMovement::query()->count());
+
+            // The other tenant's sequence starts from its own 0001.
+            $this->actingAs($otherAdmin);
+            $otherItem = Item::create([
+                'code' => 'ITM-ISO',
+                'name' => 'صنف المستأجر الثاني',
+                'current_stock' => '10.000',
+                'cost_price' => '100.000',
+                'selling_price' => '150.000',
+                'is_active' => true,
+            ]);
+            $otherCustomer = Customer::create(['name' => 'عميل المستأجر الثاني', 'is_active' => true]);
+            $otherInvoice = app(InvoiceService::class)->confirmInvoice([
+                'customer_id' => $otherCustomer->id,
+                'payment_type' => 'cash',
+                'items' => [['item_id' => $otherItem->id, 'quantity' => '1.000', 'unit_price' => '150.000']],
+            ]);
+
+            $this->assertSame($tenantInvoiceNumber, (string) $otherInvoice->invoice_number);
+            $this->assertStringEndsWith('-0001', (string) $otherInvoice->invoice_number);
+        });
+
+        // Back in the first tenant: still exactly one invoice and the stock it left.
+        $this->assertSame(1, Invoice::withTrashed()->count());
+        $this->assertSame('9.750', (string) Item::query()->findOrFail($tenantItemId)->current_stock);
     }
 }

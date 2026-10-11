@@ -29,7 +29,7 @@ return [
     'insufficient_funds' => 'Insufficient funds in source account.',
 
     // Common Shifts & Movements
-    'open_shift' => 'Open New Shift',
+    'open_shift' => 'Open Shift',
     'close_shift' => 'Close Shift (Z-Report)',
     'opening_cash' => 'Opening Drawer Cash:',
     'actual_closing_cash' => 'Actual Counted Drawer Cash:',
@@ -80,7 +80,7 @@ return [
     'opening_float_balance' => 'Drawer Opening Float',
     'print_z_report' => 'Print Z-Report',
     'no_open_shift_warning' => 'No active work shift open for this branch. Please open a shift to begin sales and collections.',
-    'open_shift_now' => 'Open Shift Now',
+    'open_shift_now' => 'Open Shift',
     'total_receipts_in' => 'Total Inflows (Cash In)',
     'inflow_details_sub' => 'Cash sales + customer collections',
     'total_disbursements_out' => 'Total Outflows (Cash Out)',
@@ -125,7 +125,7 @@ return [
     'method_cash_drawer' => '💵 Cash from Drawer',
     'method_instapay' => '⚡ InstaPay',
     'method_wallet' => '📱 E-Wallet',
-    'method_visa' => '💳 POS Card / Visa',
+    'method_visa' => 'POS Card / Visa',
     'submit_expense_btn' => 'Save Expense',
     'daily_journal_report_title' => 'Daily Journal & Treasury Report - :date',
     'daily_journal_print_preview' => 'Daily Journal & Closing Print Preview (A4 Document)',

@@ -14,10 +14,13 @@ use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
-use App\Models\Store;
+use App\Models\User;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class ExpenseController extends Controller
 {
@@ -31,7 +34,7 @@ final class ExpenseController extends Controller
     /**
      * List / Search Expenses with filters & metrics
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('daily_journal.view')) {
@@ -46,14 +49,14 @@ final class ExpenseController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: $user?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2: the active store (X-Store-Id); a query store_id is an access-checked branch
+        // filter (403). Null (every store) only through a verified `all`.
+        $storeId = $activeStore->readFilter($request);
 
         $query = Expense::with(['user', 'store']);
 
-        if ($storeId) {
-            $query->where('store_id', (int) $storeId);
+        if ($storeId !== null) {
+            $query->where('store_id', $storeId);
         }
 
         if ($search !== '') {
@@ -88,7 +91,7 @@ final class ExpenseController extends Controller
         $expenses = $query->latest('expense_date')->latest('id')->paginate($perPage);
 
         $summary = $this->getExpensesSummaryAction->execute(
-            $storeId ? (int) $storeId : null,
+            $storeId,
             $fromDate ? (string) $fromDate : null,
             $toDate ? (string) $toDate : null
         );
@@ -134,20 +137,20 @@ final class ExpenseController extends Controller
     /**
      * Store new expense
      */
-    public function store(StoreExpenseRequest $request): JsonResponse
+    public function store(StoreExpenseRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // STOR-2 (CTO Q14): the expense is booked on the active store only (store.active:concrete).
+        // A body store_id is still access-checked (403) but never chooses the store.
+        ClientStoreGuard::verified($request);
 
-        $dto = ExpenseDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
+        $dto = ExpenseDTO::fromArray($request->validated(), (int) $activeStore->requireStore()->id);
         $userId = (int) auth()->id();
 
         $expense = $this->createExpenseAction->execute($dto, $userId);
 
         return response()->json([
             'success' => true,
-            'message' => __('expenses.recorded_success') ?: "تم تسجيل المصروف رقم {$expense->expense_number} بنجاح",
+            'message' => __('expenses.recorded_success'),
             'data' => (new ExpenseResource($expense))->resolve(),
         ], 201);
     }
@@ -160,6 +163,10 @@ final class ExpenseController extends Controller
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('expenses.manage') && ! $user->can('daily_journal.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
+        if ($user instanceof User) {
+            $this->findExpenseOr404($user, $id, 'view');
         }
 
         $expense = Expense::with(['user', 'store'])->findOrFail($id);
@@ -175,6 +182,11 @@ final class ExpenseController extends Controller
      */
     public function update(UpdateExpenseRequest $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if ($user instanceof User) {
+            $this->findExpenseOr404($user, $id, 'update');
+        }
+
         $expense = Expense::findOrFail($id);
         $dto = ExpenseDTO::fromArray($request->validated(), $expense->store_id);
 
@@ -182,7 +194,7 @@ final class ExpenseController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('expenses.updated_success') ?: "تم تعديل المصروف [{$updated->title}] بنجاح",
+            'message' => __('expenses.updated_success'),
             'data' => (new ExpenseResource($updated))->resolve(),
         ], 200);
     }
@@ -197,12 +209,29 @@ final class ExpenseController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
+        if ($user instanceof User) {
+            $this->findExpenseOr404($user, $id, 'delete');
+        }
+
         $expense = Expense::findOrFail($id);
         $this->deleteExpenseAction->execute($expense);
 
         return response()->json([
             'success' => true,
-            'message' => __('expenses.deleted_success') ?: 'تم حذف المصروف بنجاح',
+            'message' => __('expenses.deleted_success'),
         ], 200);
+    }
+
+    /**
+     * STOR-2 (CTO Q13): the permission was already checked (403), so a policy denial here can only
+     * be the expense's store: answered exactly like a missing expense (404), never revealing it.
+     */
+    private function findExpenseOr404(User $user, int $id, string $ability): void
+    {
+        $expense = Expense::query()->select(['id', 'store_id'])->find($id);
+
+        if (! $expense instanceof Expense || ! Gate::forUser($user)->allows($ability, $expense)) {
+            throw (new ModelNotFoundException)->setModel(Expense::class, [$id]);
+        }
     }
 }

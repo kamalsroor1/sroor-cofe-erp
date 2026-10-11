@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace App\Actions\Tenants;
 
 use App\Models\Tenant;
+use App\Services\Branding\TenantBranding;
+use App\Support\PlatformHosts;
 
 class ResolveTenantWorkspaceAction
 {
+    public function __construct(
+        private readonly TenantBranding $tenantBranding,
+    ) {}
+
     /**
      * Resolve a tenant workspace by code, slug, id, or domain
      */
@@ -33,11 +39,28 @@ class ResolveTenantWorkspaceAction
             })
             ->first();
 
-        if (! $tenant) {
+        // OPS-9: a purged (or being purged) workspace no longer exists for its users.
+        if (! $tenant || $tenant->isPurged()) {
             return [
                 'success' => false,
                 'status' => 404,
                 'message' => __('auth.workspace_not_found'),
+            ];
+        }
+
+        // OPS-2: a workspace still being provisioned (or failed) has no usable database yet.
+        // 409 here (the login screen shows "being set up"); the tenant API itself answers 503.
+        if (! $tenant->isProvisioned()) {
+            return [
+                'success' => false,
+                'status' => 409,
+                'error_code' => 'provisioning.workspace_not_ready',
+                'message' => __('provisioning.workspace_not_ready'),
+                'tenant' => [
+                    'tenant_id' => $tenant->id,
+                    'name' => $tenant->name,
+                    'provisioning_status' => $tenant->provisioningStatus()->value,
+                ],
             ];
         }
 
@@ -58,17 +81,24 @@ class ResolveTenantWorkspaceAction
         // Resolve primary domain
         $primaryDomain = $tenant->domains->first()?->domain;
         if (! $primaryDomain) {
-            $centralDomain = config('tenancy.central_domains.2', 'baraa-solutions.com');
-            $primaryDomain = "{$tenant->id}.{$centralDomain}";
+            $primaryDomain = PlatformHosts::tenantHost((string) $tenant->id);
         }
 
+        // Scheme (and port) follow config('app.url'): https in production, http on the
+        // local *.test setup. Never hardcoded.
         $serverUrl = str_starts_with($primaryDomain, 'http')
             ? $primaryDomain
-            : "https://{$primaryDomain}";
+            : PlatformHosts::origin($primaryDomain);
 
+        // BRND-5: the shop's own logo (host-bound public route on its domain) and subtitle,
+        // read from the tenant DB. Null when the shop has no logo or is not ready: never the
+        // shared public/logo.png, which would show another brand.
+        $branding = $this->tenantBranding->forTenant($tenant);
         $settings = is_array($tenant->settings) ? $tenant->settings : [];
-        $logoUrl = $settings['logo_url'] ?? asset('logo.png');
-        $subtitle = $settings['company_subtitle'] ?? null;
+        $logoUrl = $branding?->logoLightUrl;
+        $subtitle = $branding !== null
+            ? ($branding->subtitle !== '' ? $branding->subtitle : null)
+            : ($settings['company_subtitle'] ?? null);
 
         return [
             'success' => true,
@@ -81,6 +111,7 @@ class ResolveTenantWorkspaceAction
                 'server_url' => $serverUrl,
                 'status' => $tenant->status ?? 'active',
                 'logo_url' => $logoUrl,
+                'logo_dark_url' => $branding?->logoDarkUrl,
                 'company_subtitle' => $subtitle,
             ],
         ];

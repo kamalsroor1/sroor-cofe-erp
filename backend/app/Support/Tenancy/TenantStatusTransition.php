@@ -20,6 +20,10 @@ use InvalidArgumentException;
  * $expectFrom: the statuses the caller believes the tenant is in (what the operator saw on
  * screen, or what the sweep evaluated). Empty = no expectation. A mismatch is a 409, so a
  * stale decision is never applied on top of a concurrent change.
+ *
+ * $finalBackupId (OPS-9): a move to `archived` must name the tenant_backups row of its
+ * verified final (or pre_purge) backup; the action checks it under the row lock (409
+ * subscription.final_backup_required otherwise). Ignored for every other target.
  */
 final readonly class TenantStatusTransition
 {
@@ -36,6 +40,7 @@ final readonly class TenantStatusTransition
         public ?string $note,
         public ?CentralUser $causer,
         public array $context,
+        public ?int $finalBackupId = null,
     ) {
         if ($actor === TenantLifecycleActor::SuperAdmin && $causer === null) {
             throw new InvalidArgumentException('A SuperAdmin tenant transition needs the acting CentralUser.');
@@ -59,6 +64,7 @@ final readonly class TenantStatusTransition
         ?string $note = null,
         ?CentralUser $causer = null,
         array $context = [],
+        ?int $finalBackupId = null,
     ): self {
         return new self(
             $tenantId,
@@ -69,6 +75,7 @@ final readonly class TenantStatusTransition
             self::normalizeNote($note),
             $causer,
             $context,
+            $finalBackupId,
         );
     }
 

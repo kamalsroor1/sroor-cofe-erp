@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Api;
 
 use App\Models\CashShift;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
+use Tests\TenantTestCase;
 
-class ShiftsAndDailyJournalApiTest extends TestCase
+class ShiftsAndDailyJournalApiTest extends TenantTestCase
 {
-    use RefreshDatabase;
+    protected Tenant $tenant;
 
     protected User $adminUser;
 
@@ -28,11 +31,16 @@ class ShiftsAndDailyJournalApiTest extends TestCase
     {
         parent::setUp();
 
-        $role = Role::create(['name' => 'admin']);
-        Permission::create(['name' => 'daily_journal.view']);
-        Permission::create(['name' => 'pos.sell']);
+        // Fixtures and DB assertions run inside the tenant; every request selects it with X-Tenant.
+        $this->tenant = $this->createTenant();
+        $this->useTenantForTest($this->tenant);
 
-        $this->store = Store::create([
+        // The tenant is born with the seeded matrix: reuse it instead of re-creating it.
+        $role = Role::findByName('admin', 'web');
+        Permission::findOrCreate('daily_journal.view', 'web');
+        Permission::findOrCreate('pos.sell', 'web');
+
+        $this->store = $this->adoptMainStore([
             'name' => 'المخزن الرئيسي',
             'code' => 'MAIN-001',
             'type' => 'warehouse',
@@ -198,7 +206,7 @@ class ShiftsAndDailyJournalApiTest extends TestCase
             'is_active' => true,
         ]);
 
-        Invoice::create([
+        $cashInvoice = Invoice::create([
             'invoice_number' => 'INV-260821-001',
             'customer_id' => $customer->id,
             'user_id' => $this->adminUser->id,
@@ -212,6 +220,16 @@ class ShiftsAndDailyJournalApiTest extends TestCase
             'remaining_amount' => '0.000',
             'payment_type' => 'cash',
             'status' => 'confirmed',
+        ]);
+        // The sale voucher InvoiceService writes with every paid invoice: the drawer's cash source.
+        Payment::create([
+            'payment_number' => Payment::SALE_NUMBER_PREFIX.'260821-001',
+            'customer_id' => $customer->id,
+            'invoice_id' => $cashInvoice->id,
+            'user_id' => $this->adminUser->id,
+            'amount' => '500.000',
+            'payment_date' => $today,
+            'payment_method' => 'cash',
         ]);
 
         Expense::create([
@@ -258,5 +276,45 @@ class ShiftsAndDailyJournalApiTest extends TestCase
                     ],
                 ],
             ]);
+    }
+
+    public function test_shifts_of_another_tenant_are_invisible_and_untouched(): void
+    {
+        $other = $this->createTenant(); // ends tenancy
+        $otherStoreId = (int) $this->tenantStore($other)->id;
+        $otherAdminId = (int) $this->tenantAdmin($other)->id;
+        $foreignShiftId = $this->inTenant($other, fn (): int => (int) CashShift::create([
+            'user_id' => $otherAdminId,
+            'store_id' => $otherStoreId,
+            'shift_number' => 'SHF-OTHER-001',
+            'status' => 'open',
+            'opened_at' => now(),
+            'opening_cash_balance' => '900.000',
+        ])->id);
+        $this->useTenantForTest($this->tenant);
+
+        // No active shift here, although the other tenant has one open.
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/shifts/current')
+            ->assertStatus(200)
+            ->assertJson(['success' => true, 'has_active' => false]);
+
+        // The other tenant's shift id does not resolve here.
+        $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->getJson('/api/v1/shifts/'.$foreignShiftId.'/z-report')
+            ->assertStatus(404);
+
+        // Closing the other tenant's shift by id is rejected and leaves it untouched.
+        $close = $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+            ->postJson('/api/v1/shifts/close', ['shift_id' => $foreignShiftId, 'actual_cash_balance' => '900.000']);
+        $this->assertContains($close->status(), [404, 422]);
+
+        $this->inTenant($other, function () use ($foreignShiftId): void {
+            $shift = CashShift::query()->findOrFail($foreignShiftId);
+            $this->assertSame('open', $shift->status);
+            $this->assertSame('900.000', (string) $shift->opening_cash_balance);
+            $this->assertNull($shift->closed_at);
+            $this->assertSame('0.000', (string) $shift->actual_cash_balance);
+        });
     }
 }

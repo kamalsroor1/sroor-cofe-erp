@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\SuperAdmin;
 
+use App\Exceptions\TenantProvisioningException;
 use App\Models\Tenant;
 use App\Models\User;
 use Stancl\Tenancy\Database\Models\ImpersonationToken;
@@ -16,6 +17,11 @@ final class ImpersonateTenantAction
     public function execute(string $tenantId, ?int $targetUserId = null): string
     {
         $tenant = Tenant::findOrFail($tenantId);
+
+        // OPS-2: a pending / running / failed tenant has no usable database (409).
+        if (! $tenant->isProvisioned()) {
+            throw TenantProvisioningException::requiresReadyWorkspace($tenant->provisioningStatus());
+        }
 
         // 1. Resolve Target User inside Tenant's isolated database
         $targetUser = $tenant->run(function () use ($targetUserId) {

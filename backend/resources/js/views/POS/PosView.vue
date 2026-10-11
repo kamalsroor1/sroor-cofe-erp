@@ -211,7 +211,7 @@ const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const { isDesktop, printThermalReceipt, openCashDrawer } = useDesktopHardware();
 const { playScanBeep, playSuccessChime, playDrawerSound, playErrorTone } = useAudioFeedback();
-const { formatMoney } = useFormatters();
+const { formatMoney, formatDate, formatDateTime } = useFormatters();
 // OFFL-1: no offline queue yet (end of Phase 2) — every server write is blocked while offline.
 const { isOnline } = useConnectivity();
 
@@ -878,7 +878,7 @@ const printLastInvoice = async () => {
         <div style="font-family: sans-serif; font-size: 11px; text-align: center;">
           <h2 style="margin: 0 0 4px 0; font-size: 14px;">${appConfigStore.companyName || appConfigStore.platformName}</h2>
           <p style="margin: 0; font-size: 10px;">فاتورة مبيعات رقم: #${inv.invoice_number}</p>
-          <p style="margin: 2px 0; font-size: 9px; color: #555;">${inv.invoice_date || new Date().toLocaleString('ar-EG')}</p>
+          <p style="margin: 2px 0; font-size: 9px; color: #555;">${inv.invoice_date ? formatDate(inv.invoice_date) : formatDateTime(new Date())}</p>
           <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
           <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
             <thead>

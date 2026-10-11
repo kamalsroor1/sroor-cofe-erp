@@ -157,18 +157,26 @@
         </button>
     </div>
 
+    {{-- BRND-5: the shop brand comes from TenantBranding only (tenant settings + tenant-disk logo
+         as a data: URI). Never public/logo*.png, which is shared by every tenant. All text is escaped. --}}
+    @inject('tenantBranding', 'App\Services\Branding\TenantBranding')
     @php
-        $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
-        $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
-        $showCompanyName = \App\Models\Setting::getBool('show_print_company_name', true);
-        $showSubtitle = \App\Models\Setting::getBool('show_print_subtitle', true);
-        $showLogo = \App\Models\Setting::getBool('show_print_logo', true);
-        $logoPath = public_path('logo.png');
-        $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : asset('logo.png');
+        $brand = $tenantBranding->get();
+        $companyName = $brand->name;
+        $companySubtitle = $brand->subtitle;
+        $showCompanyName = $brand->showName;
+        $showSubtitle = $brand->showSubtitle;
+        $logoSrc = $brand->showLogo ? $tenantBranding->logoDataUri() : null;
+        $showLogo = $logoSrc !== null;
+        $headerLines = $brand->receiptHeaderLines;
+        $legalLines = array_filter([
+            $brand->commercialRegister !== '' ? __('settings.commercial_register').': '.$brand->commercialRegister : null,
+            $brand->taxRegistrationNo !== '' ? __('settings.tax_registration_no').': '.$brand->taxRegistrationNo : null,
+        ]);
     @endphp
 
     @php
-        $hasBrandHeader = $showLogo || $showCompanyName || ($showSubtitle && !empty($companySubtitle));
+        $hasBrandHeader = $showLogo || $showCompanyName || ($showSubtitle && !empty($companySubtitle)) || !empty($headerLines);
     @endphp
 
     <div class="container">
@@ -179,7 +187,7 @@
                 @if($showLogo)
                     <img src="{{ $logoSrc }}" alt="{{ $companyName }}" style="max-height: 75px; max-width: 130px; object-fit: contain;">
                 @endif
-                @if($showCompanyName || ($showSubtitle && !empty($companySubtitle)))
+                @if($showCompanyName || ($showSubtitle && !empty($companySubtitle)) || !empty($headerLines) || !empty($legalLines))
                 <div>
                     @if($showCompanyName)
                         <h1 class="brand-title">{{ $companyName }}</h1>
@@ -187,6 +195,12 @@
                     @if($showSubtitle && !empty($companySubtitle))
                         <p class="brand-subtitle">{{ $companySubtitle }}</p>
                     @endif
+                    @foreach($headerLines as $headerLine)
+                        <p class="brand-subtitle" data-receipt-header-line>{{ $headerLine }}</p>
+                    @endforeach
+                    @foreach($legalLines as $legalLine)
+                        <p class="brand-subtitle" data-legal-line>{{ $legalLine }}</p>
+                    @endforeach
                 </div>
                 @endif
             </div>
@@ -316,6 +330,10 @@
                 <p style="margin: 30px 0 0 0;">....................................</p>
             </div>
         </div>
+
+        @if($brand->receiptFooterText !== '')
+        <div style="margin-top: 18px; text-align: center; font-size: 12px; font-weight: 800;" data-receipt-footer>{{ $brand->receiptFooterText }}</div>
+        @endif
     </div>
 
     <script>

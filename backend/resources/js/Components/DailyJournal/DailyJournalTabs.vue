@@ -110,7 +110,7 @@
                 <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ inv.customer_name }}</h4>
               </div>
               <div class="text-end">
-                <span class="text-sm font-black font-mono text-emerald-500"
+                <span class="text-sm font-black font-mono text-emerald-500 dark:text-emerald-400"
                   >{{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}</span
                 >
                 <span class="text-[10px] text-slate-400 block font-mono">{{ inv.time || '—' }}</span>
@@ -201,7 +201,7 @@
                 <p class="text-xs text-slate-500">{{ e.cost_center_label || e.cost_center }}</p>
               </div>
               <div class="text-end">
-                <span class="text-sm font-black font-mono text-rose-500"
+                <span class="text-sm font-black font-mono text-rose-500 dark:text-rose-400"
                   >{{ formatMoney(e.amount) }} {{ $t('common.currency') }}</span
                 >
                 <span class="text-[10px] font-bold block text-slate-400">{{

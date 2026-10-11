@@ -126,7 +126,8 @@ const props = defineProps({
   editingItem: { type: Object, default: null },
   form: { type: Object, required: true },
   categories: { type: Array, default: () => [] },
-  units: { type: Array, default: () => ['كجم', 'جرام', 'قطعة', 'علبة', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'لتر'] },
+  // Unit names or { value, label } options (useUnits().unitOptionsFor) — the tenant list, never a built-in one.
+  units: { type: Array, default: () => [] },
   errors: { type: Object, default: () => ({}) },
   isSubmitting: { type: Boolean, default: false },
 });
@@ -143,10 +144,7 @@ const categoryOptions = computed(() => {
   }));
 });
 
-const unitOptions = computed(() => {
-  return props.units.map((u) => ({
-    value: u,
-    label: u,
-  }));
-});
+const unitOptions = computed(() =>
+  props.units.map((u) => (u && typeof u === 'object' ? { value: u.value, label: u.label } : { value: u, label: u }))
+);
 </script>

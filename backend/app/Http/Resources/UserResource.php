@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
-use App\Support\PlatformSuperAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,7 +20,6 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'roles' => $this->getRoleNames(),
             'permissions' => $this->getAllPermissions()->pluck('name'),
-            'is_super_admin' => PlatformSuperAdmin::check($this->resource),
             'theme_preference' => $this->theme_preference ?? 'dark',
             'locale' => $this->resource instanceof User ? $this->resource->locale : null,
             'show_print_subtitle' => (bool) $this->show_print_subtitle,

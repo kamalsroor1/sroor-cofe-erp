@@ -2,6 +2,8 @@
 .DS_Store
 .env
 .env.backup
+.env.backup-*
+.env.testing
 .env.production
 .phpactor.json
 .phpunit.result.cache
@@ -20,6 +22,10 @@ node_modules/
 public/build/
 public/fonts-manifest.dev.json
 public/hot
+# Vite dev-server marker and storage:link symlink of the Laravel app (the public/* rules
+# around them contain a slash, so git anchors them to the repo root: they never match backend/).
+/backend/public/hot
+/backend/public/storage
 public/storage
 storage/*.key
 storage/pail

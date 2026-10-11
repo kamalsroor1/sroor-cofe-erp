@@ -116,3 +116,106 @@ test('verifySha256 returns false for a missing file instead of passing', async (
     }
     assert.equal(result, false);
 });
+
+// APP-7: manifest -> release to install. Fails closed and never trusts URLs outside the allow-list.
+
+const SHA = 'c'.repeat(64);
+const manifest = (overrides = {}) => ({
+    success: true,
+    has_update: true,
+    force_update: false,
+    latest_version: '1.2.0',
+    latest_version_code: 1002000,
+    download_url: 'https://baraa-solutions.com/api/v1/app/download-apk?platform=windows&version_code=1002000',
+    manual_download_url: 'https://baraa-solutions.com/download',
+    file_size_bytes: 73400320,
+    checksum: SHA,
+    checksum_algorithm: 'sha256',
+    rollback: null,
+    ...overrides,
+});
+
+test('releaseFromManifest returns the verified target of a newer release', () => {
+    const res = verify().releaseFromManifest(manifest(), 1001000);
+    assert.equal(res.ok, true);
+    assert.deepEqual(res.release, {
+        version: '1.2.0',
+        versionCode: 1002000,
+        downloadUrl: manifest().download_url,
+        sha256: SHA,
+        sizeBytes: 73400320,
+    });
+});
+
+test('releaseFromManifest reports already_latest instead of reinstalling the same build', () => {
+    const { releaseFromManifest } = verify();
+    assert.deepEqual(releaseFromManifest(manifest(), 1002000), { ok: false, code: 'app_update.already_latest' });
+    assert.deepEqual(releaseFromManifest(manifest({ has_update: false }), 1), {
+        ok: false,
+        code: 'app_update.already_latest',
+    });
+});
+
+test('releaseFromManifest refuses a release without checksum, size or trusted URL', () => {
+    const { releaseFromManifest } = verify();
+    assert.equal(releaseFromManifest(manifest({ checksum: null }), 1).code, 'app_update.error_missing_checksum');
+    assert.equal(releaseFromManifest(manifest({ file_size_bytes: 0 }), 1).code, 'app_update.error_manifest_invalid');
+    assert.equal(releaseFromManifest(manifest({ file_size_bytes: null }), 1).code, 'app_update.error_manifest_invalid');
+    assert.equal(
+        releaseFromManifest(manifest({ download_url: 'https://evil.com/x.exe' }), 1).code,
+        'app_update.error_missing_url'
+    );
+    assert.equal(releaseFromManifest(null, 1).code, 'app_update.error_manifest_invalid');
+});
+
+test('rollbackFromManifest only accepts an older, fully described, allow-listed release', () => {
+    const { rollbackFromManifest } = verify();
+    const rollback = {
+        version: '1.1.0',
+        version_code: 1001000,
+        download_url: 'https://baraa-solutions.com/api/v1/app/download-apk?platform=windows&version_code=1001000',
+        checksum: SHA,
+        file_size_bytes: 1000,
+    };
+    assert.deepEqual(rollbackFromManifest(manifest({ rollback }), 1002000), {
+        version: '1.1.0',
+        versionCode: 1001000,
+        downloadUrl: rollback.download_url,
+        sha256: SHA,
+        sizeBytes: 1000,
+    });
+    assert.equal(rollbackFromManifest(manifest({ rollback }), 1001000), null, 'not older than the running build');
+    assert.equal(rollbackFromManifest(manifest({ rollback: { ...rollback, checksum: null } }), 1002000), null);
+    assert.equal(
+        rollbackFromManifest(
+            manifest({ rollback: { ...rollback, download_url: 'http://baraa-solutions.com/a.exe' } }),
+            1002000
+        ),
+        null
+    );
+    assert.equal(rollbackFromManifest(manifest(), 1002000), null);
+});
+
+test('manualDownloadUrl keeps an allow-listed page and falls back to the official one', () => {
+    const { manualDownloadUrl } = verify();
+    assert.equal(manualDownloadUrl(manifest()), 'https://baraa-solutions.com/download');
+    assert.equal(
+        manualDownloadUrl(manifest({ manual_download_url: 'https://evil.com/download' })),
+        'https://baraa-solutions.com/download'
+    );
+    assert.equal(manualDownloadUrl(null), 'https://baraa-solutions.com/download');
+});
+
+test('the renderer only ever receives app_update.* codes', () => {
+    const { toRendererCode, updaterError } = verify();
+    assert.equal(
+        toRendererCode(updaterError('app_update.error_checksum_mismatch')),
+        'app_update.error_checksum_mismatch'
+    );
+    assert.equal(toRendererCode(new Error('ENOENT C:/Users/x/setup.exe')), 'app_update.error_download_failed');
+    assert.equal(
+        toRendererCode(Object.assign(new Error('x'), { code: 'ECONNRESET' })),
+        'app_update.error_download_failed'
+    );
+    assert.equal(toRendererCode(null), 'app_update.error_download_failed');
+});

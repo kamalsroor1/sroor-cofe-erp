@@ -15,8 +15,15 @@ use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
 use Stancl\Tenancy\UUIDGenerator;
 
+// Base domain of the platform (env CENTRAL_DOMAIN): tenant subdomains are "<slug>.<domain>".
+// An empty value falls back to the production domain. Read it through
+// config('tenancy.central_domain') / App\Support\PlatformHosts, never env() at runtime.
+$centralDomain = strtolower(trim((string) env('CENTRAL_DOMAIN', ''))) ?: 'baraa-solutions.com';
+
 return [
     'tenant_model' => Tenant::class,
+
+    'central_domain' => $centralDomain,
     'id_generator' => UUIDGenerator::class,
 
     'domain_model' => Domain::class,
@@ -26,14 +33,20 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-    'central_domains' => [
+    // IDEN-1.11: the platform-console host(s) from CENTRAL_ADMIN_DOMAINS (same parsing as
+    // config/central.php) are central too, so no tenant lookup / tenant-miss throttling ever
+    // runs on them. Appended last: code reads central_domains.0 and .2 by index.
+    'central_domains' => array_values(array_unique(array_merge([
         '127.0.0.1',
         'localhost',
         'baraa-solutions.com',
         'www.baraa-solutions.com',
         'sroor.test',
-        env('CENTRAL_DOMAIN', 'baraa-solutions.com'),
-    ],
+        $centralDomain,
+    ], array_values(array_filter(array_map(
+        static fn (string $host): string => strtolower(trim($host)),
+        explode(',', (string) env('CENTRAL_ADMIN_DOMAINS', '')),
+    )))))),
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
@@ -209,5 +222,33 @@ return [
     'seeder_parameters' => [
         '--class' => TenantDatabaseSeeder::class, // tenant-safe root seeder (never the central DatabaseSeeder)
         // '--force' => true, // This needs to be true to seed tenant databases in production
+    ],
+
+    /**
+     * OPS-2: queued tenant provisioning (App\Jobs\ProvisionTenantJob).
+     *
+     * - connection: Laravel DB connection used for CREATE/DROP DATABASE and the per-tenant
+     *   user on MySQL/MariaDB (config/database.php `provisioner`, the `sroor_provisioner`
+     *   account of vps-runbook.md §5). Never root in production.
+     * - queue_connection / queue: where the job runs. The job may take up to 900 s, so the
+     *   queue connection's `retry_after` must be larger than that (a duplicate delivery is
+     *   dropped by WithoutOverlapping, but it is still wasted work). null = the default.
+     * - per_tenant_db_user: create one MySQL user per tenant, granted only on its own
+     *   database (escaped GRANT target). Required where the app account has no access to
+     *   tenant databases (the VPS). Off by default: dev/CI/shared hosting reuse DB_*.
+     * - db_user_host: host part of the per-tenant user ('localhost' on the VPS socket setup).
+     * - unique_for: seconds the job's unique lock lives (never below every attempt + backoff,
+     *   3 x 900 + 30 + 120 = 2850). A pending/running tenant without activity for that long is
+     *   "stale" (lost dispatch, dead worker) and may be retried by a super-admin.
+     *
+     * Read at runtime through config() only (never env() outside this file).
+     */
+    'provisioning' => [
+        'connection' => env('TENANT_PROVISIONER_CONNECTION', 'provisioner'),
+        'queue_connection' => env('TENANT_PROVISIONING_QUEUE_CONNECTION') ?: null,
+        'queue' => env('TENANT_PROVISIONING_QUEUE') ?: 'default',
+        'per_tenant_db_user' => filter_var(env('TENANT_DB_PER_TENANT_USER', false), FILTER_VALIDATE_BOOL),
+        'db_user_host' => env('TENANT_DB_USER_HOST') ?: 'localhost',
+        'unique_for' => max(2850, (int) (env('TENANT_PROVISIONING_UNIQUE_FOR') ?: 3600)),
     ],
 ];

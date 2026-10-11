@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('inventory.branch_stocks_balance')"
       :subtitle="$t('inventory.branch_stocks_subtitle')"
-      icon="📦"
+      :icon="Package"
     >
       <template #actions>
         <router-link
@@ -29,12 +29,25 @@
     />
 
     <!-- Stocks Table & Mobile Cards -->
-    <StoreStocksTable :stocks="stocks" :pagination="pagination" :loading="isLoading" @page-change="fetchStocks" />
+
+    <template v-if="error && (!stocks || stocks.length === 0)">
+      <ErrorState
+        data-testid="error-state"
+        :message="errorMessage"
+        @retry="fetchStocks(pagination?.current_page || 1)"
+      />
+    </template>
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStocks(pagination?.current_page || 1)" />
+      <StoreStocksTable :stocks="stocks" :pagination="pagination" :loading="isLoading" @page-change="fetchStocks" />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ArrowRight } from 'lucide-vue-next';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import { ArrowRight, Package } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import StoreStocksFilterBar from '../../Components/StoreStocks/StoreStocksFilterBar.vue';
 import StoreStocksTable from '../../Components/StoreStocks/StoreStocksTable.vue';
@@ -44,6 +57,8 @@ const {
   selectedStoreId,
   searchQuery,
   stockStatus,
+  error,
+  errorMessage,
   isLoading,
   stocks,
   pagination,

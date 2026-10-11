@@ -4,52 +4,73 @@ declare(strict_types=1);
 
 namespace App\Actions\AppVersions;
 
+use App\DTOs\AppVersions\CheckUpdateDTO;
 use App\Models\AppVersion;
-use Illuminate\Support\Str;
+use App\Support\AppReleases\ReleaseFileLocator;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * Serve a release binary (GET /api/v1/app/download-apk?platform=&version_code=).
+ *
+ * version_code given → exactly that ADVERTISABLE release (the URL check-update returns, and
+ * the rollback target); omitted → the latest advertisable release, the same one
+ * check-update offers. Only files uploaded through the super-admin flow are served, from the
+ * private release disk (legacy public root as a read fallback until app-releases:relocate).
+ * There is deliberately no fallback to files in public/: that served the wrong binary and
+ * made the response depend on whatever sat on the server's filesystem.
+ *
+ * The response carries X-Checksum-Sha256 so a client can verify before installing.
+ */
 final class DownloadLatestApkAction
 {
-    /**
-     * Serve the latest active release binary for the platform.
-     *
-     * Only files uploaded through the super-admin AppVersion flow (central, AppVersion::releaseDisk()) are
-     * served. There is deliberately no fallback to files in public/ or outside the
-     * app: that served the wrong binary (e.g. an Android APK to iOS) and made the
-     * response depend on whatever happened to sit on the server's filesystem.
-     */
-    public function execute(string $platform = 'android'): BinaryFileResponse
-    {
-        $latest = AppVersion::forPlatform($platform)
-            ->active()
-            ->whereNotNull('apk_path')
-            ->orderByDesc('version_code')
-            ->first();
+    public function __construct(private readonly CheckAppUpdateAction $checkAppUpdate) {}
 
-        if (! $latest instanceof AppVersion || ! AppVersion::releaseDisk()->exists($latest->apk_path)) {
+    public function execute(CheckUpdateDTO $dto): BinaryFileResponse
+    {
+        $release = $dto->versionCode === null
+            ? $this->checkAppUpdate->execute($dto)['latest']
+            : $this->exactRelease($dto);
+
+        $absolutePath = $release instanceof AppVersion ? ReleaseFileLocator::absolutePath($release) : null;
+
+        if (! $release instanceof AppVersion || $absolutePath === null || ! $release->hasValidChecksum()) {
             throw new NotFoundHttpException(__('app_update.file_not_available'));
         }
 
-        $contentType = match ($platform) {
-            'windows' => 'application/vnd.microsoft.portable-executable',
-            'android' => 'application/vnd.android.package-archive',
-            default => 'application/octet-stream',
-        };
-
         // Atomic SQL increment; no lock needed.
-        $latest->increment('download_count');
+        $release->increment('download_count');
 
-        $appNameSlug = Str::slug((string) config('app.name', 'erp-pos')) ?: 'erp-pos';
-        $defaultFilename = $platform === 'windows' ? $appNameSlug.'-Setup.exe' : $appNameSlug.'.apk';
+        $size = filesize($absolutePath);
 
-        return response()->download(
-            AppVersion::releaseDisk()->path($latest->apk_path),
-            $latest->apk_filename ?? $defaultFilename,
+        $response = response()->download(
+            $absolutePath,
+            $release->apk_filename ?? ('release.'.$dto->platform->extension()),
             [
-                'Content-Type' => $contentType,
+                'Content-Type' => $dto->platform->contentType(),
                 'Cache-Control' => 'no-cache, private',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Checksum-Sha256' => (string) $release->apk_checksum,
             ],
         );
+
+        // BinaryFileResponse marks itself public by default; a release must not sit in shared caches.
+        $response->setPrivate();
+        $response->headers->addCacheControlDirective('no-cache');
+
+        if ($size !== false) {
+            $response->headers->set('Content-Length', (string) $size);
+        }
+
+        return $response;
+    }
+
+    private function exactRelease(CheckUpdateDTO $dto): ?AppVersion
+    {
+        return AppVersion::query()
+            ->forPlatform($dto->platform->value)
+            ->advertisable()
+            ->where('version_code', $dto->versionCode)
+            ->first();
     }
 }

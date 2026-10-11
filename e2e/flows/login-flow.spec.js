@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { getScreenshotRunDir } from '../utils/screenshot-helper.js';
+import { E2E_USER_PASSWORD, E2E_USER_PHONE } from '../utils/e2e-user.js';
 
 test.describe('Flow: Complete Authentication & Navigation Journey', () => {
     // Override storage state to start as a fresh guest user for login testing
@@ -14,8 +15,8 @@ test.describe('Flow: Complete Authentication & Navigation Journey', () => {
             fs.mkdirSync(flowDir, { recursive: true });
         }
 
-        const testPhone = process.env.E2E_USER_PHONE || '01000000001';
-        const testPassword = process.env.E2E_USER_PASSWORD || 'password';
+        const testPhone = E2E_USER_PHONE;
+        const testPassword = E2E_USER_PASSWORD;
 
         // Step 1: Open Login Page
         await page.goto('/login', { waitUntil: 'networkidle' });

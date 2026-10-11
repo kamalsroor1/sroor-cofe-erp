@@ -38,9 +38,13 @@
     <TenantsTable
       :tenants="tenants"
       :loading="isLoading"
+      :can-manage="canManageTenants"
+      :is-archiving="isArchiving"
+      :is-unarchiving="isUnarchiving"
       @open-status="openStatusModal"
       @open-create="openCreateModal"
-      @delete-tenant="confirmDeleteTenant"
+      @archive-tenant="confirmDeleteTenant"
+      @unarchive-tenant="confirmUnarchiveTenant"
     />
 
     <!-- Create Tenant Modal -->
@@ -57,9 +61,11 @@
     <!-- Edit Tenant Status Modal -->
     <EditTenantStatusModal
       :show="showStatusModal"
-      :selected-tenant="selectedTenant"
+      :tenant-name="selectedTenant?.name || ''"
+      :current-status="selectedTenant?.status || ''"
       :form="statusForm"
-      :is-submitting="isSubmitting"
+      :errors="statusErrors"
+      :is-submitting="isSubmittingStatus"
       @update:field="updateStatusField"
       @submit="submitStatusChange"
       @close="showStatusModal = false"
@@ -89,6 +95,8 @@ const {
   selectedTenant,
   createForm,
   statusForm,
+  statusErrors,
+  isSubmittingStatus,
   updateSearch,
   updateStatusFilter,
   updatePlanFilter,
@@ -99,5 +107,9 @@ const {
   updateStatusField,
   submitStatusChange,
   confirmDeleteTenant,
+  confirmUnarchiveTenant,
+  isArchiving,
+  isUnarchiving,
+  canManageTenants,
 } = useSuperAdminTenants();
 </script>

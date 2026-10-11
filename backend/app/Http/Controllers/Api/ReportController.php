@@ -16,8 +16,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\FilterReportRequest;
 use App\Models\Item;
 use App\Models\StockMovement;
-use App\Models\Store;
-use App\Support\ClientStoreGuard;
+use App\Models\User;
+use App\Support\ActiveStore;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,28 +35,45 @@ final class ReportController extends Controller
         private readonly TenantClock $tenantClock,
     ) {}
 
-    private function buildDTO(FilterReportRequest|Request $request): ReportFilterDTO
+    /**
+     * STOR-2: the report's store is the active store, or an access-checked query/body store_id
+     * filter (403); every store (null) only through a verified `all` (header or store_id).
+     */
+    private function buildDTO(FilterReportRequest|Request $request, ActiveStore $activeStore): ReportFilterDTO
     {
-        // ReportFilterDTO lets a query/body store_id override the header: access-check it first (403).
-        ClientStoreGuard::verified($request);
-
-        $headerStoreId = $request->header('X-Store-Id')
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
-
         return ReportFilterDTO::fromArray(
-            $request->all(),
-            $headerStoreId ? (int) $headerStoreId : null,
+            $request->except('store_id'),
+            $activeStore->readFilter($request),
             $this->tenantClock->businessNow(),
         );
     }
 
     /**
+     * STOR-2: the per-branch comparison lists every active branch. A user who may not see every
+     * store only gets the rows of the branches they can access.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function visibleStoreRows(Request $request, array $rows): array
+    {
+        $user = $request->user();
+        if ($user instanceof User && ActiveStore::canViewAll($user)) {
+            return $rows;
+        }
+
+        return array_values(array_filter(
+            $rows,
+            fn (array $row): bool => $user instanceof User && ActiveStore::canAccess($user, (int) $row['id']),
+        ));
+    }
+
+    /**
      * Profit & Loss Executive Summary
      */
-    public function summary(FilterReportRequest $request): JsonResponse
+    public function summary(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $result = $this->getProfitLossReportAction->execute($dto);
 
         return response()->json([
@@ -70,9 +87,9 @@ final class ReportController extends Controller
     /**
      * Items Profitability & Sales Report
      */
-    public function items(FilterReportRequest $request): JsonResponse
+    public function items(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $items = $this->getItemsProfitabilityReportAction->execute($dto);
 
         return response()->json([
@@ -84,10 +101,10 @@ final class ReportController extends Controller
     /**
      * Stores Comparative Performance Report
      */
-    public function stores(FilterReportRequest $request): JsonResponse
+    public function stores(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
-        $stores = $this->getStoresComparativeReportAction->execute($dto);
+        $dto = $this->buildDTO($request, $activeStore);
+        $stores = $this->visibleStoreRows($request, $this->getStoresComparativeReportAction->execute($dto));
 
         return response()->json([
             'success' => true,
@@ -98,9 +115,9 @@ final class ReportController extends Controller
     /**
      * Customers Sales & Receivables Report
      */
-    public function customers(FilterReportRequest $request): JsonResponse
+    public function customers(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $customers = $this->getCustomersSalesReportAction->execute($dto);
 
         return response()->json([
@@ -112,9 +129,9 @@ final class ReportController extends Controller
     /**
      * Operational Expenses Breakdown Report
      */
-    public function expenses(FilterReportRequest $request): JsonResponse
+    public function expenses(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
 
         return response()->json([
@@ -126,9 +143,9 @@ final class ReportController extends Controller
     /**
      * Inventory Valuation & ABC Analysis Report
      */
-    public function inventory(FilterReportRequest $request): JsonResponse
+    public function inventory(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $inventory = $this->getInventoryValuationReportAction->execute($dto);
 
         return response()->json([
@@ -140,9 +157,9 @@ final class ReportController extends Controller
     /**
      * Treasury & Inflows/Outflows Report
      */
-    public function treasury(FilterReportRequest $request): JsonResponse
+    public function treasury(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $treasury = $this->getTreasuryReportAction->execute($dto);
 
         return response()->json([
@@ -154,13 +171,13 @@ final class ReportController extends Controller
     /**
      * Comprehensive Multi-Dimension Report Bundle
      */
-    public function comprehensive(FilterReportRequest $request): JsonResponse
+    public function comprehensive(FilterReportRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
 
         $summary = $this->getProfitLossReportAction->execute($dto);
         $items = $this->getItemsProfitabilityReportAction->execute($dto);
-        $stores = $this->getStoresComparativeReportAction->execute($dto);
+        $stores = $this->visibleStoreRows($request, $this->getStoresComparativeReportAction->execute($dto));
         $customers = $this->getCustomersSalesReportAction->execute($dto);
         $expenses = $this->getExpensesBreakdownReportAction->execute($dto);
         $inventory = $this->getInventoryValuationReportAction->execute($dto);
@@ -182,14 +199,14 @@ final class ReportController extends Controller
     /**
      * Top Selling & Most Profitable Coffee Items
      */
-    public function topItems(Request $request): JsonResponse
+    public function topItems(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $dto = $this->buildDTO($request);
+        $dto = $this->buildDTO($request, $activeStore);
         $items = $this->getItemsProfitabilityReportAction->execute($dto);
 
         return response()->json([
@@ -201,7 +218,7 @@ final class ReportController extends Controller
     /**
      * Item Movement Card
      */
-    public function itemCard(Request $request, int|string $itemId): JsonResponse
+    public function itemCard(Request $request, ActiveStore $activeStore, int|string $itemId): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('reports.view')) {
@@ -209,13 +226,10 @@ final class ReportController extends Controller
         }
 
         $item = Item::findOrFail((int) $itemId);
-        $storeId = ClientStoreGuard::verified($request)
-            ?: $request->header('X-Store-Id')
-            ?: $user?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        $storeId = $activeStore->readFilter($request);
 
         $movements = StockMovement::where('item_id', $itemId)
-            ->when($storeId && $storeId !== 'all', fn ($q) => $q->where('store_id', (int) $storeId))
+            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId))
             ->latest('id')
             ->limit(50)
             ->get();

@@ -14,12 +14,13 @@ use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
-use App\Models\Payment;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\DailyCashFlowService;
 use App\Services\DashboardAnalyticsService;
 use App\Services\ProfitService;
 use App\Services\Settings\TenantSettings;
+use App\Support\ActiveStore;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -35,6 +36,7 @@ class GetTenantDashboardAnalyticsAction
         protected ProfitService $profitService,
         protected TenantClock $tenantClock,
         protected TenantSettings $tenantSettings,
+        protected DailyCashFlowService $dailyCashFlow,
     ) {}
 
     /**
@@ -42,7 +44,10 @@ class GetTenantDashboardAnalyticsAction
      */
     public function execute(?User $user): array
     {
-        $storeId = session('current_store_id');
+        // STOR-2: the store resolved by `store.active` when this runs inside a scoped request,
+        // else the (middleware-verified) session store.
+        $scope = app(ActiveStore::class);
+        $storeId = $scope->isResolved() ? $scope->id() : session('current_store_id');
         $cacheKey = ($user?->id ?? 0).':'.($storeId ?? 'all');
 
         if (isset($this->memoized[$cacheKey])) {
@@ -86,29 +91,22 @@ class GetTenantDashboardAnalyticsAction
         $cashSales = (string) ($todayInvoices->where('payment_type', 'cash')->sum('net_total') ?: '0.000');
         $creditSales = (string) ($todayInvoices->where('payment_type', 'credit')->sum('net_total') ?: '0.000');
         $partialSales = (string) ($todayInvoices->where('payment_type', 'partial')->sum('net_total') ?: '0.000');
-        $partialPaid = (string) ($todayInvoices->where('payment_type', 'partial')->sum('paid_amount') ?: '0.000');
 
-        // 4. Cash Collected from Customer Vouchers
-        $customerPayments = (string) (Payment::whereDate('payment_date', $today)
-            ->whereNotNull('customer_id')
-            ->sum('amount') ?: '0.000');
+        // 4. Cash collected today (BUG-01): the cash vouchers of the store in scope only. The
+        // invoice writes its own sale voucher, so adding invoices.paid_amount counted it twice.
+        $cashFlow = $this->dailyCashFlow->forDate($today, $storeFilter);
+        $totalCashCollected = $cashFlow['total_cash_in'];
 
-        $totalCashCollected = bcadd(bcadd($cashSales, $partialPaid, 3), $customerPayments, 3);
-
-        // 5. Operating Expenses Today
+        // 5. Operating Expenses Today (all methods; only the cash ones leave the drawer)
         $expensesQuery = Expense::whereDate('expense_date', $today);
         if ($storeFilter) {
             $expensesQuery->where('store_id', $storeFilter);
         }
         $totalExpenses = (string) ($expensesQuery->sum('amount') ?: '0.000');
 
-        // 6. Supplier Payments Today
-        $supplierPaid = (string) (Payment::whereDate('payment_date', $today)
-            ->whereNotNull('supplier_id')
-            ->sum('amount') ?: '0.000');
-
-        $totalOutflows = bcadd($totalExpenses, $supplierPaid, 3);
-        $netCashToday = bcsub($totalCashCollected, $totalOutflows, 3);
+        // 6. Supplier cash payments today and the day's net drawer cash
+        $supplierPaid = $cashFlow['supplier_paid'];
+        $netCashToday = $cashFlow['net_cash'];
 
         // 7. Customer Debts Total
         $totalCustomersDebt = (float) Customer::where('is_active', true)->sum('current_balance');

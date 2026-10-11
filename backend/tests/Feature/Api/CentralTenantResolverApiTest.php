@@ -35,6 +35,8 @@ class CentralTenantResolverApiTest extends TenantTestCase
 
     public function test_resolves_active_tenant_by_id(): void
     {
+        config(['app.url' => 'https://baraa-solutions.com']);
+
         $tenant = Tenant::create([
             'id' => '2m',
             'name' => '2M Coffee Roastery',
@@ -92,6 +94,23 @@ class CentralTenantResolverApiTest extends TenantTestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.tenant_id', 'test-cafe');
+    }
+
+    public function test_a_purged_workspace_is_not_found(): void
+    {
+        $tenant = Tenant::create([
+            'id' => 'gone',
+            'name' => 'Gone Shop',
+            'slug' => 'gone',
+            'email' => 'gone@example.test',
+            'status' => 'archived',
+        ]);
+        $tenant->forceFill(['purged_at' => now()])->save();
+
+        $this->getJson('/api/v1/central/tenants/resolve?code=gone')
+            ->assertNotFound()
+            ->assertJsonPath('success', false)
+            ->assertJsonMissingPath('tenant');
     }
 
     public function test_returns_404_when_tenant_does_not_exist(): void

@@ -45,7 +45,7 @@
       :form="form"
       @update:form="Object.assign(form, $event)"
       :categories="categories"
-      :units="systemUnits"
+      :units="unitOptionsFor(editingItem?.unit)"
       :is-submitting="isSubmitting"
       @close="showItemModal = false"
       @submit="saveItem"
@@ -77,6 +77,9 @@ import ItemStockAdjustModal from '../../Components/Items/ItemStockAdjustModal.vu
 import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
+import { useUnits } from '../../Composables/useUnits';
+
+const { defaultUnit, unitOptionsFor } = useUnits();
 
 const items = ref([]);
 const categories = ref([]);
@@ -92,7 +95,6 @@ const stockStatus = ref('all');
 const isLoading = ref(true);
 const isSubmitting = ref(false);
 
-const systemUnits = ref(['كجم', 'جرام', 'قطعة', 'علبة', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'لتر']);
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -107,7 +109,7 @@ const form = reactive({
   name: '',
   code: '',
   category: '',
-  unit: 'كجم',
+  unit: defaultUnit.value,
   cost_price: 0,
   selling_price: 0,
   min_selling_price: 0,
@@ -160,7 +162,7 @@ const openCreateModal = () => {
   form.name = '';
   form.code = '';
   form.category = '';
-  form.unit = 'كجم';
+  form.unit = defaultUnit.value;
   form.cost_price = 0;
   form.selling_price = 0;
   form.min_selling_price = 0;
@@ -174,7 +176,7 @@ const openEditModal = (item) => {
   form.name = item.name;
   form.code = item.code || '';
   form.category = item.category || '';
-  form.unit = item.unit || 'كجم';
+  form.unit = item.unit || defaultUnit.value;
   form.cost_price = Number(item.cost_price) || 0;
   form.selling_price = Number(item.selling_price) || 0;
   form.min_selling_price = Number(item.min_selling_price || item.price_wholesale || item.selling_price) || 0;

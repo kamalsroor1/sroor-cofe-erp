@@ -7,11 +7,13 @@ namespace Tests\Feature\Tenancy;
 use App\Actions\Tenants\RevokeTenantTokensAction;
 use App\Actions\Tenants\TransitionTenantStatusAction;
 use App\Enums\CentralAuditEvent;
+use App\Enums\TenantBackupKind;
 use App\Enums\TenantLifecycleActor;
 use App\Enums\TenantStatus;
 use App\Exceptions\TenantLifecycleException;
 use App\Models\CentralAuditLog;
 use App\Models\Tenant;
+use App\Models\TenantBackup;
 use App\Models\TenantLifecycleEvent;
 use App\Support\Tenancy\EndsTenantImpersonationSessions;
 use App\Support\Tenancy\TenantStatusTransition;
@@ -252,7 +254,7 @@ final class TransitionTenantStatusActionTest extends TenantTestCase
         $super = $this->centralSuperAdmin();
         $id = (string) $tenant->getKey();
 
-        $this->action()->execute(TenantStatusTransition::to($id, TenantStatus::Archived, TenantLifecycleActor::SuperAdmin, expectFrom: TenantStatus::Suspended, causer: $super));
+        $this->action()->execute(TenantStatusTransition::to($id, TenantStatus::Archived, TenantLifecycleActor::SuperAdmin, expectFrom: TenantStatus::Suspended, causer: $super, finalBackupId: $this->finalBackup($id)));
 
         $archived = Tenant::query()->findOrFail($id);
         $this->assertSame(TenantStatus::Archived, $archived->lifecycleStatus());
@@ -294,7 +296,7 @@ final class TransitionTenantStatusActionTest extends TenantTestCase
         $super = $this->centralSuperAdmin();
         $id = (string) $tenant->getKey();
 
-        $this->action()->execute(TenantStatusTransition::to($id, TenantStatus::Archived, TenantLifecycleActor::System));
+        $this->action()->execute(TenantStatusTransition::to($id, TenantStatus::Archived, TenantLifecycleActor::System, finalBackupId: $this->finalBackup($id)));
         $this->action()->execute(TenantStatusTransition::unarchive($id, $super));
 
         $this->assertSame(TenantStatus::Cancelled, Tenant::query()->findOrFail($id)->lifecycleStatus());
@@ -400,6 +402,23 @@ final class TransitionTenantStatusActionTest extends TenantTestCase
     private function action(): TransitionTenantStatusAction
     {
         return app(TransitionTenantStatusAction::class);
+    }
+
+    /**
+     * OPS-9 fixture: archiving needs a verified, recent final backup of the same tenant
+     * (the guard itself is covered by ArchiveTenantRequiresFinalBackupTest).
+     */
+    private function finalBackup(string $tenantId): int
+    {
+        return (int) TenantBackup::query()->create([
+            'tenant_id' => $tenantId,
+            'disk' => 'local',
+            'path' => 'sroor-backups/'.$tenantId.'/'.$tenantId.'-final.zip',
+            'sha256' => str_repeat('a', 64),
+            'size_bytes' => 1,
+            'kind' => TenantBackupKind::Final,
+            'verified_at' => now(),
+        ])->getKey();
     }
 
     private function tenantTokenCount(Tenant $tenant): int

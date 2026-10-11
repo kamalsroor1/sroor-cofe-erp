@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Central;
 
 use App\Actions\Central\Data\CentralSignInResult;
+use App\Actions\Central\Exceptions\CentralAuthException;
 use App\Actions\Central\TwoFactor\TwoFactorChallengeStore;
 use App\DTOs\Central\CentralLoginDTO;
 use App\Enums\CentralAuditEvent;
@@ -21,6 +22,9 @@ use Illuminate\Validation\ValidationException;
  *   (`central_auth.failed`), and an unknown email still pays for one hash check, so the
  *   response does not reveal whether the account exists. Each failure is audited with
  *   recordAttempt() (survives any rollback) and its reason.
+ * - Password accepted but `must_reset_password` set (accounts created by
+ *   central:migrate-super-admins): 403 `central_auth.password_reset_required`, no token and
+ *   no challenge, until ResetCentralPasswordAction clears the flag.
  * - Password accepted, 2FA confirmed (`two_factor_confirmed_at`): NO token. A single-use
  *   challenge id (5 min, only its hash in the central cache) to exchange together with a
  *   TOTP or recovery code at /auth/two-factor-challenge (CompleteTwoFactorChallengeAction).
@@ -60,6 +64,14 @@ final class LoginCentralUserAction
             throw ValidationException::withMessages([
                 'email' => [__('central_auth.failed')],
             ]);
+        }
+
+        // W2-B3 security: an account moved by central:migrate-super-admins still has the legacy
+        // password; nothing (no challenge, no setup token) until the reset flow clears the flag.
+        if ((bool) $user->getAttribute('must_reset_password')) {
+            $this->auditFailure($dto, $user, 'password_reset_required');
+
+            throw CentralAuthException::passwordResetRequired();
         }
 
         if ($user->two_factor_confirmed_at !== null && ! empty($user->two_factor_secret)) {

@@ -60,14 +60,17 @@
 
     <div id="receipt-container" style="background: #ffffff; padding: 4px;">
 
+    {{-- BRND-5: the shop brand comes from TenantBranding only (tenant settings + tenant-disk logo
+         as a data: URI). Never public/logo*.png, which is shared by every tenant. All text is escaped. --}}
+    @inject('tenantBranding', 'App\Services\Branding\TenantBranding')
     @php
-        $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
-        $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
-        $showCompanyName = \App\Models\Setting::getBool('show_print_company_name', true);
-        $showSubtitle = \App\Models\Setting::getBool('show_print_subtitle', true);
-        $showLogo = \App\Models\Setting::getBool('show_print_logo', true);
-        $logoPath = public_path('logo.png');
-        $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : asset('logo.png');
+        $brand = $tenantBranding->get();
+        $companyName = $brand->name;
+        $companySubtitle = $brand->subtitle;
+        $showCompanyName = $brand->showName;
+        $showSubtitle = $brand->showSubtitle;
+        $logoSrc = $brand->showLogo ? $tenantBranding->logoDataUri() : null;
+        $showLogo = $logoSrc !== null;
     @endphp
 
     <!-- Header -->
@@ -81,6 +84,9 @@
         @if($showSubtitle && !empty($companySubtitle))
             <p style="margin: 2px 0; font-size: 11px; font-weight: 800;">{{ $companySubtitle }}</p>
         @endif
+        @foreach($brand->receiptHeaderLines as $headerLine)
+            <p style="margin: 1px 0; font-size: 10px; font-weight: 700;" data-receipt-header-line>{{ $headerLine }}</p>
+        @endforeach
     </div>
 
     <div class="border-t border-b py-1 my-2">
@@ -166,7 +172,8 @@
 
         @php
             $showCustomerBalance = \App\Models\Setting::getBool('thermal_show_customer_balance', true);
-            $footerNote = \App\Models\Setting::get('invoice_footer_note', __('invoices.default_thank_you_note'));
+            // BRND-5: receipt_footer_text, else the legacy invoice_footer_note (TenantBranding).
+            $footerNote = $brand->receiptFooterText;
             $showQr = \App\Models\Setting::getBool('print_show_qr', true);
             $customer = $invoice->customer;
         @endphp
@@ -193,7 +200,7 @@
     @endif
 
     <div class="text-center py-2 border-t" style="margin-top: 6px;">
-        <p style="margin: 0; font-size: 11px; font-weight: 800;">{{ $footerNote ?: __('invoices.default_thank_you_note') }}</p>
+        <p style="margin: 0; font-size: 11px; font-weight: 800;" data-receipt-footer>{{ $footerNote ?: __('invoices.default_thank_you_note') }}</p>
     </div>
 
     </div>

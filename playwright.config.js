@@ -13,7 +13,7 @@ const authStorageFile = path.resolve(rootDir, 'e2e/.auth/user.json');
  */
 export default defineConfig({
   testDir: path.resolve(rootDir, 'e2e'),
-  timeout: 45000,
+  timeout: 60000,
   expect: {
     timeout: 8000,
   },

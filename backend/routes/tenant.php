@@ -20,13 +20,14 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TrashController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\DailyJournalPrintController;
 use App\Http\Controllers\InvoicePrintController;
 use App\Http\Controllers\POSController;
-use App\Models\CashShift;
-use App\Models\Expense;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Models\Item;
+use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\StoreStock;
+use App\Support\PlatformHosts;
 use App\Support\ReportStoreFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,11 +69,8 @@ Route::middleware([
         session()->invalidate();
         session()->regenerateToken();
 
-        $centralDomain = env('CENTRAL_DOMAIN', 'localhost');
-        $port = request()->getPort() ? (':'.request()->getPort()) : '';
-        $scheme = request()->getScheme();
-
-        return redirect()->away("{$scheme}://{$centralDomain}{$port}/admin/super/tenants");
+        // Back to the platform console on its own host (central.admin_domains), config-driven.
+        return redirect()->away(PlatformHosts::consoleUrl());
     })->name('impersonate.leave')->middleware('auth');
 
     // 2. Logout Route
@@ -112,69 +110,158 @@ Route::middleware([
         Route::get('/invoices/{id}/print/a4', [InvoicePrintController::class, 'a4'])->whereNumber('id')->name('invoices.print.a4')->middleware('can:invoices.view');
 
         // Daily Journal A4 Print Route
-        Route::get('/daily-journal/print', function (Request $request) {
-            $date = $request->query('date', now()->toDateString());
-            // Resolved + access-checked on the exact value used below (non-admins can never get "all").
-            $storeFilter = ReportStoreFilter::resolve($request, $request->user());
+        // BUG-01: data built by GetDailyJournalPrintDataAction (cash vouchers of the store only).
+        Route::get('/daily-journal/print', DailyJournalPrintController::class)->name('daily.journal.print')->middleware(['can:daily_journal.view', 'store.access']);
 
-            $storeName = 'كافة الفروع والعربيات';
-            if ($storeFilter) {
-                $st = Store::find($storeFilter);
+        // W2 3F: moved from routes/web.php, which never initialised tenancy (500 on tenant hosts).
+        // The SPA catch-all in routes/web.php excludes these two print paths so they are reachable.
+        // 🖨️ Item Movements Audit Ledger Print
+        Route::get('/items/{id}/movements/print', function ($id, Request $request) {
+            $item = Item::withTrashed()->findOrFail($id);
+            $storeId = ReportStoreFilter::resolve($request, $request->user()); // access-checked on the value used
+            $fromDate = $request->query('from');
+            $toDate = $request->query('to');
+            $filterType = $request->query('type');
+
+            $inTypes = ['purchase_in', 'stock_deposit_in', 'stock_adjustment_in', 'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in'];
+            $outTypes = ['sales_out', 'waste_out', 'stock_adjustment_out', 'transfer_out', 'purchase_cancel_out', 'purchase_return_out'];
+            $adjTypes = ['stock_adjustment_in', 'stock_adjustment_out', 'stock_deposit_in'];
+
+            $storeName = trans('common.all_stores');
+            if ($storeId) {
+                $st = Store::find($storeId);
                 if ($st) {
                     $storeName = $st->name;
                 }
             }
 
-            // Invoices
-            $invoices = Invoice::with(['customer', 'store'])
-                ->whereDate('invoice_date', $date)
-                ->where('status', 'confirmed')
-                ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter))
-                ->latest('id')
-                ->get();
+            $baseQuery = StockMovement::with(['user', 'store'])
+                ->where('item_id', $item->id)
+                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+                ->when($fromDate, fn ($q) => $q->whereDate('created_at', '>=', $fromDate))
+                ->when($toDate, fn ($q) => $q->whereDate('created_at', '<=', $toDate))
+                ->when($filterType === 'in', fn ($q) => $q->whereIn('movement_type', $inTypes))
+                ->when($filterType === 'out', fn ($q) => $q->whereIn('movement_type', $outTypes))
+                ->when($filterType === 'adjustments', fn ($q) => $q->whereIn('movement_type', $adjTypes));
 
-            $invoicesCount = $invoices->count();
-            $totalSales = (string) ($invoices->sum('total_amount') ?: '0.000');
-            $cashSales = (string) ($invoices->where('payment_type', 'cash')->sum('total_amount') ?: '0.000');
-            $creditSales = (string) ($invoices->where('payment_type', 'credit')->sum('total_amount') ?: '0.000');
-            $partialSales = (string) ($invoices->where('payment_type', 'partial')->sum('total_amount') ?: '0.000');
-            $partialPaid = (string) ($invoices->where('payment_type', 'partial')->sum('paid_amount') ?: '0.000');
+            $allMovements = (clone $baseQuery)->get();
+            $totalIn = '0.000';
+            $totalOut = '0.000';
+            foreach ($allMovements as $mov) {
+                if (in_array($mov->movement_type, $inTypes)) {
+                    $totalIn = bcadd($totalIn, (string) $mov->quantity, 3);
+                } elseif (in_array($mov->movement_type, $outTypes)) {
+                    $totalOut = bcadd($totalOut, (string) $mov->quantity, 3);
+                }
+            }
+            $netMovement = bcsub($totalIn, $totalOut, 3);
+            $currentScopeStock = $storeId
+                ? (string) (StoreStock::where('store_id', $storeId)->where('item_id', $item->id)->value('quantity') ?: '0.000')
+                : (string) $item->current_stock;
 
-            $customerPayments = (string) (Payment::whereDate('payment_date', $date)->whereNotNull('customer_id')->sum('amount') ?: '0.000');
-            $totalCashCollected = bcadd((string) bcadd($cashSales, $partialPaid, 3), (string) $customerPayments, 3);
+            $movements = $baseQuery->oldest('created_at')->get();
 
-            $expenses = Expense::with('store')
-                ->whereDate('expense_date', $date)
-                ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter))
-                ->get();
-            $totalExpenses = (string) ($expenses->sum('amount') ?: '0.000');
-
-            $supplierPayments = Payment::with('supplier')
-                ->whereDate('payment_date', $date)
-                ->whereNotNull('supplier_id')
-                ->get();
-            $totalSupplierPaid = (string) ($supplierPayments->sum('amount') ?: '0.000');
-
-            $totalOutflows = bcadd($totalExpenses, $totalSupplierPaid, 3);
-            $netCashToday = bcsub((string) $totalCashCollected, $totalOutflows, 3);
-
-            $shiftsOnDate = CashShift::with(['user', 'store'])
-                ->whereDate('opened_at', $date)
-                ->when($storeFilter, fn ($q) => $q->where('store_id', $storeFilter))
-                ->latest('id')
-                ->get();
-
-            $openingCashBalance = $shiftsOnDate->count() > 0 ? (string) $shiftsOnDate->first()->opening_cash_balance : '0.000';
-            $expectedCashInDrawer = bcadd($openingCashBalance, $netCashToday, 3);
-
-            return view('layouts.print-daily-journal-a4', compact(
-                'date', 'storeName', 'invoices', 'invoicesCount', 'totalSales',
-                'cashSales', 'creditSales', 'partialSales', 'customerPayments',
-                'totalCashCollected', 'expenses', 'totalExpenses', 'supplierPayments',
-                'totalSupplierPaid', 'netCashToday', 'openingCashBalance',
-                'expectedCashInDrawer', 'shiftsOnDate'
+            return view('layouts.print-item-movements-a4', compact(
+                'item', 'storeName', 'fromDate', 'toDate', 'movements',
+                'totalIn', 'totalOut', 'netMovement', 'currentScopeStock'
             ));
-        })->name('daily.journal.print')->middleware(['can:daily_journal.view', 'store.access']);
+        })->name('items.movements.print')->middleware(['can:items.view', 'store.access']);
+
+        // 🖨️ General Reports A4 Print
+        Route::get('/reports/print', function (Request $request) {
+            $tab = $request->query('tab', 'sales');
+            $storeId = ReportStoreFilter::resolve($request, $request->user()); // access-checked on the value used
+            $fromDate = $request->query('from');
+            $toDate = $request->query('to');
+
+            $storeName = trans('common.all_stores');
+            if ($storeId) {
+                $st = Store::find($storeId);
+                if ($st) {
+                    $storeName = $st->name;
+                }
+            }
+
+            $titles = [
+                'sales' => 'تقرير المبيعات والفواتير',
+                'items' => 'تقرير حركة وأرباح الأصناف',
+                'stores' => 'تقرير مقارنة أداء الفروع والمخازن',
+                'customers' => 'تقرير مبيعات ومديونيات العملاء',
+                'expenses' => 'تقرير المصروفات والنفقات التشغيلية',
+                'inventory' => 'تقرير تقييم وجرد المخزون',
+                'treasury' => 'تقرير الخزائن والسيولة وسجل التحويلات المالية',
+            ];
+            $reportTitle = $titles[$tab] ?? 'تقرير عام للنظام';
+
+            $kpis = [
+                ['label' => 'الفترة الزمنية', 'value' => ($fromDate ?: 'البداية').' إلى '.($toDate ?: now()->toDateString())],
+                ['label' => 'النطاق', 'value' => $storeName],
+            ];
+
+            $tableHeaders = [
+                ['title' => 'البيان / الوصف', 'align' => 'text-right'],
+                ['title' => 'التاريخ', 'align' => 'text-center'],
+                ['title' => 'القيمة', 'align' => 'text-center'],
+                ['title' => 'الحالة', 'align' => 'text-center'],
+            ];
+            $tableRows = [];
+
+            if ($tab === 'treasury') {
+                $tableHeaders = [
+                    ['title' => 'الخزينة / الحساب', 'align' => 'text-right'],
+                    ['title' => 'رصيد البداية', 'align' => 'text-center'],
+                    ['title' => 'إجمالي الوارد', 'align' => 'text-center'],
+                    ['title' => 'إجمالي المنصرف', 'align' => 'text-center'],
+                    ['title' => 'الرصيد الحالي', 'align' => 'text-center'],
+                ];
+                $tableRows = [
+                    [
+                        ['value' => 'درج النقدية (كاش)', 'class' => 'font-bold'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
+                    ],
+                    [
+                        ['value' => 'إنستاباي (InstaPay)', 'class' => 'font-bold'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
+                    ],
+                    [
+                        ['value' => 'المحافظ الذكية', 'class' => 'font-bold'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
+                        ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
+                    ],
+                ];
+            }
+
+            return view('layouts.print-report-a4', compact(
+                'reportTitle', 'storeName', 'fromDate', 'toDate', 'kpis', 'tableHeaders', 'tableRows'
+            ));
+        })->name('reports.print')->middleware(['can:reports.view', 'store.access']);
+
+        // Session store switch (moved from routes/web.php, W2 3F): only to an active store the user may access.
+        Route::post('/store/switch', function (Request $request) {
+            $raw = $request->input('store_id');
+            $storeId = (is_int($raw) || (is_string($raw) && ctype_digit($raw))) ? (int) $raw : 0;
+            $user = $request->user();
+
+            $allowed = $storeId > 0
+                && Store::whereKey($storeId)->where('is_active', true)->exists()
+                && ($user->hasRole('admin')
+                    || (int) $user->default_store_id === $storeId
+                    || $user->stores()->where('stores.id', $storeId)->exists());
+
+            abort_unless($allowed, 403, __('common.store_access_denied'));
+
+            session(['current_store_id' => $storeId]);
+
+            return response()->json(['success' => true, 'store_id' => $storeId]);
+        })->name('store.switch');
 
         // Items & Inventory Movements
         Route::get('/items', [ItemController::class, 'index'])->name('items.index')->middleware('can:items.view');

@@ -191,15 +191,16 @@
         <!-- Header -->
         <div class="header">
             <div style="display: flex; align-items: center; gap: 14px;">
+                {{-- BRND-5: shop brand from TenantBranding (tenant-disk logo as data: URI, never public/logo*.png). --}}
+                @inject('tenantBranding', 'App\Services\Branding\TenantBranding')
                 @php
-                    $showLogo = \App\Models\Setting::getBool('show_print_logo', true);
-                    $logoPath = public_path('logo.png');
-                    $logoSrc = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : asset('logo.png');
-                    $companyName = \App\Models\Setting::get('company_name', config('app.name', 'منظومة ERP'));
-                    $companySubtitle = \App\Models\Setting::get('company_subtitle', '');
+                    $brand = $tenantBranding->get();
+                    $logoSrc = $brand->showLogo ? $tenantBranding->logoDataUri() : null;
+                    $companyName = $brand->name;
+                    $companySubtitle = $brand->subtitle;
                 @endphp
-                @if($showLogo)
-                    <img src="{{ $logoSrc }}" alt="Logo" style="max-height: 65px; max-width: 120px; object-fit: contain;">
+                @if($logoSrc !== null)
+                    <img src="{{ $logoSrc }}" alt="{{ $companyName }}" style="max-height: 65px; max-width: 120px; object-fit: contain;">
                 @endif
                 <div>
                     <h1 class="brand-title">{{ $companyName }}</h1>
@@ -386,7 +387,7 @@
                         @else {{ __('invoices.partial') }}
                         @endif
                     </td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$inv->total_amount, 2) }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$inv->net_total, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$inv->paid_amount, 2) }}</td>
                     <td style="font-family: monospace;">{{ number_format((float)$inv->remaining_amount, 2) }}</td>
                     <td>{{ $inv->store?->name ?? __('common.main_store_default') }}</td>
@@ -395,7 +396,7 @@
                 <tr class="table-total">
                     <td colspan="4" style="text-align: left; font-weight: 900;">{{ __('common.total') }}:</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalSales, 2) }}</td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$cashSales, 2) }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalPaid, 2) }}</td>
                     <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$creditSales, 2) }}</td>
                     <td>-</td>
                 </tr>

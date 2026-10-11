@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Supplier;
 use App\Services\PaymentService;
+use App\Support\ActiveStore;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ final class PaymentController extends Controller
     /**
      * List payment vouchers with filters and financial summary
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ActiveStore $activeStore): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('customers.manage') && ! $user->can('suppliers.manage')) {
@@ -38,7 +39,13 @@ final class PaymentController extends Controller
         $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
-        $query = Payment::query()->with(['customer:id,name,phone', 'supplier:id,name,phone', 'user:id,name']);
+        // STOR-2: the active store (X-Store-Id); a query store_id is an access-checked branch
+        // filter (403). Null (every store) only through a verified `all`. A voucher belongs to
+        // payments.store_id, legacy rows without it to their invoice / purchase store.
+        $storeId = $activeStore->readFilter($request);
+
+        $query = Payment::query()->with(['customer:id,name,phone', 'supplier:id,name,phone', 'user:id,name'])
+            ->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId));
 
         if ($type === 'customer') {
             $query->whereNotNull('customer_id');
@@ -62,8 +69,8 @@ final class PaymentController extends Controller
 
         $payments = $query->latest('id')->paginate($perPage);
 
-        $totalCollections = (string) (Payment::whereNotNull('customer_id')->sum('amount') ?: '0.000');
-        $totalDisbursements = (string) (Payment::whereNotNull('supplier_id')->sum('amount') ?: '0.000');
+        $totalCollections = (string) (Payment::whereNotNull('customer_id')->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
+        $totalDisbursements = (string) (Payment::whereNotNull('supplier_id')->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
 
         return response()->json([
             'success' => true,

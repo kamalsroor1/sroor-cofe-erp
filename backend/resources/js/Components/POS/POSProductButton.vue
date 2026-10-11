@@ -2,6 +2,7 @@
   <button
     @click="$emit('add-item', item)"
     type="button"
+    data-testid="pos-product-tile"
     class="relative flex flex-col justify-between p-2.5 rounded-xl border-s-[3px] border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/70 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer select-none group min-h-[96px] w-full text-start"
     :style="{ borderInlineStartColor: categoryColor }"
   >

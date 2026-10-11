@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -100,6 +101,33 @@ final class ClientStoreGuard
         }
 
         return null;
+    }
+
+    /**
+     * concrete(), falling back to the user's own store (ActiveStore::defaultFor: default store,
+     * then first assigned store, then the main store for all-store users), never to a hardcoded
+     * id such as 1. A user without any usable store gets the translated 403 instead of data
+     * from a branch they may not see (or, worse, unfiltered totals of every branch).
+     */
+    public static function concreteOrDefault(Request $request, bool $preferClient = false): int
+    {
+        $storeId = self::concrete($request, $preferClient);
+
+        if ($storeId !== null) {
+            return $storeId;
+        }
+
+        $user = $request->user();
+        if (! $user instanceof User) {
+            throw new HttpResponseException(response()->json([
+                'success' => false,
+                'message' => __('auth.unauthorized'),
+            ], 401));
+        }
+
+        $store = ActiveStore::defaultFor($user);
+
+        return $store instanceof Store ? $store->id : self::deny();
     }
 
     private static function notAStore(): never

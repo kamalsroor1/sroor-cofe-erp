@@ -13,7 +13,29 @@ function pickName(value) {
     return typeof value === 'string' && value.trim() !== '' ? value : '';
 }
 
-function createDrawerKicker({ listPrinters, getConfiguredPrinter, sendRaw, printDriverPulse, kickOptions }) {
+const DRAWER_PINS = Object.freeze([2, 5]);
+const DEFAULT_DRAWER_PIN = 2;
+
+/** Saved per-device pin; anything but exactly 2 or 5 falls back to pin 2. */
+function normalizeDrawerPin(value) {
+    return DRAWER_PINS.includes(value) ? value : DEFAULT_DRAWER_PIN;
+}
+
+// getKickOptions() is read on every kick, so a pin changed in the settings applies immediately.
+function createDrawerKicker({
+    listPrinters,
+    getConfiguredPrinter,
+    sendRaw,
+    printDriverPulse,
+    kickOptions,
+    getKickOptions,
+}) {
+    function currentKickOptions() {
+        const options = typeof getKickOptions === 'function' ? getKickOptions() : kickOptions;
+        const base = options && typeof options === 'object' ? options : {};
+        return { ...base, pin: normalizeDrawerPin(base.pin) };
+    }
+
     async function kick(requestedPrinter) {
         try {
             const wanted = pickName(requestedPrinter) || pickName(getConfiguredPrinter());
@@ -24,7 +46,7 @@ function createDrawerKicker({ listPrinters, getConfiguredPrinter, sendRaw, print
 
             // The system default has no name we can open raw; only the driver path can reach it.
             if (target.printerName !== '') {
-                const raw = await sendRaw(target.printerName, buildDrawerKick(kickOptions));
+                const raw = await sendRaw(target.printerName, buildDrawerKick(currentKickOptions()));
                 if (raw && raw.success) {
                     return { success: true, method: 'escpos', printerName: target.printerName };
                 }
@@ -43,4 +65,4 @@ function createDrawerKicker({ listPrinters, getConfiguredPrinter, sendRaw, print
     return { kick };
 }
 
-module.exports = { createDrawerKicker };
+module.exports = { createDrawerKicker, normalizeDrawerPin, DRAWER_PINS, DEFAULT_DRAWER_PIN };

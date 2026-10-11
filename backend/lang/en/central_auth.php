@@ -22,6 +22,8 @@ return [
     'password_reset_link_sent' => 'If this email belongs to a platform account, a password reset link has been sent to it.',
     'password_reset_invalid' => 'This password reset link is invalid or has expired.',
     'password_reset_success' => 'Your password has been reset. Sign in again on every device.',
+    // W2-B3 security: accounts moved by central:migrate-super-admins must set a new password first.
+    'password_reset_required' => 'You must reset your password before signing in. Use "Forgot password" to set a new one.',
     'password_reset_mail' => [
         'subject' => 'Reset your platform console password',
         'greeting' => 'Hello :name,',

@@ -47,6 +47,8 @@
       :show="isCreateModalOpen"
       :form="form"
       :is-submitting="isSubmitting"
+      :errors="formErrors"
+      :general-error="formGeneralError"
       @update:field="updateFormField"
       @file-change="handleFileUpload"
       @submit="submitCreateVersion"
@@ -70,6 +72,8 @@ const {
   isCreateModalOpen,
   isSubmitting,
   form,
+  formErrors,
+  formGeneralError,
   fetchVersions,
   openCreateModal,
   updateFormField,

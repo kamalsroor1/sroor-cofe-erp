@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 /**
  * GET /telescope-access?n=…&expires=…&signature=… (behind the `signed` middleware).
- * Redeems a single-use link from IssueTelescopeLinkAction and opens a web session.
+ * Redeems a single-use link from IssueTelescopeLinkAction and opens a `central_web` session.
  */
 final class TelescopeAccessController extends Controller
 {
@@ -31,7 +31,10 @@ final class TelescopeAccessController extends Controller
             abort(403, __('auth.telescope_forbidden'));
         }
 
-        auth('web')->login($user);
+        // The operator's own session guard (IDEN-1.1), never the tenant-side `web` guard.
+        // IDEN-1.7 still has to point Telescope::auth / its middleware at `central_web`: until
+        // then /telescope stays fail-closed (viewTelescope sees no `web` user) outside local.
+        auth('central_web')->login($user);
         $request->session()->regenerate();
 
         return redirect('/telescope');

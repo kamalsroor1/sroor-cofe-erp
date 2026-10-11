@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use App\Models\Store;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -81,6 +82,38 @@ abstract class TenantTestCase extends BaseTestCase
                 tenancy()->initialize($previous);
             }
         }
+    }
+
+    /**
+     * QA-4 helper for migrated suites: keep $tenant initialized for the rest of the test
+     * (fixtures and DB assertions then hit the tenant database) and send `X-Tenant` with
+     * every request, so Bearer tokens minted inside the tenant resolve there. Requests
+     * still resolve their own tenant: call() ends tenancy around each one and restores
+     * it afterwards. createTenant() ends tenancy, so call this again after creating
+     * another tenant.
+     */
+    protected function useTenantForTest(Tenant $tenant): void
+    {
+        tenancy()->initialize($tenant);
+        $this->withHeaders(['X-Tenant' => (string) $tenant->getTenantKey()]);
+    }
+
+    /**
+     * The harness main store of the CURRENT tenant, updated with a test's own fixture
+     * attributes (name, code…) instead of creating a second `is_main` store.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function adoptMainStore(array $attributes = []): Store
+    {
+        if (! tenancy()->initialized) {
+            throw new \RuntimeException('adoptMainStore() needs an initialized tenant (useTenantForTest()).');
+        }
+
+        $store = Store::query()->where('is_main', true)->orderBy('id')->firstOrFail();
+        $store->update(array_merge($attributes, ['is_main' => true]));
+
+        return $store->refresh();
     }
 
     private function resetPerRequestState(string $uri): void

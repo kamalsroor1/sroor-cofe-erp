@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\AppReleases\ReleaseFileLocator;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $apk_filename
  * @property int $apk_size_bytes
  * @property string|null $apk_checksum
+ * @property string|null $binary_mime
+ * @property bool $apk_signing_block
+ * @property bool $authenticode_present
  * @property int $download_count
  * @property bool $is_active
  * @property Carbon|null $published_at
@@ -34,11 +37,14 @@ class AppVersion extends Model
 
     protected $table = 'app_versions';
 
-    /** Disk the super-admin uploads release binaries to (always from central context). */
-    public const RELEASE_DISK = 'public';
+    /**
+     * Private central disk holding release binaries (config/filesystems.php). Not web-served,
+     * not re-rooted by tenancy: the same file is read from every tenant host.
+     */
+    public const RELEASE_DISK = 'app_releases_private';
 
-    /** Central alias of RELEASE_DISK's root that tenancy never re-roots (config/filesystems.php). */
-    public const CENTRAL_RELEASE_DISK = 'app_releases';
+    /** Legacy read-only alias of the old public root, until app-releases:relocate ran. */
+    public const LEGACY_RELEASE_DISK = 'app_releases';
 
     public function getConnectionName()
     {
@@ -57,6 +63,9 @@ class AppVersion extends Model
         'apk_filename',
         'apk_size_bytes',
         'apk_checksum',
+        'binary_mime',
+        'apk_signing_block',
+        'authenticode_present',
         'download_count',
         'is_active',
         'published_at',
@@ -67,6 +76,8 @@ class AppVersion extends Model
         'min_version_code' => 'integer',
         'is_force_update' => 'boolean',
         'apk_size_bytes' => 'integer',
+        'apk_signing_block' => 'boolean',
+        'authenticode_present' => 'boolean',
         'download_count' => 'integer',
         'is_active' => 'boolean',
         'published_at' => 'datetime',
@@ -89,6 +100,19 @@ class AppVersion extends Model
     }
 
     /**
+     * Releases that may be offered to an installed app: active, with a stored binary, a
+     * size and a SHA-256 checksum. Whether the file is still on disk is checked by
+     * ReleaseFileLocator. A release without a checksum is never advertised (APP-3, W1 Q7).
+     */
+    public function scopeAdvertisable(Builder $query): Builder
+    {
+        return $query->where('is_active', true)
+            ->whereNotNull('apk_path')
+            ->whereNotNull('apk_checksum')
+            ->where('apk_size_bytes', '>', 0);
+    }
+
+    /**
      * Formatted file size accessor (e.g. 18.5 MB)
      */
     public function getFormattedSizeAttribute(): string
@@ -103,24 +127,30 @@ class AppVersion extends Model
         return $bytes.' B';
     }
 
-    /**
-     * Disk to read release binaries from. Releases are central (one row and one file
-     * for every tenant), but on a tenant host stancl's FilesystemTenancyBootstrapper
-     * re-roots 'public' to storage/tenant<id>/app/public, so the binary is read through
-     * the central alias there.
-     */
-    public static function releaseDisk(): Filesystem
+    /** True when apk_checksum is a lowercase 64-hex SHA-256. */
+    public function hasValidChecksum(): bool
     {
-        $tenancyInitialized = function_exists('tenancy') && tenancy()->initialized;
-
-        return Storage::disk($tenancyInitialized ? self::CENTRAL_RELEASE_DISK : self::RELEASE_DISK);
+        return is_string($this->apk_checksum) && preg_match('/^[a-f0-9]{64}$/', $this->apk_checksum) === 1;
     }
 
     /**
-     * Full download URL
+     * Disk holding release binaries for writes and deletes (always the private disk).
+     * Reads go through ReleaseFileLocator (private first, legacy public fallback).
+     */
+    public static function releaseDisk(): Filesystem
+    {
+        return ReleaseFileLocator::privateDisk();
+    }
+
+    /**
+     * Version-specific download URL on the requesting host (a tenant host serves the
+     * central release too).
      */
     public function getDownloadUrlAttribute(): string
     {
-        return url('/api/v1/app/download-latest-apk?platform='.$this->platform);
+        return url('/api/v1/app/download-apk').'?'.http_build_query([
+            'platform' => $this->platform,
+            'version_code' => $this->version_code,
+        ]);
     }
 }

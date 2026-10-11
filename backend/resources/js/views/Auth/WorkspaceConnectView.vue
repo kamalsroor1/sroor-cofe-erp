@@ -39,6 +39,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../../Services/api';
 import { trans } from '../../helpers/trans';
+import { isCentralHost, isLoopbackHost } from '../../helpers/platformHosts';
 import WorkspaceStepInput from '../../Components/Auth/WorkspaceStepInput.vue';
 import WorkspaceConnectingState from '../../Components/Auth/WorkspaceConnectingState.vue';
 
@@ -85,7 +86,8 @@ const resolveWorkspace = async (targetCode) => {
 
       // 3. Navigation: On mobile apps / Capacitor, NEVER use external window.location.href
       const host = window.location.hostname;
-      const isCentralHost = host === 'baraa-solutions.com' || host === 'www.baraa-solutions.com';
+      // Server-configured central hub (not a loopback dev host): hand over to the tenant's own host.
+      const isPublicCentralHost = isCentralHost(host) && !isLoopbackHost(host);
       const isNativeMobile =
         window.Capacitor !== undefined ||
         window.isNativeMobile === true ||
@@ -93,7 +95,7 @@ const resolveWorkspace = async (targetCode) => {
         navigator.userAgent.includes('Mobile');
 
       setTimeout(() => {
-        if (!isNativeMobile && isCentralHost && data.domain && !host.startsWith(data.domain)) {
+        if (!isNativeMobile && isPublicCentralHost && data.domain && !host.startsWith(data.domain)) {
           window.location.href = `${data.server_url}/login`;
         } else {
           router.push({ name: 'login' });

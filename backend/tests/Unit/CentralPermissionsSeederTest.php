@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use App\Enums\CentralPermission;
 use Database\Seeders\CentralPermissionsSeeder;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Spatie\Permission\Models\Permission;
@@ -100,6 +101,8 @@ final class CentralPermissionsSeederTest extends TenantTestCase
 
     public function test_prunes_central_guard_permissions_that_are_not_central_abilities(): void
     {
+        // The tenant-guard matrix (seeded by PermissionsSeeder, no longer by this seeder).
+        $this->seed(PermissionsSeeder::class);
         $this->seed(CentralPermissionsSeeder::class);
 
         $planted = Permission::create(['name' => 'customers.manage', 'guard_name' => CentralPermission::GUARD]);
@@ -114,15 +117,16 @@ final class CentralPermissionsSeederTest extends TenantTestCase
         $this->assertTrue(Permission::query()->where('guard_name', 'web')->where('name', 'customers.manage')->exists());
     }
 
-    /** Legacy expectations: removed with the legacy branch in IDEN-1.4 (W2-B3). */
-    public function test_keeps_the_legacy_web_guard_super_admin_role_until_iden_1_4(): void
+    /** W2-B3 (IDEN-1.4 follow-up): the Phase 0 `web` super_admin role and `super_admin.access` are no longer seeded. */
+    public function test_no_longer_seeds_the_legacy_web_guard_super_admin_role(): void
     {
         $this->seed(CentralPermissionsSeeder::class);
 
-        $legacy = Role::findByName('super_admin', 'web');
+        $central = DB::connection($this->centralConnectionName());
 
-        $this->assertTrue($legacy->hasPermissionTo('super_admin.access'));
-        $this->assertSame(0, $legacy->permissions()->where('guard_name', '!=', 'web')->count());
+        $this->assertFalse($central->table('roles')->where('name', 'super_admin')->where('guard_name', 'web')->exists());
+        $this->assertFalse($central->table('permissions')->where('name', 'super_admin.access')->exists());
+        $this->assertSame(0, $central->table('permissions')->where('guard_name', 'web')->count());
     }
 
     public function test_refuses_to_run_inside_a_tenant(): void

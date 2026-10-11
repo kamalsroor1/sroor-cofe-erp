@@ -3,8 +3,10 @@ import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useUnits } from './useUnits';
 
 export function useCreateReturn() {
+    const { unitLabel } = useUnits();
     const { t } = useTrans();
     const router = useRouter();
 
@@ -89,7 +91,7 @@ export function useCreateReturn() {
         form.items.push({
             item_id: it.id,
             name: it.name,
-            unit: it.unit || 'كجم',
+            unit: unitLabel(it.unit),
             quantity: 1,
             unit_price: unitPrice,
         });
