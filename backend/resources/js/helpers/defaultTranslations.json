@@ -296,7 +296,11 @@
             "biometric_prompt_login_subtitle": "امسح بصمتك للمتابعة",
             "biometric_prompt_cancel": "إلغاء",
             "biometric_enabled_success": "تم تفعيل الدخول بالبصمة على هذا الجهاز",
-            "biometric_disabled": "تم إيقاف الدخول بالبصمة ومسح بياناته من هذا الجهاز"
+            "biometric_disabled": "تم إيقاف الدخول بالبصمة ومسح بياناته من هذا الجهاز",
+            "cannot_assign_admin_role": "صلاحية مدير النظام لا يمنحها إلا مدير النظام.",
+            "cannot_modify_admin_account": "تغيير صلاحية أو كلمة مرور أو حالة حساب مدير النظام أو حذفه متاح لمدير النظام فقط.",
+            "cannot_change_own_role": "لا يمكنك تغيير صلاحية حسابك بنفسك.",
+            "cannot_modify_admin_identity": "تعديل اسم أو رقم هاتف أو بريد حساب مدير النظام متاح لمدير النظام فقط."
         },
         "billing": {
             "subscription_status": {
@@ -620,7 +624,25 @@
             "filter_search": "بحث وتصفية",
             "save_changes": "حفظ التعديلات",
             "saving": "جارٍ الحفظ...",
-            "server_error": "حدث خطأ في الخادم، حاول مرة أخرى"
+            "server_error": "حدث خطأ في الخادم، حاول مرة أخرى",
+            "by": "بواسطة",
+            "splash": {
+                "subtitle": "نظام الفواتير والمخزون ونقاط البيع السريعة"
+            },
+            "confirm_dialog": {
+                "title": "هل أنت متأكد؟",
+                "text": "لن تتمكن من التراجع عن هذه العملية!",
+                "confirm": "نعم، تابع التنفيذ",
+                "cancel": "إلغاء الأمر",
+                "this_item": "هذا العنصر",
+                "delete_title": "تأكيد حذف :name",
+                "delete_text": "هل أنت متأكد من الحذف؟ سيتم نقل العنصر إلى سلة المحذوفات أو حذفه نهائياً.",
+                "delete_confirm": "نعم، احذف الآن",
+                "delete_cancel": "تراجع"
+            },
+            "operation_failed": "تعذّر إتمام العملية. حاول مرة أخرى أو تواصل مع الدعم الفني.",
+            "record_not_found": "السجل المطلوب غير موجود.",
+            "trash_invalid_type": "نوع السجل ده مينفعش يتسترجع أو يتحذف من سلة المحذوفات."
         },
         "connectivity": {
             "offline_title": "لا يوجد اتصال بالإنترنت",
@@ -1008,7 +1030,24 @@
             "pay_to": "سداد للمورد",
             "payment_notes_placeholder": "ملاحظات اختيارية (مثال: رقم الإيصال أو التحويل)",
             "save_customer": "حفظ العميل",
-            "save_supplier": "حفظ المورد"
+            "save_supplier": "حفظ المورد",
+            "receipt_recorded_success": "تم تسجيل سند القبض وتحصيل مبلغ :amount :currency بنجاح",
+            "receipt_record_failed": "فشل تسجيل سند القبض: :error",
+            "disbursement_recorded_success": "تم تسجيل سند الصرف وسداد مبلغ :amount :currency للمورد بنجاح",
+            "disbursement_record_failed": "فشل تسجيل سند الصرف: :error",
+            "default_receipt_note": "سند قبض نقدي من العميل",
+            "default_disbursement_note": "سند صرف نقدي للمورد",
+            "statement_debit_col": "مدين",
+            "statement_credit_col": "دائن",
+            "statement_balance_col": "الرصيد",
+            "collect_cash_payment": "تحصيل نقدية",
+            "cash_receipt_voucher": "سند قبض نقدي",
+            "disburse_cash_payment": "صرف نقدية",
+            "cash_disbursement_voucher": "سند صرف نقدي",
+            "receipt_record_failed_generic": "تعذّر تسجيل سند القبض. حاول مرة أخرى.",
+            "disbursement_record_failed_generic": "تعذّر تسجيل سند الصرف. حاول مرة أخرى.",
+            "payment_invoice_customer_mismatch": "الفاتورة دي مش تبع العميل المختار.",
+            "payment_purchase_supplier_mismatch": "فاتورة الشراء دي مش تبع المورد المختار."
         },
         "customers": {
             "retail": "عميل قطاعي",
@@ -1133,7 +1172,28 @@
             "menu_hub_subtitle": "الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة",
             "search_screens_placeholder": "🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...",
             "no_screens_found": "لم يتم العثور على أي شاشة مطابقة لبحثك",
-            "company_title": "مؤسستي"
+            "company_title": "مؤسستي",
+            "modules_sales": "المبيعات و POS",
+            "modules_inventory": "الأصناف والمخزون",
+            "modules_shifts": "الخزينة والورديات",
+            "modules_purchases": "المشتريات والتوريد",
+            "modules_expenses": "المصروفات",
+            "modules_contacts": "العملاء والموردين",
+            "modules_auth": "الأمان والدخول",
+            "modules_settings": "إدارة النظام والإعدادات",
+            "modules_transfers": "التحويلات المخزنية",
+            "modules_blends": "تجميع وتوليف الأصناف",
+            "system_alerts": {
+                "low_stock_title": "نواقص بالمخزن (:count صنف)",
+                "low_stock_desc": "أصناف بلغت أو تجاوزت حد الطلب الأدنى",
+                "low_stock_link": "إعادة الطلب الذكي",
+                "debts_title": "مديونيات عملاء (:count عميل)",
+                "debts_desc": "يوجد عملاء مستحق عليهم مبالغ آجلة بحاجة للتحصيل",
+                "debts_link": "قائمة العملاء المدينين",
+                "high_cash_title": "سيولة نقدية عالية بالدرج",
+                "high_cash_desc": "يوجد حالياً :amount :currency نقداً بالدرج. يُنصح بتوريد الفائض.",
+                "high_cash_link": "دفتر اليومية والخزينة"
+            }
         },
         "desktop_hardware": {
             "drawer_pin_label": "طرف توصيل درج الكاش (Pin)",
@@ -1247,7 +1307,19 @@
             "icon_zap": "سريع",
             "icon_gift": "هدية",
             "icon_bookmark": "إشارة مرجعية",
-            "icon_archive": "أرشيف"
+            "icon_archive": "أرشيف",
+            "general_expenses": "مصروفات عامة",
+            "operational_expense": "مصروف تشغيلي",
+            "daily_category": "مصاريف يومية",
+            "quick_categories": {
+                "bags": "شنط وأكياس",
+                "cups": "أكواب ورقية وبلاستيكية",
+                "tape": "لاصق وشرائط تغليف",
+                "hospitality": "بوفيه وضيافة",
+                "equipment_maintenance": "صيانة مطاحن ومعدات",
+                "rent_utilities": "إيجار وكهرباء ومرافق",
+                "petty_operations": "نثريات ومصاريف تشغيل"
+            }
         },
         "inventory": {
             "title": "إدارة المخزون وبطاقات الأصناف",
@@ -1612,7 +1684,16 @@
             "quantity": "الكمية",
             "view_transfer_details": "عرض تفاصيل التحويل",
             "unit_not_in_tenant_list": "الوحدة «:unit» مش موجودة في قائمة وحدات القياس بتاعة المحل. اختار وحدة من القائمة أو ضيفها من الإعدادات.",
-            "switched_to_store": "تم التبديل إلى فرع: :store"
+            "switched_to_store": "تم التبديل إلى فرع: :store",
+            "item_status_updated": "تم تحديث حالة الصنف بنجاح",
+            "store_status_updated": "تم تحديث حالة الفرع (:name) بنجاح",
+            "store_users_updated": "تم تحديث تعيينات الموظفين لفرع (:name) بنجاح",
+            "store_deleted": "تم حذف الفرع (:name) بنجاح",
+            "transfer_executed_numbered": "تم تنفيذ إذن التحويل المخزني رقم :number ونقل البضاعة بنجاح",
+            "transfer_cancelled_numbered": "تم إلغاء إذن التحويل رقم :number وعكس حركة الأصناف للفرع المصدر بنجاح",
+            "transfer_cancel_reason_default": "إلغاء من النظام",
+            "delete_category_confirm_text": "سيتم حذف الفئة \":name\" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.",
+            "store_delete_blockers": "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers"
         },
         "invoices": {
             "title": "فواتير المبيعات",
@@ -1833,7 +1914,26 @@
             "idempotency_key_conflict": "رقم العملية ده اتستخدم قبل كده مع فاتورة أو عميل أو فرع مختلف",
             "payment_ewallet": "محفظة إلكترونية",
             "total_net": "الصافي",
-            "invoice_with_number": "فاتورة #:number"
+            "invoice_with_number": "فاتورة #:number",
+            "bulk_cancel_reason": "إلغاء مجمع من لوحة المبيعات",
+            "stamp_placeholder": "ختم",
+            "image_filename_a4": "فاتورة-مبيعات-:number.png",
+            "image_filename_thermal": "إيصال-:number.png",
+            "csv_columns": {
+                "number": "رقم الفاتورة",
+                "customer": "العميل",
+                "phone": "الهاتف",
+                "date": "التاريخ",
+                "payment_method": "طريقة الدفع",
+                "net": "الصافي",
+                "paid": "المدفوع",
+                "remaining": "المتبقي",
+                "status": "الحالة"
+            },
+            "share": {
+                "copy_text": "🧾 فاتورة رقم: #:number\n🏢 المؤسسة: :company\n👤 العميل: :customer\n📅 التاريخ: :date\n💰 الصافي المطلوب: :net :currency\n💵 المدفوع: :paid :currency\n📝 المتبقي: :remaining :currency",
+                "whatsapp_text": "مرحباً بك :customer،\nمرفق تفاصيل فاتورتك رقم #:number من :company:\nالإجمالي الصافي: :net :currency\nالمدفوع: :paid :currency\nالمتبقي: :remaining :currency\nشكراً لتعاملكم معنا!"
+            }
         },
         "items": {
             "unit_not_in_list": ":unit (غير موجودة في قائمة الوحدات)",
@@ -1916,7 +2016,79 @@
             "telegram_backup_sent": "تم إرسال النسخة الاحتياطية لقاعدة البيانات إلى تيليجرام بنجاح",
             "cache_cleared_success": "تم تنظيف وتسريع وإعادة بناء الكاش بنجاح",
             "cache_clear_error": "حدث خطأ أثناء تنظيف الكاش: :message",
-            "coming_soon": "قريباً"
+            "coming_soon": "قريباً",
+            "layout": {
+                "menu": "القائمة",
+                "mobile_bottom_nav": "شريط التنقل السفلي",
+                "expand_menu": "توسيع القائمة (Ctrl+B)",
+                "collapse_menu": "تصغير القائمة (Ctrl+B)",
+                "quick_pos": "+ نقطة البيع السريعة (POS)",
+                "quick_pos_hint": "+ نقطة البيع السريعة (POS) - F2",
+                "modules_heading": "أقسام وموديولات المنظومة",
+                "links_count": ":count روابط",
+                "shift_number": "الوردية (#:number)",
+                "shift_open_badge": "مفتوحة",
+                "open_shift_cta": "فتح ←",
+                "version": "الإصدار",
+                "update": "تحديث",
+                "version_click_to_check": "v:version (انقر للفحص)",
+                "current_version": "الإصدار الحالي:",
+                "check_updates": "فحص التحديثات",
+                "profile_security": "الملف الشخصي والأمان",
+                "users_permissions": "إدارة المستخدمين والصلاحيات",
+                "roles_matrix": "مصفوفة الصلاحيات والأدوار",
+                "activity_audit": "سجل العمليات والرقابة",
+                "light_mode": "الوضع النهاري",
+                "dark_mode": "الوضع الليلي",
+                "notifications": "الإشعارات والتنبيهات",
+                "notifications_count": ":count تنبيهات",
+                "view_all_activity": "عرض كافة سجلات النشاط والرقابة ←",
+                "journal_open": "يومية مفتوحة",
+                "journal_open_cta_hint": "اضغط لفتح يومية جديدة",
+                "journal_number": "• يومية (#:number)",
+                "open_journal": "• فتح يومية",
+                "back_to_sections": "العودة لجميع الأقسام",
+                "logout_confirm_title": "تسجيل الخروج؟",
+                "logout_confirm_text": "هل أنت متأكد من رغبتك في تسجيل الخروج وإنهاء الجلسة؟",
+                "logout_confirm_btn": "نعم، تسجيل الخروج"
+            },
+            "page_titles": {
+                "default_app_name": "منظومة ERP",
+                "untitled_screen": "شاشة",
+                "workspace_connect": "الاتصال ببيئة العمل",
+                "login": "تسجيل الدخول",
+                "dashboard": "لوحة التحكم الرئيسية",
+                "stores_index": "إدارة الفروع والمخازن",
+                "stores_stocks": "أرصدة الفروع والمخازن",
+                "customers_index": "العملاء وكشوف الحساب",
+                "customers_statement": "كشف حساب عميل",
+                "suppliers_index": "الموردين وكشوف الحساب",
+                "suppliers_statement": "كشف حساب مورد",
+                "expenses_index": "المصروفات والعهد",
+                "items_index": "الأصناف والمخزون",
+                "categories_index": "فئات الأصناف",
+                "items_movements": "حركات مخزون الصنف",
+                "daily_journal_index": "دفتر اليومية والخزينة",
+                "purchases_index": "المشتريات والتوريد",
+                "purchases_create": "فاتورة مشتريات جديدة",
+                "purchases_smart_reorder": "رادار إعادة الطلب الذكي",
+                "invoices_index": "فواتير المبيعات",
+                "invoices_show": "معاينة الفاتورة والطباعة",
+                "invoices_print": "طباعة الفاتورة",
+                "pos_index": "نقطة البيع السريعة (POS)",
+                "returns_index": "مرتجعات المبيعات والمشتريات",
+                "returns_create": "تسجيل مرتجع جديد",
+                "stock_transfers_index": "التحويلات المخزنية",
+                "stock_transfers_create": "إذن تحويل مخزني جديد",
+                "coffee_blender_index": "معمل تركيب وتجميع المنتجات",
+                "reports_index": "التقارير المالية والأرباح",
+                "users_index": "إدارة المستخدمين والموظفين",
+                "roles_index": "مصفوفة الصلاحيات والأدوار",
+                "activity_logs_index": "سجل التدقيق الأمني والنشاطات",
+                "settings_index": "إعدادات النظام والمؤسسة",
+                "profile_show": "الملف الشخصي والحساب",
+                "trash_index": "سلة المحذوفات"
+            }
         },
         "pagination": {
             "previous": "&laquo; السابق",
@@ -2425,7 +2597,17 @@
             "quick_keys_saved": "تم حفظ الأصناف السريعة للفرع",
             "quick_keys_duplicate_position": "الخانة :position في الصفحة :page مستخدمة لأكثر من مفتاح",
             "quick_keys_item_unavailable": "الصنف غير موجود أو غير نشط",
-            "quick_keys_category_unavailable": "الفئة غير موجودة أو غير نشطة"
+            "quick_keys_category_unavailable": "الفئة غير موجودة أو غير نشطة",
+            "customer_registered_success": "تم تسجيل العميل بنجاح",
+            "one_kilo_short": "1ك",
+            "thermal": {
+                "invoice_number": "فاتورة مبيعات رقم: #:number",
+                "col_item": "الصنف",
+                "col_qty": "الكمية",
+                "col_total": "الإجمالي",
+                "net_total": "الصافي النهائي:",
+                "thank_you": "شكراً لزيارتكم!"
+            }
         },
         "profile": {
             "title": "الملف الشخصي وإعدادات الحساب",
@@ -2645,7 +2827,9 @@
             "final_net_total": "صافي الفاتورة",
             "remaining_debt": "المتبقي للمورد (آجل)",
             "wac_tooltip": "متوسط التكلفة المرجح (Weighted Average Cost - WAC)",
-            "landed_cost_tooltip": "التكلفة المحملة تشمل سعر الشراء مضافاً إليه الشحن والجمارك ومصاريف التوريد"
+            "landed_cost_tooltip": "التكلفة المحملة تشمل سعر الشراء مضافاً إليه الشحن والجمارك ومصاريف التوريد",
+            "status_confirmed": "معتمدة",
+            "cancel_purchase": "إلغاء فاتورة شراء"
         },
         "reports": {
             "title": "التقارير الشاملة والإحصائيات",
@@ -2788,7 +2972,29 @@
             "total_sales": "إجمالي المبيعات",
             "revenue_tooltip": "إجمالي الإيرادات والمبيعات الصادرة (Revenue)",
             "cogs_tooltip": "تكلفة شراء البضائع المباعة والمواد الخام (COGS)",
-            "gross_profit_tooltip": "مجمل الربح التجاري قبل خصم المصروفات التشغيلية (Gross Profit)"
+            "gross_profit_tooltip": "مجمل الربح التجاري قبل خصم المصروفات التشغيلية (Gross Profit)",
+            "print_sheet": {
+                "titles": {
+                    "sales": "تقرير المبيعات والفواتير",
+                    "items": "تقرير حركة وأرباح الأصناف",
+                    "stores": "تقرير مقارنة أداء الفروع والمخازن",
+                    "customers": "تقرير مبيعات ومديونيات العملاء",
+                    "expenses": "تقرير المصروفات والنفقات التشغيلية",
+                    "inventory": "تقرير تقييم وجرد المخزون",
+                    "treasury": "تقرير الخزائن والسيولة وسجل التحويلات المالية",
+                    "general": "تقرير عام للنظام"
+                },
+                "period": "الفترة الزمنية",
+                "period_range": ":from إلى :to",
+                "period_start": "البداية",
+                "scope": "النطاق",
+                "col_description": "البيان \/ الوصف",
+                "col_value": "القيمة",
+                "col_account": "الخزينة \/ الحساب",
+                "col_total_in": "إجمالي الوارد",
+                "col_total_out": "إجمالي المنصرف",
+                "col_current_balance": "الرصيد الحالي"
+            }
         },
         "returns": {
             "title": "سجل المرتجعات وإشعارات الخصم والإرجاع",
@@ -2870,7 +3076,8 @@
             "item_already_in_return": "هذا الصنف مضاف بالفعل في قائمة المرتجع",
             "return_confirmed_title": "تم اعتماد المرتجع",
             "return_confirmed_msg": "تم تسجيل المرتجع وتعديل الأرصدة بنجاح ✓",
-            "save_return_failed": "تعذر تسجيل مستند المرتجع"
+            "save_return_failed": "تعذر تسجيل مستند المرتجع",
+            "returned_goods": "بضاعة مرتجعة"
         },
         "roles": {
             "title": "مصفوفة الأدوار والصلاحيات",
@@ -3484,17 +3691,6 @@
             "multi_db_engine_desc": "تجهيز فوري ومستقل لقواعد بيانات المؤسسات والمستأجرين.",
             "multi_db_arch_title": "معمارية العزل التام للمستأجرين",
             "multi_db_arch_desc": "قواعد بيانات سحابية معزولة تماماً لكل مستأجر لمنع أي تداخل في البيانات.",
-            "platform_settings_title": "الهوية واسم المنصة العام (Platform Whitelabel & Branding)",
-            "platform_settings_subtitle": "تغيير اسم المنصة والمشروع، الوصف، وبيانات الدعم الفني المنعكسة مركزياً في كافة واجهات وتطبيقات النظام",
-            "platform_name_label": "اسم المنصة \/ المشروع *",
-            "platform_name_placeholder": "مثال: منصة السحاب ERP أو منظومة المتجر السحابية",
-            "platform_subtitle_label": "الوصف \/ السلوجان (Subtitle)",
-            "platform_subtitle_placeholder": "مثال: منظومة سحابية متكاملة لإدارة المبيعات والمخزون والفروع",
-            "support_email_label": "بريد الدعم الفني",
-            "support_phone_label": "هاتف الدعم الفني والواتساب",
-            "save_platform_settings_btn": "حفظ وتحديث اسم المنصة 💾",
-            "saving_platform_settings": "جاري حفظ الإعدادات...",
-            "platform_settings_saved_success": "تم حفظ إعدادات المنصة.",
             "version_delete_failed": "فشل حذف الإصدار",
             "tenant_details_title": "بيانات وإحصائيات المستأجر",
             "impersonate_btn": "دخول كأدمن",
@@ -3572,6 +3768,7 @@
             "tenant_identifier_taken": "النطاق أو المعرّف مستخدم بالفعل لمستأجر آخر.",
             "tenant_db_unreachable": "تعذر الاتصال بخادم قواعد البيانات.",
             "db_config_updated_success": "تم تحديث إعدادات قاعدة بيانات المستأجر.",
+            "platform_settings_saved_success": "تم حفظ إعدادات المنصة.",
             "rate_limit_raised_success": "تم رفع حدود الطلبات لهذا المستأجر مؤقتًا.",
             "nav_units": "وحدات القياس",
             "platform_version": "إصدار المنصة",
@@ -3585,7 +3782,8 @@
                 "tenant_show": "تفاصيل المستأجر",
                 "plans": "الباقات والأسعار",
                 "app_versions": "إصدارات التطبيق",
-                "units": "وحدات القياس"
+                "units": "وحدات القياس",
+                "settings": "إعدادات المنصة"
             },
             "central_auth": {
                 "login_title": "تسجيل الدخول للوحة المنصة",
@@ -3667,6 +3865,79 @@
                 "nothing_to_update": "ابعت إعداد واحد على الأقل للتعديل.",
                 "asset_uploaded": "تم رفع الصورة وتحديث هوية المنصة.",
                 "asset_deleted": "تم حذف الصورة والرجوع للصورة الافتراضية."
+            },
+            "nav_settings": "إعدادات المنصة",
+            "platform_settings": {
+                "title": "إعدادات المنصة",
+                "subtitle": "هوية المنصة اللي بتظهر لكل المحلات: الاسم، الشعارات، اللون وبيانات الدعم.",
+                "read_only_notice": "تقدر تشوف إعدادات المنصة بس، معندكش صلاحية تعدّلها.",
+                "load_failed": "مقدرناش نحمّل إعدادات المنصة.",
+                "save_failed": "مقدرناش نحفظ إعدادات المنصة.",
+                "fix_errors": "راجع الحقول اللي عليها علامة خطأ وحاول تاني.",
+                "discard": "تجاهل التغييرات",
+                "unsaved_changes": "فيه تغييرات لسه ما اتحفظتش.",
+                "all_saved": "كل التغييرات محفوظة.",
+                "leave_title": "تخرج من غير ما تحفظ؟",
+                "leave_text": "التغييرات اللي ما اتحفظتش هتضيع.",
+                "leave_confirm": "خروج من غير حفظ",
+                "leave_cancel": "كمّل التعديل",
+                "default_hint": "سيبه فاضي عشان يرجع للقيمة الافتراضية.",
+                "sections": {
+                    "identity_title": "هوية المنصة",
+                    "identity_subtitle": "الاسم اللي بيظهر في التطبيق والفواتير والمتصفح.",
+                    "support_title": "بيانات الدعم",
+                    "support_subtitle": "طرق التواصل اللي بتظهر للمحلات لما يحتاجوا مساعدة.",
+                    "appearance_title": "المظهر",
+                    "appearance_subtitle": "اللون الأساسي للمنصة وظهور عبارة \"بواسطة\".",
+                    "assets_title": "الشعارات والأيقونات",
+                    "assets_subtitle": "الصور بتتحفظ بعد الرفع على طول، من غير زرار الحفظ."
+                },
+                "fields": {
+                    "name": "اسم المنصة",
+                    "name_placeholder": "مثال: منظومة المبيعات السحابية",
+                    "short_name": "الاسم المختصر",
+                    "short_name_hint": "بيظهر تحت أيقونة التطبيق على الموبايل، 30 حرف بالكتير.",
+                    "subtitle": "الوصف المختصر",
+                    "subtitle_placeholder": "مثال: فواتير ومخزون ونقاط بيع في مكان واحد",
+                    "legal_name": "الاسم القانوني",
+                    "legal_name_placeholder": "اسم الشركة المشغّلة للمنصة",
+                    "support_email": "بريد الدعم الفني",
+                    "support_email_placeholder": "support@example.com",
+                    "support_phone": "رقم الدعم الفني",
+                    "support_phone_placeholder": "+20 100 000 0000",
+                    "website_url": "الموقع الإلكتروني",
+                    "website_url_placeholder": "https:\/\/example.com",
+                    "primary_color": "اللون الأساسي",
+                    "primary_color_hint": "لون بصيغة HEX من 6 خانات.",
+                    "primary_color_picker": "اختيار اللون الأساسي",
+                    "primary_color_preview": "معاينة اللون",
+                    "powered_by_enabled": "إظهار عبارة \"بواسطة\" عند المحلات",
+                    "powered_by_enabled_desc": "بتظهر في الفواتير وشاشة الدخول باسم المنصة."
+                },
+                "assets": {
+                    "logo_light": "الشعار للوضع الفاتح",
+                    "logo_dark": "الشعار للوضع الداكن",
+                    "favicon": "أيقونة المتصفح",
+                    "app_icon": "أيقونة التطبيق",
+                    "logo_hint": "PNG أو JPG أو WebP، من 64 لـ 2048 بكسل، بحد أقصى 2 ميجا.",
+                    "favicon_hint": "PNG مربعة، من 32 لـ 512 بكسل، بحد أقصى 256 كيلوبايت.",
+                    "app_icon_hint": "PNG مربعة، من 192 لـ 1024 بكسل، بحد أقصى 1 ميجا.",
+                    "refused_formats": "ملفات SVG وGIF مش مقبولة.",
+                    "custom_badge": "مخصص",
+                    "default_badge": "افتراضي",
+                    "no_image": "مفيش صورة",
+                    "upload": "رفع صورة",
+                    "replace": "تغيير الصورة",
+                    "remove": "حذف الصورة",
+                    "uploading": "جاري الرفع...",
+                    "upload_failed": "مقدرناش نرفع الصورة.",
+                    "remove_failed": "مقدرناش نحذف الصورة.",
+                    "remove_confirm_text": "هترجع الصورة الافتراضية للمنصة."
+                },
+                "dashboard_link": {
+                    "description": "الاسم، الشعارات، اللون وبيانات الدعم اللي بتظهر لكل المحلات.",
+                    "open": "فتح الإعدادات"
+                }
             },
             "tenant_archive_queued": "اتطلبت الأرشفة: بناخد النسخة الاحتياطية النهائية، والحساب هيتأرشف بعد ما تترفع ونتأكد منها.",
             "tenant_unarchived": "الحساب رجع لحالته اللي كان عليها قبل الأرشفة."
@@ -3931,7 +4202,17 @@
             "management_stamp_approval": "اعتماد الإدارة والختم الرسمي",
             "drawer_balanced": "الدرج مطابق",
             "drawer_surplus": "زيادة بالدرج",
-            "record_expense_btn": "تسجيل المصروف"
+            "record_expense_btn": "تسجيل المصروف",
+            "shift_opened_numbered": "تم فتح وردية العمل رقم :number بنجاح",
+            "shift_closed_numbered": "تم إغلاق وتقفيل الوردية رقم :number بنجاح (:status)",
+            "shift_already_open": "يوجد وردية عمل مفتوحة بالفعل لهذا الفرع برقم :number. يجب إغلاقها أولاً.",
+            "cash_diff_matched": "مطابقة للدرج",
+            "cash_diff_surplus": "زيادة بمقدار :amount :currency",
+            "cash_diff_shortage": "عجز بمقدار :amount :currency",
+            "activity": {
+                "shift_opened": "تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency",
+                "shift_closed": "تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)"
+            }
         },
         "users": {
             "title": "إدارة حسابات المستخدمين والكاشير",
@@ -4559,7 +4840,11 @@
             "biometric_prompt_login_subtitle": "Scan your fingerprint to continue",
             "biometric_prompt_cancel": "Cancel",
             "biometric_enabled_success": "Fingerprint sign-in is enabled on this device",
-            "biometric_disabled": "Fingerprint sign-in is off and its data was removed from this device"
+            "biometric_disabled": "Fingerprint sign-in is off and its data was removed from this device",
+            "cannot_assign_admin_role": "Only a system admin can grant the admin role.",
+            "cannot_modify_admin_account": "Only a system admin can change the role, password or status of an admin account, or delete it.",
+            "cannot_change_own_role": "You cannot change your own role.",
+            "cannot_modify_admin_identity": "Only a system admin can change the name, phone or email of an admin account."
         },
         "billing": {
             "subscription_status": {
@@ -4883,7 +5168,25 @@
             "filter_search": "Search and filter",
             "save_changes": "Save changes",
             "saving": "Saving...",
-            "server_error": "A server error occurred. Please try again."
+            "server_error": "A server error occurred. Please try again.",
+            "by": "By",
+            "splash": {
+                "subtitle": "Invoicing, inventory and fast point of sale"
+            },
+            "confirm_dialog": {
+                "title": "Are you sure?",
+                "text": "You won't be able to undo this action.",
+                "confirm": "Yes, continue",
+                "cancel": "Cancel",
+                "this_item": "this item",
+                "delete_title": "Delete :name?",
+                "delete_text": "Are you sure? The item will be moved to the recycle bin or permanently deleted.",
+                "delete_confirm": "Yes, delete now",
+                "delete_cancel": "Go back"
+            },
+            "operation_failed": "The operation could not be completed. Please try again or contact support.",
+            "record_not_found": "The requested record was not found.",
+            "trash_invalid_type": "This record type cannot be restored or deleted from the recycle bin."
         },
         "connectivity": {
             "offline_title": "You are offline",
@@ -5271,7 +5574,24 @@
             "pay_to": "Pay supplier",
             "payment_notes_placeholder": "Optional notes (e.g. receipt or transfer number)",
             "save_customer": "Save customer",
-            "save_supplier": "Save supplier"
+            "save_supplier": "Save supplier",
+            "receipt_recorded_success": "Receipt voucher recorded: :amount :currency collected",
+            "receipt_record_failed": "Failed to record receipt voucher: :error",
+            "disbursement_recorded_success": "Payment voucher recorded: :amount :currency paid to the supplier",
+            "disbursement_record_failed": "Failed to record payment voucher: :error",
+            "default_receipt_note": "Cash receipt from customer",
+            "default_disbursement_note": "Cash payment to supplier",
+            "statement_debit_col": "Debit",
+            "statement_credit_col": "Credit",
+            "statement_balance_col": "Balance",
+            "collect_cash_payment": "Cash collection",
+            "cash_receipt_voucher": "Cash receipt voucher",
+            "disburse_cash_payment": "Cash disbursement",
+            "cash_disbursement_voucher": "Cash payment voucher",
+            "receipt_record_failed_generic": "The receipt voucher could not be recorded. Please try again.",
+            "disbursement_record_failed_generic": "The payment voucher could not be recorded. Please try again.",
+            "payment_invoice_customer_mismatch": "This invoice does not belong to the selected customer.",
+            "payment_purchase_supplier_mismatch": "This purchase invoice does not belong to the selected supplier."
         },
         "customers": {
             "retail": "Retail Customer",
@@ -5396,7 +5716,28 @@
             "menu_hub_subtitle": "Direct 1-touch visual access to all system screens and documents",
             "search_screens_placeholder": "🔍 Search any screen or document (e.g. sale, purchase, stock)...",
             "no_screens_found": "No screens matching your search query",
-            "company_title": "My business"
+            "company_title": "My business",
+            "modules_sales": "Sales & POS",
+            "modules_inventory": "Items & inventory",
+            "modules_shifts": "Treasury & shifts",
+            "modules_purchases": "Purchases & supply",
+            "modules_expenses": "Expenses",
+            "modules_contacts": "Customers & suppliers",
+            "modules_auth": "Security & sign-in",
+            "modules_settings": "System & settings",
+            "modules_transfers": "Stock transfers",
+            "modules_blends": "Item blending & assembly",
+            "system_alerts": {
+                "low_stock_title": "Low stock (:count items)",
+                "low_stock_desc": "Items at or below their reorder level",
+                "low_stock_link": "Smart reorder",
+                "debts_title": "Customer debts (:count customers)",
+                "debts_desc": "Some customers have outstanding credit balances to collect",
+                "debts_link": "Customers with balances",
+                "high_cash_title": "High cash in drawer",
+                "high_cash_desc": "There is currently :amount :currency in the cash drawer. Consider depositing the surplus.",
+                "high_cash_link": "Daily journal & treasury"
+            }
         },
         "desktop_hardware": {
             "drawer_pin_label": "Cash drawer connector pin",
@@ -5510,7 +5851,19 @@
             "icon_zap": "Zap",
             "icon_gift": "Gift",
             "icon_bookmark": "Bookmark",
-            "icon_archive": "Archive"
+            "icon_archive": "Archive",
+            "general_expenses": "General expenses",
+            "operational_expense": "Operating expense",
+            "daily_category": "Daily expenses",
+            "quick_categories": {
+                "bags": "Bags & sacks",
+                "cups": "Paper & plastic cups",
+                "tape": "Tape & wrapping",
+                "hospitality": "Hospitality & pantry",
+                "equipment_maintenance": "Grinder & equipment maintenance",
+                "rent_utilities": "Rent & utilities",
+                "petty_operations": "Petty & operating costs"
+            }
         },
         "inventory": {
             "title": "Inventory & Item Cards Management",
@@ -5875,7 +6228,16 @@
             "quantity": "Quantity",
             "view_transfer_details": "View transfer details",
             "unit_not_in_tenant_list": "The unit \":unit\" is not in the unit list of this business. Pick a unit from the list or add it in settings.",
-            "switched_to_store": "Switched to branch: :store"
+            "switched_to_store": "Switched to branch: :store",
+            "item_status_updated": "Item status updated successfully",
+            "store_status_updated": "Branch (:name) status updated successfully",
+            "store_users_updated": "Staff assignments for branch (:name) updated successfully",
+            "store_deleted": "Branch (:name) deleted successfully",
+            "transfer_executed_numbered": "Stock transfer :number executed and goods moved successfully",
+            "transfer_cancelled_numbered": "Transfer :number cancelled and items returned to the source branch",
+            "transfer_cancel_reason_default": "Cancelled from the system",
+            "delete_category_confirm_text": "Category \":name\" will be deleted and its items unlinked; the items themselves are kept.",
+            "store_delete_blockers": "Linked operations prevent deletion:\n- :blockers"
         },
         "invoices": {
             "title": "Sales Invoices",
@@ -6096,7 +6458,26 @@
             "idempotency_key_conflict": "This request key was already used for a different invoice, customer, or store",
             "payment_ewallet": "E-wallet",
             "total_net": "Net total",
-            "invoice_with_number": "Invoice #:number"
+            "invoice_with_number": "Invoice #:number",
+            "bulk_cancel_reason": "Bulk cancellation from the sales list",
+            "stamp_placeholder": "Stamp",
+            "image_filename_a4": "sales-invoice-:number.png",
+            "image_filename_thermal": "receipt-:number.png",
+            "csv_columns": {
+                "number": "Invoice number",
+                "customer": "Customer",
+                "phone": "Phone",
+                "date": "Date",
+                "payment_method": "Payment method",
+                "net": "Net",
+                "paid": "Paid",
+                "remaining": "Remaining",
+                "status": "Status"
+            },
+            "share": {
+                "copy_text": "🧾 Invoice #:number\n🏢 Business: :company\n👤 Customer: :customer\n📅 Date: :date\n💰 Net due: :net :currency\n💵 Paid: :paid :currency\n📝 Remaining: :remaining :currency",
+                "whatsapp_text": "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!"
+            }
         },
         "items": {
             "unit_not_in_list": ":unit (not in the unit list)",
@@ -6179,7 +6560,79 @@
             "telegram_backup_sent": "Database backup sent to Telegram successfully",
             "cache_cleared_success": "Cache successfully cleared, optimized, and rebuilt",
             "cache_clear_error": "An error occurred while clearing cache: :message",
-            "coming_soon": "Coming Soon"
+            "coming_soon": "Coming Soon",
+            "layout": {
+                "menu": "Menu",
+                "mobile_bottom_nav": "Bottom navigation",
+                "expand_menu": "Expand menu (Ctrl+B)",
+                "collapse_menu": "Collapse menu (Ctrl+B)",
+                "quick_pos": "+ Quick POS",
+                "quick_pos_hint": "+ Quick POS - F2",
+                "modules_heading": "System sections",
+                "links_count": ":count links",
+                "shift_number": "Shift (#:number)",
+                "shift_open_badge": "Open",
+                "open_shift_cta": "Open →",
+                "version": "Version",
+                "update": "Update",
+                "version_click_to_check": "v:version (click to check)",
+                "current_version": "Current version:",
+                "check_updates": "Check for updates",
+                "profile_security": "Profile & security",
+                "users_permissions": "Users & permissions",
+                "roles_matrix": "Roles & permissions matrix",
+                "activity_audit": "Activity & audit log",
+                "light_mode": "Light mode",
+                "dark_mode": "Dark mode",
+                "notifications": "Notifications",
+                "notifications_count": ":count alerts",
+                "view_all_activity": "View all activity logs →",
+                "journal_open": "Journal open",
+                "journal_open_cta_hint": "Click to open a new journal",
+                "journal_number": "• Journal (#:number)",
+                "open_journal": "• Open journal",
+                "back_to_sections": "Back to all sections",
+                "logout_confirm_title": "Sign out?",
+                "logout_confirm_text": "Are you sure you want to sign out and end this session?",
+                "logout_confirm_btn": "Yes, sign out"
+            },
+            "page_titles": {
+                "default_app_name": "ERP system",
+                "untitled_screen": "Screen",
+                "workspace_connect": "Connect to workspace",
+                "login": "Sign in",
+                "dashboard": "Main dashboard",
+                "stores_index": "Branches & stores",
+                "stores_stocks": "Branch & store balances",
+                "customers_index": "Customers & statements",
+                "customers_statement": "Customer statement",
+                "suppliers_index": "Suppliers & statements",
+                "suppliers_statement": "Supplier statement",
+                "expenses_index": "Expenses & petty cash",
+                "items_index": "Items & inventory",
+                "categories_index": "Item categories",
+                "items_movements": "Item stock movements",
+                "daily_journal_index": "Daily journal & treasury",
+                "purchases_index": "Purchases & supply",
+                "purchases_create": "New purchase invoice",
+                "purchases_smart_reorder": "Smart reorder radar",
+                "invoices_index": "Sales invoices",
+                "invoices_show": "Invoice preview & print",
+                "invoices_print": "Print invoice",
+                "pos_index": "Quick point of sale (POS)",
+                "returns_index": "Sales & purchase returns",
+                "returns_create": "New return",
+                "stock_transfers_index": "Stock transfers",
+                "stock_transfers_create": "New stock transfer",
+                "coffee_blender_index": "Product blending lab",
+                "reports_index": "Financial & profit reports",
+                "users_index": "Users & staff",
+                "roles_index": "Roles & permissions matrix",
+                "activity_logs_index": "Security audit & activity log",
+                "settings_index": "System & business settings",
+                "profile_show": "Profile & account",
+                "trash_index": "Recycle bin"
+            }
         },
         "pagination": {
             "previous": "&laquo; Previous",
@@ -6688,7 +7141,17 @@
             "quick_keys_saved": "Branch quick keys saved",
             "quick_keys_duplicate_position": "Position :position on page :page is used by more than one key",
             "quick_keys_item_unavailable": "Item not found or inactive",
-            "quick_keys_category_unavailable": "Category not found or inactive"
+            "quick_keys_category_unavailable": "Category not found or inactive",
+            "customer_registered_success": "Customer registered successfully",
+            "one_kilo_short": "1kg",
+            "thermal": {
+                "invoice_number": "Sales invoice #:number",
+                "col_item": "Item",
+                "col_qty": "Qty",
+                "col_total": "Total",
+                "net_total": "Net total:",
+                "thank_you": "Thank you for your visit!"
+            }
         },
         "profile": {
             "title": "User Profile & Account Settings",
@@ -6908,7 +7371,9 @@
             "final_net_total": "Net total",
             "remaining_debt": "Remaining owed to supplier",
             "wac_tooltip": "Weighted Average Cost (WAC)",
-            "landed_cost_tooltip": "Landed cost includes purchase price plus shipping, customs, and delivery fees"
+            "landed_cost_tooltip": "Landed cost includes purchase price plus shipping, customs, and delivery fees",
+            "status_confirmed": "Confirmed",
+            "cancel_purchase": "Purchase cancellation"
         },
         "reports": {
             "title": "Financial Reports & Analytics",
@@ -7051,7 +7516,29 @@
             "total_sales": "Total sales",
             "revenue_tooltip": "Total sales revenue (Revenue)",
             "cogs_tooltip": "Cost of goods sold (COGS)",
-            "gross_profit_tooltip": "Gross profit before operating expenses (Gross Profit)"
+            "gross_profit_tooltip": "Gross profit before operating expenses (Gross Profit)",
+            "print_sheet": {
+                "titles": {
+                    "sales": "Sales & invoices report",
+                    "items": "Item movement & profit report",
+                    "stores": "Branch & store performance report",
+                    "customers": "Customer sales & debts report",
+                    "expenses": "Operating expenses report",
+                    "inventory": "Inventory valuation & count report",
+                    "treasury": "Treasury, liquidity & transfers report",
+                    "general": "General system report"
+                },
+                "period": "Period",
+                "period_range": ":from to :to",
+                "period_start": "Start",
+                "scope": "Scope",
+                "col_description": "Description",
+                "col_value": "Value",
+                "col_account": "Treasury \/ account",
+                "col_total_in": "Total in",
+                "col_total_out": "Total out",
+                "col_current_balance": "Current balance"
+            }
         },
         "returns": {
             "title": "Returns, Credit Notes & Stock Adjustments",
@@ -7133,7 +7620,8 @@
             "item_already_in_return": "This item is already added to return list",
             "return_confirmed_title": "Return Confirmed",
             "return_confirmed_msg": "Return recorded and stock reconciled successfully ✓",
-            "save_return_failed": "Failed to record return document"
+            "save_return_failed": "Failed to record return document",
+            "returned_goods": "Returned goods"
         },
         "roles": {
             "title": "Roles & Permissions Matrix",
@@ -7748,17 +8236,6 @@
             "multi_db_engine_desc": "Instant schema provisioning per tenant workspace.",
             "multi_db_arch_title": "Multi-Database Architecture",
             "multi_db_arch_desc": "Isolated tenant databases provisioned instantly with zero cross-tenant contamination.",
-            "platform_settings_title": "Platform Whitelabel & Branding",
-            "platform_settings_subtitle": "Change platform & project name, subtitle, and support contacts reflected system-wide across all views and apps",
-            "platform_name_label": "Platform \/ Project Name *",
-            "platform_name_placeholder": "e.g. Cloud ERP or Retail & Wholesale ERP",
-            "platform_subtitle_label": "Description \/ Slogan (Subtitle)",
-            "platform_subtitle_placeholder": "e.g. Integrated Cloud ERP for Sales, Inventory & Multi-Branch Management",
-            "support_email_label": "Technical Support Email",
-            "support_phone_label": "Support & WhatsApp Phone",
-            "save_platform_settings_btn": "Save Platform Settings 💾",
-            "saving_platform_settings": "Saving settings...",
-            "platform_settings_saved_success": "Platform settings saved.",
             "tenant_details_title": "Tenant Details & Statistics",
             "impersonate_btn": "Impersonate Admin",
             "impersonating_status": "Redirecting...",
@@ -7835,6 +8312,7 @@
             "tenant_identifier_taken": "This domain or identifier is already used by another tenant.",
             "tenant_db_unreachable": "Could not connect to the database server.",
             "db_config_updated_success": "Tenant database settings updated.",
+            "platform_settings_saved_success": "Platform settings saved.",
             "rate_limit_raised_success": "Rate limits raised temporarily for this tenant.",
             "nav_units": "Units of measurement",
             "platform_version": "Platform version",
@@ -7848,7 +8326,8 @@
                 "tenant_show": "Tenant details",
                 "plans": "Plans and pricing",
                 "app_versions": "App releases",
-                "units": "Units of measurement"
+                "units": "Units of measurement",
+                "settings": "Platform settings"
             },
             "central_auth": {
                 "login_title": "Platform console sign-in",
@@ -7930,6 +8409,79 @@
                 "nothing_to_update": "Send at least one setting to update.",
                 "asset_uploaded": "Image uploaded and platform branding updated.",
                 "asset_deleted": "Image removed; the default image is used again."
+            },
+            "nav_settings": "Platform settings",
+            "platform_settings": {
+                "title": "Platform settings",
+                "subtitle": "The platform identity every store sees: name, logos, colour and support contacts.",
+                "read_only_notice": "You can view the platform settings but you are not allowed to change them.",
+                "load_failed": "The platform settings could not be loaded.",
+                "save_failed": "The platform settings could not be saved.",
+                "fix_errors": "Check the highlighted fields and try again.",
+                "discard": "Discard changes",
+                "unsaved_changes": "You have unsaved changes.",
+                "all_saved": "All changes are saved.",
+                "leave_title": "Leave without saving?",
+                "leave_text": "Your unsaved changes will be lost.",
+                "leave_confirm": "Leave without saving",
+                "leave_cancel": "Keep editing",
+                "default_hint": "Leave empty to use the default value.",
+                "sections": {
+                    "identity_title": "Platform identity",
+                    "identity_subtitle": "The name shown in the app, on invoices and in the browser.",
+                    "support_title": "Support contacts",
+                    "support_subtitle": "How stores reach you when they need help.",
+                    "appearance_title": "Appearance",
+                    "appearance_subtitle": "The platform primary colour and the \"Powered by\" line.",
+                    "assets_title": "Logos and icons",
+                    "assets_subtitle": "Images are saved as soon as they are uploaded, without the save button."
+                },
+                "fields": {
+                    "name": "Platform name",
+                    "name_placeholder": "e.g. Cloud sales suite",
+                    "short_name": "Short name",
+                    "short_name_hint": "Shown under the app icon on phones, up to 30 characters.",
+                    "subtitle": "Tagline",
+                    "subtitle_placeholder": "e.g. Invoices, stock and POS in one place",
+                    "legal_name": "Legal name",
+                    "legal_name_placeholder": "The company that operates the platform",
+                    "support_email": "Support email",
+                    "support_email_placeholder": "support@example.com",
+                    "support_phone": "Support phone",
+                    "support_phone_placeholder": "+20 100 000 0000",
+                    "website_url": "Website",
+                    "website_url_placeholder": "https:\/\/example.com",
+                    "primary_color": "Primary colour",
+                    "primary_color_hint": "A 6-digit HEX colour.",
+                    "primary_color_picker": "Pick the primary colour",
+                    "primary_color_preview": "Colour preview",
+                    "powered_by_enabled": "Show \"Powered by\" on stores",
+                    "powered_by_enabled_desc": "Shown with the platform name on invoices and the sign-in screen."
+                },
+                "assets": {
+                    "logo_light": "Logo for light mode",
+                    "logo_dark": "Logo for dark mode",
+                    "favicon": "Browser icon",
+                    "app_icon": "App icon",
+                    "logo_hint": "PNG, JPG or WebP, 64 to 2048 px, up to 2 MB.",
+                    "favicon_hint": "Square PNG, 32 to 512 px, up to 256 KB.",
+                    "app_icon_hint": "Square PNG, 192 to 1024 px, up to 1 MB.",
+                    "refused_formats": "SVG and GIF files are not accepted.",
+                    "custom_badge": "Custom",
+                    "default_badge": "Default",
+                    "no_image": "No image",
+                    "upload": "Upload image",
+                    "replace": "Replace image",
+                    "remove": "Remove image",
+                    "uploading": "Uploading...",
+                    "upload_failed": "The image could not be uploaded.",
+                    "remove_failed": "The image could not be removed.",
+                    "remove_confirm_text": "The platform default image will be used again."
+                },
+                "dashboard_link": {
+                    "description": "Name, logos, colour and support contacts shown to every store.",
+                    "open": "Open settings"
+                }
             },
             "tenant_archive_queued": "Archive requested: the final backup is being taken. The account is archived once it is uploaded and verified.",
             "tenant_unarchived": "The account was restored to its previous status."
@@ -8194,7 +8746,17 @@
             "management_stamp_approval": "Management Approval & Official Stamp",
             "drawer_balanced": "Drawer balanced",
             "drawer_surplus": "Drawer surplus",
-            "record_expense_btn": "Record expense"
+            "record_expense_btn": "Record expense",
+            "shift_opened_numbered": "Shift :number opened successfully",
+            "shift_closed_numbered": "Shift :number closed successfully (:status)",
+            "shift_already_open": "Shift :number is already open for this branch. Close it first.",
+            "cash_diff_matched": "Drawer matches",
+            "cash_diff_surplus": "Surplus of :amount :currency",
+            "cash_diff_shortage": "Shortage of :amount :currency",
+            "activity": {
+                "shift_opened": "Opened shift [:number] at branch (:store) with an opening balance of :amount :currency",
+                "shift_closed": "Closed shift [:number] with actual cash of :amount :currency (:status)"
+            }
         },
         "users": {
             "title": "User & Cashier Management",
