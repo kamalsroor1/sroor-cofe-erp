@@ -12,10 +12,14 @@ class SettingsStore {
             thermalPrinterName: '',
             paperWidth: '80mm',
             autoOpenDrawerOnCash: true,
+            // APP-5: per-device cash drawer connector (2 or 5), see src/hardware/drawerKick.js.
+            cashDrawerPin: 2,
             kioskMode: false,
             windowBounds: { width: 1400, height: 900, isMaximized: true },
             theme: 'dark',
             supportWhatsapp: '',
+            // APP-7: updater attempts / pending install / boot guard (src/updater/updateState.js).
+            updateState: null,
         };
         this.settings = null;
     }

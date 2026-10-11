@@ -1,17 +1,31 @@
 import { ref, computed } from 'vue';
-import { isValidSha256, normalizeUpdateResponse, progressPercent, nativeErrorKey } from '../../helpers/appUpdate.js';
+import {
+    DESKTOP_ALREADY_LATEST,
+    desktopErrorKey,
+    isValidSha256,
+    nativeErrorKey,
+    normalizeUpdateResponse,
+    offersManualDownload,
+    progressPercent,
+} from '../../helpers/appUpdate.js';
+
+/** Permanent "dismissed" flag of older builds; optional updates are now prompted once per launch instead. */
+const LEGACY_DISMISSED_PREFIX = 'app_update_dismissed:';
 
 /**
- * Platform-agnostic updater state machine (APP-3). All side effects are injected so it can be unit-tested:
+ * Platform-agnostic updater state machine (APP-3 / APP-7). All side effects are injected so it can be unit-tested:
  *
  * - platform: 'android' | 'windows' | 'web'
  * - getCurrentVersion(): Promise<{ name, code }> — always the INSTALLED binary, never a stored/spoofed value
  * - fetchUpdate(params): Promise<checkUpdateResponse>
  * - native: { downloadAndInstall(opts), addProgressListener(cb) } (Android AppUpdater plugin) or null
- * - legacyDownload(url): for APKs built before the AppUpdater plugin existed — hands the URL to the WebView so the
- *   old native DownloadListener installs it. Only used when `native` is null.
+ * - openManualDownload(url): opens the public manual download page. Used when the in-app updater cannot install
+ *   safely (APKs without the AppUpdater plugin, unverifiable signer, desktop attempts exhausted). It never hands
+ *   an APK URL to the WebView: an install that skips the SHA-256 check is refused.
+ * - manualDownloadFallback: URL of the download page when the server did not send manual_download_url
  * - desktop: window.electronAPI.updater or null
- * - storage / session: Storage-like (getItem / setItem)
+ * - storage: Storage-like; only used to clean up the old permanent dismissal flag
+ * - session: Storage-like (getItem / setItem) — lives for one app launch
  * - notify(type, key, params): user feedback for manual checks
  */
 export function createAppUpdater({
@@ -19,7 +33,8 @@ export function createAppUpdater({
     getCurrentVersion,
     fetchUpdate,
     native,
-    legacyDownload,
+    openManualDownload = null,
+    manualDownloadFallback = null,
     desktop,
     storage,
     session,
@@ -54,9 +69,17 @@ export function createAppUpdater({
             progressPercent(downloadedBytes.value, totalBytes.value) === null
     );
 
+    const manualDownloadUrl = computed(() => update.value?.manualDownloadUrl || manualDownloadFallback || null);
+    const canDownloadManually = computed(
+        () =>
+            stage.value === 'error' &&
+            offersManualDownload(errorKey.value) &&
+            !!manualDownloadUrl.value &&
+            typeof openManualDownload === 'function'
+    );
+
     const checkedKey = () => `app_update_checked:${platform}:${currentVersionCode.value}`;
     const forcedKey = () => `app_update_forced:${platform}:${currentVersionCode.value}`;
-    const dismissedKey = `app_update_dismissed:${platform}`;
 
     const safeGet = (store, key) => {
         try {
@@ -72,6 +95,12 @@ export function createAppUpdater({
             // storage unavailable (private mode / quota) — degrade to in-memory behaviour
         }
     };
+
+    try {
+        storage?.removeItem?.(`${LEGACY_DISMISSED_PREFIX}${platform}`);
+    } catch {
+        // nothing to clean up
+    }
 
     const syncVersion = async () => {
         try {
@@ -103,7 +132,7 @@ export function createAppUpdater({
     };
 
     /**
-     * A forced update seen earlier in this session is re-applied from sessionStorage, so a reload never unlocks
+     * A forced update seen earlier in this launch is re-applied from sessionStorage, so a reload never unlocks
      * an outdated build even though the server is not asked again.
      */
     const restoreForcedUpdate = () => {
@@ -116,13 +145,14 @@ export function createAppUpdater({
             applyUpdate(data, normalized);
             isModalOpen.value = true;
         } catch {
-            // corrupt session entry — the next session re-checks with the server
+            // corrupt session entry — the next launch re-checks with the server
         }
     };
 
     /**
-     * Automatic checks run at most once per session for the same installed version (survives page reloads),
-     * which is what stops a forced update from re-prompting in a loop. Manual checks always hit the server.
+     * Automatic checks run at most once per app launch for the same installed version (sessionStorage survives
+     * reloads but not a relaunch). That shows an optional update once per launch and stops a forced update from
+     * re-prompting in a loop. Manual checks always hit the server.
      */
     const checkForUpdates = async (isManual = false) => {
         if (!isEligible.value) {
@@ -159,10 +189,7 @@ export function createAppUpdater({
             }
 
             applyUpdate(data, normalized);
-
-            const dismissedCode = safeGet(storage, dismissedKey);
-            const dismissed = !normalized.isForce && dismissedCode === String(normalized.versionCode);
-            if (isManual || !dismissed) isModalOpen.value = true;
+            isModalOpen.value = true;
         } catch {
             if (isManual) notify('error', 'app_update.check_failed');
         } finally {
@@ -180,18 +207,9 @@ export function createAppUpdater({
     const installAndroid = async (target) => {
         if (!target.downloadUrl) return fail('app_update.error_missing_url');
         if (!isValidSha256(target.checksum)) return fail('app_update.error_missing_checksum');
-        if (!native) {
-            // Old APKs without the AppUpdater plugin: their built-in DownloadListener fetches + installs the APK,
-            // so a forced update never dead-ends; the modal explains that the in-app updater is unavailable.
-            if (typeof legacyDownload === 'function') {
-                try {
-                    legacyDownload(target.downloadUrl);
-                } catch {
-                    // navigation blocked — the message below still tells the user to update manually
-                }
-            }
-            return fail('app_update.error_updater_unavailable');
-        }
+        // APKs built before the AppUpdater plugin cannot verify the SHA-256 or the signer in-app: refuse and offer
+        // the manual download page (it shows the checksum) instead of handing the APK URL to the WebView.
+        if (!native) return fail('app_update.error_updater_unavailable');
 
         totalBytes.value = target.sizeBytes;
         let removeListener = null;
@@ -221,24 +239,47 @@ export function createAppUpdater({
     };
 
     let desktopSubscribed = false;
+    const subscribeDesktop = () => {
+        if (desktopSubscribed) return;
+        desktopSubscribed = true;
+        desktop.onProgress?.((p) => {
+            desktopPercent.value = Math.max(0, Math.min(100, Math.floor(Number(p?.percent) || 0)));
+            if (p?.stage === 'verifying') stage.value = 'verifying';
+        });
+        desktop.onComplete?.(() => {
+            desktopPercent.value = 100;
+            isDownloading.value = false;
+            isDownloaded.value = true;
+            stage.value = 'installer_opened';
+        });
+        desktop.onError?.((payload) => {
+            if (payload?.code === DESKTOP_ALREADY_LATEST) return;
+            fail(desktopErrorKey(payload?.code));
+        });
+    };
+
+    const handleDesktopResult = (result) => {
+        if (!result || result.success) return;
+        if (result.error === DESKTOP_ALREADY_LATEST) {
+            // The installed build is already current: nothing to install, unlock the app.
+            hasUpdate.value = false;
+            isForceUpdate.value = false;
+            safeSet(session, forcedKey(), '');
+            resetDownloadState();
+            isModalOpen.value = false;
+            notify('success', 'app_update.up_to_date_desc', { version: currentVersionName.value });
+            return;
+        }
+        fail(desktopErrorKey(result.error));
+    };
+
+    // The Electron main process resolves URL, SHA-256, size and signature from the update API itself;
+    // nothing the renderer holds is trusted for the install.
     const installDesktop = async () => {
         if (!desktop?.downloadAndInstall) return fail('app_update.error_updater_unavailable');
-        if (!desktopSubscribed) {
-            desktopSubscribed = true;
-            desktop.onProgress?.((p) => {
-                desktopPercent.value = Math.max(0, Math.min(100, Math.floor(Number(p?.percent) || 0)));
-            });
-            desktop.onComplete?.(() => {
-                desktopPercent.value = 100;
-                isDownloading.value = false;
-                isDownloaded.value = true;
-                stage.value = 'installer_opened';
-            });
-            desktop.onError?.(() => fail('app_update.error_download_failed'));
-        }
+        subscribeDesktop();
         try {
-            // TODO(APP-7): the Electron main process resolves the URL/checksum from app_versions itself.
-            await desktop.downloadAndInstall();
+            handleDesktopResult(await desktop.downloadAndInstall());
         } catch {
             fail('app_update.error_download_failed');
         }
@@ -255,10 +296,20 @@ export function createAppUpdater({
         return fail('app_update.error_updater_unavailable');
     };
 
+    const openManualDownloadPage = () => {
+        if (!manualDownloadUrl.value || typeof openManualDownload !== 'function') return false;
+        try {
+            openManualDownload(manualDownloadUrl.value);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    // Closing only hides the prompt for this launch; the next launch asks again.
     const closeModal = () => {
         if (isForceUpdate.value || isDownloading.value) return;
         isModalOpen.value = false;
-        if (update.value?.versionCode) safeSet(storage, dismissedKey, update.value.versionCode);
         resetDownloadState();
     };
 
@@ -280,9 +331,12 @@ export function createAppUpdater({
         totalBytes,
         stage,
         errorKey,
+        manualDownloadUrl,
+        canDownloadManually,
         syncVersion,
         checkForUpdates,
         startDownloadAndInstall,
+        openManualDownloadPage,
         closeModal,
     };
 }

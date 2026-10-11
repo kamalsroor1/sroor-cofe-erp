@@ -7,7 +7,7 @@ const printerManager = require('./src/hardware/printerManager');
 const cashDrawer = require('./src/hardware/cashDrawer');
 const { normalizePrintJob } = require('./src/hardware/printJob');
 const { createApplicationMenu } = require('./src/menu/appMenu');
-const { downloadAndApplyUpdate } = require('./src/updater/nativeUpdater');
+const nativeUpdater = require('./src/updater/nativeUpdater');
 const urlPolicy = require('./src/security/urlPolicy');
 const { sanitizeSettings } = require('./src/security/settingsSanitizer');
 
@@ -16,6 +16,8 @@ const urlPolicyOptions = { allowDev: !app.isPackaged && process.argv.includes('-
 let mainWindow = null;
 let splashWindow = null;
 let appTray = null;
+let updateGuard = { outcome: null, offerRollback: false };
+let bootHealthTimer = null;
 
 // ══════════════════════════════════════════════════════════════════════════
 // 🔗 DEEP LINKING PROTOCOL (sroor://connect?tenant=2m)
@@ -261,6 +263,12 @@ function createMainWindow() {
     console.log('[Electron] Loading application URL:', targetUrl);
     mainWindow.loadURL(targetUrl);
 
+    // APP-7 boot guard: a build that stays up BOOT_CONFIRM_DELAY_MS after its first page load is healthy.
+    mainWindow.webContents.once('did-finish-load', () => {
+        if (bootHealthTimer) return;
+        bootHealthTimer = setTimeout(() => nativeUpdater.markBootHealthy(), nativeUpdater.BOOT_CONFIRM_DELAY_MS);
+    });
+
     mainWindow.once('ready-to-show', () => {
         // Smooth transition from splash to main window
         setTimeout(() => {
@@ -273,6 +281,11 @@ function createMainWindow() {
             }
             mainWindow.show();
             mainWindow.focus();
+            if (updateGuard.offerRollback) {
+                nativeUpdater.offerRollbackIfNeeded(mainWindow).catch((err) => {
+                    console.error('[Updater] Rollback offer failed:', err.message);
+                });
+            }
         }, 1200);
     });
 
@@ -578,7 +591,12 @@ handleTrusted('app:get-system-info', () => {
 // 7. In-App Native Electron OTA Auto-Updater
 // Renderer arguments are ignored: the manifest (URL + SHA-256) is fetched by the main process.
 handleTrusted('updater:download-and-install', async () => {
-    return await downloadAndApplyUpdate(mainWindow);
+    return await nativeUpdater.downloadAndApplyUpdate(mainWindow);
+});
+
+// Attempts / pending install / boot guard summary. Codes and counters only: no paths, no URLs.
+handleTrusted('updater:get-state', () => {
+    return nativeUpdater.getRendererState();
 });
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -628,6 +646,11 @@ app.on('web-contents-created', (_event, contents) => {
 });
 
 app.whenReady().then(() => {
+    try {
+        updateGuard = nativeUpdater.initUpdateGuard();
+    } catch (err) {
+        console.error('[Updater] Boot guard unavailable:', err.message);
+    }
     createSplashWindow();
     createMainWindow();
 
@@ -637,6 +660,16 @@ app.whenReady().then(() => {
             createMainWindow();
         }
     });
+});
+
+// A clean quit before the boot was confirmed is not counted as a failed boot.
+app.on('will-quit', () => {
+    if (bootHealthTimer) clearTimeout(bootHealthTimer);
+    try {
+        nativeUpdater.markCleanExit();
+    } catch (err) {
+        console.error('[Updater] Could not record a clean exit:', err.message);
+    }
 });
 
 app.on('window-all-closed', () => {

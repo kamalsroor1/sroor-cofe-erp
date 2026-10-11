@@ -78,7 +78,36 @@
         </div>
       </div>
 
-      <!-- 3. Hardware Test Actions -->
+      <!-- 3. Cash drawer pin (per device) -->
+      <div class="space-y-1.5">
+        <span id="drawer-pin-label" class="block text-xs font-black text-slate-700 dark:text-slate-300">
+          {{ $t('desktop_hardware.drawer_pin_label') }}
+        </span>
+        <div class="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="drawer-pin-label">
+          <button
+            v-for="pin in DRAWER_PINS"
+            :key="pin"
+            type="button"
+            role="radio"
+            :aria-checked="drawerPin === pin"
+            :data-testid="`desktop-drawer-pin-${pin}`"
+            :disabled="isSavingPin"
+            @click="selectDrawerPin(pin)"
+            class="min-h-11 p-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer disabled:opacity-60"
+            :class="
+              drawerPin === pin
+                ? 'border-theme-primary bg-theme-primary/10 text-theme-primary'
+                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400'
+            "
+          >
+            <Plug class="w-4 h-4" />
+            <span>{{ $t('desktop_hardware.drawer_pin_option', { pin }) }}</span>
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-400">{{ $t('desktop_hardware.drawer_pin_hint') }}</p>
+      </div>
+
+      <!-- 4. Hardware Test Actions -->
       <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
         <div class="text-[11px] font-black text-slate-400 uppercase">
           {{ $t('settings.hardware_diagnostics') }}
@@ -89,7 +118,7 @@
             type="button"
             @click="handleTestPrint"
             :disabled="isPrinting"
-            class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+            class="min-h-11 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
           >
             <Printer class="w-4 h-4" />
             <span>{{ isPrinting ? $t('settings.printing_in_progress') : $t('settings.test_thermal_print') }}</span>
@@ -99,15 +128,17 @@
           <button
             type="button"
             @click="handleTestDrawer"
-            class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+            :disabled="isTestingDrawer"
+            data-testid="desktop-drawer-test"
+            class="min-h-11 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
           >
             <Banknote class="w-4 h-4" />
-            <span>{{ $t('settings.test_kick_drawer') }}</span>
+            <span>{{ isTestingDrawer ? $t('desktop_hardware.drawer_testing') : $t('settings.test_kick_drawer') }}</span>
           </button>
         </div>
       </div>
 
-      <!-- 4. Kiosk & Fullscreen Controls -->
+      <!-- 5. Kiosk & Fullscreen Controls -->
       <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
         <div>
           <div class="text-xs font-black text-slate-900 dark:text-white">
@@ -152,12 +183,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Printer, FileText, Receipt, Banknote, RefreshCw } from 'lucide-vue-next';
+import { Printer, FileText, Receipt, Banknote, RefreshCw, Plug } from 'lucide-vue-next';
 import AppModal from './AppModal.vue';
 import BaseButton from './BaseButton.vue';
 import { useAppConfigStore } from '../../stores/appConfig';
-import { useDesktopHardware } from '../../Composables/useDesktopHardware';
-import Swal from 'sweetalert2';
+import { DRAWER_PINS, drawerResultKey, useDesktopHardware } from '../../Composables/useDesktopHardware';
+import { notifyError, notifySuccess } from '../../helpers/alert';
 import { trans } from '../../helpers/trans';
 import { useFormatters } from '../../Composables/useFormatters';
 
@@ -170,11 +201,23 @@ defineProps({
 
 defineEmits(['close']);
 
-const { availablePrinters, isPrinting, isKioskMode, loadPrinters, printThermalReceipt, openCashDrawer, toggleKiosk } =
-  useDesktopHardware();
+const {
+  availablePrinters,
+  isPrinting,
+  isKioskMode,
+  drawerPin,
+  loadPrinters,
+  loadDrawerPin,
+  saveDrawerPin,
+  printThermalReceipt,
+  testCashDrawer,
+  toggleKiosk,
+} = useDesktopHardware();
 
 const selectedPrinter = ref(localStorage.getItem('desktop_thermal_printer') || '');
 const paperWidth = ref(localStorage.getItem('desktop_paper_width') || '80mm');
+const isSavingPin = ref(false);
+const isTestingDrawer = ref(false);
 
 const savePrinterSelection = () => {
   localStorage.setItem('desktop_thermal_printer', selectedPrinter.value);
@@ -185,19 +228,25 @@ const setPaperWidth = (width) => {
   localStorage.setItem('desktop_paper_width', width);
 };
 
+const escapeHtml = (value) =>
+  String(value ?? '').replace(
+    /[&<>"']/g,
+    (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]
+  );
+
 const handleTestPrint = async () => {
   const testSlipHtml = `
     <div style="text-align: center; font-family: sans-serif; font-size: 11px;">
-      <h2 style="font-size: 14px; margin-bottom: 4px;">${appConfigStore.companyName || appConfigStore.platformName}</h2>
-      <p style="font-size: 10px; margin-bottom: 8px;">تجربة الطباعة الحرارية المباشرة</p>
+      <h2 style="font-size: 14px; margin-bottom: 4px;">${escapeHtml(appConfigStore.companyName || appConfigStore.platformName)}</h2>
+      <p style="font-size: 10px; margin-bottom: 8px;">${escapeHtml(trans('desktop_hardware.test_slip_title'))}</p>
       <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-      <table style="width: 100%; font-size: 10px; text-align: right;">
-        <tr><td>حالة الاتصال:</td><td style="text-align: left; font-weight: bold;">متصل ومطابق ✅</td></tr>
-        <tr><td>عرض الورق:</td><td style="text-align: left;">${paperWidth.value}</td></tr>
-        <tr><td>${trans('items.printer_test_date_time')}:</td><td style="text-align: left;">${formatDateTime(new Date(), { second: '2-digit' })}</td></tr>
+      <table style="width: 100%; font-size: 10px; text-align: start;">
+        <tr><td>${escapeHtml(trans('desktop_hardware.test_slip_connection'))}:</td><td style="text-align: end; font-weight: bold;">${escapeHtml(trans('desktop_hardware.test_slip_connected'))}</td></tr>
+        <tr><td>${escapeHtml(trans('desktop_hardware.test_slip_paper_width'))}:</td><td style="text-align: end;">${escapeHtml(paperWidth.value)}</td></tr>
+        <tr><td>${escapeHtml(trans('items.printer_test_date_time'))}:</td><td style="text-align: end;">${escapeHtml(formatDateTime(new Date(), { second: '2-digit' }))}</td></tr>
       </table>
       <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-      <p style="font-size: 9px; margin-top: 6px;">تمت الطباعة الصامتة عبر Electron Desktop Shell بنجاح.</p>
+      <p style="font-size: 9px; margin-top: 6px;">${escapeHtml(trans('desktop_hardware.test_slip_footer'))}</p>
     </div>
   `;
 
@@ -207,26 +256,41 @@ const handleTestPrint = async () => {
   });
 
   if (res && res.success) {
-    Swal.fire({
-      icon: 'success',
-      title: trans('settings.test_print_success'),
-      timer: 2000,
-      showConfirmButton: false,
-    });
+    notifySuccess(trans('settings.test_print_success'));
   }
 };
 
+const selectDrawerPin = async (pin) => {
+  if (pin === drawerPin.value || isSavingPin.value) return;
+  isSavingPin.value = true;
+  try {
+    const saved = await saveDrawerPin(pin);
+    if (saved) {
+      notifySuccess(trans('desktop_hardware.drawer_pin_saved', { pin }));
+    } else {
+      notifyError(trans('desktop_hardware.drawer_pin_save_failed'));
+    }
+  } finally {
+    isSavingPin.value = false;
+  }
+};
+
+// Shows what really happened (ESC/POS pulse, driver fallback, or the failure reason) instead of "signal sent".
 const handleTestDrawer = async () => {
-  await openCashDrawer(selectedPrinter.value);
-  Swal.fire({
-    icon: 'info',
-    title: trans('settings.drawer_signal_sent'),
-    timer: 1500,
-    showConfirmButton: false,
-  });
+  if (isTestingDrawer.value) return;
+  isTestingDrawer.value = true;
+  try {
+    const res = await testCashDrawer(selectedPrinter.value);
+    const message = trans(drawerResultKey(res), { pin: drawerPin.value });
+    if (res.success) notifySuccess(message);
+    else notifyError(message);
+  } finally {
+    isTestingDrawer.value = false;
+  }
 };
 
 onMounted(() => {
   loadPrinters();
+  loadDrawerPin();
 });
 </script>

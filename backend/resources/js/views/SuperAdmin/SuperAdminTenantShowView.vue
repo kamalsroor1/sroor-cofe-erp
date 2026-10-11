@@ -1,34 +1,29 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
-    <!-- Loading State Skeleton -->
-    <div
-      v-if="isLoading"
-      class="p-20 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl"
-    >
-      <div
-        class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-      ></div>
-      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $t('super.loading_tenant_details') }}</p>
-    </div>
+    <TenantShowSkeleton v-if="isLoading" />
 
     <template v-else-if="tenant">
-      <!-- Executive Header -->
       <TenantShowHeader
         :tenant="tenant"
         :is-impersonating="isImpersonating"
         :is-migrating="isMigrating"
+        :can-manage="canManageTenants"
+        :can-unarchive="canUnarchive"
+        :archive-in-progress="archiveInProgress"
+        :is-archiving="isArchiving"
+        :is-unarchiving="isUnarchiving"
         @impersonate="impersonateTenant"
         @open-status="openStatusModal"
         @run-migrations="runMigrations"
-        @delete-tenant="deleteTenant"
+        @archive-tenant="deleteTenant"
+        @unarchive-tenant="restoreArchivedTenant"
       />
 
-      <!-- Live Operational Stats Grid -->
+      <TenantArchivePanel v-if="showArchivePanel" :archive="archiveInfo" :status="tenant.status || ''" />
+
       <TenantStatsGrid :stats="stats" />
 
-      <!-- Main Columns Grid: Units Customization & Features Overrides -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- ⚖️ Left Column: Allowed Units for This Tenant (6 Cols) -->
         <div class="lg:col-span-6">
           <TenantUnitsCard
             :tenant-name="tenant.name"
@@ -43,7 +38,6 @@
           />
         </div>
 
-        <!-- 🚀 Right Column: Feature Overrides & Configuration (6 Cols) -->
         <div class="lg:col-span-6">
           <TenantFeaturesMatrixCard
             :features="allFeatures"
@@ -53,7 +47,6 @@
         </div>
       </div>
 
-      <!-- Status & Plan Modal -->
       <EditTenantStatusModal
         :show="showStatusModal"
         :tenant-name="tenant.name || ''"
@@ -71,6 +64,8 @@
 
 <script setup>
 import TenantShowHeader from '../../Components/SuperAdmin/TenantShowHeader.vue';
+import TenantShowSkeleton from '../../Components/SuperAdmin/TenantShowSkeleton.vue';
+import TenantArchivePanel from '../../Components/SuperAdmin/TenantArchivePanel.vue';
 import TenantStatsGrid from '../../Components/SuperAdmin/TenantStatsGrid.vue';
 import TenantUnitsCard from '../../Components/SuperAdmin/TenantUnitsCard.vue';
 import TenantFeaturesMatrixCard from '../../Components/SuperAdmin/TenantFeaturesMatrixCard.vue';
@@ -103,5 +98,13 @@ const {
   updateStatusAndPlan,
   updateStatusField,
   deleteTenant,
+  restoreArchivedTenant,
+  archiveInfo,
+  showArchivePanel,
+  canUnarchive,
+  archiveInProgress,
+  canManageTenants,
+  isArchiving,
+  isUnarchiving,
 } = useSuperAdminTenantShow();
 </script>

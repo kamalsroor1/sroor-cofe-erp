@@ -97,3 +97,48 @@ test('a throwing dependency resolves to drawer_failed', async () => {
     });
     assert.deepEqual(await kicker.kick('XP-80'), { success: false, error: 'drawer_failed' });
 });
+
+// APP-5 ext: per-device pin 2 (default) or 5, read on every kick.
+
+const { normalizeDrawerPin } = require(path.join(__dirname, '..', 'src', 'hardware', 'drawerKick.js'));
+
+function setupWithPin(getPin) {
+    const calls = [];
+    const kicker = createDrawerKicker({
+        listPrinters: async () => PRINTERS,
+        getConfiguredPrinter: () => 'XP-80',
+        getKickOptions: () => ({ pin: getPin() }),
+        sendRaw: async (name, bytes) => {
+            calls.push([...bytes]);
+            return { success: true };
+        },
+        printDriverPulse: async () => ({ success: true }),
+    });
+    return { kicker, calls };
+}
+
+test('pin 5 sends ESC p 1 25 250 (1B 70 01 19 FA)', async () => {
+    const { kicker, calls } = setupWithPin(() => 5);
+    await kicker.kick('XP-80');
+    assert.deepEqual(calls[0], [0x1b, 0x70, 0x01, 0x19, 0xfa]);
+});
+
+test('the pin is read on every kick, so a changed setting applies immediately', async () => {
+    let pin = 2;
+    const { kicker, calls } = setupWithPin(() => pin);
+    await kicker.kick('XP-80');
+    pin = 5;
+    await kicker.kick('XP-80');
+    assert.equal(calls[0][2], 0x00);
+    assert.equal(calls[1][2], 0x01);
+});
+
+test('a missing or invalid saved pin falls back to pin 2', async () => {
+    for (const bad of [undefined, null, 3, '5', 0]) {
+        const { kicker, calls } = setupWithPin(() => bad);
+        await kicker.kick('XP-80');
+        assert.equal(calls[0][2], 0x00, `pin ${String(bad)} must fall back to pin 2`);
+    }
+    assert.equal(normalizeDrawerPin(5), 5);
+    assert.equal(normalizeDrawerPin('5'), 2);
+});

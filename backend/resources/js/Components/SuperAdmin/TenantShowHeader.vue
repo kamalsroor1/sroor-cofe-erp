@@ -20,8 +20,11 @@
       <div>
         <div class="flex items-center gap-3 flex-wrap">
           <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ tenant?.name }}</h1>
-          <span class="px-3 py-0.5 rounded-full text-xs font-black border" :class="getStatusBadgeClass(tenant?.status)">
-            {{ getStatusLabel(tenant?.status) }}
+          <span
+            class="px-3 py-0.5 rounded-full text-xs font-black border"
+            :class="tenantStatusBadgeClass(tenant?.status)"
+          >
+            {{ tenantStatusLabel(tenant?.status, $t) }}
           </span>
         </div>
         <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
@@ -80,58 +83,64 @@
         <span>{{ isMigrating ? $t('super.migrating_status') : $t('super.run_migrations_btn') }}</span>
       </BaseButton>
 
-      <button
-        type="button"
-        @click="$emit('delete-tenant')"
-        class="p-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-500 rounded-xl transition cursor-pointer active:scale-95"
-        :title="$t('super.delete_tenant_title')"
-      >
-        <Trash2 class="w-4 h-4" />
-      </button>
+      <template v-if="canManage">
+        <BaseButton
+          v-if="canUnarchive"
+          type="button"
+          variant="secondary"
+          size="md"
+          :loading="isUnarchiving"
+          @click="$emit('unarchive-tenant')"
+          class="min-h-11 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
+        >
+          <ArchiveRestore class="w-4 h-4" />
+          <span>{{ $t('tenant_archive.unarchive_btn') }}</span>
+        </BaseButton>
+        <BaseButton
+          v-else-if="tenant?.status !== 'archived'"
+          type="button"
+          variant="secondary"
+          size="md"
+          :loading="isArchiving"
+          :disabled="archiveInProgress"
+          @click="$emit('archive-tenant')"
+          class="min-h-11 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-800"
+        >
+          <Archive class="w-4 h-4" />
+          <span>{{ $t('tenant_archive.confirm_btn') }}</span>
+        </BaseButton>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ExternalLink, Trash2, ArrowRight, Store, Sparkles, Settings, Database } from 'lucide-vue-next';
+import {
+  ExternalLink,
+  ArrowRight,
+  Store,
+  Sparkles,
+  Settings,
+  Database,
+  Archive,
+  ArchiveRestore,
+} from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
-import { useTrans } from '../../Composables/useTrans';
-
-const { t } = useTrans();
+import { tenantStatusBadgeClass, tenantStatusLabel } from '../../helpers/tenantStatus';
 
 defineProps({
   tenant: { type: Object, default: null },
   isImpersonating: { type: Boolean, default: false },
   isMigrating: { type: Boolean, default: false },
+  // super_admin.tenants.manage: archive / unarchive buttons are hidden without it.
+  canManage: { type: Boolean, default: false },
+  // Archived and not purged: the server can restore it.
+  canUnarchive: { type: Boolean, default: false },
+  // An archive job is queued or running: a second request would be refused (409).
+  archiveInProgress: { type: Boolean, default: false },
+  isArchiving: { type: Boolean, default: false },
+  isUnarchiving: { type: Boolean, default: false },
 });
 
-defineEmits(['impersonate', 'open-status', 'run-migrations', 'delete-tenant']);
-
-const getStatusBadgeClass = (status) => {
-  switch (status) {
-    case 'active':
-      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
-    case 'trial':
-      return 'bg-theme-light text-theme-primary border-theme-border';
-    case 'suspended':
-      return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30';
-    default:
-      return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30';
-  }
-};
-
-const getStatusLabel = (status) => {
-  switch (status) {
-    case 'active':
-      return t('super.status_active_badge');
-    case 'trial':
-      return t('super.status_trial_badge');
-    case 'suspended':
-      return t('super.status_suspended_badge');
-    case 'expired':
-      return t('super.status_expired_badge');
-    default:
-      return status;
-  }
-};
+defineEmits(['impersonate', 'open-status', 'run-migrations', 'archive-tenant', 'unarchive-tenant']);
 </script>

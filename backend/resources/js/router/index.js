@@ -323,7 +323,7 @@ const tenantRoutes = [
         meta: {
             title: 'إعدادات النظام والمؤسسة',
             requiresAuth: true,
-            permission: 'roles.manage',
+            permission: 'settings.manage',
         },
     },
     {
@@ -344,6 +344,14 @@ const tenantRoutes = [
             requiresAuth: true,
             permission: 'trash.access',
         },
+    },
+    {
+        // APP-3: public manual download page (no login). The in-app updater sends users here when it cannot
+        // install safely; it lists each platform's latest release with its SHA-256.
+        path: '/download',
+        name: 'app.download',
+        component: () => import('../views/AppDownload/AppDownloadView.vue'),
+        meta: { layout: 'blank' },
     },
     {
         path: '/:pathMatch(.*)*',

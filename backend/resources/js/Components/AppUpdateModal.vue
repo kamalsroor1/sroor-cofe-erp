@@ -1,10 +1,12 @@
 <script setup>
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   AlertTriangle,
   Calendar,
   CheckCircle,
   Download,
+  ExternalLink,
   HardDrive,
   Loader2,
   RefreshCw,
@@ -13,7 +15,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-vue-next';
-import { useAppUpdate } from '../Composables/useAppUpdate';
+import { APP_DOWNLOAD_ROUTE, useAppUpdate } from '../Composables/useAppUpdate';
 import { bytesToMegabytes } from '../helpers/appUpdate';
 
 const {
@@ -31,9 +33,17 @@ const {
   stage,
   errorKey,
   downloadStageText,
+  canDownloadManually,
   startDownloadAndInstall,
+  openManualDownloadPage,
   closeModal,
 } = useAppUpdate();
+
+const route = useRoute();
+// The manual download page must stay usable even while a forced update is pending.
+const isVisible = computed(
+  () => isEligible.value && isModalOpen.value && !!update.value && route.name !== APP_DOWNLOAD_ROUTE
+);
 
 const canDismiss = computed(() => !isForceUpdate.value && !isDownloading.value);
 const releaseNotes = computed(() => update.value?.releaseNotes ?? []);
@@ -46,7 +56,7 @@ const totalMb = computed(() => bytesToMegabytes(totalBytes.value));
   <Teleport to="body">
     <Transition name="fade">
       <div
-        v-if="isEligible && isModalOpen && update"
+        v-if="isVisible"
         class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm select-none font-tajawal"
         role="dialog"
         aria-modal="true"
@@ -208,13 +218,27 @@ const totalMb = computed(() => bytesToMegabytes(totalBytes.value));
                 role="alert"
               >
                 <ShieldAlert class="mt-0.5 h-5 w-5 shrink-0" />
-                <p class="leading-relaxed">{{ $t(errorKey) }}</p>
+                <div class="space-y-1">
+                  <p class="leading-relaxed">{{ $t(errorKey) }}</p>
+                  <p v-if="canDownloadManually" class="leading-relaxed">{{ $t('app_update.manual_download_hint') }}</p>
+                </div>
               </div>
             </div>
 
             <!-- Footer -->
-            <div class="flex items-center gap-3 border-t border-slate-200 p-5 dark:border-slate-800">
+            <div class="flex flex-wrap items-center gap-3 border-t border-slate-200 p-5 dark:border-slate-800">
               <button
+                v-if="canDownloadManually"
+                type="button"
+                data-testid="app-update-manual-download"
+                class="flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-theme-gradient px-4 py-3 text-sm font-black text-white transition active:scale-95"
+                @click="openManualDownloadPage"
+              >
+                <ExternalLink class="h-4 w-4" />
+                <span>{{ $t('app_update.download_manually') }}</span>
+              </button>
+              <button
+                v-else
                 type="button"
                 :disabled="isDownloading"
                 class="flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-theme-gradient px-4 py-3 text-sm font-black text-white transition active:scale-95 disabled:opacity-50"

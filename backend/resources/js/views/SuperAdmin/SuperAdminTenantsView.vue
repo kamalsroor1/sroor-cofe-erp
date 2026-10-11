@@ -38,9 +38,13 @@
     <TenantsTable
       :tenants="tenants"
       :loading="isLoading"
+      :can-manage="canManageTenants"
+      :is-archiving="isArchiving"
+      :is-unarchiving="isUnarchiving"
       @open-status="openStatusModal"
       @open-create="openCreateModal"
-      @delete-tenant="confirmDeleteTenant"
+      @archive-tenant="confirmDeleteTenant"
+      @unarchive-tenant="confirmUnarchiveTenant"
     />
 
     <!-- Create Tenant Modal -->
@@ -103,5 +107,9 @@ const {
   updateStatusField,
   submitStatusChange,
   confirmDeleteTenant,
+  confirmUnarchiveTenant,
+  isArchiving,
+  isUnarchiving,
+  canManageTenants,
 } = useSuperAdminTenants();
 </script>

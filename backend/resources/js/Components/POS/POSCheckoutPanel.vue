@@ -220,6 +220,7 @@
 
       <button
         type="button"
+        data-testid="pos-checkout-save-print"
         @click="$emit('submit', true)"
         :disabled="cartEmpty || isSubmitting || offline"
         class="w-full h-8 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-[11px] transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
