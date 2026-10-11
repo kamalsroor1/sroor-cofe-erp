@@ -20,7 +20,7 @@
         <div class="space-y-0.5">
           <div class="flex items-center gap-2">
             <h1 class="text-base sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>⚙️</span>
+              <Settings class="w-5 h-5 text-theme-primary shrink-0" />
               <span>{{ title }}</span>
             </h1>
 
@@ -32,16 +32,6 @@
             >
               <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
               <span>{{ $t('settings.unsaved_changes') }}</span>
-            </span>
-
-            <!-- Read-Only Badge -->
-            <span
-              v-if="!canManage"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
-              :title="$t('settings.read_only_notice')"
-            >
-              <Lock class="w-3 h-3" />
-              <span>{{ $t('settings.read_only_mode') }}</span>
             </span>
           </div>
 
@@ -103,7 +93,7 @@
 </template>
 
 <script setup>
-import { ArrowRight, SlidersHorizontal, Save, Loader2, Lock } from 'lucide-vue-next';
+import { ArrowRight, SlidersHorizontal, Save, Loader2, Settings } from 'lucide-vue-next';
 import SettingsSearchBar from './SettingsSearchBar.vue';
 
 defineProps({

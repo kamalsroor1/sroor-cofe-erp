@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted, toRaw } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useTrans } from './useTrans';
@@ -35,31 +35,35 @@ export function useSettingsShell(options = {}) {
     };
 
     // 3. Advanced Settings Toggle (persisted per user in localStorage)
+    const getStorageKey = () => {
+        const uid = authStore.user?.id || 'default';
+        return `${STORAGE_KEY_ADVANCED}_${uid}`;
+    };
+
     const showAdvanced = ref(
-        typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY_ADVANCED) === 'true' : false
+        typeof localStorage !== 'undefined' ? localStorage.getItem(getStorageKey()) === 'true' : false
     );
 
     const toggleAdvanced = () => {
         showAdvanced.value = !showAdvanced.value;
         if (typeof localStorage !== 'undefined') {
-            localStorage.setItem(STORAGE_KEY_ADVANCED, showAdvanced.value ? 'true' : 'false');
+            localStorage.setItem(getStorageKey(), showAdvanced.value ? 'true' : 'false');
         }
     };
 
     // 4. Permissions Checking
-    // User has settings.manage (or admin / roles.manage). If not, canManage = false (read-only mode).
+    // Gated by settings.manage or admin per CTO guidance
     const canManage = computed(() => {
         if (!authStore.user) return false;
         if (authStore.isAdmin) return true;
-        return authStore.can('settings.manage') || authStore.can('roles.manage');
+        return authStore.can('settings.manage');
     });
 
     // 5. Unsaved Changes Dirty Tracking
     const hasUnsavedChanges = computed(() => {
-        if (!form || !initialForm) return false;
-        const current = toRaw(form.value || form);
-        const baseline = toRaw(initialForm.value || initialForm);
-        if (!current || !baseline) return false;
+        if (!form?.value || !initialForm?.value) return false;
+        const current = form.value;
+        const baseline = initialForm.value;
 
         const keys = Object.keys(baseline);
         return keys.some((k) => {

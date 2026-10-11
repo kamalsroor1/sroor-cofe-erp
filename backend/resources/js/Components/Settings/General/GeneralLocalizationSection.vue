@@ -26,7 +26,7 @@
         <div class="flex items-center justify-between">
           <label for="setting-currency" class="block text-xs font-black text-slate-700 dark:text-slate-200">
             {{ $t('settings.currency') }}
-            <span class="text-rose-500 mr-0.5">*</span>
+            <span class="text-rose-500 ms-0.5">*</span>
           </label>
           <div class="flex items-center gap-2">
             <span
@@ -90,7 +90,7 @@
         <div class="flex items-center justify-between">
           <label for="setting-timezone" class="block text-xs font-black text-slate-700 dark:text-slate-200">
             {{ $t('settings.timezone') }}
-            <span class="text-rose-500 mr-0.5">*</span>
+            <span class="text-rose-500 ms-0.5">*</span>
           </label>
           <div class="flex items-center gap-2">
             <span
@@ -136,7 +136,7 @@
         <div class="flex items-center justify-between">
           <label for="setting-business_day_cutoff" class="block text-xs font-black text-slate-700 dark:text-slate-200">
             {{ $t('settings.business_day_cutoff') }}
-            <span class="text-rose-500 mr-0.5">*</span>
+            <span class="text-rose-500 ms-0.5">*</span>
           </label>
           <div class="flex items-center gap-2">
             <span

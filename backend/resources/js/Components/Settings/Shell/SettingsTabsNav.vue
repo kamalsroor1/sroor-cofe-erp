@@ -6,6 +6,7 @@
         v-for="tab in visibleTabs"
         :key="tab.id"
         type="button"
+        :data-testid="'mobile-tab-' + tab.id"
         @click="$emit('select-tab', tab.id)"
         class="w-full text-start p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-theme-primary/40 dark:hover:border-theme-primary/40 shadow-xs hover:shadow-md transition-all flex items-start gap-4 active:scale-98 cursor-pointer select-none group min-h-[44px]"
       >
@@ -45,6 +46,7 @@
         v-for="tab in visibleTabs"
         :key="tab.id"
         type="button"
+        :data-testid="'tab-' + tab.id"
         @click="$emit('select-tab', tab.id)"
         class="w-full text-start p-3 sm:p-3.5 rounded-2xl transition-all flex items-center gap-3.5 cursor-pointer select-none min-h-[44px] active:scale-98"
         :class="
@@ -133,7 +135,7 @@ const visibleTabs = computed(() => [
   },
   {
     id: 'printing',
-    label: t('settings.sec_printing_label'),
+    label: t('settings.tab_printing'),
     subtitle: t('settings.tab_printing_sub'),
     icon: Printer,
     iconBg: 'bg-blue-500/10 border border-blue-500/20',

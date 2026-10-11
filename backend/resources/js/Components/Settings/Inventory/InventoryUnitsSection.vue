@@ -95,9 +95,9 @@
               @click="moveUp(idx)"
               :disabled="idx === 0"
               :title="$t('settings.move_up')"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              <ArrowUp class="w-3.5 h-3.5" />
+              <ArrowUp class="w-4 h-4" />
             </button>
 
             <button
@@ -105,18 +105,18 @@
               @click="moveDown(idx)"
               :disabled="idx === unitsList.length - 1"
               :title="$t('settings.move_down')"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              <ArrowDown class="w-3.5 h-3.5" />
+              <ArrowDown class="w-4 h-4" />
             </button>
 
             <button
               type="button"
               @click="remove(idx)"
               :title="$t('settings.remove_unit')"
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+              class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
             >
-              <Trash2 class="w-3.5 h-3.5" />
+              <Trash2 class="w-4 h-4" />
             </button>
           </div>
         </div>

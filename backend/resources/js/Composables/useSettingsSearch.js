@@ -1,4 +1,4 @@
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTrans } from './useTrans';
 
@@ -10,7 +10,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_name',
         descKey: 'settings.company_name_placeholder',
         tabId: 'general',
-        keywords: ['اسم', 'المنشأة', 'المحل', 'الشركة', 'company', 'name', 'branding'],
+        keywords: ['اسم', 'المنشأة', 'المحل', 'الشركة', 'company', 'name', 'branding', 'identity'],
         isAdvanced: false,
     },
     {
@@ -19,7 +19,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_subtitle',
         descKey: 'settings.company_subtitle_placeholder',
         tabId: 'general',
-        keywords: ['وصف', 'نشاط', 'فرعي', 'subtitle'],
+        keywords: ['وصف', 'نشاط', 'فرعي', 'subtitle', 'description'],
         isAdvanced: false,
     },
     {
@@ -28,7 +28,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_phone',
         descKey: 'settings.company_phone_placeholder',
         tabId: 'general',
-        keywords: ['هاتف', 'تليفون', 'موبايل', 'اتصال', 'phone'],
+        keywords: ['هاتف', 'تليفون', 'موبايل', 'اتصال', 'phone', 'contact'],
         isAdvanced: false,
     },
     {
@@ -37,7 +37,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_address',
         descKey: 'settings.company_address_placeholder',
         tabId: 'general',
-        keywords: ['عنوان', 'مقر', 'مكان', 'فرع', 'address'],
+        keywords: ['عنوان', 'مقر', 'مكان', 'فرع', 'address', 'location'],
         isAdvanced: false,
     },
     {
@@ -62,7 +62,7 @@ export const SETTINGS_REGISTRY = [
         id: 'business_day_cutoff',
         key: 'locale.business_day_cutoff',
         labelKey: 'settings.business_day_cutoff',
-        descKey: 'settings.business_day_cutoff_invalid',
+        descKey: 'settings.business_day_cutoff_hint',
         tabId: 'general',
         keywords: ['نهاية اليوم', 'بداية اليوم', 'إغلاق اليوم', 'توقيت الإغلاق', 'وردية', 'cutoff', 'business_day'],
         isAdvanced: true,
@@ -93,7 +93,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.print_company_name_toggle',
         descKey: 'settings.print_company_name_desc',
         tabId: 'printing',
-        keywords: ['طباعة اسم', 'رأس الفاتورة', 'إيصال'],
+        keywords: ['طباعة اسم', 'رأس الفاتورة', 'إيصال', 'print', 'header'],
         isAdvanced: false,
     },
     {
@@ -102,7 +102,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.print_subtitle_toggle',
         descKey: 'settings.print_subtitle_desc',
         tabId: 'printing',
-        keywords: ['طباعة الوصف', 'وصف فرعي', 'إيصال'],
+        keywords: ['طباعة الوصف', 'وصف فرعي', 'إيصال', 'subtitle'],
         isAdvanced: false,
     },
     {
@@ -111,7 +111,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.show_print_logo',
         descKey: 'settings.logo_hint',
         tabId: 'printing',
-        keywords: ['شعار', 'لوجو', 'logo', 'طباعة اللوجو'],
+        keywords: ['شعار', 'لوجو', 'logo', 'طباعة اللوجو', 'print logo'],
         isAdvanced: false,
     },
     {
@@ -120,7 +120,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.thermal_balance_toggle',
         descKey: 'settings.thermal_balance_desc',
         tabId: 'printing',
-        keywords: ['رصيد العميل', 'مديونية', 'آجل', 'balance'],
+        keywords: ['رصيد العميل', 'مديونية', 'آجل', 'balance', 'credit'],
         isAdvanced: false,
     },
     {
@@ -134,11 +134,11 @@ export const SETTINGS_REGISTRY = [
     },
     {
         id: 'invoice_footer_note',
-        key: 'receipt.footer_text',
+        key: 'printing.invoice_footer',
         labelKey: 'settings.invoice_footer_note_label',
         descKey: 'settings.invoice_footer_placeholder',
         tabId: 'printing',
-        keywords: ['تذييل', 'ملاحظة الفاتورة', 'footer', 'استرجاع', 'شكر'],
+        keywords: ['تذييل', 'ملاحظة الفاتورة', 'footer', 'استرجاع', 'شكر', 'invoice footer'],
         isAdvanced: false,
     },
 
@@ -158,7 +158,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.low_stock_default_threshold',
         descKey: 'settings.low_stock_default_threshold',
         tabId: 'inventory',
-        keywords: ['نواقص', 'تنبيه النواقص', 'حد النقص', 'threshold', 'low_stock'],
+        keywords: ['نواقص', 'تنبيه النواقص', 'حد النقص', 'threshold', 'low_stock', 'minimum'],
         isAdvanced: false,
     },
 
@@ -185,16 +185,16 @@ export const SETTINGS_REGISTRY = [
         id: 'receipt_header_lines',
         key: 'receipt.header_lines',
         labelKey: 'branding.attributes.receipt_header_lines',
-        descKey: 'branding.receipt_header_too_many_lines',
+        descKey: 'settings.receipt_header_hint',
         tabId: 'branding',
-        keywords: ['ترويسة', 'رأس', 'إيصال', 'فاتورة', 'header', 'receipt'],
+        keywords: ['ترويسة', 'رأس', 'إيصال', 'فاتورة', 'header', 'receipt', 'lines'],
         isAdvanced: false,
     },
     {
         id: 'receipt_footer_text',
         key: 'receipt.footer_text',
         labelKey: 'branding.attributes.receipt_footer_text',
-        descKey: 'branding.receipt_text_no_markup',
+        descKey: 'settings.receipt_footer_hint',
         tabId: 'branding',
         keywords: ['تذييل', 'ختام', 'إيصال', 'فاتورة', 'footer', 'receipt'],
         isAdvanced: false,
@@ -203,20 +203,20 @@ export const SETTINGS_REGISTRY = [
         id: 'system_theme_color',
         key: 'system.theme_color',
         labelKey: 'branding.attributes.system_theme_color',
-        descKey: 'branding.theme_color_invalid',
+        descKey: 'settings.sec_appearance_desc',
         tabId: 'branding',
-        keywords: ['لون', 'ثيم', 'مظهر', 'theme', 'color'],
+        keywords: ['لون', 'ثيم', 'مظهر', 'theme', 'color', 'palette', 'amber', 'emerald'],
         isAdvanced: false,
     },
 
-    // 4. Notifications Tab Settings
+    // 5. Notifications Tab Settings
     {
         id: 'telegram_notifications_enabled',
         key: 'notifications.telegram.enabled',
         labelKey: 'settings.telegram_enable_toggle',
         descKey: 'settings.telegram_enable_desc',
         tabId: 'notifications',
-        keywords: ['تلجرام', 'إشعارات', 'تنبيهات', 'telegram', 'bot'],
+        keywords: ['تلجرام', 'إشعارات', 'تنبيهات', 'telegram', 'bot', 'notifications'],
         isAdvanced: false,
     },
     {
@@ -225,7 +225,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.bot_token',
         descKey: 'settings.bot_token_placeholder',
         tabId: 'notifications',
-        keywords: ['توكن', 'token', 'bot token'],
+        keywords: ['توكن', 'token', 'bot token', 'telegram'],
         isAdvanced: true,
     },
     {
@@ -234,42 +234,24 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.chat_id',
         descKey: 'settings.chat_id_input_placeholder',
         tabId: 'notifications',
-        keywords: ['chat_id', 'محادثة', 'جروب'],
+        keywords: ['chat_id', 'محادثة', 'جروب', 'chat', 'id', 'group'],
         isAdvanced: false,
     },
 
-    // 5. Device & System Tab Settings
-    {
-        id: 'system_theme_color',
-        key: 'device.theme_color',
-        labelKey: 'settings.sec_appearance_label',
-        descKey: 'settings.sec_appearance_desc',
-        tabId: 'device',
-        keywords: ['ألوان', 'ثيم', 'مظهر', 'theme', 'color', 'palette'],
-        isAdvanced: false,
-    },
+    // 6. Device & System Tab Settings
     {
         id: 'theme_mode',
         key: 'device.theme_mode',
         labelKey: 'settings.theme_mode_label',
         descKey: 'settings.theme_mode_label',
         tabId: 'device',
-        keywords: ['داكن', 'فاتح', 'ليلي', 'نهاري', 'dark', 'light'],
-        isAdvanced: false,
-    },
-    {
-        id: 'database_backup',
-        key: 'device.backup',
-        labelKey: 'settings.backup_title',
-        descKey: 'settings.backup_sub',
-        tabId: 'device',
-        keywords: ['نسخ احتياطي', 'تحميل قاعدة البيانات', 'backup', 'sql'],
+        keywords: ['داكن', 'فاتح', 'ليلي', 'نهاري', 'dark', 'light', 'mode'],
         isAdvanced: false,
     },
 ];
 
 export function useSettingsSearch(options = {}) {
-    const { onSelectTab } = options;
+    const { onSelectTab, isLoading } = options;
     const { t } = useTrans();
     const route = useRoute();
     const router = useRouter();
@@ -325,7 +307,7 @@ export function useSettingsSearch(options = {}) {
             el.classList.add('ring-4', 'ring-theme-primary', 'ring-offset-2', 'transition-all', 'duration-500');
             setTimeout(() => {
                 el.classList.remove('ring-4', 'ring-theme-primary', 'ring-offset-2');
-            }, 2500);
+            }, 4500);
         }
     };
 
@@ -355,13 +337,22 @@ export function useSettingsSearch(options = {}) {
     };
 
     /**
-     * Check query parameter 'k' and deep link into matching setting
+     * Check query parameter 'k' and deep link into matching setting.
+     * Waits until loading completes to prevent race conditions.
      */
     const handleDeepLink = async () => {
-        const k = route?.query?.k;
+        const k = route?.query?.k || route?.query?.tab;
         if (!k || typeof k !== 'string') return;
 
         const needle = k.toLowerCase().trim();
+        const validTabs = ['general', 'printing', 'inventory', 'branding', 'notifications', 'device'];
+        if (validTabs.includes(needle)) {
+            if (onSelectTab) {
+                onSelectTab(needle);
+            }
+            return;
+        }
+
         const found = SETTINGS_REGISTRY.find(
             (item) =>
                 item.key.toLowerCase() === needle ||
@@ -374,10 +365,28 @@ export function useSettingsSearch(options = {}) {
             if (onSelectTab) {
                 onSelectTab(found.tabId);
             }
-            await nextTick();
-            setTimeout(() => {
-                highlightElement(found.id);
-            }, 250);
+
+            const doHighlight = () => {
+                nextTick().then(() => {
+                    setTimeout(() => {
+                        highlightElement(found.id);
+                    }, 150);
+                });
+            };
+
+            if (!isLoading || !isLoading.value) {
+                doHighlight();
+            } else {
+                const unwatch = watch(
+                    () => isLoading.value,
+                    (loading) => {
+                        if (!loading) {
+                            unwatch();
+                            doHighlight();
+                        }
+                    }
+                );
+            }
         }
     };
 

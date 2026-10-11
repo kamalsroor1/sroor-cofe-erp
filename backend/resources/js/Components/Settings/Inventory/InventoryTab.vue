@@ -1,34 +1,20 @@
 <template>
   <div class="space-y-6 font-tajawal">
-    <!-- Read-Only Banner when user lacks settings.manage permission -->
-    <div
-      v-if="!resolvedCanManage"
-      class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 flex items-center gap-3 text-xs font-bold"
-    >
-      <ShieldAlert class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-      <span>{{ $t('settings.read_only_notice') }}</span>
-    </div>
-
     <!-- 1. Units Section -->
-    <InventoryUnitsSection
-      :form="resolvedForm"
-      :errors="resolvedErrors"
-      :can-manage="resolvedCanManage"
-      @update:field="handleUpdateField"
-    />
+    <InventoryUnitsSection :form="form" :errors="errors" :can-manage="canManage" @update:field="handleUpdateField" />
 
     <!-- 2. Threshold Section -->
     <InventoryThresholdSection
-      :form="resolvedForm"
-      :errors="resolvedErrors"
-      :can-manage="resolvedCanManage"
+      :form="form"
+      :errors="errors"
+      :can-manage="canManage"
       @update:field="handleUpdateField"
       @reset-field="handleResetField"
     />
 
     <!-- Section Save Actions Footer -->
     <div
-      v-if="resolvedCanManage"
+      v-if="canManage"
       class="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs"
     >
       <div class="flex items-center gap-2">
@@ -46,7 +32,7 @@
           type="button"
           variant="primary"
           size="md"
-          :loading="resolvedIsSaving"
+          :loading="isSaving"
           @click="handleSave"
           class="w-full sm:w-auto font-black shadow-theme-primary shadow-lg flex items-center justify-center gap-2 min-h-[44px]"
         >
@@ -60,21 +46,20 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Save, ShieldAlert } from 'lucide-vue-next';
+import { Save } from 'lucide-vue-next';
 import BaseButton from '../../Common/BaseButton.vue';
 import InventoryUnitsSection from './InventoryUnitsSection.vue';
 import InventoryThresholdSection from './InventoryThresholdSection.vue';
-import { useSettings } from '../../../Composables/useSettings';
 
 const props = defineProps({
-  form: { type: Object, default: null },
-  errors: { type: Object, default: null },
-  isSaving: { type: Boolean, default: null },
-  canManage: { type: Boolean, default: null },
+  form: { type: Object, required: true },
+  errors: { type: Object, default: () => ({}) },
+  isSaving: { type: Boolean, default: false },
+  canManage: { type: Boolean, default: true },
   initialForm: { type: Object, default: null },
-  activeUnitsList: { type: Array, default: null },
-  defaultPresets: { type: Array, default: null },
-  newUnitInput: { type: String, default: null },
+  activeUnitsList: { type: Array, default: () => [] },
+  defaultPresets: { type: Array, default: () => [] },
+  newUnitInput: { type: String, default: '' },
 });
 
 const emit = defineEmits([
@@ -89,19 +74,11 @@ const emit = defineEmits([
   'reorder-units',
 ]);
 
-const settings = useSettings();
-
-const resolvedForm = computed(() => props.form || settings.form.value);
-const resolvedErrors = computed(() => props.errors || settings.errors.value);
-const resolvedIsSaving = computed(() => (props.isSaving !== null ? props.isSaving : settings.isSaving.value));
-const resolvedCanManage = computed(() => (props.canManage !== null ? props.canManage : settings.canManage.value));
-const resolvedInitialForm = computed(() => props.initialForm || settings.initialForm.value);
-
 const inventoryFields = ['inventory_units', 'low_stock_default_threshold'];
 
 const isSectionDirty = computed(() => {
-  if (!resolvedInitialForm.value) return false;
-  return inventoryFields.some((f) => resolvedForm.value[f] !== resolvedInitialForm.value[f]);
+  if (!props.initialForm) return false;
+  return inventoryFields.some((f) => props.form[f] !== props.initialForm[f]);
 });
 
 const handleUpdateField = (field, val) => {
@@ -114,27 +91,15 @@ const handleUpdateField = (field, val) => {
       : [];
     emit('reorder-units', list);
   }
-  if (props.form) {
-    emit('update:field', field, val);
-  } else {
-    settings.updateFormField(field, val);
-  }
+  emit('update:field', field, val);
 };
 
 const handleResetField = (field) => {
-  if (props.form) {
-    emit('reset-default', field);
-    emit('reset-field', field);
-  } else {
-    settings.resetFieldToDefault(field);
-  }
+  emit('reset-default', field);
+  emit('reset-field', field);
 };
 
 const handleSave = () => {
-  if (props.isSaving !== null) {
-    emit('save', 'inventory');
-  } else {
-    settings.saveSettings('inventory');
-  }
+  emit('save', 'inventory');
 };
 </script>

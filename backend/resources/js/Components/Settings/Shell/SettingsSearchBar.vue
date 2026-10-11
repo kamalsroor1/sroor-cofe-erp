@@ -15,7 +15,7 @@
         @keydown.up.prevent="navigateResults(-1)"
         @keydown.enter.prevent="selectHighlighted"
         :placeholder="$t('settings.search_placeholder')"
-        class="w-full min-h-[44px] ps-10 pe-10 text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition shadow-xs"
+        class="w-full min-h-[44px] ps-10 pe-12 text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition shadow-xs"
         dir="auto"
       />
 
@@ -23,7 +23,7 @@
         v-if="query"
         type="button"
         @click="clearQuery"
-        class="absolute end-2.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95"
+        class="absolute end-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer"
       >
         <X class="w-4 h-4" />
       </button>
@@ -59,7 +59,7 @@
           >
             <!-- Tab Badge Indicator -->
             <div
-              class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-theme-primary"
+              class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5 text-theme-primary"
             >
               <component :is="getTabIcon(item.tabId)" class="w-4 h-4" />
             </div>

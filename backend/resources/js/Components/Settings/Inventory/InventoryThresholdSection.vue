@@ -29,7 +29,7 @@
           class="block text-xs font-black text-slate-700 dark:text-slate-200"
         >
           {{ $t('settings.low_stock_default_threshold') }}
-          <span class="text-rose-500 mr-0.5">*</span>
+          <span class="text-rose-500 ms-0.5">*</span>
         </label>
 
         <div class="flex items-center gap-2">

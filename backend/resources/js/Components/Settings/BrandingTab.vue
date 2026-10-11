@@ -57,11 +57,12 @@
               <button
                 v-if="canManage && logoLightUrl"
                 type="button"
+                data-testid="logo-light-remove"
                 @click="$emit('remove-logo', 'light')"
                 :disabled="isUploadingLight"
-                class="min-h-[36px] px-2.5 py-1 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                class="min-h-[44px] px-3 py-2 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
               >
-                <Trash2 class="w-3.5 h-3.5" />
+                <Trash2 class="w-4 h-4" />
                 <span>{{ $t('settings.remove_logo') }}</span>
               </button>
             </div>
@@ -134,11 +135,12 @@
               <button
                 v-if="canManage && logoDarkUrl"
                 type="button"
+                data-testid="logo-dark-remove"
                 @click="$emit('remove-logo', 'dark')"
                 :disabled="isUploadingDark"
-                class="min-h-[36px] px-2.5 py-1 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                class="min-h-[44px] px-3 py-2 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
               >
-                <Trash2 class="w-3.5 h-3.5" />
+                <Trash2 class="w-4 h-4" />
                 <span>{{ $t('settings.remove_logo') }}</span>
               </button>
             </div>
@@ -218,7 +220,7 @@
             "
           >
             <span class="w-4 h-4 rounded-full shrink-0 shadow-xs" :style="{ backgroundColor: color.hex }"></span>
-            <span class="truncate text-[11px]">{{ color.name }}</span>
+            <span class="truncate text-[11px]">{{ color.labelKey ? $t(color.labelKey) : color.name }}</span>
           </button>
         </div>
 
@@ -229,11 +231,11 @@
             <input
               type="text"
               :value="form.system_theme_color"
-              @input="canManage && $emit('update:field', 'system_theme_color', $event.target.value)"
+              @input="canManage && handleCustomHexInput($event.target.value)"
               :disabled="!canManage"
               placeholder="#10B981"
               maxlength="7"
-              class="w-28 min-h-[38px] px-3 py-1 text-xs font-mono font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 outline-hidden"
+              class="w-28 min-h-[44px] px-3 py-2 text-xs font-mono font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 outline-hidden"
             />
           </div>
         </div>
@@ -344,7 +346,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Palette, Building2, Sun, Moon, Upload, Trash2, AlertCircle, Save, ShieldAlert } from 'lucide-vue-next';
+import { Palette, Building2, Sun, Moon, Upload, Trash2, AlertCircle, Save } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
 
 const props = defineProps({
@@ -362,7 +364,7 @@ const props = defineProps({
   isUploadingDark: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:field', 'save', 'upload-logo', 'remove-logo', 'select-color']);
+const emit = defineEmits(['update:field', 'save', 'upload-logo', 'remove-logo', 'select-color', 'update:custom-color']);
 
 const brandingFields = ['receipt_header_lines', 'receipt_footer_text', 'system_theme_color'];
 
@@ -397,5 +399,10 @@ const handleFileSelect = (variant, event) => {
 const handleSelectColor = (colorId) => {
   emit('select-color', colorId);
   emit('update:field', 'system_theme_color', colorId);
+};
+
+const handleCustomHexInput = (val) => {
+  emit('update:field', 'system_theme_color', val);
+  emit('update:custom-color', val);
 };
 </script>

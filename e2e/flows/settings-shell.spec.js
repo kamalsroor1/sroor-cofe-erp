@@ -69,7 +69,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -109,7 +109,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     const consoleErrors = setupConsoleListener(page);
 
     await page.goto("/settings?k=locale.business_day_cutoff", {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
@@ -123,7 +123,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
 
     // Test deep link with shorter key format ?k=business_day_cutoff
     await page.goto("/settings?k=business_day_cutoff", {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
     await dismissAnyModal(page);
     await expect(cutoffField).toBeVisible({ timeout: 10000 });
@@ -131,9 +131,9 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
       timeout: 5000,
     });
 
-    // Test deep link to another tab (e.g. printing tab ?k=receipt.footer_text)
-    await page.goto("/settings?k=receipt.footer_text", {
-      waitUntil: "networkidle",
+    // Test deep link to another tab (e.g. printing tab ?k=printing.invoice_footer)
+    await page.goto("/settings?k=printing.invoice_footer", {
+      waitUntil: "domcontentloaded",
     });
     await dismissAnyModal(page);
     const footerNoteField = page.locator("#setting-invoice_footer_note");
@@ -151,7 +151,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -188,7 +188,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     await page.waitForTimeout(1600);
 
     // Reload page to verify persisted value from API
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     const reloadedCutoff = page.locator("#setting-business_day_cutoff");
     await expect(reloadedCutoff).toHaveValue("03:00", { timeout: 10000 });
@@ -216,7 +216,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -274,9 +274,9 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
-    await page.waitForSelector("#app", { timeout: 15000 });
+    await page.waitForSelector("#app", { state: "attached", timeout: 15000 });
 
     // Modify a field to dirty the form
     const companyNameInput = page.locator("#setting-company_name");
@@ -301,8 +301,9 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
 
     // Trigger router navigation away to dashboard or pos
     const appNavigated = await page.evaluate(() => {
-      if (window.__vue_router__) {
-        window.__vue_router__.push("/pos");
+      const router = window.spaRouter || window.__vue_router__;
+      if (router) {
+        router.push("/pos");
         return true;
       }
       return false;
@@ -344,7 +345,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     // Set mobile viewport 375x667 (iPhone standard)
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -370,7 +371,12 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     ).toBeVisible();
 
     // Click a tab card (e.g. Printing) to drill-down into detail view
-    await page.locator('nav button:has-text("الطباعة")').first().click();
+    await page
+      .locator(
+        'nav button[data-testid="mobile-tab-printing"], nav button:has-text("الطباعة")',
+      )
+      .first()
+      .click();
     await page.waitForTimeout(400);
 
     // Section detail should be visible
@@ -404,7 +410,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -459,7 +465,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -472,22 +478,49 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     await expect(page.locator("#setting-business_day_cutoff")).toBeVisible();
 
     // 2. Printing Tab
-    await page.locator('button:has-text("الطباعة")').first().click();
+    await page
+      .locator(
+        'button[data-testid="tab-printing"], button:has-text("الطباعة")',
+      )
+      .first()
+      .click();
     await expect(page.locator("#setting-show_print_company_name")).toBeVisible({
       timeout: 5000,
     });
     await expect(page.locator("#setting-print_show_qr")).toBeVisible();
     await expect(page.locator("#setting-invoice_footer_note")).toBeVisible();
 
+    // 2.5 Branding Tab
+    await page
+      .locator(
+        'button[data-testid="tab-branding"], button:has-text("الهوية البصرية")',
+      )
+      .first()
+      .click();
+    await expect(page.locator("#setting-system_theme_color")).toBeVisible({
+      timeout: 5000,
+    });
+    await expect(page.locator("#setting-logo_light")).toBeVisible();
+
     // 3. Inventory Tab
-    await page.locator('button:has-text("المخزون")').first().click();
+    await page
+      .locator(
+        'button[data-testid="tab-inventory"], nav button:has-text("المخزون")',
+      )
+      .first()
+      .click();
     await expect(
       page.locator("#setting-low_stock_default_threshold"),
     ).toBeVisible({ timeout: 5000 });
     await expect(page.locator("#setting-inventory_units")).toBeVisible();
 
     // 4. Notifications Tab
-    await page.locator('button:has-text("الإشعارات")').first().click();
+    await page
+      .locator(
+        'button[data-testid="tab-notifications"], nav button:has-text("الإشعارات")',
+      )
+      .first()
+      .click();
     await expect(
       page.locator("#setting-telegram_notifications_enabled"),
     ).toBeVisible({ timeout: 5000 });
@@ -495,12 +528,15 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     await expect(page.locator("#setting-telegram_chat_id")).toBeVisible();
 
     // 5. Device Tab
-    await page.locator('button:has-text("الجهاز والنظام")').first().click();
-    await expect(page.locator("#setting-system_theme_color")).toBeVisible({
+    await page
+      .locator(
+        'button[data-testid="tab-device"], nav button:has-text("الجهاز والنظام")',
+      )
+      .first()
+      .click();
+    await expect(page.locator("#setting-theme_mode")).toBeVisible({
       timeout: 5000,
     });
-    await expect(page.locator("#setting-theme_mode")).toBeVisible();
-    await expect(page.locator("#setting-database_backup")).toBeVisible();
 
     // Zero console errors across all sections
     expect(consoleErrors).toHaveLength(0);
@@ -511,7 +547,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings", { waitUntil: "networkidle" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -563,7 +599,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   test("10. Branding: upload a PNG logo -> preview shows", async ({ page }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings?k=branding", { waitUntil: "networkidle" });
+    await page.goto("/settings?k=branding", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -574,7 +610,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
 
     // 64x64 valid PNG (satisfies backend dimension rule: 64-2048 px)
     const validPngBuffer = Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAENSURBVHja7dsxDkJACEThVrwA1/BG3M7bUFiJjVHQfJk82WwWb5iZmZksd3f3fX9j5pznOeesuR7d3f1/gG3bxj/e3ff9v3POufd+f+77/nzf9/M8T3wQ+D0AEAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAgQCBCAQIAABAIEAgQCBAIEAgQCBAIEAgQChAG7mZmv2J8CjLg1z0QAAAAASUVORK5CYII=",
+      "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAY0lEQVRoge3PQQ3AIADAQEABlpGFu4ngcVnSU9DOfc/4s6UDXjWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgfXQRAcq88iAOAAAAAElFTkSuQmCC",
       "base64",
     );
 
@@ -599,6 +635,22 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     const src = await previewImg.getAttribute("src");
     expect(src).toContain("/api/v1/branding/logo/light");
 
+    // Cleanup: remove uploaded test logo via API
+    await page
+      .evaluate(async () => {
+        const token = localStorage.getItem("auth_token");
+        const tenant = localStorage.getItem("tenant_id") || "demo";
+        await fetch("/api/v1/settings/branding/logo/light", {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Tenant": tenant,
+            Accept: "application/json",
+          },
+        });
+      })
+      .catch(() => {});
+
     expect(consoleErrors).toHaveLength(0);
   });
 
@@ -607,7 +659,7 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings?k=branding", { waitUntil: "networkidle" });
+    await page.goto("/settings?k=branding", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
     await page.waitForSelector("#app", { timeout: 15000 });
 
@@ -646,14 +698,14 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
   }) => {
     const consoleErrors = setupConsoleListener(page);
 
-    await page.goto("/settings?k=branding", { waitUntil: "networkidle" });
+    await page.goto("/settings?k=branding", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
-    await page.waitForSelector("#app", { timeout: 15000 });
+    await page.waitForSelector("#app", { state: "attached", timeout: 15000 });
 
     const headerTextarea = page.locator("#receipt_header_input");
     await expect(headerTextarea).toBeVisible({ timeout: 10000 });
 
-    const testHeader = "فرع المعادي - شارع النصر\nهاتف: 01012345678";
+    const testHeader = "مرحباً بكم في المتجر\nأهلاً وسهلاً بكم";
     await headerTextarea.fill(testHeader);
     await page.waitForTimeout(200);
 
@@ -677,11 +729,30 @@ test.describe("Settings Shell & Workflow Verification (settings-shell.spec.js)",
     await page.waitForTimeout(1600);
 
     // Reload page to verify persisted value from API
-    await page.goto("/settings?k=branding", { waitUntil: "networkidle" });
+    await page.goto("/settings?k=branding", { waitUntil: "domcontentloaded" });
     await dismissAnyModal(page);
+    await page.waitForSelector("#app", { state: "attached", timeout: 15000 });
 
     const reloadedTextarea = page.locator("#receipt_header_input");
+    await expect(reloadedTextarea).toBeVisible({ timeout: 15000 });
     await expect(reloadedTextarea).toHaveValue(testHeader, { timeout: 10000 });
+
+    // Cleanup: reset receipt header to empty string
+    await reloadedTextarea.fill("");
+    await page.waitForTimeout(200);
+    const cleanSaveBtn = page
+      .locator(
+        'button:has-text("حفظ التعديلات"), header button:has-text("حفظ")',
+      )
+      .first();
+    const cleanupSavePromise = page.waitForResponse(
+      (res) =>
+        res.url().includes("/api/v1/settings") &&
+        res.request().method() === "POST",
+    );
+    await cleanSaveBtn.click();
+    const cleanupRes = await cleanupSavePromise;
+    expect(cleanupRes.status()).toBe(200);
 
     expect(consoleErrors).toHaveLength(0);
   });

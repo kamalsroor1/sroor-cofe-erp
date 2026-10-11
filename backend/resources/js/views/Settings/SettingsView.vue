@@ -3,6 +3,27 @@
     <!-- Shimmer Skeleton Loading State -->
     <SettingsSkeletonLoader v-if="isLoading" :is-mobile="isMobileView" :has-selected-tab="!!selectedTab" />
 
+    <!-- Load Error State with Retry Button (Must Fix #6) -->
+    <div
+      v-else-if="loadError"
+      class="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/50 shadow-sm text-center space-y-4"
+    >
+      <div
+        class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center mx-auto"
+      >
+        <AlertCircle class="w-6 h-6" />
+      </div>
+      <div>
+        <h2 class="text-base font-black text-slate-900 dark:text-white">{{ $t('settings.load_error_title') }}</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+          {{ loadErrorMessage || $t('settings.load_error_desc') }}
+        </p>
+      </div>
+      <BaseButton type="button" variant="primary" size="md" @click="fetchSettings" class="min-h-[44px]">
+        {{ $t('settings.retry_loading') }}
+      </BaseButton>
+    </div>
+
     <!-- Main Settings Shell Content -->
     <div v-else class="space-y-6">
       <SettingsShellHeader
@@ -13,12 +34,12 @@
         :show-advanced="showAdvanced"
         :has-unsaved-changes="hasUnsavedChanges"
         :is-saving="isSaving"
-        :can-manage="canManage"
+        :can-manage="canManage && !!initialForm"
         v-model:search-query="searchQuery"
         :search-results="searchResults"
         @back="backToHub"
         @toggle-advanced="toggleAdvanced"
-        @save="saveSection(selectedTab || 'general')"
+        @save="saveSettings"
         @select-search-result="selectSetting"
       />
 
@@ -37,19 +58,8 @@
         </aside>
 
         <main class="lg:col-span-8">
-          <GeneralTab
-            v-if="selectedTab === 'general'"
-            :form="form"
-            :errors="errors"
-            :is-saving="isSaving"
-            :can-manage="canManage"
-            :initial-form="initialForm"
-            @update:field="updateFormField"
-            @save="saveSection('general')"
-            @reset-default="resetFieldToDefault"
-          />
-          <BrandingTab
-            v-else-if="selectedTab === 'branding'"
+          <SettingsTabContent
+            :selected-tab="selectedTab || 'general'"
             :form="form"
             :errors="errors"
             :can-manage="canManage"
@@ -62,68 +72,24 @@
             :logo-dark-error="logoDarkError"
             :is-uploading-light="isUploadingLogoLight"
             :is-uploading-dark="isUploadingLogoDark"
-            @update:field="updateFormField"
-            @upload-logo="uploadLogo"
-            @remove-logo="removeLogo"
-            @select-color="selectThemeColor"
-            @save="saveSection('branding')"
-          />
-          <SettingsPrintingSection
-            v-else-if="selectedTab === 'printing'"
-            :form="form"
-            :errors="errors"
-            :can-manage="canManage"
-            :is-saving="isSaving"
-            :initial-form="initialForm"
-            @update:field="updateFormField"
-            @save="saveSection('printing')"
-          />
-          <InventoryTab
-            v-else-if="selectedTab === 'inventory'"
-            :form="form"
-            :errors="errors"
-            :is-saving="isSaving"
-            :can-manage="canManage"
-            :initial-form="initialForm"
             :active-units-list="activeUnitsList"
             :default-presets="defaultPresets"
             :new-unit-input="newUnitInput"
+            :is-testing-telegram="isTestingTelegram"
+            @update:field="updateFormField"
+            @update:custom-color="onCustomColorChange"
+            @upload-logo="uploadLogo"
+            @remove-logo="(variant) => removeLogo(variant)"
+            @select-color="selectThemeColor"
             @update:new-unit="newUnitInput = $event"
             @add-unit="addCustomUnit"
             @add-preset="addPresetUnit"
             @remove-unit="removeUnit"
             @reorder-units="reorderUnits"
-            @update:field="updateFormField"
-            @save="saveSection('inventory')"
-            @reset-default="resetFieldToDefault"
-          />
-          <SettingsTelegramSection
-            v-else-if="selectedTab === 'notifications'"
-            :form="form"
-            :errors="errors"
-            :can-manage="canManage"
-            :is-saving="isSaving"
-            :is-testing="isTestingTelegram"
-            :initial-form="initialForm"
-            @update:field="updateFormField"
             @test-telegram="sendTestTelegram"
-            @save="saveSection('notifications')"
-          />
-          <DeviceTab
-            v-else-if="selectedTab === 'device'"
-            :form="form"
-            :errors="errors"
-            :can-manage="canManage"
-            :is-saving="isSaving"
-            :initial-form="initialForm"
-            :custom-hex-color="customHexColor"
-            :color-palettes="colorPalettes"
-            @update:field="updateFormField"
-            @select-color="selectThemeColor"
-            @update:custom-color="onCustomColorChange"
-            @pick-screen="pickFromScreen"
-            @send-backup-telegram="sendTestTelegram"
-            @save="saveSection('device')"
+            @save="saveSettings"
+            @reset-default="resetFieldToDefault"
+            @set-theme="appConfigStore.setTheme"
           />
         </main>
       </div>
@@ -133,6 +99,8 @@
 
 <script setup>
 import { onMounted } from 'vue';
+import { AlertCircle } from 'lucide-vue-next';
+import BaseButton from '../../Components/Common/BaseButton.vue';
 import { useSettings } from '../../Composables/useSettings';
 import { useSettingsShell } from '../../Composables/useSettingsShell';
 import { useSettingsSearch } from '../../Composables/useSettingsSearch';
@@ -140,34 +108,29 @@ import { useSettingsSearch } from '../../Composables/useSettingsSearch';
 import SettingsShellHeader from '../../Components/Settings/Shell/SettingsShellHeader.vue';
 import SettingsTabsNav from '../../Components/Settings/Shell/SettingsTabsNav.vue';
 import SettingsSkeletonLoader from '../../Components/Settings/Shell/SettingsSkeletonLoader.vue';
-import GeneralTab from '../../Components/Settings/General/GeneralTab.vue';
-import BrandingTab from '../../Components/Settings/BrandingTab.vue';
-import SettingsPrintingSection from '../../Components/Settings/SettingsPrintingSection.vue';
-import InventoryTab from '../../Components/Settings/Inventory/InventoryTab.vue';
-import SettingsTelegramSection from '../../Components/Settings/SettingsTelegramSection.vue';
-import DeviceTab from '../../Components/Settings/DeviceTab.vue';
+import SettingsTabContent from '../../Components/Settings/Shell/SettingsTabContent.vue';
 
 const {
   form,
   initialForm,
   errors,
   isLoading,
+  loadError,
+  loadErrorMessage,
+  fetchSettings,
   isSaving,
   isTestingTelegram,
   colorPalettes,
   newUnitInput,
   defaultPresets,
   activeUnitsList,
-  customHexColor,
   addCustomUnit,
   addPresetUnit,
   removeUnit,
   reorderUnits,
   onCustomColorChange,
-  pickFromScreen,
   selectThemeColor,
   updateFormField,
-  saveSection,
   resetFieldToDefault,
   sendTestTelegram,
   logo_light_url,
@@ -178,6 +141,8 @@ const {
   isUploadingLogoDark,
   uploadLogo,
   removeLogo,
+  saveSettings,
+  appConfigStore,
 } = useSettings();
 
 const {
@@ -193,7 +158,10 @@ const {
   currentSubtitle,
 } = useSettingsShell({ form, initialForm });
 
-const { searchQuery, searchResults, selectSetting, handleDeepLink } = useSettingsSearch({ onSelectTab: selectTab });
+const { searchQuery, searchResults, selectSetting, handleDeepLink } = useSettingsSearch({
+  onSelectTab: selectTab,
+  isLoading,
+});
 
 onMounted(handleDeepLink);
 </script>
