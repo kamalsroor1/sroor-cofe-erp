@@ -221,7 +221,7 @@
                 logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'إيصال-{{ $invoice->invoice_number }}.png';
+                link.download = @json(__('invoices.image_filename_thermal', ['number' => $invoice->invoice_number]));
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 

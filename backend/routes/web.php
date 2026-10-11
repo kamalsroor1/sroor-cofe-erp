@@ -33,9 +33,10 @@ Route::get('/brochure', function () {
 // NOTE: invoice thermal/A4 and daily-journal print routes live in routes/tenant.php
 // behind auth + permission (+ store.access) middleware. Do not re-add them here.
 
-// NOTE (W2 3F): the item-movements and reports A4 print pages and the session store switch
-// (`/store/switch`) live in routes/tenant.php under domain tenancy (+ auth, permission and
-// store.access). They are excluded from the SPA catch-all below so that route still wins.
+// NOTE (W2 3F): the item-movements and reports A4 print pages live in routes/tenant.php under
+// domain tenancy (+ auth, permission and store.access). They are excluded from the SPA catch-all
+// below so that route still wins. SEC-1 (W2 batch 6): the session store switch is removed; the
+// SPA switches through POST /api/v1/stores/switch.
 
 // IDEN-1.11: one SPA shell, two contexts. On a platform-console host (central.admin_domains)
 // every path serves the shell with <meta name="app-context" content="central"> (the tenant SPA
@@ -70,7 +71,9 @@ Route::post('/logout', function (Request $request) {
 Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv')->middleware(['auth', 'can:logs.view']);
 
 // 📱 PWA Manifest & Service Worker
-Route::get('/manifest.json', function () {
+// public/manifest.json is a static file (kept for the Capacitor web-asset copy) that the web server
+// serves before Laravel sees /manifest.json, so the SPA shell links /app.webmanifest instead.
+$webManifest = function () {
     $baseUrl = url('/');
     // BRND-1: the platform (SaaS operator) brand lives in the CENTRAL platform_settings table.
     $branding = app(PlatformBranding::class)->get();
@@ -109,7 +112,10 @@ Route::get('/manifest.json', function () {
         'Content-Type' => 'application/manifest+json; charset=utf-8',
         'Cache-Control' => 'no-cache',
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-});
+};
+
+Route::get('/manifest.json', $webManifest);
+Route::get('/app.webmanifest', $webManifest)->name('web_manifest');
 
 Route::get('/sw.js', function () {
     $path = public_path('sw.js');

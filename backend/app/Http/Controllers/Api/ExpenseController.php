@@ -97,26 +97,26 @@ final class ExpenseController extends Controller
         );
 
         $costCentersList = [
-            'operational' => 'مصاريف تشغيلية ونثريات',
-            'rent' => 'إيجارات مقرات وفروع',
-            'utilities' => 'كهرباء ومياه وغاز ومرافق',
-            'salaries' => 'رواتب وعمالة وإكراميات',
-            'vehicles' => 'وقود وزيوت وصيانة سيارات',
-            'maintenance' => 'صيانة معدات وديكورات',
-            'packaging' => 'مطبوعات وكراتين وتعبئة',
-            'hospitality' => 'ضيافة ونظافة وبوفيه',
-            'marketing' => 'تسويق وإعلانات ودعاية',
-            'shipping' => 'شحن ونولون وتوصيل خارجي',
+            'operational' => __('expenses.cc_operational'),
+            'rent' => __('expenses.cc_rent'),
+            'utilities' => __('expenses.cc_utilities'),
+            'salaries' => __('expenses.cc_salaries'),
+            'vehicles' => __('expenses.cc_vehicles'),
+            'maintenance' => __('expenses.cc_maintenance'),
+            'packaging' => __('expenses.cc_packaging'),
+            'hospitality' => __('expenses.cc_hospitality'),
+            'marketing' => __('expenses.cc_marketing'),
+            'shipping' => __('expenses.cc_shipping'),
         ];
 
         $quickCategories = [
-            'شنط وأكياس',
-            'أكواب ورقية وبلاستيكية',
-            'لاصق وشرائط تغليف',
-            'بوفيه وضيافة',
-            'صيانة مطاحن ومعدات',
-            'إيجار وكهرباء ومرافق',
-            'نثريات ومصاريف تشغيل',
+            __('expenses.quick_categories.bags'),
+            __('expenses.quick_categories.cups'),
+            __('expenses.quick_categories.tape'),
+            __('expenses.quick_categories.hospitality'),
+            __('expenses.quick_categories.equipment_maintenance'),
+            __('expenses.quick_categories.rent_utilities'),
+            __('expenses.quick_categories.petty_operations'),
         ];
 
         return response()->json([

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Profile;
 
 use App\Models\User;
-use Exception;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 final class UpdateProfileAction
 {
@@ -17,7 +17,9 @@ final class UpdateProfileAction
     {
         if (! empty($validated['new_password'])) {
             if (! Hash::check((string) $validated['current_password'], $user->password)) {
-                throw new Exception(__('auth.current_password_incorrect') ?: 'كلمة المرور الحالية غير صحيحة');
+                throw ValidationException::withMessages([
+                    'current_password' => __('auth.current_password_incorrect'),
+                ]);
             }
             $user->password = Hash::make((string) $validated['new_password']);
         }

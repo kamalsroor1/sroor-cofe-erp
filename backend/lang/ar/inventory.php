@@ -423,4 +423,15 @@ return [
     // SETG-10 (W2 lane 2B)
     'unit_not_in_tenant_list' => 'الوحدة «:unit» مش موجودة في قائمة وحدات القياس بتاعة المحل. اختار وحدة من القائمة أو ضيفها من الإعدادات.',
     'switched_to_store' => 'تم التبديل إلى فرع: :store',
+
+    // Item / store / transfer API messages
+    'item_status_updated' => 'تم تحديث حالة الصنف بنجاح',
+    'store_status_updated' => 'تم تحديث حالة الفرع (:name) بنجاح',
+    'store_users_updated' => 'تم تحديث تعيينات الموظفين لفرع (:name) بنجاح',
+    'store_deleted' => 'تم حذف الفرع (:name) بنجاح',
+    'transfer_executed_numbered' => 'تم تنفيذ إذن التحويل المخزني رقم :number ونقل البضاعة بنجاح',
+    'transfer_cancelled_numbered' => 'تم إلغاء إذن التحويل رقم :number وعكس حركة الأصناف للفرع المصدر بنجاح',
+    'transfer_cancel_reason_default' => 'إلغاء من النظام',
+    'delete_category_confirm_text' => 'سيتم حذف الفئة ":name" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.',
+    'store_delete_blockers' => "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers",
 ];

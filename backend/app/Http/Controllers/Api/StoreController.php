@@ -22,8 +22,10 @@ use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class StoreController extends Controller
 {
@@ -44,10 +46,10 @@ final class StoreController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $isGlobalAdmin = $user->id === 1
-            || $user->hasRole('super-admin')
-            || $user->hasRole('admin')
-            || $user->can('stores.manage');
+        // SEC-1 (L2): role/permission based (ActiveStore::canViewAll), never a magic user id or
+        // a legacy platform role. Only store managers get the assignable users list.
+        $isGlobalAdmin = ActiveStore::canViewAll($user);
+        $canManageStores = Gate::forUser($user)->allows('create', Store::class);
 
         $query = Store::with(['users' => fn ($q) => $q->select('users.id', 'users.name', 'users.email')])
             ->withCount(['stocks', 'invoices', 'purchases'])
@@ -76,7 +78,7 @@ final class StoreController extends Controller
         $activeStore = $stores->firstWhere('id', (int) $activeStoreId) ?: $stores->first();
 
         $allUsers = [];
-        if ($isGlobalAdmin) {
+        if ($canManageStores) {
             $allUsers = User::where('is_active', true)->select('id', 'name', 'email')->get();
         }
 
@@ -98,7 +100,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.store_added') ?: 'تم إضافة الفرع / المخزن بنجاح',
+            'message' => __('inventory.store_added'),
             'data' => (new StoreResource($store))->resolve(),
         ], 201);
     }
@@ -111,6 +113,12 @@ final class StoreController extends Controller
         $store = Store::with(['users' => fn ($q) => $q->select('users.id', 'users.name', 'users.email')])
             ->withCount(['stocks', 'invoices', 'purchases'])
             ->findOrFail($id);
+
+        // SEC-1 (L1): StorePolicy::view (an accessible store, or stores.manage); a store the user
+        // may not access is "not found" (404), never its users and counters.
+        if (! Gate::forUser($request->user())->allows('view', $store)) {
+            throw (new ModelNotFoundException)->setModel(Store::class, [$id]);
+        }
 
         return response()->json([
             'success' => true,
@@ -129,7 +137,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.store_updated') ?: 'تم تعديل بيانات الفرع بنجاح',
+            'message' => __('inventory.store_updated'),
             'data' => (new StoreResource($updatedStore))->resolve(),
         ], 200);
     }
@@ -149,7 +157,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.store_status_updated') ?: "تم تحديث حالة الفرع ({$store->name}) بنجاح",
+            'message' => __('inventory.store_status_updated', ['name' => $store->name]),
             'data' => (new StoreResource($toggledStore))->resolve(),
         ], 200);
     }
@@ -165,7 +173,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.store_users_updated') ?: "تم تحديث تعيينات الموظفين لفرع ({$store->name}) بنجاح",
+            'message' => __('inventory.store_users_updated', ['name' => $store->name]),
             'data' => (new StoreResource($updatedStore))->resolve(),
         ], 200);
     }
@@ -185,7 +193,7 @@ final class StoreController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.store_deleted') ?: "تم حذف الفرع ({$store->name}) بنجاح",
+            'message' => __('inventory.store_deleted', ['name' => $store->name]),
         ], 200);
     }
 
@@ -194,6 +202,12 @@ final class StoreController extends Controller
      */
     public function stocks(Request $request): JsonResponse
     {
+        // SEC-1 (M6): branch stock is an items.view read (admin passes through Gate::before).
+        $user = $request->user();
+        if (! $user instanceof User || ! $user->can('items.view')) {
+            return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
+        }
+
         // store_id is the branch picked on the stores screen (explicit filter, wins over the header);
         // access-checked, and `all` is a 422, never store 0.
         $storeId = ClientStoreGuard::concreteOrDefault($request, preferClient: true);

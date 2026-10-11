@@ -81,4 +81,6 @@ return [
     'return_confirmed_title' => 'تم اعتماد المرتجع',
     'return_confirmed_msg' => 'تم تسجيل المرتجع وتعديل الأرصدة بنجاح ✓',
     'save_return_failed' => 'تعذر تسجيل مستند المرتجع',
+
+    'returned_goods' => 'بضاعة مرتجعة',
 ];

@@ -28,6 +28,22 @@ class ResolveApiTenancy
     public const ADMIN_HOST_ROUTES = ['api.ping', 'api.system.translations', 'api.branding'];
 
     /**
+     * SEC-1 (M1): the only routes of this group that answer when NO tenant was resolved (central
+     * host without X-Tenant, or an unknown host): the admin-host allowlist plus the public app
+     * update endpoints (central `app_versions`) and the login-options probe. Every other route
+     * here is tenant API and is 404 without a tenant: it would otherwise run against the CENTRAL
+     * database (central `users`, central personal_access_tokens).
+     */
+    public const CENTRAL_SAFE_ROUTES = [
+        ...self::ADMIN_HOST_ROUTES,
+        'api.app.version',
+        'api.app.check_update',
+        'api.app.download_apk',
+        'api.app.download_latest_apk',
+        'api.auth.options',
+    ];
+
+    /**
      * Handle incoming API request and dynamically initialize tenant context if requested
      */
     public function handle(Request $request, Closure $next): Response
@@ -120,6 +136,11 @@ class ResolveApiTenancy
 
                 tenancy()->initialize($tenant);
             }
+        }
+
+        // 4. SEC-1 (M1): no tenant resolved => only the central-safe routes answer.
+        if (! tenancy()->initialized && ! $request->routeIs(self::CENTRAL_SAFE_ROUTES)) {
+            return $this->notFound();
         }
 
         return $next($request);

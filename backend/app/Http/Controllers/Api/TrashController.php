@@ -8,6 +8,7 @@ use App\Actions\Trash\ForceDeleteTrashRecordAction;
 use App\Actions\Trash\GetTrashRecordsAction;
 use App\Actions\Trash\RestoreTrashRecordAction;
 use App\Http\Controllers\Controller;
+use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
@@ -60,13 +61,11 @@ final class TrashController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => __('common.restored_success') ?: 'تم استرجاع السجل بنجاح ✓',
+                'message' => __('common.restored_success'),
             ], 200);
         } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
         }
     }
 
@@ -85,13 +84,11 @@ final class TrashController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => __('common.force_deleted_success') ?: 'تم الحذف النهائي للسجل بنجاح',
+                'message' => __('common.force_deleted_success'),
             ], 200);
         } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
         }
     }
 }

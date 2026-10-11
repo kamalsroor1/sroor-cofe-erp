@@ -112,7 +112,7 @@ final class ShiftController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "تم فتح وردية العمل رقم {$shift->shift_number} بنجاح ✓",
+            'message' => __('treasury.shift_opened_numbered', ['number' => $shift->shift_number]),
             'data' => (new CashShiftResource($shift))->resolve(),
         ], 201);
     }
@@ -138,11 +138,16 @@ final class ShiftController extends Controller
         $closedShift = $this->closeShiftAction->execute($dto);
 
         $diff = (float) $closedShift->cash_difference;
-        $diffStatus = $diff == 0 ? 'مطابقة للدرج' : ($diff > 0 ? 'زيادة بمقدار '.number_format($diff, 2).' ج.م' : 'عجز بمقدار '.number_format(abs($diff), 2).' ج.م');
+        $currency = __('common.currency');
+        $diffStatus = $diff == 0
+            ? __('treasury.cash_diff_matched')
+            : ($diff > 0
+                ? __('treasury.cash_diff_surplus', ['amount' => number_format($diff, 2), 'currency' => $currency])
+                : __('treasury.cash_diff_shortage', ['amount' => number_format(abs($diff), 2), 'currency' => $currency]));
 
         return response()->json([
             'success' => true,
-            'message' => "تم إغلاق وتقفيل الوردية رقم {$closedShift->shift_number} بنجاح ({$diffStatus}) ✓",
+            'message' => __('treasury.shift_closed_numbered', ['number' => $closedShift->shift_number, 'status' => $diffStatus]),
             'data' => (new CashShiftResource($closedShift))->resolve(),
             'diff_status' => $diffStatus,
         ], 200);

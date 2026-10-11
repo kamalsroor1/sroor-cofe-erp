@@ -107,4 +107,17 @@ return [
     'icon_gift' => 'Gift',
     'icon_bookmark' => 'Bookmark',
     'icon_archive' => 'Archive',
+
+    'general_expenses' => 'General expenses',
+    'operational_expense' => 'Operating expense',
+    'daily_category' => 'Daily expenses',
+    'quick_categories' => [
+        'bags' => 'Bags & sacks',
+        'cups' => 'Paper & plastic cups',
+        'tape' => 'Tape & wrapping',
+        'hospitality' => 'Hospitality & pantry',
+        'equipment_maintenance' => 'Grinder & equipment maintenance',
+        'rent_utilities' => 'Rent & utilities',
+        'petty_operations' => 'Petty & operating costs',
+    ],
 ];

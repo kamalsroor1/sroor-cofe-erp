@@ -277,4 +277,40 @@ class PosApiTest extends TenantTestCase
             ])
             ->assertStatus(401);
     }
+
+    public function test_unauthorized_checkout_without_customer_creates_no_walk_in_customer(): void
+    {
+        // SEC-1 (L13): the walk-in customer is resolved after authorize(), never in prepareForValidation().
+        $before = Customer::query()->count();
+
+        $this->withHeader('Authorization', 'Bearer '.$this->unauthorizedToken)
+            ->postJson('/api/v1/pos/checkout', [
+                'payment_type' => 'cash',
+                'payment_method' => 'cash',
+                'items' => [['item_id' => $this->item->id, 'quantity' => 1.000, 'unit_price' => 35.000]],
+            ])
+            ->assertStatus(403);
+
+        $this->assertSame($before, Customer::query()->count());
+        $this->assertSame('100.000', (string) Item::findOrFail($this->item->id)->current_stock);
+    }
+
+    public function test_checkout_without_customer_is_booked_on_the_walk_in_customer(): void
+    {
+        foreach ([null, '', 'null'] as $customerId) {
+            $this->withHeader('Authorization', 'Bearer '.$this->adminToken)
+                ->postJson('/api/v1/pos/checkout', [
+                    'customer_id' => $customerId,
+                    'payment_type' => 'cash',
+                    'payment_method' => 'cash',
+                    'items' => [['item_id' => $this->item->id, 'quantity' => 0.250, 'unit_price' => 35.000]],
+                ])
+                ->assertStatus(201);
+        }
+
+        $walkIns = Customer::query()->where('phone', '0000000000')->pluck('id')->all();
+        $this->assertCount(1, $walkIns);
+        $this->assertSame(3, Invoice::query()->where('customer_id', $walkIns[0])->count());
+        $this->assertSame('99.250', (string) Item::findOrFail($this->item->id)->current_stock);
+    }
 }

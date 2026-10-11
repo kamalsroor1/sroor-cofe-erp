@@ -181,7 +181,7 @@ final class InvoiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('invoices.invoice_cancelled') ?: "تم إلغاء الفاتورة رقم {$cancelled->invoice_number} بنجاح وعكس رصيد المخزن والحساب ✓",
+            'message' => __('invoices.cancelled_success', ['number' => $cancelled->invoice_number]),
             'data' => (new InvoiceResource($cancelled))->resolve(),
         ], 200);
     }

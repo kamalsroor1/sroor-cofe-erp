@@ -81,4 +81,6 @@ return [
     'return_confirmed_title' => 'Return Confirmed',
     'return_confirmed_msg' => 'Return recorded and stock reconciled successfully ✓',
     'save_return_failed' => 'Failed to record return document',
+
+    'returned_goods' => 'Returned goods',
 ];

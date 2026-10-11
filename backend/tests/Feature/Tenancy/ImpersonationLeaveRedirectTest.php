@@ -4,53 +4,44 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Tenancy;
 
+use Illuminate\Support\Facades\Route;
 use Tests\TenantTestCase;
 
 /**
- * POST /impersonate/leave (tenant host, routes/tenant.php) logs the impersonated session out
- * and sends the operator back to the CURRENT platform console (/super-admin/tenants) on its
- * own host (central.admin_domains), with the scheme of config('app.url'). It used to point
- * at the removed /admin/super/tenants path on the tenant base domain.
+ * SEC-1 (M7 / L8, W2 batch 6): the stancl session impersonation entry (GET /impersonate/{token})
+ * and its exit (POST /impersonate/leave) are removed from routes/tenant.php. Nothing in the
+ * platform console used them (its "impersonate" button only opens the shop's host), and a
+ * one-time token turning into a tenant web session is exactly the kind of path IDEN-2.6 replaces
+ * with an audited, step-up impersonation. This used to test the leave redirect.
  */
 final class ImpersonationLeaveRedirectTest extends TenantTestCase
 {
-    public function test_leaving_impersonation_redirects_to_the_console_on_the_admin_host(): void
+    public function test_the_impersonation_routes_are_not_registered(): void
     {
-        config(['app.url' => 'http://sroor.test', 'central.admin_domains' => ['admin.sroor.test']]);
+        $this->assertFalse(Route::has('impersonate'));
+        $this->assertFalse(Route::has('impersonate.leave'));
+    }
+
+    public function test_leaving_impersonation_is_no_longer_routed_on_a_tenant_host(): void
+    {
         $tenant = $this->createTenant();
         $user = $this->createTenantUser($tenant, 'admin');
 
-        $this->actingAs($user, 'web')
+        $status = $this->actingAs($user, 'web')
             ->withSession(['is_impersonating' => true, 'impersonated_by_super' => true])
             ->post($this->tenantUrl($tenant, '/impersonate/leave'))
-            ->assertRedirect('http://admin.sroor.test/super-admin/tenants')
-            ->assertSessionMissing('is_impersonating');
+            ->getStatusCode();
+
+        $this->assertContains($status, [404, 405]);
+    }
+
+    public function test_an_impersonation_token_url_never_signs_anyone_in(): void
+    {
+        $tenant = $this->createTenant();
+
+        // Falls through to the SPA shell (GET catch-all); no session login happens.
+        $this->get($this->tenantUrl($tenant, '/impersonate/'.str_repeat('a', 40)));
 
         $this->assertGuest('web');
-    }
-
-    public function test_without_an_admin_host_it_falls_back_to_the_central_domain(): void
-    {
-        config([
-            'app.url' => 'https://platform.example.test',
-            'central.admin_domains' => [],
-            'tenancy.central_domain' => 'platform.example.test',
-        ]);
-        $tenant = $this->createTenant();
-        $user = $this->createTenantUser($tenant, 'admin');
-
-        $this->actingAs($user, 'web')
-            ->post($this->tenantUrl($tenant, '/impersonate/leave'))
-            ->assertRedirect('https://platform.example.test/super-admin/tenants');
-    }
-
-    public function test_a_guest_cannot_use_the_leave_route(): void
-    {
-        $tenant = $this->createTenant();
-
-        config(['central.admin_domains' => ['admin.sroor.test']]);
-
-        $this->post($this->tenantUrl($tenant, '/impersonate/leave'))
-            ->assertRedirect($this->tenantUrl($tenant, '/login'));
     }
 }

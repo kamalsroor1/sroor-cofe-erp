@@ -98,7 +98,7 @@ final class GetDailyJournalAction
             'invoices' => $invoices->map(fn ($inv) => [
                 'id' => $inv->id,
                 'invoice_number' => $inv->invoice_number,
-                'customer_name' => $inv->customer?->name ?: 'عميل نقدي سريع',
+                'customer_name' => $inv->customer?->name ?: __('pos.general_walkin_customer'),
                 'net_total' => (float) $inv->net_total,
                 'paid_amount' => (float) $inv->paid_amount,
                 'remaining_amount' => (float) $inv->remaining_amount,

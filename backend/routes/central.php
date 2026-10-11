@@ -124,8 +124,9 @@ Route::prefix('v1/super-admin')
         // Tenants
         Route::get('/tenants', [SuperAdminApiController::class, 'tenants'])
             ->middleware($can(CentralPermission::TenantsView))->name('tenants');
+        // SEC-1 (L11): creating a workspace (DB + admin account) needs a recent second factor.
         Route::post('/tenants', [SuperAdminApiController::class, 'storeTenant'])
-            ->middleware($can(CentralPermission::TenantsManage))->name('tenants.store');
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class])->name('tenants.store');
         Route::get('/tenants/{id}', [SuperAdminApiController::class, 'showTenant'])
             ->middleware($can(CentralPermission::TenantsView))->name('tenants.show');
         // OPS-9: "delete" = asynchronous archive with a verified final backup (202). Nothing is

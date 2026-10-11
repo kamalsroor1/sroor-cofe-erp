@@ -16,6 +16,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Store;
 use App\Models\User;
+use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
@@ -143,11 +144,12 @@ final class UserController extends Controller
     public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
         $dto = UpdateUserDTO::fromArray($id, $request->validated());
-        $user = $this->updateUserAction->execute($dto);
+        $actor = $request->user();
+        $user = $this->updateUserAction->execute($dto, $actor instanceof User ? $actor : null);
 
         return response()->json([
             'success' => true,
-            'message' => __('auth.user_updated_success') ?: 'تم تحديث بيانات المستخدم بنجاح',
+            'message' => __('auth.user_updated_success'),
             'data' => (new UserResource($user->load(['roles', 'defaultStore'])))->resolve(),
         ], 200);
     }
@@ -163,17 +165,15 @@ final class UserController extends Controller
         }
 
         try {
-            $this->deleteUserAction->execute($id, $request->user()?->id);
+            $this->deleteUserAction->execute($id, $user instanceof User ? $user : null);
 
             return response()->json([
                 'success' => true,
-                'message' => __('auth.user_deleted_success') ?: 'تم حذف حساب المستخدم بنجاح',
+                'message' => __('auth.user_deleted_success'),
             ], 200);
         } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
         }
     }
 
@@ -188,18 +188,16 @@ final class UserController extends Controller
         }
 
         try {
-            $toggledUser = $this->toggleUserActiveAction->execute($id, $request->user()?->id);
+            $toggledUser = $this->toggleUserActiveAction->execute($id, $user instanceof User ? $user : null);
 
             return response()->json([
                 'success' => true,
                 'is_active' => (bool) $toggledUser->is_active,
-                'message' => __('auth.user_status_updated') ?: 'تم تحديث حالة نشاط الحساب بنجاح',
+                'message' => __('auth.user_status_updated'),
             ], 200);
         } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
         }
     }
 }

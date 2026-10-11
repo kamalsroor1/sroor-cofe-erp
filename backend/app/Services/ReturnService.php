@@ -22,6 +22,7 @@ class ReturnService
         protected CustomerBalanceService $customerBalanceService,
         protected AuditLogService $auditLogService,
         protected TenantClock $tenantClock,
+        protected PurchaseService $purchaseService,
     ) {}
 
     /**
@@ -136,6 +137,7 @@ class ReturnService
         return DB::transaction(function () use ($data) {
             $supplier = Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
             $purchaseId = $data['purchase_id'] ?? null;
+            $purchase = $purchaseId !== null ? Purchase::query()->find($purchaseId) : null;
 
             $totalAmount = '0.000';
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
@@ -168,6 +170,19 @@ class ReturnService
                     'unit_price' => $unitPrice,
                     'total_price' => $lineTotal,
                 ]);
+
+                // BUG-03: goods leave at the refunded price, so take that valuation out of the
+                // moving average. With no stock or value left the current average is kept.
+                $reversedWac = $this->purchaseService->reverseWeightedAverageCost(
+                    currentStock: (string) $item->current_stock,
+                    currentWac: $this->purchaseService->effectiveWeightedAverageCost($item),
+                    removedQuantity: $qty,
+                    removedValuation: bcmul($qty, $unitPrice, 6),
+                );
+                if ($reversedWac !== null) {
+                    $item->weighted_avg_cost = $reversedWac;
+                    $item->save();
+                }
 
                 // Deduct stock sent back to supplier
                 $this->stockService->deductStock(

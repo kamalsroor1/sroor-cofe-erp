@@ -176,4 +176,7 @@ return [
     // Tooltips for technical financial terms (UX review 2026-10-09, G12)
     'wac_tooltip' => 'متوسط التكلفة المرجح (Weighted Average Cost - WAC)',
     'landed_cost_tooltip' => 'التكلفة المحملة تشمل سعر الشراء مضافاً إليه الشحن والجمارك ومصاريف التوريد',
+
+    'status_confirmed' => 'معتمدة',
+    'cancel_purchase' => 'إلغاء فاتورة شراء',
 ];

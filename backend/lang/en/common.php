@@ -128,4 +128,29 @@ return [
     'save_changes' => 'Save changes',
     'saving' => 'Saving...',
     'server_error' => 'A server error occurred. Please try again.',
+
+    'by' => 'By',
+
+    // Boot splash screen (app.blade.php)
+    'splash' => [
+        'subtitle' => 'Invoicing, inventory and fast point of sale',
+    ],
+
+    // Generic confirmation dialogs (helpers/alert.js)
+    'confirm_dialog' => [
+        'title' => 'Are you sure?',
+        'text' => 'You won\'t be able to undo this action.',
+        'confirm' => 'Yes, continue',
+        'cancel' => 'Cancel',
+        'this_item' => 'this item',
+        'delete_title' => 'Delete :name?',
+        'delete_text' => 'Are you sure? The item will be moved to the recycle bin or permanently deleted.',
+        'delete_confirm' => 'Yes, delete now',
+        'delete_cancel' => 'Go back',
+    ],
+
+    // SEC-1 (W2 batch 6)
+    'operation_failed' => 'The operation could not be completed. Please try again or contact support.',
+    'record_not_found' => 'The requested record was not found.',
+    'trash_invalid_type' => 'This record type cannot be restored or deleted from the recycle bin.',
 ];

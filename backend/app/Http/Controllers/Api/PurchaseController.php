@@ -160,7 +160,7 @@ final class PurchaseController extends Controller
         }
 
         $dto = CancelPurchaseDTO::fromArray($id, [
-            'reason' => $request->input('reason', 'إلغاء من النظام'),
+            'reason' => $request->input('reason', __('purchases.cancel_reason_default')),
         ]);
 
         $purchase = $this->cancelPurchaseAction->execute($dto);

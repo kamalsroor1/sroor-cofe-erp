@@ -266,4 +266,17 @@ return [
     'quick_keys_duplicate_position' => 'Position :position on page :page is used by more than one key',
     'quick_keys_item_unavailable' => 'Item not found or inactive',
     'quick_keys_category_unavailable' => 'Category not found or inactive',
+
+    'customer_registered_success' => 'Customer registered successfully',
+    'one_kilo_short' => '1kg',
+
+    // Desktop thermal receipt (PosView direct print)
+    'thermal' => [
+        'invoice_number' => 'Sales invoice #:number',
+        'col_item' => 'Item',
+        'col_qty' => 'Qty',
+        'col_total' => 'Total',
+        'net_total' => 'Net total:',
+        'thank_you' => 'Thank you for your visit!',
+    ],
 ];

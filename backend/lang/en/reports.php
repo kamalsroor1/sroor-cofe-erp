@@ -155,4 +155,28 @@ return [
     'revenue_tooltip' => 'Total sales revenue (Revenue)',
     'cogs_tooltip' => 'Cost of goods sold (COGS)',
     'gross_profit_tooltip' => 'Gross profit before operating expenses (Gross Profit)',
+
+    // General A4 report print sheet (routes/tenant.php reports.print)
+    'print_sheet' => [
+        'titles' => [
+            'sales' => 'Sales & invoices report',
+            'items' => 'Item movement & profit report',
+            'stores' => 'Branch & store performance report',
+            'customers' => 'Customer sales & debts report',
+            'expenses' => 'Operating expenses report',
+            'inventory' => 'Inventory valuation & count report',
+            'treasury' => 'Treasury, liquidity & transfers report',
+            'general' => 'General system report',
+        ],
+        'period' => 'Period',
+        'period_range' => ':from to :to',
+        'period_start' => 'Start',
+        'scope' => 'Scope',
+        'col_description' => 'Description',
+        'col_value' => 'Value',
+        'col_account' => 'Treasury / account',
+        'col_total_in' => 'Total in',
+        'col_total_out' => 'Total out',
+        'col_current_balance' => 'Current balance',
+    ],
 ];

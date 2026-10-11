@@ -78,7 +78,7 @@ final class TenantProvisioningGuardPinningTest extends TenantTestCase
                 'password' => 'secret1234',
                 'plan_id' => $plan->id,
                 'trial_days' => 14,
-            ], $this->centralHeaders($this->centralSuperAdmin()))
+            ], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
                 ->assertStatus(201)
                 ->assertJson(['success' => true]);
 

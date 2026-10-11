@@ -10,9 +10,9 @@ final class StoreSupplierPaymentVoucherRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole('admin')
-            || $this->user()?->can('suppliers.manage')
-            || $this->user()?->can('daily_journal.view') ?? false;
+        // SEC-1 (M5): paying a supplier is a suppliers.manage operation (admin passes through
+        // Gate::before). daily_journal.view is a read permission and no longer authorizes it.
+        return (bool) $this->user()?->can('suppliers.manage');
     }
 
     public function rules(): array

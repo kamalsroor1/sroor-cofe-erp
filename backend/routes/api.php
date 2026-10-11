@@ -135,13 +135,13 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // Items & Stock by Branch & Low Stock Radar & Movements
         Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
         Route::get('/items/low-stock', [ItemController::class, 'lowStock'])->name('api.items.low_stock');
-        Route::get('/items/{id}', [ItemController::class, 'show'])->name('api.items.show');
+        Route::get('/items/{id}', [ItemController::class, 'show'])->name('api.items.show')->middleware('store.active');
         Route::post('/items', [ItemController::class, 'store'])->name('api.items.store');
         Route::put('/items/{id}', [ItemController::class, 'update'])->name('api.items.update');
         Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('api.items.destroy');
         Route::patch('/items/{id}/toggle-active', [ItemController::class, 'toggleActive'])->name('api.items.toggle_active');
         Route::post('/items/{id}/adjust-stock', [ItemController::class, 'adjustStock'])->name('api.items.adjust_stock');
-        Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements');
+        Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('api.items.movements')->middleware('store.active');
 
         // Categories Management
         Route::get('/categories', [CategoryApiController::class, 'index'])->name('api.categories.index');
@@ -213,7 +213,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // Coffee Blender Engine & Custom Roasting Studio
         Route::post('/coffee-blender/calculate', [CoffeeBlenderController::class, 'calculate'])->name('api.coffee_blender.calculate');
-        Route::post('/coffee-blender/invoice', [CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice');
+        Route::post('/coffee-blender/invoice', [CoffeeBlenderController::class, 'createInvoice'])->name('api.coffee_blender.invoice')->middleware('store.active:concrete');
 
         // Administrative areas: never reachable with a testing-only quick-login token.
         Route::middleware(DenyQuickLoginToken::class)->group(function () {

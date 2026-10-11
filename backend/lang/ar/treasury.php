@@ -177,4 +177,16 @@ return [
     'drawer_balanced' => 'الدرج مطابق',
     'drawer_surplus' => 'زيادة بالدرج',
     'record_expense_btn' => 'تسجيل المصروف',
+
+    // Shift open/close API messages and activity log entries
+    'shift_opened_numbered' => 'تم فتح وردية العمل رقم :number بنجاح',
+    'shift_closed_numbered' => 'تم إغلاق وتقفيل الوردية رقم :number بنجاح (:status)',
+    'shift_already_open' => 'يوجد وردية عمل مفتوحة بالفعل لهذا الفرع برقم :number. يجب إغلاقها أولاً.',
+    'cash_diff_matched' => 'مطابقة للدرج',
+    'cash_diff_surplus' => 'زيادة بمقدار :amount :currency',
+    'cash_diff_shortage' => 'عجز بمقدار :amount :currency',
+    'activity' => [
+        'shift_opened' => 'تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency',
+        'shift_closed' => 'تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)',
+    ],
 ];

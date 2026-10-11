@@ -158,4 +158,27 @@ return [
     'payment_notes_placeholder' => 'ملاحظات اختيارية (مثال: رقم الإيصال أو التحويل)',
     'save_customer' => 'حفظ العميل',
     'save_supplier' => 'حفظ المورد',
+
+    // Receipt / payment voucher API messages and default notes
+    'receipt_recorded_success' => 'تم تسجيل سند القبض وتحصيل مبلغ :amount :currency بنجاح',
+    'receipt_record_failed' => 'فشل تسجيل سند القبض: :error',
+    'disbursement_recorded_success' => 'تم تسجيل سند الصرف وسداد مبلغ :amount :currency للمورد بنجاح',
+    'disbursement_record_failed' => 'فشل تسجيل سند الصرف: :error',
+    'default_receipt_note' => 'سند قبض نقدي من العميل',
+    'default_disbursement_note' => 'سند صرف نقدي للمورد',
+
+    // Statement export (ExportService)
+    'statement_debit_col' => 'مدين',
+    'statement_credit_col' => 'دائن',
+    'statement_balance_col' => 'الرصيد',
+    'collect_cash_payment' => 'تحصيل نقدية',
+    'cash_receipt_voucher' => 'سند قبض نقدي',
+    'disburse_cash_payment' => 'صرف نقدية',
+    'cash_disbursement_voucher' => 'سند صرف نقدي',
+
+    // SEC-1 (W2 batch 6)
+    'receipt_record_failed_generic' => 'تعذّر تسجيل سند القبض. حاول مرة أخرى.',
+    'disbursement_record_failed_generic' => 'تعذّر تسجيل سند الصرف. حاول مرة أخرى.',
+    'payment_invoice_customer_mismatch' => 'الفاتورة دي مش تبع العميل المختار.',
+    'payment_purchase_supplier_mismatch' => 'فاتورة الشراء دي مش تبع المورد المختار.',
 ];

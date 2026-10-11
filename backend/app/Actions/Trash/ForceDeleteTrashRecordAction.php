@@ -10,7 +10,7 @@ use App\Models\Item;
 use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\Supplier;
-use Exception;
+use Illuminate\Validation\ValidationException;
 
 final class ForceDeleteTrashRecordAction
 {
@@ -26,7 +26,7 @@ final class ForceDeleteTrashRecordAction
             'stores' => Store::onlyTrashed()->findOrFail($id),
             'expenses' => Expense::onlyTrashed()->findOrFail($id),
             'returns' => ReturnDocument::onlyTrashed()->findOrFail($id),
-            default => throw new Exception('نوع السجل غير صالح للحذف النهائي'),
+            default => throw ValidationException::withMessages(['type' => __('common.trash_invalid_type')]),
         };
 
         return (bool) $model->forceDelete();

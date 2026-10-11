@@ -311,6 +311,31 @@ class ActivityLogApiTest extends TenantTestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
     }
 
+    public function test_csv_export_neutralizes_spreadsheet_formulas(): void
+    {
+        // SEC-1 (L7): user-controlled cells starting with = + - @ (or tab / CR) are prefixed with '.
+        foreach (['=HYPERLINK("http://evil.test","x")', '+SUM(1,2)', '-2+3', '@cmd', "\tTAB"] as $i => $description) {
+            $this->log([
+                'user_id' => $this->adminUser->id,
+                'store_id' => $this->mainStoreId,
+                'module' => 'sales',
+                'action' => 'csv_formula_'.$i,
+                'description' => $description,
+                'ip_address' => '127.0.0.1',
+            ]);
+        }
+
+        $csv = $this->get('/api/v1/activity-logs/export-csv', $this->adminHeaders)->assertOk();
+        $body = $this->inTenant($this->tenant, fn (): string => (string) $csv->streamedContent());
+
+        $this->assertStringContainsString("'=HYPERLINK", $body);
+        $this->assertStringContainsString("'+SUM(1,2)", $body);
+        $this->assertStringContainsString("'-2+3", $body);
+        $this->assertStringContainsString("'@cmd", $body);
+        $this->assertStringContainsString("'\tTAB", $body);
+        $this->assertDoesNotMatchRegularExpression('/(^|,)"?=HYPERLINK/m', $body);
+    }
+
     public function test_unauthorized_user_cannot_export_csv(): void
     {
         $response = $this->getJson('/api/v1/activity-logs/export-csv', $this->regularHeaders);

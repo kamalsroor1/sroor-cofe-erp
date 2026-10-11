@@ -71,7 +71,7 @@ class SuperAdminAnalyticsService implements SuperAdminDashboardAnalyticsInterfac
                 'name' => $t->name,
                 'slug' => $t->slug,
                 'domain' => $t->domains->first()?->domain ?? PlatformHosts::tenantHost((string) $t->slug),
-                'plan_name' => $t->plan?->name ?? __('common.unspecified', [], 'ar') ?: 'غير محدد',
+                'plan_name' => $t->plan?->name ?? __('common.unspecified'),
                 'status' => $t->status,
                 'created_at' => $t->created_at->diffForHumans(),
             ])

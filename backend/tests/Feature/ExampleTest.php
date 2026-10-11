@@ -16,36 +16,34 @@ class ExampleTest extends TenantTestCase
 
     public function test_authenticated_user_can_view_home(): void
     {
-        // QA-4: the only web-session login is the tenant host's /login (the central host has
-        // none: SuperAdminLoginAction is not routed), so "an authenticated user" is a tenant
-        // user. Real login on the tenant's host, then the home page, instead of actingAs().
+        // SEC-1 (M7, W2 batch 6): the legacy session POST /login is removed (the SPA signs in
+        // through POST /api/v1/auth/login with a Bearer token). The home page still renders the
+        // SPA shell on the tenant's host for a user of that tenant.
         $tenant = $this->createTenant();
         $admin = $this->tenantAdmin($tenant);
 
-        $this->post($this->tenantUrl($tenant, '/login'), ['phone' => $admin->phone, 'password' => 'password'])
-            ->assertRedirect();
-        $this->assertSame($admin->id, (int) session()->get($this->sessionAuthKey()), 'The tenant session login did not authenticate the tenant admin.');
-
-        $this->get($this->tenantUrl($tenant, '/'))
+        $this->actingAs($admin, 'web')
+            ->get($this->tenantUrl($tenant, '/'))
             ->assertStatus(200)
             ->assertSee('id="app"', false);
     }
 
-    public function test_a_session_from_one_tenant_is_a_guest_on_another_tenant(): void
+    public function test_the_session_login_is_removed_and_never_authenticates(): void
     {
         $tenantA = $this->createTenant();
         $tenantB = $this->createTenant();
         $adminA = $this->tenantAdmin($tenantA);
 
-        $this->post($this->tenantUrl($tenantA, '/login'), ['phone' => $adminA->phone, 'password' => 'password'])
-            ->assertRedirect();
+        foreach ([$tenantA, $tenantB] as $tenant) {
+            $status = $this->post($this->tenantUrl($tenant, '/login'), ['phone' => $adminA->phone, 'password' => 'password'])
+                ->getStatusCode();
 
-        // B's guest-only login page must still render: A's user id does not exist in B's database.
+            $this->assertContains($status, [404, 405]);
+            $this->assertNull(session()->get($this->sessionAuthKey()), 'POST /login must not start a session.');
+        }
+
+        // The SPA login page itself still renders on a tenant host.
         $this->get($this->tenantUrl($tenantB, '/login'))->assertStatus(200);
-
-        // And A's credentials never authenticate on B.
-        $this->post($this->tenantUrl($tenantB, '/login'), ['phone' => $adminA->phone, 'password' => 'password'])
-            ->assertSessionHasErrors('phone');
     }
 
     private function sessionAuthKey(): string

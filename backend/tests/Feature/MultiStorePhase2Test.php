@@ -257,15 +257,19 @@ class MultiStorePhase2Test extends TenantTestCase
 
     public function test_store_switch_route(): void
     {
-        // On a tenant host the session store switch is tenant.php's `tenant.store.switch`
-        // (web.php's central `store.switch` never initialises tenancy; see QA-4 report).
-        $response = $this->actingAs($this->tenantAdmin($this->tenant))
-            ->postJson($this->tenantUrl($this->tenant, '/tenant/store/switch'), [
-                'store_id' => $this->vanStoreId,
-            ]);
+        // SEC-1 (M7, W2 batch 6): the session store switch (`/tenant/store/switch`) is removed
+        // from routes/tenant.php; the SPA switches through POST /api/v1/stores/switch.
+        $status = $this->actingAs($this->tenantAdmin($this->tenant))
+            ->postJson($this->tenantUrl($this->tenant, '/tenant/store/switch'), ['store_id' => $this->vanStoreId])
+            ->getStatusCode();
+        $this->assertContains($status, [404, 405]);
 
-        $response->assertOk();
-        $this->assertEquals($this->vanStoreId, session('current_store_id'));
+        $this->postJson('/api/v1/stores/switch', ['store_id' => $this->vanStoreId], $this->tenantHeaders($this->tenant))
+            ->assertOk()
+            ->assertJsonPath('active_store.id', $this->vanStoreId);
+
+        $adminId = $this->adminId;
+        $this->assertSame($this->vanStoreId, $this->inTenant($this->tenant, fn (): int => (int) User::query()->findOrFail($adminId)->default_store_id));
     }
 
     public function test_store_switch_refuses_a_store_that_only_exists_in_another_tenant(): void
@@ -279,11 +283,14 @@ class MultiStorePhase2Test extends TenantTestCase
             'is_main' => false,
         ])->id);
 
-        $this->actingAs($this->tenantAdmin($this->tenant))
-            ->postJson($this->tenantUrl($this->tenant, '/tenant/store/switch'), ['store_id' => $foreignStoreId])
-            ->assertForbidden();
+        $adminId = $this->adminId;
+        $before = $this->inTenant($this->tenant, fn (): ?int => User::query()->findOrFail($adminId)->default_store_id);
 
-        $this->assertNotEquals($foreignStoreId, session('current_store_id'));
+        $status = $this->postJson('/api/v1/stores/switch', ['store_id' => $foreignStoreId], $this->tenantHeaders($this->tenant))
+            ->getStatusCode();
+
+        $this->assertContains($status, [403, 404, 422]);
+        $this->assertSame($before, $this->inTenant($this->tenant, fn (): ?int => User::query()->findOrFail($adminId)->default_store_id));
     }
 
     public function test_stock_transfer_in_one_tenant_leaves_the_other_tenants_stock_untouched(): void

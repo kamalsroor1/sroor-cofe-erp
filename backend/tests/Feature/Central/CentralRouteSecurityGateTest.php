@@ -83,6 +83,8 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
         'api.super_admin.units.update',
         // W2 batch 5 (OPS-9): unarchive (DELETE = archive is listed above).
         'api.super_admin.tenants.unarchive',
+        // W2 batch 6 (SEC-1 L11): creating a workspace.
+        'api.super_admin.tenants.store',
     ];
 
     protected function setUp(): void

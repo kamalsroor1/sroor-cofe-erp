@@ -75,7 +75,7 @@ final class PosController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('pos.customer_registered_success') ?: 'تم تسجيل العميل بنجاح',
+            'message' => __('pos.customer_registered_success'),
             'customer' => [
                 'id' => $customer->id,
                 'name' => $customer->name,

@@ -12,6 +12,7 @@ use App\Models\Item;
 use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
+use App\Support\CostVisibility;
 use Illuminate\Support\Facades\DB;
 
 class GetPOSBootstrapDataAction
@@ -78,18 +79,24 @@ class GetPOSBootstrapDataAction
                 ->get();
         }
 
-        $items = $rawItems->map(function ($it) {
+        // SEC-1 (M6): cashiers sell with the selling price; the cost (and the cost fallback of
+        // the minimum price) only reaches users with items.view_cost.
+        $showCost = CostVisibility::allows($user);
+
+        $items = $rawItems->map(function ($it) use ($showCost) {
             return [
                 'id' => (int) $it->id,
                 'name' => (string) $it->name,
                 'code' => (string) ($it->code ?? ''),
                 'image' => $it->image,
-                'category' => (string) ($it->category ?: 'عام'),
+                'category' => (string) ($it->category ?: __('inventory.general_category')),
                 'category_id' => $it->category_id ? (int) $it->category_id : null,
                 'price_retail' => (float) $it->selling_price,
                 'price_wholesale' => (float) (($it->min_selling_price && $it->min_selling_price > 0) ? $it->min_selling_price : $it->selling_price),
-                'min_selling_price' => (float) ($it->min_selling_price ?? $it->cost_price ?? 0),
-                'cost_price' => (float) $it->cost_price,
+                'min_selling_price' => $showCost
+                    ? (float) ($it->min_selling_price ?? $it->cost_price ?? 0)
+                    : (float) $it->min_selling_price,
+                'cost_price' => $showCost ? (float) $it->cost_price : null,
                 'current_stock' => (float) ($it->calculated_stock ?? 0),
                 'min_stock_level' => (float) ($it->min_stock_level ?: 0),
                 'unit' => (string) ($it->unit ?: 'قطعة'),
@@ -153,7 +160,7 @@ class GetPOSBootstrapDataAction
             'customers' => POSCustomerResource::collection($customers)->resolve(),
             'default_customer' => $defaultCustomer ? (new POSCustomerResource($defaultCustomer))->resolve() : [
                 'id' => 1,
-                'name' => 'عميل نقدي عام',
+                'name' => __('pos.general_cash_customer'),
                 'phone' => '',
                 'price_tier' => 'retail',
                 'current_balance' => 0,

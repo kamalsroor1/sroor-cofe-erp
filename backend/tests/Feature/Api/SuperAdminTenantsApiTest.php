@@ -122,7 +122,8 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
 
     public function test_can_get_tenants_and_provision_new_tenant(): void
     {
-        $headers = $this->centralHeaders($this->centralSuperAdmin());
+        $super = $this->centralSuperAdmin();
+        $headers = $this->centralHeaders($super);
 
         $this->getJson('/api/v1/super-admin/tenants', $headers)
             ->assertStatus(200)
@@ -142,7 +143,7 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
                 'password' => 'secret1234',
                 'plan_id' => $this->plan->id,
                 'trial_days' => 14,
-            ], $headers)
+            ], $this->steppedUpCentralHeaders($super)) // SEC-1 L11: creation needs a recent 2FA proof
                 ->assertStatus(201)
                 ->assertJson(['success' => true]);
 
@@ -169,9 +170,34 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
         }
     }
 
+    public function test_store_tenant_without_a_recent_second_factor_is_step_up_required(): void
+    {
+        // SEC-1 (L11): creating a workspace needs a recent 2FA proof; nothing is created without it.
+        $operator = $this->centralSuperAdmin();
+        $before = Tenant::query()->count();
+        $payload = [
+            'name' => 'محل بدون تحقق',
+            'slug' => 'no-step-up-'.Str::lower(Str::random(6)),
+            'email' => 'no-step-up@elbon.test',
+            'password' => 'secret1234',
+            'plan_id' => $this->plan->id,
+        ];
+
+        $this->postJson('/api/v1/super-admin/tenants', $payload, $this->centralHeaders($operator))
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'central_auth.step_up_required');
+
+        $stale = now()->subMinutes((int) config('central.step_up_ttl_minutes', 15) + 1);
+        $this->postJson('/api/v1/super-admin/tenants', $payload, $this->steppedUpCentralHeaders($operator, $stale))
+            ->assertStatus(403)
+            ->assertJsonPath('error_code', 'central_auth.step_up_required');
+
+        $this->assertSame($before, Tenant::query()->count());
+    }
+
     public function test_store_tenant_fails_validation_on_missing_fields(): void
     {
-        $this->postJson('/api/v1/super-admin/tenants', ['name' => ''], $this->centralHeaders($this->centralSuperAdmin()))
+        $this->postJson('/api/v1/super-admin/tenants', ['name' => ''], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'slug', 'email', 'plan_id', 'password']);
     }
@@ -187,7 +213,7 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
             'plan_id' => 999999,
             'password' => '123',
             'trial_days' => 91,
-        ], $this->centralHeaders($this->centralSuperAdmin()))
+        ], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'slug', 'email', 'plan_id', 'password', 'trial_days']);
 

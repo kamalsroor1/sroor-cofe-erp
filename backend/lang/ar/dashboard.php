@@ -125,4 +125,29 @@ return [
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'company_title' => 'مؤسستي',
+
+    // Activity log module filter labels
+    'modules_sales' => 'المبيعات و POS',
+    'modules_inventory' => 'الأصناف والمخزون',
+    'modules_shifts' => 'الخزينة والورديات',
+    'modules_purchases' => 'المشتريات والتوريد',
+    'modules_expenses' => 'المصروفات',
+    'modules_contacts' => 'العملاء والموردين',
+    'modules_auth' => 'الأمان والدخول',
+    'modules_settings' => 'إدارة النظام والإعدادات',
+    'modules_transfers' => 'التحويلات المخزنية',
+    'modules_blends' => 'تجميع وتوليف الأصناف',
+
+    // System context alerts (GetSystemContextAction)
+    'system_alerts' => [
+        'low_stock_title' => 'نواقص بالمخزن (:count صنف)',
+        'low_stock_desc' => 'أصناف بلغت أو تجاوزت حد الطلب الأدنى',
+        'low_stock_link' => 'إعادة الطلب الذكي',
+        'debts_title' => 'مديونيات عملاء (:count عميل)',
+        'debts_desc' => 'يوجد عملاء مستحق عليهم مبالغ آجلة بحاجة للتحصيل',
+        'debts_link' => 'قائمة العملاء المدينين',
+        'high_cash_title' => 'سيولة نقدية عالية بالدرج',
+        'high_cash_desc' => 'يوجد حالياً :amount :currency نقداً بالدرج. يُنصح بتوريد الفائض.',
+        'high_cash_link' => 'دفتر اليومية والخزينة',
+    ],
 ];

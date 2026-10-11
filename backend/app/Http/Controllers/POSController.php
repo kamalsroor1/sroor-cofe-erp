@@ -9,9 +9,10 @@ use App\DTOs\POSInvoiceDTO;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Support\ClientStoreGuard;
-use Exception;
+use App\Support\SafeJsonError;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Throwable;
 
 class POSController extends Controller
 {
@@ -60,15 +61,15 @@ class POSController extends Controller
             return redirect()->route('invoices.show', $invoice->id)
                 ->with('success', __('pos.invoice_confirmed_success', ['number' => $invoice->invoice_number]));
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
             if ($request->wantsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => $e->getMessage(),
-                ], 422);
+                return SafeJsonError::respond($e);
             }
 
-            return back()->with('error', $e->getMessage());
+            report($e);
+
+            return back()->with('error', __('common.operation_failed'));
         }
     }
 

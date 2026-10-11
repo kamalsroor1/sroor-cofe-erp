@@ -158,4 +158,27 @@ return [
     'payment_notes_placeholder' => 'Optional notes (e.g. receipt or transfer number)',
     'save_customer' => 'Save customer',
     'save_supplier' => 'Save supplier',
+
+    // Receipt / payment voucher API messages and default notes
+    'receipt_recorded_success' => 'Receipt voucher recorded: :amount :currency collected',
+    'receipt_record_failed' => 'Failed to record receipt voucher: :error',
+    'disbursement_recorded_success' => 'Payment voucher recorded: :amount :currency paid to the supplier',
+    'disbursement_record_failed' => 'Failed to record payment voucher: :error',
+    'default_receipt_note' => 'Cash receipt from customer',
+    'default_disbursement_note' => 'Cash payment to supplier',
+
+    // Statement export (ExportService)
+    'statement_debit_col' => 'Debit',
+    'statement_credit_col' => 'Credit',
+    'statement_balance_col' => 'Balance',
+    'collect_cash_payment' => 'Cash collection',
+    'cash_receipt_voucher' => 'Cash receipt voucher',
+    'disburse_cash_payment' => 'Cash disbursement',
+    'cash_disbursement_voucher' => 'Cash payment voucher',
+
+    // SEC-1 (W2 batch 6)
+    'receipt_record_failed_generic' => 'The receipt voucher could not be recorded. Please try again.',
+    'disbursement_record_failed_generic' => 'The payment voucher could not be recorded. Please try again.',
+    'payment_invoice_customer_mismatch' => 'This invoice does not belong to the selected customer.',
+    'payment_purchase_supplier_mismatch' => 'This purchase invoice does not belong to the selected supplier.',
 ];

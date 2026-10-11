@@ -266,4 +266,17 @@ return [
     'quick_keys_duplicate_position' => 'الخانة :position في الصفحة :page مستخدمة لأكثر من مفتاح',
     'quick_keys_item_unavailable' => 'الصنف غير موجود أو غير نشط',
     'quick_keys_category_unavailable' => 'الفئة غير موجودة أو غير نشطة',
+
+    'customer_registered_success' => 'تم تسجيل العميل بنجاح',
+    'one_kilo_short' => '1ك',
+
+    // Desktop thermal receipt (PosView direct print)
+    'thermal' => [
+        'invoice_number' => 'فاتورة مبيعات رقم: #:number',
+        'col_item' => 'الصنف',
+        'col_qty' => 'الكمية',
+        'col_total' => 'الإجمالي',
+        'net_total' => 'الصافي النهائي:',
+        'thank_you' => 'شكراً لزيارتكم!',
+    ],
 ];

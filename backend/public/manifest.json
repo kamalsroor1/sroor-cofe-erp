@@ -1,8 +1,8 @@
 {
-  "id": "sroor-coffee-pos-app",
-  "name": "سرور كوفي | نظام إدارة الفواتير والمخزون",
-  "short_name": "سرور POS",
-  "description": "تطبيق سرور لإدارة مبيعات وفواتير ومخزون مطاحن البن",
+  "id": "cloud-erp-pos-app",
+  "name": "Retail ERP | نظام الفواتير والمخزون ونقاط البيع",
+  "short_name": "Retail ERP",
+  "description": "نظام سحابي لإدارة المبيعات والفواتير والمخزون ونقاط البيع",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

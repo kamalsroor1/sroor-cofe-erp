@@ -11,7 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CalculateBlendCostRequest;
 use App\Http\Requests\CreateBlenderInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
-use App\Models\Store;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Http\JsonResponse;
 
@@ -38,18 +38,21 @@ final class CoffeeBlenderController extends Controller
     /**
      * Create and confirm Sales Invoice for custom blend
      */
-    public function createInvoice(CreateBlenderInvoiceRequest $request): JsonResponse
+    public function createInvoice(CreateBlenderInvoiceRequest $request, ActiveStore $activeStore): JsonResponse
     {
-        $storeId = ClientStoreGuard::concrete($request)
-            ?: auth()->user()?->getCurrentStore()?->id
-            ?: Store::getMainStore()?->id;
+        // SEC-1 (L3): sold from the active store only (store.active:concrete resolved and
+        // access-checked X-Store-Id). A body store_id is access-checked (403) and then ignored.
+        if (ClientStoreGuard::verified($request) === ActiveStore::ALL) {
+            ClientStoreGuard::deny();
+        }
+        $storeId = (int) $activeStore->requireStore()->id;
 
-        $dto = CreateBlenderInvoiceDTO::fromArray($request->validated(), $storeId ? (int) $storeId : null);
+        $dto = CreateBlenderInvoiceDTO::fromArray(array_merge($request->validated(), ['store_id' => $storeId]), $storeId);
         $invoice = $this->createBlenderInvoiceAction->execute($dto);
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.blend_invoice_success') ?: "تم إصدار واعتماد فاتورة التوليفة رقم {$invoice->invoice_number} بنجاح ✓",
+            'message' => __('inventory.blend_invoice_success'),
             'data' => (new InvoiceResource($invoice->load(['customer', 'store', 'user', 'items.item'])))->resolve(),
         ], 201);
     }

@@ -8,6 +8,7 @@ use App\Actions\Profile\UpdateProfileAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
@@ -57,14 +58,12 @@ final class ProfileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => __('auth.profile_updated') ?: 'تم تحديث الملف الشخصي بنجاح',
+                'message' => __('auth.profile_updated'),
                 'data' => (new UserResource($updated->load(['roles', 'defaultStore'])))->resolve(),
             ], 200);
         } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
         }
     }
 }

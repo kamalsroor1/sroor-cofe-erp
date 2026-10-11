@@ -10,9 +10,12 @@ final class StoreCustomerPaymentReceiptRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole('admin')
-            || $this->user()?->can('customers.manage')
-            || $this->user()?->can('daily_journal.view') ?? false;
+        // SEC-1 (M5): customers.manage, or pos.access (cashiers collect customer debts at the
+        // counter). Admin passes through Gate::before. daily_journal.view (a read permission)
+        // no longer authorizes a receipt.
+        $user = $this->user();
+
+        return $user !== null && ($user->can('customers.manage') || $user->can('pos.access'));
     }
 
     public function rules(): array

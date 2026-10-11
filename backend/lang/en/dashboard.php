@@ -125,4 +125,29 @@ return [
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'company_title' => 'My business',
+
+    // Activity log module filter labels
+    'modules_sales' => 'Sales & POS',
+    'modules_inventory' => 'Items & inventory',
+    'modules_shifts' => 'Treasury & shifts',
+    'modules_purchases' => 'Purchases & supply',
+    'modules_expenses' => 'Expenses',
+    'modules_contacts' => 'Customers & suppliers',
+    'modules_auth' => 'Security & sign-in',
+    'modules_settings' => 'System & settings',
+    'modules_transfers' => 'Stock transfers',
+    'modules_blends' => 'Item blending & assembly',
+
+    // System context alerts (GetSystemContextAction)
+    'system_alerts' => [
+        'low_stock_title' => 'Low stock (:count items)',
+        'low_stock_desc' => 'Items at or below their reorder level',
+        'low_stock_link' => 'Smart reorder',
+        'debts_title' => 'Customer debts (:count customers)',
+        'debts_desc' => 'Some customers have outstanding credit balances to collect',
+        'debts_link' => 'Customers with balances',
+        'high_cash_title' => 'High cash in drawer',
+        'high_cash_desc' => 'There is currently :amount :currency in the cash drawer. Consider depositing the surplus.',
+        'high_cash_link' => 'Daily journal & treasury',
+    ],
 ];

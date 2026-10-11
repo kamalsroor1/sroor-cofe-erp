@@ -151,6 +151,27 @@ final class ActiveStore
         return $storeId !== null && self::canAccess($user, $storeId);
     }
 
+    /**
+     * SEC-1 (M3): the ids of the stores $user may READ, or null when the user may read every
+     * store (canViewAll). Same rule as canRead(): the default store plus the assigned stores.
+     *
+     * @return list<int>|null
+     */
+    public static function readableStoreIds(User $user): ?array
+    {
+        if (self::canViewAll($user)) {
+            return null;
+        }
+
+        $ids = $user->stores()->pluck('stores.id')->map(fn ($id): int => (int) $id)->all();
+
+        if ($user->default_store_id !== null) {
+            $ids[] = (int) $user->default_store_id;
+        }
+
+        return array_values(array_unique($ids));
+    }
+
     public static function canViewAll(User $user): bool
     {
         return $user->hasRole('admin')

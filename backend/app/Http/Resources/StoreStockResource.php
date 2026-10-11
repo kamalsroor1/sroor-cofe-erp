@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\StoreStock;
+use App\Support\CostVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,8 @@ class StoreStockResource extends JsonResource
         $quantity = (string) ($this->quantity ?? '0');
         $costPrice = (string) ($this->item?->cost_price ?? '0');
         $totalValuation = bcmul($quantity, $costPrice, 3);
+        // SEC-1 (M6): cost and the cost-based valuation only with items.view_cost.
+        $showCost = CostVisibility::allows($request->user());
 
         return [
             'id' => $this->id,
@@ -27,8 +30,8 @@ class StoreStockResource extends JsonResource
             'unit' => $this->item?->unit,
             'quantity' => (float) $quantity,
             'min_stock_level' => (float) ($this->item?->min_stock_level ?? 0),
-            'cost_price' => (float) $costPrice,
-            'total_valuation' => (float) $totalValuation,
+            'cost_price' => $showCost ? (float) $costPrice : null,
+            'total_valuation' => $showCost ? (float) $totalValuation : null,
             'is_low_stock' => bccomp($quantity, (string) ($this->item?->min_stock_level ?? 0), 3) <= 0,
             'is_out_of_stock' => bccomp($quantity, '0', 3) <= 0,
         ];

@@ -115,9 +115,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (UnauthorizedException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
+                // SEC-1 (L5): never append spatie's message (it names the missing role/permission).
                 return response()->json([
                     'success' => false,
-                    'message' => __('auth.unauthorized').' - '.$e->getMessage(),
+                    'message' => __('auth.unauthorized'),
                 ], 403);
             }
         });

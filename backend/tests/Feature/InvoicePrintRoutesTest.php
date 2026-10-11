@@ -688,11 +688,11 @@ class InvoicePrintRoutesTest extends TenantTestCase
             'stock-transfers',     // SPA shell (no data)
             'brochure',            // marketing page
             'manifest.json',       // PWA manifest
+            'app.webmanifest',     // PWA manifest (dynamic platform branding)
             'sw.js',               // service worker
             'telescope-access',    // super-admin bridge, gated by PlatformSuperAdmin
             'login',               // guest auth
             'logout',              // ends session only
-            'impersonate/{token}', // stancl one-time impersonation token
             'up',                  // health check
         ];
 
@@ -741,14 +741,45 @@ class InvoicePrintRoutesTest extends TenantTestCase
         return str_contains($file, '/vendor/');
     }
 
-    public function test_session_store_switch_requires_auth_and_store_access(): void
+    public function test_session_store_switch_is_removed(): void
     {
-        $this->postJson('/store/switch', ['store_id' => $this->storeB->id])->assertStatus(401);
+        // SEC-1 (M7, W2 batch 6): the session store switches are gone from routes/tenant.php
+        // (the SPA switches through POST /api/v1/stores/switch). The print routes stay.
+        $this->assertFalse(Route::has('store.switch'));
+        $this->assertFalse(Route::has('tenant.store.switch'));
 
         $user = $this->userWithPermissions(['pos.access'], $this->storeA);
-        $this->actingAs($user)->postJson('/store/switch', ['store_id' => $this->storeB->id])->assertStatus(403);
-        $this->actingAs($user)->postJson('/store/switch', ['store_id' => $this->storeA->id])->assertOk();
-        $this->assertEquals($this->storeA->id, session('current_store_id'));
+        $status = $this->actingAs($user)->postJson('/store/switch', ['store_id' => $this->storeB->id])->getStatusCode();
+
+        $this->assertContains($status, [404, 405]);
+        $this->assertNotEquals($this->storeB->id, session('current_store_id'));
+    }
+
+    public function test_tenant_web_routes_hold_no_write_route_and_keep_the_print_pages(): void
+    {
+        $writes = [];
+        foreach (Route::getRoutes()->getRoutes() as $route) {
+            if (! in_array(InitializeTenancyByDomain::class, $route->gatherMiddleware(), true)) {
+                continue;
+            }
+
+            if (array_diff($route->methods(), ['GET', 'HEAD']) !== []) {
+                $writes[] = implode('|', $route->methods()).' '.$route->uri();
+            }
+
+            // No route may point at a controller method that does not exist.
+            $uses = $route->getAction('uses');
+            if (is_string($uses) && str_contains($uses, '@')) {
+                [$class, $method] = explode('@', $uses, 2);
+                $this->assertTrue(method_exists($class, $method), "{$route->uri()} points at missing {$uses}");
+            }
+        }
+
+        $this->assertSame([], $writes, 'routes/tenant.php must not register write routes: '.implode(', ', $writes));
+
+        foreach (['invoices.print.thermal', 'invoices.print.a4', 'daily.journal.print', 'items.movements.print', 'reports.print', 'login', 'dashboard'] as $name) {
+            $this->assertTrue(Route::has($name), "{$name} must stay registered.");
+        }
     }
 
     // ------------------------------------------------------------------

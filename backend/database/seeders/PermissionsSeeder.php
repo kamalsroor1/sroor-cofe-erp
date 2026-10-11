@@ -122,8 +122,11 @@ class PermissionsSeeder extends Seeder
         // Storekeeper permissions. CTO 2026-10-09: no items.create / items.edit (item create,
         // edit, toggle-active, price and cost changes stay admin-only); see the tenant migration
         // 2026_10_10_070010_revoke_item_edit_permissions_from_storekeeper.
+        // CTO 2026-10-11: items.view_cost is granted (they enter purchase costs); existing
+        // tenants get it from 2026_10_11_110000_grant_view_cost_to_storekeeper.
         $storeRole->syncPermissions([
             'items.view',
+            'items.view_cost',
             'purchases.view',
             'purchases.create',
             'transfers.view',

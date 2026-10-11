@@ -46,12 +46,25 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             return;
         }
 
-        Telescope::hideRequestParameters(['_token']);
+        // SEC-1 (L6): credentials, 2FA codes and integration secrets never reach the
+        // Telescope store (Telescope already hides password / password_confirmation and the
+        // authorization / php-auth-pw headers by default).
+        Telescope::hideRequestParameters([
+            '_token',
+            'code',
+            'recovery_code',
+            'current_password',
+            'new_password',
+            'new_password_confirmation',
+            'telegram_bot_token',
+            'token',
+        ]);
 
         Telescope::hideRequestHeaders([
             'cookie',
             'x-csrf-token',
             'x-xsrf-token',
+            'x-api-token',
         ]);
     }
 

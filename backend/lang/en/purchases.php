@@ -176,4 +176,7 @@ return [
     // Tooltips for technical financial terms (UX review 2026-10-09, G12)
     'wac_tooltip' => 'Weighted Average Cost (WAC)',
     'landed_cost_tooltip' => 'Landed cost includes purchase price plus shipping, customs, and delivery fees',
+
+    'status_confirmed' => 'Confirmed',
+    'cancel_purchase' => 'Purchase cancellation',
 ];

@@ -12,9 +12,10 @@ use App\Models\Payment;
 use App\Models\Supplier;
 use App\Services\PaymentService;
 use App\Support\ActiveStore;
-use Exception;
+use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 final class PaymentController extends Controller
 {
@@ -101,15 +102,16 @@ final class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تسجيل سند القبض وتحصيل مبلغ '.number_format((float) $validated['amount'], 2).' ج.م بنجاح',
+                'message' => __('contacts.receipt_recorded_success', [
+                    'amount' => number_format((float) $validated['amount'], 2),
+                    'currency' => __('common.currency'),
+                ]),
                 'data' => $payment,
                 'customer_current_balance' => (float) ($customer?->current_balance ?? 0),
             ], 201);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل تسجيل سند القبض: '.$e->getMessage(),
-            ], 422);
+        } catch (Throwable $e) {
+            // SEC-1 (L4): 404/422/403 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e, 'contacts.receipt_record_failed_generic');
         }
     }
 
@@ -126,15 +128,16 @@ final class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تسجيل سند الصرف وسداد مبلغ '.number_format((float) $validated['amount'], 2).' ج.م للمورد بنجاح',
+                'message' => __('contacts.disbursement_recorded_success', [
+                    'amount' => number_format((float) $validated['amount'], 2),
+                    'currency' => __('common.currency'),
+                ]),
                 'data' => $payment,
                 'supplier_current_balance' => (float) ($supplier?->current_balance ?? 0),
             ], 201);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فشل تسجيل سند الصرف: '.$e->getMessage(),
-            ], 422);
+        } catch (Throwable $e) {
+            // SEC-1 (L4): 404/422/403 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e, 'contacts.disbursement_record_failed_generic');
         }
     }
 }

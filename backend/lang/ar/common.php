@@ -128,4 +128,29 @@ return [
     'save_changes' => 'حفظ التعديلات',
     'saving' => 'جارٍ الحفظ...',
     'server_error' => 'حدث خطأ في الخادم، حاول مرة أخرى',
+
+    'by' => 'بواسطة',
+
+    // Boot splash screen (app.blade.php)
+    'splash' => [
+        'subtitle' => 'نظام الفواتير والمخزون ونقاط البيع السريعة',
+    ],
+
+    // Generic confirmation dialogs (helpers/alert.js)
+    'confirm_dialog' => [
+        'title' => 'هل أنت متأكد؟',
+        'text' => 'لن تتمكن من التراجع عن هذه العملية!',
+        'confirm' => 'نعم، تابع التنفيذ',
+        'cancel' => 'إلغاء الأمر',
+        'this_item' => 'هذا العنصر',
+        'delete_title' => 'تأكيد حذف :name',
+        'delete_text' => 'هل أنت متأكد من الحذف؟ سيتم نقل العنصر إلى سلة المحذوفات أو حذفه نهائياً.',
+        'delete_confirm' => 'نعم، احذف الآن',
+        'delete_cancel' => 'تراجع',
+    ],
+
+    // SEC-1 (W2 batch 6)
+    'operation_failed' => 'تعذّر إتمام العملية. حاول مرة أخرى أو تواصل مع الدعم الفني.',
+    'record_not_found' => 'السجل المطلوب غير موجود.',
+    'trash_invalid_type' => 'نوع السجل ده مينفعش يتسترجع أو يتحذف من سلة المحذوفات.',
 ];

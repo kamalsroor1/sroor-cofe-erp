@@ -155,4 +155,28 @@ return [
     'revenue_tooltip' => 'إجمالي الإيرادات والمبيعات الصادرة (Revenue)',
     'cogs_tooltip' => 'تكلفة شراء البضائع المباعة والمواد الخام (COGS)',
     'gross_profit_tooltip' => 'مجمل الربح التجاري قبل خصم المصروفات التشغيلية (Gross Profit)',
+
+    // General A4 report print sheet (routes/tenant.php reports.print)
+    'print_sheet' => [
+        'titles' => [
+            'sales' => 'تقرير المبيعات والفواتير',
+            'items' => 'تقرير حركة وأرباح الأصناف',
+            'stores' => 'تقرير مقارنة أداء الفروع والمخازن',
+            'customers' => 'تقرير مبيعات ومديونيات العملاء',
+            'expenses' => 'تقرير المصروفات والنفقات التشغيلية',
+            'inventory' => 'تقرير تقييم وجرد المخزون',
+            'treasury' => 'تقرير الخزائن والسيولة وسجل التحويلات المالية',
+            'general' => 'تقرير عام للنظام',
+        ],
+        'period' => 'الفترة الزمنية',
+        'period_range' => ':from إلى :to',
+        'period_start' => 'البداية',
+        'scope' => 'النطاق',
+        'col_description' => 'البيان / الوصف',
+        'col_value' => 'القيمة',
+        'col_account' => 'الخزينة / الحساب',
+        'col_total_in' => 'إجمالي الوارد',
+        'col_total_out' => 'إجمالي المنصرف',
+        'col_current_balance' => 'الرصيد الحالي',
+    ],
 ];

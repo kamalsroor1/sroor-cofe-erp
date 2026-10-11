@@ -304,4 +304,62 @@ class CoffeeBlenderApiTest extends TenantTestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['blend_name', 'components']);
     }
+
+    // ------------------------------------------------------------------ SEC-1 (W2 batch 6)
+
+    /** @return array<string, mixed> */
+    private function blendPayload(?int $customerId): array
+    {
+        return array_filter([
+            'blend_name' => 'توليفة الفرع',
+            'customer_id' => $customerId,
+            'target_weight_grams' => 250,
+            'components' => [['item_id' => $this->itemCol->id, 'grams' => 250, 'unit_price' => 600.000]],
+        ], static fn (mixed $value): bool => $value !== null);
+    }
+
+    public function test_blender_invoice_is_sold_from_the_active_store_only(): void
+    {
+        // L3: store.active:concrete. `all` is never a store to sell from.
+        $this->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload($this->customer->id), array_merge($this->adminHeaders, ['X-Store-Id' => 'all']))
+            ->assertStatus(403);
+
+        // A cashier may not book the invoice on a branch they cannot access through the body.
+        $otherStoreId = $this->inTenant($this->tenant, fn (): int => (int) Store::create([
+            'name' => 'فرع آخر', 'code' => 'BL-OTHER', 'type' => 'retail', 'is_main' => false, 'is_active' => true,
+        ])->id);
+        $cashier = $this->createTenantUser($this->tenant, 'cashier', attributes: ['default_store_id' => $this->store->id]);
+        $this->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload($this->customer->id) + ['store_id' => $otherStoreId], $this->tenantHeaders($this->tenant, $cashier, $this->store))
+            ->assertStatus(403);
+        $this->inTenant($this->tenant, fn () => $this->assertDatabaseCount('invoices', 0));
+
+        // The admin's body store_id never overrides the active store.
+        $this->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload($this->customer->id) + ['store_id' => $otherStoreId], $this->adminHeaders)
+            ->assertStatus(201)
+            ->assertJsonPath('data.store_id', $this->store->id);
+    }
+
+    public function test_unauthorized_request_without_customer_creates_no_walk_in_customer(): void
+    {
+        // L13: the walk-in customer is resolved after authorization, never before it.
+        $before = $this->inTenant($this->tenant, fn (): int => Customer::query()->count());
+
+        $this->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload(null), $this->unauthorizedHeaders)
+            ->assertStatus(403);
+
+        $this->assertSame($before, $this->inTenant($this->tenant, fn (): int => Customer::query()->count()));
+    }
+
+    public function test_blend_invoice_without_customer_is_booked_on_the_walk_in_customer(): void
+    {
+        $response = $this->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload(null), $this->adminHeaders)
+            ->assertStatus(201);
+
+        $walkIn = $this->inTenant($this->tenant, fn (): Customer => Customer::query()->where('phone', '0000000000')->firstOrFail());
+        $response->assertJsonPath('data.customer_id', $walkIn->id);
+
+        // A second sale reuses the same walk-in customer.
+        $this->postJson('/api/v1/coffee-blender/invoice', $this->blendPayload(null), $this->adminHeaders)->assertStatus(201);
+        $this->assertSame(1, $this->inTenant($this->tenant, fn (): int => Customer::query()->where('phone', '0000000000')->count()));
+    }
 }

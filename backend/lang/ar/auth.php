@@ -104,4 +104,10 @@ return [
     'biometric_prompt_cancel' => 'إلغاء',
     'biometric_enabled_success' => 'تم تفعيل الدخول بالبصمة على هذا الجهاز',
     'biometric_disabled' => 'تم إيقاف الدخول بالبصمة ومسح بياناته من هذا الجهاز',
+
+    // SEC-1 (W2 batch 6)
+    'cannot_assign_admin_role' => 'صلاحية مدير النظام لا يمنحها إلا مدير النظام.',
+    'cannot_modify_admin_account' => 'تغيير صلاحية أو كلمة مرور أو حالة حساب مدير النظام أو حذفه متاح لمدير النظام فقط.',
+    'cannot_change_own_role' => 'لا يمكنك تغيير صلاحية حسابك بنفسك.',
+    'cannot_modify_admin_identity' => 'تعديل اسم أو رقم هاتف أو بريد حساب مدير النظام متاح لمدير النظام فقط.',
 ];

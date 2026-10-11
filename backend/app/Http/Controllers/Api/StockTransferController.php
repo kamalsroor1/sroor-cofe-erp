@@ -144,7 +144,7 @@ final class StockTransferController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.confirm_transfer') ?: "تم تنفيذ إذن التحويل المخزني رقم {$transfer->transfer_number} ونقل البضاعة فوراً بنجاح ✓",
+            'message' => __('inventory.transfer_executed_numbered', ['number' => $transfer->transfer_number]),
             'data' => (new StockTransferResource($transfer->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
         ], 201);
     }
@@ -161,7 +161,7 @@ final class StockTransferController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.cancel_transfer') ?: "تم إلغاء إذن التحويل رقم {$cancelled->transfer_number} وعكس حركة الأصناف للفرع المصدر بنجاح ✓",
+            'message' => __('inventory.transfer_cancelled_numbered', ['number' => $cancelled->transfer_number]),
             'data' => (new StockTransferResource($cancelled->load(['fromStore', 'toStore', 'items.item'])))->resolve(),
         ], 200);
     }

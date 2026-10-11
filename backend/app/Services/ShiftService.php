@@ -51,7 +51,7 @@ class ShiftService
 
         $existing = $this->getActiveShift(storeId: $targetStoreId);
         if ($existing) {
-            throw new Exception("يوجد وردية عمل مفتوحة بالفعل لهذا الفرع برقم {$existing->shift_number}. يجب إغلاقها أولاً.");
+            throw new Exception(__('treasury.shift_already_open', ['number' => $existing->shift_number]));
         }
 
         $shiftNumber = $this->nextShiftNumber();
@@ -67,11 +67,16 @@ class ShiftService
             'notes' => $notes,
         ]);
 
-        $storeName = Store::find($targetStoreId)?->name ?? 'الفرع الرئيسي';
+        $storeName = Store::find($targetStoreId)?->name ?? __('common.main_store_default');
         $this->activityLogService->logShift(
             action: 'shift_opened',
             shift: $shift,
-            description: "تم فتح وردية عمل جديدة رقم [{$shiftNumber}] في فرع ({$storeName}) برصيد افتتاحي ".number_format((float) $openingCash, 2).' ج.م'
+            description: __('treasury.activity.shift_opened', [
+                'number' => $shiftNumber,
+                'store' => $storeName,
+                'amount' => number_format((float) $openingCash, 2),
+                'currency' => __('common.currency'),
+            ])
         );
 
         return $shift;
@@ -206,16 +211,22 @@ class ShiftService
                 'notes' => $notes ?: $shift->notes,
             ]);
 
+            $currency = __('common.currency');
             $diffMsg = bccomp($diff, '0.000', 3) === 0
-                ? 'متطابقة تماماً بدون عجز أو زيادة'
+                ? __('treasury.cash_diff_matched')
                 : (bccomp($diff, '0.000', 3) > 0
-                    ? 'بزيادة قدرها '.number_format((float) $diff, 2).' ج.م'
-                    : 'بعجز قدره '.number_format((float) abs((float) $diff), 2).' ج.م');
+                    ? __('treasury.cash_diff_surplus', ['amount' => number_format((float) $diff, 2), 'currency' => $currency])
+                    : __('treasury.cash_diff_shortage', ['amount' => number_format((float) abs((float) $diff), 2), 'currency' => $currency]));
 
             $this->activityLogService->logShift(
                 action: 'shift_closed',
                 shift: $shift,
-                description: "تم تقفيل وإغلاق وردية العمل رقم [{$shift->shift_number}] بنقدية فعلية ".number_format((float) $actualCash, 2)." ج.م ({$diffMsg})",
+                description: __('treasury.activity.shift_closed', [
+                    'number' => $shift->shift_number,
+                    'amount' => number_format((float) $actualCash, 2),
+                    'currency' => $currency,
+                    'status' => $diffMsg,
+                ]),
                 properties: [
                     'expected_cash' => $totals['expected_cash_balance'],
                     'actual_cash' => $actualCash,

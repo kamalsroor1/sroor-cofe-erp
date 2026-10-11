@@ -5,12 +5,15 @@ namespace App\Services;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -139,7 +142,7 @@ class PurchaseService
                 // Calculate weighted average cost with Landed Unit Cost
                 $newWac = $this->calculateWeightedAverageCost(
                     currentStock: (string) $item->current_stock,
-                    currentWac: (string) ($item->weighted_avg_cost ?: $item->cost_price),
+                    currentWac: $this->effectiveWeightedAverageCost($item),
                     newQuantity: $quantity,
                     newCost: $landedUnitCost
                 );
@@ -277,10 +280,12 @@ class PurchaseService
             }
 
             $storeId = $lockedPurchase->store_id;
+            $lines = $lockedPurchase->items()->orderBy('id')->get();
+            $items = $this->lockItemsInIdOrder($lines);
 
             // 1. Verify stock sufficiency for every item before reversing to prevent negative stock
-            foreach ($lockedPurchase->items as $itemLine) {
-                $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
+            foreach ($lines->sortBy('item_id') as $itemLine) {
+                $item = $items[$itemLine->item_id];
                 $qty = (string) $itemLine->quantity;
 
                 // Check master stock
@@ -302,9 +307,13 @@ class PurchaseService
                 }
             }
 
-            // 2. Reverse stock deductions safely
-            foreach ($lockedPurchase->items as $itemLine) {
-                $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
+            // 2. BUG-03: work out every item's reversed cost from the pre-cancel stock. Applied
+            //    after the stock movements below, so they keep recording the carried cost.
+            $costReversals = $this->reversePurchaseCosts($lockedPurchase, $lines, $items);
+
+            // 3. Reverse stock deductions safely
+            foreach ($lines as $itemLine) {
+                $item = $items[$itemLine->item_id];
                 $qty = (string) $itemLine->quantity;
 
                 $this->stockService->deductStock(
@@ -318,12 +327,16 @@ class PurchaseService
                 );
             }
 
+            foreach ($costReversals as $itemId => $costs) {
+                Item::whereKey($itemId)->update($costs);
+            }
+
             $oldState = $lockedPurchase->toArray();
 
-            // 3. Cancel associated payment vouchers
+            // 4. Cancel associated payment vouchers
             Payment::where('purchase_id', $lockedPurchase->id)->delete();
 
-            // 4. Update purchase status
+            // 5. Update purchase status
             $cancelNote = 'تم إلغاء الفاتورة وعكس المخزون'.($reason ? " (السبب: {$reason})" : '');
             $lockedPurchase->update([
                 'status' => 'cancelled',
@@ -331,10 +344,10 @@ class PurchaseService
                 'notes' => $lockedPurchase->notes ? ($lockedPurchase->notes."\n".$cancelNote) : $cancelNote,
             ]);
 
-            // 5. Recalculate supplier balance
+            // 6. Recalculate supplier balance
             $this->supplierBalanceService->updateBalance($lockedPurchase->supplier_id);
 
-            // 6. Audit and Activity Logging
+            // 7. Audit and Activity Logging
             $this->auditLogService->log(
                 action: 'purchase_cancelled',
                 auditable: $lockedPurchase,
@@ -366,20 +379,33 @@ class PurchaseService
 
             $storeId = $lockedPurchase->store_id;
 
-            // 1. Re-add stock for each line item and recalculate WAC
-            foreach ($lockedPurchase->items as $itemLine) {
+            $lines = $lockedPurchase->items()->orderBy('id')->get();
+            $items = $this->lockItemsInIdOrder($lines);
+
+            // BUG-03: cost_price is the last purchase's landed cost, so restoring an older
+            // purchase must not overwrite the cost a newer confirmed purchase set.
+            $ownsCostPrice = [];
+            foreach (array_keys($items) as $itemId) {
+                $newest = $this->latestConfirmedPurchaseLine($itemId);
+                $ownsCostPrice[$itemId] = $newest === null || (int) $newest->purchase_id < (int) $lockedPurchase->id;
+            }
+
+            // 1. Re-add stock line by line in entry order (mirrors createPurchase) and re-apply WAC
+            foreach ($lines as $itemLine) {
                 $item = Item::where('id', $itemLine->item_id)->lockForUpdate()->firstOrFail();
                 $qty = (string) $itemLine->quantity;
                 $cost = (string) $itemLine->cost_price;
 
                 $newWac = $this->calculateWeightedAverageCost(
                     currentStock: (string) $item->current_stock,
-                    currentWac: (string) ($item->weighted_avg_cost ?: $item->cost_price),
+                    currentWac: $this->effectiveWeightedAverageCost($item),
                     newQuantity: $qty,
                     newCost: $cost
                 );
 
-                $item->cost_price = $cost;
+                if ($ownsCostPrice[$item->id]) {
+                    $item->cost_price = $cost;
+                }
                 $item->weighted_avg_cost = $newWac;
                 $item->save();
 
@@ -493,6 +519,137 @@ class PurchaseService
         }
 
         return Decimal::round(bcdiv($totalValuation, $totalQuantity, 12));
+    }
+
+    /**
+     * Moving-average reversal (BUG-03): take a document's valuation back out of the
+     * current tenant-wide valuation, at the current quantity:
+     *
+     *   new WAC = (currentStock x currentWac - removedValuation) / (currentStock - removedQuantity)
+     *
+     * Units sold in between left at the blended average, so this conserves the inventory
+     * value rather than jumping back to the pre-purchase average. Computed exactly with
+     * bcmath (scale 6 products, scale 12 division), rounded half-up to scale 3 once.
+     *
+     * Returns null when no average is left to keep (remaining quantity <= 0, or remaining
+     * valuation <= 0, e.g. the cost was edited by hand in between); the caller then
+     * falls back to the last known cost.
+     */
+    public function reverseWeightedAverageCost(
+        string $currentStock,
+        string $currentWac,
+        string $removedQuantity,
+        string $removedValuation
+    ): ?string {
+        $remainingQuantity = bcsub($currentStock, $removedQuantity, 3);
+        if (bccomp($remainingQuantity, '0.000', 3) <= 0) {
+            return null;
+        }
+
+        $remainingValuation = bcsub(bcmul($currentStock, $currentWac, 6), $removedValuation, 6);
+        if (bccomp($remainingValuation, '0', 6) <= 0) {
+            return null;
+        }
+
+        return Decimal::round(bcdiv($remainingValuation, $remainingQuantity, 12));
+    }
+
+    /**
+     * The average an item is carried at: weighted_avg_cost, or cost_price while no average
+     * exists yet. Compared with bccomp because the decimal cast yields '0.000' (truthy).
+     */
+    public function effectiveWeightedAverageCost(Item $item): string
+    {
+        $wac = (string) $item->weighted_avg_cost;
+
+        return bccomp($wac, '0.000', 3) > 0 ? $wac : (string) ($item->cost_price ?? '0.000');
+    }
+
+    /**
+     * BUG-03: the costs each item of a purchase being cancelled goes back to. Lines of the
+     * same item are reversed together (one rounding step instead of one per line).
+     *
+     * - weighted_avg_cost: reverseWeightedAverageCost(); when no average is left, the last
+     *   known cost = landed cost of the latest other confirmed purchase line of the item,
+     *   else the current average is kept (no independent cost evidence exists).
+     * - cost_price (last purchase landed cost): only when this purchase is the item's
+     *   latest confirmed purchase and still owns the value (not edited by hand since); it
+     *   goes back to the previous confirmed purchase's cost, else to the new average.
+     *
+     * @param  Collection<int, PurchaseItem>  $lines
+     * @param  array<int, Item>  $items  locked, keyed by id
+     * @return array<int, array<string, string>>
+     */
+    private function reversePurchaseCosts(Purchase $purchase, Collection $lines, array $items): array
+    {
+        $reversals = [];
+
+        foreach ($lines->groupBy('item_id') as $itemId => $itemLines) {
+            $item = $items[$itemId];
+            $quantity = '0.000';
+            $valuation = '0';
+            foreach ($itemLines as $line) {
+                $quantity = bcadd($quantity, (string) $line->quantity, 3);
+                $valuation = bcadd($valuation, bcmul((string) $line->quantity, (string) $line->cost_price, 6), 6);
+            }
+
+            $previous = $this->latestConfirmedPurchaseLine((int) $itemId, excludePurchaseId: $purchase->id);
+            $lastKnownCost = $previous !== null ? (string) $previous->cost_price : null;
+
+            $newWac = $this->reverseWeightedAverageCost(
+                currentStock: (string) $item->current_stock,
+                currentWac: $this->effectiveWeightedAverageCost($item),
+                removedQuantity: $quantity,
+                removedValuation: $valuation,
+            ) ?? $lastKnownCost ?? (string) $item->weighted_avg_cost;
+
+            $reversals[$itemId] = ['weighted_avg_cost' => $newWac];
+
+            $newest = $this->latestConfirmedPurchaseLine((int) $itemId);
+            $ownCost = (string) $itemLines->last()->cost_price;
+            if ($newest !== null && (int) $newest->purchase_id === (int) $purchase->id && bccomp((string) $item->cost_price, $ownCost, 3) === 0) {
+                $reversals[$itemId]['cost_price'] = $lastKnownCost ?? $newWac;
+            }
+        }
+
+        return $reversals;
+    }
+
+    /**
+     * The item's latest line on a confirmed, non-deleted purchase, by entry order (the
+     * order in which createPurchase overwrites cost_price).
+     */
+    private function latestConfirmedPurchaseLine(int $itemId, ?int $excludePurchaseId = null): ?PurchaseItem
+    {
+        return PurchaseItem::query()
+            ->join('purchases', 'purchases.id', '=', 'purchase_items.purchase_id')
+            ->where('purchase_items.item_id', $itemId)
+            ->where('purchases.status', 'confirmed')
+            ->whereNull('purchases.deleted_at')
+            ->when($excludePurchaseId !== null, fn ($query) => $query->where('purchases.id', '!=', $excludePurchaseId))
+            ->orderByDesc('purchases.id')
+            ->orderByDesc('purchase_items.id')
+            ->select('purchase_items.*')
+            ->first();
+    }
+
+    /**
+     * Lock every item a document touches in ascending id order, so two documents that
+     * share items never wait on each other in opposite orders.
+     *
+     * @param  Collection<int, PurchaseItem>  $lines
+     * @return array<int, Item> keyed by id
+     */
+    private function lockItemsInIdOrder(Collection $lines): array
+    {
+        $ids = $lines->pluck('item_id')->unique()->sort()->values()->all();
+
+        $items = Item::whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id')->all();
+        if (count($items) !== count($ids)) {
+            throw (new ModelNotFoundException)->setModel(Item::class, array_values(array_diff($ids, array_keys($items))));
+        }
+
+        return $items;
     }
 
     public function generateUniqueNumber(): string

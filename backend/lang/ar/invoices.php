@@ -228,4 +228,24 @@ return [
     'payment_ewallet' => 'محفظة إلكترونية',
     'total_net' => 'الصافي',
     'invoice_with_number' => 'فاتورة #:number',
+
+    'bulk_cancel_reason' => 'إلغاء مجمع من لوحة المبيعات',
+    'stamp_placeholder' => 'ختم',
+    'image_filename_a4' => 'فاتورة-مبيعات-:number.png',
+    'image_filename_thermal' => 'إيصال-:number.png',
+    'csv_columns' => [
+        'number' => 'رقم الفاتورة',
+        'customer' => 'العميل',
+        'phone' => 'الهاتف',
+        'date' => 'التاريخ',
+        'payment_method' => 'طريقة الدفع',
+        'net' => 'الصافي',
+        'paid' => 'المدفوع',
+        'remaining' => 'المتبقي',
+        'status' => 'الحالة',
+    ],
+    'share' => [
+        'copy_text' => "🧾 فاتورة رقم: #:number\n🏢 المؤسسة: :company\n👤 العميل: :customer\n📅 التاريخ: :date\n💰 الصافي المطلوب: :net :currency\n💵 المدفوع: :paid :currency\n📝 المتبقي: :remaining :currency",
+        'whatsapp_text' => "مرحباً بك :customer،\nمرفق تفاصيل فاتورتك رقم #:number من :company:\nالإجمالي الصافي: :net :currency\nالمدفوع: :paid :currency\nالمتبقي: :remaining :currency\nشكراً لتعاملكم معنا!",
+    ],
 ];

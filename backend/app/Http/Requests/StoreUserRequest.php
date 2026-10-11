@@ -11,7 +11,13 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) ($this->user() && ($this->user()->hasRole('admin') || $this->user()->can('roles.manage')));
+        $user = $this->user();
+        if (! $user || (! $user->hasRole('admin') && ! $user->can('roles.manage'))) {
+            return false;
+        }
+
+        // SEC-1 (L12): only an admin may create another admin account.
+        return $user->hasRole('admin') || $this->input('role') !== 'admin';
     }
 
     public function rules(): array

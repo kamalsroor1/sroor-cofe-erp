@@ -69,10 +69,10 @@ final class GetSystemContextAction
             $alerts[] = [
                 'type' => 'danger',
                 'icon' => '🚨',
-                'title' => "نواقص بالمخزن ({$lowStockCount} صنف)",
-                'description' => 'أصناف بلغت أو تجاوزت حد الطلب الأدنى',
+                'title' => __('dashboard.system_alerts.low_stock_title', ['count' => $lowStockCount]),
+                'description' => __('dashboard.system_alerts.low_stock_desc'),
                 'link' => '/purchases/smart-reorder',
-                'link_label' => 'إعادة الطلب الذكي',
+                'link_label' => __('dashboard.system_alerts.low_stock_link'),
             ];
         }
 
@@ -81,10 +81,10 @@ final class GetSystemContextAction
             $alerts[] = [
                 'type' => 'warning',
                 'icon' => '👥',
-                'title' => "مديونيات عملاء ({$debtCount} عميل)",
-                'description' => 'يوجد عملاء مستحق عليهم مبالغ آجلة بحاجة للتحصيل',
+                'title' => __('dashboard.system_alerts.debts_title', ['count' => $debtCount]),
+                'description' => __('dashboard.system_alerts.debts_desc'),
                 'link' => '/customers',
-                'link_label' => 'قائمة العملاء المدينين',
+                'link_label' => __('dashboard.system_alerts.debts_link'),
             ];
         }
 
@@ -96,10 +96,10 @@ final class GetSystemContextAction
                     $alerts[] = [
                         'type' => 'info',
                         'icon' => '💰',
-                        'title' => 'سيولة نقدية عالية بالدرج',
-                        'description' => 'يوجد حالياً '.number_format($cashExpected, 0).' ج.م نقداً بالدرج. يُنصح بتوريد الفائض.',
+                        'title' => __('dashboard.system_alerts.high_cash_title'),
+                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => __('common.currency')]),
                         'link' => '/daily-journal',
-                        'link_label' => 'دفتر اليومية والخزينة',
+                        'link_label' => __('dashboard.system_alerts.high_cash_link'),
                     ];
                 }
             } catch (\Throwable) {

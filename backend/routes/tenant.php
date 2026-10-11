@@ -3,22 +3,6 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\ActivityLogController;
-use App\Http\Controllers\Api\CoffeeBlenderController;
-use App\Http\Controllers\Api\CustomerController;
-use App\Http\Controllers\Api\DailyJournalController;
-use App\Http\Controllers\Api\ExpenseController;
-use App\Http\Controllers\Api\InvoiceController;
-use App\Http\Controllers\Api\ItemController;
-use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\PurchaseController;
-use App\Http\Controllers\Api\ReportController;
-use App\Http\Controllers\Api\ReturnController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\SettingController;
-use App\Http\Controllers\Api\StoreController;
-use App\Http\Controllers\Api\SupplierController;
-use App\Http\Controllers\Api\TrashController;
-use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DailyJournalPrintController;
 use App\Http\Controllers\InvoicePrintController;
@@ -27,12 +11,9 @@ use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
-use App\Support\PlatformHosts;
 use App\Support\ReportStoreFilter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Features\UserImpersonation;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
@@ -42,6 +23,13 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 |--------------------------------------------------------------------------
 | Every route in this group runs within the isolated database and storage
 | context of the identified tenant.
+|
+| SEC-1 (M7, W2 batch 6): this file only serves the SPA shell pages and the Blade print
+| pages. Every business read/write lives in /api/v1 (Sanctum Bearer token, store.active,
+| policies). Removed here: the legacy session POST /login and /tenant/logout, the stancl
+| /impersonate/{token} entry (+ /impersonate/leave), every POST/PUT/DELETE duplicate of the
+| API, the session store switches and /theme-toggle, and the routes whose controller
+| methods do not exist (invoices/{id}/edit, purchases/create, returns/create).
 */
 
 Route::middleware([
@@ -50,31 +38,11 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
 
-    // 1. Guest Authentication Routes (Vue 3 SPA)
+    // 1. SPA login page (the SPA signs in through POST /api/v1/auth/login). Named `login`:
+    //    bootstrap/app.php redirects guests here.
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-        Route::post('/login', [AuthenticatedSessionController::class, 'store']);
     });
-
-    // 1.1 Tenant Impersonation by Super Admin
-    Route::get('/impersonate/{token}', function (string $token) {
-        session(['is_impersonating' => true, 'impersonated_by_super' => true]);
-
-        return UserImpersonation::makeResponse($token);
-    })->name('impersonate');
-
-    Route::post('/impersonate/leave', function () {
-        Auth::logout();
-        session()->forget(['is_impersonating', 'impersonated_by_super']);
-        session()->invalidate();
-        session()->regenerateToken();
-
-        // Back to the platform console on its own host (central.admin_domains), config-driven.
-        return redirect()->away(PlatformHosts::consoleUrl());
-    })->name('impersonate.leave')->middleware('auth');
-
-    // 2. Logout Route
-    Route::post('/tenant/logout', [AuthenticatedSessionController::class, 'destroy'])->name('tenant.logout')->middleware('auth');
 
     // 🌐 Pure Vue 3 SPA Host Route (Dual-Engine Mode)
     Route::get('/spa/{any?}', function () {
@@ -85,25 +53,14 @@ Route::middleware([
     // through to the SPA catch-all, whose InvoicePrintView loads the invoice via
     // the authenticated, permission-checked API before calling window.print().
 
-    // 3. Protected POS, ERP & Inventory Routes
+    // 2. Protected SPA shell pages and Blade print pages (read-only)
     Route::middleware('auth')->group(function () {
-        // Dashboard (Vue 3 SPA)
+        // Dashboard (Vue 3 SPA). Named `dashboard`: bootstrap/app.php redirects users here.
         Route::get('/', fn () => view('app'))->name('dashboard');
 
-        // Invoices & POS (Vue 3 Fast Cashier Engine)
+        // POS (Vue 3 Fast Cashier Engine): SPA shell only.
         Route::get('/pos', [POSController::class, 'index'])->name('pos.index')->middleware('can:pos.access');
         Route::get('/invoices/create', [POSController::class, 'index'])->name('invoices.create')->middleware('can:pos.access');
-        Route::post('/pos/invoices', [POSController::class, 'store'])->name('pos.invoices.store')->middleware('can:pos.access');
-        Route::post('/pos/customers', [POSController::class, 'storeCustomer'])->name('pos.customers.store')->middleware('can:pos.access');
-        Route::get('/pos/customer-last-price', [POSController::class, 'getCustomerLastPrice'])->name('pos.customer_last_price')->middleware('can:pos.access');
-
-        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index')->middleware('can:invoices.view');
-        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show')->middleware('can:invoices.view');
-        Route::get('/invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit')->middleware('can:invoices.edit');
-        Route::put('/invoices/{id}', [InvoiceController::class, 'update'])->name('invoices.update')->middleware('can:invoices.edit');
-        Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel')->middleware('can:invoices.cancel');
-        Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('can:invoices.delete');
-        Route::post('/invoices/{id}/restore', [InvoiceController::class, 'restore'])->name('invoices.restore')->middleware('can:trash.access');
 
         // Blade invoice print pages (thermal receipt / A4) — permission + policy + store access enforced
         Route::get('/invoices/{id}/print/thermal', [InvoicePrintController::class, 'thermal'])->whereNumber('id')->name('invoices.print.thermal')->middleware('can:invoices.view');
@@ -183,54 +140,54 @@ Route::middleware([
             }
 
             $titles = [
-                'sales' => 'تقرير المبيعات والفواتير',
-                'items' => 'تقرير حركة وأرباح الأصناف',
-                'stores' => 'تقرير مقارنة أداء الفروع والمخازن',
-                'customers' => 'تقرير مبيعات ومديونيات العملاء',
-                'expenses' => 'تقرير المصروفات والنفقات التشغيلية',
-                'inventory' => 'تقرير تقييم وجرد المخزون',
-                'treasury' => 'تقرير الخزائن والسيولة وسجل التحويلات المالية',
+                'sales' => __('reports.print_sheet.titles.sales'),
+                'items' => __('reports.print_sheet.titles.items'),
+                'stores' => __('reports.print_sheet.titles.stores'),
+                'customers' => __('reports.print_sheet.titles.customers'),
+                'expenses' => __('reports.print_sheet.titles.expenses'),
+                'inventory' => __('reports.print_sheet.titles.inventory'),
+                'treasury' => __('reports.print_sheet.titles.treasury'),
             ];
-            $reportTitle = $titles[$tab] ?? 'تقرير عام للنظام';
+            $reportTitle = $titles[$tab] ?? __('reports.print_sheet.titles.general');
 
             $kpis = [
-                ['label' => 'الفترة الزمنية', 'value' => ($fromDate ?: 'البداية').' إلى '.($toDate ?: now()->toDateString())],
-                ['label' => 'النطاق', 'value' => $storeName],
+                ['label' => __('reports.print_sheet.period'), 'value' => __('reports.print_sheet.period_range', ['from' => $fromDate ?: __('reports.print_sheet.period_start'), 'to' => $toDate ?: now()->toDateString()])],
+                ['label' => __('reports.print_sheet.scope'), 'value' => $storeName],
             ];
 
             $tableHeaders = [
-                ['title' => 'البيان / الوصف', 'align' => 'text-right'],
-                ['title' => 'التاريخ', 'align' => 'text-center'],
-                ['title' => 'القيمة', 'align' => 'text-center'],
-                ['title' => 'الحالة', 'align' => 'text-center'],
+                ['title' => __('reports.print_sheet.col_description'), 'align' => 'text-right'],
+                ['title' => __('common.date'), 'align' => 'text-center'],
+                ['title' => __('reports.print_sheet.col_value'), 'align' => 'text-center'],
+                ['title' => __('common.status'), 'align' => 'text-center'],
             ];
             $tableRows = [];
 
             if ($tab === 'treasury') {
                 $tableHeaders = [
-                    ['title' => 'الخزينة / الحساب', 'align' => 'text-right'],
-                    ['title' => 'رصيد البداية', 'align' => 'text-center'],
-                    ['title' => 'إجمالي الوارد', 'align' => 'text-center'],
-                    ['title' => 'إجمالي المنصرف', 'align' => 'text-center'],
-                    ['title' => 'الرصيد الحالي', 'align' => 'text-center'],
+                    ['title' => __('reports.print_sheet.col_account'), 'align' => 'text-right'],
+                    ['title' => __('treasury.opening_balance_short'), 'align' => 'text-center'],
+                    ['title' => __('reports.print_sheet.col_total_in'), 'align' => 'text-center'],
+                    ['title' => __('reports.print_sheet.col_total_out'), 'align' => 'text-center'],
+                    ['title' => __('reports.print_sheet.col_current_balance'), 'align' => 'text-center'],
                 ];
                 $tableRows = [
                     [
-                        ['value' => 'درج النقدية (كاش)', 'class' => 'font-bold'],
+                        ['value' => __('treasury.cash_drawer'), 'class' => 'font-bold'],
                         ['value' => '0.000', 'class' => 'font-mono text-center'],
                         ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
                         ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
                         ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
                     ],
                     [
-                        ['value' => 'إنستاباي (InstaPay)', 'class' => 'font-bold'],
+                        ['value' => __('treasury.instapay'), 'class' => 'font-bold'],
                         ['value' => '0.000', 'class' => 'font-mono text-center'],
                         ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
                         ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
                         ['value' => '0.000', 'class' => 'font-mono text-center font-bold'],
                     ],
                     [
-                        ['value' => 'المحافظ الذكية', 'class' => 'font-bold'],
+                        ['value' => __('treasury.e_wallet'), 'class' => 'font-bold'],
                         ['value' => '0.000', 'class' => 'font-mono text-center'],
                         ['value' => '0.000', 'class' => 'font-mono text-center text-emerald-600'],
                         ['value' => '0.000', 'class' => 'font-mono text-center text-rose-600'],
@@ -244,151 +201,8 @@ Route::middleware([
             ));
         })->name('reports.print')->middleware(['can:reports.view', 'store.access']);
 
-        // Session store switch (moved from routes/web.php, W2 3F): only to an active store the user may access.
-        Route::post('/store/switch', function (Request $request) {
-            $raw = $request->input('store_id');
-            $storeId = (is_int($raw) || (is_string($raw) && ctype_digit($raw))) ? (int) $raw : 0;
-            $user = $request->user();
-
-            $allowed = $storeId > 0
-                && Store::whereKey($storeId)->where('is_active', true)->exists()
-                && ($user->hasRole('admin')
-                    || (int) $user->default_store_id === $storeId
-                    || $user->stores()->where('stores.id', $storeId)->exists());
-
-            abort_unless($allowed, 403, __('common.store_access_denied'));
-
-            session(['current_store_id' => $storeId]);
-
-            return response()->json(['success' => true, 'store_id' => $storeId]);
-        })->name('store.switch');
-
-        // Items & Inventory Movements
-        Route::get('/items', [ItemController::class, 'index'])->name('items.index')->middleware('can:items.view');
-        Route::post('/items', [ItemController::class, 'store'])->name('items.store')->middleware('can:items.create');
-        Route::put('/items/{id}', [ItemController::class, 'update'])->name('items.update')->middleware('can:items.edit');
-        Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('items.destroy')->middleware('can:items.delete');
-        Route::get('/items/{id}/movements', [ItemController::class, 'movements'])->name('items.movements')->middleware('can:items.view');
-
-        // Multi-Store, Vans & Warehouse Management
-        Route::get('/stores', [StoreController::class, 'index'])->name('stores')->middleware('can:stores.manage');
-        Route::post('/stores', [StoreController::class, 'store'])->name('stores.store')->middleware('can:stores.manage');
-        Route::post('/stores/switch', [StoreController::class, 'switchStore']);
-        Route::put('/stores/{id}', [StoreController::class, 'update'])->name('stores.update')->middleware('can:stores.manage');
-        Route::post('/stores/{id}/toggle-active', [StoreController::class, 'toggleActive'])->name('stores.toggle_active')->middleware('can:stores.manage');
-        Route::post('/stores/{id}/assign-users', [StoreController::class, 'assignUsers'])->name('stores.assign_users')->middleware('can:stores.manage');
-        Route::delete('/stores/{id}', [StoreController::class, 'destroy'])->name('stores.destroy')->middleware('can:stores.manage');
-        Route::get('/store-stocks', [StoreController::class, 'stocks'])->name('store-stocks')->middleware('can:items.view');
-
-        // Customers & Statements
-        Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('can:customers.manage');
-        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store')->middleware('can:customers.manage');
-        Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('customers.update')->middleware('can:customers.manage');
-        Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('customers.destroy')->middleware('can:customers.manage');
-        Route::post('/customers/{id}/toggle-active', [CustomerController::class, 'toggleActive'])->name('customers.toggle_active')->middleware('can:customers.manage');
-        Route::post('/customers/{id}/payments', [CustomerController::class, 'collectPayment'])->name('customers.payments')->middleware('can:customers.manage');
-        Route::get('/customers/{id}/statement', [CustomerController::class, 'statement'])->name('customers.statement')->middleware('can:customers.statement');
-
-        // Suppliers & Purchases & Statements
-        Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index')->middleware('can:suppliers.manage');
-        Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store')->middleware('can:suppliers.manage');
-        Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update')->middleware('can:suppliers.manage');
-        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('suppliers.destroy')->middleware('can:suppliers.manage');
-        Route::post('/suppliers/{id}/pay', [SupplierController::class, 'pay'])->name('suppliers.pay')->middleware('can:suppliers.manage');
-        Route::post('/suppliers/{id}/toggle-active', [SupplierController::class, 'toggleActive'])->name('suppliers.toggle_active')->middleware('can:suppliers.manage');
-        Route::get('/suppliers/{id}/statement', [SupplierController::class, 'statement'])->name('suppliers.statement')->middleware('can:suppliers.statement');
-        Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index')->middleware('can:purchases.view');
-        Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create')->middleware('can:purchases.create');
-        Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store')->middleware('can:purchases.create');
-        Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel')->middleware('can:purchases.delete');
-        Route::get('/purchases/smart-reorder', [PurchaseController::class, 'smartReorder'])->name('purchases.reorder')->middleware('can:purchases.view');
-
-        // Returns & Reversals
-        Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index')->middleware('can:returns.manage');
-        Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create')->middleware('can:returns.manage');
-        Route::post('/returns', [ReturnController::class, 'store'])->name('returns.store')->middleware('can:returns.manage');
-        Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->name('returns.destroy')->middleware('can:returns.manage');
-
-        // Financial & Profit Reports (Admin & Accountant / reports.view)
-        Route::get('/reports', [ReportController::class, 'comprehensive'])->name('reports.index')->middleware('can:reports.view');
-        Route::get('/reports/export-abc', [ReportController::class, 'inventory'])->name('reports.export.abc')->middleware('can:reports.view');
-
-        // Operational Expenses & Supplies
-        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index')->middleware('can:expenses.manage');
-        Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store')->middleware('can:expenses.manage');
-        Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('expenses.update')->middleware('can:expenses.manage');
-        Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy')->middleware('can:expenses.manage');
-
-        // Coffee Blending Master & Roastery Recipe
-        Route::get('/coffee-blender', [CoffeeBlenderController::class, 'calculate'])->name('coffee.blender')->middleware('can:items.create');
-        Route::post('/coffee-blender/invoice', [CoffeeBlenderController::class, 'createInvoice'])->name('coffee.blender.invoice')->middleware('can:items.create');
-
-        // Daily Journal & Cashier Shifts (يوم بيوم)
-        Route::get('/daily-journal', [DailyJournalController::class, 'index'])->name('daily.journal')->middleware('can:daily_journal.view');
-        Route::get('/shifts', [DailyJournalController::class, 'index'])->name('shifts.index')->middleware('can:daily_journal.view');
-        Route::post('/daily-journal/open-shift', [DailyJournalController::class, 'openShift'])->name('daily.journal.open_shift')->middleware('can:daily_journal.view');
-        Route::post('/daily-journal/close-shift/{id}', [DailyJournalController::class, 'closeShift'])->name('daily.journal.close_shift')->middleware('can:daily_journal.view');
-        Route::post('/daily-journal/expense', [DailyJournalController::class, 'storeExpense'])->name('daily.journal.expense')->middleware('can:daily_journal.view');
-
-        // Auth, Profile, Settings, Trash, Activity Logs & User Management
-        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('can:logs.view');
+        // Activity log CSV export (same URI as routes/web.php; this tenant-initialised definition
+        // replaces that one on tenant hosts).
         Route::get('/activity-logs/export-csv', [ActivityLogController::class, 'exportCsv'])->name('tenant.activity-logs.export.csv')->middleware('can:logs.view');
-
-        Route::get('/trash', [TrashController::class, 'index'])->name('trash.index')->middleware('can:trash.access');
-        Route::post('/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('trash.restore')->middleware('can:trash.access');
-        Route::delete('/trash/{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('trash.force-delete')->middleware('can:trash.access');
-
-        Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index')->middleware('can:roles.manage');
-        Route::post('/settings', [SettingController::class, 'update'])->name('settings.update')->middleware('can:roles.manage');
-        Route::post('/settings/telegram/test', [SettingController::class, 'sendTestTelegram'])->name('settings.telegram.test')->middleware('can:roles.manage');
-
-        Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('can:roles.manage');
-        Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('can:roles.manage');
-        Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update')->middleware('can:roles.manage');
-        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy')->middleware('can:roles.manage');
-        Route::post('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle')->middleware('can:roles.manage');
-
-        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index')->middleware('can:roles.manage');
-        Route::put('/roles/{id}', [RoleController::class, 'updatePermissions'])->name('roles.update')->middleware('can:roles.manage');
-
-        // Theme Toggle (Dark / Light Mode)
-        Route::post('/theme-toggle', function (Request $request) {
-            $theme = $request->input('theme', 'dark');
-            if (in_array($theme, ['dark', 'light']) && Auth::check()) {
-                Auth::user()->update(['theme_preference' => $theme]);
-            }
-            if ($request->wantsJson()) {
-                return response()->json(['status' => 'success', 'theme' => $theme]);
-            }
-
-            return back();
-        })->name('theme.toggle');
-
-        // Store Switcher (Fast active branch/van switch for authorized users)
-        Route::post('/tenant/store/switch', function (Request $request) {
-            $storeId = (int) $request->input('store_id');
-            $store = Store::where('id', $storeId)->where('is_active', true)->first();
-
-            if ($store) {
-                $user = Auth::user();
-                if ($user->hasRole('admin') || $user->stores()->where('stores.id', $storeId)->exists() || (int) $user->default_store_id === $storeId) {
-                    session(['current_store_id' => $storeId]);
-                    if ($request->wantsJson()) {
-                        return response()->json(['status' => 'success', 'store' => $store]);
-                    }
-
-                    return back()->with('success', "تم التبديل إلى ({$store->name}) بنجاح");
-                }
-            }
-
-            if ($request->wantsJson()) {
-                return response()->json(['status' => 'error', 'message' => 'غير مصرح'], 403);
-            }
-
-            return back()->with('error', 'غير مصرح بالوصول إلى هذا الفرع');
-        })->name('tenant.store.switch');
     });
 });

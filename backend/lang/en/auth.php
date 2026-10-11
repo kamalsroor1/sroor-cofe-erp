@@ -109,4 +109,10 @@ return [
     'biometric_prompt_cancel' => 'Cancel',
     'biometric_enabled_success' => 'Fingerprint sign-in is enabled on this device',
     'biometric_disabled' => 'Fingerprint sign-in is off and its data was removed from this device',
+
+    // SEC-1 (W2 batch 6)
+    'cannot_assign_admin_role' => 'Only a system admin can grant the admin role.',
+    'cannot_modify_admin_account' => 'Only a system admin can change the role, password or status of an admin account, or delete it.',
+    'cannot_change_own_role' => 'You cannot change your own role.',
+    'cannot_modify_admin_identity' => 'Only a system admin can change the name, phone or email of an admin account.',
 ];

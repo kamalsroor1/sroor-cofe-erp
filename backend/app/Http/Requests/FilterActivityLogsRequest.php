@@ -19,7 +19,8 @@ final class FilterActivityLogsRequest extends FormRequest
             return false;
         }
 
-        return $user->can('logs.view') || $user->hasRole('admin') || $user->hasRole('super_admin');
+        // SEC-1 (M1): tenant permission only; platform operators never read tenant logs here.
+        return $user->can('logs.view') || $user->hasRole('admin');
     }
 
     /**

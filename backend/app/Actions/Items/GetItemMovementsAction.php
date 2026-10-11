@@ -12,8 +12,11 @@ final class GetItemMovementsAction
 {
     /**
      * Query movements ledger and calculate aggregates for an item
+     *
+     * SEC-1 (M6): $includeCost = false (no items.view_cost) returns cost_price as null and
+     * hides each movement's unit_cost.
      */
-    public function execute(Item $item, ?string $fromDate = null, ?string $toDate = null, ?int $storeId = null, ?string $type = null, int $perPage = 20): array
+    public function execute(Item $item, ?string $fromDate = null, ?string $toDate = null, ?int $storeId = null, ?string $type = null, int $perPage = 20, bool $includeCost = true): array
     {
         $inTypes = [
             'purchase_in', 'stock_deposit_in', 'stock_adjustment_in',
@@ -63,6 +66,9 @@ final class GetItemMovementsAction
             : (float) $item->current_stock;
 
         $movements = $query->latest('id')->paginate($perPage);
+        if (! $includeCost) {
+            $movements->getCollection()->each(fn (StockMovement $movement) => $movement->makeHidden('unit_cost'));
+        }
 
         return [
             'item' => [
@@ -72,7 +78,7 @@ final class GetItemMovementsAction
                 'category' => $item->category,
                 'unit' => $item->unit,
                 'current_stock' => (float) $item->current_stock,
-                'cost_price' => (float) $item->cost_price,
+                'cost_price' => $includeCost ? (float) $item->cost_price : null,
                 'selling_price' => (float) $item->selling_price,
             ],
             'filters' => [

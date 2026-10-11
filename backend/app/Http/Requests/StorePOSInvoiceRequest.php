@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\Customer;
+use App\Http\Requests\Concerns\ResolvesWalkInCustomer;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use App\Support\TenantClock;
@@ -13,6 +13,7 @@ use Illuminate\Foundation\Http\FormRequest;
 final class StorePOSInvoiceRequest extends FormRequest
 {
     use Concerns\ValidatesCheckoutPayments;
+    use ResolvesWalkInCustomer;
 
     public function authorize(): bool
     {
@@ -53,27 +54,11 @@ final class StorePOSInvoiceRequest extends FormRequest
             $paymentMethod = 'e_wallet';
         }
 
-        $customerId = $this->input('customer_id');
-        if (empty($customerId) || $customerId === 'null' || $customerId === null) {
-            $defaultCustomer = Customer::where('name', 'نقدي عام')
-                ->orWhere('name', 'عميل نقدي')
-                ->orWhere('phone', '0000000000')
-                ->first();
-
-            if (! $defaultCustomer) {
-                $defaultCustomer = Customer::create([
-                    'name' => 'عميل نقدي',
-                    'phone' => '0000000000',
-                    'current_balance' => 0,
-                    'price_tier' => 'retail',
-                    'is_active' => true,
-                ]);
-            }
-            $customerId = $defaultCustomer->id;
-        }
+        // SEC-1 (L13): no customer = walk-in customer, resolved in passedValidation() (after
+        // authorize() and the rules), never here.
+        $this->normalizeWalkInCustomerId();
 
         $this->merge([
-            'customer_id' => $customerId ? (int) $customerId : null,
             'store_id' => $storeId,
             // SETG-2 ext: the business date on the tenant clock (timezone + cutoff), not the server date.
             'invoice_date' => $this->input('invoice_date') ?? app(TenantClock::class)->businessDate(),
@@ -86,7 +71,7 @@ final class StorePOSInvoiceRequest extends FormRequest
     {
         return [
             'client_uuid' => ['nullable', 'uuid'],
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'store_id' => ['required', 'exists:stores,id'],
             'invoice_date' => ['required', 'date'],
             'payment_type' => ['required', 'string', 'in:cash,credit,partial'],

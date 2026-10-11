@@ -388,4 +388,15 @@ return [
     // SETG-10 (W2 lane 2B)
     'unit_not_in_tenant_list' => 'The unit ":unit" is not in the unit list of this business. Pick a unit from the list or add it in settings.',
     'switched_to_store' => 'Switched to branch: :store',
+
+    // Item / store / transfer API messages
+    'item_status_updated' => 'Item status updated successfully',
+    'store_status_updated' => 'Branch (:name) status updated successfully',
+    'store_users_updated' => 'Staff assignments for branch (:name) updated successfully',
+    'store_deleted' => 'Branch (:name) deleted successfully',
+    'transfer_executed_numbered' => 'Stock transfer :number executed and goods moved successfully',
+    'transfer_cancelled_numbered' => 'Transfer :number cancelled and items returned to the source branch',
+    'transfer_cancel_reason_default' => 'Cancelled from the system',
+    'delete_category_confirm_text' => 'Category ":name" will be deleted and its items unlinked; the items themselves are kept.',
+    'store_delete_blockers' => "Linked operations prevent deletion:\n- :blockers",
 ];

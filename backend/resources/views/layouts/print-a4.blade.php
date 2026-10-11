@@ -352,7 +352,7 @@
                 logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'فاتورة-مبيعات-{{ $invoice->invoice_number }}.png';
+                link.download = @json(__('invoices.image_filename_a4', ['number' => $invoice->invoice_number]));
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 

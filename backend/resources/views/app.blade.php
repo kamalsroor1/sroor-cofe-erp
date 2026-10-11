@@ -20,7 +20,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <title>{{ \App\Models\Setting::get('platform_name') ?: \App\Models\Setting::get('app_name') ?: config('app.name', 'منظومة ERP السحابية') }}</title>
+    @php
+        // BRND-1: the shell is rendered before tenancy is initialised (the SPA sends X-Tenant on
+        // API calls only), so the shop name is not available here: the platform brand is shown.
+        $platformBrand = app(\App\Services\Branding\PlatformBranding::class)->get();
+    @endphp
+    <title>{{ $platformBrand->name }}</title>
 
     <!-- Early Anti-Flicker Theme Script -->
     <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
@@ -63,7 +68,9 @@
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    {{-- Dynamic manifest (routes/web.php): public/manifest.json is a static file the web server
+         would serve instead of the /manifest.json route, so the shell points at /app.webmanifest. --}}
+    <link rel="manifest" href="{{ url('/app.webmanifest') }}">
 
     <!-- Injected Global Translations & System Context -->
     <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
@@ -94,16 +101,17 @@
         <!-- Instant Branded Pre-Vue Splash Screen (Hidden in Electron to avoid double splash) -->
         <div id="pre-vue-splash" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;" dir="rtl">
             <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35); margin-bottom: 20px;">
-                <svg style="width: 40px; height: 40px; stroke: #020617; fill: none; stroke-width: 2.2;" viewBox="0 0 24 24">
-                    <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-                    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-                    <line x1="6" y1="2" x2="6" y2="4"></line>
-                    <line x1="10" y1="2" x2="10" y2="4"></line>
-                    <line x1="14" y1="2" x2="14" y2="4"></line>
+                {{-- Neutral storefront glyph (lucide "store"): the product is a generic retail SaaS. --}}
+                <svg style="width: 40px; height: 40px; stroke: #020617; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                    <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                    <path d="M2 7h20"></path>
+                    <path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>
                 </svg>
             </div>
-            <h1 style="font-size: 20px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -0.5px; color: #ffffff;">سرور كوفي ERP & POS</h1>
-            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px 0; font-weight: 600;">نظام الفواتير والمخزون ونقاط البيع السريعة</p>
+            <h1 style="font-size: 20px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -0.5px; color: #ffffff;">{{ $platformBrand->name }}</h1>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px 0; font-weight: 600;">{{ __('common.splash.subtitle') }}</p>
             <div style="width: 180px; height: 4px; background: #1e293b; border-radius: 999px; overflow: hidden; position: relative;">
                 <div style="position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 999px; animation: app-splash-loader 1.5s infinite ease-in-out;"></div>
             </div>

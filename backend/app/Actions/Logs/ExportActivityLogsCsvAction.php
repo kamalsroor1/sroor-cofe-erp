@@ -77,7 +77,7 @@ final class ExportActivityLogsCsvAction
 
             $query->orderBy('created_at', 'desc')->chunk(200, function ($logs) use ($handle) {
                 foreach ($logs as $log) {
-                    fputcsv($handle, [
+                    fputcsv($handle, array_map(static fn (mixed $cell): mixed => self::neutralizeFormula($cell), [
                         $log->id,
                         $log->created_at?->format('Y-m-d H:i:s'),
                         $log->user?->name ?? __('common.system'),
@@ -87,7 +87,7 @@ final class ExportActivityLogsCsvAction
                         $log->action,
                         $log->description,
                         $log->ip_address ?? '-',
-                    ]);
+                    ]));
                 }
             });
 
@@ -96,5 +96,20 @@ final class ExportActivityLogsCsvAction
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
+    }
+
+    /**
+     * SEC-1 (L7): CSV/formula injection. A cell a spreadsheet would evaluate (starting with
+     * = + - @, a tab or a carriage return) is prefixed with a single quote so it stays text.
+     * User-controlled values (names, descriptions) end up in this export.
+     */
+    private static function neutralizeFormula(mixed $value): mixed
+    {
+        // A lone '-' is the export's own "no value" placeholder, not a formula.
+        if (! is_string($value) || $value === '' || $value === '-') {
+            return $value;
+        }
+
+        return in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true) ? "'".$value : $value;
     }
 }

@@ -86,7 +86,7 @@ final class ProvisionTenantJobTest extends TenantTestCase
             'plan_id' => $plan->id,
             'trial_days' => 14,
             'custom_domain' => $slug.'.custom.test',
-        ], $this->centralHeaders($this->centralSuperAdmin()))
+        ], $this->steppedUpCentralHeaders($this->centralSuperAdmin()))
             ->assertStatus(201)
             ->assertJson(['success' => true]);
 

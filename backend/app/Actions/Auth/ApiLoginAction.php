@@ -24,6 +24,15 @@ final class ApiLoginAction
     {
         $login = $dto->login;
 
+        // 0. SEC-1 (M1): tenant users only, never the CENTRAL `users` table. ResolveApiTenancy
+        //    already answers 404 without a tenant; this is defense in depth (same answer as a
+        //    wrong password, so nothing about the central database leaks).
+        if (! tenancy()->initialized) {
+            throw ValidationException::withMessages([
+                'login' => __('auth.failed'),
+            ]);
+        }
+
         // 1. Find user by phone or email
         $user = User::where(function ($query) use ($login) {
             $query->where('phone', $login)

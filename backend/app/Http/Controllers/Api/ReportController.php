@@ -14,10 +14,12 @@ use App\Actions\Reports\GetTreasuryReportAction;
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FilterReportRequest;
+use App\Http\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\ActiveStore;
+use App\Support\CostVisibility;
 use App\Support\TenantClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -233,10 +235,14 @@ final class ReportController extends Controller
             ->latest('id')
             ->limit(50)
             ->get();
+        if (! CostVisibility::allows($user)) {
+            $movements->each(fn (StockMovement $movement) => $movement->makeHidden('unit_cost'));
+        }
 
         return response()->json([
             'success' => true,
-            'item' => $item,
+            // SEC-1 (M6): shaped by ItemResource (cost only with items.view_cost), never the raw model.
+            'item' => (new ItemResource($item))->resolve(),
             'movements' => $movements,
         ], 200);
     }

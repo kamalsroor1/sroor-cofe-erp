@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\Customer;
+use App\Http\Requests\Concerns\ResolvesWalkInCustomer;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateBlenderInvoiceRequest extends FormRequest
 {
+    use ResolvesWalkInCustomer;
+
     public function authorize(): bool
     {
         return $this->user()?->hasRole('admin') || $this->user()?->can('invoices.create') || $this->user()?->can('pos.access') ?? false;
@@ -16,31 +18,16 @@ class CreateBlenderInvoiceRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $customerId = $this->input('customer_id');
-        if (empty($customerId) || $customerId === 'null' || $customerId === null) {
-            $defaultCustomer = Customer::where('name', 'نقدي عام')
-                ->orWhere('name', 'عميل نقدي')
-                ->orWhere('phone', '0000000000')
-                ->first();
-
-            if (! $defaultCustomer) {
-                $defaultCustomer = Customer::create([
-                    'name' => 'عميل نقدي',
-                    'phone' => '0000000000',
-                    'current_balance' => 0,
-                    'price_tier' => 'retail',
-                    'is_active' => true,
-                ]);
-            }
-            $this->merge(['customer_id' => $defaultCustomer->id]);
-        }
+        // SEC-1 (L13): no customer = walk-in customer, resolved in passedValidation() (after
+        // authorize() and the rules), never here.
+        $this->normalizeWalkInCustomerId();
     }
 
     public function rules(): array
     {
         return [
             'blend_name' => ['required', 'string', 'max:255'],
-            'customer_id' => ['required', 'integer', 'exists:customers,id'],
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'target_weight_grams' => ['nullable', 'numeric', 'min:1'],
             'roast_type' => ['nullable', 'string', 'max:50'],

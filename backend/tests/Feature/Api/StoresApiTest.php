@@ -326,6 +326,47 @@ class StoresApiTest extends TenantTestCase
         ]));
     }
 
+    // ------------------------------------------------------------------ SEC-1 (W2 batch 6)
+
+    public function test_show_answers_404_for_a_store_the_user_cannot_access(): void
+    {
+        // L1: StorePolicy::view, else "not found" (never the users and counters of another branch).
+        $otherId = $this->createBranch('فرع مقفول', 'LOCKED-1', 'retail');
+        $cashier = $this->createTenantUser($this->tenant, 'cashier');
+        $headers = $this->tenantHeaders($this->tenant, $cashier);
+
+        $this->getJson("/api/v1/stores/{$otherId}", $headers)
+            ->assertStatus(404)
+            ->assertJsonMissing(['name' => 'فرع مقفول']);
+
+        $this->getJson("/api/v1/stores/{$this->mainStoreId}", $headers)
+            ->assertOk()
+            ->assertJsonPath('data.id', $this->mainStoreId);
+
+        $this->getJson("/api/v1/stores/{$otherId}", $this->adminHeaders)->assertOk();
+    }
+
+    public function test_index_scope_is_permission_based_and_the_user_list_is_for_store_managers_only(): void
+    {
+        // L2: no magic user id / legacy role. stores.view_all lists every branch (also inactive
+        // ones) but only stores.manage gets the assignable users list.
+        $inactiveId = $this->inTenant($this->tenant, fn (): int => (int) Store::create([
+            'name' => 'فرع موقوف', 'code' => 'OFF-1', 'type' => 'retail', 'is_main' => false, 'is_active' => false,
+        ])->id);
+
+        $viewer = $this->createTenantUser($this->tenant, permissions: ['stores.view_all']);
+        $viewerResponse = $this->getJson('/api/v1/stores', $this->tenantHeaders($this->tenant, $viewer))->assertOk();
+        $this->assertContains($inactiveId, array_column($viewerResponse->json('stores'), 'id'));
+        $this->assertSame([], $viewerResponse->json('all_users'));
+
+        $cashier = $this->createTenantUser($this->tenant, 'cashier');
+        $cashierResponse = $this->getJson('/api/v1/stores', $this->tenantHeaders($this->tenant, $cashier))->assertOk();
+        $this->assertSame([$this->mainStoreId], array_column($cashierResponse->json('stores'), 'id'));
+        $this->assertSame([], $cashierResponse->json('all_users'));
+
+        $this->assertNotEmpty($this->getJson('/api/v1/stores', $this->adminHeaders)->assertOk()->json('all_users'));
+    }
+
     private function createBranch(string $name, string $code, string $type): int
     {
         return $this->inTenant($this->tenant, fn (): int => Store::create([

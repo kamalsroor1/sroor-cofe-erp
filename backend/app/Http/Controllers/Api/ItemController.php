@@ -19,8 +19,14 @@ use App\Http\Requests\UpdateItemRequest;
 use App\Http\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\Store;
+use App\Models\StoreStock;
+use App\Models\User;
 use App\Services\Settings\TenantSettings;
+use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
+use App\Support\CostVisibility;
+use Closure;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -59,7 +65,7 @@ final class ItemController extends Controller
             ?: $user?->getCurrentStore()?->id
             ?: Store::getMainStore()?->id;
 
-        $query = Item::with(['storeStocks.store']);
+        $query = Item::with($this->readableStoreStocks($user));
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -107,7 +113,10 @@ final class ItemController extends Controller
 
         $totalItemsCount = Item::count();
         $lowStockCount = $this->tenantSettings->whereLowStock(Item::query())->where('is_active', true)->count();
-        $totalStockValue = (float) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val');
+        // SEC-1 (M6): stock valuation is cost-derived: items.view_cost only.
+        $totalStockValue = CostVisibility::allows($user)
+            ? (float) Item::selectRaw('SUM(current_stock * cost_price) as total_val')->value('total_val')
+            : null;
 
         return response()->json([
             'success' => true,
@@ -138,7 +147,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.item_added') ?: 'تم إضافة الصنف بنجاح',
+            'message' => __('inventory.item_added'),
             'data' => (new ItemResource($item))->resolve(),
         ], 201);
     }
@@ -153,7 +162,8 @@ final class ItemController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $item = Item::with(['storeStocks.store'])->findOrFail($id);
+        // SEC-1 (M3): per-store stock rows only for the stores the user may read.
+        $item = Item::with($this->readableStoreStocks($user))->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -172,7 +182,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.item_updated') ?: 'تم تعديل بيانات الصنف بنجاح',
+            'message' => __('inventory.item_updated'),
             'data' => (new ItemResource($updated))->resolve(),
         ], 200);
     }
@@ -192,7 +202,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.item_deleted') ?: 'تم حذف الصنف بنجاح',
+            'message' => __('inventory.item_deleted'),
         ], 200);
     }
 
@@ -211,7 +221,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.status_updated') ?: 'تم تحديث حالة الصنف بنجاح',
+            'message' => __('inventory.item_status_updated'),
             'data' => (new ItemResource($toggled))->resolve(),
         ], 200);
     }
@@ -231,7 +241,7 @@ final class ItemController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('inventory.stock_adjusted') ?: 'تم تسجيل تسوية المخزون بنجاح',
+            'message' => __('inventory.stock_adjusted_success'),
             'movement' => $movement,
         ], 200);
     }
@@ -239,7 +249,7 @@ final class ItemController extends Controller
     /**
      * Item stock movements ledger
      */
-    public function movements(Request $request, int $id): JsonResponse
+    public function movements(Request $request, ActiveStore $activeStore, int $id): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('items.view')) {
@@ -249,8 +259,9 @@ final class ItemController extends Controller
         $item = Item::withTrashed()->findOrFail($id);
         $fromDate = $request->input('from_date') ?: $request->input('from');
         $toDate = $request->input('to_date') ?: $request->input('to');
-        $clientStoreId = ClientStoreGuard::verified($request);
-        $storeId = is_int($clientStoreId) ? $clientStoreId : null;
+        // SEC-1 (M3): the active store (or an access-checked store_id filter); every store only
+        // for a verified `all`. A user never reads another branch's ledger.
+        $storeId = $activeStore->readFilter($request);
         $type = $request->input('type');
         $perPage = max(1, min(200, (int) $request->input('per_page', 20)));
 
@@ -260,7 +271,8 @@ final class ItemController extends Controller
             $toDate ? (string) $toDate : null,
             $storeId,
             $type ? (string) $type : null,
-            $perPage
+            $perPage,
+            CostVisibility::allows($user),
         );
 
         return response()->json([
@@ -282,11 +294,12 @@ final class ItemController extends Controller
         $storeId = ClientStoreGuard::concreteOrDefault($request);
 
         $threshold = $this->tenantSettings->lowStockDefaultThreshold();
+        $showCost = CostVisibility::allows($user);
 
         $items = $this->tenantSettings->whereLowStock(Item::query()->active())
             ->orderBy('current_stock', 'asc')
             ->get()
-            ->map(function (Item $item) use ($storeId, $threshold) {
+            ->map(function (Item $item) use ($storeId, $threshold, $showCost) {
                 $stock = (string) $item->getStockInStore($storeId);
                 $min = (string) $item->min_stock_level;
                 // An item without its own minimum is measured against the tenant default threshold.
@@ -302,7 +315,7 @@ final class ItemController extends Controller
                     'name' => $item->name,
                     'category' => $item->category,
                     'unit' => $item->unit,
-                    'cost_price' => (string) $item->cost_price,
+                    'cost_price' => $showCost ? (string) $item->cost_price : null,
                     'selling_price' => (string) $item->selling_price,
                     'current_stock' => $stock,
                     'min_stock_level' => $min,
@@ -316,5 +329,27 @@ final class ItemController extends Controller
             'count' => $items->count(),
             'low_items' => $items,
         ], 200);
+    }
+
+    /**
+     * SEC-1 (M3): eager load of the per-store stock rows limited to the stores the user may read
+     * (ActiveStore::canRead): every store for admin / stores.manage / stores.view_all, else the
+     * user's default and assigned stores. Another branch's quantities never leave the server.
+     *
+     * @return array<string, Closure(HasMany<StoreStock, Item>): void>
+     */
+    private function readableStoreStocks(mixed $user): array
+    {
+        $storeIds = $user instanceof User ? ActiveStore::readableStoreIds($user) : [];
+
+        return [
+            'storeStocks' => function (HasMany $query) use ($storeIds): void {
+                $query->with('store');
+
+                if ($storeIds !== null) {
+                    $query->whereIn('store_id', $storeIds);
+                }
+            },
+        ];
     }
 }

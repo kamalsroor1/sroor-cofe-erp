@@ -171,4 +171,16 @@ return [
     'drawer_balanced' => 'Drawer balanced',
     'drawer_surplus' => 'Drawer surplus',
     'record_expense_btn' => 'Record expense',
+
+    // Shift open/close API messages and activity log entries
+    'shift_opened_numbered' => 'Shift :number opened successfully',
+    'shift_closed_numbered' => 'Shift :number closed successfully (:status)',
+    'shift_already_open' => 'Shift :number is already open for this branch. Close it first.',
+    'cash_diff_matched' => 'Drawer matches',
+    'cash_diff_surplus' => 'Surplus of :amount :currency',
+    'cash_diff_shortage' => 'Shortage of :amount :currency',
+    'activity' => [
+        'shift_opened' => 'Opened shift [:number] at branch (:store) with an opening balance of :amount :currency',
+        'shift_closed' => 'Closed shift [:number] with actual cash of :amount :currency (:status)',
+    ],
 ];

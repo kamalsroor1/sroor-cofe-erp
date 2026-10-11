@@ -228,4 +228,24 @@ return [
     'payment_ewallet' => 'E-wallet',
     'total_net' => 'Net total',
     'invoice_with_number' => 'Invoice #:number',
+
+    'bulk_cancel_reason' => 'Bulk cancellation from the sales list',
+    'stamp_placeholder' => 'Stamp',
+    'image_filename_a4' => 'sales-invoice-:number.png',
+    'image_filename_thermal' => 'receipt-:number.png',
+    'csv_columns' => [
+        'number' => 'Invoice number',
+        'customer' => 'Customer',
+        'phone' => 'Phone',
+        'date' => 'Date',
+        'payment_method' => 'Payment method',
+        'net' => 'Net',
+        'paid' => 'Paid',
+        'remaining' => 'Remaining',
+        'status' => 'Status',
+    ],
+    'share' => [
+        'copy_text' => "🧾 Invoice #:number\n🏢 Business: :company\n👤 Customer: :customer\n📅 Date: :date\n💰 Net due: :net :currency\n💵 Paid: :paid :currency\n📝 Remaining: :remaining :currency",
+        'whatsapp_text' => "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!",
+    ],
 ];

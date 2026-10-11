@@ -118,11 +118,15 @@ final class GetDashboardOverviewAction
         $supplierPaid = $cashFlow['supplier_paid'];
         $netCashToday = $cashFlow['net_cash'];
 
+        // SEC-1 (M6): profit, margin and receivable/payable totals are financial report data:
+        // reports.view only (there is no dashboard.* permission). Without it they are null.
+        $showFinancials = $user instanceof User && $user->can('reports.view');
+
         // 7. Customers & Suppliers Totals
         $customersCount = (int) Customer::where('is_active', true)->count();
         $suppliersCount = (int) Supplier::where('is_active', true)->count();
-        $totalCustomersDebt = (float) (Customer::where('is_active', true)->sum('current_balance') ?: 0);
-        $totalSuppliersDebt = (float) (Supplier::where('is_active', true)->sum('current_balance') ?: 0);
+        $totalCustomersDebt = $showFinancials ? (float) (Customer::where('is_active', true)->sum('current_balance') ?: 0) : null;
+        $totalSuppliersDebt = $showFinancials ? (float) (Supplier::where('is_active', true)->sum('current_balance') ?: 0) : null;
 
         // 8. Low Stock Items Radar (SETG-10: own minimum, else the tenant default threshold)
         $lowStockThreshold = $this->tenantSettings->lowStockDefaultThreshold();
@@ -186,7 +190,7 @@ final class GetDashboardOverviewAction
                 $activeShift = [
                     'id' => $shift->id,
                     'shift_number' => $shift->shift_number,
-                    'user_name' => $shift->user?->name ?? 'الكاشير',
+                    'user_name' => $shift->user?->name ?? __('common.cashier'),
                     'starting_cash' => (float) $shift->opening_cash_balance,
                     'current_cash' => (float) $this->shiftService->calculateShiftTotals($shift)['expected_cash_balance'],
                     'opened_at' => $shift->opened_at?->toDateTimeString(),
@@ -204,7 +208,7 @@ final class GetDashboardOverviewAction
             ->map(fn ($inv) => [
                 'id' => $inv->id,
                 'invoice_number' => $inv->invoice_number,
-                'customer_name' => $inv->customer?->name ?? 'عميل نقدي',
+                'customer_name' => $inv->customer?->name ?? __('pos.walk_in_customer'),
                 'invoice_date' => $inv->invoice_date?->toDateString() ?? $inv->created_at?->toDateString(),
                 'net_total' => (float) $inv->net_total,
                 'paid_amount' => (float) $inv->paid_amount,
@@ -233,12 +237,13 @@ final class GetDashboardOverviewAction
                 'customers_debt' => $totalCustomersDebt,
                 'suppliers_debt' => $totalSuppliersDebt,
                 'monthly_sales' => (float) $periodic['total_sales'],
-                'monthly_gross_profit' => (float) $periodic['gross_profit'],
-                'monthly_margin' => (float) $periodic['margin_percentage'],
+                'monthly_gross_profit' => $showFinancials ? (float) $periodic['gross_profit'] : null,
+                'monthly_margin' => $showFinancials ? (float) $periodic['margin_percentage'] : null,
                 'customers_count' => $customersCount,
                 'suppliers_count' => $suppliersCount,
                 'low_stock_count' => $lowStockCount,
             ],
+            'can_view_financials' => $showFinancials,
             'analytics' => $analytics,
             'low_stock_items' => $lowStockItems,
             'top_selling_items' => $topSellingItems,
