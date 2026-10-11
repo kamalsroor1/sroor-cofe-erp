@@ -1,4 +1,4 @@
-# Backup & restore runbook — النسخ الاحتياطي والاستعادة (OPS-5 / OPS-7)
+# Backup & restore runbook — النسخ الاحتياطي والاستعادة (OPS-5 / OPS-7 / OPS-9)
 
 > المهمة: Phase 1 · W2 · **OPS-5** (+ فحوص الـ health من OPS-7) في `docs/05-planning/phase-1-plan.md` §4.
 > قرارات الـ CTO: **D3** Google Drive بـ OAuth من حساب الـ CTO (مجلد مخصص)، **D4** `BACKUP_ARCHIVE_PASSWORD` فاضي في الإنتاج = النسخ يرفض يشتغل + الـ deploy preflight يفشل + الـ health أحمر، والتطبيق نفسه يقوم عادي.
@@ -18,7 +18,8 @@
 | المكان | `<disk>:<BACKUP_PATH_PREFIX>/<subject>/<subject>-YYYY-mm-dd-HH-ii-ss.zip` (مثال: `sroor-backups/shop1/shop1-2026-10-11-01-30-02.zip`) |
 | الـ disk | `google` على الـ VPS (`BACKUP_DISKS=google`)، `local` في dev/staging |
 | السجل | جدول مركزي `tenant_backups` (`tenant_id` NULL = المركزي، `disk`، `path`، `sha256`، `size_bytes`، `created_at`، `verified_at`). `verified_at` بيتحط بس بعد ما النسخة المرفوعة تتنزّل تاني والـ sha256 يطابق |
-| الاحتفاظ | **7 يومي / 4 أسبوعي / 3 شهري** لكل DB ولكل disk (أحدث نسخة من كل أسبوع ثم من كل شهر)، أحدث نسخة عمرها ما بتتمسح، وصف السجل بيتمسح مع الملف. بيتطبق بس على اللي نجح في نفس التشغيلة |
+| الاحتفاظ | **7 يومي / 4 أسبوعي / 3 شهري** لكل DB ولكل disk (أحدث نسخة من كل أسبوع ثم من كل شهر)، أحدث نسخة عمرها ما بتتمسح، وصف السجل بيتمسح مع الملف. بيتطبق بس على اللي نجح في نفس التشغيلة. **نسخ `final` و`pre_purge` (OPS-9) عمرها ما بتتمسح** (§11) |
+| نوع النسخة | عمود `tenant_backups.kind`: `scheduled` (الليلي/الـ deploy)، `manual`، `final` (قبل الأرشفة)، `pre_purge` (قبل المسح النهائي). الأخيرتين اسم ملفهم بينتهي بـ `-final.zip` / `-pre_purge.zip` |
 | الجدولة | `01:30` يوميًا (`routes/console.php`، `withoutOverlapping`) |
 | ملفات المستخدمين | `backup:run --only-files` (spatie، `storage/` من غير `.env` والمفاتيح، `tests/Unit/BackupConfigTest.php`) الساعة `02:30` + `backup:clean` الساعة `03:00`، بنفس الباسورد ونفس الـ disks |
 | الفشل | أي DB تفشل **ماتوقفش الباقي**. في الآخر: exit 1، سطر `error` في الـ log لكل DB، وإيميل واحد (`BackupFailedNotification`) لـ `BACKUP_NOTIFICATION_EMAIL` فيه كل DB فشلت والسبب |
@@ -170,3 +171,95 @@ bash ../scripts/ops/tests/deploy-test.sh
 ```
 
 تغطي: أرشيف لكل مستأجر مشفّر AES-256 (الـ manifest مايتقراش من غير الباسورد) وعدد الصفوف صح والـ sha256 = السجل و`verified_at`؛ مستأجر بايظ مايوقفش الباقي + إيميل؛ D4 في الإنتاج (exit 1، صفر ملفات، صفر صفوف)؛ المركزي كـ subject لوحده؛ تخطي الـ archived إلا بالطلب؛ الاحتفاظ 7/4/3 ومسح صفوف السجل؛ الاستعادة في DB جديدة بعدد صفوف مطابق، رفض checksum غلط/باسورد غلط/subject تاني/اسم DB حي أو موجود، فرق عدد الصفوف يفضل للفحص؛ الـ health (التسجيل، البوابة، D4، 26 ساعة، غير متحقق منه، مستأجر جديد/مؤرشف)؛ وترتيب الـ deploy (backup قبل migrate، فشله يوقف الـ release، الـ skip بيتسجل).
+
+
+---
+
+## 11. الأرشفة والمسح النهائي للمستأجر (OPS-9)
+
+> قرارات الـ CTO: **Q-B13 / Q1** «الحذف» من الـ API = **أرشفة بس** (async)، **Q2** المسح النهائي من سطر الأوامر بس، **Q3** شروط الاستحقاق، **Q4** شروط النسخة قبل الـ DROP، **Q5** tombstone، **Q6** نسخ `final`/`pre_purge` عمرها ما تتمسح. **مفيش purge تلقائي أبدًا**: لا job ولا sweep ولا schedule (`Tests\Unit\Architecture\NoAutomaticPurgeTest`).
+
+### 11.1 القواعد
+
+| القاعدة | التفاصيل |
+|---|---|
+| الأرشفة ≠ حذف | الأرشفة بتغيّر الحالة لـ `archived` بس. قاعدة البيانات والملفات والدومينات بتفضل زي ما هي، والأرشفة **قابلة للرجوع** (unarchive) لحد المسح النهائي |
+| مفيش أرشفة من غير نسخة نهائية | الكاتب الوحيد للحالة (`TransitionTenantStatusAction`) بيرفض `archived` إلا لو فيه صف في `tenant_backups` **لنفس المستأجر**، نوعه `final` أو `pre_purge`، **متأكدين منه** (`verified_at`)، وعمره ≤ `tenant_lifecycle.archive.final_backup_max_age_minutes` (**120 دقيقة**). غير كده: 409 `subscription.final_backup_required` + audit `tenant_archive_refused`، والحالة ماتتغيرش. ده بيغطي أي طريق (الـ API، `tenants:archive`، الـ sweep لما ييجي في W3) |
+| مين يتأرشف | `suspended` أو `cancelled` بس. من أي حالة تانية: 409 `subscription.archive_not_allowed` |
+| مين يتمسح نهائيًا | `archived` من ≥ **30 يوم** (من `archived_at`)، أو `suspended`/`cancelled` من ≥ **90 يوم** (من `status_changed_at`). الإيقاف بسبب `violation` **عمره ما يتمسح**. أي حالة تانية: مرفوض |
+| النسخة قبل المسح | نسخة **لنفس المستأجر**، متأكدين منها، عمرها ≤ **24 ساعة** (أو نسخة `pre_purge` جديدة بـ `--take-backup`)، وقبل الـ DROP: الـ sha256 بيتعاد حسابه على الـ disk، الأرشيف بيتفك بـ `BACKUP_ARCHIVE_PASSWORD` والـ manifest بتاع نفس المستأجر، و**restore drill** حقيقي في DB مؤقتة (`purge.require_restore_drill = true`) |
+| تأكيد مكتوب | لازم تكتب **كود المحل (slug) بالظبط** ثم «أيوه» (الافتراضي «لأ»). من غير تفاعل (CI/سكربت): `--confirm=<slug>` **و** `--yes-i-understand` مع بعض. **مفيش `--force`** |
+| tombstone | صف `tenants` بيفضل للأبد (`purged_at`، `purged_by` = `cli:<مستخدم النظام>`): الفواتير والاشتراكات والـ audit وتاريخ الحالة وسجل النسخ بيفضلوا، والـ slug مايتعادش استخدامه. اللي بيتمسح: الـ DB، مستخدم الـ MySQL الخاص بالمحل (لو الـ provisioner هو اللي عمله وهو لسه المستخدم الحالي)، `storage/tenant<id>`، الدومينات، توكنات الـ impersonation، رفع حدود الطلبات، وبيانات دخول الـ DB في `data` |
+| بعد المسح | المحل **404** `auth.tenant_not_found` على كل الـ API (X-Tenant أو الدومين)، خارج `Tenant::provisioned()` (backups، migrations، health)، و`backup:tenants --tenant=<id>` بيرفضه |
+| الاحتفاظ | نسخ `final` و`pre_purge` عمرها ما بتتمسح من الـ retention (بالاسم وبالسجل). ده يعني إن مساحة الـ Drive بتزيد بنسخة لكل محل اتأرشف/اتمسح؛ أي تنظيف ليها قرار يدوي من الـ CTO |
+
+### 11.2 الأرشفة من لوحة المنصة (الطريق العادي)
+
+`DELETE /api/v1/super-admin/tenants/{id}` (صلاحية `super_admin.tenants.manage` + **step-up 2FA** + `throttle:6,1`)، الـ body:
+
+```json
+{ "confirm_code": "<slug المحل بالظبط>", "expected_status": "suspended|cancelled", "note": "اختياري ≤ 500" }
+```
+
+- **202**: `{ success, message, data: { id, status, archive: { state: "queued", requested_at, … } } }` — الطلب اتسجل (`archive_state = queued`، audit `tenant_archive_requested`) و`ArchiveTenantJob` اتبعت للـ queue **بعد الـ commit**.
+- الـ job (محاولة واحدة، timeout 30 دقيقة، unique لكل محل): قفل `tenant-lifecycle:{id}` ← `running` ← `backup:tenants --tenant=<id> --skip-central --no-cleanup --kind=final` ← لازم صف `final` متأكدين منه على **كل** disk متظبط ← `archived` (مع `archived_at` و`final_backup_id`) ← الحالة بتتمسح.
+- لو فشل: الحالة **ماتتغيرش**، `archive_state = failed` و`archive_error_code` واحد من `final_backup_failed | status_changed | purged | unknown`، audit `tenant_archive_refused`. الحل: صلّح السبب (غالبًا §9) واطلب الأرشفة تاني (طلب `failed` أو `queued/running` أقدم من `archive.stale_after_minutes` = 60 دقيقة يتقبل تاني).
+- 409: `subscription.archive_not_allowed`، `subscription.already_archived`، `subscription.archive_in_progress`، `subscription.tenant_purged`، `subscription.status_conflict` (الحالة اتغيرت عن اللي شفته)، `provisioning.workspace_not_ready`. 422: كود المحل غلط أو ناقص.
+- صفحة المحل (`GET /super-admin/tenants/{id}`) فيها `data.archive`: `state`، `requested_at`، `error_code`، `archived_at`، `final_backup {id, created_at, disk, sha256_prefix}`، `purge_eligible_at`، `purged_at`.
+
+**إلغاء الأرشفة:** `POST /api/v1/super-admin/tenants/{id}/unarchive` (`note` اختياري، نفس الصلاحية + step-up) ← المحل بيرجع للحالة اللي كان عليها (`suspended`/`cancelled`) مع audit `tenant_unarchived`. 409 `subscription.not_archived` أو `subscription.tenant_purged`. النسخة النهائية بتفضل في السجل.
+
+### 11.3 الأرشفة من سطر الأوامر (بديل متزامن)
+
+```bash
+php artisan tenants:archive <tenant id> --note="طلب العميل"
+```
+
+نفس الخطوات ونفس الضمانات بالظبط (`ArchiveTenantAction`)، بس من غير queue. exit 0 = اتأرشف وطبع رقم النسخة النهائية. exit 1 = الحالة ماتغيرتش (السبب مطبوع ومتسجل).
+
+### 11.4 المسح النهائي — `tenants:purge` (CLI بس، على الـ VPS)
+
+> **لا رجوع.** النسخة اللي الأمر بيتأكد منها هي الطريقة الوحيدة لرجوع المحل. ممنوع تشغيله على الإنتاج غير بطلب صريح من الـ CTO لمحل محدد.
+
+1. **اتأكد من الاستحقاق والنسخة من غير ما تمسح حاجة** (بيعمل كل الفحوص بما فيها الـ restore drill):
+   ```bash
+   php artisan tenants:purge <tenant id> --dry-run --db-user=sroor_provisioner
+   ```
+   لو مفيش نسخة ≤ 24 ساعة: إما `--take-backup` في الخطوة الجاية، أو `php artisan backup:tenants --tenant=<id> --skip-central --no-cleanup` الأول.
+2. **المسح** (تفاعلي — هيطلب كتابة كود المحل ثم تأكيد):
+   ```bash
+   php artisan tenants:purge <tenant id> --db-user=sroor_provisioner
+   # أو بنسخة pre_purge جديدة:
+   php artisan tenants:purge <tenant id> --take-backup --db-user=sroor_provisioner
+   # أو بنسخة معيّنة من السجل:
+   php artisan tenants:purge <tenant id> --backup=<ledger id> --db-user=sroor_provisioner
+   ```
+   من غير تفاعل بس (سكربت مراجَع): زوّد `--no-interaction --confirm=<slug> --yes-i-understand`.
+   - `--db-user`: حساب الـ restore drill (زي `backup:restore-tenant`، الباسورد بيتسأل مخفي). في الإنتاج الـ drill مش هيشتغل من غيره أو من غير `DB_RESTORE_USERNAME`.
+   - الـ DROP نفسه بيتعمل بحساب الـ provisioner (`ProvisionerMySQLDatabaseManager`، اللي بيرمي error لو فشل)، **مش** بـ `SafeMySQLDatabaseManager` القديم اللي بيبلع الأخطاء. الأمر بيرفض يمسح DB اسمها هو اسم الـ DB المركزية أو DB بيستخدمها مستأجر تاني.
+3. **لو وقف في النص** (exit 1 + audit `tenant_purge_failed {step, class}`): المحل بيبقى «purging» (`purge_started_at` متسجل، 404 للعملاء، ومحدش يقدر يرجعه). صلّح السبب وشغّل **نفس الأمر تاني** — بيكمّل الخطوات الباقية (كل خطوة idempotent). لو الـ DB لسه موجودة، قواعد النسخة (≤ 24 ساعة + drill) بتتطبق تاني؛ لو اتمسحت خلاص، بيكمّل من غير نسخة.
+4. **سجّل** في سجل العمليات: المحل، رقم النسخة وتاريخها وأول 12 حرف من الـ sha256 (مطبوعين في الملخص)، ومين نفّذ.
+
+الأسباب اللي بيرفض بيها (exit 1 + audit `tenant_purge_refused {reason}`): `too_recent`، `violation`، `status_not_eligible`، `no_anchor`، `backup_missing`، `backup_too_old`، `backup_unverified`، `backup_wrong_tenant`، `backup_failed`، `backup_verification_failed`، `conflicting_options`، `confirmation_missing`، `confirmation_mismatch`، `not_confirmed`.
+
+### 11.5 الإعدادات (`config/tenant_lifecycle.php`)
+
+| المفتاح | القيمة | المعنى |
+|---|---|---|
+| `archive.final_backup_max_age_minutes` | 120 | أقصى عمر للنسخة النهائية وقت الأرشفة |
+| `archive.job_timeout_seconds` | 1800 | timeout الـ `ArchiveTenantJob` |
+| `archive.queue_connection` / `archive.queue` | null | الـ queue (null = الافتراضي) |
+| `archive.stale_after_minutes` | 60 | طلب `queued/running` من غير تقدم المدة دي يتقبل يتطلب تاني |
+| `purge.archived_min_days` / `purge.blocked_min_days` | 30 / 90 | الاستحقاق |
+| `purge.backup_max_age_hours` | 24 | أقصى عمر للنسخة قبل المسح |
+| `purge.require_restore_drill` | true | restore drill إجباري قبل الـ DROP |
+| `purge.lock_seconds` | 3600 | قفل `tenant-lifecycle:{id}` (مشترك مع الأرشفة) |
+
+مفيش مفاتيح `.env` جديدة.
+
+### 11.6 الاختبارات
+
+```bash
+cd backend
+php artisan test --filter='ArchiveTenantRequiresFinalBackupTest|TenantArchiveApiTest|DestroyTenantDoesNotDropDatabaseTest|TenantPurgeCommandTest|PurgeEligibilityTest|BackupRetentionProtectsFinalArchivesTest|NoAutomaticPurgeTest'
+```

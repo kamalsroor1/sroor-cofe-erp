@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # APP-3 (W2 batch 5): app release binaries are never served as static files from
+    # public/ (or public/storage). They are downloaded only through
+    # GET /api/v1/app/download-apk, which carries the SHA-256 checksum. 404, not 403,
+    # so stray files are not even confirmed. nginx: docs/07-operations/vps-runbook.md.
+    RewriteRule \.(apk|exe|ipa)$ - [NC,R=404,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

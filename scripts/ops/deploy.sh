@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 # Zero-downtime release on the VPS (OPS-3). Runs ON THE SERVER as the app user
 # (APP_USER, e.g. `sroor`), called by .github/workflows/release.yml over SSH,
 # or by hand during the rehearsal (docs/07-operations/deploy-runbook.md).
@@ -18,9 +19,12 @@
 #   -> storage:link --force -> pre-migration backup (`backup:tenants`, not on the 1st
 #   release) -> migrate --force (central, as the migrator account)
 #   -> per-table central grants (append-only audit) -> tenants:migrate --force
+#   -> app-releases:relocate (copy + verify release binaries to the private disk;
+#      the public copy stays for the old release, idempotent)
 #   -> config/route/view/event cache -> smoke health:check from the new release
 #   -> atomic `current` switch -> php-fpm reload -> horizon:terminate (or
-#   queue:restart) -> health:check + GET /up -> prune old releases
+#   queue:restart) -> health:check + GET /up
+#   -> app-releases:relocate --prune-legacy (NON-FATAL, logged) -> prune old releases
 #
 # Any failure BEFORE the switch removes the new release and restores shared/.env
 # (users never saw it; exit 1). Any failure AFTER the switch rolls `current` back
@@ -37,7 +41,6 @@
 # Test hooks (scripts/ops/tests/deploy-test.sh): OPS_PHP_BIN, OPS_HEALTH_DELAY,
 # OPS_HEALTH_ATTEMPTS. Nothing else changes behaviour.
 
-set -euo pipefail
 
 # Physical path: a manual --rollback started from current/ keeps using its own files.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -464,6 +467,14 @@ STAGE="migrate-tenants"
 info "php artisan tenants:migrate --force (any failing tenant stops the release)"
 artisan "$BACKEND" tenants:migrate --force
 
+# APP-3 (CTO Q9) / R1: release binaries are COPIED from the web-served public disk to the
+# private release disk (same relative path, SHA-256 verified, no DB change). The public
+# copy stays: the previous release (still serving, and the rollback target) only reads it.
+# Idempotent. A conflict or a failed copy is a failure (users stay on the previous release).
+STAGE="relocate-app-releases"
+info "php artisan app-releases:relocate (copy APK/EXE binaries to the private disk)"
+artisan "$BACKEND" app-releases:relocate
+
 STAGE="caches"
 artisan "$BACKEND" config:cache
 chmod 600 "$BACKEND/bootstrap/cache/config.php"
@@ -486,6 +497,15 @@ restart_queue "$CURRENT/backend"
 
 STAGE="health"
 health_check "$CURRENT/backend"
+
+# R1: the new release is live and healthy: delete the public copies whose private copy has
+# the same SHA-256. NON-FATAL: a failure here never rolls back a healthy release; the
+# public copies simply stay until the next deploy retries (logged for the operator).
+STAGE="prune-legacy-releases"
+info "php artisan app-releases:relocate --prune-legacy (verified public copies only)"
+if ! artisan "$CURRENT/backend" app-releases:relocate --prune-legacy; then
+    warn "app-releases:relocate --prune-legacy failed (non-fatal): public release copies kept, the next deploy retries"
+fi
 
 # ---- success ----------------------------------------------------------------------
 STAGE="cleanup"
