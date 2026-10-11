@@ -48,12 +48,12 @@
 
 | # | الصفحة والوثيقة | المسار (Route) | اسم المسار (Route Name) | الصلاحية المركزية (Central Ability) | الكنترولر الرئيسي (Controller) |
 |---|---|---|---|---|---|
-| 31 | [لوحة تحكم السوبر أدمن المركزية](super-admin-dashboard.md) | `/super-admin/dashboard` | `super_admin.dashboard` | `super_admin.access` (`super_admin.dashboard.view`) | `SuperAdminApiController` |
-| 32 | [إدارة المستأجرين والشركات](super-admin-tenants.md) | `/super-admin/tenants` | `super_admin.tenants` | `super_admin.access` (`super_admin.tenants.view`) | `SuperAdminApiController` |
-| 33 | [تفاصيل المستأجر والتحكم المركزي](super-admin-tenant-show.md) | `/super-admin/tenants/:id` | `super_admin.tenants.show` | `super_admin.access` (`super_admin.tenants.manage`) | `SuperAdminApiController` |
-| 34 | [إدارة باقات الاشتراك والأسعار](super-admin-plans.md) | `/super-admin/plans` | `super_admin.plans` | `super_admin.access` (`super_admin.plans.view`) | `SuperAdminApiController` |
-| 35 | [إدارة إصدارات التطبيق وحزم APK](super-admin-app-versions.md) | `/super-admin/app-versions` | `super_admin.app_versions` | `super_admin.access` (`super_admin.app_versions.view`) | `SuperAdminAppVersionController` |
-| 36 | [إدارة وحدات القياس المركزية](super-admin-units.md) | `/super-admin/units` | `super_admin.units` | `super_admin.access` (`super_admin.settings.view`) | `SuperAdminApiController` |
+| 31 | [لوحة تحكم السوبر أدمن المركزية](super-admin-dashboard.md) | `/super-admin/dashboard` | `super_admin.dashboard` | `can:super_admin.dashboard.view` | `SuperAdminApiController` |
+| 32 | [إدارة المستأجرين والشركات](super-admin-tenants.md) | `/super-admin/tenants` | `super_admin.tenants` | `can:super_admin.tenants.view` | `SuperAdminApiController` / `TenantArchiveController` |
+| 33 | [تفاصيل المستأجر والتحكم المركزي](super-admin-tenant-show.md) | `/super-admin/tenants/:id` | `super_admin.tenants.show` | `can:super_admin.tenants.manage` | `SuperAdminApiController` / `PlatformUnitsController` |
+| 34 | [إدارة باقات الاشتراك والأسعار](super-admin-plans.md) | `/super-admin/plans` | `super_admin.plans` | `can:super_admin.plans.view` | `SuperAdminApiController` |
+| 35 | [إدارة إصدارات التطبيق وحزم APK](super-admin-app-versions.md) | `/super-admin/app-versions` | `super_admin.app_versions` | `can:super_admin.app_versions.view` | `SuperAdminAppVersionController` |
+| 36 | [إدارة وحدات القياس المركزية](super-admin-units.md) | `/super-admin/units` | `super_admin.units` | `can:super_admin.settings.view` | `PlatformUnitsController` |
 
 ---
 
