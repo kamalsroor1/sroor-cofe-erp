@@ -3,13 +3,26 @@ import {
   apiCall,
   createTestCustomer,
   createTestItem,
+  toDecimal3,
+  decAdd,
   collectConsoleErrors,
+  cleanupTestRecords,
 } from "../utils/flows/flow-helpers.js";
 
 test.describe("Business Flow 2: POS credit sale to customer and settlement", () => {
+  let customer;
+  let item;
+
   test.beforeEach(async ({}, testInfo) => {
     test.setTimeout(90000);
     test.skip(testInfo.project.name !== "desktop", "Desktop project flow");
+  });
+
+  test.afterAll(async ({ request }) => {
+    await cleanupTestRecords(request, {
+      customers: [customer],
+      items: [item],
+    });
   });
 
   test("credit sale -> customer balance increases -> statement payment -> balance settled", async ({
@@ -19,7 +32,7 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
     const consoleErrors = collectConsoleErrors(page);
 
     // 1. Create a dedicated test customer
-    const customer = await createTestCustomer(request, {
+    customer = await createTestCustomer(request, {
       name: "عميل آجل بيزنس فلو",
       price_tier: "retail",
     });
@@ -30,13 +43,13 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
       "GET",
       `/api/v1/customers/${customer.id}`,
     );
-    const initialBalance = parseFloat(
-      initialBalanceRes.body?.data?.current_balance || "0",
+    const initialBalance = toDecimal3(
+      initialBalanceRes.body?.data?.current_balance,
     );
 
     // 2. Create a test item
-    const item = await createTestItem(request, {
-      name: "شاي أخضر فاخر",
+    item = await createTestItem(request, {
+      name: "شاي أخضر فاخر تجربة",
       cost: "60.000",
       price: "250.000",
       stock: "15.000",
@@ -58,8 +71,8 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
           items: [
             {
               item_id: item.id,
-              quantity: 1.0,
-              unit_price: 250.0,
+              quantity: "1.000",
+              unit_price: "250.000",
             },
           ],
         },
@@ -69,10 +82,7 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
     expect(creditInvoiceRes.status).toBe(201);
     expect(creditInvoiceRes.body.success).toBe(true);
     const invoice = creditInvoiceRes.body.data;
-    expect(parseFloat(invoice.net_total || invoice.net_amount)).toBeCloseTo(
-      250.0,
-      3,
-    );
+    expect(toDecimal3(invoice.net_total || invoice.net_amount)).toBe("250.000");
 
     // 4. Server State Verification: Customer balance increased by 250.000
     const customerAfterCredit = await apiCall(
@@ -80,10 +90,10 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
       "GET",
       `/api/v1/customers/${customer.id}`,
     );
-    const balanceAfterCredit = parseFloat(
+    const balanceAfterCredit = toDecimal3(
       customerAfterCredit.body.data.current_balance,
     );
-    expect(balanceAfterCredit).toBeCloseTo(initialBalance + 250.0, 3);
+    expect(balanceAfterCredit).toBe(decAdd(initialBalance, "250.000"));
 
     const statementBeforePayment = await apiCall(
       request,
@@ -91,12 +101,12 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
       `/api/v1/customers/${customer.id}/statement`,
     );
     expect(statementBeforePayment.status).toBe(200);
-    const statementBalanceBefore = parseFloat(
+    const statementBalanceBefore = toDecimal3(
       statementBeforePayment.body.data?.customer?.current_balance ??
         statementBeforePayment.body.data?.summary?.current_balance ??
         statementBeforePayment.body.data?.current_balance,
     );
-    expect(statementBalanceBefore).toBeCloseTo(initialBalance + 250.0, 3);
+    expect(statementBalanceBefore).toBe(decAdd(initialBalance, "250.000"));
 
     // 5. Pay the debt: Record customer payment voucher
     const paymentRes = await apiCall(
@@ -123,22 +133,22 @@ test.describe("Business Flow 2: POS credit sale to customer and settlement", () 
       "GET",
       `/api/v1/customers/${customer.id}`,
     );
-    const balanceAfterPayment = parseFloat(
+    const balanceAfterPayment = toDecimal3(
       customerAfterPayment.body.data.current_balance,
     );
-    expect(balanceAfterPayment).toBeCloseTo(initialBalance, 3);
+    expect(balanceAfterPayment).toBe(initialBalance);
 
     const statementAfterPayment = await apiCall(
       request,
       "GET",
       `/api/v1/customers/${customer.id}/statement`,
     );
-    const statementBalanceAfter = parseFloat(
+    const statementBalanceAfter = toDecimal3(
       statementAfterPayment.body.data?.customer?.current_balance ??
         statementAfterPayment.body.data?.summary?.current_balance ??
         statementAfterPayment.body.data?.current_balance,
     );
-    expect(statementBalanceAfter).toBeCloseTo(initialBalance, 3);
+    expect(statementBalanceAfter).toBe(initialBalance);
 
     // 7. UI Verification: Customer Statement View
     await page.goto(`/customers/${customer.id}/statement`, {

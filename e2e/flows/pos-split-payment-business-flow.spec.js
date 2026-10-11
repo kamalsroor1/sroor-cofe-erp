@@ -3,13 +3,23 @@ import {
   apiCall,
   ensureShiftOpen,
   createTestItem,
+  toDecimal3,
   collectConsoleErrors,
+  cleanupTestRecords,
 } from "../utils/flows/flow-helpers.js";
 
 test.describe("Business Flow 3: POS split payment across methods and shift tracking", () => {
+  let item;
+
   test.beforeEach(async ({}, testInfo) => {
     test.setTimeout(90000);
     test.skip(testInfo.project.name !== "desktop", "Desktop project flow");
+  });
+
+  test.afterAll(async ({ request }) => {
+    await cleanupTestRecords(request, {
+      items: [item],
+    });
   });
 
   test("split payment (cash + card) -> payments breakdown and shift tracking", async ({
@@ -23,8 +33,8 @@ test.describe("Business Flow 3: POS split payment across methods and shift track
     expect(shift).toBeTruthy();
 
     // 2. Create test item
-    const item = await createTestItem(request, {
-      name: "قهوة كولومبي بريميوم",
+    item = await createTestItem(request, {
+      name: "قهوة كولومبي بريميوم سبليت",
       cost: "100.000",
       price: "300.000",
       stock: "20.000",
@@ -46,8 +56,8 @@ test.describe("Business Flow 3: POS split payment across methods and shift track
         items: [
           {
             item_id: item.id,
-            quantity: 1.0,
-            unit_price: 300.0,
+            quantity: "1.000",
+            unit_price: "300.000",
           },
         ],
       },
@@ -57,42 +67,51 @@ test.describe("Business Flow 3: POS split payment across methods and shift track
     expect(invoiceRes.body.success).toBe(true);
 
     const invoice = invoiceRes.body.data;
-    expect(parseFloat(invoice.net_total || invoice.net_amount)).toBeCloseTo(
-      300.0,
-      3,
+    expect(toDecimal3(invoice.net_total || invoice.net_amount)).toBe("300.000");
+
+    // 4. Server State Verification: Verify payments created for this invoice (unconditional check)
+    const invoiceDetails = await apiCall(
+      request,
+      "GET",
+      `/api/v1/invoices/${invoice.id}`,
+      { storeId: 1 },
+    );
+    expect(invoiceDetails.status).toBe(200);
+
+    const invoicePayments =
+      invoiceDetails.body.data?.payments ||
+      (
+        await apiCall(
+          request,
+          "GET",
+          `/api/v1/payments?invoice_id=${invoice.id}`,
+        )
+      ).body?.data ||
+      [];
+
+    expect(invoicePayments.length).toBeGreaterThanOrEqual(2);
+
+    const cashPayment = invoicePayments.find(
+      (p) => p.payment_method === "cash",
+    );
+    const cardPayment = invoicePayments.find(
+      (p) => p.payment_method === "visa" || p.payment_method === "card",
     );
 
-    // 4. Server State Verification: Verify payments created for this invoice
-    const paymentsRes = await apiCall(request, "GET", "/api/v1/payments");
-    expect(paymentsRes.status).toBe(200);
+    expect(cashPayment).toBeDefined();
+    expect(toDecimal3(cashPayment.amount)).toBe("100.000");
 
-    const invoicePayments = paymentsRes.body.data.filter(
-      (p) => Number(p.invoice_id) === Number(invoice.id),
-    );
+    expect(cardPayment).toBeDefined();
+    expect(toDecimal3(cardPayment.amount)).toBe("200.000");
 
-    // Should have both payment methods recorded
-    if (invoicePayments.length > 0) {
-      const cashPayments = invoicePayments.filter(
-        (p) => p.payment_method === "cash",
-      );
-      const visaPayments = invoicePayments.filter(
-        (p) => p.payment_method === "visa" || p.payment_method === "card",
-      );
+    // 5. Verify Shift per-method tracking
+    const shiftRes = await apiCall(request, "GET", "/api/v1/shifts/current", {
+      storeId: 1,
+    });
+    expect(shiftRes.status).toBe(200);
+    expect(shiftRes.body?.metrics).toBeDefined();
 
-      const cashTotal = cashPayments.reduce(
-        (sum, p) => sum + parseFloat(p.amount),
-        0,
-      );
-      const visaTotal = visaPayments.reduce(
-        (sum, p) => sum + parseFloat(p.amount),
-        0,
-      );
-
-      expect(cashTotal).toBeCloseTo(100.0, 3);
-      expect(visaTotal).toBeCloseTo(200.0, 3);
-    }
-
-    // 5. UI Verification: View invoice details
+    // 6. UI Verification: View invoice details
     await page.goto(`/invoices/${invoice.id}`, { waitUntil: "networkidle" });
     await expect(page.locator("h1, h2, h3").first()).toBeVisible({
       timeout: 15000,
