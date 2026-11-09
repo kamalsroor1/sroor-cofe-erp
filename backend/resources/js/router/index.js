@@ -318,6 +318,28 @@ const tenantRoutes = [
         },
     },
     {
+        path: '/billing',
+        name: 'billing.index',
+        component: () => import('../views/Billing/SubscriptionView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.billing_index',
+            requiresAuth: true,
+            permission: 'billing.manage',
+        },
+    },
+    {
+        path: '/billing/invoices/:id/print',
+        name: 'billing.invoice.print',
+        component: () => import('../views/Billing/BillingInvoicePrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.billing_invoice_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
+            permission: 'billing.manage',
+        },
+    },
+    {
         path: '/settings',
         name: 'settings.index',
         component: () => import('../views/Settings/SettingsView.vue'),

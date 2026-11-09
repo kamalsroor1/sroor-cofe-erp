@@ -1,6 +1,8 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useModules } from './useModules';
+import { useAuthStore } from '../stores/auth';
+import { trans } from '../helpers/trans';
 import {
     LayoutDashboard,
     FileText,
@@ -23,11 +25,13 @@ import {
     Trash2,
     Sliders,
     Truck,
+    CreditCard,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
     const route = useRoute();
     const { isModuleEnabled } = useModules();
+    const auth = useAuthStore();
 
     const sectionsRaw = [
         {
@@ -268,6 +272,16 @@ export function useNavigation() {
                     icon: Sliders,
                     module: 'settings',
                 },
+                {
+                    key: 'billing',
+                    get title() {
+                        return trans('nav.billing');
+                    },
+                    titleKey: 'nav.billing',
+                    path: '/billing',
+                    icon: CreditCard,
+                    permission: 'billing.manage',
+                },
             ],
         },
     ];
@@ -281,6 +295,9 @@ export function useNavigation() {
 
                 const visibleItems = section.items.filter((item) => {
                     if (item.module && !isModuleEnabled(item.module)) {
+                        return false;
+                    }
+                    if (item.permission && !auth.can(item.permission)) {
                         return false;
                     }
                     return true;
