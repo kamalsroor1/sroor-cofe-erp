@@ -27,7 +27,7 @@
 
     <!-- 2. Invoices / Sales (Module 2) -->
     <router-link
-      v-if="isModuleEnabled('pos_and_sales')"
+      v-if="canAccessPath('/invoices')"
       to="/invoices"
       class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
       :class="
@@ -47,7 +47,7 @@
     </router-link>
 
     <!-- 3. Primary Center Action: Raised Fast POS Button (Module 2) -->
-    <div v-if="isModuleEnabled('pos_and_sales')" class="flex-1 flex items-center justify-center">
+    <div v-if="canAccessPath('/pos')" class="flex-1 flex items-center justify-center">
       <router-link
         to="/pos"
         class="relative -top-4 w-12 h-12 rounded-2xl bg-theme-gradient flex items-center justify-center shadow-lg shadow-theme-primary transition-all duration-200 active:scale-90 cursor-pointer ring-4 ring-white dark:ring-slate-900 group"
@@ -60,7 +60,7 @@
 
     <!-- 4. Items & Inventory (Module 3) -->
     <router-link
-      v-if="isModuleEnabled('inventory_and_stores')"
+      v-if="canAccessPath('/items')"
       to="/items"
       class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
       :class="
@@ -81,7 +81,7 @@
 
     <!-- 5. Customers & CRM (Module 6) -->
     <router-link
-      v-if="isModuleEnabled('customers')"
+      v-if="canAccessPath('/customers')"
       to="/customers"
       class="flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group active:scale-90 relative"
       :class="
@@ -118,13 +118,13 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useModules } from '../../Composables/useModules';
+import { useRoutePermission } from '../../Composables/useRoutePermission';
 import { LayoutDashboard, FileText, ShoppingCart, Package, Users, Menu } from 'lucide-vue-next';
 
 defineEmits(['open-drawer']);
 
 const route = useRoute();
-const { isModuleEnabled } = useModules();
+const { canAccessPath } = useRoutePermission();
 
 const currentPath = computed(() => route.path || '');
 

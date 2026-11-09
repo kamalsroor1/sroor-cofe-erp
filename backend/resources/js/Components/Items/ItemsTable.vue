@@ -246,14 +246,16 @@
       :icon="'☕'"
     >
       <template #action>
-        <BaseButton
-          type="button"
-          variant="gradient"
-          size="md"
-          :icon="Plus"
-          :label="$t('inventory.add_first_item')"
-          @click="$emit('create')"
-        />
+        <FeatureGate feature="items.manage">
+          <BaseButton
+            type="button"
+            variant="gradient"
+            size="md"
+            :icon="Plus"
+            :label="$t('inventory.add_first_item')"
+            @click="$emit('create')"
+          />
+        </FeatureGate>
       </template>
     </EmptyState>
   </div>
@@ -263,11 +265,13 @@
 import { Sliders, History, Pencil, Trash2, Plus } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import FeatureGate from '../FeatureGate.vue';
 import ActionMenu from '../ActionMenu.vue';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 import { useAuthStore } from '../../stores/auth';
+import { useAppConfigStore } from '../../stores/appConfig';
 
 const { formatMoney, formatQty } = useFormatters();
 
@@ -282,30 +286,32 @@ defineProps({
 
 const emit = defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
 const authStore = useAuthStore();
+const appConfigStore = useAppConfigStore();
 
 const getItemActions = (item) => [
   {
     label: trans('inventory.adjust_stock'),
     icon: Sliders,
-    show: authStore.hasPermission('inventory.adjust'),
+    show: authStore.hasPermission('inventory.adjust') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('adjust', item),
   },
   {
     label: trans('inventory.movements_log'),
     icon: History,
     href: `/items/${item.id}/movements`,
+    show: appConfigStore.hasFeature('items.movements'),
   },
   {
     label: trans('common.edit'),
     icon: Pencil,
-    show: authStore.hasPermission('items.edit'),
+    show: authStore.hasPermission('items.edit') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('edit', item),
   },
   {
     label: trans('common.delete'),
     icon: Trash2,
     variant: 'danger',
-    show: authStore.hasPermission('items.delete'),
+    show: authStore.hasPermission('items.delete') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('delete', item),
   },
 ];

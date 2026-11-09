@@ -3,14 +3,16 @@
     <!-- 1. 🔝 Page Header & Actions -->
     <PageHeader :title="$t('inventory.items_title')" :subtitle="$t('inventory.items_subtitle')" :icon="'☕'">
       <template #actions>
-        <BaseButton
-          type="button"
-          variant="gradient"
-          size="md"
-          :icon="Plus"
-          :label="$t('inventory.add_item')"
-          @click="openCreateModal"
-        />
+        <FeatureGate feature="items.manage">
+          <BaseButton
+            type="button"
+            variant="gradient"
+            size="md"
+            :icon="Plus"
+            :label="$t('inventory.add_item')"
+            @click="openCreateModal"
+          />
+        </FeatureGate>
       </template>
     </PageHeader>
 
@@ -67,6 +69,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
+import FeatureGate from '../../Components/FeatureGate.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ItemsMetricsGrid from '../../Components/Items/ItemsMetricsGrid.vue';

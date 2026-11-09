@@ -1,6 +1,5 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useModules } from './useModules';
 import { useRoutePermission } from './useRoutePermission';
 import {
     LayoutDashboard,
@@ -28,7 +27,6 @@ import {
 
 export function useNavigation() {
     const route = useRoute();
-    const { isModuleEnabled } = useModules();
     const { canAccessPath } = useRoutePermission();
 
     const sectionsRaw = [
@@ -59,7 +57,6 @@ export function useNavigation() {
             titleKey: 'nav.group_sales',
             icon: Zap,
             iconBg: 'bg-emerald-500/10 text-emerald-500',
-            module: 'pos_and_sales',
             items: [
                 {
                     key: 'invoices',
@@ -67,7 +64,6 @@ export function useNavigation() {
                     titleKey: 'nav.invoices_log',
                     path: '/invoices',
                     icon: FileText,
-                    module: 'pos_and_sales',
                 },
                 {
                     key: 'pos',
@@ -75,7 +71,6 @@ export function useNavigation() {
                     titleKey: 'nav.pos_fast',
                     path: '/pos',
                     icon: Zap,
-                    module: 'pos_and_sales',
                 },
                 {
                     key: 'daily-journal',
@@ -83,7 +78,6 @@ export function useNavigation() {
                     titleKey: 'nav.daily_journal',
                     path: '/daily-journal',
                     icon: Wallet,
-                    module: 'treasury_and_shifts',
                 },
                 {
                     key: 'customers',
@@ -91,7 +85,6 @@ export function useNavigation() {
                     titleKey: 'nav.customers',
                     path: '/customers',
                     icon: Users,
-                    module: 'customers',
                 },
             ],
         },
@@ -102,7 +95,6 @@ export function useNavigation() {
             titleKey: 'nav.group_inventory',
             icon: Package,
             iconBg: 'bg-sky-500/10 text-sky-500',
-            module: 'inventory_and_stores',
             items: [
                 {
                     key: 'items',
@@ -110,7 +102,6 @@ export function useNavigation() {
                     titleKey: 'nav.items_catalog',
                     path: '/items',
                     icon: Package,
-                    module: 'inventory_and_stores',
                 },
                 {
                     key: 'categories',
@@ -118,7 +109,6 @@ export function useNavigation() {
                     titleKey: 'nav.categories',
                     path: '/categories',
                     icon: Tags,
-                    module: 'inventory_and_stores',
                 },
                 {
                     key: 'stores',
@@ -126,7 +116,6 @@ export function useNavigation() {
                     titleKey: 'nav.stores',
                     path: '/stores',
                     icon: StoreIcon,
-                    module: 'inventory_and_stores',
                 },
                 {
                     key: 'stores-stocks',
@@ -134,7 +123,6 @@ export function useNavigation() {
                     titleKey: 'nav.store_stocks',
                     path: '/stores/stocks',
                     icon: StoreIcon,
-                    module: 'inventory_and_stores',
                 },
                 {
                     key: 'stock-transfers',
@@ -142,7 +130,6 @@ export function useNavigation() {
                     titleKey: 'nav.stock_transfers',
                     path: '/stock-transfers',
                     icon: ArrowLeftRight,
-                    module: 'inventory_and_stores',
                 },
                 {
                     key: 'smart-reorder',
@@ -150,7 +137,6 @@ export function useNavigation() {
                     titleKey: 'nav.smart_reorder',
                     path: '/purchases/smart-reorder',
                     icon: Sparkles,
-                    module: 'inventory_and_stores',
                 },
                 {
                     key: 'coffee-blender',
@@ -158,7 +144,6 @@ export function useNavigation() {
                     titleKey: 'nav.coffee_blender',
                     path: '/coffee-blender',
                     icon: Layers,
-                    module: 'coffee_blends',
                 },
             ],
         },
@@ -169,7 +154,6 @@ export function useNavigation() {
             titleKey: 'nav.purchases',
             icon: Truck,
             iconBg: 'bg-indigo-500/10 text-indigo-500',
-            module: 'purchases_and_suppliers',
             items: [
                 {
                     key: 'purchases',
@@ -177,7 +161,6 @@ export function useNavigation() {
                     titleKey: 'nav.purchases',
                     path: '/purchases',
                     icon: ShoppingCart,
-                    module: 'purchases_and_suppliers',
                 },
                 {
                     key: 'suppliers',
@@ -185,7 +168,6 @@ export function useNavigation() {
                     titleKey: 'nav.suppliers',
                     path: '/suppliers',
                     icon: Building2,
-                    module: 'purchases_and_suppliers',
                 },
             ],
         },
@@ -203,7 +185,6 @@ export function useNavigation() {
                     titleKey: 'nav.expenses',
                     path: '/expenses',
                     icon: Receipt,
-                    module: 'expenses',
                 },
                 {
                     key: 'returns',
@@ -211,7 +192,6 @@ export function useNavigation() {
                     titleKey: 'nav.returns_adjustments',
                     path: '/returns',
                     icon: RotateCcw,
-                    module: 'returns',
                 },
                 {
                     key: 'reports',
@@ -219,7 +199,6 @@ export function useNavigation() {
                     titleKey: 'nav.reports',
                     path: '/reports',
                     icon: BarChart3,
-                    module: 'reports',
                 },
             ],
         },
@@ -237,7 +216,6 @@ export function useNavigation() {
                     titleKey: 'nav.users',
                     path: '/users',
                     icon: Users,
-                    module: 'users_and_auth',
                 },
                 {
                     key: 'roles',
@@ -245,7 +223,6 @@ export function useNavigation() {
                     titleKey: 'nav.roles',
                     path: '/roles',
                     icon: ShieldCheck,
-                    module: 'users_and_auth',
                 },
                 {
                     key: 'activity-logs',
@@ -253,7 +230,6 @@ export function useNavigation() {
                     titleKey: 'nav.audit_logs',
                     path: '/activity-logs',
                     icon: Activity,
-                    module: 'users_and_auth',
                 },
                 {
                     key: 'trash',
@@ -268,7 +244,6 @@ export function useNavigation() {
                     titleKey: 'nav.settings',
                     path: '/settings',
                     icon: Sliders,
-                    module: 'settings',
                 },
             ],
         },
@@ -277,16 +252,7 @@ export function useNavigation() {
     const navigationSections = computed(() => {
         return sectionsRaw
             .map((section) => {
-                if (section.module && !isModuleEnabled(section.module)) {
-                    return null;
-                }
-
-                const visibleItems = section.items.filter((item) => {
-                    if (item.module && !isModuleEnabled(item.module)) {
-                        return false;
-                    }
-                    return canAccessPath(item.path);
-                });
+                const visibleItems = section.items.filter((item) => canAccessPath(item.path));
 
                 if (visibleItems.length === 0) {
                     return null;

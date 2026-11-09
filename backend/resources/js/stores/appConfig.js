@@ -19,6 +19,7 @@ export const useAppConfigStore = defineStore('appConfig', {
             logo: '/logo.png',
         },
         tenant: null,
+        entitlements: null,
         activeShift: null,
         notifications: [],
         locale: localStorage.getItem('app_locale') || 'ar',
@@ -35,6 +36,19 @@ export const useAppConfigStore = defineStore('appConfig', {
         companySubtitle: (state) => state.system.company_subtitle,
         currentShiftNumber: (state) => state.activeShift?.shift_number || null,
         hasOpenShift: (state) => !!state.activeShift,
+        /**
+         * Plan entitlement check. Allow while the context is not loaded or the tenant is not enforced
+         * (legacy planless tenants); otherwise the canonical key must be in `features`.
+         * Accepts a key or an any-of array.
+         */
+        hasFeature: (state) => (keyOrKeys) => {
+            const keys = (Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys]).filter(Boolean);
+            if (keys.length === 0) return true;
+            const ent = state.entitlements;
+            if (!ent || !ent.enforced) return true;
+            const features = Array.isArray(ent.features) ? ent.features : [];
+            return keys.some((key) => features.includes(key));
+        },
         alertsCount: (state) => state.notifications.length,
     },
 
@@ -53,6 +67,7 @@ export const useAppConfigStore = defineStore('appConfig', {
                     if (data.system) this.system = data.system;
                     if (data.branding) this.branding = data.branding;
                     if (data.tenant) this.tenant = data.tenant;
+                    if (data.entitlements) this.entitlements = data.entitlements;
                     if (data.active_shift) this.activeShift = data.active_shift;
                     if (data.notifications) this.notifications = data.notifications;
                     if (data.locale) this.locale = data.locale;

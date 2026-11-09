@@ -105,6 +105,14 @@ return [
         'confirm_code_mismatch' => 'Type the shop code exactly to confirm.',
     ],
 
+    // Plan upsell screen shown instead of a module the tenant's plan does not include (FE-03).
+    'upsell' => [
+        'title' => 'This feature is not in your plan',
+        'description' => 'This feature is not included in your current plan. Upgrade your plan or contact support to get it.',
+        'back_home' => 'Back to home',
+        'locked_badge' => 'Not in your plan',
+    ],
+
     // Titles of the SPA alert shown when the API refuses a request because of the subscription state.
     'alerts' => [
         'read_only_title' => 'Account is read-only',

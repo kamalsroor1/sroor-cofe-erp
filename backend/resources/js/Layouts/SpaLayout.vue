@@ -289,7 +289,7 @@
           <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
             <!-- 🌟 Quick Action Button: POS -->
             <router-link
-              v-if="isModuleEnabled('pos_and_sales') && !activeMobileSection"
+              v-if="canAccessPath('/pos') && !activeMobileSection"
               to="/pos"
               @click="isSidebarOpen = false"
               class="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl text-slate-950 font-black text-xs shadow-lg transition active:scale-95 cursor-pointer"
@@ -504,7 +504,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useAppConfigStore } from '../stores/appConfig';
-import { useModules } from '../Composables/useModules';
+import { useRoutePermission } from '../Composables/useRoutePermission';
 import { useNavigation } from '../Composables/useNavigation';
 import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
@@ -544,7 +544,7 @@ const isDesktopSettingsOpen = ref(false);
 const authStore = useAuthStore();
 const appConfigStore = useAppConfigStore();
 const { formatDate, formatTime } = useFormatters();
-const { isModuleEnabled } = useModules();
+const { canAccessPath } = useRoutePermission();
 const { navigationSections, isItemActive } = useNavigation();
 
 const route = useRoute();

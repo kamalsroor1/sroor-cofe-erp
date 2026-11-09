@@ -60,7 +60,7 @@
     </div>
 
     <!-- 📌 2. QUICK POS ACTION BUTTON (F2) -->
-    <div class="px-3 pt-3 shrink-0" v-if="isModuleEnabled('pos_and_sales')">
+    <div class="px-3 pt-3 shrink-0" v-if="canAccessPath('/pos')">
       <div
         class="relative"
         @mouseenter="handleItemHover($event, $t('nav.layout.quick_pos_hint'))"
@@ -393,7 +393,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNavigation } from '../../Composables/useNavigation';
-import { useModules } from '../../Composables/useModules';
+import { useRoutePermission } from '../../Composables/useRoutePermission';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import versionData from '../../version.json';
@@ -408,7 +408,7 @@ const emit = defineEmits(['toggle-collapse']);
 const route = useRoute();
 const appConfigStore = useAppConfigStore();
 const { navigationSections } = useNavigation();
-const { isModuleEnabled } = useModules();
+const { canAccessPath } = useRoutePermission();
 const { checkForUpdates } = useAppUpdate();
 
 const currentVersionName = ref(versionData?.version || '1.0.10');

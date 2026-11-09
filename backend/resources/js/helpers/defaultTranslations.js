@@ -3602,6 +3602,12 @@ export const defaultArabicTranslations = {
             "purge_refused": "المسح النهائي اترفض: :reason.",
             "confirm_code_mismatch": "اكتب كود المحل بالظبط للتأكيد."
         },
+        "upsell": {
+            "title": "هذه الميزة غير متاحة في باقتك",
+            "description": "هذه الميزة غير مشمولة في باقتك الحالية. للحصول عليها قم بترقية الباقة أو تواصل مع فريق الدعم.",
+            "back_home": "العودة للرئيسية",
+            "locked_badge": "غير متاح في باقتك"
+        },
         "alerts": {
             "read_only_title": "الحساب في وضع القراءة فقط",
             "blocked_title": "تم إيقاف الوصول إلى الحساب",
@@ -8258,6 +8264,12 @@ export const defaultEnglishTranslations = {
             "archive_failed": "The archive did not complete and the account status was not changed: :reason.",
             "purge_refused": "Permanent deletion refused: :reason.",
             "confirm_code_mismatch": "Type the shop code exactly to confirm."
+        },
+        "upsell": {
+            "title": "This feature is not in your plan",
+            "description": "This feature is not included in your current plan. Upgrade your plan or contact support to get it.",
+            "back_home": "Back to home",
+            "locked_badge": "Not in your plan"
         },
         "alerts": {
             "read_only_title": "Account is read-only",

@@ -31,7 +31,8 @@
     <SpaLayout v-else>
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" v-if="appConfigStore.hasFeature(route.meta.feature)" :key="route.fullPath" />
+          <FeatureGate v-else :key="route.fullPath" :feature="route.meta.feature" page />
         </transition>
       </router-view>
     </SpaLayout>
@@ -57,6 +58,7 @@ import { useAuthStore } from './stores/auth';
 import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
+import FeatureGate from './Components/FeatureGate.vue';
 import SpaLayout from './Layouts/SpaLayout.vue';
 import SuperAdminLayout from './Layouts/SuperAdminLayout.vue';
 import AppUpdateModal from './Components/AppUpdateModal.vue';

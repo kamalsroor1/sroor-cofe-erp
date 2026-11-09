@@ -92,6 +92,7 @@
         <div class="flex items-center justify-center gap-1">
           <!-- Pay Supplier Button -->
           <button
+            v-if="appConfigStore.hasFeature('payments.manage')"
             type="button"
             data-testid="action-pay"
             @click="$emit('pay', row)"
@@ -145,9 +146,11 @@ import { CreditCard, FileText, Pencil, Trash2 } from 'lucide-vue-next';
 import DataTable from '../Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
+import { useAppConfigStore } from '../../stores/appConfig';
 
 const { formatMoney } = useFormatters();
 const { t } = useTrans();
+const appConfigStore = useAppConfigStore();
 
 defineProps({
   suppliers: { type: Array, default: () => [] },

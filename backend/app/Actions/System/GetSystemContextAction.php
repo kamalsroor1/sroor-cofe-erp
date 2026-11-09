@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\System;
 
 use App\Actions\Branding\GetBrandingAction;
+use App\Contracts\TenantFeatureManagerInterface;
+use App\Enums\LimitResource;
 use App\Http\Resources\BrandingResource;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
@@ -13,7 +15,9 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Setting;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
 use App\Support\TenantClock;
@@ -27,6 +31,8 @@ final class GetSystemContextAction
         private readonly TenantSettings $tenantSettings,
         private readonly TenantClock $tenantClock,
         private readonly GetBrandingAction $getBrandingAction,
+        private readonly PlanEnforcer $planEnforcer,
+        private readonly TenantFeatureManagerInterface $featureManager,
     ) {}
 
     /**
@@ -169,9 +175,52 @@ final class GetSystemContextAction
                 'logo_dark' => $tenantBrand->logoDarkUrl ?? $tenantBrand->logoLightUrl ?? $platformLogos['dark'],
                 'logo' => $tenantBrand->logoLightUrl ?? $platformLogos['light'],
             ],
+            'entitlements' => $this->entitlements($tenant),
             'notifications' => $alerts,
             'locale' => $locale,
             'translations' => $translations,
         ];
+    }
+
+    /**
+     * Effective plan gating for the SPA, mirroring what the `feature:<key>` middleware enforces
+     * (plan + active add-ons + super-admin overrides, canonical keys; one cached read).
+     *
+     * enforced=false (grandfathered planless tenant): everything is allowed, so `features` is
+     * the full catalog and every limit is null (unlimited). enforced=true: `features` holds only
+     * the enabled keys and `limits` the effective caps (null = unlimited).
+     *
+     * @return array{enforced: bool, features: list<string>, limits: array<string, int|null>}
+     */
+    private function entitlements(mixed $tenant): array
+    {
+        if (! $tenant instanceof Tenant || ! $this->planEnforcer->isEnforcedForCurrentTenant()) {
+            $catalog = array_values(array_unique(array_map(
+                fn (string $key): string => $this->canonical($key),
+                array_values(array_filter((array) config('entitlements.features', []), 'is_string')),
+            )));
+            sort($catalog);
+
+            return [
+                'enforced' => false,
+                'features' => $catalog,
+                'limits' => array_fill_keys(LimitResource::values(), null),
+            ];
+        }
+
+        $entitlements = $this->featureManager->entitlements($tenant);
+
+        return [
+            'enforced' => true,
+            'features' => $entitlements->features,
+            'limits' => $entitlements->limits,
+        ];
+    }
+
+    private function canonical(string $key): string
+    {
+        $canonical = (array) config('entitlements.aliases', []);
+
+        return is_string($canonical[$key] ?? null) ? $canonical[$key] : $key;
     }
 }

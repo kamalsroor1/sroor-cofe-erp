@@ -112,6 +112,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.expenses_index',
             requiresAuth: true,
+            feature: 'expenses.manage',
             permission: 'expenses.manage',
         },
     },
@@ -142,6 +143,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.items_movements',
             requiresAuth: true,
+            feature: 'items.movements',
             permission: 'items.view',
         },
     },
@@ -153,6 +155,7 @@ const tenantRoutes = [
             titleKey: 'nav.page_titles.daily_journal_index',
             requiresAuth: true,
             permission: 'daily_journal.view',
+            feature: 'shifts.manage',
         },
     },
     {
@@ -162,6 +165,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.purchases_index',
             requiresAuth: true,
+            feature: 'purchases.manage',
             permission: 'purchases.view',
         },
     },
@@ -172,6 +176,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.purchases_create',
             requiresAuth: true,
+            feature: 'purchases.manage',
             permission: 'purchases.create',
         },
     },
@@ -183,6 +188,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.purchases_smart_reorder',
             requiresAuth: true,
+            feature: 'purchases.reorder',
             permission: 'purchases.view',
         },
     },
@@ -225,6 +231,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.pos_index',
             requiresAuth: true,
+            feature: 'pos.access',
             permission: 'pos.access',
         },
     },
@@ -235,6 +242,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.returns_index',
             requiresAuth: true,
+            feature: 'returns.manage',
             permission: 'returns.manage',
         },
     },
@@ -245,6 +253,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.returns_create',
             requiresAuth: true,
+            feature: 'returns.manage',
             permission: 'returns.manage',
         },
     },
@@ -255,6 +264,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stock_transfers_index',
             requiresAuth: true,
+            feature: 'transfers.manage',
             permission: ['stores.manage', 'transfers.view'],
         },
     },
@@ -265,6 +275,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stock_transfers_create',
             requiresAuth: true,
+            feature: 'transfers.manage',
             permission: ['stores.manage', 'transfers.create'],
         },
     },
@@ -275,6 +286,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.coffee_blender_index',
             requiresAuth: true,
+            feature: 'mixes.manage',
             permission: 'items.create',
         },
     },
@@ -285,6 +297,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.reports_index',
             requiresAuth: true,
+            feature: 'reports.basic',
             permission: 'reports.view',
         },
     },
@@ -315,6 +328,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.activity_logs_index',
             requiresAuth: true,
+            feature: 'audit.logs',
             permission: 'logs.view',
         },
     },
@@ -485,7 +499,7 @@ async function tenantGuard(to, from, next) {
         return next({ name: 'login', query: { redirect: to.fullPath } });
     }
 
-    // 5. Permission / Role Check
+    // 5. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         notifyError(trans('common.no_access'));
         return next({ name: 'dashboard' });
