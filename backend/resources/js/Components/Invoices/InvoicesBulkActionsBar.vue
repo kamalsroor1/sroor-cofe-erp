@@ -38,6 +38,7 @@
 
         <!-- Bulk Cancel Selected -->
         <button
+          v-can="'invoices.cancel'"
           type="button"
           @click="$emit('bulk-cancel')"
           class="flex-1 sm:flex-initial min-h-[40px] px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 select-none"

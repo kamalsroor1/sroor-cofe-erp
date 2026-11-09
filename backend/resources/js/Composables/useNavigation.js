@@ -1,6 +1,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useModules } from './useModules';
+import { useRoutePermission } from './useRoutePermission';
 import {
     LayoutDashboard,
     FileText,
@@ -28,6 +29,7 @@ import {
 export function useNavigation() {
     const route = useRoute();
     const { isModuleEnabled } = useModules();
+    const { canAccessPath } = useRoutePermission();
 
     const sectionsRaw = [
         {
@@ -283,7 +285,7 @@ export function useNavigation() {
                     if (item.module && !isModuleEnabled(item.module)) {
                         return false;
                     }
-                    return true;
+                    return canAccessPath(item.path);
                 });
 
                 if (visibleItems.length === 0) {

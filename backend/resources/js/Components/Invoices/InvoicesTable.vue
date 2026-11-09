@@ -116,9 +116,11 @@ import ActionMenu from '../ActionMenu.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 import { useTrans } from '../../Composables/useTrans';
+import { useAuthStore } from '../../stores/auth';
 
 const { t } = useTrans();
 const { formatMoney } = useFormatters();
+const authStore = useAuthStore();
 
 const props = defineProps({
   invoices: { type: Array, default: () => [] },
@@ -164,7 +166,7 @@ const getInvoiceActions = (inv) => [
     label: trans('invoices.cancel_invoice'),
     icon: Ban,
     variant: 'danger',
-    show: !inv.is_cancelled,
+    show: !inv.is_cancelled && authStore.hasPermission('invoices.cancel'),
     onClick: () => emit('cancel', inv),
   },
 ];

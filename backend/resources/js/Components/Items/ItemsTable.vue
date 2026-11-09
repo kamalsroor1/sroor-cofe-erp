@@ -267,6 +267,7 @@ import ActionMenu from '../ActionMenu.vue';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
+import { useAuthStore } from '../../stores/auth';
 
 const { formatMoney, formatQty } = useFormatters();
 
@@ -280,11 +281,13 @@ defineProps({
 });
 
 const emit = defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
+const authStore = useAuthStore();
 
 const getItemActions = (item) => [
   {
     label: trans('inventory.adjust_stock'),
     icon: Sliders,
+    show: authStore.hasPermission('inventory.adjust'),
     onClick: () => emit('adjust', item),
   },
   {
@@ -295,12 +298,14 @@ const getItemActions = (item) => [
   {
     label: trans('common.edit'),
     icon: Pencil,
+    show: authStore.hasPermission('items.edit'),
     onClick: () => emit('edit', item),
   },
   {
     label: trans('common.delete'),
     icon: Trash2,
     variant: 'danger',
+    show: authStore.hasPermission('items.delete'),
     onClick: () => emit('delete', item),
   },
 ];

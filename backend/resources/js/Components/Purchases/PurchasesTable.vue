@@ -91,6 +91,7 @@
         <!-- Cancel Button -->
         <button
           v-if="row.status === 'confirmed'"
+          v-can="'purchases.delete'"
           type="button"
           @click="$emit('cancel', row)"
           data-testid="action-cancel"

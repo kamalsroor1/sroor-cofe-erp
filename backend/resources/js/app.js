@@ -4,12 +4,14 @@ import { App as CapacitorApp } from '@capacitor/app';
 import router from './router';
 import App from './App.vue';
 import { trans } from './helpers/trans';
+import { vCan } from './directives/can';
 
 const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
+app.directive('can', vCan);
 
 // Global translation helpers
 app.config.globalProperties.$t = trans;

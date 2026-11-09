@@ -153,4 +153,5 @@ return [
     'operation_failed' => 'The operation could not be completed. Please try again or contact support.',
     'record_not_found' => 'The requested record was not found.',
     'trash_invalid_type' => 'This record type cannot be restored or deleted from the recycle bin.',
+    'no_access' => 'You do not have access to this page.',
 ];

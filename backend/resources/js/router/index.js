@@ -5,6 +5,7 @@ import { useCentralAuthStore } from '../stores/centralAuth';
 import { CENTRAL_STORAGE_KEYS, isCentralAppContext, setCentralSessionHandlers } from '../Services/centralApi';
 import { safeCentralRedirect } from '../Composables/useSuperAdminLogin';
 import { trans } from '../helpers/trans';
+import { notifyError } from '../helpers/alert';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 
 /**
@@ -192,7 +193,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.invoices_index',
             requiresAuth: true,
-            permission: 'invoices.view',
+            permission: ['invoices.view', 'pos.access'],
         },
     },
     {
@@ -202,7 +203,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.invoices_show',
             requiresAuth: true,
-            permission: 'invoices.view',
+            permission: ['invoices.view', 'pos.access'],
         },
     },
     {
@@ -254,7 +255,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stock_transfers_index',
             requiresAuth: true,
-            permission: 'transfers.view',
+            permission: ['stores.manage', 'transfers.view'],
         },
     },
     {
@@ -264,7 +265,7 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.stock_transfers_create',
             requiresAuth: true,
-            permission: 'stores.manage',
+            permission: ['stores.manage', 'transfers.create'],
         },
     },
     {
@@ -486,10 +487,12 @@ async function tenantGuard(to, from, next) {
 
     // 5. Permission / Role Check
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
+        notifyError(trans('common.no_access'));
         return next({ name: 'dashboard' });
     }
 
     if (to.meta.role && !authStore.hasRole(to.meta.role)) {
+        notifyError(trans('common.no_access'));
         return next({ name: 'dashboard' });
     }
 

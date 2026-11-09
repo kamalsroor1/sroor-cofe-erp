@@ -123,13 +123,15 @@ import {
   Banknote,
 } from 'lucide-vue-next';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
+import { useRoutePermission } from '../../Composables/useRoutePermission';
 
 const { playScanBeep } = useAudioFeedback();
+const { canAccessPath } = useRoutePermission();
 
 const searchQuery = ref('');
 const activeTab = ref('all');
 
-const categoryTabs = [
+const allTabs = [
   { id: 'all', label: 'الكل', icon: Sparkles },
   { id: 'sales', label: 'المبيعات والـ POS', icon: ShoppingBag },
   { id: 'purchases', label: 'المشتريات والتوريد', icon: ShoppingCart },
@@ -317,8 +319,14 @@ const tiles = [
   },
 ];
 
+const visibleTiles = computed(() => tiles.filter((t) => canAccessPath(t.to)));
+
+const categoryTabs = computed(() =>
+  allTabs.filter((tab) => tab.id === 'all' || visibleTiles.value.some((t) => t.category === tab.id))
+);
+
 const filteredTiles = computed(() => {
-  let list = tiles;
+  let list = visibleTiles.value;
 
   // Filter by Tab
   if (activeTab.value !== 'all') {
