@@ -25,7 +25,9 @@
 | الفشل | أي DB تفشل **ماتوقفش الباقي**. في الآخر: exit 1، سطر `error` في الـ log لكل DB، وإيميل واحد (`BackupFailedNotification`) لـ `BACKUP_NOTIFICATION_EMAIL` فيه كل DB فشلت والسبب |
 | D4 | `BACKUP_ARCHIVE_PASSWORD` فاضي و`APP_ENV=production` ← الأمرين (`backup:tenants` و`backup:restore-tenant`) بيرفضوا قبل أي dump (رسالة مترجمة، exit 1، إيميل)، وspatie `backup:run` مالوش destination فبيفشل بصوت عالي. بره الإنتاج: تحذير والأرشيف بيطلع **من غير تشفير** |
 
-**تنبيه Telegram:** `backup:telegram` اتشال نهائيًا (كان بيبعت dump مش مشفّر). تنبيه الفشل على Telegram للـ CTO جزء من OPS-10 (بوت المنصة، chat منفصل)؛ لحد ما يندمج، التنبيه = إيميل + log + الـ health check (§7).
+**تنبيه Telegram (OPS-04):** `backup:telegram` اتشال نهائيًا (كان بيبعت dump مش مشفّر)، وكمان اتمسح الكود الميت اللي كان ممكن يرجّعه (`DatabaseBackupService` و`TelegramService::sendDatabaseBackupNotification`)، وفيه اختبار (`BackupTelegramAlertTest`) بيضمن إنهم مش موجودين. Telegram دلوقتي **رسالة نصية بس** عند الفشل (`App\Support\Backup\BackupTelegramAlert`: عنوان + subject + اسم الـ exception class، ولا ملف ولا مسار ولا رسالة exception): بتشتغل لما `TELEGRAM_BOT_TOKEN` و`BACKUP_TELEGRAM_CHAT_ID` يتحطوا في `.env`، وفاضيين = مفيش تنبيه Telegram. التنبيه إيميل + Telegram + log + الـ health check (§7).
+
+**سكربت قديم (للعلم، ماتشغلوش):** `main:routes/console.php` على فرع `main` (محل شغال) لسه فيه جدولة `backup:telegram` (dump مضغوط مش مشفّر على Telegram). مش في فرع `feature/multi-tenant`. إيقافه ومسح الـ dumps القديمة من شات Telegram إجراء يدوي للـ CTO (§12).
 
 ---
 
@@ -55,6 +57,7 @@
 | `BACKUP_DISKS` | `google` | `check-env.sh` يفشل لو مفيهوش `google` (معيار الإنتاج #8). `BACKUP_TENANT_DISKS` يغيّر disks الـ DB بس |
 | `BACKUP_PATH_PREFIX` | `sroor-backups` | اسم المجلد على الـ disk |
 | `BACKUP_NOTIFICATION_EMAIL` | إلزامي (variable) | إيميل الفشل + تنبيهات الـ health |
+| `BACKUP_TELEGRAM_CHAT_ID` (+ `TELEGRAM_BOT_TOKEN`) | اختياري (يُنصح بيه) | تنبيه فشل نصي بس على Telegram. عمره ما بيبعت ملف |
 | `DB_BACKUP_USERNAME` / `DB_BACKUP_PASSWORD` | `sroor_backup` / secret | `check-env.sh`: إلزامي، مش `root` ومش `DB_USERNAME` |
 | `GOOGLE_DRIVE_CLIENT_ID` / `_CLIENT_SECRET` / `_REFRESH_TOKEN` | secrets إلزامية لما `google` في الـ disks | `render-env.sh` يرفض `--optional` ليهم |
 | `GOOGLE_DRIVE_FOLDER_ID` | فاضي (§2 خطوة 5) | الـ workflow يمرّره `--optional` |
@@ -166,12 +169,40 @@ php artisan backup:restore-tenant shop1 --drop-after-verify --db-user=sroor_prov
 
 ```bash
 cd backend
-php artisan test --filter='BackupTenantsCommandTest|RestoreTenantBackupCommandTest|HealthChecksTest|ScheduledTelegramJobsGuardTest|BackupConfigTest'
+php artisan test --filter='BackupTenantsCommandTest|RestoreTenantBackupCommandTest|BackupTelegramAlertTest|HealthChecksTest|ScheduledTelegramJobsGuardTest|BackupConfigTest'
 bash ../scripts/ops/tests/deploy-test.sh
 ```
 
 تغطي: أرشيف لكل مستأجر مشفّر AES-256 (الـ manifest مايتقراش من غير الباسورد) وعدد الصفوف صح والـ sha256 = السجل و`verified_at`؛ مستأجر بايظ مايوقفش الباقي + إيميل؛ D4 في الإنتاج (exit 1، صفر ملفات، صفر صفوف)؛ المركزي كـ subject لوحده؛ تخطي الـ archived إلا بالطلب؛ الاحتفاظ 7/4/3 ومسح صفوف السجل؛ الاستعادة في DB جديدة بعدد صفوف مطابق، رفض checksum غلط/باسورد غلط/subject تاني/اسم DB حي أو موجود، فرق عدد الصفوف يفضل للفحص؛ الـ health (التسجيل، البوابة، D4، 26 ساعة، غير متحقق منه، مستأجر جديد/مؤرشف)؛ وترتيب الـ deploy (backup قبل migrate، فشله يوقف الـ release، الـ skip بيتسجل).
 
+
+---
+
+## 12. بروفة الـ OPS-04 (restore rehearsal) — **لم تُنفَّذ**
+
+`backup:restore-tenant` هو أمر الـ restore-test: بيستعيد أرشيف في DB جديدة منفصلة، ويقارن عدد صفوف كل جدول بالـ manifest، ويمسحها بعد النجاح. الاختبارات (`Storage::fake` + sqlite) بتغطي منطقه.
+
+### 12.1 محليًا (آمن، من غير أي سيرفر)
+
+```bash
+cd backend
+# sqlite محلي، disk محلي، من غير تشفير مسموح في local فقط (أو حط BACKUP_ARCHIVE_PASSWORD تجريبي في .env المحلي)
+php artisan backup:tenants --disk=local --no-cleanup
+php artisan backup:restore-tenant central          # يستعيد أحدث نسخة متحقق منها ويقارن الصفوف ويمسح النسخة
+php artisan test --filter='BackupTenantsCommandTest|RestoreTenantBackupCommandTest'
+```
+
+### 12.2 على الـ VPS (شغل الـ CTO)
+
+1. **Google Drive OAuth** (§2): الـ consent screen = *In production*، ثم الـ secrets في GitHub Environment `production`: `GOOGLE_DRIVE_CLIENT_ID`، `GOOGLE_DRIVE_CLIENT_SECRET`، `GOOGLE_DRIVE_REFRESH_TOKEN`، `DB_BACKUP_PASSWORD`، `BACKUP_ARCHIVE_PASSWORD` (مع نسخة منه في password manager **بره الخادم**) + variable `BACKUP_NOTIFICATION_EMAIL` + (اختياري) `BACKUP_TELEGRAM_CHAT_ID`.
+2. تأكد من `shared/.env`: `BACKUP_DISKS=google`، `APP_ENV=production`.
+3. شغّل أول backup يدويًا: `php artisan backup:tenants` ← لازم exit 0، ولكل DB (central + كل مستأجر) سطر "uploaded and verified"، وملف `.zip` ظاهر في مجلد `sroor-backups` على Drive.
+4. اختبر التنبيه: بدّل `BACKUP_ARCHIVE_PASSWORD` مؤقتًا لفاضي في staging (مش الإنتاج) وتأكد إن الأمر يرفض وإن الإيميل/Telegram وصلوا، وبعدين رجّعه.
+5. نزّل أرشيف على جهاز آخر وحاول تفتحه من غير الباسورد (لازم يفشل)، وبالباسورد من الـ password manager (لازم ينجح) = إثبات إن المفتاح خارج الخادم شغال.
+6. الـ restore: `php artisan backup:restore-tenant central --drop-after-verify --db-user=sroor_provisioner` ثم لـ 2 مستأجرين (§6). كل واحد لازم يطلع "counts match".
+7. سجّل النتيجة في جدول §6 (التاريخ، الـ subject، id النسخة، الجداول، الصفوف، النتيجة).
+8. تأكد من `php artisan health:check` (أو صفحة الـ health): `BackupFreshness` و`BackupArchivePassword` أخضر.
+9. **محل `main` الشغال:** قبل أي migration، خد dump مشفّر خارج الخادم (مثلًا `mysqldump | openssl enc -aes-256-cbc -pbkdf2` بكلمة سر من password manager، يتخزن بره السيرفر)، بعدين وقّف `backup:telegram` على `main` وامسح الـ dumps القديمة من شات Telegram.
 
 ---
 

@@ -121,6 +121,7 @@ return [
         'cleanup_failed' => 'تعذر حذف أرشيف قديم من القرص ":disk".',
         'retention' => 'سياسة الاحتفاظ',
         'pruned' => 'سياسة الاحتفاظ: اتحذف :file الخاص بـ :subject.',
+        'telegram_alert' => 'فشل النسخ الاحتياطي على :app: الأمر :command انتهى بـ :count فشل.',
         'mail_subject' => '[:app] فشل في النسخ الاحتياطي (:count)',
         'mail_intro' => 'الأمر :command انتهى بـ :count حالة فشل:',
         'mail_line' => ':subject: :reason',

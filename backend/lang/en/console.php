@@ -121,6 +121,7 @@ return [
         'cleanup_failed' => 'Could not delete an old archive from the disk ":disk".',
         'retention' => 'retention',
         'pruned' => 'Retention: deleted :file of :subject.',
+        'telegram_alert' => 'Backup failure on :app: :command finished with :count failure(s).',
         'mail_subject' => '[:app] Backup failure (:count)',
         'mail_intro' => 'The command :command finished with :count failure(s):',
         'mail_line' => ':subject: :reason',

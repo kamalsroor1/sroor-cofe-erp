@@ -392,38 +392,6 @@ class TelegramService
     }
 
     /**
-     * Generate and send a complete SQL.GZ database backup to Telegram.
-     */
-    public function sendDatabaseBackupNotification(?string $chatId = null): array
-    {
-        try {
-            $backupService = app(DatabaseBackupService::class);
-            $gzPath = $backupService->createSqlGzBackup();
-
-            $companyName = Setting::get('company_name', 'نظام إدارة الفواتير والمخزون');
-            $fileSize = number_format(filesize($gzPath) / 1024, 1).' KB';
-            $now = $this->tenantClock->now()->format('Y-m-d h:i A');
-
-            $caption = "💾 <b>النسخة الاحتياطية السحابية اليومية (Database Backup)</b>\n";
-            $caption .= "🏢 <b>المنشأة:</b> {$companyName}\n";
-            $caption .= "📅 <b>التاريخ:</b> {$now}\n";
-            $caption .= "📦 <b>حجم الملف المضغوط:</b> <code>{$fileSize}</code>\n";
-            $caption .= '🔒 <i>نسخة مشفرة ومؤمنة بالكامل تشمل كافة الفواتير، الحسابات، والمخزون.</i>';
-
-            $res = $this->sendDocument($gzPath, $caption, $chatId);
-
-            // Clean up temporary backup file
-            @unlink($gzPath);
-
-            return $res;
-        } catch (\Throwable $e) {
-            Log::error('Database backup export failed: '.$e->getMessage());
-
-            return ['success' => false, 'message' => 'فشل إنشاء النسخة الاحتياطية: '.$e->getMessage()];
-        }
-    }
-
-    /**
      * Send immediate alert when a shift is closed with cash deficit or surplus.
      */
     public function sendShiftDiscrepancyNotification(CashShift $shift): array

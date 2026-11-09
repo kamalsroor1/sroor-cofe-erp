@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Health\Notifications\BackupFailedNotification;
 use App\Models\TenantBackup;
+use App\Support\Backup\BackupTelegramAlert;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -508,6 +509,8 @@ final class RestoreTenantBackupCommand extends Command
 
     private function notify(string $subject, string $reason): void
     {
+        BackupTelegramAlert::send('backup:restore-tenant', [$subject => $reason]);
+
         $to = config('backup.tenants.notify_mail');
         if (! is_string($to) || trim($to) === '') {
             return;

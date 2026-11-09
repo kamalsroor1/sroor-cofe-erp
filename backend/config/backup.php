@@ -243,6 +243,10 @@ return [
         // Failure alerts: always to the log; mail when an address is configured.
         'notify_mail' => env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS')),
 
+        // OPS-04: text-only Telegram failure alert (platform bot token + this chat id, both .env).
+        // Telegram never carries dumps. Empty = alert off.
+        'notify_telegram_chat_id' => env('BACKUP_TELEGRAM_CHAT_ID'),
+
         // Health: a subject without a verified backup younger than this is red (OPS-7).
         'max_age_hours' => (int) env('BACKUP_MAX_AGE_HOURS', 26),
 

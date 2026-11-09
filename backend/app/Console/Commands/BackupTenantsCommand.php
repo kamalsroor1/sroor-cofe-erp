@@ -8,6 +8,7 @@ use App\Enums\TenantBackupKind;
 use App\Health\Notifications\BackupFailedNotification;
 use App\Models\Tenant;
 use App\Models\TenantBackup;
+use App\Support\Backup\BackupTelegramAlert;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
@@ -862,6 +863,8 @@ final class BackupTenantsCommand extends Command
     private function notifyFailures(): void
     {
         Log::critical('backup:tenants finished with failures', ['failures' => $this->failures]);
+
+        BackupTelegramAlert::send('backup:tenants', $this->failures);
 
         $to = config('backup.tenants.notify_mail');
         if (! is_string($to) || trim($to) === '') {
