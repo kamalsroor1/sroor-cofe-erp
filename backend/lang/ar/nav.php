@@ -100,6 +100,8 @@ return [
         'light_mode' => 'الوضع النهاري',
         'dark_mode' => 'الوضع الليلي',
         'notifications' => 'الإشعارات والتنبيهات',
+        'notifications_empty' => 'لا توجد تنبيهات حالياً',
+        'notifications_empty_hint' => 'كل شيء يسير بانتظام',
         'notifications_count' => ':count تنبيهات',
         'view_all_activity' => 'عرض كافة سجلات النشاط والرقابة ←',
         'journal_open' => 'يومية مفتوحة',

@@ -139,65 +139,7 @@
           <span class="hidden xl:inline font-tajawal">{{ $t('settings.desktop_badge') }}</span>
         </button>
 
-        <!-- 🔔 Notifications Bell Popover -->
-        <div class="relative" ref="notificationsRef">
-          <button
-            type="button"
-            @click="isNotificationsOpen = !isNotificationsOpen"
-            class="min-h-[38px] min-w-[38px] p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-xl sm:rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer active:scale-95 shadow-2xs flex items-center justify-center relative"
-            :title="$t('nav.layout.notifications')"
-          >
-            <Bell class="w-3.5 h-3.5 text-theme-primary" />
-            <span
-              class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse"
-            >
-              {{ notificationsList.length }}
-            </span>
-          </button>
-
-          <!-- Notifications Dropdown Popup -->
-          <Transition name="fade">
-            <div
-              v-if="isNotificationsOpen"
-              class="absolute right-0 top-full mt-2 w-80 max-w-[90vw] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-3 z-50 font-tajawal space-y-2"
-            >
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <div class="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
-                  <Bell class="w-4 h-4 text-theme-primary" />
-                  <span>{{ $t('nav.notifications_title') }}</span>
-                </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-theme-light text-theme-primary">
-                  {{ $t('nav.layout.notifications_count', { count: notificationsList.length }) }}
-                </span>
-              </div>
-
-              <!-- Notifications Items List -->
-              <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1 text-xs">
-                <div
-                  v-for="(n, idx) in notificationsList"
-                  :key="idx"
-                  class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-theme-border transition flex items-start gap-2.5"
-                >
-                  <DynamicIcon :name="n.icon" class="w-4 h-4 text-theme-primary shrink-0 mt-0.5" />
-                  <div class="flex-1 min-w-0">
-                    <div class="font-bold text-slate-900 dark:text-white truncate">{{ n.title }}</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">{{ n.desc }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="border-t border-slate-100 dark:border-slate-800 pt-2 text-center">
-                <router-link
-                  to="/activity-logs"
-                  @click="isNotificationsOpen = false"
-                  class="text-[11px] font-bold text-theme-primary hover:underline"
-                >
-                  {{ $t('nav.layout.view_all_activity') }}
-                </router-link>
-              </div>
-            </div>
-          </Transition>
-        </div>
+        <NotificationsBell />
 
         <!-- 🏬 Store Switcher (Branch context dropdown / badge - Desktop/Tablet) -->
         <div class="hidden lg:flex items-center gap-2">
@@ -570,15 +512,14 @@ import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
+import NotificationsBell from '../Components/Layout/NotificationsBell.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../helpers/trans';
-import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import {
   Store as StoreIcon,
   LogOut,
   Sun,
   Moon,
-  Bell,
   Menu,
   Plus,
   ChevronDown,
@@ -646,18 +587,10 @@ watch(
 );
 
 const isUserDropdownOpen = ref(false);
-const isNotificationsOpen = ref(false);
 const userDropdownRef = ref(null);
-const notificationsRef = ref(null);
 
 const currentTimeStr = ref('');
 let clockInterval = null;
-
-const notificationsList = computed(() => [
-  { icon: '📦', title: 'تنبيه نواقص المخزون', desc: 'صنف جيهان أخضر وصل للحد الأدنى (5 كجم)' },
-  { icon: '🧾', title: 'فاتورة مبيعات جديدة', desc: 'تم اعتماد فاتورة للعميل بن الأصيل بقيمة 4,495 ج.م' },
-  { icon: '🛡️', title: 'جلسة تسجيل دخول', desc: 'تم تسجيل الدخول بنجاح من لوحة الإدارة' },
-]);
 
 const toggleSidebarCollapse = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
@@ -706,9 +639,6 @@ const confirmLogout = async () => {
 const handleOutsideClick = (e) => {
   if (userDropdownRef.value && !userDropdownRef.value.contains(e.target)) {
     isUserDropdownOpen.value = false;
-  }
-  if (notificationsRef.value && !notificationsRef.value.contains(e.target)) {
-    isNotificationsOpen.value = false;
   }
 };
 

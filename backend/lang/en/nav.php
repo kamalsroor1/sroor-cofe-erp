@@ -100,6 +100,8 @@ return [
         'light_mode' => 'Light mode',
         'dark_mode' => 'Dark mode',
         'notifications' => 'Notifications',
+        'notifications_empty' => 'No notifications',
+        'notifications_empty_hint' => 'Everything is running smoothly',
         'notifications_count' => ':count alerts',
         'view_all_activity' => 'View all activity logs →',
         'journal_open' => 'Journal open',
