@@ -8,10 +8,20 @@ import POSCartSection from '../../Components/POS/POSCartSection.vue';
 import POSCatalogSection from '../../Components/POS/POSCatalogSection.vue';
 import POSCustomerModal from '../../Components/POS/POSCustomerModal.vue';
 import POSSuccessModal from '../../Components/POS/POSSuccessModal.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import POSSkeleton from '../../Components/POS/POSSkeleton.vue';
 import POSExpensesModal from '../../Components/POS/POSExpensesModal.vue';
 import POSMultiPaymentModal from '../../Components/POS/POSMultiPaymentModal.vue';
+import POSShortcutsModal from '../../Components/POS/POSShortcutsModal.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
+
+const PARTIAL_ERROR_KEYS = {
+  categories: 'pos.load_failed_categories',
+  customers: 'pos.load_failed_customers',
+  shift: 'pos.load_failed_shift',
+  category_items: 'pos.load_failed_category_items',
+};
 
 const {
   authStore,
@@ -34,6 +44,7 @@ const {
   submitInvoice,
   cartEmpty,
   orderApi,
+  showShortcutsHelp,
 } = usePosTerminal();
 </script>
 
@@ -67,59 +78,79 @@ const {
         @add-item="search.addItemFromDropdown"
         @navigate-dropdown="search.navigateDropdown"
         @select-highlighted="search.selectHighlightedOrFirstItem"
-        @close-dropdown="search.isSearchFocused.value = false"
+        @close-dropdown="search.escapeSearch"
         @open-customer-picker="customer.showCustomerPickerModal.value = true"
         @clear-cart="cartOps.clearCart"
         @switch-store="catalog.switchStore"
       />
 
-      <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
-        <POSCartSection
-          v-model:payment-type="fields.paymentType.value"
-          v-model:payment-method="fields.paymentMethod.value"
-          v-model:cash-received="fields.cashReceived.value"
-          :cart="fields.cart.value"
-          :total-qty="payment.cartTotalQuantity.value"
-          :orders="orders"
-          :active-order-id="activeOrderId"
-          :subtotal="payment.cartSubtotal.value"
-          :discount-amount="payment.discountAmount.value"
-          :discount-value="fields.discountValue.value"
-          :discount-type="fields.discountType.value"
-          :customer-expenses-total="payment.customerExpensesTotal.value"
-          :net-total="payment.cartNetTotal.value"
-          :change-due="payment.changeDue.value"
-          :walk-in="customer.isWalkInCustomer.value"
-          :is-submitting="isSubmitting"
-          :offline="!isOnline"
-          :expenses-count="fields.additionalExpenses.value.length"
-          @increase-qty="cartOps.increaseCartItemQty"
-          @decrease-qty="cartOps.decreaseCartItemQty"
-          @update-qty="cartOps.onCartQtyUpdate"
-          @update-price="cartOps.onCartPriceUpdate"
-          @remove-item="cartOps.removeFromCart"
-          @switch-order="orderApi.switchOrder"
-          @create-order="cartOps.handleCreateOrder"
-          @close-order="cartOps.handleCloseOrder"
-          @apply-discount="payment.applyDiscountPreset"
-          @submit="submitInvoice"
-          @open-expenses="payment.showExpensesModal.value = true"
-          @open-multi-payment="payment.openMultiPayment"
-        />
+      <ErrorState
+        v-if="catalog.loadFailed.value"
+        class="flex-1"
+        :title="$t('pos.load_failed_title')"
+        :message="$t('pos.load_failed_message')"
+        @retry="catalog.retryInitial"
+      />
 
-        <POSCatalogSection
-          v-if="catalog.showCatalog.value"
-          :items="catalog.items.value"
-          :categories="catalog.categories.value"
-          :active-category-id="catalog.activeCategoryId.value"
-          :active-price-tier="fields.activePriceTier.value"
-          :search-query="search.searchQuery.value"
-          :favorite-count="catalog.favoriteItemsCount.value"
-          :total-items-count="catalog.totalItemsCount.value"
-          @add-item="cartOps.addToCart"
-          @select-category="catalog.selectCategory"
-        />
-      </div>
+      <template v-else>
+        <div v-if="catalog.partialErrors.value.length" class="px-3 pt-3 shrink-0">
+          <InlineErrorBar
+            v-for="key in catalog.partialErrors.value"
+            :key="key"
+            class="!mb-2"
+            :message="$t(PARTIAL_ERROR_KEYS[key])"
+            @retry="catalog.retryPartial"
+          />
+        </div>
+
+        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
+          <POSCartSection
+            v-model:payment-type="fields.paymentType.value"
+            v-model:payment-method="fields.paymentMethod.value"
+            v-model:cash-received="fields.cashReceived.value"
+            :cart="fields.cart.value"
+            :total-qty="payment.cartTotalQuantity.value"
+            :orders="orders"
+            :active-order-id="activeOrderId"
+            :subtotal="payment.cartSubtotal.value"
+            :discount-amount="payment.discountAmount.value"
+            :discount-value="fields.discountValue.value"
+            :discount-type="fields.discountType.value"
+            :customer-expenses-total="payment.customerExpensesTotal.value"
+            :net-total="payment.cartNetTotal.value"
+            :change-due="payment.changeDue.value"
+            :walk-in="customer.isWalkInCustomer.value"
+            :is-submitting="isSubmitting"
+            :offline="!isOnline"
+            :expenses-count="fields.additionalExpenses.value.length"
+            @increase-qty="cartOps.increaseCartItemQty"
+            @decrease-qty="cartOps.decreaseCartItemQty"
+            @update-qty="cartOps.onCartQtyUpdate"
+            @update-price="cartOps.onCartPriceUpdate"
+            @remove-item="cartOps.removeFromCart"
+            @switch-order="orderApi.switchOrder"
+            @create-order="cartOps.handleCreateOrder"
+            @close-order="cartOps.handleCloseOrder"
+            @apply-discount="payment.applyDiscountPreset"
+            @submit="submitInvoice"
+            @open-expenses="payment.showExpensesModal.value = true"
+            @open-multi-payment="payment.openMultiPayment"
+          />
+
+          <POSCatalogSection
+            v-if="catalog.showCatalog.value"
+            :items="catalog.items.value"
+            :categories="catalog.categories.value"
+            :active-category-id="catalog.activeCategoryId.value"
+            :active-price-tier="fields.activePriceTier.value"
+            :search-query="search.searchQuery.value"
+            :favorite-count="catalog.favoriteItemsCount.value"
+            :total-items-count="catalog.totalItemsCount.value"
+            @add-item="cartOps.addToCart"
+            @select-category="catalog.selectCategory"
+          />
+        </div>
+      </template>
     </div>
 
     <POSCustomerModal
@@ -158,5 +189,7 @@ const {
       @close="payment.showMultiPaymentModal.value = false"
       @confirm="payment.confirmMultiPayment"
     />
+
+    <POSShortcutsModal :show="showShortcutsHelp" @close="showShortcutsHelp = false" />
   </div>
 </template>

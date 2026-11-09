@@ -1,4 +1,4 @@
-import { nextTick } from 'vue';
+import { nextTick, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import {
@@ -7,7 +7,16 @@ import {
     updateLineQty,
     updateLinePrice,
     removeLine,
+    priceFor,
+    repriceLines,
 } from '../../helpers/posCartLines';
+import { focusLineField } from '../../helpers/posFocus';
+import { notifyWarning } from '../../helpers/alert';
+
+// Where focus goes after a manually added item (see pos.entry_sequence in the keyboard research):
+// 'scan' stays in search, 'qty' / 'price' jump to that field, 'qty_price' starts at qty then Enter moves to price.
+// Stays 'scan' until a per-store setting exists.
+export const DEFAULT_ENTRY_SEQUENCE = 'scan';
 
 /**
  * Cart operations and order tabs. The cart itself lives on the active order (see usePosOrderFields).
@@ -20,41 +29,59 @@ export function usePosCart({
     focusSearch,
     playScanBeep,
     formatMoney,
+    entrySequence = ref(DEFAULT_ENTRY_SEQUENCE),
 }) {
     const { cart, discountValue, additionalExpenses, cashReceived } = fields;
     const { createNewOrder, closeOrder, saveOrders } = orderApi;
 
-    const getItemPrice = (item) => {
-        if (!item) return 0;
-        const retail = parseFloat(item.selling_price ?? item.price_retail ?? item.price ?? 0);
-        const wholesale = parseFloat(item.min_selling_price ?? item.price_wholesale ?? retail);
-        return activePriceTier.value === 'wholesale'
-            ? wholesale > 0
-                ? wholesale
-                : retail
-            : retail > 0
-              ? retail
-              : wholesale;
+    const getItemPrice = (item) => priceFor(item, activePriceTier.value);
+
+    // POS-09: re-price the open cart when a customer with another price tier is picked.
+    const repriceCart = (tier) => repriceLines(cart.value, tier);
+
+    // A scan stream never loses focus: a scanned item without a price is flagged and toasted instead.
+    // A manually added item without a price opens its price field.
+    const focusAfterAdd = (line, scanned) => {
+        const needsPrice = !(parseFloat(line.unit_price) > 0);
+        if (needsPrice && scanned) {
+            notifyWarning(trans('pos.price_missing_scanned', { name: line.name }));
+            return;
+        }
+        let field = null;
+        // Touch screens would pop the on-screen keyboard after every tap, so only a missing price asks for focus.
+        const touchOnly = window.matchMedia?.('(pointer: coarse)').matches;
+        if (needsPrice) field = 'price';
+        else if (!scanned && !touchOnly && entrySequence.value !== 'scan')
+            field = entrySequence.value === 'price' ? 'price' : 'qty';
+        if (!field) return;
+        nextTick(() => {
+            if (!focusLineField(line.id, field)) focusSearch();
+        });
     };
 
-    const addToCart = (item, qty = 1) => {
+    const addToCart = (item, qty = 1, { scanned = false } = {}) => {
         playScanBeep();
         const existing = cart.value.find((c) => c.id === item.id);
         if (existing) {
             existing.quantity = parseFloat(existing.quantity) + qty;
+            focusAfterAdd(existing, scanned);
             return;
         }
-        cart.value.push({
+        const line = {
             id: item.id,
             name: item.name,
             code: item.code,
             unit: item.unit,
             unit_price: getItemPrice(item),
+            selling_price: item.selling_price,
+            wholesale_price: item.wholesale_price,
             price_retail: item.price_retail,
             price_wholesale: item.price_wholesale,
             min_selling_price: item.min_selling_price,
             quantity: qty,
-        });
+        };
+        cart.value.push(line);
+        focusAfterAdd(cart.value[cart.value.length - 1], scanned);
     };
 
     const increaseCartItemQty = (idx) => increaseLineQty(cart.value, idx);
@@ -105,6 +132,7 @@ export function usePosCart({
 
     return {
         addToCart,
+        repriceCart,
         increaseCartItemQty,
         decreaseCartItemQty,
         onCartQtyUpdate,

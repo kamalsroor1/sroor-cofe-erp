@@ -60,6 +60,8 @@ const close = () => {
 
 const handleKeyDown = (e) => {
   if (e.key === 'Escape' && props.show && props.closeable) {
+    // Marks the key as handled so window-level shortcut handlers don't close a second layer.
+    e.preventDefault();
     close();
   }
 };

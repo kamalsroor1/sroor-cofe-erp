@@ -21,7 +21,7 @@ const MAX_MS_PER_CHAR = 40;
  * @param {import('vue').Ref<string>} options.query search box text
  * @param {import('vue').Ref<Array>} options.results text-search dropdown rows
  * @param {import('vue').Ref<number>} options.highlightedIndex dropdown highlight
- * @param {(item: object, qty: number) => void} options.addItem adds a line to the cart
+ * @param {(item: object, qty: number, meta?: { scanned: boolean }) => void} options.addItem adds a line to the cart
  * @param {() => void} options.reset clears the search box, closes the dropdown, refocuses it
  * @param {() => void} [options.onMiss] audio/visual hook when a code is unknown
  */
@@ -56,27 +56,28 @@ export function useBarcodeScanner({ query, results, highlightedIndex, addItem, r
         notifyError(trans('pos.barcode_not_found', { code }));
     };
 
-    const resolve = async (code, fallbackItem) => {
+    const resolve = async (code, fallbackItem, multiplier, scanned) => {
         try {
             const res = await api.get('/pos/lookup', { params: { code } });
             const data = res.data?.data;
             if (!data?.item) return reportMiss(code);
             const qty = parseFloat(data.quantity);
-            addItem(data.item, qty > 0 ? qty : 1);
+            // A scale-label weight wins over the typed `n*` multiplier.
+            addItem(data.item, qty > 0 ? qty : multiplier, { scanned });
         } catch (err) {
             if (err.response?.status === 404) {
-                if (fallbackItem) return addItem(fallbackItem, 1);
+                if (fallbackItem) return addItem(fallbackItem, multiplier, { scanned });
                 return reportMiss(code);
             }
             // Network failure while typing manually: keep the cashier moving with the row they see.
-            if (!err.response && fallbackItem) return addItem(fallbackItem, 1);
+            if (!err.response && fallbackItem) return addItem(fallbackItem, multiplier, { scanned });
             onMiss?.();
             notifyError(err.userMessage || trans('common.unexpected_error'));
         }
     };
 
-    /** Enter pressed in the search box. */
-    const submit = () => {
+    /** Enter pressed in the search box. `multiplier` is the typed `n*` quantity prefix (default 1). */
+    const submit = (multiplier = 1) => {
         const code = query.value.trim();
         if (!code) return;
 
@@ -84,14 +85,14 @@ export function useBarcodeScanner({ query, results, highlightedIndex, addItem, r
         const highlighted = results.value[highlightedIndex.value] || results.value[0] || null;
 
         if (navigated && !burst && highlighted) {
-            addItem(highlighted, 1);
+            addItem(highlighted, multiplier, { scanned: false });
             reset();
             return;
         }
 
         const fallbackItem = burst ? null : highlighted;
         reset();
-        queue = queue.then(() => resolve(code, fallbackItem));
+        queue = queue.then(() => resolve(code, fallbackItem, multiplier, burst));
     };
 
     return { submit, noteQueryChange, noteNavigation };

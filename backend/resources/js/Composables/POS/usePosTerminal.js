@@ -38,7 +38,13 @@ export function usePosTerminal() {
     const { orders, activeOrderId, activeOrder } = orderApi;
     const fields = usePosOrderFields(activeOrder);
 
-    const customer = usePosCustomer({ selectedCustomerId: fields.selectedCustomerId, isOnline });
+    const customer = usePosCustomer({
+        selectedCustomerId: fields.selectedCustomerId,
+        selectedCustomerSnapshot: fields.selectedCustomer,
+        activePriceTier: fields.activePriceTier,
+        repriceCart: (tier) => cartOps.repriceCart(tier),
+        isOnline,
+    });
     const catalog = usePosCatalog({ authStore, customers: customer.customers });
     const payment = usePosPayment({
         fields,
@@ -87,12 +93,36 @@ export function usePosTerminal() {
         sounds,
     });
 
+    const showShortcutsHelp = ref(false);
+    const modalCloseOrder = [
+        showShortcutsHelp,
+        customer.showCustomerPickerModal,
+        payment.showExpensesModal,
+        payment.showMultiPaymentModal,
+        showSuccessModal,
+    ];
     usePosKeyboard({
         focusSearch,
+        focusCustomer: () => (customer.showCustomerPickerModal.value = true),
+        focusDiscount: () => {
+            const input = document.querySelector('[data-pos-discount-input]');
+            input?.focus();
+            return !!input;
+        },
         createOrder: cartOps.handleCreateOrder,
         toggleCatalog: catalog.toggleCatalog,
+        toggleHelp: () => (showShortcutsHelp.value = !showShortcutsHelp.value),
         submit: submitInvoice,
-        canSubmit: () => !isSubmitting.value && !showSuccessModal.value && fields.cart.value.length > 0,
+        canSubmit: () => !isSubmitting.value && fields.cart.value.length > 0,
+        isModalOpen: () => modalCloseOrder.some((flag) => flag.value),
+        closeTopModal: () => {
+            const open = modalCloseOrder.find((flag) => flag.value);
+            if (!open) return false;
+            open.value = false;
+            focusSearch();
+            return true;
+        },
+        getLastLineId: () => fields.cart.value.at(-1)?.id ?? null,
         showSuccessModal,
     });
 
@@ -125,5 +155,6 @@ export function usePosTerminal() {
         submitInvoice,
         cartEmpty,
         orderApi,
+        showShortcutsHelp,
     };
 }

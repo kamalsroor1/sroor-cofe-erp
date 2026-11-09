@@ -15,6 +15,7 @@
           <div
             v-for="(item, idx) in cart"
             :key="item.id"
+            :data-line-id="item.id"
             class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3"
           >
             <!-- Row 1: Header (#, Name, Delete) -->
@@ -47,6 +48,7 @@
                     <button
                       v-if="(item.price_retail || item.unit_price) > 0"
                       type="button"
+                      tabindex="-1"
                       @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
                       class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
                       :class="
@@ -68,6 +70,7 @@
                           parseFloat(item.price_retail || item.unit_price)
                       "
                       type="button"
+                      tabindex="-1"
                       @click="
                         $emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })
                       "
@@ -88,6 +91,7 @@
 
               <button
                 type="button"
+                tabindex="-1"
                 @click="$emit('remove-item', idx)"
                 class="min-h-[36px] min-w-[36px] p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0"
                 :title="$t('pos.delete_item')"
@@ -104,22 +108,29 @@
               <div class="flex items-center gap-1">
                 <button
                   type="button"
+                  tabindex="-1"
                   @click="$emit('decrease-qty', idx)"
                   class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-500/20 hover:text-rose-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                 >
                   -
                 </button>
                 <input
-                  type="number"
+                  type="text"
+                  inputmode="decimal"
                   :value="item.quantity"
                   data-testid="pos-cart-qty"
-                  @input="$emit('update-qty', { index: idx, value: $event.target.value })"
-                  step="1"
-                  min="1"
+                  :data-line-id="item.id"
+                  data-line-field="qty"
+                  @focus="onFieldFocus"
+                  @blur="onFieldBlur($event, idx, 'quantity')"
+                  @input="onNumberInput($event, idx, 'update-qty')"
+                  @keydown.enter.prevent="focusLineField(item.id, 'price')"
+                  @keydown.esc.prevent="revertField($event, idx, 'update-qty')"
                   class="w-14 h-9 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                 />
                 <button
                   type="button"
+                  tabindex="-1"
                   @click="$emit('increase-qty', idx)"
                   class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                 >
@@ -132,12 +143,18 @@
                 <div class="flex items-center gap-1">
                   <label class="text-[10px] font-bold text-slate-500">{{ $t('pos.item_price') }}:</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     :value="item.unit_price"
-                    @input="$emit('update-price', { index: idx, value: $event.target.value })"
-                    step="any"
-                    min="0"
-                    class="w-18 h-8 px-1.5 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
+                    :data-line-id="item.id"
+                    data-line-field="price"
+                    :aria-invalid="!(parseFloat(item.unit_price) > 0)"
+                    @focus="onFieldFocus"
+                    @blur="onFieldBlur($event, idx, 'unit_price')"
+                    @input="onNumberInput($event, idx, 'update-price')"
+                    @keydown.enter.prevent="focusPosSearch()"
+                    @keydown.esc.prevent="revertField($event, idx, 'update-price')"
+                    class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 w-18 h-8 px-1.5 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   />
                 </div>
                 <div class="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
@@ -167,6 +184,7 @@
             <tr
               v-for="(item, idx) in cart"
               :key="item.id"
+              :data-line-id="item.id"
               class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
               <!-- Row Number -->
@@ -191,6 +209,7 @@
                   <button
                     v-if="(item.price_retail || item.unit_price) > 0"
                     type="button"
+                    tabindex="-1"
                     @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
                     class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
                     :class="
@@ -212,6 +231,7 @@
                         parseFloat(item.price_retail || item.unit_price)
                     "
                     type="button"
+                    tabindex="-1"
                     @click="
                       $emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })
                     "
@@ -234,22 +254,29 @@
                 <div class="flex items-center justify-center gap-1">
                   <button
                     type="button"
+                    tabindex="-1"
                     @click="$emit('decrease-qty', idx)"
                     class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-rose-500/20 hover:text-rose-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                   >
                     -
                   </button>
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     :value="item.quantity"
                     data-testid="pos-cart-qty"
-                    @input="$emit('update-qty', { index: idx, value: $event.target.value })"
-                    step="1"
-                    min="1"
+                    :data-line-id="item.id"
+                    data-line-field="qty"
+                    @focus="onFieldFocus"
+                    @blur="onFieldBlur($event, idx, 'quantity')"
+                    @input="onNumberInput($event, idx, 'update-qty')"
+                    @keydown.enter.prevent="focusLineField(item.id, 'price')"
+                    @keydown.esc.prevent="revertField($event, idx, 'update-qty')"
                     class="w-16 h-9 text-center font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
                   />
                   <button
                     type="button"
+                    tabindex="-1"
                     @click="$emit('increase-qty', idx)"
                     class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-emerald-500/20 hover:text-emerald-500 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-black transition active:scale-95 cursor-pointer border border-slate-200 dark:border-slate-700 text-base"
                   >
@@ -262,12 +289,18 @@
               <td class="p-3 font-mono">
                 <div class="flex items-center gap-1">
                   <input
-                    type="number"
+                    type="text"
+                    inputmode="decimal"
                     :value="item.unit_price"
-                    @input="$emit('update-price', { index: idx, value: $event.target.value })"
-                    step="any"
-                    min="0"
-                    class="w-24 h-9 px-2 text-start font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none"
+                    :data-line-id="item.id"
+                    data-line-field="price"
+                    :aria-invalid="!(parseFloat(item.unit_price) > 0)"
+                    @focus="onFieldFocus"
+                    @blur="onFieldBlur($event, idx, 'unit_price')"
+                    @input="onNumberInput($event, idx, 'update-price')"
+                    @keydown.enter.prevent="focusPosSearch()"
+                    @keydown.esc.prevent="revertField($event, idx, 'update-price')"
+                    class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 w-24 h-9 px-2 text-start font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none"
                   />
                   <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
                 </div>
@@ -282,6 +315,7 @@
               <td class="p-3 text-center">
                 <button
                   type="button"
+                  tabindex="-1"
                   @click="$emit('remove-item', idx)"
                   class="min-h-[40px] min-w-[40px] p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer flex items-center justify-center mx-auto"
                   :title="$t('pos.delete_item')"
@@ -314,14 +348,49 @@
 import { Trash2 } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useUnits } from '../../Composables/useUnits';
+import { toWesternDigits } from '../../helpers/digits';
+import { focusLineField, focusPosSearch } from '../../helpers/posFocus';
 
 const { formatMoney } = useFormatters();
 const { unitLabel } = useUnits();
 
-defineProps({
+const props = defineProps({
   cart: { type: Array, default: () => [] },
   totalQty: { type: Number, default: 0 },
 });
 
-defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-price', 'remove-item']);
+const emit = defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-price', 'remove-item']);
+
+// Arabic-Indic digits are accepted in the numeric line fields and converted before they reach the cart.
+const onNumberInput = (event, index, eventName) => {
+  // Keep digits and a single decimal point only.
+  const normalized = toWesternDigits(event.target.value)
+    .replace(/[^0-9.]/g, '')
+    .replace(/^(\d*\.\d*)\./, '$1');
+  if (normalized !== event.target.value) event.target.value = normalized;
+  emit(eventName, { index, value: normalized });
+};
+
+// Leaving a field with an invalid or zero value snaps it back to the cart value.
+const onFieldBlur = (event, index, key) => {
+  const parsed = parseFloat(event.target.value);
+  const minimum = key === 'quantity' ? 0 : -1;
+  if (isNaN(parsed) || parsed <= minimum) event.target.value = props.cart[index]?.[key] ?? '';
+};
+
+// Select the whole value on focus so typing replaces it, and remember it for Esc.
+const onFieldFocus = (event) => {
+  event.target.dataset.original = event.target.value;
+  event.target.select();
+};
+
+// Esc reverts the field to its value before the edit and returns to the search box.
+const revertField = (event, index, eventName) => {
+  const original = event.target.dataset.original;
+  if (original !== undefined) {
+    event.target.value = original;
+    emit(eventName, { index, value: original });
+  }
+  focusPosSearch();
+};
 </script>

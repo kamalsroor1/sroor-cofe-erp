@@ -1,6 +1,20 @@
 import { ref, computed, watch } from 'vue';
 import { useRemoteSearch } from './useRemoteSearch';
 import { useBarcodeScanner } from './useBarcodeScanner';
+import { toWesternDigits } from '../../helpers/digits';
+
+const MAX_MULTIPLIER = 9999;
+
+// "3*" or "2.5*code": quantity multiplier prefix for the next item.
+const MULTIPLIER_PATTERN = /^\s*(\d+(?:[.,،]\d+)?)\s*[*×٭]\s*(.*)$/s;
+
+/** Splits the search text into its `n*` quantity prefix and the item term. */
+export function parseMultiplier(raw) {
+    const match = MULTIPLIER_PATTERN.exec(toWesternDigits(raw));
+    const qty = match ? Math.min(parseFloat(match[1].replace(/[,،]/, '.')), MAX_MULTIPLIER) : 0;
+    if (!match || !(qty > 0)) return { multiplier: 1, hasMultiplier: false, term: String(raw ?? '') };
+    return { multiplier: qty, hasMultiplier: true, term: match[2] };
+}
 
 /**
  * Header search box: local + remote item matches, dropdown navigation, and the POS-01 scan queue.
@@ -16,8 +30,17 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
         search,
     } = useRemoteSearch('/items', (res) => res.data?.data || []);
 
+    // Decimal quantities only make sense for weighted items.
+    const quantityFor = (item, qty) =>
+        item?.is_weighted || Number.isInteger(qty) ? qty : Math.max(1, Math.round(qty));
+    const addWithMultiplier = (item, qty, meta) => addToCart(item, quantityFor(item, qty), meta);
+
+    const parsedQuery = computed(() => parseMultiplier(searchQuery.value));
+    const multiplier = computed(() => parsedQuery.value.multiplier);
+    const searchTerm = computed(() => parsedQuery.value.term);
+
     const dropdownResults = computed(() => {
-        const q = searchQuery.value.trim().toLowerCase();
+        const q = searchTerm.value.trim().toLowerCase();
         if (!q) return [];
 
         const localMatches = items.value.filter(
@@ -41,27 +64,46 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
 
     // POS-01: Enter resolves the exact scanned code through /pos/lookup (serialized, never substring).
     const {
-        submit: selectHighlightedOrFirstItem,
+        submit: submitScan,
         noteQueryChange,
         noteNavigation,
     } = useBarcodeScanner({
-        query: searchQuery,
+        query: searchTerm,
         results: dropdownResults,
         highlightedIndex,
-        addItem: addToCart,
+        addItem: addWithMultiplier,
         reset: resetSearchBox,
         onMiss,
     });
 
-    watch(searchQuery, (newVal) => {
+    // "3*" alone waits for the item; with an item it adds that many.
+    const selectHighlightedOrFirstItem = () => {
+        if (!searchTerm.value.trim()) return;
+        submitScan(multiplier.value);
+    };
+
+    watch(searchQuery, (value) => {
+        if (value) isSearchFocused.value = true;
+    });
+
+    watch(searchTerm, (newVal) => {
         noteQueryChange(newVal);
         highlightedIndex.value = 0;
         search(newVal);
     });
 
     const addItemFromDropdown = (item) => {
-        addToCart(item);
+        addWithMultiplier(item, multiplier.value, { scanned: false });
         resetSearchBox();
+    };
+
+    /** Esc in the search box: close the dropdown first, then clear the text. */
+    const escapeSearch = () => {
+        if (isSearchFocused.value && dropdownResults.value.length > 0) {
+            isSearchFocused.value = false;
+        } else if (searchQuery.value) {
+            searchQuery.value = '';
+        }
     };
 
     const navigateDropdown = (direction) => {
@@ -84,5 +126,7 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
         selectHighlightedOrFirstItem,
         addItemFromDropdown,
         navigateDropdown,
+        escapeSearch,
+        multiplier,
     };
 }

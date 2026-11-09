@@ -72,6 +72,7 @@
           </div>
           <input
             ref="searchInputRef"
+            data-pos-search
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text"
