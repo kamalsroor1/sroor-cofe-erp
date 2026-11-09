@@ -2,6 +2,7 @@ import { ref, reactive, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { businessToday } from './useBusinessDate';
 
 export function useSuppliers() {
     const { t } = useTrans();
@@ -48,7 +49,7 @@ export function useSuppliers() {
     const paymentForm = reactive({
         amount: '',
         payment_method: 'cash',
-        payment_date: new Date().toISOString().split('T')[0],
+        payment_date: businessToday(),
         notes: '',
     });
 
@@ -167,7 +168,7 @@ export function useSuppliers() {
         targetSupplier.value = supplier;
         paymentForm.amount = supplier.current_balance > 0 ? supplier.current_balance : '';
         paymentForm.payment_method = 'cash';
-        paymentForm.payment_date = new Date().toISOString().split('T')[0];
+        paymentForm.payment_date = businessToday();
         paymentForm.notes = '';
         showPaymentModal.value = true;
     };

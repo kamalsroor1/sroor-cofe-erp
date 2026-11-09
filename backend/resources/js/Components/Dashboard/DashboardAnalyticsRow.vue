@@ -95,6 +95,7 @@ import DashboardSectionCard from '../Common/DashboardSectionCard.vue';
 import SimpleBarChart from '../Common/SimpleBarChart.vue';
 import ProgressDistributionList from '../Common/ProgressDistributionList.vue';
 import { useFormatters } from '../../Composables/useFormatters';
+import { businessToday } from '../../Composables/useBusinessDate';
 const { formatMoney } = useFormatters();
 defineProps({
   dailyTrend: { type: Array, default: () => [] },
@@ -102,7 +103,7 @@ defineProps({
   paymentDistribution: { type: Array, default: () => [] },
   activeShift: { type: Object, default: null },
 });
-const isToday = (day) => day?.date === new Date().toISOString().split('T')[0];
+const isToday = (day) => day?.date === businessToday();
 const getPaymentMethodIcon = (key) =>
   ({ cash: Banknote, instapay: Zap, visa: CreditCard, e_wallet: Smartphone, bank_transfer: Building2 })[key] || Wallet;
 const getPaymentMethodColor = (key) =>

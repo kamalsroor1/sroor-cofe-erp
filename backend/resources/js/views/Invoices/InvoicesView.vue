@@ -127,6 +127,7 @@ import { SlidersHorizontal, FileSpreadsheet, Download, Printer, RefreshCw, Zap }
 import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
+import { addDays, businessToday, startOfMonth } from '../../Composables/useBusinessDate';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import BaseDropdown from '../../Components/Common/BaseDropdown.vue';
@@ -234,29 +235,22 @@ const debounceSearch = () => {
 
 const applyDatePreset = (presetId) => {
   activeDatePreset.value = presetId;
-  const now = new Date();
+  const today = businessToday();
   if (presetId === 'all') {
     dateFrom.value = '';
     dateTo.value = '';
   } else if (presetId === 'today') {
-    const s = now.toISOString().split('T')[0];
-    dateFrom.value = s;
-    dateTo.value = s;
+    dateFrom.value = today;
+    dateTo.value = today;
   } else if (presetId === 'yesterday') {
-    const y = new Date();
-    y.setDate(y.getDate() - 1);
-    const s = y.toISOString().split('T')[0];
-    dateFrom.value = s;
-    dateTo.value = s;
+    dateFrom.value = addDays(today, -1);
+    dateTo.value = dateFrom.value;
   } else if (presetId === 'week') {
-    const w = new Date();
-    w.setDate(w.getDate() - 7);
-    dateFrom.value = w.toISOString().split('T')[0];
-    dateTo.value = now.toISOString().split('T')[0];
+    dateFrom.value = addDays(today, -7);
+    dateTo.value = today;
   } else if (presetId === 'month') {
-    const m = new Date(now.getFullYear(), now.getMonth(), 1);
-    dateFrom.value = m.toISOString().split('T')[0];
-    dateTo.value = now.toISOString().split('T')[0];
+    dateFrom.value = startOfMonth(today);
+    dateTo.value = today;
   }
   fetchInvoices(1);
 };
@@ -343,7 +337,7 @@ const bulkExportSelected = () => {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `invoices_export_${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `invoices_export_${businessToday()}.csv`;
   link.click();
 };
 
@@ -386,7 +380,7 @@ const exportToExcel = () => {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `all_invoices_${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `all_invoices_${businessToday()}.csv`;
   link.click();
 };
 

@@ -2,6 +2,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../Services/api';
 import { useTrans } from './useTrans';
+import { businessToday, startOfMonth, endOfMonth } from './useBusinessDate';
 
 export function useItemMovements() {
     const route = useRoute();
@@ -61,17 +62,14 @@ export function useItemMovements() {
 
     const applyPreset = (preset) => {
         activePreset.value = preset;
-        const now = new Date();
-        const formatDate = (d) => d.toISOString().split('T')[0];
+        const today = businessToday();
 
         if (preset === 'today') {
-            dateFrom.value = formatDate(now);
-            dateTo.value = formatDate(now);
+            dateFrom.value = today;
+            dateTo.value = today;
         } else if (preset === 'this_month') {
-            const start = new Date(now.getFullYear(), now.getMonth(), 1);
-            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            dateFrom.value = formatDate(start);
-            dateTo.value = formatDate(end);
+            dateFrom.value = startOfMonth(today);
+            dateTo.value = endOfMonth(today);
         } else if (preset === 'all') {
             dateFrom.value = '';
             dateTo.value = '';

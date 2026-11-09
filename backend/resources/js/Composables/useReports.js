@@ -2,6 +2,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2 } from 'lucide-vue-next';
 import api from '../Services/api';
 import { useTrans } from './useTrans';
+import { addDays, businessToday, startOfMonth, startOfWeek, startOfYear } from './useBusinessDate';
 
 export function useReports() {
     const { t } = useTrans();
@@ -72,31 +73,19 @@ export function useReports() {
 
     const setPeriod = (period) => {
         filters.period = period;
-        const now = new Date();
+        const today = businessToday();
+        filters.to = today;
         if (period === 'today') {
-            const todayStr = now.toISOString().split('T')[0];
-            filters.from = todayStr;
-            filters.to = todayStr;
+            filters.from = today;
         } else if (period === 'yesterday') {
-            const d = new Date();
-            d.setDate(d.getDate() - 1);
-            const yStr = d.toISOString().split('T')[0];
-            filters.from = yStr;
-            filters.to = yStr;
+            filters.from = addDays(today, -1);
+            filters.to = filters.from;
         } else if (period === 'this_week') {
-            const d = new Date();
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            filters.from = new Date(d.setDate(diff)).toISOString().split('T')[0];
-            filters.to = new Date().toISOString().split('T')[0];
+            filters.from = startOfWeek(today, 1);
         } else if (period === 'this_month') {
-            const d = new Date();
-            filters.from = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-            filters.to = new Date().toISOString().split('T')[0];
+            filters.from = startOfMonth(today);
         } else if (period === 'this_year') {
-            const d = new Date();
-            filters.from = new Date(d.getFullYear(), 0, 1).toISOString().split('T')[0];
-            filters.to = new Date().toISOString().split('T')[0];
+            filters.from = startOfYear(today);
         }
 
         fetchReportsData();
@@ -155,9 +144,9 @@ export function useReports() {
     };
 
     onMounted(() => {
-        const d = new Date();
-        filters.from = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-        filters.to = new Date().toISOString().split('T')[0];
+        const today = businessToday();
+        filters.from = startOfMonth(today);
+        filters.to = today;
 
         loadStores();
         fetchReportsData();

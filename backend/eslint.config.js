@@ -8,6 +8,8 @@ import globals from 'globals';
 // list so later rules extend it instead of overriding it (flat config: last wins).
 const RAW_AR_LOCALE_MESSAGE =
     'Format dates/numbers with useFormatters() / helpers/formatters.js, not a raw Arabic locale (SETG-6).';
+const TO_ISO_DATE_MESSAGE =
+    'Do not build calendar dates from toISOString() (UTC). Use businessToday() / toTenantDateString() / addDays() from Composables/useBusinessDate.js (FE-06).';
 const restrictedSyntax = [
     {
         selector:
@@ -23,6 +25,12 @@ const restrictedSyntax = [
         selector:
             "NewExpression[callee.object.name='Intl'][callee.property.name=/^(DateTimeFormat|NumberFormat)$/] > Literal.arguments:first-child[value=/^ar/i]",
         message: RAW_AR_LOCALE_MESSAGE,
+    },
+    // FE-06: toISOString() is UTC, so "today"/presets drift around midnight in the tenant timezone.
+    {
+        selector:
+            "CallExpression[callee.property.name=/^(split|slice|substring|substr)$/][callee.object.callee.property.name='toISOString']",
+        message: TO_ISO_DATE_MESSAGE,
     },
 ];
 

@@ -3,6 +3,7 @@ import { useRouter, useRoute } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { businessToday } from './useBusinessDate';
 
 export function useCreatePurchase() {
     const router = useRouter();
@@ -15,7 +16,7 @@ export function useCreatePurchase() {
 
     const form = reactive({
         supplier_id: '',
-        purchase_date: new Date().toISOString().split('T')[0],
+        purchase_date: businessToday(),
         supplier_invoice_ref: '',
         paid_amount: '0.000',
         discount_amount: '0.000',

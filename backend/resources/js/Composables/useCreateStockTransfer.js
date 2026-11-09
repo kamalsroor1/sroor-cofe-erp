@@ -4,6 +4,7 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useUnits } from './useUnits';
+import { businessToday } from './useBusinessDate';
 
 export function useCreateStockTransfer() {
     const { unitLabel } = useUnits();
@@ -18,7 +19,7 @@ export function useCreateStockTransfer() {
     const form = reactive({
         from_store_id: null,
         to_store_id: null,
-        transfer_date: new Date().toISOString().split('T')[0],
+        transfer_date: businessToday(),
         notes: '',
         items: [],
     });

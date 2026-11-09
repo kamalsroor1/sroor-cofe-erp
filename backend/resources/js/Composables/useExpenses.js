@@ -2,6 +2,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { businessToday } from './useBusinessDate';
 
 export function useExpenses() {
     const { t } = useTrans();
@@ -43,7 +44,7 @@ export function useExpenses() {
         category: '',
         cost_center: 'operational',
         amount: '',
-        expense_date: new Date().toISOString().split('T')[0],
+        expense_date: businessToday(),
         payment_method: 'cash',
         notes: '',
     });
@@ -115,7 +116,7 @@ export function useExpenses() {
             category: t('expenses.preset_customs'),
             cost_center: 'operational',
             amount: '',
-            expense_date: new Date().toISOString().split('T')[0],
+            expense_date: businessToday(),
             payment_method: 'cash',
             notes: '',
         });

@@ -6,6 +6,7 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useUnits } from './useUnits';
+import { businessToday } from './useBusinessDate';
 
 export function useCreateReturn() {
     const { unitLabel } = useUnits();
@@ -28,7 +29,7 @@ export function useCreateReturn() {
         return_type: 'sales_return',
         customer_id: null,
         supplier_id: null,
-        return_date: new Date().toISOString().split('T')[0],
+        return_date: businessToday(),
         refund_amount: '0.000',
         reason: '',
         items: [],
