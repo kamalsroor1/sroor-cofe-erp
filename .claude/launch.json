@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sroor-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "eval \"$(fnm env)\" && cd backend && composer dev"],
+      "port": 8000,
+      "url": "http://demo.localhost:8000"
+    }
+  ]
+}
