@@ -686,6 +686,19 @@
                 "col_phone_matches": "مستخدمين بأرقام موبايل المنصة",
                 "findings": "مستأجرين بهم ملاحظات: :count من :total. لم يتم تعديل أي شيء."
             },
+            "min_price_equals_cost": {
+                "description": "عرض الأصناف اللي أقل سعر بيع فيها يساوي التكلفة (تسريب تكلفة). تشغيل تجريبي ما لم يُمرَّر --fix.",
+                "tenant_not_found": "المستأجر غير موجود: :tenant",
+                "no_tenants": "لا يوجد مستأجرين للفحص.",
+                "tenant_failed": "تعذر معالجة المستأجر :tenant: :error",
+                "col_tenant": "المستأجر",
+                "col_id": "المعرف",
+                "col_code": "الكود",
+                "col_name": "الصنف",
+                "col_cost": "التكلفة",
+                "dry_run": "تشغيل تجريبي: :count صنف متأثر في :total مستأجر. لم يتم تعديل أي شيء؛ أعد التشغيل بـ --fix لتصفير الحد الأدنى (0.000).",
+                "fixed": "تم الإصلاح: :count صنف في :total مستأجر أصبح بدون حد أدنى (0.000)."
+            },
             "migrate_super_admins": {
                 "description": "نقل مشرفي المنصة القدامى (جدول users المركزي) إلى حسابات مشغّلين مركزية. تشغيل تجريبي ما لم يُمرَّر --execute.",
                 "tenant_context": "يجب تشغيل هذا الأمر في السياق المركزي، وليس داخل مستأجر.",
@@ -760,6 +773,7 @@
                 "cleanup_failed": "تعذر حذف أرشيف قديم من القرص \":disk\".",
                 "retention": "سياسة الاحتفاظ",
                 "pruned": "سياسة الاحتفاظ: اتحذف :file الخاص بـ :subject.",
+                "telegram_alert": "فشل النسخ الاحتياطي على :app: الأمر :command انتهى بـ :count فشل.",
                 "mail_subject": "[:app] فشل في النسخ الاحتياطي (:count)",
                 "mail_intro": "الأمر :command انتهى بـ :count حالة فشل:",
                 "mail_line": ":subject: :reason",
@@ -807,6 +821,15 @@
             "tenants": {
                 "skipped_not_provisioned": "تم تخطي :count مستأجر لسه ما اتجهزش (في الانتظار أو جاري التجهيز أو فشل: مفيش قاعدة بيانات).",
                 "none_provisioned": "مفيش مستأجرين جاهزين: مفيش حاجة تتنفذ."
+            },
+            "lifecycle": {
+                "description": "تطبيق دورة حياة الاشتراك: نقل المستأجرين الذين انتهت تجربتهم أو فترة السماح أو فترة القراءة فقط إلى الحالة التالية",
+                "moved": "المستأجر :tenant_id: :from -> :to",
+                "would_move": "[تجربة بدون تنفيذ] المستأجر :tenant_id: :from -> :to",
+                "archive_due": "المستأجر :tenant_id حان موعد أرشفته: شغّل tenants:archive (يلزم نسخة احتياطية نهائية موثّقة).",
+                "failed": "تعذّر نقل المستأجر :tenant_id: :error",
+                "needs_attention": "المستأجر :tenant_id في حالة :status بدون تاريخ انتهاء: لن تتغير حالته تلقائيًا. حدّد تواريخه (يحتاج انتباهًا).",
+                "summary": "تم فحص :checked مستأجر: نُقل :moved، حان موعد أرشفة :archive_due، يحتاج انتباهًا :attention (بدون موعد)، فشل :failed."
             },
             "archive": {
                 "description": "أرشفة محل موقوف أو ملغي بعد نسخة احتياطية نهائية متأكدين منها (من غير مسح أي حاجة)",
@@ -874,6 +897,15 @@
                     "confirmation_mismatch": "كود المحل اللي اتكتب مش مطابق",
                     "not_confirmed": "المشغّل ماأكدش"
                 }
+            },
+            "planless": {
+                "description": "يعرض المحلات من غير باقة (مش خاضعة لحدود الباقة)، و--assign=<slug الباقة> يعيّن لهم باقة",
+                "none": "كل المحلات ليها باقة.",
+                "row": ":id (:name) الحالة :status",
+                "summary": ":count محل من غير باقة.",
+                "dry_run_hint": "عرض فقط. شغّله تاني بـ --assign=<slug الباقة> للتعيين.",
+                "unknown_plan": "مفيش باقة بالـ slug \":slug\".",
+                "assigned": "اتعيّن :count محل على باقة \":slug\"."
             }
         },
         "contacts": {
@@ -1693,7 +1725,9 @@
             "transfer_cancelled_numbered": "تم إلغاء إذن التحويل رقم :number وعكس حركة الأصناف للفرع المصدر بنجاح",
             "transfer_cancel_reason_default": "إلغاء من النظام",
             "delete_category_confirm_text": "سيتم حذف الفئة \":name\" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.",
-            "store_delete_blockers": "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers"
+            "store_delete_blockers": "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers",
+            "insufficient_stock_item": "رصيد الصنف [:item] غير كافٍ. المتوفر حالياً: :available",
+            "insufficient_stock_store": "رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit"
         },
         "invoices": {
             "title": "فواتير المبيعات",
@@ -1904,6 +1938,7 @@
             "return_policy_note": "البضاعة المباعة ترد وتستبدل خلال 14 يوماً بموجب هذا الإيصال",
             "thank_you_note": "شكراً لتعاملكم معنا ونسعد بزيارتكم دائماً ☕",
             "invoice_created": "تم حفظ واعتماد الفاتورة رقم :number بنجاح",
+            "walk_in_must_pay_full": "لا يمكن البيع بالآجل أو بدفع جزئي على العميل النقدي العام. اختر عميلاً محدداً أو ادفع المبلغ بالكامل.",
             "partial_paid_out_of_range": "المبلغ المدفوع في الفاتورة الجزئية لازم يكون أكبر من صفر وأقل من صافي الفاتورة (:net)",
             "split_payment_total_mismatch": "مجموع طرق الدفع (:paid) لا يساوي صافي الفاتورة (:net)",
             "split_payment_non_cash_exceeds_due": "المدفوع بغير الكاش (:non_cash) أكبر من صافي الفاتورة (:net)، الباقي يرجع كاش بس",
@@ -2041,6 +2076,8 @@
                 "light_mode": "الوضع النهاري",
                 "dark_mode": "الوضع الليلي",
                 "notifications": "الإشعارات والتنبيهات",
+                "notifications_empty": "لا توجد تنبيهات حالياً",
+                "notifications_empty_hint": "كل شيء يسير بانتظام",
                 "notifications_count": ":count تنبيهات",
                 "view_all_activity": "عرض كافة سجلات النشاط والرقابة ←",
                 "journal_open": "يومية مفتوحة",
@@ -2154,7 +2191,8 @@
                 "manage": "تسجيل وتعديل وحذف المصروفات"
             },
             "returns": {
-                "manage": "إدارة مرتجعات المبيعات والمشتريات"
+                "manage": "إدارة مرتجعات المبيعات والمشتريات",
+                "without_invoice": "تسجيل مرتجع بدون فاتورة بيع أو شراء أصلية"
             },
             "reports": {
                 "view": "عرض التقارير المالية والأرباح ومقارنة الفروع"
@@ -2514,6 +2552,7 @@
             "giant_net_total": "الصافي النهائي:",
             "invoice_and_payment_type": "نوع الفاتورة والسداد:",
             "instant_cash": "كاش فوري",
+            "walk_in_pay_full_hint": "العميل النقدي العام لازم يدفع بالكامل. اختر عميلاً محدداً للبيع الآجل أو الجزئي.",
             "credit_on_account": "آجل ذمم",
             "partial_pay": "دفع جزئي",
             "quick_cash_exact": "المبلغ بالظبط",
@@ -2590,6 +2629,8 @@
             "cash_received_placeholder": "المدفوع نقداً...",
             "pos_settings_saved": "تم حفظ إعدادات نقطة البيع للفرع",
             "scale_barcode_invalid_check_digit": "باركود الميزان غير صحيح (رقم التحقق لا يطابق). أعد طباعة الملصق أو امسحه مرة أخرى",
+            "scale_barcode_unpriced_item": "لا يمكن حساب الكمية من ملصق السعر: الصنف بلا سعر بيع",
+            "barcode_not_found": "الكود :code غير موجود",
             "store_not_found": "الفرع غير موجود",
             "decrease_qty": "إنقاص الكمية",
             "increase_qty": "زيادة الكمية",
@@ -3077,7 +3118,36 @@
             "return_confirmed_title": "تم اعتماد المرتجع",
             "return_confirmed_msg": "تم تسجيل المرتجع وتعديل الأرصدة بنجاح ✓",
             "save_return_failed": "تعذر تسجيل مستند المرتجع",
-            "returned_goods": "بضاعة مرتجعة"
+            "returned_goods": "بضاعة مرتجعة",
+            "cancel_item_unavailable": "لا يمكن حذف هذا المرتجع لأن أحد أصنافه لم يعد موجودًا.",
+            "cancel_insufficient_stock": "لا يمكن حذف هذا المرتجع: رصيد الصنف [:item] هو :available فقط بينما المطلوب خصم :required.",
+            "cancel_movement_note": "عكس حركة المرتجع المحذوف :number",
+            "restore_not_allowed": "لا يمكن استرجاع مرتجع محذوف لأن حذفه عكس أثره على المخزون والرصيد. سجّل مرتجعًا جديدًا بدلًا منه.",
+            "source_not_confirmed": "يمكن عمل مرتجع على مستند معتمد فقط.",
+            "party_mismatch": "العميل أو المورد لا يطابق المستند الأصلي.",
+            "line_not_in_source": "هذا السطر لا ينتمي للمستند المحدد.",
+            "item_mismatch": "الصنف لا يطابق سطر المستند المحدد.",
+            "line_repeated": "تم إرسال نفس سطر المستند مرتين في مرتجع واحد.",
+            "over_return": "الكمية أكبر من المتاح إرجاعه لهذا السطر (المتبقي :remaining).",
+            "return_source_title": "مرتجع على مستند",
+            "select_invoice": "اختر الفاتورة المراد الإرجاع منها",
+            "select_purchase": "اختر فاتورة الشراء المراد الإرجاع منها",
+            "source_search_placeholder": "ابحث بالرقم أو الاسم...",
+            "no_sources_found": "لا توجد مستندات مطابقة في هذا الفرع.",
+            "source_lines_title": "الأسطر المتاح إرجاعها",
+            "sold_qty": "الكمية الأصلية",
+            "returned_qty": "تم إرجاعه",
+            "remaining_qty": "المتاح إرجاعه",
+            "return_qty": "كمية المرتجع",
+            "refund_unit_price": "سعر الاسترداد",
+            "nothing_returnable": "لا يوجد ما يمكن إرجاعه على هذا المستند.",
+            "change_source": "تغيير المستند",
+            "without_invoice_option": "بدون مستند أصلي",
+            "select_source_first": "اختر مستندًا أولًا",
+            "source_has_returns": "هذا المستند عليه مرتجعات. احذفها أولًا ثم يمكنك إلغاءه أو تعديله أو حذفه.",
+            "source_load_failed": "تعذر تحميل المستندات. حاول مرة أخرى.",
+            "return_manually": "مرتجع بدون مستند أصلي",
+            "return_from_document": "مرتجع على فاتورة بيع أو شراء"
         },
         "roles": {
             "title": "مصفوفة الأدوار والصلاحيات",
@@ -3462,6 +3532,7 @@
             "errors": {
                 "read_only": "الحساب للعرض فقط حاليًا، ومش هتقدر تضيف أو تعدّل بيانات. جدّد الاشتراك لإعادة التفعيل.",
                 "access_blocked": "الوصول للحساب موقوف (الحالة: :status). تواصل مع إدارة المنصة.",
+                "access_blocked_generic": "الوصول إلى هذا الحساب غير متاح حاليًا. تواصل مع فريق المنصة.",
                 "activation_requires_payment": "تفعيل الحساب بيتم بعد تأكيد الدفع فقط.",
                 "invalid_transition": "لا يمكن تغيير حالة الحساب من «:from» إلى «:to».",
                 "status_conflict": "حالة الحساب اتغيّرت وأصبحت «:status». حدّث الصفحة وحاول تاني.",
@@ -3469,7 +3540,8 @@
                 "not_archived": "الحساب مش مؤرشف.",
                 "suspension_reason_required": "اختار سبب الإيقاف.",
                 "limit_reached": "وصلت للحد الأقصى المسموح في باقتك من :resource (:max). رقّي باقتك أو أضف إضافة.",
-                "feature_unavailable": "الميزة دي مش متاحة في باقتك الحالية."
+                "feature_unavailable": "الميزة دي مش متاحة في باقتك الحالية.",
+                "plan_has_tenants": "الباقة دي لسه عليها مشتركين. انقلهم لباقة تانية قبل ما تمسحها."
             },
             "archive_states": {
                 "queued": "الأرشفة في الانتظار",
@@ -3490,6 +3562,12 @@
                 "archive_failed": "الأرشفة ماكملتش وحالة الحساب ماتغيرتش: :reason.",
                 "purge_refused": "المسح النهائي اترفض: :reason.",
                 "confirm_code_mismatch": "اكتب كود المحل بالظبط للتأكيد."
+            },
+            "alerts": {
+                "read_only_title": "الحساب في وضع القراءة فقط",
+                "blocked_title": "تم إيقاف الوصول إلى الحساب",
+                "feature_unavailable_title": "هذه الميزة غير متاحة في باقتك",
+                "limit_reached_title": "تم الوصول إلى حد الباقة"
             }
         },
         "super": {
@@ -5230,6 +5308,19 @@
                 "col_phone_matches": "Users matching platform phones",
                 "findings": "Tenants with findings: :count of :total. Nothing was changed."
             },
+            "min_price_equals_cost": {
+                "description": "List items whose minimum selling price equals their cost (cost leak). Dry-run unless --fix is passed.",
+                "tenant_not_found": "Tenant not found: :tenant",
+                "no_tenants": "No tenants to scan.",
+                "tenant_failed": "Could not process tenant :tenant: :error",
+                "col_tenant": "Tenant",
+                "col_id": "ID",
+                "col_code": "Code",
+                "col_name": "Item",
+                "col_cost": "Cost",
+                "dry_run": "Dry run: :count affected items across :total tenants. Nothing was changed; re-run with --fix to set them to no floor (0.000).",
+                "fixed": "Fixed: :count items across :total tenants were set to no floor (0.000)."
+            },
             "migrate_super_admins": {
                 "description": "Move legacy platform super admins (central users table) to central operator accounts. Dry run unless --execute.",
                 "tenant_context": "This command must run in the central context, never inside a tenant.",
@@ -5304,6 +5395,7 @@
                 "cleanup_failed": "Could not delete an old archive from the disk \":disk\".",
                 "retention": "retention",
                 "pruned": "Retention: deleted :file of :subject.",
+                "telegram_alert": "Backup failure on :app: :command finished with :count failure(s).",
                 "mail_subject": "[:app] Backup failure (:count)",
                 "mail_intro": "The command :command finished with :count failure(s):",
                 "mail_line": ":subject: :reason",
@@ -5351,6 +5443,15 @@
             "tenants": {
                 "skipped_not_provisioned": "Skipped :count tenant(s) that are not provisioned yet (pending, running or failed: no database).",
                 "none_provisioned": "No provisioned tenants: nothing to run."
+            },
+            "lifecycle": {
+                "description": "Apply the subscription lifecycle: move tenants whose trial, grace or read-only period ended to the next status",
+                "moved": "Tenant :tenant_id: :from -> :to",
+                "would_move": "[dry run] Tenant :tenant_id: :from -> :to",
+                "archive_due": "Tenant :tenant_id is due for archiving: run tenants:archive (a verified final backup is required).",
+                "failed": "Tenant :tenant_id could not be moved: :error",
+                "needs_attention": "Tenant :tenant_id is in :status with no end date: it will never change status by itself. Set its dates (needs attention).",
+                "summary": "Checked :checked tenant(s): :moved moved, :archive_due due for archiving, :attention need attention (no deadline), :failed failed."
             },
             "archive": {
                 "description": "Archive one suspended or cancelled tenant after a verified final backup (nothing is dropped)",
@@ -5418,6 +5519,15 @@
                     "confirmation_mismatch": "the typed shop code does not match",
                     "not_confirmed": "the operator did not confirm"
                 }
+            },
+            "planless": {
+                "description": "List tenants without a plan (not subject to plan enforcement); --assign=<plan slug> assigns them",
+                "none": "Every tenant has a plan.",
+                "row": ":id (:name) status :status",
+                "summary": ":count tenant(s) without a plan.",
+                "dry_run_hint": "Dry run. Re-run with --assign=<plan slug> to assign them.",
+                "unknown_plan": "No plan with slug \":slug\".",
+                "assigned": "Assigned :count tenant(s) to plan \":slug\"."
             }
         },
         "contacts": {
@@ -6237,7 +6347,9 @@
             "transfer_cancelled_numbered": "Transfer :number cancelled and items returned to the source branch",
             "transfer_cancel_reason_default": "Cancelled from the system",
             "delete_category_confirm_text": "Category \":name\" will be deleted and its items unlinked; the items themselves are kept.",
-            "store_delete_blockers": "Linked operations prevent deletion:\n- :blockers"
+            "store_delete_blockers": "Linked operations prevent deletion:\n- :blockers",
+            "insufficient_stock_item": "Insufficient stock for item [:item]. Currently available: :available",
+            "insufficient_stock_store": "Insufficient stock for item [:item] in [:store]. Currently available: :available :unit"
         },
         "invoices": {
             "title": "Sales Invoices",
@@ -6448,6 +6560,7 @@
             "return_policy_note": "Goods sold may be returned\/exchanged within 14 days with this receipt",
             "thank_you_note": "Thank you for your business! ☕",
             "invoice_created": "Invoice :number saved and approved successfully",
+            "walk_in_must_pay_full": "Credit or partial payment is not allowed for the walk-in cash customer. Choose a named customer or pay in full.",
             "partial_paid_out_of_range": "The paid amount on a partial invoice must be greater than zero and less than the invoice net (:net)",
             "split_payment_total_mismatch": "The payment methods total (:paid) does not equal the invoice net (:net)",
             "split_payment_non_cash_exceeds_due": "Non-cash payments (:non_cash) exceed the invoice net (:net); change can only be given from cash",
@@ -6585,6 +6698,8 @@
                 "light_mode": "Light mode",
                 "dark_mode": "Dark mode",
                 "notifications": "Notifications",
+                "notifications_empty": "No notifications",
+                "notifications_empty_hint": "Everything is running smoothly",
                 "notifications_count": ":count alerts",
                 "view_all_activity": "View all activity logs →",
                 "journal_open": "Journal open",
@@ -6698,7 +6813,8 @@
                 "manage": "Record, edit and delete expenses"
             },
             "returns": {
-                "manage": "Manage sales and purchase returns"
+                "manage": "Manage sales and purchase returns",
+                "without_invoice": "Record a return without a source invoice or purchase"
             },
             "reports": {
                 "view": "View financial and profit reports and branch comparison"
@@ -7058,6 +7174,7 @@
             "giant_net_total": "Net Total:",
             "invoice_and_payment_type": "Invoice & Payment Type:",
             "instant_cash": "Instant Cash",
+            "walk_in_pay_full_hint": "The general cash customer must pay in full. Select a named customer for credit or partial payment.",
             "credit_on_account": "Credit",
             "partial_pay": "Partial",
             "quick_cash_exact": "Exact Amount",
@@ -7134,6 +7251,8 @@
             "cash_received_placeholder": "Cash received...",
             "pos_settings_saved": "Branch POS settings saved",
             "scale_barcode_invalid_check_digit": "Invalid scale barcode (check digit mismatch). Reprint the label or scan it again",
+            "scale_barcode_unpriced_item": "Cannot derive a quantity from a price label: the item has no selling price",
+            "barcode_not_found": "Code :code not found",
             "store_not_found": "Branch not found",
             "decrease_qty": "Decrease quantity",
             "increase_qty": "Increase quantity",
@@ -7621,7 +7740,36 @@
             "return_confirmed_title": "Return Confirmed",
             "return_confirmed_msg": "Return recorded and stock reconciled successfully ✓",
             "save_return_failed": "Failed to record return document",
-            "returned_goods": "Returned goods"
+            "returned_goods": "Returned goods",
+            "cancel_item_unavailable": "This return cannot be deleted because one of its items no longer exists.",
+            "cancel_insufficient_stock": "Cannot delete this return: item [:item] has only :available in stock but :required must be taken back out.",
+            "cancel_movement_note": "Reversal of deleted return :number",
+            "restore_not_allowed": "A deleted return cannot be restored because deleting it reversed its stock and balance. Record a new return instead.",
+            "source_not_confirmed": "Only a confirmed document can be returned against.",
+            "party_mismatch": "The customer or supplier does not match the source document.",
+            "line_not_in_source": "This line does not belong to the selected document.",
+            "item_mismatch": "The item does not match the selected document line.",
+            "line_repeated": "The same document line was sent twice in one return.",
+            "over_return": "The quantity is more than what can still be returned for this line (:remaining left).",
+            "return_source_title": "Return against",
+            "select_invoice": "Select the invoice to return from",
+            "select_purchase": "Select the purchase to return from",
+            "source_search_placeholder": "Search by number or name...",
+            "no_sources_found": "No matching documents in this branch.",
+            "source_lines_title": "Lines available to return",
+            "sold_qty": "Original qty",
+            "returned_qty": "Already returned",
+            "remaining_qty": "Returnable",
+            "return_qty": "Return qty",
+            "refund_unit_price": "Refund price",
+            "nothing_returnable": "Nothing left to return on this document.",
+            "change_source": "Change document",
+            "without_invoice_option": "Without a source document",
+            "select_source_first": "Select a document first",
+            "source_has_returns": "This document has returns. Delete them first, then you can cancel, edit or delete it.",
+            "source_load_failed": "Could not load the documents. Try again.",
+            "return_manually": "Return without a source document",
+            "return_from_document": "Return against an invoice or purchase"
         },
         "roles": {
             "title": "Roles & Permissions Matrix",
@@ -8006,6 +8154,7 @@
             "errors": {
                 "read_only": "This account is read-only: you cannot add or change data. Renew your subscription to reactivate it.",
                 "access_blocked": "Access to this account is blocked (status: :status). Contact the platform team.",
+                "access_blocked_generic": "Access to this account is currently unavailable. Contact the platform team.",
                 "activation_requires_payment": "An account can only be activated after its payment is confirmed.",
                 "invalid_transition": "The account status cannot change from \":from\" to \":to\".",
                 "status_conflict": "The account status has changed to \":status\". Refresh the page and try again.",
@@ -8013,7 +8162,8 @@
                 "not_archived": "This account is not archived.",
                 "suspension_reason_required": "Choose a suspension reason.",
                 "limit_reached": "You have reached your plan limit for :resource (:max). Upgrade your plan or buy an add-on.",
-                "feature_unavailable": "This feature is not included in your current plan."
+                "feature_unavailable": "This feature is not included in your current plan.",
+                "plan_has_tenants": "This plan still has tenants. Move them to another plan before deleting it."
             },
             "archive_states": {
                 "queued": "Archive queued",
@@ -8034,6 +8184,12 @@
                 "archive_failed": "The archive did not complete and the account status was not changed: :reason.",
                 "purge_refused": "Permanent deletion refused: :reason.",
                 "confirm_code_mismatch": "Type the shop code exactly to confirm."
+            },
+            "alerts": {
+                "read_only_title": "Account is read-only",
+                "blocked_title": "Account access is blocked",
+                "feature_unavailable_title": "Feature not in your plan",
+                "limit_reached_title": "Plan limit reached"
             }
         },
         "super": {

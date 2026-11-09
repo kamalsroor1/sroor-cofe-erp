@@ -53,7 +53,7 @@ final class ReturnsAgainstSourceApiTest extends TenantTestCase
 
         $this->inTenant($this->tenant, function (): void {
             $this->customerId = (int) Customer::create(['name' => 'عميل', 'phone' => '01000007003', 'price_tier' => 'retail', 'is_active' => true])->id;
-            $this->supplierId = (int) Supplier::create(['name' => 'مورد', 'phone' => '01234567890', 'current_balance' => '0.000', 'is_active' => true])->id;
+            $this->supplierId = (int) Supplier::create(['name' => 'مورد', 'phone' => '01000007005', 'current_balance' => '0.000', 'is_active' => true])->id;
             $this->itemId = $this->makeItem('SRC-1', $this->storeId);
             $this->otherItemId = $this->makeItem('SRC-2', $this->storeId);
         });
@@ -294,7 +294,7 @@ final class ReturnsAgainstSourceApiTest extends TenantTestCase
         $this->getJson('/api/v1/return-sources/purchase_return', $this->headers)->assertOk()->assertJsonCount(0, 'data');
 
         $purchaseA = $this->purchase('5.000', '100.000', discount: '0.000');
-        $other = $this->inTenant($this->tenant, fn (): int => (int) Supplier::create(['name' => 'مورد آخر', 'phone' => '01234567891', 'current_balance' => '0.000', 'is_active' => true])->id);
+        $other = $this->inTenant($this->tenant, fn (): int => (int) Supplier::create(['name' => 'مورد آخر', 'phone' => '01000007006', 'current_balance' => '0.000', 'is_active' => true])->id);
         $this->purchaseReturn($purchaseA, '1.000', $other)->assertStatus(422)->assertJsonValidationErrors(['supplier_id']);
     }
 
