@@ -215,6 +215,7 @@ return [
     'thank_you_note' => 'Thank you for your business! ☕',
     // Checkout validation & idempotency
     'invoice_created' => 'Invoice :number saved and approved successfully',
+    'walk_in_must_pay_full' => 'Credit or partial payment is not allowed for the walk-in cash customer. Choose a named customer or pay in full.',
     'partial_paid_out_of_range' => 'The paid amount on a partial invoice must be greater than zero and less than the invoice net (:net)',
     'split_payment_total_mismatch' => 'The payment methods total (:paid) does not equal the invoice net (:net)',
     'split_payment_non_cash_exceeds_due' => 'Non-cash payments (:non_cash) exceed the invoice net (:net); change can only be given from cash',

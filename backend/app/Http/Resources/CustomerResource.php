@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Actions\Customers\ResolveWalkInCustomerAction;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -24,6 +25,7 @@ class CustomerResource extends JsonResource
             'current_balance' => (float) $this->current_balance,
             'credit_limit' => (float) ($this->credit_limit ?? 0),
             'is_active' => (bool) $this->is_active,
+            'is_walk_in' => app(ResolveWalkInCustomerAction::class)->isWalkIn($this->resource),
             'notes' => $this->notes,
             'invoices_count' => $this->whenCounted('invoices', $this->invoices_count),
             'payments_count' => $this->whenCounted('payments', $this->payments_count),

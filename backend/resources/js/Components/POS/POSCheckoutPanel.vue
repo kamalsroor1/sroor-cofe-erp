@@ -101,8 +101,10 @@
       <button
         type="button"
         data-testid="pos-payment-type-credit"
+        :disabled="walkIn"
+        :title="walkIn ? $t('pos.walk_in_pay_full_hint') : undefined"
         @click="$emit('update:paymentType', 'credit')"
-        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold"
+        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
         :class="
           paymentType === 'credit'
             ? 'bg-rose-500/10 border-rose-500 text-rose-600 dark:text-rose-400 font-black shadow-2xs'
@@ -114,8 +116,10 @@
       <button
         type="button"
         data-testid="pos-payment-type-partial"
+        :disabled="walkIn"
+        :title="walkIn ? $t('pos.walk_in_pay_full_hint') : undefined"
         @click="$emit('update:paymentType', 'partial')"
-        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold"
+        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
         :class="
           paymentType === 'partial'
             ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 font-black shadow-2xs'
@@ -125,6 +129,10 @@
         {{ $t('pos.partial_pay') }}
       </button>
     </div>
+
+    <p v-if="walkIn" class="text-[11px] text-slate-500 dark:text-slate-400" data-testid="pos-walk-in-hint">
+      {{ $t('pos.walk_in_pay_full_hint') }}
+    </p>
 
     <!-- 3. Payment Method & Fast Cash Calculator -->
     <div
@@ -251,6 +259,7 @@ defineProps({
   cashReceived: { type: [Number, String], default: 0 },
   changeDue: { type: Number, default: 0 },
   cartEmpty: { type: Boolean, default: true },
+  walkIn: { type: Boolean, default: false },
   isSubmitting: { type: Boolean, default: false },
   offline: { type: Boolean, default: false },
   expensesCount: { type: Number, default: 0 },

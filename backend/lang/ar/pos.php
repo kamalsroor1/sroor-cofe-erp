@@ -165,6 +165,7 @@ return [
     'giant_net_total' => 'الصافي النهائي:',
     'invoice_and_payment_type' => 'نوع الفاتورة والسداد:',
     'instant_cash' => 'كاش فوري',
+    'walk_in_pay_full_hint' => 'العميل النقدي العام لازم يدفع بالكامل. اختر عميلاً محدداً للبيع الآجل أو الجزئي.',
     'credit_on_account' => 'آجل ذمم',
     'partial_pay' => 'دفع جزئي',
     'quick_cash_exact' => 'المبلغ بالظبط',

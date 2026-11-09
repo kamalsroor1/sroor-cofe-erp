@@ -215,6 +215,7 @@ return [
     'thank_you_note' => 'شكراً لتعاملكم معنا ونسعد بزيارتكم دائماً ☕',
     // Checkout validation & idempotency
     'invoice_created' => 'تم حفظ واعتماد الفاتورة رقم :number بنجاح',
+    'walk_in_must_pay_full' => 'لا يمكن البيع بالآجل أو بدفع جزئي على العميل النقدي العام. اختر عميلاً محدداً أو ادفع المبلغ بالكامل.',
     'partial_paid_out_of_range' => 'المبلغ المدفوع في الفاتورة الجزئية لازم يكون أكبر من صفر وأقل من صافي الفاتورة (:net)',
     'split_payment_total_mismatch' => 'مجموع طرق الدفع (:paid) لا يساوي صافي الفاتورة (:net)',
     'split_payment_non_cash_exceeds_due' => 'المدفوع بغير الكاش (:non_cash) أكبر من صافي الفاتورة (:net)، الباقي يرجع كاش بس',

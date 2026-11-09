@@ -165,6 +165,7 @@ return [
     'giant_net_total' => 'Net Total:',
     'invoice_and_payment_type' => 'Invoice & Payment Type:',
     'instant_cash' => 'Instant Cash',
+    'walk_in_pay_full_hint' => 'The general cash customer must pay in full. Select a named customer for credit or partial payment.',
     'credit_on_account' => 'Credit',
     'partial_pay' => 'Partial',
     'quick_cash_exact' => 'Exact Amount',

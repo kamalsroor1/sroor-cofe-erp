@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Actions\Customers\ResolveWalkInCustomerAction;
 use App\Enums\PaymentMethod;
 use App\Models\Customer;
 use App\Models\Expense;
@@ -74,6 +75,21 @@ class InvoiceService
         }
     }
 
+    /**
+     * POS-02: the generic walk-in (cash) customer is anonymous, so a credit or partial sale on it
+     * would be an uncollectable receivable. It must be paid in full.
+     *
+     * @throws ValidationException
+     */
+    private function assertWalkInPaidInFull(Customer $customer, string $paymentType): void
+    {
+        if ($paymentType !== 'cash' && app(ResolveWalkInCustomerAction::class)->isWalkIn($customer)) {
+            throw ValidationException::withMessages([
+                'payment_type' => __('invoices.walk_in_must_pay_full'),
+            ]);
+        }
+    }
+
     private function persistConfirmedInvoice(array $data, ?string $clientUuid): Invoice
     {
         return DB::transaction(function () use ($data, $clientUuid) {
@@ -92,6 +108,9 @@ class InvoiceService
                     return $existing;
                 }
             }
+
+            // POS-02: after the idempotency replay, so an offline retry of a saved invoice replays.
+            $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
 
             $invoiceNumber = $data['invoice_number'] ?? $this->generateUniqueNumber($storeId);
 
@@ -562,6 +581,10 @@ class InvoiceService
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
             $oldCustomerId = $lockedInvoice->customer_id;
             $newCustomerId = $data['customer_id'];
+            $this->assertWalkInPaidInFull(
+                Customer::query()->findOrFail($newCustomerId),
+                (string) ($data['payment_type'] ?? 'cash'),
+            );
 
             // 1. If invoice was confirmed, reverse previous stock back to warehouse
             if ($lockedInvoice->status === 'confirmed') {

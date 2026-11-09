@@ -22,13 +22,36 @@ final class ResolveWalkInCustomerAction
     /** Names legacy tenants created the walk-in customer with (data lookup, not UI text). */
     private const LEGACY_NAMES = ['نقدي عام', 'عميل نقدي'];
 
-    public function execute(): Customer
+    /** POS-02: is this customer a generic walk-in (cash) customer? Classifies the row itself; no query. */
+    public function isWalkIn(Customer $customer): bool
     {
-        $existing = Customer::query()
-            ->whereIn('name', [...self::LEGACY_NAMES, (string) __('pos.walk_in_customer')])
+        return (string) $customer->phone === self::PLACEHOLDER_PHONE
+            || in_array((string) $customer->name, self::walkInNames(), true);
+    }
+
+    /** @return list<string> */
+    private static function walkInNames(): array
+    {
+        return [
+            ...self::LEGACY_NAMES,
+            (string) __('pos.walk_in_customer', [], 'ar'),
+            (string) __('pos.walk_in_customer', [], 'en'),
+            (string) __('pos.walk_in_customer'),
+        ];
+    }
+
+    private function findExisting(): ?Customer
+    {
+        return Customer::query()
+            ->whereIn('name', self::walkInNames())
             ->orWhere('phone', self::PLACEHOLDER_PHONE)
             ->orderBy('id')
             ->first();
+    }
+
+    public function execute(): Customer
+    {
+        $existing = $this->findExisting();
 
         if ($existing instanceof Customer) {
             return $existing;

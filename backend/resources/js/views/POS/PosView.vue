@@ -80,6 +80,7 @@
               v-model:cash-received="cashReceived"
               :change-due="changeDue"
               :cart-empty="cart.length === 0"
+              :walk-in="isWalkInCustomer"
               :is-submitting="isSubmitting"
               :offline="!isOnline"
               :expenses-count="additionalExpenses.length"
@@ -480,6 +481,21 @@ const selectedCustomer = computed(() => {
       phone: '',
     }
   );
+});
+
+// POS-02: the generic cash customer (no customer, or the placeholder-phone row) must pay in full.
+const isWalkInCustomer = computed(
+  () =>
+    !selectedCustomerId.value ||
+    (selectedCustomer.value.is_walk_in ?? selectedCustomer.value.phone === '0000000000') === true
+);
+
+watch(isWalkInCustomer, (walkIn) => {
+  if (!walkIn) return;
+  if (paymentType.value !== 'cash') paymentType.value = 'cash';
+  multiPayments.value = [];
+  paidAmount.value = normalize(checkoutNet.value);
+  cashReceived.value = normalize(checkoutNet.value);
 });
 
 const filteredCustomerList = computed(() => {
