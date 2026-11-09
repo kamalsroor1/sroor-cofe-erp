@@ -255,6 +255,8 @@ return [
     // POSB-2: per-store POS settings & scale labels
     'pos_settings_saved' => 'Branch POS settings saved',
     'scale_barcode_invalid_check_digit' => 'Invalid scale barcode (check digit mismatch). Reprint the label or scan it again',
+    'scale_barcode_unpriced_item' => 'Cannot derive a quantity from a price label: the item has no selling price',
+    'barcode_not_found' => 'Code :code not found',
     'store_not_found' => 'Branch not found',
 
     // Touch cart card (POSCartItem)

@@ -9,11 +9,15 @@ use App\Actions\Customers\QuickCreateCustomerAction;
 use App\Actions\Invoices\GetInvoiceDetailsAction;
 use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\Actions\POS\GetPOSBootstrapDataAction;
+use App\Actions\POS\LookupPosBarcodeAction;
 use App\DTOs\POSInvoiceDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pos\LookupPosBarcodeRequest;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Http\Resources\InvoiceResource;
+use App\Http\Resources\PosLookupItemResource;
+use App\Services\Pos\InvalidScaleBarcodeException;
 use App\Support\ActiveStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +29,8 @@ final class PosController extends Controller
         private readonly ProcessPOSInvoiceAction $processPOSInvoiceAction,
         private readonly QuickCreateCustomerAction $quickCreateCustomerAction,
         private readonly GetCustomerLastSoldPriceAction $getCustomerLastSoldPriceAction,
-        private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction
+        private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction,
+        private readonly LookupPosBarcodeAction $lookupPosBarcodeAction,
     ) {}
 
     /**
@@ -44,6 +49,37 @@ final class PosController extends Controller
             'success' => true,
             'data' => $data,
         ], 200);
+    }
+
+    /**
+     * POS-01: exact barcode/code lookup (plus scale labels) in the active store.
+     */
+    public function lookup(LookupPosBarcodeRequest $request): JsonResponse
+    {
+        $code = $request->code();
+
+        try {
+            $result = $this->lookupPosBarcodeAction->execute($code, $request->activeStore());
+        } catch (InvalidScaleBarcodeException $e) {
+            return response()->json(['success' => false, 'message' => $e->localizedMessage()], 422);
+        }
+
+        if ($result === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('pos.barcode_not_found', ['code' => $code]),
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'item' => (new PosLookupItemResource($result['item']))->resolve($request),
+                'quantity' => $result['quantity'],
+                'scanned_price' => $result['scanned_price'],
+                'source' => $result['source'],
+            ],
+        ]);
     }
 
     /**

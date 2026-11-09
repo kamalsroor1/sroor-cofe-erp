@@ -255,6 +255,8 @@ return [
     // POSB-2: per-store POS settings & scale labels
     'pos_settings_saved' => 'تم حفظ إعدادات نقطة البيع للفرع',
     'scale_barcode_invalid_check_digit' => 'باركود الميزان غير صحيح (رقم التحقق لا يطابق). أعد طباعة الملصق أو امسحه مرة أخرى',
+    'scale_barcode_unpriced_item' => 'لا يمكن حساب الكمية من ملصق السعر: الصنف بلا سعر بيع',
+    'barcode_not_found' => 'الكود :code غير موجود',
     'store_not_found' => 'الفرع غير موجود',
 
     // Touch cart card (POSCartItem)

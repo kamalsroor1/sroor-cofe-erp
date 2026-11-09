@@ -15,6 +15,8 @@ final class InvalidScaleBarcodeException extends RuntimeException
 {
     public const INVALID_CHECK_DIGIT = 'pos.scale_barcode_invalid_check_digit';
 
+    public const UNPRICED_ITEM = 'pos.scale_barcode_unpriced_item';
+
     public function __construct(
         public readonly string $translationKey,
         public readonly string $barcode,
@@ -25,6 +27,11 @@ final class InvalidScaleBarcodeException extends RuntimeException
     public static function invalidCheckDigit(string $barcode): self
     {
         return new self(self::INVALID_CHECK_DIGIT, $barcode);
+    }
+
+    public static function unpricedItem(string $barcode): self
+    {
+        return new self(self::UNPRICED_ITEM, $barcode);
     }
 
     public function localizedMessage(): string

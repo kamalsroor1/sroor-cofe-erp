@@ -197,6 +197,7 @@ import { useDesktopHardware } from '../../Composables/useDesktopHardware';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useFormatters } from '../../Composables/useFormatters';
 import { usePosOrders } from '../../Composables/usePosOrders';
+import { useBarcodeScanner } from '../../Composables/POS/useBarcodeScanner';
 import { usePosCheckout } from '../../Composables/usePosCheckout';
 import { useConnectivity } from '../../Composables/useConnectivity';
 import { normalize, dSum, isPositive } from '../../helpers/decimal';
@@ -401,6 +402,7 @@ const performRemoteSearch = (query) => {
 };
 
 watch(searchQuery, (newVal) => {
+  noteQueryChange(newVal);
   highlightedIndex.value = 0;
   performRemoteSearch(newVal);
 });
@@ -614,6 +616,7 @@ const addItemFromDropdown = (item) => {
 };
 
 const navigateDropdown = (direction) => {
+  noteNavigation();
   if (searchDropdownResults.value.length === 0) return;
   if (direction === 'down') {
     highlightedIndex.value = (highlightedIndex.value + 1) % searchDropdownResults.value.length;
@@ -623,12 +626,26 @@ const navigateDropdown = (direction) => {
   }
 };
 
-const selectHighlightedOrFirstItem = () => {
-  if (searchDropdownResults.value.length > 0) {
-    const item = searchDropdownResults.value[highlightedIndex.value] || searchDropdownResults.value[0];
-    addItemFromDropdown(item);
-  }
+const resetSearchBox = () => {
+  searchQuery.value = '';
+  isSearchFocused.value = false;
+  highlightedIndex.value = 0;
+  headerRef.value?.focusSearch();
 };
+
+// POS-01: Enter resolves the exact scanned code through /pos/lookup (serialized, never substring).
+const {
+  submit: selectHighlightedOrFirstItem,
+  noteQueryChange,
+  noteNavigation,
+} = useBarcodeScanner({
+  query: searchQuery,
+  results: searchDropdownResults,
+  highlightedIndex,
+  addItem: addToCart,
+  reset: resetSearchBox,
+  onMiss: playErrorTone,
+});
 
 const increaseCartItemQty = (idx) => increaseLineQty(cart.value, idx);
 const decreaseCartItemQty = (idx) => decreaseLineQty(cart.value, idx);
