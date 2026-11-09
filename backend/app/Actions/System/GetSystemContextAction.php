@@ -116,6 +116,8 @@ final class GetSystemContextAction
         $headerLocale = $request->header('X-Locale');
         $locale = GetTranslationsAction::normalizeLocale(is_string($headerLocale) ? $headerLocale : null);
         $translations = $this->translationsAction->execute($locale);
+        $translationsHash = $this->translationsAction->hash($locale, $translations);
+        $clientHash = $request->query('translations_hash');
 
         // BRND-3 / BRND-5: one source for the platform and shop brand.
         $branding = $this->getBrandingAction->execute();
@@ -178,8 +180,8 @@ final class GetSystemContextAction
             'entitlements' => $this->entitlements($tenant),
             'notifications' => $alerts,
             'locale' => $locale,
-            'translations' => $translations,
-        ];
+            'translations_hash' => $translationsHash,
+        ] + ($clientHash === $translationsHash ? [] : ['translations' => $translations]);
     }
 
     /**

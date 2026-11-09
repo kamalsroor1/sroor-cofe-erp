@@ -3,7 +3,7 @@ import { createPinia } from 'pinia';
 import { App as CapacitorApp } from '@capacitor/app';
 import router from './router';
 import App from './App.vue';
-import { trans } from './helpers/trans';
+import { trans, ensureTranslations } from './helpers/trans';
 import { vCan } from './directives/can';
 
 const app = createApp(App);
@@ -39,7 +39,7 @@ if (typeof window !== 'undefined') {
 
 const mountEl = document.getElementById('app') || document.getElementById('spa-app');
 if (mountEl) {
-    router.isReady().then(() => {
+    Promise.all([router.isReady(), ensureTranslations()]).then(() => {
         app.mount(mountEl);
     });
 }

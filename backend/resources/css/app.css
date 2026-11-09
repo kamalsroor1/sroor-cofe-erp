@@ -1,5 +1,41 @@
 @import 'tailwindcss';
 
+/* Self-hosted Cairo variable font (SIL OFL 1.1, see resources/fonts/Cairo-OFL.txt); replaces the Google Fonts CDN. */
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 1000;
+    src: url('../fonts/cairo-arabic-wght-normal.woff2') format('woff2');
+    unicode-range:
+        U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F,
+        U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF,
+        U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B,
+        U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D,
+        U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E,
+        U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 1000;
+    src: url('../fonts/cairo-latin-ext-wght-normal.woff2') format('woff2');
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+        U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 1000;
+    src: url('../fonts/cairo-latin-wght-normal.woff2') format('woff2');
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+        U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant coarse (@media (pointer: coarse));
 
@@ -22,7 +58,8 @@ body {
     font-family: 'Cairo', 'Tajawal', sans-serif;
 }
 
-html.dark, html.dark body {
+html.dark,
+html.dark body {
     background-color: #020617;
     color: #f8fafc;
 }
@@ -43,7 +80,8 @@ html.dark, html.dark body {
     }
 }
 
-html, body {
+html,
+body {
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent !important;
@@ -51,29 +89,38 @@ html, body {
 }
 
 /* 🔒 Prevent Web-like accidental text selection on UI chrome and controls */
-body, button, nav, header, [role="button"], .select-none-mobile {
+body,
+button,
+nav,
+header,
+[role='button'],
+.select-none-mobile {
     -webkit-user-select: none;
     user-select: none;
 }
 
 /* Allow text selection specifically inside editable text controls */
-input, textarea, [contenteditable="true"] {
+input,
+textarea,
+[contenteditable='true'] {
     -webkit-user-select: text !important;
     user-select: text !important;
 }
 
 /* 🚀 Option 3: Seamless RTL Horizontal Swipe Page Transition Animation */
 .page-enter-active {
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     will-change: opacity, transform, filter;
 }
 
 .page-leave-active {
-    transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1),
-                transform 0.16s cubic-bezier(0.4, 0, 1, 1),
-                filter 0.16s cubic-bezier(0.4, 0, 1, 1) !important;
+    transition:
+        opacity 0.16s cubic-bezier(0.4, 0, 1, 1),
+        transform 0.16s cubic-bezier(0.4, 0, 1, 1),
+        filter 0.16s cubic-bezier(0.4, 0, 1, 1) !important;
     will-change: opacity, transform, filter;
 }
 
@@ -107,7 +154,9 @@ input, textarea, [contenteditable="true"] {
 /* 1. Sidebar Drawer Slide (RTL Right to Left) */
 .sidebar-drawer-enter-active,
 .sidebar-drawer-leave-active {
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+    transition:
+        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.25s ease !important;
     will-change: transform, opacity;
 }
 .sidebar-drawer-enter-from,
@@ -124,7 +173,9 @@ input, textarea, [contenteditable="true"] {
 /* 2. Dropdown Menu Spring Pop */
 .dropdown-pop-enter-active,
 .dropdown-pop-leave-active {
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
     transform-origin: top right !important;
 }
 .dropdown-pop-enter-from,
@@ -153,16 +204,18 @@ input, textarea, [contenteditable="true"] {
 
 /* ⚙️ Dedicated Fluid Settings Hub & Sub-Pages Navigation Transitions */
 .settings-slide-enter-active {
-    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
     will-change: opacity, transform, filter;
 }
 
 .settings-slide-leave-active {
-    transition: opacity 0.15s cubic-bezier(0.4, 0, 1, 1),
-                transform 0.15s cubic-bezier(0.4, 0, 1, 1),
-                filter 0.15s cubic-bezier(0.4, 0, 1, 1) !important;
+    transition:
+        opacity 0.15s cubic-bezier(0.4, 0, 1, 1),
+        transform 0.15s cubic-bezier(0.4, 0, 1, 1),
+        filter 0.15s cubic-bezier(0.4, 0, 1, 1) !important;
     will-change: opacity, transform, filter;
 }
 
@@ -179,14 +232,16 @@ input, textarea, [contenteditable="true"] {
 }
 
 .settings-crossfade-enter-active {
-    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .settings-crossfade-leave-active {
-    transition: opacity 0.14s ease,
-                transform 0.14s ease !important;
+    transition:
+        opacity 0.14s ease,
+        transform 0.14s ease !important;
 }
 
 .settings-crossfade-enter-from {
@@ -214,15 +269,15 @@ input, textarea, [contenteditable="true"] {
 /* 5. Modal Center Pop */
 .modal-zoom-enter-active,
 .modal-zoom-leave-active {
-    transition: opacity 0.22s ease, transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition:
+        opacity 0.22s ease,
+        transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 .modal-zoom-enter-from,
 .modal-zoom-leave-to {
     opacity: 0 !important;
     transform: scale(0.92) translateY(8px) !important;
 }
-
-
 
 /* 📐 Modern Mobile Safe Areas */
 .pb-safe {
@@ -258,7 +313,9 @@ input, textarea, [contenteditable="true"] {
 
 /* ⚡ Tactile Native Tap Micro-Interactions */
 .btn-native-tap {
-    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), filter 0.1s ease !important;
+    transition:
+        transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.1s ease !important;
 }
 .btn-native-tap:active {
     transform: scale(0.95) !important;
@@ -266,7 +323,9 @@ input, textarea, [contenteditable="true"] {
 }
 
 .card-native-tap {
-    transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.12s ease !important;
+    transition:
+        transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.12s ease !important;
 }
 .card-native-tap:active {
     transform: scale(0.98) !important;
@@ -299,7 +358,8 @@ input, textarea, [contenteditable="true"] {
 }
 
 /* 🎨 Dynamic Dashboard & System Color Customization Palettes */
-:root, [data-theme-color="amber"] {
+:root,
+[data-theme-color='amber'] {
     --color-primary: #f59e0b;
     --color-primary-hover: #d97706;
     --color-primary-rgb: 245, 158, 11;
@@ -307,7 +367,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(245, 158, 11, 0.35);
 }
 
-[data-theme-color="emerald"] {
+[data-theme-color='emerald'] {
     --color-primary: #10b981;
     --color-primary-hover: #059669;
     --color-primary-rgb: 16, 185, 129;
@@ -315,7 +375,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(16, 185, 129, 0.35);
 }
 
-[data-theme-color="blue"] {
+[data-theme-color='blue'] {
     --color-primary: #3b82f6;
     --color-primary-hover: #2563eb;
     --color-primary-rgb: 59, 130, 246;
@@ -323,7 +383,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(59, 130, 246, 0.35);
 }
 
-[data-theme-color="purple"] {
+[data-theme-color='purple'] {
     --color-primary: #a855f7;
     --color-primary-hover: #9333ea;
     --color-primary-rgb: 168, 85, 247;
@@ -331,7 +391,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(168, 85, 247, 0.35);
 }
 
-[data-theme-color="rose"] {
+[data-theme-color='rose'] {
     --color-primary: #f43f5e;
     --color-primary-hover: #e11d48;
     --color-primary-rgb: 244, 63, 94;
@@ -339,7 +399,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(244, 63, 94, 0.35);
 }
 
-[data-theme-color="orange"] {
+[data-theme-color='orange'] {
     --color-primary: #f97316;
     --color-primary-hover: #ea580c;
     --color-primary-rgb: 249, 115, 22;
@@ -347,7 +407,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(249, 115, 22, 0.35);
 }
 
-[data-theme-color="teal"] {
+[data-theme-color='teal'] {
     --color-primary: #14b8a6;
     --color-primary-hover: #0d9488;
     --color-primary-rgb: 20, 184, 166;
@@ -355,7 +415,7 @@ input, textarea, [contenteditable="true"] {
     --color-primary-border: rgba(20, 184, 166, 0.35);
 }
 
-[data-theme-color="indigo"] {
+[data-theme-color='indigo'] {
     --color-primary: #6366f1;
     --color-primary-hover: #4f46e5;
     --color-primary-rgb: 99, 102, 241;
@@ -368,7 +428,9 @@ input, textarea, [contenteditable="true"] {
     background-color: var(--color-primary) !important;
 }
 
-.hover\:bg-theme-hover:hover, .bg-theme-hover:hover, .hover\:bg-theme-primary:hover {
+.hover\:bg-theme-hover:hover,
+.bg-theme-hover:hover,
+.hover\:bg-theme-primary:hover {
     background-color: var(--color-primary-hover) !important;
 }
 
@@ -412,7 +474,8 @@ input, textarea, [contenteditable="true"] {
     border-color: var(--color-primary-border) !important;
 }
 
-.ring-theme-primary, .focus\:ring-theme-primary:focus {
+.ring-theme-primary,
+.focus\:ring-theme-primary:focus {
     --tw-ring-color: var(--color-primary) !important;
 }
 
@@ -424,14 +487,19 @@ input, textarea, [contenteditable="true"] {
     box-shadow: 0 10px 20px -3px rgba(var(--color-primary-rgb), 0.35) !important;
 }
 
-::selection, .selection\:bg-theme-primary::selection {
+::selection,
+.selection\:bg-theme-primary::selection {
     background-color: var(--color-primary) !important;
     color: #ffffff !important;
 }
 
 /* 🖨️ Comprehensive Global Print Engine Rules (Dual Mode: Thermal & A4) */
 @media print {
-    :root, html, body, #app, main {
+    :root,
+    html,
+    body,
+    #app,
+    main {
         background: #ffffff !important;
         background-color: #ffffff !important;
         color: #000000 !important;
@@ -447,8 +515,8 @@ input, textarea, [contenteditable="true"] {
     header,
     footer,
     .no-print,
-    [role="navigation"],
-    [role="complementary"],
+    [role='navigation'],
+    [role='complementary'],
     .spa-sidebar,
     .spa-navbar,
     .spa-bottom-nav,
@@ -523,7 +591,7 @@ input, textarea, [contenteditable="true"] {
 
 .electron-app input,
 .electron-app textarea,
-.electron-app [contenteditable="true"] {
+.electron-app [contenteditable='true'] {
     user-select: text !important;
     -webkit-user-select: text !important;
 }

@@ -60,10 +60,8 @@
         })();
     </script>
 
-    <!-- Google Arabic Fonts (Cairo & Tajawal) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    {{-- Cairo is self-hosted (resources/css/app.css @font-face); preload the Arabic subset used by first paint. --}}
+    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/cairo-arabic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
@@ -79,8 +77,9 @@
             $locale = app()->getLocale() ?: 'ar';
             $initialTranslations = $translationsAction->execute($locale);
         @endphp
-        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) !!};
         window.spaLocale = '{{ $locale }}';
+        window.spaTranslationsHash = '{{ $translationsAction->hash($locale, $initialTranslations) }}';
     </script>
 
     <!-- Vite Scripts (Vue 3 Pure SPA) -->

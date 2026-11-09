@@ -14,8 +14,8 @@ Allowed literals: log messages for developers, test fixtures, seed/demo data, co
 
 ## Source of truth
 - `backend/lang/ar/<file>.php` and `backend/lang/en/<file>.php` — nested PHP arrays. **Both languages, same keys, same commit.**
-- The frontend bundle is **generated**: `php artisan lang:export` writes `resources/js/helpers/defaultTranslations.json` and `.js`. It runs automatically as `prebuild` of `npm run build`.
-- **Never hand-edit** `defaultTranslations.js` / `defaultTranslations.json`. If they're out of date, run the export.
+- The frontend bundle is **generated**: `php artisan lang:export` writes `resources/js/helpers/defaultTranslations.ar.json` and `.en.json` (one file per locale). `app.blade.php` inlines the active locale as `window.spaTranslations`; the JSON files are only a lazily loaded per-locale fallback, never bundled. The export runs automatically as `prebuild` of `npm run build`.
+- **Never hand-edit** `defaultTranslations.*.json`. If they're out of date, run the export.
 
 ## How to call
 ```php

@@ -114,7 +114,11 @@ onMounted(async () => {
 
     // 2. Fetch translations if guest or bootstrap context if authenticated
     if (authStore.isAuthenticated) {
-      await appConfigStore.fetchBootstrapContext();
+      // The router guard already loads the context before first render; only fetch it here if it did not.
+      if (!appConfigStore.isLoaded) await appConfigStore.fetchBootstrapContext();
+    } else if (window.spaTranslations && Object.keys(window.spaTranslations).length > 0) {
+      // The server already inlined the dictionary; no extra request for guests.
+      appConfigStore.translations = window.spaTranslations;
     } else {
       await appConfigStore.fetchTranslations();
     }

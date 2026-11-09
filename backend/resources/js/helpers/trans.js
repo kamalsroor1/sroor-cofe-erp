@@ -1,51 +1,43 @@
-import { defaultArabicTranslations, defaultEnglishTranslations } from './defaultTranslations';
-
 /**
- * Universal translation helper for Vue 3 Pure SPA (Pinia Store & window.spaTranslations)
+ * Universal translation helper for Vue 3 Pure SPA.
+ * The server inlines the active locale's dictionary as window.spaTranslations (app.blade.php) and
+ * /system/context refreshes it. Nothing is bundled: ensureTranslations() lazily imports only the
+ * active locale if the page was served without an inlined dictionary.
  * Usage in template: $t('pos.title') or trans('auth.login_button')
  * Usage in script setup: const { t } = useTrans(); t('common.save');
  */
+const localeLoaders = {
+    ar: () => import('./defaultTranslations.ar.json'),
+    en: () => import('./defaultTranslations.en.json'),
+};
+
+function activeLocale() {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('app_locale') : null;
+    const candidate = stored || (typeof window !== 'undefined' && window.spaLocale) || 'ar';
+    return candidate in localeLoaders ? candidate : 'ar';
+}
+
+export async function ensureTranslations() {
+    if (typeof window === 'undefined') return;
+    if (window.spaTranslations && Object.keys(window.spaTranslations).length > 0) return;
+    try {
+        const module = await localeLoaders[activeLocale()]();
+        window.spaTranslations = module.default;
+    } catch {
+        window.spaTranslations = {};
+    }
+}
+
 export function trans(key, replace = {}) {
     if (!key || typeof key !== 'string') return '';
 
-    let translations = {};
+    let value = typeof window !== 'undefined' && window.spaTranslations ? window.spaTranslations : {};
 
-    // 1. Get global SPA translations from window / Pinia store
-    if (typeof window !== 'undefined' && window.spaTranslations && Object.keys(window.spaTranslations).length > 0) {
-        translations = window.spaTranslations;
-    }
-
-    const parts = key.split('.');
-    let value = translations;
-
-    for (const part of parts) {
+    for (const part of key.split('.')) {
         if (value && typeof value === 'object' && value[part] !== undefined) {
             value = value[part];
         } else {
-            value = undefined;
-            break;
-        }
-    }
-
-    // 2. Fallback to bundled static auto-generated default translations (Arabic or English)
-    if (value === undefined) {
-        const isEnglish =
-            (typeof localStorage !== 'undefined' &&
-                (localStorage.getItem('app_locale') === 'en' || localStorage.getItem('locale') === 'en')) ||
-            (typeof document !== 'undefined' && document.documentElement.lang === 'en');
-
-        let fallbackVal = isEnglish ? defaultEnglishTranslations : defaultArabicTranslations;
-
-        for (const part of parts) {
-            if (fallbackVal && typeof fallbackVal === 'object' && fallbackVal[part] !== undefined) {
-                fallbackVal = fallbackVal[part];
-            } else {
-                fallbackVal = undefined;
-                break;
-            }
-        }
-        if (fallbackVal !== undefined) {
-            value = fallbackVal;
+            return key;
         }
     }
 

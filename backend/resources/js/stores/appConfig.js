@@ -60,7 +60,11 @@ export const useAppConfigStore = defineStore('appConfig', {
             // Tenant bootstrap (/system/context) never runs on the platform console.
             if (isCentralAppContext()) return null;
             try {
-                const response = await api.get('/system/context');
+                // Echo the dictionary version the page already holds; the server then omits `translations`.
+                const params = window.spaTranslationsHash
+                    ? { translations_hash: window.spaTranslationsHash }
+                    : undefined;
+                const response = await api.get('/system/context', { params });
                 const data = response.data?.data;
 
                 if (data) {
@@ -71,7 +75,13 @@ export const useAppConfigStore = defineStore('appConfig', {
                     this.activeShift = data.active_shift ?? null;
                     if (data.notifications) this.notifications = data.notifications;
                     if (data.locale) this.locale = data.locale;
-                    if (data.translations) this.translations = data.translations;
+                    if (data.translations) {
+                        this.translations = data.translations;
+                        window.spaTranslations = data.translations;
+                    } else if (window.spaTranslations) {
+                        this.translations = window.spaTranslations;
+                    }
+                    if (data.translations_hash) window.spaTranslationsHash = data.translations_hash;
                     if (data.stores) {
                         const { useAuthStore } = await import('./auth');
                         const authStore = useAuthStore();
