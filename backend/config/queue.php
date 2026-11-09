@@ -29,6 +29,16 @@ return [
     |
     */
 
+    /*
+    | OPS-8: let the scheduler (routes/console.php) run `queue:work --stop-when-empty` every minute.
+    | For hosts that cannot keep a resident worker alive (Hostinger shared staging, database queue).
+    | Default: on for any non-redis default connection, off for redis where Horizon is the worker.
+    | Override with SCHEDULER_QUEUE_WORKER=true|false.
+    */
+    'scheduler_worker' => in_array(env('SCHEDULER_QUEUE_WORKER'), [null, ''], true)
+        ? ! in_array(env('QUEUE_CONNECTION', 'database'), ['redis', 'sync', 'null'], true)
+        : filter_var(env('SCHEDULER_QUEUE_WORKER'), FILTER_VALIDATE_BOOL),
+
     'connections' => [
 
         'sync' => [
