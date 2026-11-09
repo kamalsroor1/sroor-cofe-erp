@@ -100,6 +100,11 @@ bash /var/www/sroor/current/scripts/ops/deploy.sh --app-root /var/www/sroor --ro
 
 ---
 
+## 5b. المسار القديم (متقاعد) — BE-06
+
+`deploy_root_baraa.py` (جذر الـ repo) كان بيعمل `tenants:migrate --tenants=2m --force || true` (مستأجر واحد والفشل مخفي)، ويمسح صف المستأجر `tenant_sroor`، ويشغّل seeders و`tenant:populate-realistic-data`. اتعطّل: بيخرج برسالة إلا لو `SROOR_ALLOW_LEGACY_DEPLOY` اتضبط صراحةً، وخطوات المسح والـ seed والـ populate اتشالت منه وبقى `tenants:migrate --force` لكل المستأجرين من غير `|| true`. المسار الوحيد المعتمد للـ SaaS هو `release.yml` ← `scripts/ops/deploy.sh` (backup قبل الـ migrate، `migrate --force` مركزي، `tenants:migrate --force` لكل المستأجرين وأي فشل يوقف الـ release، من غير seeders). `scripts/ops/tests/deploy-test.sh` §7b بيفشل لو حد رجّع `db:seed` أو `tinker` أو `--tenants=` أو `|| true` على migrate/backup في المسار الجديد.
+`.github/workflows/deploy.yml` (push إلى `main` ← webhook محل Hostinger الشغال) **لم يتعدّل** (محل شغال، قرار الـ CTO): تعطيله إجراء يدوي في إعدادات GitHub.
+
 ## 6. اختبار محلي
 
 ```bash

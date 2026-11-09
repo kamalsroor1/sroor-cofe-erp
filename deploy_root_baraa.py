@@ -1,5 +1,16 @@
 import sys
 import os
+
+# DEPRECATED (BE-06 / OPS-03): this legacy Hostinger deploy is retired. The SaaS ships only
+# through .github/workflows/release.yml -> scripts/ops/deploy.sh (VPS). Refuses to run unless
+# the operator sets SROOR_ALLOW_LEGACY_DEPLOY=I-UNDERSTAND-THE-RISK for a one-off, reviewed use.
+if os.environ.get("SROOR_ALLOW_LEGACY_DEPLOY") != "I-UNDERSTAND-THE-RISK":
+    sys.stderr.write(
+        "deploy_root_baraa.py is deprecated and disabled. "
+        "Use the release.yml / scripts/ops/deploy.sh pipeline (docs/07-operations/deploy-runbook.md).\n"
+    )
+    sys.exit(1)
+
 import subprocess
 import paramiko
 from bump_version import bump_version
@@ -121,13 +132,9 @@ $PHP_BIN $(which composer) install --no-dev --optimize-autoloader --no-interacti
 
 echo "5. Running MySQL Migrations safely on u910151740_baraa_central..."
 $PHP_BIN artisan migrate --force
-$PHP_BIN artisan tinker --execute="\App\Models\Tenant::where('id', 'tenant_sroor')->delete();" || true
-$PHP_BIN artisan tenants:migrate --tenants=2m --force || true
-$PHP_BIN artisan db:seed --class=PermissionsSeeder --force
-$PHP_BIN artisan db:seed --class=PlansAndFeaturesSeeder --force
-echo "6. Populating authentic 1-year operational dataset for 2M Store..."
-$PHP_BIN artisan tenant:populate-realistic-data 2m
-
+# BE-06: every tenant is migrated, any failure stops the deploy (set -e), and the deploy never
+# deletes a tenant, seeds, or populates demo data. Seeding/provisioning is a separate, manual act.
+$PHP_BIN artisan tenants:migrate --force
 echo "7. Clearing and refreshing all Laravel caches..."
 $PHP_BIN artisan optimize:clear
 $PHP_BIN artisan cache:clear

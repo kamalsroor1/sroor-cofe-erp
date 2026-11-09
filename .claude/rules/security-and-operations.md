@@ -4,7 +4,7 @@
 This repo contains many root-level Python/PHP scripts (`deploy_*.py`, `check_*live*.py`, `fix_*.py`, `run_*.py`, `restore_*_db.py`, `seed_*.py`, `sync_*.py`, `update_webhook.php`…) that SSH into the **live server**, touch the **live database**, or push to git.
 
 - **Never run any of them, and never write a new one that connects to production, unless the user explicitly asks for that specific action in the current message.** "Fix the bug" is not permission to deploy the fix.
-- `deploy_root_baraa.py` is the sanctioned deploy path, and it is heavy: bumps the version, builds, `git add .` + commit + push, then SSHes to production. Run it only on an explicit "deploy"/"انشر" request, and first tell the user what is about to be committed (`git status`) — `git add .` will sweep in every untracked scratch file.
+- `deploy_root_baraa.py` is **retired** (BE-06): it exits unless `SROOR_ALLOW_LEGACY_DEPLOY` carries the override value, and it used to migrate one tenant with `|| true`, delete a tenant and run seeders. The SaaS ships through `.github/workflows/release.yml` → `scripts/ops/deploy.sh` (see `docs/07-operations/deploy-runbook.md`). Never run either without an explicit "deploy"/"انشر" request in that message; if the legacy script is ever used, first show `git status` — it does `git add .` and would sweep in every untracked scratch file.
 - Never run against production: `migrate:fresh`, `db:wipe`, `tenants:migrate-fresh`, seeders, restore scripts, or raw `UPDATE`/`DELETE` without a `WHERE` reviewed by the user. Take/confirm a backup first for any live data fix.
 - Pushing to `main` triggers the GitHub Actions deploy. Don't push, force-push, or merge to `main` without being asked.
 

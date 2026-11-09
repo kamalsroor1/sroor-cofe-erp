@@ -530,6 +530,20 @@ DETAIL="$(cat "$FAKE_LOG")"
 check "--prune-legacy failure: no rollback (one php-fpm reload)" test "$(grep -c 'sudo -n /usr/bin/systemctl reload php8.4-fpm' "$FAKE_LOG")" -eq 1
 
 # ------------------------------------------------------------------------------------
+echo "7b. Pipeline hygiene (BE-06): static guards on the replacement pipeline"
+# ------------------------------------------------------------------------------------
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+PIPELINE_FILES=("$REPO_ROOT/scripts/ops/deploy.sh" "$REPO_ROOT/.github/workflows/release.yml")
+DETAIL=""
+check "pipeline never seeds, populates demo data, or runs tinker" bash -c "! grep -nE '^[^#]*(db:seed|populate-realistic-data|artisan[[:space:]]+tinker|[[:space:]]tinker[[:space:]])' ${PIPELINE_FILES[*]}"
+check "pipeline never wipes or resets a database" bash -c "! grep -nE '^[^#]*(migrate:fresh|migrate:reset|migrate:refresh|db:wipe|tenants:migrate-fresh)' ${PIPELINE_FILES[*]}"
+check "pipeline never migrates a single tenant (--tenants=...)" bash -c "! grep -nE '^[^#]*tenants:migrate[^#]*--tenants' ${PIPELINE_FILES[*]}"
+check "no '|| true' on a migrate or backup line" bash -c "! grep -nE '^[^#]*(migrate|backup:tenants)[^#]*\\|\\|[[:space:]]*(true|:)' ${PIPELINE_FILES[*]}"
+check "tenants:migrate --force (all tenants) is present in deploy.sh" grep -q 'tenants:migrate --force' "$REPO_ROOT/scripts/ops/deploy.sh"
+check "pre-migration backup stage comes before migrate-central" bash -c "[[ \$(grep -n 'STAGE=\"pre-migration-backup\"' '$REPO_ROOT/scripts/ops/deploy.sh' | cut -d: -f1) -lt \$(grep -n 'STAGE=\"migrate-central\"' '$REPO_ROOT/scripts/ops/deploy.sh' | cut -d: -f1) ]]"
+check "legacy deploy_root_baraa.py refuses to run without the explicit override" grep -q 'SROOR_ALLOW_LEGACY_DEPLOY' "$REPO_ROOT/deploy_root_baraa.py"
+
+# ------------------------------------------------------------------------------------
 echo "8. Secrets"
 # ------------------------------------------------------------------------------------
 leaked=""
