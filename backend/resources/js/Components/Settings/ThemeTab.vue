@@ -13,6 +13,7 @@ import {
   Heart,
   Coffee,
   Waves,
+  Gem,
 } from 'lucide-vue-next';
 import { useTheme } from '@/Composables/useTheme';
 import { trans } from '@/helpers/trans';
@@ -33,12 +34,21 @@ const { applyColorTheme } = useTheme();
 
 const palettes = computed(() => [
   {
+    id: 'ibraa',
+    name: trans('settings.palette_ibraa_name'),
+    sub: trans('settings.palette_ibraa_sub'),
+    hex: '#0F6E5E',
+    ring: 'ring-theme-primary',
+    bg: 'bg-theme-primary',
+    icon: Gem,
+  },
+  {
     id: 'amber',
     name: trans('settings.palette_amber_name'),
     sub: trans('settings.palette_amber_sub'),
     hex: '#f59e0b',
-    ring: 'ring-theme-primary',
-    bg: 'bg-theme-primary',
+    ring: 'ring-amber-500',
+    bg: 'bg-amber-500',
     icon: Sparkles,
   },
   {
@@ -130,7 +140,7 @@ const activeHexColor = computed(() => {
   if (preset) return preset.hex;
   if (props.form.system_theme_color && props.form.system_theme_color.startsWith('#'))
     return props.form.system_theme_color;
-  return '#f59e0b';
+  return '#0F6E5E';
 });
 
 const customPickerColor = ref(activeHexColor.value);

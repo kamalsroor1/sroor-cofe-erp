@@ -81,8 +81,10 @@ return [
     'quick_swatches' => 'Quick Color Swatches:',
     'custom_color_badge' => 'Custom Color Active',
     'preview_active_branch_sample' => 'Active Branch: Main Commercial Branch',
+    'palette_ibraa_name' => 'Ibraa teal',
+    'palette_ibraa_sub' => 'The default Ibraa identity',
     'palette_amber_name' => 'Amber / Royal Gold',
-    'palette_amber_sub' => 'Default official theme (Emerald & Amber)',
+    'palette_amber_sub' => 'Warm and clear gold',
     'palette_emerald_name' => 'Royal Emerald Green',
     'palette_emerald_sub' => 'High luxury financial clarity',
     'palette_blue_name' => 'Royal Blue (Sapphire)',
@@ -296,6 +298,7 @@ return [
     'custom_hex' => 'Custom HEX code',
 
     // Palettes
+    'palette_ibraa' => 'Ibraa teal',
     'palette_amber' => 'Amber Gold',
     'palette_emerald' => 'Emerald Green',
     'palette_blue' => 'Sky Blue',

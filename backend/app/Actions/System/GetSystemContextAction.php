@@ -14,6 +14,7 @@ use App\Models\Item;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Branding\TenantBranding;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
 use App\Support\TenantClock;
@@ -149,7 +150,7 @@ final class GetSystemContextAction
                 'company_address' => $tenantBrand->address ?? (Setting::get('company_address') ?: ''),
                 'commercial_register' => $tenantBrand->commercialRegister ?? (Setting::get('commercial_register') ?: ''),
                 'tax_registration_no' => $tenantBrand->taxRegistrationNo ?? (Setting::get('tax_registration_no') ?: ''),
-                'system_theme_color' => $tenantBrand->themeColor ?? Setting::get('system_theme_color', 'emerald'),
+                'system_theme_color' => $tenantBrand->themeColor ?? Setting::get('system_theme_color', TenantBranding::DEFAULT_THEME_COLOR),
                 'server_time' => now()->toDateTimeString(),
                 // SETG-1 ext / SETG-2 ext / SETG-10 / SETG-13: tenant settings the SPA formats and validates with.
                 'currency' => $this->tenantSettings->currency(),

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">سرور كوفي ERP</string>
-    <string name="title_activity_main">سرور كوفي ERP</string>
+    <string name="app_name">إبراء</string>
+    <string name="title_activity_main">إبراء</string>
     <string name="package_name">com.sroor.cofe.erp</string>
     <string name="custom_url_scheme">com.sroor.cofe.erp</string>
 </resources>

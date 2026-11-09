@@ -18,8 +18,8 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
 
     // Vue 3 Login Page Localization
-    'title' => 'Sign in to ERP System',
-    'app_name' => 'Cloud ERP & Inventory Management',
+    'title' => 'Sign in to Ibraa',
+    'app_name' => 'Ibraa',
     'subtitle' => 'Sign in with your phone number and password to continue',
     'phone' => 'Phone / Mobile Number',
     'phone_or_email' => 'Email or Phone Number',
@@ -33,7 +33,7 @@ return [
     'click_to_fill' => 'Click to quick-fill',
     'super_admin_1' => 'System Administrator 1 (Super Admin 1)',
     'super_admin_2' => 'General Manager 2 (Super Admin 2)',
-    'login_success' => 'Logged in successfully to ERP System.',
+    'login_success' => 'Logged in successfully to Ibraa.',
     'logout_success' => 'Logged out successfully.',
     'admin_role_full_access' => 'Administrator role automatically possesses all system permissions',
     'role_permissions_updated' => 'Role permissions saved and updated successfully',

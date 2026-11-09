@@ -116,7 +116,7 @@ return [
 
     // Browser tab / document titles per route (router/index.js meta.titleKey)
     'page_titles' => [
-        'default_app_name' => 'منظومة ERP',
+        'default_app_name' => 'إبراء ERP',
         'untitled_screen' => 'شاشة',
         'workspace_connect' => 'الاتصال ببيئة العمل',
         'login' => 'تسجيل الدخول',

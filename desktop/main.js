@@ -1,5 +1,23 @@
 const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, shell } = require('electron');
 const path = require('path');
+
+// The product was renamed to Ibraa, and Electron derives userData from the product name.
+// Keep using the pre-rename folder when it holds this device's data (saved settings, or the
+// web storage that keeps the session and offline queue), so updating does not reset the device.
+// Runs before anything reads userData.
+const LEGACY_USER_DATA_DIRS = ['سرور كوفي ERP & POS', 'sroor-cofe-erp-desktop'];
+const USER_DATA_MARKERS = ['sroor-desktop-config.json', 'Local Storage', 'IndexedDB'];
+if (app.isPackaged) {
+    const fs = require('fs');
+    const holdsDeviceData = (dir) => USER_DATA_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)));
+    if (!holdsDeviceData(app.getPath('userData'))) {
+        const legacyDir = LEGACY_USER_DATA_DIRS.map((name) => path.join(app.getPath('appData'), name)).find(
+            holdsDeviceData
+        );
+        if (legacyDir) app.setPath('userData', legacyDir);
+    }
+}
+
 const http = require('http');
 const https = require('https');
 const settingsStore = require('./src/config/settingsStore');
@@ -135,7 +153,7 @@ function createSplashWindow() {
         resizable: false,
         show: true,
         backgroundColor: '#00000000',
-        icon: path.join(__dirname, 'build', 'icon.png'),
+        icon: path.join(__dirname, 'src', 'assets', 'icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -160,14 +178,14 @@ function createMainWindow() {
         y: savedBounds.y,
         minWidth: 1024,
         minHeight: 680,
-        title: 'ERP & POS System',
+        title: 'Ibraa POS',
         frame: false, // 🚀 Frameless window for custom native titlebar
         titleBarStyle: 'hidden',
         show: false, // Hidden until ready and splash completes
         backgroundColor: '#020617', // Dark slate 950
         autoHideMenuBar: true,
         kiosk: kioskMode,
-        icon: path.join(__dirname, 'build', 'icon.png'),
+        icon: path.join(__dirname, 'src', 'assets', 'icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
@@ -357,10 +375,10 @@ function createMainWindow() {
 function createSystemTray() {
     if (appTray) return;
     try {
-        const iconPath = path.join(__dirname, 'build', 'icon.png');
+        const iconPath = path.join(__dirname, 'src', 'assets', 'icon.png');
         const trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
         appTray = new Tray(trayIcon);
-        appTray.setToolTip('ERP & POS System');
+        appTray.setToolTip('Ibraa POS');
 
         const contextMenu = Menu.buildFromTemplate([
             {

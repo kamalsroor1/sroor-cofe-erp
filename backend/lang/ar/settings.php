@@ -81,8 +81,10 @@ return [
     'quick_swatches' => 'درجات ألوان مميزة وسريعة:',
     'custom_color_badge' => 'لون مخصص نشط',
     'preview_active_branch_sample' => 'الفرع النشط: الفرع التجاري الرئيسي',
+    'palette_ibraa_name' => 'صافي (إبراء)',
+    'palette_ibraa_sub' => 'هوية إبراء الافتراضية',
     'palette_amber_name' => 'الكهرمان / الذهبي الأصيل',
-    'palette_amber_sub' => 'الهوية الرسمية الافتراضية (Emerald & Amber)',
+    'palette_amber_sub' => 'ذهبي دافئ وواضح',
     'palette_emerald_name' => 'الأخضر الزمردي الملكي',
     'palette_emerald_sub' => 'طابع مالي فاخر ونقاء عالي',
     'palette_blue_name' => 'الأزرق الملكي (Sapphire)',
@@ -296,6 +298,7 @@ return [
     'custom_hex' => 'رمز لون مخصص (HEX)',
 
     // Palettes
+    'palette_ibraa' => 'صافي (إبراء)',
     'palette_amber' => 'عنبري ذهبي',
     'palette_emerald' => 'أخضر زمردي',
     'palette_blue' => 'أزرق عصري',

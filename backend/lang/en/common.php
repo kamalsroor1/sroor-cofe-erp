@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_name' => 'Sales, Inventory & Accounting ERP System',
+    'app_name' => 'Ibraa ERP',
     'currency' => 'EGP',
     'currency_full' => 'Egyptian Pound',
     'save' => 'Save',
@@ -78,8 +78,8 @@ return [
     'search_in_list' => 'Search in list...',
     'unexpected_error' => 'An unexpected server communication error occurred',
     'permission_alert' => 'Permission Alert',
-    'app_title' => 'Enterprise ERP & Inventory System',
-    'app_subtitle' => 'Sales, Inventory, and POS Management Platform',
+    'app_title' => 'Ibraa',
+    'app_subtitle' => 'Your accounts, settled. Every piece in its place.',
     'system_booting' => 'Loading and initializing system...',
     'pos_badge' => 'ERP & POS',
     'ok' => 'OK',
@@ -117,9 +117,8 @@ return [
     'remind_me_later' => 'Remind Me Later',
     'yes_delete' => 'Yes, Delete',
     'all_items' => 'All Items',
-    'app_title' => 'Integrated ERP Platform',
     'store_access_denied' => 'You are not allowed to access this store\'s data',
-    'platform_name' => 'Cloud ERP platform',
+    'platform_name' => 'Ibraa ERP',
     'default_company_subtitle' => 'Sales, inventory and branch management',
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
@@ -133,7 +132,7 @@ return [
 
     // Boot splash screen (app.blade.php)
     'splash' => [
-        'subtitle' => 'Invoicing, inventory and fast point of sale',
+        'subtitle' => 'Your accounts, settled. Every piece in its place.',
     ],
 
     // Generic confirmation dialogs (helpers/alert.js)

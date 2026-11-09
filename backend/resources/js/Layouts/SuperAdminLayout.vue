@@ -7,6 +7,7 @@ import centralApi from '../Services/centralApi';
 import { notifyError } from '../helpers/alert';
 import { useIdleLogout } from '../Composables/useIdleLogout';
 import versionData from '../version.json';
+import BrandMark from '../Components/Brand/BrandMark.vue';
 import DynamicIcon from '../Components/Common/DynamicIcon.vue';
 import StepUpPrompt from '../Components/SuperAdmin/StepUpPrompt.vue';
 import {
@@ -128,11 +129,7 @@ const handleLogout = async () => {
         </button>
 
         <router-link to="/super-admin/dashboard" class="flex items-center gap-2.5">
-          <div
-            class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0"
-          >
-            <ShieldCheck class="w-5 h-5" />
-          </div>
+          <BrandMark variant="app-icon" :size="40" class="rounded-2xl shadow-lg" decorative />
           <div>
             <div class="flex items-center gap-2">
               <span class="font-black text-sm tracking-tight text-slate-900 dark:text-white">

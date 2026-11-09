@@ -1,6 +1,12 @@
 import { ref } from 'vue';
 
 export const PRESET_PALETTES = {
+    ibraa: {
+        hex: '#0F6E5E',
+        hover: '#0B5A4D',
+        rgb: '15, 110, 94',
+        text: '#ffffff',
+    },
     amber: {
         hex: '#f59e0b',
         hover: '#d97706',
@@ -68,7 +74,7 @@ export const PRESET_PALETTES = {
 };
 
 export function hexToRgb(hex) {
-    let c = (hex || '#f59e0b').replace(/^#/, '');
+    let c = (hex || '#0F6E5E').replace(/^#/, '');
     if (c.length === 3)
         c = c
             .split('')
@@ -98,7 +104,7 @@ export function getContrastTextColor(hex) {
     return yiq >= 155 ? '#020617' : '#ffffff';
 }
 
-export function useTheme(defaultTheme = 'dark', defaultColor = 'amber') {
+export function useTheme(defaultTheme = 'dark', defaultColor = 'ibraa') {
     const currentTheme = ref(localStorage.getItem('theme_preference') || defaultTheme);
     const currentColor = ref(localStorage.getItem('system_theme_color') || defaultColor);
 

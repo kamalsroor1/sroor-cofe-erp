@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'platform_title' => 'Makhzani SaaS Super Admin',
+    'platform_title' => 'Ibraa',
     'central_platform' => 'Central Platform',
     'platform_subtitle' => 'Manage tenants, subscriptions, and pricing plans',
     'dashboard' => 'Dashboard',

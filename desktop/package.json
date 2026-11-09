@@ -1,7 +1,7 @@
 {
   "name": "sroor-cofe-erp-desktop",
   "version": "1.0.0",
-  "description": "نظام سرور كوفي ERP & POS - تطبيق سطح المكتب لنقاط البيع وإدارة المؤسسات",
+  "description": "إبراء (Ibraa POS) - تطبيق سطح المكتب لنقاط البيع وإدارة المؤسسات",
   "main": "main.js",
   "author": "Baraa Solutions <info@baraa-solutions.com>",
   "license": "MIT",
@@ -33,7 +33,7 @@
   },
   "build": {
     "appId": "com.baraasolutions.sroorerp",
-    "productName": "سرور كوفي ERP & POS",
+    "productName": "Ibraa POS",
     "copyright": "Copyright © 2026 Baraa Solutions",
     "directories": {
       "output": "dist",
@@ -61,7 +61,7 @@
           ]
         }
       ],
-      "icon": "build/icon.ico",
+      "icon": "src/assets/icon.png",
       "artifactName": "Sroor-ERP-POS-Setup-${version}.${ext}"
     },
     "nsis": {
@@ -69,8 +69,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "سرور كوفي ERP",
-      "uninstallDisplayName": "سرور كوفي ERP & POS"
+      "shortcutName": "Ibraa POS",
+      "uninstallDisplayName": "إبراء - Ibraa POS"
     }
   }
 }

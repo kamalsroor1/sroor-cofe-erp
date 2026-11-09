@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'platform_title' => 'منصة مخزني SaaS Super Admin',
+    'platform_title' => 'إبراء',
     'central_platform' => 'المنصة المركزية',
     'platform_subtitle' => 'إدارة الشركات والمستأجرين، الباقات، والاشتراكات',
     'dashboard' => 'لوحة المؤشرات',

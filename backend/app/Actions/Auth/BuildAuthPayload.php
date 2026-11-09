@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Setting;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Branding\TenantBranding;
 
 /**
  * Shared login response payload (token + user + store context + system branding)
@@ -48,7 +49,7 @@ final class BuildAuthPayload
             'system' => [
                 'company_name' => Setting::get('company_name') ?: ($tenantName ?: __('auth.default_company_name')),
                 'company_subtitle' => Setting::get('company_subtitle') ?: '',
-                'system_theme' => Setting::get('system_theme_color', 'emerald'),
+                'system_theme' => Setting::get('system_theme_color', TenantBranding::DEFAULT_THEME_COLOR),
                 'server_time' => now()->toDateTimeString(),
             ],
         ];

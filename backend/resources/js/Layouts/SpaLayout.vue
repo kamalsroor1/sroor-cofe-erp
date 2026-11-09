@@ -259,12 +259,13 @@
             class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 mobile-safe-header"
           >
             <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-950 font-black text-base shadow-sm shrink-0"
-                :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-              >
-                <Coffee class="w-5 h-5 stroke-[2.5]" />
-              </div>
+              <img
+                v-if="appConfigStore.companyLogo"
+                :src="appConfigStore.companyLogo"
+                :alt="appConfigStore.companyName"
+                class="w-9 h-9 rounded-xl object-contain shrink-0"
+              />
+              <BrandMark v-else variant="app-icon" :size="36" class="rounded-xl shadow-sm" />
               <div class="min-w-0">
                 <span class="font-black text-sm text-slate-900 dark:text-white truncate block">{{
                   appConfigStore.companyName
@@ -511,6 +512,7 @@ import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSett
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
+import BrandMark from '../Components/Brand/BrandMark.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
 import NotificationsBell from '../Components/Layout/NotificationsBell.vue';
 import Swal from 'sweetalert2';
@@ -530,7 +532,6 @@ import {
   ShieldCheck,
   FileText,
   Printer,
-  Coffee,
   X,
 } from 'lucide-vue-next';
 

@@ -10,7 +10,7 @@ export const useAppConfigStore = defineStore('appConfig', {
             platform_name: '',
             company_name: '',
             company_subtitle: '',
-            system_theme_color: 'amber',
+            system_theme_color: 'ibraa',
             server_time: null,
         },
         branding: {
@@ -31,6 +31,12 @@ export const useAppConfigStore = defineStore('appConfig', {
         isDark: (state) => state.theme === 'dark',
         platformName: (state) =>
             state.system.platform_name || state.system.company_name || trans('common.platform_name'),
+        // Only a logo the shop uploaded itself; null means "show the Ibraa brand mark".
+        companyLogo: (state) => {
+            const logos = state.branding?.tenant?.logos;
+            if (!logos) return null;
+            return (state.theme === 'dark' ? logos.dark || logos.light : logos.light) || null;
+        },
         companyName: (state) => state.system.company_name || trans('auth.default_company_name'),
         companySubtitle: (state) => state.system.company_subtitle,
         currentShiftNumber: (state) => state.activeShift?.shift_number || null,

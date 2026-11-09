@@ -152,7 +152,7 @@
         <p class="text-xs font-black">{{ $t('invoices.thank_you_note') }}</p>
         <p class="text-[9px]">{{ $t('invoices.return_policy_note') }}</p>
         <div class="pt-0.5 text-[8px] font-mono text-slate-800">
-          {{ $t('invoices.printed_by_system', { system: appConfigStore.platformName || 'ERP' }) }}
+          {{ $t('invoices.printed_by_system', { system: appConfigStore.platformName }) }}
         </div>
       </div>
     </div>

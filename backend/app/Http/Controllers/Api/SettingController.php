@@ -58,7 +58,7 @@ final class SettingController extends Controller
             'thermal_show_customer_balance' => Setting::getBool('thermal_show_customer_balance', true),
             'print_show_qr' => Setting::getBool('print_show_qr', true),
             'invoice_primary_color' => Setting::get('invoice_primary_color', 'emerald'),
-            'system_theme_color' => Setting::get('system_theme_color', 'emerald'),
+            'system_theme_color' => Setting::get('system_theme_color', TenantBranding::DEFAULT_THEME_COLOR),
             // BRND-5: receipt text (header: one line per "\n") and the shop logos (tenant route URLs, null = none).
             TenantBranding::KEY_RECEIPT_HEADER_LINES => implode("\n", $branding->receiptHeaderLines ?? []),
             TenantBranding::KEY_RECEIPT_FOOTER_TEXT => Setting::get(TenantBranding::KEY_RECEIPT_FOOTER_TEXT, ''),

@@ -116,7 +116,7 @@ return [
 
     // Browser tab / document titles per route (router/index.js meta.titleKey)
     'page_titles' => [
-        'default_app_name' => 'ERP system',
+        'default_app_name' => 'Ibraa ERP',
         'untitled_screen' => 'Screen',
         'workspace_connect' => 'Connect to workspace',
         'login' => 'Sign in',

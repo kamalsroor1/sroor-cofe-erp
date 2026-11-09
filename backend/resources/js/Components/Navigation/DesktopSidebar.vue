@@ -10,12 +10,13 @@
       <!-- Expanded Mode Header -->
       <div v-if="!isCollapsed" class="flex items-center justify-between">
         <div class="flex items-center gap-3 overflow-hidden">
-          <div
-            class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shrink-0 transition-transform hover:scale-105"
-            :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-          >
-            <Coffee class="w-5 h-5 stroke-[2.5]" />
-          </div>
+          <img
+            v-if="appConfigStore.companyLogo"
+            :src="appConfigStore.companyLogo"
+            :alt="appConfigStore.companyName"
+            class="w-10 h-10 rounded-2xl object-contain shrink-0"
+          />
+          <BrandMark v-else variant="app-icon" :size="40" class="rounded-2xl shadow-lg" />
           <div class="min-w-0">
             <h2 class="font-black text-sm text-slate-900 dark:text-white tracking-tight truncate">
               {{ appConfigStore.companyName || $t('dashboard.company_title') }}
@@ -42,12 +43,13 @@
 
       <!-- Collapsed Mini Mode Header -->
       <div v-else class="flex flex-col items-center gap-2.5 py-1">
-        <div
-          class="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shrink-0 transition-transform hover:scale-105"
-          :style="{ backgroundColor: 'var(--color-primary, #f59e0b)' }"
-        >
-          <Coffee class="w-5 h-5 stroke-[2.5]" />
-        </div>
+        <img
+          v-if="appConfigStore.companyLogo"
+          :src="appConfigStore.companyLogo"
+          :alt="appConfigStore.companyName"
+          class="w-10 h-10 rounded-2xl object-contain shrink-0"
+        />
+        <BrandMark v-else variant="app-icon" :size="40" class="rounded-2xl shadow-lg" />
         <button
           type="button"
           @click="toggleCollapse"
@@ -395,9 +397,10 @@ import { useRoute } from 'vue-router';
 import { useNavigation } from '../../Composables/useNavigation';
 import { useModules } from '../../Composables/useModules';
 import { useAppConfigStore } from '../../stores/appConfig';
+import BrandMark from '../Brand/BrandMark.vue';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import versionData from '../../version.json';
-import { ChevronRight, ChevronLeft, ChevronDown, Plus, Coffee, Sparkles } from 'lucide-vue-next';
+import { ChevronRight, ChevronLeft, ChevronDown, Plus, Sparkles } from 'lucide-vue-next';
 
 const props = defineProps({
   isCollapsed: { type: Boolean, default: false },

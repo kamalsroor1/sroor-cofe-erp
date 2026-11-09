@@ -35,7 +35,7 @@ final class PlatformBranding
     private const HEX_COLOR = '/^#[0-9a-f]{6}$/i';
 
     /** Last resort if config/branding.php itself holds an invalid color. */
-    private const FALLBACK_COLOR = '#059669';
+    private const FALLBACK_COLOR = '#0F6E5E';
 
     public function get(): PlatformBrandingDTO
     {

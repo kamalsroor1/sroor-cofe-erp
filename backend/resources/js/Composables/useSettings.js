@@ -23,6 +23,7 @@ export function useSettings() {
     const isTestingTelegram = ref(false);
 
     const colorPalettes = [
+        { id: 'ibraa', labelKey: 'settings.palette_ibraa', hex: '#0F6E5E' },
         { id: 'amber', labelKey: 'settings.palette_amber', hex: '#f59e0b' },
         { id: 'emerald', labelKey: 'settings.palette_emerald', hex: '#10b981' },
         { id: 'blue', labelKey: 'settings.palette_blue', hex: '#3b82f6' },
@@ -124,7 +125,7 @@ export function useSettings() {
         show_print_logo: true,
         thermal_show_customer_balance: true,
         print_show_qr: true,
-        system_theme_color: 'amber',
+        system_theme_color: 'ibraa',
         inventory_units: systemUnits.value.join(','),
         telegram_notifications_enabled: true,
         telegram_bot_token: '',
@@ -351,7 +352,7 @@ export function useSettings() {
         show_print_logo: true,
         thermal_show_customer_balance: true,
         print_show_qr: true,
-        system_theme_color: 'amber',
+        system_theme_color: 'ibraa',
         telegram_notifications_enabled: true,
         receipt_header_lines: '',
         receipt_footer_text: '',
@@ -392,7 +393,7 @@ export function useSettings() {
                 show_print_logo: !!s.show_print_logo,
                 thermal_show_customer_balance: !!s.thermal_show_customer_balance,
                 print_show_qr: !!s.print_show_qr,
-                system_theme_color: s.system_theme_color || 'amber',
+                system_theme_color: s.system_theme_color || 'ibraa',
                 inventory_units: s.inventory_units != null ? s.inventory_units : systemUnits.value.join(','),
                 telegram_notifications_enabled: !!s.telegram_notifications_enabled,
                 telegram_bot_token: s.telegram_bot_token || '',

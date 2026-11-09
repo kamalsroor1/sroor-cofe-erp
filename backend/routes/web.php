@@ -86,25 +86,17 @@ $webManifest = function () {
         'start_url' => $baseUrl.'/',
         'scope' => $baseUrl.'/',
         'display' => 'standalone',
-        'background_color' => '#020617',
-        'theme_color' => '#0f172a',
+        'background_color' => '#13201C',
+        'theme_color' => '#0F6E5E',
         'orientation' => 'portrait-primary',
         'dir' => 'rtl',
         'lang' => 'ar',
         'prefer_related_applications' => false,
         'icons' => [
-            [
-                'src' => asset('logo.png'),
-                'sizes' => '192x192',
-                'type' => 'image/png',
-                'purpose' => 'any',
-            ],
-            [
-                'src' => asset('logo.png'),
-                'sizes' => '512x512',
-                'type' => 'image/png',
-                'purpose' => 'any',
-            ],
+            ['src' => asset('icons/icon-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => asset('icons/icon-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => asset('icons/maskable-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'],
+            ['src' => asset('icons/maskable-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
         ],
     ];
 

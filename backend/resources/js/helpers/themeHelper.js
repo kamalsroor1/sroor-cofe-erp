@@ -1,5 +1,5 @@
 export function hexToRgb(hex) {
-    if (!hex) return '245, 158, 11';
+    if (!hex) return '15, 110, 94';
     hex = hex.replace('#', '').trim();
     if (hex.length === 3) {
         hex = hex
@@ -7,7 +7,7 @@ export function hexToRgb(hex) {
             .map((c) => c + c)
             .join('');
     }
-    if (hex.length !== 6) return '245, 158, 11';
+    if (hex.length !== 6) return '15, 110, 94';
     const num = parseInt(hex, 16);
     const r = (num >> 16) & 255;
     const g = (num >> 8) & 255;
@@ -16,7 +16,7 @@ export function hexToRgb(hex) {
 }
 
 export function adjustColorBrightness(hex, percent) {
-    if (!hex) return '#d97706';
+    if (!hex) return '#0b5a4d';
     hex = hex.replace('#', '').trim();
     if (hex.length === 3) {
         hex = hex
@@ -24,7 +24,7 @@ export function adjustColorBrightness(hex, percent) {
             .map((c) => c + c)
             .join('');
     }
-    if (hex.length !== 6) return '#d97706';
+    if (hex.length !== 6) return '#0b5a4d';
     let num = parseInt(hex, 16);
     let r = (num >> 16) + Math.round(255 * (percent / 100));
     let g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
@@ -40,6 +40,7 @@ export function applyThemeColor(color) {
     localStorage.setItem('system_theme_color', color);
 
     const presets = {
+        ibraa: { hex: '#0F6E5E', hover: '#0B5A4D' },
         amber: { hex: '#f59e0b', hover: '#d97706' },
         emerald: { hex: '#10b981', hover: '#059669' },
         blue: { hex: '#3b82f6', hover: '#2563eb' },

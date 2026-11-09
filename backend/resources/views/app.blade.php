@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#020617">
+    <meta name="theme-color" content="#13201C">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @if (($appContext ?? null) === 'central')
     {{-- IDEN-1.11: platform-console shell (admin host only); contract for the SPA boot. --}}
@@ -40,9 +40,9 @@
                     document.documentElement.classList.remove('dark');
                 }
 
-                const storedColor = localStorage.getItem('system_theme_color') || 'amber';
+                const storedColor = localStorage.getItem('system_theme_color') || 'ibraa';
                 const presets = {
-                    amber: '#f59e0b', emerald: '#10b981', blue: '#3b82f6', purple: '#a855f7',
+                    ibraa: '#0F6E5E', amber: '#f59e0b', emerald: '#10b981', blue: '#3b82f6', purple: '#a855f7',
                     rose: '#f43f5e', orange: '#f97316', teal: '#14b8a6', indigo: '#6366f1'
                 };
                 if (presets[storedColor]) {
@@ -52,7 +52,7 @@
                     document.documentElement.setAttribute('data-theme-color', 'custom');
                     document.documentElement.style.setProperty('--color-primary', storedColor);
                 } else {
-                    document.documentElement.setAttribute('data-theme-color', 'amber');
+                    document.documentElement.setAttribute('data-theme-color', 'ibraa');
                 }
             } catch (e) {
                 document.documentElement.classList.add('dark');
@@ -60,10 +60,10 @@
         })();
     </script>
 
-    <!-- Google Arabic Fonts (Cairo & Tajawal) -->
+    <!-- Google Arabic Fonts: IBM Plex Sans Arabic (body), Reem Kufi (logo wordmark), Cairo & Tajawal (fallbacks) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
@@ -88,38 +88,62 @@
 
     <style>
         * {
-            font-family: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         body {
-            font-family: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-amber-500 selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-[var(--color-primary)] selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
     <div id="app">
         <!-- Instant Branded Pre-Vue Splash Screen (Hidden in Electron to avoid double splash) -->
-        <div id="pre-vue-splash" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;" dir="rtl">
-            <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35); margin-bottom: 20px;">
-                {{-- Neutral storefront glyph (lucide "store"): the product is a generic retail SaaS. --}}
-                <svg style="width: 40px; height: 40px; stroke: #020617; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                    <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
-                    <path d="M2 7h20"></path>
-                    <path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>
-                </svg>
-            </div>
-            <h1 style="font-size: 20px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -0.5px; color: #ffffff;">{{ $platformBrand->name }}</h1>
-            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px 0; font-weight: 600;">{{ __('common.splash.subtitle') }}</p>
-            <div style="width: 180px; height: 4px; background: #1e293b; border-radius: 999px; overflow: hidden; position: relative;">
-                <div style="position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 999px; animation: app-splash-loader 1.5s infinite ease-in-out;"></div>
-            </div>
+        <div id="pre-vue-splash" dir="rtl">
+            <svg class="ps-mark" viewBox="0 0 100 100" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{ $platformBrand->name }}">
+                <g class="ps-settle">
+                    <path class="ps-arc" d="M50 14 A36 36 0 1 1 20 30" stroke-width="9" pathLength="100"></path>
+                    <polyline class="ps-head" points="12,22 20,30 30,24" stroke-width="7"></polyline>
+                    <polyline class="ps-check" points="36,51 46,61 66,40" stroke-width="7" pathLength="100"></polyline>
+                </g>
+            </svg>
+            <h1 class="ps-name">{{ $platformBrand->name }}</h1>
+            <p class="ps-tagline">{{ __('common.splash.subtitle') }}</p>
+            <div class="ps-bar"><div class="ps-bar-fill"></div></div>
             <style>
-                @keyframes app-splash-loader {
+                #pre-vue-splash {
+                    --ps-bg: #13201C; --ps-arc: #4CC3A8; --ps-check: #EEF3F0; --ps-text: #EEF3F0; --ps-muted: #8FA79E; --ps-track: #22332D;
+                    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    background: var(--ps-bg); color: var(--ps-text); z-index: 99999;
+                    font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Tajawal', sans-serif;
+                }
+                html.light #pre-vue-splash {
+                    --ps-bg: #F5F7F3; --ps-arc: #0F6E5E; --ps-check: #15241F; --ps-text: #15241F; --ps-muted: #5B6F67; --ps-track: #DCE4DF;
+                }
+                #pre-vue-splash .ps-mark { width: 96px; height: 96px; margin-bottom: 20px; }
+                #pre-vue-splash .ps-arc, #pre-vue-splash .ps-head { stroke: var(--ps-arc); }
+                #pre-vue-splash .ps-check { stroke: var(--ps-check); }
+                #pre-vue-splash .ps-arc, #pre-vue-splash .ps-check { stroke-dasharray: 100; }
+                #pre-vue-splash .ps-arc { animation: ps-draw 1.1s cubic-bezier(.65, 0, .35, 1) both, ps-show .01s linear both; }
+                #pre-vue-splash .ps-head { transform-box: fill-box; transform-origin: center; animation: ps-pop .25s ease-out 1.05s both; }
+                #pre-vue-splash .ps-check { animation: ps-draw .45s cubic-bezier(.65, 0, .35, 1) 1.35s both, ps-show .01s linear 1.35s both; }
+                #pre-vue-splash .ps-settle { transform-box: view-box; transform-origin: 50px 50px; animation: ps-settle .45s ease-in-out 1.85s both; }
+                #pre-vue-splash .ps-name { font-family: 'Reem Kufi', 'IBM Plex Sans Arabic', sans-serif; font-size: 32px; font-weight: 600; margin: 0 0 6px 0; line-height: 1.2; color: var(--ps-text); }
+                #pre-vue-splash .ps-tagline { font-size: 12px; color: var(--ps-muted); margin: 0 0 24px 0; font-weight: 500; text-align: center; padding: 0 16px; }
+                #pre-vue-splash .ps-bar { width: 160px; height: 3px; background: var(--ps-track); border-radius: 999px; overflow: hidden; position: relative; }
+                #pre-vue-splash .ps-bar-fill { position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: var(--ps-arc); border-radius: 999px; animation: ps-loader 1.5s infinite ease-in-out; }
+                @keyframes ps-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+                @keyframes ps-show { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes ps-pop { 0% { opacity: 0; transform: scale(.4); } 60% { opacity: 1; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+                @keyframes ps-settle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+                @keyframes ps-loader {
                     0% { transform: translateX(-100%); }
                     50% { transform: translateX(100%); }
                     100% { transform: translateX(300%); }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    #pre-vue-splash .ps-arc, #pre-vue-splash .ps-head, #pre-vue-splash .ps-check, #pre-vue-splash .ps-settle, #pre-vue-splash .ps-bar-fill { animation: none; }
+                    #pre-vue-splash .ps-arc, #pre-vue-splash .ps-check { stroke-dasharray: none; }
                 }
             </style>
             <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>

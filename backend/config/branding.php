@@ -11,8 +11,8 @@
 | App\Services\Branding\PlatformBranding — never config('branding.*'),
 | config('app.name') or env('APP_NAME') directly.
 |
-| These defaults are deliberately neutral (CTO Q-R1: the commercial name is not
-| decided yet). Set them per environment through .env. They are also the source
+| Defaults carry the product brand «إبراء» / Ibraa (CTO, 2026-11-10; was the
+| neutral "Retail ERP" while Q-R1 was open). Override per environment through .env. They are also the source
 | for native builds (BRND-8), whose installed name cannot change from the DB.
 |
 | Shop (tenant) branding is separate: see TenantBranding (BRND-5).
@@ -21,16 +21,16 @@
 
 return [
 
-    'name' => env('BRANDING_NAME', 'Retail ERP'),
+    'name' => env('BRANDING_NAME', 'إبراء'),
 
-    'short_name' => env('BRANDING_SHORT_NAME', 'Retail ERP'),
+    'short_name' => env('BRANDING_SHORT_NAME', 'Ibraa'),
 
     'subtitle' => env('BRANDING_SUBTITLE', ''),
 
-    'legal_name' => env('BRANDING_LEGAL_NAME', ''),
+    'legal_name' => env('BRANDING_LEGAL_NAME', 'Ibraa by Sroor'),
 
     /* Hex #rrggbb used by platform screens (login before choosing a shop, super-admin). */
-    'primary_color' => env('BRANDING_PRIMARY_COLOR', '#059669'),
+    'primary_color' => env('BRANDING_PRIMARY_COLOR', '#0F6E5E'),
 
     'support_email' => env('BRANDING_SUPPORT_EMAIL', ''),
 

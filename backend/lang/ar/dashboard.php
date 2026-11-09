@@ -3,7 +3,7 @@
 return [
     'welcome' => 'مرحباً بك في :app',
     'subtitle' => 'نظرة عامة على المبيعات، المخزون، والسيولة النقدية اليومية',
-    'welcome_banner_title' => 'مرحباً بك في نظام ERP لإدارة الفواتير والمخزون',
+    'welcome_banner_title' => 'مرحباً بك في إبراء',
     'current_branch_label' => 'الفرع الحالي:',
     'overview_subtitle' => 'نظرة عامة على المبيعات، رصيد الخزينة، والمخزون',
     'pos_fast_btn' => 'شاشة البيع السريع (POS)',

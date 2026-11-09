@@ -38,11 +38,13 @@
 
       <!-- Header / Brand Logo -->
       <div class="text-center space-y-3">
-        <div
-          class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-theme-border text-theme-primary shadow-2xl shadow-amber-500/10"
-        >
-          <Building2 class="w-10 h-10" />
-        </div>
+        <img
+          v-if="appConfigStore.companyLogo"
+          :src="appConfigStore.companyLogo"
+          :alt="appConfigStore.companyName"
+          class="mx-auto h-20 w-20 object-contain"
+        />
+        <BrandMark v-else :size="80" class="mx-auto" />
         <div>
           <h1 class="text-2xl font-black text-slate-900 dark:text-white font-tajawal tracking-tight">
             {{
@@ -198,6 +200,7 @@
           {{ appConfigStore.platformName }} •
           <span class="text-theme-primary font-bold">v{{ versionData?.version || '1.0.1' }}</span>
         </span>
+        <p class="mt-1 text-[10px] font-medium text-slate-400 dark:text-slate-500">{{ $t('brand.company_line') }}</p>
       </div>
     </div>
   </div>
@@ -212,11 +215,12 @@ import { useAppConfigStore } from '../../stores/appConfig';
 import { useBiometricAuth } from '../../Composables/useBiometricAuth';
 import BaseInput from '../../Components/Form/BaseInput.vue';
 import BaseCheckbox from '../../Components/Form/BaseCheckbox.vue';
+import BrandMark from '../../Components/Brand/BrandMark.vue';
 import WorkspaceBadge from '../../Components/Auth/WorkspaceBadge.vue';
 import LoginMethodTabs from '../../Components/Auth/LoginMethodTabs.vue';
 import QuickLoginPanel from '../../Components/Auth/QuickLoginPanel.vue';
 import { useQuickLogin } from '../../Composables/Auth/useQuickLogin';
-import { AlertTriangle, Building2, Phone, Lock, LogIn, Sun, Moon, Fingerprint, RefreshCw } from 'lucide-vue-next';
+import { AlertTriangle, Phone, Lock, LogIn, Sun, Moon, Fingerprint, RefreshCw } from 'lucide-vue-next';
 
 import { trans } from '../../helpers/trans';
 import { isCentralHost } from '../../helpers/platformHosts';

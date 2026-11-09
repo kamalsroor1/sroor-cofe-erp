@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_name' => 'نظام إدارة المبيعات والمخزون والحسابات',
+    'app_name' => 'إبراء ERP',
     'currency' => 'ج.م',
     'currency_full' => 'جنيه مصري',
     'save' => 'حفظ',
@@ -78,8 +78,8 @@ return [
     'search_in_list' => '... بحث في القائمة',
     'unexpected_error' => 'حدث خطأ غير متوقع في الاتصال بالخادم',
     'permission_alert' => 'تنبيه الصلاحيات',
-    'app_title' => 'منظومة إدارة المؤسسات والمخزون ERP',
-    'app_subtitle' => 'منظومة إدارة المبيعات، المخزون، ونقاط البيع السريعة',
+    'app_title' => 'إبراء',
+    'app_subtitle' => 'حساباتك خالصة. كل قرش في مكانه.',
     'system_booting' => 'جاري تحميل وتهيئة المنظومة...',
     'pos_badge' => 'ERP & POS',
     'ok' => 'حسناً',
@@ -117,9 +117,8 @@ return [
     'remind_me_later' => 'تذكيري لاحقاً',
     'yes_delete' => 'نعم، احذف',
     'all_items' => 'كل الأصناف',
-    'app_title' => 'منظومة ERP المتكاملة',
     'store_access_denied' => 'غير مصرح لك بالوصول لبيانات هذا الفرع',
-    'platform_name' => 'منظومة ERP السحابية',
+    'platform_name' => 'إبراء ERP',
     'default_company_subtitle' => 'لإدارة المبيعات والمخزون والفروع',
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
@@ -133,7 +132,7 @@ return [
 
     // Boot splash screen (app.blade.php)
     'splash' => [
-        'subtitle' => 'نظام الفواتير والمخزون ونقاط البيع السريعة',
+        'subtitle' => 'حساباتك خالصة. كل قرش في مكانه.',
     ],
 
     // Generic confirmation dialogs (helpers/alert.js)

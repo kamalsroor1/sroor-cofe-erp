@@ -7,7 +7,7 @@
     <!-- ☕ Right Side: App Brand & Active Store Context -->
     <div class="flex items-center gap-2.5 shrink-0 no-drag">
       <div class="flex items-center gap-1.5 font-black text-white text-xs">
-        <Coffee class="w-3.5 h-3.5 text-theme-primary" />
+        <BrandMark :size="16" variant="dark" decorative />
         <span>{{ appConfigStore.companyName || $t('dashboard.company_title') }}</span>
       </div>
 
@@ -183,6 +183,7 @@ import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
+import BrandMark from '../Brand/BrandMark.vue';
 import {
   HelpCircle,
   Volume2,
@@ -195,7 +196,6 @@ import {
   X,
   RefreshCw,
   Rocket,
-  Coffee,
   Store,
   Zap,
   ChevronDown,

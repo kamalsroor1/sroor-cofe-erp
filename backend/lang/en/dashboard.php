@@ -3,7 +3,7 @@
 return [
     'welcome' => 'Welcome to :app',
     'subtitle' => 'Daily overview of sales, inventory, and cash flow',
-    'welcome_banner_title' => 'Welcome to Cloud ERP & Invoicing System',
+    'welcome_banner_title' => 'Welcome to Ibraa',
     'current_branch_label' => 'Current Branch:',
     'overview_subtitle' => 'Overview of sales, treasury, and inventory',
     'pos_fast_btn' => 'Fast POS Cashier',

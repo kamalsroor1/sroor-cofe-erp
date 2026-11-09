@@ -1,5 +1,7 @@
 <script setup>
 import { Cpu, RefreshCw, BarChart3 } from 'lucide-vue-next';
+import BrandLogo from '../Brand/BrandLogo.vue';
+import versionData from '../../version.json';
 
 defineProps({
   systemInfo: {
@@ -100,6 +102,17 @@ defineEmits(['clear-cache']);
           <RefreshCw class="w-4 h-4" />
           <span>{{ $t('settings.clear_cache_now') }}</span>
         </button>
+      </div>
+    </div>
+
+    <!-- About: product brand, version and company line -->
+    <div
+      class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <BrandLogo :size="44" product="erp" show-tagline />
+      <div class="text-start sm:text-end space-y-0.5">
+        <div class="text-xs font-mono font-bold text-theme-primary">v{{ versionData.version }}</div>
+        <p class="text-[10px] font-medium text-slate-400 dark:text-slate-500">{{ $t('brand.company_line') }}</p>
       </div>
     </div>
   </div>
