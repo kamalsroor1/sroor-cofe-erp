@@ -76,6 +76,10 @@ Schedule::command('health:schedule-check-heartbeat')
     ->everyMinute();
 Schedule::command('health:queue-check-heartbeat')
     ->everyMinute();
+// OPS-7: external dead-man switch (no-op while OPS_HEARTBEAT_URL is empty).
+Schedule::command('ops:heartbeat')
+    ->everyMinute()
+    ->runInBackground();
 
 // 8. IDEN-1.15: platform audit retention (2 years, CTO W1 Q2). Deletes ONLY rows strictly
 // older than config('activitylog.central_audit.retention_days') from central_audit_logs and

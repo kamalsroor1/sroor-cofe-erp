@@ -1,6 +1,7 @@
 <?php
 
-use Spatie\Health\Notifications\CheckFailedNotification;
+use App\Health\Channels\PlatformTelegramChannel;
+use App\Health\Notifications\PlatformCheckFailedNotification;
 use Spatie\Health\Notifications\Notifiable;
 use Spatie\Health\ResultStores\CacheHealthResultStore;
 
@@ -29,7 +30,7 @@ return [
         'enabled' => env('HEALTH_NOTIFICATIONS_ENABLED', true),
 
         'notifications' => [
-            CheckFailedNotification::class => ['mail'],
+            PlatformCheckFailedNotification::class => ['mail', PlatformTelegramChannel::class],
         ],
 
         'notifiable' => Notifiable::class,
@@ -56,6 +57,23 @@ return [
             'username' => null,
             'icon' => null,
         ],
+    ],
+
+    /*
+     * OPS-7: platform-operator Telegram alert (plain text, own bot; NOT the per-shop settings).
+     * Empty = the Telegram channel is skipped and only the mail goes out.
+     */
+    'telegram' => [
+        'bot_token' => env('HEALTH_TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('HEALTH_TELEGRAM_CHAT_ID'),
+    ],
+
+    /*
+     * OPS-7: external heartbeat pinged every minute by `ops:heartbeat` (Better Stack / UptimeRobot /
+     * healthchecks.io). The monitor alerts when the pings STOP. Empty = disabled.
+     */
+    'heartbeat' => [
+        'url' => env('OPS_HEARTBEAT_URL'),
     ],
 
     'oh_dear_endpoint' => [

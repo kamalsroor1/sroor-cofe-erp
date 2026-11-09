@@ -29,3 +29,26 @@ Owner actions:
    optional `SENTRY_RELEASE` (the deploy version) and `SENTRY_TRACES_SAMPLE_RATE=0.05`.
 3. `php artisan config:clear` is not needed after a deploy (the pipeline rebuilds the config cache).
 4. Add an alert rule in Sentry (new issue / regression -> your email or Telegram).
+
+## Uptime, heartbeat and Telegram alerts (OPS-7)
+
+Before: only `health:check` ran on the box (every 5 minutes) and mailed on failure. If the box, cron or PHP
+died nothing was watching, and the only channel was email.
+
+1. **Uptime probe:** `GET /up` (Laravel's health route: 200, no auth, no tenant, not traced by Sentry).
+   Point an UptimeRobot / Better Stack HTTP monitor at `https://<platform-domain>/up`, interval 1-5 minutes.
+2. **Dead-man heartbeat:** `ops:heartbeat` runs every minute from the scheduler and GETs `OPS_HEARTBEAT_URL`
+   (empty = off). Create a *heartbeat* monitor (expected every 1-2 minutes, grace 3-5 minutes) and paste its URL.
+   When cron/PHP/the box stops, the pings stop and the service alerts you. The URL is never logged.
+3. **Telegram:** a failing `health:check` (disk, DB, Redis, queue, schedule, Horizon, backup freshness) now
+   sends mail **and** a plain-text Telegram message (`PlatformCheckFailedNotification`, throttled to one per
+   hour per channel). It uses its own bot, not the per-shop Telegram settings.
+
+Owner actions (production `.env`, never commit values):
+- `OPS_HEARTBEAT_URL=<heartbeat url>`
+- `HEALTH_TELEGRAM_BOT_TOKEN=<bot token from @BotFather>`, `HEALTH_TELEGRAM_CHAT_ID=<your chat or group id>`
+  (send the bot a message first; read the chat id from `getUpdates`).
+- Create the UptimeRobot/Better Stack monitors above and route their alerts to Telegram/phone.
+- Optional dead-man pings that already existed: `SCHEDULE_HEARTBEAT_URL`, `HORIZON_HEARTBEAT_URL`.
+
+Pinned by `tests/Feature/Ops/UptimeAlertingTest.php`.
