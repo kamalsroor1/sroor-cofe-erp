@@ -27,17 +27,17 @@ export function useItemMovements() {
 
     const formatMovementLabel = (type) => {
         const map = {
-            purchase_in: `🚛 ${t('inventory.movement_purchase')}`,
-            sales_out: `🛒 ${t('inventory.movement_sale')}`,
-            transfer_in: `📥 ${t('inventory.movement_transfer_in')}`,
-            transfer_out: `📤 ${t('inventory.movement_transfer_out')}`,
-            sales_return_in: `↩️ ${t('inventory.movement_sale_return')}`,
-            purchase_return_out: `↪️ ${t('inventory.movement_purchase_return')}`,
-            stock_adjustment_in: `➕ ${t('inventory.movement_adjustment')}`,
-            stock_adjustment_out: `➖ ${t('inventory.movement_adjustment')}`,
-            cancellation_in: `🚫 ${t('invoices.cancelled_badge')}`,
-            waste_out: `🗑️ ${t('inventory.movement_waste')}`,
-            stock_deposit_in: `📦 ${t('inventory.movement_initial')}`,
+            purchase_in: t('inventory.movement_purchase'),
+            sales_out: t('inventory.movement_sale'),
+            transfer_in: t('inventory.movement_transfer_in'),
+            transfer_out: t('inventory.movement_transfer_out'),
+            sales_return_in: t('inventory.movement_sale_return'),
+            purchase_return_out: t('inventory.movement_purchase_return'),
+            stock_adjustment_in: t('inventory.movement_adjustment'),
+            stock_adjustment_out: t('inventory.movement_adjustment'),
+            cancellation_in: t('invoices.cancelled_badge'),
+            waste_out: t('inventory.movement_waste'),
+            stock_deposit_in: t('inventory.movement_initial'),
         };
         return map[type] || type;
     };

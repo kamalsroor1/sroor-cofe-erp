@@ -87,7 +87,7 @@
           class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
         >
           <div class="flex items-center gap-2.5">
-            <span class="text-lg">📦</span>
+            <Package class="w-5 h-5" />
             <div>
               <div class="text-[10px] text-slate-400 font-bold">{{ $t('settings.current_installed_version') }}</div>
               <div class="text-xs font-black font-mono text-slate-900 dark:text-white">v{{ currentVersionName }}</div>
@@ -135,7 +135,7 @@
 
 <script setup>
 import { onMounted } from 'vue';
-import { Sun, Moon, Smartphone, Rocket, Fingerprint } from 'lucide-vue-next';
+import { Sun, Moon, Smartphone, Rocket, Fingerprint, Package } from 'lucide-vue-next';
 import { useAppUpdate } from '../../Composables/useAppUpdate';
 import { useBiometricAuth } from '../../Composables/useBiometricAuth';
 

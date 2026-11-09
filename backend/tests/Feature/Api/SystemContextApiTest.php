@@ -113,6 +113,11 @@ class SystemContextApiTest extends TenantTestCase
 
         $notifications = $response->json('data.notifications');
         $this->assertNotEmpty($notifications);
+
+        // Alert icons are lucide icon names, never emoji glyphs.
+        foreach ($notifications as $notification) {
+            $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $notification['icon']);
+        }
     }
 
     public function test_system_context_omits_translations_when_client_hash_matches(): void

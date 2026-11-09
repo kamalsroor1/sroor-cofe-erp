@@ -5,7 +5,7 @@
     <h2
       class="text-xs font-bold text-slate-700 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
     >
-      <span>⚙️</span>
+      <Settings class="w-4 h-4" />
       <span>{{ $t('inventory.blend_specs_title') }}</span>
     </h2>
 
@@ -70,6 +70,7 @@
 </template>
 
 <script setup>
+import { Settings } from 'lucide-vue-next';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
@@ -78,8 +79,8 @@ defineProps({
   blendName: { type: String, default: '' },
   targetWeightGrams: { type: Number, default: 250 },
   presetWeights: { type: Array, default: () => [] },
-  roastType: { type: String, default: 'وسط' },
-  grindLevel: { type: String, default: 'تركي ناعم' },
+  roastType: { type: String, default: 'medium' },
+  grindLevel: { type: String, default: 'turkish' },
   roastOptions: { type: Array, default: () => [] },
   grindOptions: { type: Array, default: () => [] },
 });

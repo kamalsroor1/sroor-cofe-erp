@@ -10,7 +10,7 @@
       ref="inputRef"
       v-model="model"
       type="text"
-      :placeholder="placeholder || 'بحث سريع...'"
+      :placeholder="placeholder || $t('common.quick_search')"
       :disabled="disabled"
       class="w-full min-h-[44px] ps-10 pe-10 py-2.5 text-base sm:text-sm font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 shadow-2xs"
       :class="inputClass"
@@ -27,7 +27,7 @@
         type="button"
         @click="clear"
         class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
-        title="تفريغ البحث (ESC)"
+        :title="$t('common.clear_search_esc')"
       >
         <X class="w-3.5 h-3.5" />
       </button>

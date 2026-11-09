@@ -19,7 +19,9 @@
 
       <div class="flex items-center justify-between">
         <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('invoices.cashier') }}:</span>
-        <span class="font-bold text-slate-900 dark:text-white">{{ invoice?.cashier_name || 'الكاشير' }}</span>
+        <span class="font-bold text-slate-900 dark:text-white">{{
+          invoice?.cashier_name || $t('invoices.cashier')
+        }}</span>
       </div>
 
       <div class="flex items-center justify-between">

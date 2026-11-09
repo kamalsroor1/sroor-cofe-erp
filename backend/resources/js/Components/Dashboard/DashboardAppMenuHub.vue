@@ -124,30 +124,32 @@ import {
 } from 'lucide-vue-next';
 import { useAudioFeedback } from '../../Composables/useAudioFeedback';
 import { useRoutePermission } from '../../Composables/useRoutePermission';
+import { useTrans } from '../../Composables/useTrans';
 
 const { playScanBeep } = useAudioFeedback();
 const { canAccessPath } = useRoutePermission();
+const { t } = useTrans();
 
 const searchQuery = ref('');
 const activeTab = ref('all');
 
-const allTabs = [
-  { id: 'all', label: 'الكل', icon: Sparkles },
-  { id: 'sales', label: 'المبيعات والـ POS', icon: ShoppingBag },
-  { id: 'purchases', label: 'المشتريات والتوريد', icon: ShoppingCart },
-  { id: 'finance', label: 'الخزينة واليومية', icon: Banknote },
-  { id: 'inventory', label: 'المخازن والأصناف', icon: Package },
-  { id: 'reports', label: 'التقارير والمتابعة', icon: BarChart3 },
-  { id: 'setup', label: 'التعريفات والنظام', icon: Settings },
-];
+const allTabs = computed(() => [
+  { id: 'all', label: t('dashboard.menu_hub.tabs.all'), icon: Sparkles },
+  { id: 'sales', label: t('dashboard.menu_hub.tabs.sales'), icon: ShoppingBag },
+  { id: 'purchases', label: t('dashboard.menu_hub.tabs.purchases'), icon: ShoppingCart },
+  { id: 'finance', label: t('dashboard.menu_hub.tabs.finance'), icon: Banknote },
+  { id: 'inventory', label: t('dashboard.menu_hub.tabs.inventory'), icon: Package },
+  { id: 'reports', label: t('dashboard.menu_hub.tabs.reports'), icon: BarChart3 },
+  { id: 'setup', label: t('dashboard.menu_hub.tabs.setup'), icon: Settings },
+]);
 
-const tiles = [
+const tiles = computed(() => [
   // 1. Sales & POS
   {
     id: 'pos',
     category: 'sales',
-    title: 'نقطة البيع (POS)',
-    subtitle: 'كاشير سريع ولمس',
+    title: t('dashboard.menu_hub.tiles.pos.title'),
+    subtitle: t('dashboard.menu_hub.tiles.pos.subtitle'),
     to: '/pos',
     shortcut: 'F2',
     icon: Zap,
@@ -156,8 +158,8 @@ const tiles = [
   {
     id: 'invoices',
     category: 'sales',
-    title: 'فاتورة مبيعات',
-    subtitle: 'إصدار ومتابعة البيع',
+    title: t('dashboard.menu_hub.tiles.invoices.title'),
+    subtitle: t('dashboard.menu_hub.tiles.invoices.subtitle'),
     to: '/invoices',
     shortcut: 'F4',
     icon: ShoppingBag,
@@ -166,8 +168,8 @@ const tiles = [
   {
     id: 'sale_returns',
     category: 'sales',
-    title: 'مرتجع مبيعات',
-    subtitle: 'استرجاع بضاعة',
+    title: t('dashboard.menu_hub.tiles.sale_returns.title'),
+    subtitle: t('dashboard.menu_hub.tiles.sale_returns.subtitle'),
     to: '/returns/create',
     icon: RotateCcw,
     bgClass: 'bg-gradient-to-br from-teal-600 to-emerald-700 border-teal-500/50 shadow-teal-500/20',
@@ -175,8 +177,8 @@ const tiles = [
   {
     id: 'customers',
     category: 'sales',
-    title: 'العملاء والحسابات',
-    subtitle: 'كشوف حساب الآجل',
+    title: t('dashboard.menu_hub.tiles.customers.title'),
+    subtitle: t('dashboard.menu_hub.tiles.customers.subtitle'),
     to: '/customers',
     icon: Users,
     bgClass: 'bg-gradient-to-br from-sky-600 to-blue-700 border-sky-500/50 shadow-sky-500/20',
@@ -186,8 +188,8 @@ const tiles = [
   {
     id: 'purchases',
     category: 'purchases',
-    title: 'فاتورة مشتريات',
-    subtitle: 'توريد واستلام بضاعة',
+    title: t('dashboard.menu_hub.tiles.purchases.title'),
+    subtitle: t('dashboard.menu_hub.tiles.purchases.subtitle'),
     to: '/purchases/create',
     icon: ShoppingCart,
     bgClass: 'bg-gradient-to-br from-amber-600 to-orange-700 border-amber-500/50 shadow-amber-500/20',
@@ -195,8 +197,8 @@ const tiles = [
   {
     id: 'purchase_returns',
     category: 'purchases',
-    title: 'مرتجع مشتريات',
-    subtitle: 'إرجاع لمورد',
+    title: t('dashboard.menu_hub.tiles.purchase_returns.title'),
+    subtitle: t('dashboard.menu_hub.tiles.purchase_returns.subtitle'),
     to: '/returns',
     icon: RefreshCw,
     bgClass: 'bg-gradient-to-br from-orange-700 to-rose-700 border-orange-600/50 shadow-orange-500/20',
@@ -204,8 +206,8 @@ const tiles = [
   {
     id: 'suppliers',
     category: 'purchases',
-    title: 'الموردين والشركات',
-    subtitle: 'أرصدة الموردين',
+    title: t('dashboard.menu_hub.tiles.suppliers.title'),
+    subtitle: t('dashboard.menu_hub.tiles.suppliers.subtitle'),
     to: '/suppliers',
     icon: Truck,
     bgClass: 'bg-gradient-to-br from-amber-700 to-yellow-800 border-amber-600/50 shadow-amber-500/20',
@@ -213,8 +215,8 @@ const tiles = [
   {
     id: 'smart_reorder',
     category: 'purchases',
-    title: 'رادار النواقص',
-    subtitle: 'إعادة الطلب الذكي',
+    title: t('dashboard.menu_hub.tiles.smart_reorder.title'),
+    subtitle: t('dashboard.menu_hub.tiles.smart_reorder.subtitle'),
     to: '/purchases/smart-reorder',
     icon: Radar,
     bgClass: 'bg-gradient-to-br from-purple-600 to-indigo-700 border-purple-500/50 shadow-purple-500/20',
@@ -224,8 +226,8 @@ const tiles = [
   {
     id: 'daily_journal',
     category: 'finance',
-    title: 'دفتر اليومية',
-    subtitle: 'حركة الخزينة والسيولة',
+    title: t('dashboard.menu_hub.tiles.daily_journal.title'),
+    subtitle: t('dashboard.menu_hub.tiles.daily_journal.subtitle'),
     to: '/daily-journal',
     icon: CalendarDays,
     bgClass: 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500/50 shadow-blue-500/20',
@@ -233,8 +235,8 @@ const tiles = [
   {
     id: 'expenses',
     category: 'finance',
-    title: 'المصروفات والعهد',
-    subtitle: 'سندات الصرف والتشغيل',
+    title: t('dashboard.menu_hub.tiles.expenses.title'),
+    subtitle: t('dashboard.menu_hub.tiles.expenses.subtitle'),
     to: '/expenses',
     icon: Receipt,
     bgClass: 'bg-gradient-to-br from-rose-500 to-red-600 border-rose-400/50 shadow-rose-500/20',
@@ -244,8 +246,8 @@ const tiles = [
   {
     id: 'items',
     category: 'inventory',
-    title: 'كارت صنف والمخزن',
-    subtitle: 'إدخال البضاعة والأسعار',
+    title: t('dashboard.menu_hub.tiles.items.title'),
+    subtitle: t('dashboard.menu_hub.tiles.items.subtitle'),
     to: '/items',
     icon: Package,
     bgClass: 'bg-gradient-to-br from-cyan-600 to-teal-700 border-cyan-500/50 shadow-cyan-500/20',
@@ -253,8 +255,8 @@ const tiles = [
   {
     id: 'categories',
     category: 'inventory',
-    title: 'فئات الأصناف',
-    subtitle: 'تصنيفات وأقسام المنيو',
+    title: t('dashboard.menu_hub.tiles.categories.title'),
+    subtitle: t('dashboard.menu_hub.tiles.categories.subtitle'),
     to: '/categories',
     icon: FolderOpen,
     bgClass: 'bg-gradient-to-br from-teal-700 to-cyan-800 border-teal-600/50 shadow-teal-500/20',
@@ -262,8 +264,8 @@ const tiles = [
   {
     id: 'store_stocks',
     category: 'inventory',
-    title: 'جرد وأرصدة الفروع',
-    subtitle: 'جرد الفروع والمخازن',
+    title: t('dashboard.menu_hub.tiles.store_stocks.title'),
+    subtitle: t('dashboard.menu_hub.tiles.store_stocks.subtitle'),
     to: '/stores/stocks',
     icon: Layers,
     bgClass: 'bg-gradient-to-br from-sky-700 to-cyan-800 border-sky-600/50 shadow-sky-500/20',
@@ -271,8 +273,8 @@ const tiles = [
   {
     id: 'stock_transfers',
     category: 'inventory',
-    title: 'التحويل بين المخازن',
-    subtitle: 'إذن تحويل بضاعة',
+    title: t('dashboard.menu_hub.tiles.stock_transfers.title'),
+    subtitle: t('dashboard.menu_hub.tiles.stock_transfers.subtitle'),
     to: '/stock-transfers',
     icon: Truck,
     bgClass: 'bg-gradient-to-br from-teal-600 to-emerald-800 border-teal-500/50 shadow-teal-500/20',
@@ -280,8 +282,8 @@ const tiles = [
   {
     id: 'coffee_blender',
     category: 'inventory',
-    title: 'خلطة وتجميع الأصناف',
-    subtitle: 'معمل البن والإنتاج',
+    title: t('dashboard.menu_hub.tiles.coffee_blender.title'),
+    subtitle: t('dashboard.menu_hub.tiles.coffee_blender.subtitle'),
     to: '/coffee-blender',
     icon: Coffee,
     bgClass: 'bg-gradient-to-br from-amber-800 to-yellow-900 border-amber-700/50 shadow-amber-600/20',
@@ -291,8 +293,8 @@ const tiles = [
   {
     id: 'reports',
     category: 'reports',
-    title: 'التقارير الشاملة',
-    subtitle: 'أرباح، مبيعات، ومخازن',
+    title: t('dashboard.menu_hub.tiles.reports.title'),
+    subtitle: t('dashboard.menu_hub.tiles.reports.subtitle'),
     to: '/reports',
     icon: BarChart3,
     bgClass: 'bg-gradient-to-br from-indigo-600 to-blue-700 border-indigo-500/50 shadow-indigo-500/20',
@@ -302,8 +304,8 @@ const tiles = [
   {
     id: 'stores',
     category: 'setup',
-    title: 'الفروع والمخازن',
-    subtitle: 'إدارة منافذ البيع',
+    title: t('dashboard.menu_hub.tiles.stores.title'),
+    subtitle: t('dashboard.menu_hub.tiles.stores.subtitle'),
     to: '/stores',
     icon: Building2,
     bgClass: 'bg-gradient-to-br from-violet-600 to-purple-800 border-violet-500/50 shadow-violet-500/20',
@@ -311,18 +313,18 @@ const tiles = [
   {
     id: 'settings',
     category: 'setup',
-    title: 'إعدادات النظام',
-    subtitle: 'الضرائب، الفاتورة، والفرع',
+    title: t('dashboard.menu_hub.tiles.settings.title'),
+    subtitle: t('dashboard.menu_hub.tiles.settings.subtitle'),
     to: '/settings',
     icon: Settings,
     bgClass: 'bg-gradient-to-br from-slate-700 to-slate-900 border-slate-600/50 shadow-slate-600/20',
   },
-];
+]);
 
-const visibleTiles = computed(() => tiles.filter((t) => canAccessPath(t.to)));
+const visibleTiles = computed(() => tiles.value.filter((tile) => canAccessPath(tile.to)));
 
 const categoryTabs = computed(() =>
-  allTabs.filter((tab) => tab.id === 'all' || visibleTiles.value.some((t) => t.category === tab.id))
+  allTabs.value.filter((tab) => tab.id === 'all' || visibleTiles.value.some((tile) => tile.category === tab.id))
 );
 
 const filteredTiles = computed(() => {
@@ -330,17 +332,17 @@ const filteredTiles = computed(() => {
 
   // Filter by Tab
   if (activeTab.value !== 'all') {
-    list = list.filter((t) => t.category === activeTab.value);
+    list = list.filter((tile) => tile.category === activeTab.value);
   }
 
   // Filter by Search Query
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.trim().toLowerCase();
     list = list.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        (t.subtitle && t.subtitle.toLowerCase().includes(q)) ||
-        (t.shortcut && t.shortcut.toLowerCase().includes(q))
+      (tile) =>
+        tile.title.toLowerCase().includes(q) ||
+        (tile.subtitle && tile.subtitle.toLowerCase().includes(q)) ||
+        (tile.shortcut && tile.shortcut.toLowerCase().includes(q))
     );
   }
 

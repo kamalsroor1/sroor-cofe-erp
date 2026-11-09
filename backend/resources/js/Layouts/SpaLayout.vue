@@ -343,7 +343,7 @@
                         v-if="section.comingSoon"
                         class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20"
                       >
-                        🚀 {{ $t('nav.coming_soon') }}
+                        {{ $t('nav.coming_soon') }}
                       </span>
                       <template v-else>
                         <span
@@ -448,7 +448,7 @@
               @click="checkForUpdates(true)"
               class="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold font-tajawal transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
             >
-              <span>🚀</span>
+              <Rocket class="w-3.5 h-3.5" />
               <span>{{ $t('nav.layout.check_updates') }}</span>
             </button>
           </div>
@@ -502,6 +502,7 @@ import {
   Printer,
   Coffee,
   X,
+  Rocket,
 } from 'lucide-vue-next';
 
 const { currentVersionName, checkForUpdates } = useAppUpdate();

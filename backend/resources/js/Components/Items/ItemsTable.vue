@@ -168,7 +168,8 @@
                 {{ formatQty(item.current_stock) }} {{ item.unit }}
               </span>
               <div v-if="item.is_low_stock" class="text-[10px] text-rose-500 font-bold mt-0.5">
-                🚨 {{ $t('inventory.min_stock_level') }}: {{ formatQty(item.min_stock_level) }}
+                <AlertTriangle class="inline w-3 h-3 me-1 align-text-bottom" />{{ $t('inventory.min_stock_level') }}:
+                {{ formatQty(item.min_stock_level) }}
               </div>
             </div>
 
@@ -243,7 +244,7 @@
       v-else
       :title="$t('inventory.no_items_found')"
       :description="$t('inventory.no_items_description')"
-      :icon="'☕'"
+      :icon="'coffee'"
     >
       <template #action>
         <FeatureGate feature="items.manage">
@@ -262,7 +263,7 @@
 </template>
 
 <script setup>
-import { Sliders, History, Pencil, Trash2, Plus } from 'lucide-vue-next';
+import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import FeatureGate from '../FeatureGate.vue';

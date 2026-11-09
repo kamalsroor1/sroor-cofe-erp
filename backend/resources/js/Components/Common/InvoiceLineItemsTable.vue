@@ -1,4 +1,5 @@
 <script setup>
+import { X } from 'lucide-vue-next';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
@@ -59,7 +60,9 @@ const formatTotal = (qty, price) => {
           <th class="pb-2.5 w-28">{{ $t('common.quantity') }}</th>
           <th class="pb-2.5 w-28">{{ priceLabel }}</th>
           <th class="pb-2.5 font-mono">{{ $t('common.total') }}</th>
-          <th class="pb-2.5 text-center w-10">✕</th>
+          <th class="pb-2.5 text-center w-10">
+            <span class="sr-only">{{ $t('common.delete') }}</span>
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
@@ -103,7 +106,7 @@ const formatTotal = (qty, price) => {
               class="w-9 h-9 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer"
               @click="onRemove(itIdx)"
             >
-              ✕
+              <X class="w-4 h-4" />
             </button>
           </td>
         </tr>
@@ -128,7 +131,7 @@ const formatTotal = (qty, price) => {
           class="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-500 dark:text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer shrink-0"
           @click="onRemove(itIdx)"
         >
-          ✕
+          <X class="w-4 h-4" />
         </button>
       </div>
 

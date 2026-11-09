@@ -40,14 +40,14 @@
       <div v-if="previewUrl" class="relative group">
         <img
           :src="previewUrl"
-          alt="Preview"
+          :alt="$t('common.preview')"
           class="w-24 h-24 object-cover rounded-xl shadow-md border border-slate-200 dark:border-slate-700"
         />
         <button
           type="button"
           @click.stop="clearFile"
           class="absolute -top-2 -start-2 p-1 bg-rose-500 text-white rounded-full shadow-lg hover:scale-110 transition cursor-pointer"
-          title="حذف الملف"
+          :title="$t('common.remove_file')"
         >
           <X class="w-3.5 h-3.5" />
         </button>
@@ -61,7 +61,7 @@
           <UploadCloud class="w-5 h-5" />
         </div>
         <div class="text-xs font-black text-slate-700 dark:text-slate-200">
-          <span>{{ placeholder || 'اضغط هنا لرفع ملف أو اسحبه إلى هنا' }}</span>
+          <span>{{ placeholder || $t('common.upload_prompt') }}</span>
         </div>
         <p v-if="hint" class="text-[10px] font-medium text-slate-400 dark:text-slate-500">
           {{ hint }}

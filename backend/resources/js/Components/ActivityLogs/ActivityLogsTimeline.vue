@@ -14,7 +14,11 @@
           class="p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs"
         >
           <div class="flex items-start gap-3 flex-1 min-w-0">
-            <span class="text-xl shrink-0 mt-0.5">{{ log.module_icon || '📋' }}</span>
+            <DynamicIcon
+              :name="log.module_icon"
+              fallback="clipboard-list"
+              class="w-5 h-5 shrink-0 mt-0.5 text-slate-500"
+            />
             <div class="space-y-1 flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span
@@ -88,12 +92,13 @@
       v-else
       :title="$t('activity.no_logs_match')"
       :description="$t('activity.adjust_filter_hint')"
-      icon="📋"
+      icon="clipboard-list"
     />
   </div>
 </template>
 
 <script setup>
+import DynamicIcon from '../Common/DynamicIcon.vue';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 

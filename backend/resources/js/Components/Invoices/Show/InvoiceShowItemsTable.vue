@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
       <div class="flex items-center gap-2">
-        <span class="text-base">📦</span>
+        <Package class="w-5 h-5" />
         <h3 class="text-sm font-black text-slate-900 dark:text-white">
           {{ $t('invoices.items_count') }} ({{ items.length }})
         </h3>
@@ -67,6 +67,7 @@
 </template>
 
 <script setup>
+import { Package } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 
 const { formatMoney, currencyLabel } = useFormatters();

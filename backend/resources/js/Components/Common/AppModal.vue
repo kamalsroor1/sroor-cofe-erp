@@ -1,4 +1,5 @@
 <script setup>
+import { X } from 'lucide-vue-next';
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 
@@ -169,7 +170,7 @@ watch(
               class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs font-bold flex items-center justify-center transition active:scale-90 cursor-pointer shrink-0 shadow-xs"
               @click="close"
             >
-              ✕
+              <X class="w-4 h-4" />
             </button>
           </div>
 

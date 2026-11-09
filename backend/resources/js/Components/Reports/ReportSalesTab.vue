@@ -1,4 +1,5 @@
 <script setup>
+import { FileText } from 'lucide-vue-next';
 import MetricCard from '@/Components/Common/MetricCard.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -57,7 +58,7 @@ const { formatMoney } = useMoney();
       class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs font-tajawal"
     >
       <h3 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-        <span>📑</span>
+        <FileText class="w-4 h-4" />
         <span>{{ $t('reports.pnl_breakdown') }}</span>
       </h3>
 

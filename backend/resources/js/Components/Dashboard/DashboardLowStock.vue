@@ -11,7 +11,7 @@
         class="text-xs font-bold text-theme-primary hover:text-theme-primary transition flex items-center gap-1 cursor-pointer"
       >
         <span>{{ $t('dashboard.smart_reorder_link') }}</span
-        ><span>←</span>
+        ><ArrowRight class="w-3.5 h-3.5 rtl:rotate-180" />
       </router-link>
     </template>
     <div class="space-y-2 max-h-[460px] overflow-y-auto ps-1">
@@ -46,6 +46,7 @@
   </DashboardSectionCard>
 </template>
 <script setup>
+import { ArrowRight } from 'lucide-vue-next';
 import DashboardSectionCard from '../Common/DashboardSectionCard.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 const { formatQty } = useFormatters();

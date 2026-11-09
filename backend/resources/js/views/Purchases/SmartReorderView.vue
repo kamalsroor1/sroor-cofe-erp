@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('purchases.reorder_radar_title')"
       :subtitle="$t('purchases.reorder_radar_subtitle')"
-      icon="⚡"
+      icon="zap"
     >
       <template #actions>
         <div class="flex items-center gap-2">

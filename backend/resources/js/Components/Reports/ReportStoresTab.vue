@@ -40,7 +40,7 @@ const storeColumns = computed(() => [
       :columns="storeColumns"
       :rows="storeBreakdown"
       :empty-title="$t('common.no_data_available')"
-      empty-icon="🏪"
+      empty-icon="store"
     >
       <!-- Name -->
       <template #cell-name="{ row }">

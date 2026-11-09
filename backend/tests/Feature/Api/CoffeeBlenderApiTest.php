@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\DTOs\Blends\CreateBlenderInvoiceDTO;
+use App\Enums\BlendGrind;
+use App\Enums\BlendRoast;
 use App\Models\ActivityLog;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TenantTestCase;
 
 class CoffeeBlenderApiTest extends TenantTestCase
@@ -303,6 +308,51 @@ class CoffeeBlenderApiTest extends TenantTestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['blend_name', 'components']);
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string, 2: string}>
+     */
+    public static function roastAndGrindInputs(): array
+    {
+        return [
+            'codes' => ['dark', 'espresso', 'espresso'],
+            'legacy arabic labels' => ['غامق', 'إسبريسو', 'espresso'],
+        ];
+    }
+
+    #[DataProvider('roastAndGrindInputs')]
+    public function test_blender_invoice_accepts_codes_and_legacy_arabic_roast_and_grind(string $roast, string $grind, string $grindCode): void
+    {
+        $payload = $this->blendPayload($this->customer->id);
+        $payload['roast_type'] = $roast;
+        $payload['grind_level'] = $grind;
+
+        $this->postJson('/api/v1/coffee-blender/invoice', $payload, $this->adminHeaders)->assertStatus(201);
+
+        $expectedRoast = BlendRoast::Dark->label();
+        $expectedGrind = BlendGrind::from($grindCode)->label();
+
+        $this->inTenant($this->tenant, function () use ($expectedRoast, $expectedGrind): void {
+            $notes = (string) Invoice::query()->latest('id')->firstOrFail()->notes;
+            $this->assertStringContainsString($expectedRoast, $notes);
+            $this->assertStringContainsString($expectedGrind, $notes);
+        });
+    }
+
+    public function test_blender_enums_map_codes_and_legacy_labels_and_keep_unknown_text_out(): void
+    {
+        $this->assertSame(BlendRoast::Medium, BlendRoast::fromInput('وسط'));
+        $this->assertSame(BlendRoast::Double, BlendRoast::fromInput('محروق / دبل'));
+        $this->assertSame(BlendGrind::Beans, BlendGrind::fromInput('beans'));
+        $this->assertNull(BlendGrind::fromInput('something else'));
+
+        $dto = CreateBlenderInvoiceDTO::fromArray([
+            'blend_name' => 'x', 'customer_id' => 1, 'components' => [],
+            'roast_type' => 'فاتح', 'grind_level' => 'custom grind',
+        ]);
+        $this->assertSame('light', $dto->roast_type);
+        $this->assertSame('custom grind', $dto->grind_level);
     }
 
     // ------------------------------------------------------------------ SEC-1 (W2 batch 6)

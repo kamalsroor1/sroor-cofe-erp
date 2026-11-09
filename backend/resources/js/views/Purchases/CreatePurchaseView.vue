@@ -4,7 +4,7 @@
     <PageHeader
       :title="$t('purchases.new_purchase')"
       :subtitle="$t('purchases.create_subtitle')"
-      icon="🚛"
+      icon="truck"
       back-href="/purchases"
     />
 

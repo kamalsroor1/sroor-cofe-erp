@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal text-slate-900 dark:text-slate-100">
     <!-- Header with Filter toggle, Actions dropdown, and Fast POS -->
-    <PageHeader :title="$t('invoices.title')" :subtitle="$t('invoices.subtitle')" :icon="'🛒'">
+    <PageHeader :title="$t('invoices.title')" :subtitle="$t('invoices.subtitle')" :icon="'shopping-cart'">
       <template #actions>
         <div class="flex items-center gap-2 flex-wrap">
           <BaseButton

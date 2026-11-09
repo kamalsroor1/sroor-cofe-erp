@@ -38,7 +38,12 @@ const itemColumns = computed(() => [
       }}</span>
     </div>
 
-    <DataTable :columns="itemColumns" :rows="itemProfits" :empty-title="$t('common.no_data_available')" empty-icon="📊">
+    <DataTable
+      :columns="itemColumns"
+      :rows="itemProfits"
+      :empty-title="$t('common.no_data_available')"
+      empty-icon="bar-chart3"
+    >
       <!-- Name -->
       <template #cell-name="{ row }">
         <span class="font-bold text-slate-900 dark:text-white font-tajawal">{{ row.name }}</span>

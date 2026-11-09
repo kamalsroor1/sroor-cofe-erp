@@ -30,7 +30,7 @@
                   class="text-sm hover:text-purple-500 hover:underline flex items-center gap-1.5 font-black"
                 >
                   <span>{{ t.name }}</span>
-                  <span class="text-xs text-purple-400">↗</span>
+                  <ExternalLink class="w-3 h-3 text-purple-400" />
                 </router-link>
                 <div class="text-[10px] text-slate-400 font-mono">ID: {{ t.id }}</div>
               </td>
@@ -135,7 +135,7 @@
                 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1"
               >
                 <span>{{ t.name }}</span>
-                <span class="text-xs text-purple-400">↗</span>
+                <ExternalLink class="w-3 h-3 text-purple-400" />
               </router-link>
               <div class="text-xs text-cyan-600 dark:text-cyan-400 font-mono mt-0.5">{{ t.domain }}</div>
             </div>

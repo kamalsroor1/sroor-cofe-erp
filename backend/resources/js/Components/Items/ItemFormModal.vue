@@ -140,7 +140,7 @@ const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: v
 const categoryOptions = computed(() => {
   return props.categories.map((c) => ({
     value: typeof c === 'object' ? c.name : c,
-    label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,
+    label: typeof c === 'object' ? c.name : c,
   }));
 });
 

@@ -15,12 +15,12 @@ export function useTrash() {
     const errorMessage = ref('');
 
     const tabsList = computed(() => [
-        { id: 'items', label: t('trash.tab_items_label'), icon: '📦' },
-        { id: 'customers', label: t('trash.tab_customers_label'), icon: '👥' },
-        { id: 'suppliers', label: t('trash.tab_suppliers_label'), icon: '🏭' },
-        { id: 'stores', label: t('trash.tab_stores_label'), icon: '🏬' },
-        { id: 'expenses', label: t('trash.tab_expenses_label'), icon: '💸' },
-        { id: 'returns', label: t('trash.tab_returns_label'), icon: '🔄' },
+        { id: 'items', label: t('trash.tab_items_label'), icon: 'package' },
+        { id: 'customers', label: t('trash.tab_customers_label'), icon: 'users' },
+        { id: 'suppliers', label: t('trash.tab_suppliers_label'), icon: 'warehouse' },
+        { id: 'stores', label: t('trash.tab_stores_label'), icon: 'store' },
+        { id: 'expenses', label: t('trash.tab_expenses_label'), icon: 'receipt' },
+        { id: 'returns', label: t('trash.tab_returns_label'), icon: 'arrow-left-right' },
     ]);
 
     const pagination = ref({

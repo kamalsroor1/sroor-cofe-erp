@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-        <span>📦</span>
+        <Package class="w-4 h-4" />
         <span>{{ $t('inventory.transferred_items_section') }}</span>
       </h2>
     </div>
@@ -77,7 +77,7 @@
                   type="button"
                   @click="$emit('remove-item', idx)"
                   class="p-2 text-slate-400 hover:text-rose-500 rounded-lg transition cursor-pointer active:scale-90"
-                  title="حذف"
+                  :title="$t('common.delete')"
                 >
                   <Trash2 class="w-4 h-4" />
                 </button>
@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { Plus, Trash2 } from 'lucide-vue-next';
+import { Plus, Trash2, Package } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
 

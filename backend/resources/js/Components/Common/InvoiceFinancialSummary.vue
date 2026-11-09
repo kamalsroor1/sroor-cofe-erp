@@ -1,4 +1,5 @@
 <script setup>
+import DynamicIcon from 'DynamicIcon.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { currencyLabel } = useFormatters();
@@ -13,7 +14,7 @@ defineProps({
   isProcessing: { type: Boolean, default: false },
   isDisabled: { type: Boolean, default: false },
   submitLabel: { type: String, default: '' },
-  submitIcon: { type: String, default: '✅' },
+  submitIcon: { type: String, default: 'check-circle2' },
 });
 
 defineEmits(['update:discountAmount', 'update:paidAmount', 'update:refundAmount', 'submit']);
@@ -113,7 +114,7 @@ const formatMoney = (val) => {
       :disabled="isProcessing || isDisabled"
       class="w-full h-12 rounded-2xl btn-primary-theme font-black text-sm flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
     >
-      <span>{{ submitIcon }}</span>
+      <DynamicIcon :name="submitIcon" class="w-4 h-4" />
       <span>{{ isProcessing ? $t('common.save') + '...' : submitLabel }}</span>
     </button>
   </div>

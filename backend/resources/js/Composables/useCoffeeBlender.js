@@ -19,12 +19,12 @@ export function useCoffeeBlender() {
         }),
     });
 
-    const blendName = ref('تركيبة مجمعة مخصصة');
+    const blendName = ref(t('inventory.blend_default_name'));
     const targetWeightGrams = ref(250);
     const selectedCustomerId = ref(null);
     const selectedItemToAdd = ref(null);
-    const roastType = ref('وسط');
-    const grindLevel = ref('تركي ناعم');
+    const roastType = ref('medium');
+    const grindLevel = ref('turkish');
     const cardamomGrams = ref(0);
     const notes = ref('');
     const isSubmitting = ref(false);
@@ -38,17 +38,17 @@ export function useCoffeeBlender() {
     ]);
 
     const roastOptions = computed(() => [
-        { value: 'فاتح', label: t('inventory.roast_light') },
-        { value: 'وسط', label: t('inventory.roast_medium') },
-        { value: 'غامق', label: t('inventory.roast_dark') },
-        { value: 'محروق / دبل', label: t('inventory.roast_double') },
+        { value: 'light', label: t('inventory.roast_light') },
+        { value: 'medium', label: t('inventory.roast_medium') },
+        { value: 'dark', label: t('inventory.roast_dark') },
+        { value: 'double', label: t('inventory.roast_double') },
     ]);
 
     const grindOptions = computed(() => [
-        { value: 'تركي ناعم', label: t('inventory.grind_turkish') },
-        { value: 'إسبريسو', label: t('inventory.grind_espresso') },
-        { value: 'فرينش بريس', label: t('inventory.grind_french_press') },
-        { value: 'حبوب بدون طحن', label: t('inventory.grind_beans') },
+        { value: 'turkish', label: t('inventory.grind_turkish') },
+        { value: 'espresso', label: t('inventory.grind_espresso') },
+        { value: 'french_press', label: t('inventory.grind_french_press') },
+        { value: 'beans', label: t('inventory.grind_beans') },
     ]);
 
     const setTargetWeight = (grams) => {

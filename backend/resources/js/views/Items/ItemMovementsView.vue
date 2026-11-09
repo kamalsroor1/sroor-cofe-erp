@@ -4,7 +4,7 @@
     <PageHeader
       :title="`${$t('inventory.movements_title')}: ${item?.name || ''}`"
       :subtitle="$t('inventory.movements_subtitle')"
-      icon="📜"
+      icon="scroll-text"
       class="no-print"
     >
       <template #actions>

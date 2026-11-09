@@ -307,11 +307,7 @@ const onHexTextInput = (val) => {
                 :style="{ backgroundColor: swatch.hex }"
                 :title="swatch.name + ' (' + swatch.hex + ')'"
               >
-                <span
-                  v-if="activeHexColor.toLowerCase() === swatch.hex.toLowerCase()"
-                  class="text-white text-[10px] font-black"
-                  >✓</span
-                >
+                <Check v-if="activeHexColor.toLowerCase() === swatch.hex.toLowerCase()" class="w-3 h-3 text-white" />
               </button>
             </div>
           </div>

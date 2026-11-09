@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
-    <PageHeader :title="$t('inventory.blender_title')" :subtitle="$t('inventory.blender_subtitle')" icon="📦">
+    <PageHeader :title="$t('inventory.blender_title')" :subtitle="$t('inventory.blender_subtitle')" icon="package">
       <template #actions>
         <router-link
           to="/invoices"

@@ -53,13 +53,13 @@ export function useInvoices() {
         { value: 'confirmed', label: trans('invoices.status_confirmed_option') },
         { value: 'cancelled', label: trans('invoices.status_cancelled_option') },
     ]);
-    const datePresets = [
+    const datePresets = computed(() => [
         { id: 'all', label: trans('invoices.date_preset_all') },
         { id: 'today', label: trans('invoices.date_preset_today') },
         { id: 'yesterday', label: trans('invoices.date_preset_yesterday') },
         { id: 'week', label: trans('invoices.date_preset_week') },
         { id: 'month', label: trans('invoices.date_preset_month') },
-    ];
+    ]);
 
     const activeFiltersCount = computed(() => {
         let count = 0;

@@ -36,7 +36,7 @@
         <div
           class="absolute end-1 top-1 bg-white w-5 h-5 rounded-full transition-transform duration-200 shadow-md rtl:peer-checked:translate-x-5 ltr:peer-checked:-translate-x-5 flex items-center justify-center text-[10px] font-black"
         >
-          <span v-if="model" class="text-theme-primary">✓</span>
+          <Check v-if="model" class="w-3 h-3 text-theme-primary" />
         </div>
       </div>
     </label>
@@ -51,7 +51,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { AlertCircle } from 'lucide-vue-next';
+import { AlertCircle, Check } from 'lucide-vue-next';
 
 defineOptions({
   inheritAttrs: false,

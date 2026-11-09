@@ -138,7 +138,7 @@
         v-else
         :title="$t('treasury.no_invoices_date')"
         :description="$t('treasury.no_invoices_date_desc')"
-        icon="🛒"
+        icon="shopping-cart"
       />
     </div>
 

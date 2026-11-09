@@ -24,7 +24,7 @@
                 class="w-16 h-16 object-contain"
               />
             </span>
-            <span v-else>☕</span>
+            <span v-else><Coffee class="w-10 h-10 text-theme-primary" /></span>
           </div>
           <!-- Animated glowing halo -->
           <div
@@ -69,6 +69,7 @@
 </template>
 
 <script setup>
+import { Coffee } from 'lucide-vue-next';
 import { useAppConfigStore } from '../../stores/appConfig';
 
 const appConfigStore = useAppConfigStore();

@@ -1,4 +1,6 @@
 <script setup>
+import DynamicIcon from 'DynamicIcon.vue';
+import { X } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 const props = defineProps({
@@ -16,7 +18,7 @@ const props = defineProps({
   },
   icon: {
     type: String,
-    default: '🔍',
+    default: 'search',
   },
   inputClass: {
     type: String,
@@ -67,7 +69,7 @@ const clear = () => {
     />
 
     <span class="absolute inset-y-0 start-0 ps-3.5 flex items-center text-slate-400 text-xs pointer-events-none">
-      {{ icon }}
+      <DynamicIcon :name="icon" class="w-4 h-4" />
     </span>
 
     <button
@@ -76,7 +78,7 @@ const clear = () => {
       class="absolute inset-y-0 end-0 pe-3.5 ps-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-900 dark:text-slate-200 text-xs cursor-pointer transition"
       @click="clear"
     >
-      ✕
+      <X class="w-3.5 h-3.5" />
     </button>
   </div>
 </template>

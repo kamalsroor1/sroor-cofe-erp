@@ -1,4 +1,5 @@
 <script setup>
+import { Download } from 'lucide-vue-next';
 import { useMoney } from '@/Composables/useMoney';
 import { useFormatters } from '../../Composables/useFormatters';
 
@@ -76,7 +77,7 @@ const { formatMoney } = useMoney();
           class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5"
           @click="$emit('export-abc')"
         >
-          <span>📥</span>
+          <Download class="w-4 h-4" />
           <span>{{ $t('reports.export_abc_excel') }}</span>
         </button>
       </div>

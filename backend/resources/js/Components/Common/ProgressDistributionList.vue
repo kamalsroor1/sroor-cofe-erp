@@ -28,7 +28,7 @@
 
     <!-- Empty State -->
     <div v-if="!items.length" class="py-8 text-center text-xs text-slate-400 font-bold">
-      {{ emptyMessage }}
+      {{ emptyMessage || $t('common.no_data') }}
     </div>
   </div>
 </template>
@@ -54,6 +54,6 @@ defineProps({
   formatFn: { type: Function, default: (v) => v }, // value formatter
 
   currency: { type: String, default: '' },
-  emptyMessage: { type: String, default: 'لا توجد بيانات مسجلة' },
+  emptyMessage: { type: String, default: '' },
 });
 </script>

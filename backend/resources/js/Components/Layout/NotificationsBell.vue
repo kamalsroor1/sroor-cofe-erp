@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { Bell, BellOff, AlertTriangle, Info, TriangleAlert } from 'lucide-vue-next';
+import { Bell, BellOff, AlertTriangle, Info, TriangleAlert, Users, Wallet } from 'lucide-vue-next';
 import { useAppConfigStore } from '../../stores/appConfig';
 
 const appConfigStore = useAppConfigStore();
@@ -19,7 +19,10 @@ const TYPE_STYLES = {
   warning: { icon: TriangleAlert, cls: 'text-amber-500 bg-amber-500/10' },
   info: { icon: Info, cls: 'text-sky-500 bg-sky-500/10' },
 };
+// The server sends lucide icon names (kebab-case); anything unknown falls back to the type icon.
+const ICONS = { 'alert-triangle': AlertTriangle, users: Users, wallet: Wallet, info: Info };
 const styleOf = (n) => TYPE_STYLES[n.type] || TYPE_STYLES.info;
+const iconOf = (n) => ICONS[n.icon] || styleOf(n).icon;
 
 const openLink = (n) => {
   isOpen.value = false;
@@ -92,7 +95,7 @@ onUnmounted(() => document.removeEventListener('click', onOutsideClick));
             @click="openLink(n)"
           >
             <span class="shrink-0 mt-0.5 p-1 rounded-lg" :class="styleOf(n).cls">
-              <component :is="styleOf(n).icon" class="w-4 h-4" />
+              <component :is="iconOf(n)" class="w-4 h-4" />
             </span>
             <span class="flex-1 min-w-0">
               <span class="block font-bold text-slate-900 dark:text-white">{{ n.title }}</span>

@@ -65,7 +65,7 @@
           tabindex="-1"
           @click="model = ''"
           class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
-          title="مسح"
+          :title="$t('common.clear')"
         >
           <X class="w-3.5 h-3.5" />
         </button>
@@ -77,7 +77,7 @@
           tabindex="-1"
           @click="showPassword = !showPassword"
           class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
-          :title="showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'"
+          :title="showPassword ? $t('common.hide_password') : $t('common.show_password')"
         >
           <EyeOff v-if="showPassword" class="w-4 h-4" />
           <Eye v-else class="w-4 h-4" />

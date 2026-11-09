@@ -49,7 +49,7 @@ const customerColumns = computed(() => [
       :columns="customerColumns"
       :rows="customerSales"
       :empty-title="$t('common.no_data_available')"
-      empty-icon="👥"
+      empty-icon="users"
     >
       <!-- Name -->
       <template #cell-name="{ row }">

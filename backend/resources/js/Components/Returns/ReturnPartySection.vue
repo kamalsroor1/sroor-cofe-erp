@@ -5,7 +5,7 @@
     <h2
       class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
     >
-      <span>🔄</span>
+      <RefreshCw class="w-4 h-4" />
       <span>{{ $t('returns.type_and_party_section') }}</span>
     </h2>
 
@@ -79,6 +79,7 @@
 </template>
 
 <script setup>
+import { RefreshCw } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseDatePicker from '../Form/BaseDatePicker.vue';
 

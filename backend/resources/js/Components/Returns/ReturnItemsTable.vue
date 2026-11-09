@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-        <span>📦</span>
+        <Package class="w-4 h-4" />
         <span>{{ $t('returns.return_items_section') }}</span>
       </h2>
     </div>
@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
+import { Trash2, Package } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 

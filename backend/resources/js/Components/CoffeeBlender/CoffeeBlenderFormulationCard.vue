@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 flex items-center gap-2">
-        <span>🫘</span>
+        <Bean class="w-4 h-4" />
         <span>{{ $t('inventory.raw_beans_components') }}</span>
       </h2>
       <span
@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
+import { Trash2, Bean } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import BaseInput from '../Form/BaseInput.vue';

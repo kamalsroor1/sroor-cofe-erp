@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
-import { MoreHorizontal, MoreVertical, X } from 'lucide-vue-next';
+import { MoreHorizontal, MoreVertical, X, ArrowRight } from 'lucide-vue-next';
 import { useNativeBridge } from '@/Composables/useNativeBridge';
 
 const props = defineProps({
@@ -311,7 +311,7 @@ onUnmounted(() => {
                         item.description
                       }}</span>
                     </div>
-                    <span class="text-slate-400 text-xs">←</span>
+                    <ArrowRight class="w-3.5 h-3.5 text-slate-400 rtl:rotate-180" />
                   </router-link>
 
                   <button
@@ -337,7 +337,7 @@ onUnmounted(() => {
                         item.description
                       }}</span>
                     </div>
-                    <span class="text-slate-400 text-xs">←</span>
+                    <ArrowRight class="w-3.5 h-3.5 text-slate-400 rtl:rotate-180" />
                   </button>
                 </template>
               </template>

@@ -1,4 +1,5 @@
 <script setup>
+import { RefreshCw } from 'lucide-vue-next';
 import { computed } from 'vue';
 import DatePicker from '@/Components/DatePicker.vue';
 
@@ -91,7 +92,7 @@ const storeId = computed({
           class="w-full h-11 rounded-2xl btn-primary-theme font-bold text-xs transition active:scale-95 cursor-pointer shadow-theme-primary flex items-center justify-center gap-1.5"
           @click="$emit('apply')"
         >
-          <span>🔄</span>
+          <RefreshCw class="w-4 h-4" />
           <span>{{ $t('reports.refresh_report') }}</span>
         </button>
       </div>

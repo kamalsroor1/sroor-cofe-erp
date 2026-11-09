@@ -75,7 +75,7 @@ final class GetSystemContextAction
         if ($lowStockCount > 0) {
             $alerts[] = [
                 'type' => 'danger',
-                'icon' => '🚨',
+                'icon' => 'alert-triangle',
                 'title' => __('dashboard.system_alerts.low_stock_title', ['count' => $lowStockCount]),
                 'description' => __('dashboard.system_alerts.low_stock_desc'),
                 'link' => '/purchases/smart-reorder',
@@ -87,7 +87,7 @@ final class GetSystemContextAction
         if ($debtCount > 0) {
             $alerts[] = [
                 'type' => 'warning',
-                'icon' => '👥',
+                'icon' => 'users',
                 'title' => __('dashboard.system_alerts.debts_title', ['count' => $debtCount]),
                 'description' => __('dashboard.system_alerts.debts_desc'),
                 'link' => '/customers',
@@ -102,7 +102,7 @@ final class GetSystemContextAction
                 if ($cashExpected >= 10000) {
                     $alerts[] = [
                         'type' => 'info',
-                        'icon' => '💰',
+                        'icon' => 'wallet',
                         'title' => __('dashboard.system_alerts.high_cash_title'),
                         'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
                         'link' => '/daily-journal',

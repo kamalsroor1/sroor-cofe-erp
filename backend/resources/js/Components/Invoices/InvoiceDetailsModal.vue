@@ -135,10 +135,10 @@ defineEmits(['close', 'print']);
 
 const formatPaymentType = (type) => {
   const map = {
-    cash: `💵 ${trans('invoices.cash')}`,
-    credit: `📝 ${trans('invoices.credit')}`,
-    partial: `⚖️ ${trans('invoices.partial')}`,
-    bank_transfer: `⚡ ${trans('invoices.electronic_transfer')}`,
+    cash: trans('invoices.cash'),
+    credit: trans('invoices.credit'),
+    partial: trans('invoices.partial'),
+    bank_transfer: trans('invoices.electronic_transfer'),
   };
   return map[type] || type;
 };

@@ -107,7 +107,7 @@ const diffClass = computed(() => {
 });
 
 const diffText = computed(() => {
-  if (diff.value === 0) return `✓ ${t('treasury.drawer_balanced')}`;
+  if (diff.value === 0) return t('treasury.drawer_balanced');
   if (diff.value > 0) return `+${formatMoney(diff.value)} ${currencyLabel.value} (${t('treasury.drawer_surplus')})`;
   return `${formatMoney(diff.value)} ${currencyLabel.value} (${t('treasury.drawer_shortage')})`;
 });

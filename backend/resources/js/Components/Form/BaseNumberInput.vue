@@ -69,7 +69,7 @@
             tabindex="-1"
             @click="decrement"
             class="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition cursor-pointer active:scale-95 text-xs font-black shadow-2xs"
-            title="تقليل"
+            :title="$t('common.decrease')"
           >
             -
           </button>
@@ -78,7 +78,7 @@
             tabindex="-1"
             @click="increment"
             class="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition cursor-pointer active:scale-95 text-xs font-black shadow-2xs"
-            title="زيادة"
+            :title="$t('common.increase')"
           >
             +
           </button>

@@ -1,4 +1,6 @@
 <script setup>
+import { X } from 'lucide-vue-next';
+import DynamicIcon from 'Common/DynamicIcon.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import flatpickr from 'flatpickr';
 import { Arabic } from 'flatpickr/dist/l10n/ar.js';
@@ -11,7 +13,7 @@ const props = defineProps({
   enableTime: { type: Boolean, default: false },
   clearable: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
-  icon: { type: String, default: '📅' },
+  icon: { type: String, default: 'calendar' },
 });
 
 const emit = defineEmits(['update:modelValue', 'change', 'clear']);
@@ -68,8 +70,8 @@ const clearDate = (e) => {
     :class="{ 'opacity-60 pointer-events-none': disabled }"
   >
     <div class="relative flex items-center">
-      <span v-if="icon" class="absolute start-3.5 text-sm text-slate-400 pointer-events-none z-10">
-        {{ icon }}
+      <span v-if="icon" class="absolute start-3.5 text-slate-400 pointer-events-none z-10">
+        <DynamicIcon :name="icon" class="w-4 h-4" />
       </span>
 
       <input
@@ -90,7 +92,7 @@ const clearDate = (e) => {
         class="absolute end-2.5 w-6 h-6 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 flex items-center justify-center text-xs transition z-10 active:scale-90"
         :title="$t('common.cancel')"
       >
-        ✕
+        <X class="w-3.5 h-3.5" />
       </button>
     </div>
   </div>

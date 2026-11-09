@@ -5,7 +5,7 @@
       :title="$t('super.app_versions_page_title')"
       :subtitle="$t('super.app_versions_page_subtitle')"
       badge="OTA Updater"
-      icon="🚀"
+      icon="rocket"
     >
       <template #actions>
         <div class="flex items-center gap-3">

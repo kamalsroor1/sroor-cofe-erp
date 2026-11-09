@@ -95,7 +95,7 @@
       </div>
     </div>
 
-    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="👥" />
+    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="users" />
   </div>
 </template>
 
