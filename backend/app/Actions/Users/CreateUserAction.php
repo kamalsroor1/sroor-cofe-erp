@@ -6,17 +6,26 @@ namespace App\Actions\Users;
 
 use App\DTOs\Users\CreateUserDTO;
 use App\Models\User;
+use App\Support\Roles\RoleGrantGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 final class CreateUserAction
 {
+    public function __construct(private readonly RoleGrantGuard $roleGrantGuard) {}
+
     /**
-     * Create user, hash password and assign role inside Transaction
+     * Create user, hash password and assign role inside Transaction.
+     *
+     * SEC-04: a non-admin actor may only assign a role whose permissions they all hold (403).
      */
-    public function execute(CreateUserDTO $dto): User
+    public function execute(CreateUserDTO $dto, ?User $actor = null): User
     {
-        return DB::transaction(function () use ($dto) {
+        return DB::transaction(function () use ($dto, $actor) {
+            if ($actor instanceof User) {
+                $this->roleGrantGuard->assertCanAssignRole($actor, $dto->role);
+            }
+
             $user = User::create([
                 'name' => $dto->name,
                 'phone' => $dto->phone,

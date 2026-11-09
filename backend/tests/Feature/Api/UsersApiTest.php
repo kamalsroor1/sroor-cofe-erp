@@ -8,6 +8,8 @@ use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TenantTestCase;
 
 class UsersApiTest extends TenantTestCase
@@ -273,7 +275,12 @@ class UsersApiTest extends TenantTestCase
         ], $headers)->assertStatus(403);
         $this->assertFalse($this->inTenant($this->tenant, fn (): bool => User::query()->where('phone', '01000007301')->exists()));
 
-        // Ordinary edits of a non-admin account still work.
+        // Ordinary edits of a non-admin account still work, provided the manager holds every
+        // permission of the target role (SEC-04: no granting what you do not hold).
+        $this->inTenant($this->tenant, function () use ($manager): void {
+            $manager->givePermissionTo(Role::findByName('storekeeper')->permissions->pluck('name')->all());
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        });
         $this->putJson("/api/v1/users/{$cashier->id}", $this->updatePayload($cashier, 'storekeeper', ['name' => 'أمين مخزن']), $headers)
             ->assertOk();
         $this->assertTrue($this->inTenant($this->tenant, fn (): bool => User::findOrFail($cashier->id)->hasRole('storekeeper')));
