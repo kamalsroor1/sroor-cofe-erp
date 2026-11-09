@@ -7,13 +7,16 @@ namespace App\Actions\Stores;
 use App\DTOs\Stores\StoreDTO;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\StoreStockInitializer;
+use App\Support\StoreLimitBucket;
 use Illuminate\Support\Facades\DB;
 
 final class CreateStoreAction
 {
     public function __construct(
         private readonly StoreStockInitializer $stockInitializer,
+        private readonly PlanEnforcer $planEnforcer,
     ) {}
 
     /**
@@ -22,6 +25,10 @@ final class CreateStoreAction
     public function execute(StoreDTO $dto, ?User $creator = null): Store
     {
         return DB::transaction(function () use ($dto, $creator) {
+            // SEC-06 / BE-12: plan limit (stores / warehouses / vans), counted under the tenant lock.
+            $resource = StoreLimitBucket::resourceFor($dto->type);
+            $this->planEnforcer->assertWithinLimit($resource, fn (): int => StoreLimitBucket::count($resource));
+
             if ($dto->is_main) {
                 Store::where('is_main', true)->update(['is_main' => false]);
             }

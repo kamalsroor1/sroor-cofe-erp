@@ -78,6 +78,7 @@ return [
         'suspension_reason_required' => 'Choose a suspension reason.',
         'limit_reached' => 'You have reached your plan limit for :resource (:max). Upgrade your plan or buy an add-on.',
         'feature_unavailable' => 'This feature is not included in your current plan.',
+        'plan_has_tenants' => 'This plan still has tenants. Move them to another plan before deleting it.',
     ],
 
     // OPS-9: asynchronous archive (DELETE /super-admin/tenants/{id}) and the CLI purge.
@@ -108,5 +109,7 @@ return [
     'alerts' => [
         'read_only_title' => 'Account is read-only',
         'blocked_title' => 'Account access is blocked',
+        'feature_unavailable_title' => 'Feature not in your plan',
+        'limit_reached_title' => 'Plan limit reached',
     ],
 ];

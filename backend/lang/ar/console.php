@@ -248,4 +248,14 @@ return [
             'not_confirmed' => 'المشغّل ماأكدش',
         ],
     ],
+
+    'planless' => [
+        'description' => 'يعرض المحلات من غير باقة (مش خاضعة لحدود الباقة)، و--assign=<slug الباقة> يعيّن لهم باقة',
+        'none' => 'كل المحلات ليها باقة.',
+        'row' => ':id (:name) الحالة :status',
+        'summary' => ':count محل من غير باقة.',
+        'dry_run_hint' => 'عرض فقط. شغّله تاني بـ --assign=<slug الباقة> للتعيين.',
+        'unknown_plan' => 'مفيش باقة بالـ slug ":slug".',
+        'assigned' => 'اتعيّن :count محل على باقة ":slug".',
+    ],
 ];

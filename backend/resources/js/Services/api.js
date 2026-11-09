@@ -100,13 +100,19 @@ apiClient.interceptors.response.use(
         }
 
         // Subscription lifecycle (BE-05): 423 read-only account, 403 subscription.access_blocked.
+        // Plan enforcement (SEC-06): 403 subscription.feature_unavailable / subscription.limit_reached.
         const code = typeof data?.error_code === 'string' ? data.error_code : '';
         const isLifecycleError = status === 423 || (status === 403 && code.startsWith('subscription.'));
+        const lifecycleTitleKeys = {
+            'subscription.feature_unavailable': 'subscription.alerts.feature_unavailable_title',
+            'subscription.limit_reached': 'subscription.alerts.limit_reached_title',
+        };
         if (isLifecycleError && !isCentralMode && !Swal.isVisible()) {
             Swal.fire({
                 icon: 'warning',
                 title: trans(
-                    status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title'
+                    lifecycleTitleKeys[code] ||
+                        (status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title')
                 ),
                 text: message,
                 confirmButtonText: trans('common.ok'),

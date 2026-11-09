@@ -61,6 +61,13 @@ return [
     ],
 
     /*
+     | A legacy tenant with NO plan (plan_id NULL) is not enforced when false (default):
+     | it predates plans and would lose every module and be capped at 0 users. New tenants
+     | cannot be provisioned without a plan. Turn on once every tenant has been assigned one.
+     */
+    'enforce_planless' => (bool) env('ENTITLEMENTS_ENFORCE_PLANLESS', false),
+
+    /*
      | Seconds a resolved entitlement set stays cached. Correctness does not depend on it:
      | every subscription / add-on / plan / override change bumps the tenant's version
      | (TenantCache::bumpFor), which makes the old entry unreachable at once.

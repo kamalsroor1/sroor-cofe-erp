@@ -248,4 +248,14 @@ return [
             'not_confirmed' => 'the operator did not confirm',
         ],
     ],
+
+    'planless' => [
+        'description' => 'List tenants without a plan (not subject to plan enforcement); --assign=<plan slug> assigns them',
+        'none' => 'Every tenant has a plan.',
+        'row' => ':id (:name) status :status',
+        'summary' => ':count tenant(s) without a plan.',
+        'dry_run_hint' => 'Dry run. Re-run with --assign=<plan slug> to assign them.',
+        'unknown_plan' => 'No plan with slug ":slug".',
+        'assigned' => 'Assigned :count tenant(s) to plan ":slug".',
+    ],
 ];

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Actions\Items;
 
 use App\DTOs\Items\ItemDTO;
+use App\Enums\LimitResource;
 use App\Models\Item;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\StoreStockInitializer;
 use Illuminate\Support\Facades\DB;
 
@@ -13,6 +15,7 @@ final class CreateItemAction
 {
     public function __construct(
         private readonly StoreStockInitializer $stockInitializer,
+        private readonly PlanEnforcer $planEnforcer,
     ) {}
 
     /**
@@ -21,6 +24,9 @@ final class CreateItemAction
     public function execute(ItemDTO $dto): Item
     {
         return DB::transaction(function () use ($dto) {
+            // SEC-06 / BE-12: plan items limit, counted under the tenant lock.
+            $this->planEnforcer->assertWithinLimit(LimitResource::Items, fn (): int => Item::query()->count());
+
             $code = $dto->code;
             if (! $code) {
                 $count = Item::count() + 1;

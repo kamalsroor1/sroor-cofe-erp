@@ -78,6 +78,7 @@ return [
         'suspension_reason_required' => 'اختار سبب الإيقاف.',
         'limit_reached' => 'وصلت للحد الأقصى المسموح في باقتك من :resource (:max). رقّي باقتك أو أضف إضافة.',
         'feature_unavailable' => 'الميزة دي مش متاحة في باقتك الحالية.',
+        'plan_has_tenants' => 'الباقة دي لسه عليها مشتركين. انقلهم لباقة تانية قبل ما تمسحها.',
     ],
 
     // OPS-9: الأرشفة غير المتزامنة (DELETE /super-admin/tenants/{id}) والمسح النهائي من سطر الأوامر.
@@ -108,5 +109,7 @@ return [
     'alerts' => [
         'read_only_title' => 'الحساب في وضع القراءة فقط',
         'blocked_title' => 'تم إيقاف الوصول إلى الحساب',
+        'feature_unavailable_title' => 'هذه الميزة غير متاحة في باقتك',
+        'limit_reached_title' => 'تم الوصول إلى حد الباقة',
     ],
 ];

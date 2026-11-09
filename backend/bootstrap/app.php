@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
+use App\Http\Middleware\EnsureTenantFeature;
 use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
@@ -97,6 +98,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'store.access' => StoreAccess::class,
             // STOR-1: alias only; mounted on the operational routes by STOR-2 (W3).
             'store.active' => ResolveActiveStore::class,
+            // SEC-06 / BE-12: plan feature gate, `feature:<key>`.
+            'feature' => EnsureTenantFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

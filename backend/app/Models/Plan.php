@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Central DB: a sellable plan. Prices are DECIMAL(12,3) strings; every limit is
@@ -97,6 +98,17 @@ class Plan extends Model
         'is_popular' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        // SEC-06: tenants.plan_id is nullOnDelete, so deleting a plan in use would silently turn
+        // its tenants into plan-less (unenforced) ones. Move them to another plan first.
+        static::deleting(function (self $plan): void {
+            if ($plan->tenants()->exists()) {
+                throw ValidationException::withMessages(['plan' => (string) __('subscription.errors.plan_has_tenants')]);
+            }
+        });
+    }
 
     /**
      * @return HasMany<Tenant, $this>
