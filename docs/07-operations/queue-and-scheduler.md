@@ -25,3 +25,23 @@ The check runs at schedule time, so `config:cache` is respected. Pinned by
 - VPS: confirm `QUEUE_CONNECTION=redis` in the production `.env` (then nothing else is needed), and that
   `supervisorctl status sroor-horizon` is RUNNING.
 - Hostinger staging: leave `QUEUE_CONNECTION=database`; do not set `SCHEDULER_QUEUE_WORKER=false`.
+
+## Long jobs: ArchiveTenantJob on its own connection (OPS-9)
+
+`ArchiveTenantJob` runs a final tenant backup (timeout 1800 s, one attempt). On the default redis
+connection `retry_after` is 90 s, so the job was re-released and a second archive started while the
+first was still running. Now:
+
+- `config/queue.php` has a `long` connection (redis, queue `long`, `retry_after` never below 1900 s,
+  default 2000 s; `LONG_QUEUE_RETRY_AFTER` raises it);
+- `tenant_lifecycle.archive.queue_connection` / `.queue` read `TENANT_ARCHIVE_QUEUE_CONNECTION` /
+  `TENANT_ARCHIVE_QUEUE`; the production template sets both to `long`;
+- Horizon `supervisor-long` (1 process, timeout 1830 s, tries 1) consumes it. `supervisor-long` and
+  `supervisor-provisioning` are now listed in `horizon.environments.production`: a supervisor in
+  `defaults` only runs in an environment that names it.
+
+Rule for any new long job: its connection's `retry_after` must exceed the job `timeout`, and the Horizon
+supervisor timeout must sit between the two. Pinned by `tests/Feature/Ops/ArchiveQueueRetryAfterTest.php`.
+
+Owner actions on the VPS `.env`: `TENANT_ARCHIVE_QUEUE_CONNECTION=long`, `TENANT_ARCHIVE_QUEUE=long`, then
+deploy (Horizon restarts and starts `supervisor-long` and `supervisor-provisioning`).

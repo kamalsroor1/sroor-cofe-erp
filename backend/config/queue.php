@@ -96,6 +96,20 @@ return [
             'after_commit' => false,
         ],
 
+        // OPS-9: dedicated connection for App\Jobs\ArchiveTenantJob (timeout 1800 s, one attempt).
+        // The default redis connection re-releases a reserved job after 90 s, which would start a
+        // second archive/backup of the same tenant while the first still runs. retry_after must
+        // stay above tenant_lifecycle.archive.job_timeout_seconds (pinned by ArchiveQueueRetryAfterTest).
+        // Used when TENANT_ARCHIVE_QUEUE_CONNECTION=long (the VPS); dev / CI keep the default.
+        'long' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('TENANT_ARCHIVE_QUEUE') ?: 'long',
+            'retry_after' => max(1900, (int) env('LONG_QUEUE_RETRY_AFTER', 2000)),
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],
