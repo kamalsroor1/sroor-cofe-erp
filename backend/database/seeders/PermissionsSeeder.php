@@ -83,6 +83,9 @@ class PermissionsSeeder extends Seeder
 
         // SETG-7: settings endpoints, SettingPolicy and store POS settings.
         'settings.manage',
+
+        // PRD-04: the shop's own subscription & billing screen (admin only by default).
+        'billing.manage',
     ];
 
     public function run(): void

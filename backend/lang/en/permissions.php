@@ -77,4 +77,7 @@ return [
     'settings' => [
         'manage' => 'Manage shop, printing and integration settings',
     ],
+    'billing' => [
+        'manage' => 'Manage the subscription: view invoices, pay and renew',
+    ],
 ];

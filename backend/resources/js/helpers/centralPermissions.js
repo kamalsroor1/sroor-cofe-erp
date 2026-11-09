@@ -5,4 +5,6 @@
 export const CENTRAL_PERMISSIONS = Object.freeze({
     settingsView: 'super_admin.settings.view',
     settingsManage: 'super_admin.settings.manage',
+    billingView: 'super_admin.billing.view',
+    billingManage: 'super_admin.billing.manage',
 });

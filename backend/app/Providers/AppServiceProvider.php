@@ -269,6 +269,14 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute($default)->by('tenant-resolve|'.$request->ip());
         });
 
+        // PRD-03: payment receipt uploads, per tenant + user + IP (the cache is shared by all tenants).
+        RateLimiter::for('billing-receipt-upload', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_receipt_upload.per_hour', 20))
+            ->by('billing-receipt|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+
+        // PRD-04: renewal-invoice requests, per tenant + user + IP.
+        RateLimiter::for('billing-renewal-invoice', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_renewal_invoice.per_hour', 10))
+            ->by('billing-renewal|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.
         RateLimiter::for('quick-login', fn (Request $request): Limit => Limit::perMinute($this->limit('auth.quick_login.per_minute', 5))
             ->by('quick-login|'.RateLimitKey::scope().'|'.$request->ip()));

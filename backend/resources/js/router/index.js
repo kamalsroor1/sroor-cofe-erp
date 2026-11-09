@@ -431,6 +431,20 @@ const centralRoutes = [
         () => import('../views/SuperAdmin/SuperAdminUnitsView.vue')
     ),
     centralPage(
+        '/super-admin/billing',
+        'super_admin.billing',
+        'billing.console.page_titles.queue',
+        () => import('../views/SuperAdmin/SuperAdminBillingView.vue'),
+        CENTRAL_PERMISSIONS.billingView
+    ),
+    centralPage(
+        '/super-admin/billing-invoices/:id/print',
+        'super_admin.billing_invoice_print',
+        'billing.console.page_titles.invoice_print',
+        () => import('../views/SuperAdmin/SuperAdminBillingInvoicePrintView.vue'),
+        CENTRAL_PERMISSIONS.billingView
+    ),
+    centralPage(
         '/super-admin/settings',
         'super_admin.settings',
         'super.page_titles.settings',

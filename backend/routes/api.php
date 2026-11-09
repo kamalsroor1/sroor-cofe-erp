@@ -4,6 +4,7 @@ use App\Enums\TenantLogoVariant;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AppUpdateController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\CentralTenantResolverController;
@@ -233,6 +234,20 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             // Roles & Permissions Matrix
             Route::get('/roles', [RoleController::class, 'index'])->name('api.roles.index');
             Route::put('/roles/{id}/permissions', [RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
+        });
+
+        // PRD-04 / ENTI-3.3: the shop's own subscription & billing. billing.manage on every route; the two
+        // POSTs stay open to a read-only / past-due shop (EnsureTenantActive::WRITE_ALLOWLIST) so it can pay.
+        Route::middleware([DenyQuickLoginToken::class, 'can:billing.manage'])->prefix('billing')->group(function () {
+            Route::get('/subscription', [BillingController::class, 'subscription'])->name('api.billing.subscription');
+            Route::get('/invoices', [BillingController::class, 'invoices'])->name('api.billing.invoices.index');
+            Route::get('/invoices/{id}', [BillingController::class, 'showInvoice'])->whereNumber('id')->name('api.billing.invoices.show');
+            Route::post('/invoices/{id}/payments', [BillingController::class, 'submitPayment'])
+                ->whereNumber('id')
+                ->middleware('throttle:billing-receipt-upload')
+                ->name('api.billing.invoices.payments.store');
+            Route::post('/renewal-invoice', [BillingController::class, 'renewalInvoice'])->middleware('throttle:billing-renewal-invoice')
+                ->name('api.billing.renewal_invoice');
         });
 
         // Activity & Audit Logs

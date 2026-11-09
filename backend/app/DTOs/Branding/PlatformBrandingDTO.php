@@ -27,6 +27,11 @@ final class PlatformBrandingDTO
         public readonly string $supportPhone,
         public readonly string $websiteUrl,
         public readonly bool $poweredByEnabled,
+        public readonly string $billingInstapayAddress = '',
+        public readonly string $billingVodafoneCashNumber = '',
+        public readonly string $billingAccountName = '',
+        public readonly string $billingPaymentNote = '',
+        public readonly string $billingTaxRate = '0.000',
     ) {}
 
     /**
@@ -34,7 +39,9 @@ final class PlatformBrandingDTO
      *     name: string, short_name: string, subtitle: string, legal_name: string,
      *     logo_light: ?string, logo_dark: ?string, favicon: ?string, app_icon: ?string,
      *     primary_color: string, support_email: string, support_phone: string,
-     *     website_url: string, powered_by_enabled: bool
+     *     website_url: string, powered_by_enabled: bool,
+     *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
+     *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string
      * }  $data
      */
     public static function fromArray(array $data): self
@@ -53,6 +60,11 @@ final class PlatformBrandingDTO
             supportPhone: $data['support_phone'],
             websiteUrl: $data['website_url'],
             poweredByEnabled: $data['powered_by_enabled'],
+            billingInstapayAddress: $data['billing_instapay_address'] ?? '',
+            billingVodafoneCashNumber: $data['billing_vodafone_cash_number'] ?? '',
+            billingAccountName: $data['billing_account_name'] ?? '',
+            billingPaymentNote: $data['billing_payment_note'] ?? '',
+            billingTaxRate: $data['billing_tax_rate'] ?? '0.000',
         );
     }
 
@@ -61,7 +73,9 @@ final class PlatformBrandingDTO
      *     name: string, short_name: string, subtitle: string, legal_name: string,
      *     logo_light: ?string, logo_dark: ?string, favicon: ?string, app_icon: ?string,
      *     primary_color: string, support_email: string, support_phone: string,
-     *     website_url: string, powered_by_enabled: bool
+     *     website_url: string, powered_by_enabled: bool,
+     *     billing_instapay_address?: string, billing_vodafone_cash_number?: string,
+     *     billing_account_name?: string, billing_payment_note?: string, billing_tax_rate?: string
      * }
      */
     public function toArray(): array
@@ -80,6 +94,11 @@ final class PlatformBrandingDTO
             'support_phone' => $this->supportPhone,
             'website_url' => $this->websiteUrl,
             'powered_by_enabled' => $this->poweredByEnabled,
+            'billing_instapay_address' => $this->billingInstapayAddress,
+            'billing_vodafone_cash_number' => $this->billingVodafoneCashNumber,
+            'billing_account_name' => $this->billingAccountName,
+            'billing_payment_note' => $this->billingPaymentNote,
+            'billing_tax_rate' => $this->billingTaxRate,
         ];
     }
 }

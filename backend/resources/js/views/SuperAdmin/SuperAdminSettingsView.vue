@@ -28,6 +28,8 @@
         <PlatformSupportSection :form="form" :errors="errors" :readonly="!canManage" @update:field="setField" />
       </div>
 
+      <PlatformBillingSection :form="form" :errors="errors" :readonly="!canManage" @update:field="setField" />
+
       <PlatformAppearanceSection :form="form" :errors="errors" :readonly="!canManage" @update:field="setField" />
 
       <PlatformAssetsSection
@@ -52,6 +54,7 @@ import PlatformSettingsSkeleton from '../../Components/SuperAdmin/PlatformSettin
 import PlatformReadOnlyNotice from '../../Components/SuperAdmin/PlatformSettings/PlatformReadOnlyNotice.vue';
 import PlatformIdentitySection from '../../Components/SuperAdmin/PlatformSettings/PlatformIdentitySection.vue';
 import PlatformSupportSection from '../../Components/SuperAdmin/PlatformSettings/PlatformSupportSection.vue';
+import PlatformBillingSection from '../../Components/SuperAdmin/PlatformSettings/PlatformBillingSection.vue';
 import PlatformAppearanceSection from '../../Components/SuperAdmin/PlatformSettings/PlatformAppearanceSection.vue';
 import PlatformAssetsSection from '../../Components/SuperAdmin/PlatformSettings/PlatformAssetsSection.vue';
 import PlatformSettingsSaveBar from '../../Components/SuperAdmin/PlatformSettings/PlatformSettingsSaveBar.vue';

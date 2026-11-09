@@ -64,4 +64,14 @@ return [
         'per_minute' => (int) env('RATE_LIMIT_TENANT_RESOLVE', 30),
     ],
 
+    // POST /api/v1/billing/invoices/{id}/payments (receipt upload), per tenant + user + IP.
+    'billing_receipt_upload' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_RECEIPT_HOURLY') ?: 20),
+    ],
+
+    // POST /api/v1/billing/renewal-invoice, per tenant + user + IP.
+    'billing_renewal_invoice' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_RENEWAL_HOURLY') ?: 10),
+    ],
+
 ];

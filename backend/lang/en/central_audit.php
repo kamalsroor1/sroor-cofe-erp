@@ -62,6 +62,12 @@ return [
         'tenant_archive_requested' => 'Tenant archive requested',
         'tenant_purge_started' => 'Tenant purge started',
         'tenant_purge_failed' => 'Tenant purge failed',
+        'billing_invoice_issued' => 'Subscription invoice issued',
+        'billing_invoice_voided' => 'Subscription invoice voided',
+        'billing_payment_submitted' => 'Payment receipt submitted',
+        'billing_payment_verified' => 'Payment verified',
+        'billing_payment_rejected' => 'Payment rejected',
+        'billing_receipt_viewed' => 'Payment receipt viewed',
     ],
     'prune' => [
         'done' => 'Deleted :count platform audit rows older than :date.',

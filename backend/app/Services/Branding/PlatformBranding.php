@@ -55,6 +55,11 @@ final class PlatformBranding
             'support_phone' => $this->string(PlatformSettingKey::SupportPhone, $stored),
             'website_url' => $this->string(PlatformSettingKey::WebsiteUrl, $stored),
             'powered_by_enabled' => $this->bool(PlatformSettingKey::PoweredByEnabled, $stored),
+            'billing_instapay_address' => $this->billingString(PlatformSettingKey::BillingInstapayAddress, $stored),
+            'billing_vodafone_cash_number' => $this->billingString(PlatformSettingKey::BillingVodafoneCashNumber, $stored),
+            'billing_account_name' => $this->billingString(PlatformSettingKey::BillingAccountName, $stored),
+            'billing_payment_note' => $this->billingString(PlatformSettingKey::BillingPaymentNote, $stored),
+            'billing_tax_rate' => $this->taxRate($stored),
         ]);
     }
 
@@ -180,6 +185,34 @@ final class PlatformBranding
         }
 
         return $this->configString('branding.'.$key->value);
+    }
+
+    /**
+     * Billing payment details have no config fallback (never hardcoded): blank until an operator sets them.
+     *
+     * @param  array<string, string|null>  $stored
+     */
+    private function billingString(PlatformSettingKey $key, array $stored): string
+    {
+        return trim((string) ($stored[$key->value] ?? ''));
+    }
+
+    /**
+     * Subscription VAT percentage at scale 3; a missing, malformed or out-of-range value is 0.
+     *
+     * @param  array<string, string|null>  $stored
+     */
+    private function taxRate(array $stored): string
+    {
+        $value = trim((string) ($stored[PlatformSettingKey::BillingTaxRate->value] ?? ''));
+
+        if (preg_match('/^\d{1,3}(\.\d{1,3})?$/', $value) !== 1) {
+            return '0.000';
+        }
+
+        $rate = bcadd($value, '0', 3);
+
+        return bccomp($rate, '100', 3) > 0 ? '0.000' : $rate;
     }
 
     /**
