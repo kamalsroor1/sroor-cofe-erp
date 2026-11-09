@@ -17,6 +17,7 @@ export function usePosOrders() {
         updatedAt: Date.now(),
         cart: [],
         selectedCustomerId: null,
+        selectedCustomer: null,
         activePriceTier: 'retail',
         discountType: 'percentage',
         discountValue: '0',
@@ -113,6 +114,7 @@ export function usePosOrders() {
             // If it's the only order, reset its contents for a new transaction
             activeOrder.value.cart = [];
             activeOrder.value.selectedCustomerId = null;
+            activeOrder.value.selectedCustomer = null;
             activeOrder.value.discountType = 'percentage';
             activeOrder.value.discountValue = '0';
             activeOrder.value.paymentType = 'cash';

@@ -16,6 +16,7 @@ export function usePosOrderFields(activeOrder) {
     return {
         cart: field('cart', (v) => v || []),
         selectedCustomerId: field('selectedCustomerId', (v) => v ?? null),
+        selectedCustomer: field('selectedCustomer', (v) => v ?? null),
         activePriceTier: field('activePriceTier', (v) => v || 'retail'),
         discountType: field('discountType', (v) => v || 'percentage'),
         discountValue: field('discountValue', (v) => v ?? '0'),

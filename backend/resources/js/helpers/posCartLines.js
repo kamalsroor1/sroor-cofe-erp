@@ -28,6 +28,7 @@ export function updateLinePrice(cart, { index, value }) {
     const parsed = parseFloat(value);
     if (isNaN(parsed) || parsed < 0) return false;
     cart[index].unit_price = parsed;
+    cart[index].price_overridden = true;
     return true;
 }
 
@@ -66,4 +67,26 @@ export function stepQuantity(quantity, { weightBased = false, direction = 1 } = 
         return Number((current - step).toFixed(3));
     }
     return Number((current + step).toFixed(3));
+}
+
+const positive = (v) => {
+    const n = parseFloat(v);
+    return n > 0 ? n : 0;
+};
+
+/** Tier price of an item or cart line: wholesale falls back to retail; min_selling_price is a floor, never a price. */
+export function priceFor(item, tier) {
+    if (!item) return 0;
+    const retail = positive(item.selling_price) || positive(item.price_retail) || positive(item.price);
+    const wholesale = positive(item.wholesale_price) || positive(item.price_wholesale);
+    return tier === 'wholesale' ? wholesale || retail : retail;
+}
+
+/** Re-price cart lines for a tier; lines the cashier priced by hand and lines without a tier price are kept. */
+export function repriceLines(cart, tier) {
+    cart.forEach((line) => {
+        if (line.price_overridden) return;
+        const price = priceFor(line, tier);
+        if (price > 0) line.unit_price = price;
+    });
 }

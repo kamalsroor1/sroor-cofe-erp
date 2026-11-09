@@ -74,6 +74,7 @@ class CustomersApiTest extends TenantTestCase
                 'meta' => ['current_page', 'last_page', 'total'],
                 'summary' => ['total_debt', 'debtors_count', 'total_customers'],
             ])
+            ->assertJsonPath('data.0.price_tier', 'retail')
             ->assertJson([
                 'success' => true,
                 'summary' => [

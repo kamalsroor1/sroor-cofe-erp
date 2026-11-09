@@ -7,7 +7,13 @@ import { useRemoteSearch } from './useRemoteSearch';
 /**
  * POS customer picker state: list, search, selection, quick-create and the POS-02 walk-in flag.
  */
-export function usePosCustomer({ selectedCustomerId, isOnline }) {
+export function usePosCustomer({
+    selectedCustomerId,
+    selectedCustomerSnapshot,
+    activePriceTier,
+    repriceCart,
+    isOnline,
+}) {
     const customers = ref([]);
     const showCustomerPickerModal = ref(false);
     const customerSearchQuery = ref('');
@@ -21,9 +27,12 @@ export function usePosCustomer({ selectedCustomerId, isOnline }) {
 
     watch(customerSearchQuery, (newVal) => search(newVal));
 
+    // POS-09: the order keeps a snapshot of the picked customer, so a remote-search pick never falls back to walk-in.
     const selectedCustomer = computed(() => {
-        const walkIn = { id: null, name: trans('pos.general_cash_customer'), phone: '' };
+        const walkIn = { id: null, name: trans('pos.general_cash_customer'), phone: '', is_walk_in: true };
         if (!selectedCustomerId.value) return walkIn;
+        const snapshot = selectedCustomerSnapshot.value;
+        if (snapshot && snapshot.id === selectedCustomerId.value) return snapshot;
         return customers.value.find((c) => c.id === selectedCustomerId.value) || walkIn;
     });
 
@@ -47,8 +56,24 @@ export function usePosCustomer({ selectedCustomerId, isOnline }) {
         return Array.from(merged.values());
     });
 
-    const selectCustomer = (cust) => {
+    const bindCustomer = (cust) => {
         selectedCustomerId.value = cust.id;
+        selectedCustomerSnapshot.value = {
+            id: cust.id,
+            name: cust.name,
+            phone: cust.phone || '',
+            price_tier: cust.price_tier ?? null,
+            is_walk_in: cust.is_walk_in === true,
+        };
+        const tier = cust.price_tier === 'wholesale' ? 'wholesale' : 'retail';
+        if (tier !== activePriceTier.value) {
+            activePriceTier.value = tier;
+            repriceCart(tier);
+        }
+    };
+
+    const selectCustomer = (cust) => {
+        bindCustomer(cust);
         showCustomerPickerModal.value = false;
     };
 
@@ -60,7 +85,7 @@ export function usePosCustomer({ selectedCustomerId, isOnline }) {
             const newCust = res.data?.data;
             if (newCust) {
                 customers.value.unshift(newCust);
-                selectedCustomerId.value = newCust.id;
+                bindCustomer(newCust);
                 showCustomerPickerModal.value = false;
             }
         } catch (e) {
