@@ -7,7 +7,6 @@ namespace App\Actions\Trash;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Item;
-use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Models\Supplier;
 use Illuminate\Validation\ValidationException;
@@ -25,7 +24,9 @@ final class RestoreTrashRecordAction
             'suppliers' => Supplier::onlyTrashed()->findOrFail($id),
             'stores' => Store::onlyTrashed()->findOrFail($id),
             'expenses' => Expense::onlyTrashed()->findOrFail($id),
-            'returns' => ReturnDocument::onlyTrashed()->findOrFail($id),
+            // BE-02: deleting a return reverses its stock and balance; restoring would have to
+            // re-apply them against stock that has since moved, so it is not offered.
+            'returns' => throw ValidationException::withMessages(['type' => __('returns.restore_not_allowed')]),
             default => throw ValidationException::withMessages(['type' => __('common.trash_invalid_type')]),
         };
 

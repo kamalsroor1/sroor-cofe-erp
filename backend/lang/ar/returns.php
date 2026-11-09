@@ -83,4 +83,9 @@ return [
     'save_return_failed' => 'تعذر تسجيل مستند المرتجع',
 
     'returned_goods' => 'بضاعة مرتجعة',
+
+    'cancel_item_unavailable' => 'لا يمكن حذف هذا المرتجع لأن أحد أصنافه لم يعد موجودًا.',
+    'cancel_insufficient_stock' => 'لا يمكن حذف هذا المرتجع: رصيد الصنف [:item] هو :available فقط بينما المطلوب خصم :required.',
+    'cancel_movement_note' => 'عكس حركة المرتجع المحذوف :number',
+    'restore_not_allowed' => 'لا يمكن استرجاع مرتجع محذوف لأن حذفه عكس أثره على المخزون والرصيد. سجّل مرتجعًا جديدًا بدلًا منه.',
 ];

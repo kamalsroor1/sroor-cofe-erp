@@ -152,11 +152,11 @@ final class ReturnController extends Controller
             $this->findReturnOr404($user, $id, 'delete');
         }
 
-        $this->deleteReturnAction->execute($id);
+        $returnDoc = $this->deleteReturnAction->execute($id);
 
         return response()->json([
             'success' => true,
-            'message' => __('returns.deleted_success'),
+            'message' => __('returns.deleted_success', ['number' => $returnDoc->return_number]),
         ], 200);
     }
 

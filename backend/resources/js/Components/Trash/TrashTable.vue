@@ -27,6 +27,7 @@
       <template #cell-actions="{ row }">
         <div class="flex items-center justify-end gap-2 font-sans">
           <button
+            v-if="row.restorable !== false"
             type="button"
             @click="$emit('restore', row)"
             data-testid="action-restore"

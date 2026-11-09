@@ -83,4 +83,9 @@ return [
     'save_return_failed' => 'Failed to record return document',
 
     'returned_goods' => 'Returned goods',
+
+    'cancel_item_unavailable' => 'This return cannot be deleted because one of its items no longer exists.',
+    'cancel_insufficient_stock' => 'Cannot delete this return: item [:item] has only :available in stock but :required must be taken back out.',
+    'cancel_movement_note' => 'Reversal of deleted return :number',
+    'restore_not_allowed' => 'A deleted return cannot be restored because deleting it reversed its stock and balance. Record a new return instead.',
 ];

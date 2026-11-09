@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $quantity
  * @property string $unit_price
  * @property string $total_price
+ * @property string|null $wac_before effective weighted_avg_cost right before a purchase-return line was applied
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -29,6 +30,7 @@ class ReturnItem extends Model
         'quantity',
         'unit_price',
         'total_price',
+        'wac_before',
     ];
 
     protected function casts(): array
@@ -37,6 +39,7 @@ class ReturnItem extends Model
             'quantity' => 'decimal:3',
             'unit_price' => 'decimal:3',
             'total_price' => 'decimal:3',
+            'wac_before' => 'decimal:3',
         ];
     }
 

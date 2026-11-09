@@ -136,6 +136,8 @@ final class GetTrashRecordsAction
                 'id' => $r->id,
                 'title' => $r->return_number,
                 'subtitle' => (string) $r->total_amount.' ج.م',
+                // BE-02: deleting a return reversed its stock and balance; it cannot be restored.
+                'restorable' => false,
                 'deleted_at' => $r->deleted_at?->diffForHumans(),
             ]);
             $pagination = [

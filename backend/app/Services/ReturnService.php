@@ -169,6 +169,8 @@ class ReturnService
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'total_price' => $lineTotal,
+                    // BE-02: lets deleting the return put the average back exactly.
+                    'wac_before' => $this->purchaseService->effectiveWeightedAverageCost($item),
                 ]);
 
                 // BUG-03: goods leave at the refunded price, so take that valuation out of the
