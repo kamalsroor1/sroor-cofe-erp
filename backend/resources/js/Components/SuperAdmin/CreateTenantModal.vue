@@ -71,6 +71,7 @@
             :label="$t('super.initial_password_label')"
             :placeholder="$t('super.initial_password_placeholder')"
             type="password"
+            :minlength="8"
             required
           />
         </div>

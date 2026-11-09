@@ -6,6 +6,7 @@ namespace App\Http\Requests\Auth;
 
 use App\Support\RateLimitKey;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
@@ -46,6 +47,8 @@ class ApiLoginRequest extends FormRequest
 
     public function ensureIsNotRateLimited(): void
     {
+        $this->ensureAccountIsNotLocked();
+
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), $this->maxFailedAttempts())) {
             return;
         }
@@ -68,6 +71,78 @@ class ApiLoginRequest extends FormRequest
     public function clearRateLimit(): void
     {
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->accountFailuresKey());
+    }
+
+    /**
+     * SEC-05: per-account lockout. Refuses the attempt (even with the right password) while the
+     * account is locked. Same 422-on-`login` envelope as the IP failure counter.
+     */
+    public function ensureAccountIsNotLocked(): void
+    {
+        $until = Cache::get($this->accountLockKey());
+
+        if (! is_int($until) || $until <= now()->getTimestamp()) {
+            return;
+        }
+
+        $seconds = $until - now()->getTimestamp();
+
+        throw ValidationException::withMessages([
+            'login' => trans('auth.account_locked', [
+                'seconds' => $seconds,
+                'minutes' => (int) ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    /**
+     * SEC-05: count a failed attempt against the ACCOUNT (any IP; unknown logins count too, so
+     * lockout behaviour reveals nothing about which accounts exist). Returns true exactly when
+     * this failure triggers the lockout.
+     */
+    public function hitAccountFailure(): bool
+    {
+        $decay = $this->lockoutMinutes() * 60;
+        RateLimiter::hit($this->accountFailuresKey(), $decay);
+
+        if (RateLimiter::attempts($this->accountFailuresKey()) < $this->lockoutAttempts()) {
+            return false;
+        }
+
+        Cache::put($this->accountLockKey(), now()->getTimestamp() + $decay, $decay);
+        RateLimiter::clear($this->accountFailuresKey());
+
+        return true;
+    }
+
+    public function accountIdentifier(): string
+    {
+        return RateLimitKey::identifier($this->input('login') ?? $this->input('phone') ?? $this->input('email'));
+    }
+
+    private function accountFailuresKey(): string
+    {
+        return 'api-login-account|'.RateLimitKey::scope().'|'.$this->accountIdentifier();
+    }
+
+    private function accountLockKey(): string
+    {
+        return 'api-login-account-lock|'.RateLimitKey::scope().'|'.$this->accountIdentifier();
+    }
+
+    private function lockoutAttempts(): int
+    {
+        $value = config('rate_limits.tenant_login.account_lockout_attempts', 5);
+
+        return max(1, is_numeric($value) ? (int) $value : 5);
+    }
+
+    private function lockoutMinutes(): int
+    {
+        $value = config('rate_limits.tenant_login.account_lockout_minutes', 15);
+
+        return max(1, is_numeric($value) ? (int) $value : 15);
     }
 
     /**

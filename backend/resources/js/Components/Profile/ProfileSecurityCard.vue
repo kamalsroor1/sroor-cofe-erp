@@ -29,6 +29,7 @@
             @update:model-value="$emit('update:field', 'new_password', $event)"
             :label="$t('profile.new_password')"
             type="password"
+            :minlength="8"
             placeholder="••••••••"
             class="font-mono"
           />
