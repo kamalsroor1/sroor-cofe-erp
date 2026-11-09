@@ -83,50 +83,20 @@
       </div>
     </div>
 
-    <!-- 2. Payment Type (كاش / آجل / جزئي) -->
+    <!-- 2. Payment Type (cash / credit / partial) -->
     <div class="grid grid-cols-3 gap-1.5">
       <button
+        v-for="type in paymentTypes"
+        :key="type.key"
         type="button"
-        data-testid="pos-payment-type-cash"
-        @click="$emit('update:paymentType', 'cash')"
-        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold"
-        :class="
-          paymentType === 'cash'
-            ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-black shadow-2xs'
-            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-        "
+        :data-testid="`pos-payment-type-${type.key}`"
+        :disabled="type.key !== 'cash' && walkIn"
+        :title="type.key !== 'cash' && walkIn ? $t('pos.walk_in_pay_full_hint') : undefined"
+        @click="$emit('update:paymentType', type.key)"
+        class="min-h-11 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+        :class="paymentType === type.key ? type.activeClass : idleClass"
       >
-        {{ $t('pos.instant_cash') }}
-      </button>
-      <button
-        type="button"
-        data-testid="pos-payment-type-credit"
-        :disabled="walkIn"
-        :title="walkIn ? $t('pos.walk_in_pay_full_hint') : undefined"
-        @click="$emit('update:paymentType', 'credit')"
-        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-        :class="
-          paymentType === 'credit'
-            ? 'bg-rose-500/10 border-rose-500 text-rose-600 dark:text-rose-400 font-black shadow-2xs'
-            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-        "
-      >
-        {{ $t('pos.credit_on_account') }}
-      </button>
-      <button
-        type="button"
-        data-testid="pos-payment-type-partial"
-        :disabled="walkIn"
-        :title="walkIn ? $t('pos.walk_in_pay_full_hint') : undefined"
-        @click="$emit('update:paymentType', 'partial')"
-        class="py-1.5 px-2 rounded-xl border text-center transition active:scale-95 cursor-pointer text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-        :class="
-          paymentType === 'partial'
-            ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 font-black shadow-2xs'
-            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-        "
-      >
-        {{ $t('pos.partial_pay') }}
+        {{ type.label }}
       </button>
     </div>
 
@@ -134,68 +104,140 @@
       {{ $t('pos.walk_in_pay_full_hint') }}
     </p>
 
-    <!-- 3. Payment Method & Fast Cash Calculator -->
+    <!-- 3. Payment methods, tender and change -->
     <div
       v-if="paymentType !== 'credit'"
-      class="space-y-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+      class="space-y-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
     >
-      <!-- Payment Method Chips -->
-      <div class="flex items-center gap-1.5">
+      <div class="grid grid-cols-3 gap-1.5" role="group" :aria-label="$t('pos.payment_method_label')">
         <button
-          v-for="m in [
-            { key: 'cash', label: $t('pos.payment_cash') },
-            { key: 'instapay', label: $t('pos.instapay') },
-            { key: 'smart_wallet', label: $t('pos.smart_wallet') },
-          ]"
+          v-for="m in methods"
           :key="m.key"
           type="button"
+          :data-testid="`pos-method-${m.key}`"
+          :aria-pressed="isMethodActive(m.key)"
           @click="$emit('update:paymentMethod', m.key)"
-          class="flex-1 py-1 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer"
+          class="min-h-11 px-1 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer flex items-center justify-center gap-1"
           :class="
-            paymentMethod === m.key
+            isMethodActive(m.key)
               ? 'bg-theme-primary text-slate-950 font-black border-theme-primary'
               : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
           "
         >
-          {{ m.label }}
+          <component :is="m.icon" class="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span class="truncate">{{ m.label }}</span>
         </button>
-        <!-- Multi-Payment Split Button -->
         <button
           type="button"
           data-testid="pos-split-payment-btn"
-          @click="$emit('open-multi-payment')"
-          class="py-1 px-2 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 shrink-0"
+          :aria-label="$t('pos.multi_payment_title')"
           :title="$t('pos.multi_payment_title')"
+          @click="$emit('open-multi-payment')"
+          class="min-h-11 px-1 rounded-lg text-[11px] font-bold border transition text-center cursor-pointer flex items-center justify-center gap-1 bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
         >
-          💳
+          <Split class="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span class="truncate">{{ $t('pos.split_short') }}</span>
         </button>
       </div>
 
-      <!-- Quick Cash Calculator Row -->
-      <div class="flex items-center gap-2 pt-0.5">
-        <div class="flex-1">
-          <input
-            type="number"
-            data-testid="pos-cash-received"
-            :value="cashReceived"
-            @input="$emit('update:cashReceived', $event.target.value)"
-            step="1"
-            min="0"
-            :placeholder="$t('pos.cash_received_placeholder')"
-            class="w-full h-8 px-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono font-black text-slate-950 dark:text-white focus:outline-none focus:ring-1 focus:ring-theme-primary"
-          />
-        </div>
-        <div
-          class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center shrink-0"
-        >
-          <span class="text-[10px] text-slate-400 font-bold me-1">{{ $t('pos.change_to_cust') }}</span>
-          <span
-            class="text-xs font-black font-mono"
-            :class="changeDue > 0 ? 'text-emerald-500' : changeDue < 0 ? 'text-rose-500' : 'text-slate-400'"
+      <!-- Tender: typed for cash and for the partial deposit; non-cash full payments are the exact net -->
+      <div v-if="showTender" class="space-y-1.5">
+        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400" for="pos-cash-received">
+          {{ paymentType === 'partial' ? $t('pos.paid_now_label') : $t('pos.tender_label') }}
+        </label>
+        <input
+          id="pos-cash-received"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          dir="ltr"
+          data-testid="pos-cash-received"
+          :value="cashReceived"
+          @input="onTenderInput"
+          @focus="$event.target.select()"
+          :placeholder="$t('pos.cash_received_placeholder')"
+          class="w-full h-12 px-3 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xl font-mono font-black text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-theme-primary"
+        />
+
+        <div v-if="isCashMethod" class="grid grid-cols-5 gap-1.5">
+          <button
+            v-for="d in denominations"
+            :key="d"
+            type="button"
+            :data-testid="`pos-tender-${d}`"
+            @click="addDenomination(d)"
+            class="min-h-11 rounded-lg border text-sm font-mono font-black transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
           >
-            {{ formatMoney(Math.max(0, changeDue)) }}
-          </span>
+            {{ d }}
+          </button>
+          <button
+            v-if="paymentType === 'cash'"
+            type="button"
+            data-testid="pos-tender-exact"
+            @click="setExact"
+            class="min-h-11 rounded-lg border text-[11px] font-black transition active:scale-95 cursor-pointer bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+          >
+            {{ $t('pos.exact_amount') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            data-testid="pos-tender-clear"
+            :aria-label="$t('pos.tender_clear')"
+            @click="$emit('update:cashReceived', '0')"
+            class="min-h-11 rounded-lg border transition active:scale-95 cursor-pointer bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center"
+          >
+            <X class="w-4 h-4" aria-hidden="true" />
+          </button>
         </div>
+      </div>
+
+      <!-- Partial: what is paid now vs what stays on the customer account -->
+      <dl
+        v-if="paymentType === 'partial'"
+        data-testid="pos-partial-summary"
+        class="grid grid-cols-2 gap-1.5 text-center"
+      >
+        <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+          <dt class="text-[11px] font-bold text-slate-600 dark:text-slate-400">{{ $t('pos.paid_now_label') }}</dt>
+          <dd class="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400" data-testid="pos-paid-now">
+            {{ formatMoney(paidNow) }}
+          </dd>
+        </div>
+        <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <dt class="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+            {{ $t('pos.remaining_on_account') }}
+          </dt>
+          <dd class="text-lg font-black font-mono text-amber-600 dark:text-amber-400" data-testid="pos-remaining">
+            {{ formatMoney(remainingOnAccount) }}
+          </dd>
+        </div>
+      </dl>
+
+      <!-- Cash: change to hand back, or what is still due when the tender is short -->
+      <div
+        v-else-if="paymentType === 'cash' && isCashMethod"
+        data-testid="pos-change-box"
+        role="status"
+        class="flex items-center justify-between gap-2 p-2.5 rounded-lg border"
+        :class="
+          changeDue < 0
+            ? 'bg-rose-500/10 border-rose-500/40'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+        "
+      >
+        <span class="text-xs font-black text-slate-700 dark:text-slate-300">
+          {{ changeDue < 0 ? $t('pos.tender_short_due') : $t('pos.change_due') }}
+        </span>
+        <span
+          class="text-2xl font-black font-mono"
+          data-testid="pos-change-amount"
+          :class="
+            changeDue < 0 ? 'text-rose-600 dark:text-rose-400' : changeDue > 0 ? 'text-emerald-500' : 'text-slate-400'
+          "
+        >
+          {{ formatMoney(Math.abs(changeDue)) }}
+        </span>
       </div>
     </div>
 
@@ -216,7 +258,7 @@
         data-testid="pos-checkout-submit"
         @click="$emit('submit', false)"
         :disabled="cartEmpty || isSubmitting || offline"
-        class="w-full h-11 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
+        class="w-full min-h-12 bg-theme-primary hover:opacity-95 text-slate-950 rounded-xl font-black text-sm transition-all duration-150 active:scale-[0.98] shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30"
       >
         <span
           v-if="isSubmitting"
@@ -231,7 +273,7 @@
         data-testid="pos-checkout-save-print"
         @click="$emit('submit', true)"
         :disabled="cartEmpty || isSubmitting || offline"
-        class="w-full h-8 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-[11px] transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
+        class="w-full min-h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs transition border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30"
       >
         <Printer class="w-3.5 h-3.5" />
         <span>{{ $t('pos.save_and_print_btn') }}</span>
@@ -241,12 +283,46 @@
 </template>
 
 <script setup>
-import { Printer, CheckCircle2, Truck, WifiOff } from 'lucide-vue-next';
+import { computed } from 'vue';
+import { Printer, CheckCircle2, Truck, WifiOff, Split, X, Banknote, Zap, Smartphone } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
+import { useTrans } from '../../Composables/useTrans';
+import { sanitizeAmountInput } from '../../helpers/posCheckout';
+import { normalize, dAdd, dSub, dCmp, dMax0, isZero } from '../../helpers/decimal';
 
 const { formatMoney } = useFormatters();
+const { t } = useTrans();
 
-defineProps({
+const denominations = [50, 100, 200, 500];
+const idleClass =
+  'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+
+// Method keys are the ones the checkout API accepts; e_wallet is what the server stores for smart wallets.
+const methods = computed(() => [
+  { key: 'cash', label: t('pos.method_cash'), icon: Banknote },
+  { key: 'instapay', label: t('pos.instapay'), icon: Zap },
+  { key: 'e_wallet', label: t('pos.smart_wallet'), icon: Smartphone },
+]);
+
+const paymentTypes = computed(() => [
+  {
+    key: 'cash',
+    label: t('pos.instant_cash'),
+    activeClass: 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-black shadow-2xs',
+  },
+  {
+    key: 'credit',
+    label: t('pos.credit_on_account'),
+    activeClass: 'bg-rose-500/10 border-rose-500 text-rose-600 dark:text-rose-400 font-black shadow-2xs',
+  },
+  {
+    key: 'partial',
+    label: t('pos.partial_pay'),
+    activeClass: 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 font-black shadow-2xs',
+  },
+]);
+
+const props = defineProps({
   cartCount: { type: Number, default: 0 },
   subtotal: { type: Number, default: 0 },
   discountAmount: { type: Number, default: 0 },
@@ -265,7 +341,33 @@ defineProps({
   expensesCount: { type: Number, default: 0 },
 });
 
-defineEmits([
+const isMethodActive = (key) => (props.paymentMethod === 'smart_wallet' ? 'e_wallet' : props.paymentMethod) === key;
+const isCashMethod = computed(() => props.paymentMethod === 'cash');
+const showTender = computed(
+  () => props.paymentType === 'partial' || (props.paymentType === 'cash' && isCashMethod.value)
+);
+
+const paidNow = computed(() => dMax0(props.cashReceived));
+const remainingOnAccount = computed(() => dMax0(dSub(String(props.netTotal), paidNow.value)));
+
+const onTenderInput = (event) => {
+  const clean = sanitizeAmountInput(event.target.value);
+  // Keep the field in Latin digits even when the keyboard types Arabic-Indic ones.
+  event.target.value = clean;
+  emit('update:cashReceived', clean);
+};
+
+const setExact = () => emit('update:cashReceived', normalize(String(props.netTotal)));
+
+// First tap on an untouched (exact) tender replaces it with the note handed over; later taps add up.
+const addDenomination = (amount) => {
+  const untouched =
+    isZero(props.cashReceived) ||
+    (props.paymentType === 'cash' && dCmp(props.cashReceived, String(props.netTotal)) === 0);
+  emit('update:cashReceived', untouched ? normalize(String(amount)) : dAdd(props.cashReceived, String(amount)));
+};
+
+const emit = defineEmits([
   'apply-discount',
   'update:paymentType',
   'update:paymentMethod',

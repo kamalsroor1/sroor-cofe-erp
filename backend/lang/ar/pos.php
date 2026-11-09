@@ -282,4 +282,12 @@ return [
         'net_total' => 'الصافي النهائي:',
         'thank_you' => 'شكراً لزيارتكم!',
     ],
+    'method_cash' => 'كاش',
+    'split_short' => 'تقسيم',
+    'tender_label' => 'المبلغ المستلم',
+    'tender_clear' => 'مسح المبلغ المستلم',
+    'tender_short' => 'المبلغ المستلم أقل من المطلوب',
+    'tender_short_due' => 'لسه مطلوب',
+    'paid_now_label' => 'المدفوع دلوقتي',
+    'remaining_on_account' => 'المتبقي على الحساب',
 ];

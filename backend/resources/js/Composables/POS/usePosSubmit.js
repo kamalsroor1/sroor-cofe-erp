@@ -46,7 +46,10 @@ export function usePosSubmit({
 
         const payment = buildPayment();
         if (!payment.valid) {
-            Swal.fire({ icon: 'warning', title: trans('pos.partial_amount_invalid') });
+            Swal.fire({
+                icon: 'warning',
+                title: trans(payment.reason === 'tender_short' ? 'pos.tender_short' : 'pos.partial_amount_invalid'),
+            });
             return;
         }
 

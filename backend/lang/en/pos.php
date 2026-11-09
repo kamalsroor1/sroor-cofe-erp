@@ -282,4 +282,12 @@ return [
         'net_total' => 'Net total:',
         'thank_you' => 'Thank you for your visit!',
     ],
+    'method_cash' => 'Cash',
+    'split_short' => 'Split',
+    'tender_label' => 'Cash received',
+    'tender_clear' => 'Clear received amount',
+    'tender_short' => 'The amount received is less than the amount due',
+    'tender_short_due' => 'Still due',
+    'paid_now_label' => 'Paid now',
+    'remaining_on_account' => 'Remaining on account',
 ];
