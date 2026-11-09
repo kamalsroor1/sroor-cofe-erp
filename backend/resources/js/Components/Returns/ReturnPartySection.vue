@@ -41,7 +41,8 @@
     <!-- Fields -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
       <!-- Customer Field -->
-      <div v-if="form.return_type === 'sales_return'">
+      <div v-if="hideParty" class="hidden"></div>
+      <div v-else-if="form.return_type === 'sales_return'">
         <BaseSelect
           :model-value="form.customer_id"
           @update:model-value="$emit('update:field', 'customer_id', Number($event))"
@@ -86,6 +87,7 @@ const props = defineProps({
   form: { type: Object, required: true },
   customers: { type: Array, default: () => [] },
   suppliers: { type: Array, default: () => [] },
+  hideParty: { type: Boolean, default: false },
 });
 
 defineEmits(['type-change', 'update:field']);

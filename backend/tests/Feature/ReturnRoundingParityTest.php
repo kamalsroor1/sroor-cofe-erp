@@ -46,7 +46,7 @@ final class ReturnRoundingParityTest extends TenantTestCase
                 'customer_id' => $customerId,
                 'invoice_id' => $invoice->id,
                 'store_id' => $this->tenantStore($tenant)->getKey(),
-                'items' => [['item_id' => $itemId, 'quantity' => '1.500', 'unit_price' => '10.333']],
+                'items' => [['invoice_item_id' => InvoiceItem::query()->where('invoice_id', $invoice->id)->value('id'), 'quantity' => '1.500']],
             ]);
 
             $this->assertSame($invoiceLineTotal, (string) ReturnDocument::query()->whereKey($return->id)->value('total_amount'));

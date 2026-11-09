@@ -15,6 +15,8 @@ use Illuminate\Support\Carbon;
  * @property string $quantity
  * @property string $unit_price
  * @property string $total_price
+ * @property int|null $invoice_item_id invoice line this sales-return line returns
+ * @property int|null $purchase_item_id purchase line this purchase-return line returns
  * @property string|null $wac_before effective weighted_avg_cost right before a purchase-return line was applied
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -31,6 +33,8 @@ class ReturnItem extends Model
         'unit_price',
         'total_price',
         'wac_before',
+        'invoice_item_id',
+        'purchase_item_id',
     ];
 
     protected function casts(): array

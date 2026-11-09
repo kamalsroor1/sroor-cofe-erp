@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReturnController;
+use App\Http\Controllers\Api\ReturnSourceController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
@@ -205,6 +206,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/returns/{id}', [ReturnController::class, 'show'])->name('api.returns.show')->middleware('store.active');
         Route::post('/returns', [ReturnController::class, 'store'])->name('api.returns.store')->middleware('store.active:concrete');
         Route::delete('/returns/{id}', [ReturnController::class, 'destroy'])->name('api.returns.destroy')->middleware('store.active');
+        // BE-01: source invoices/purchases (+ returnable lines) of the active store to book a return against.
+        Route::get('/return-sources/{type}', [ReturnSourceController::class, 'index'])->name('api.return_sources.index')->middleware('store.active:concrete');
+        Route::get('/return-sources/{type}/{id}', [ReturnSourceController::class, 'show'])->whereNumber('id')->name('api.return_sources.show')->middleware('store.active:concrete');
 
         // Stock Transfers between stores/branches
         Route::get('/transfers', [StockTransferController::class, 'index'])->name('api.transfers.index')->middleware('store.active');

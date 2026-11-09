@@ -326,7 +326,7 @@ class PurchaseWeightedAverageCostReversalTest extends TenantTestCase
                 'supplier_id' => $supplier->id,
                 'purchase_id' => $second->id,
                 'store_id' => $storeId,
-                'items' => [['item_id' => $item->id, 'quantity' => '10.000', 'unit_price' => '120.000']],
+                'items' => [['purchase_item_id' => $second->items()->value('id'), 'quantity' => '10.000']],
             ]);
 
             // (20 x 110 - 10 x 120) / 10 = 100; cost_price is the purchase price, not touched by a return.
@@ -347,7 +347,7 @@ class PurchaseWeightedAverageCostReversalTest extends TenantTestCase
                 'return_type' => 'purchase_return',
                 'supplier_id' => $supplier->id,
                 'purchase_id' => $purchase->id,
-                'items' => [['item_id' => $item->id, 'quantity' => '2.000', 'unit_price' => '100.000']],
+                'items' => [['purchase_item_id' => $purchase->items()->value('id'), 'quantity' => '2.000']],
             ]);
 
             $this->assertSame($storeId, (int) $return->store_id);

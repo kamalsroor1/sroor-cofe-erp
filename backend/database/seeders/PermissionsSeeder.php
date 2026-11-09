@@ -72,6 +72,8 @@ class PermissionsSeeder extends Seeder
         'daily_journal.manage',
         'expenses.manage',
         'returns.manage',
+        // BE-01: book a return with no source invoice/purchase (admin only by default).
+        'returns.without_invoice',
 
         // Admin & Reports
         'reports.view',

@@ -292,6 +292,8 @@ class PurchaseService
                 throw new Exception("فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] ملغاة بالفعل مسبقاً.");
             }
 
+            ReturnSourceService::assertNoLiveReturns($lockedPurchase);
+
             $storeId = $lockedPurchase->store_id;
             $lines = $lockedPurchase->items()->orderBy('id')->get();
             $items = $this->lockItemsInIdOrder($lines);
@@ -494,6 +496,7 @@ class PurchaseService
     {
         return DB::transaction(function () use ($purchase) {
             $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
+            ReturnSourceService::assertNoLiveReturns($lockedPurchase);
 
             if ($lockedPurchase->status === 'confirmed') {
                 $this->cancelPurchase($lockedPurchase, 'حذف الفاتورة من النظام');

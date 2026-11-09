@@ -21,12 +21,45 @@
           :form="form"
           :customers="customers"
           :suppliers="suppliers"
+          :hide-party="usingSource"
           @type-change="onTypeChange"
           @update:field="updateField"
         />
 
+        <!-- BE-01: source document (default) or, with permission, the manual form -->
+        <div v-if="canWithoutInvoice" class="flex justify-end">
+          <button
+            type="button"
+            @click="setManualMode(!manualMode)"
+            class="min-h-[44px] px-3 text-xs font-bold text-theme-primary cursor-pointer"
+          >
+            {{ manualMode ? $t('returns.return_from_document') : $t('returns.return_manually') }}
+          </button>
+        </div>
+
+        <template v-if="usingSource">
+          <ReturnSourcePicker
+            v-model:search="source.search.value"
+            :return-type="form.return_type"
+            :sources="source.sources.value"
+            :selected="source.selected.value"
+            :is-loading-sources="source.isLoadingSources.value"
+            :error-message="source.errorMessage.value"
+            @search="source.loadSources"
+            @select="source.selectSource"
+            @clear="source.clearSource"
+          />
+          <ReturnSourceLinesTable
+            v-if="source.selected.value"
+            :lines="source.lines.value"
+            :is-loading="source.isLoadingLines.value"
+            @set-quantity="source.setQuantity"
+          />
+        </template>
+
         <!-- Items Selection Table -->
         <ReturnItemsTable
+          v-else
           :items-list="form.items"
           :items="items"
           :selected-item-to-add="selectedItemToAdd"
@@ -39,7 +72,7 @@
       <!-- Sidebar Financial Summary (Col Span 1) -->
       <div class="space-y-4">
         <ReturnFinancialSummary
-          :items-count="form.items.length"
+          :items-count="itemsCount"
           :net-total="netTotal"
           :refund-amount="form.refund_amount"
           :is-submitting="isSubmitting"
@@ -55,6 +88,8 @@
 import { ArrowRight } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReturnPartySection from '../../Components/Returns/ReturnPartySection.vue';
+import ReturnSourcePicker from '../../Components/Returns/ReturnSourcePicker.vue';
+import ReturnSourceLinesTable from '../../Components/Returns/ReturnSourceLinesTable.vue';
 import ReturnItemsTable from '../../Components/Returns/ReturnItemsTable.vue';
 import ReturnFinancialSummary from '../../Components/Returns/ReturnFinancialSummary.vue';
 import { useCreateReturn } from '../../Composables/useCreateReturn';
@@ -67,6 +102,12 @@ const {
   selectedItemToAdd,
   form,
   netTotal,
+  itemsCount,
+  canWithoutInvoice,
+  manualMode,
+  usingSource,
+  source,
+  setManualMode,
   onTypeChange,
   updateField,
   addItemRow,

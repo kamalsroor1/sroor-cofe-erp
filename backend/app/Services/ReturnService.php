@@ -23,6 +23,7 @@ class ReturnService
         protected AuditLogService $auditLogService,
         protected TenantClock $tenantClock,
         protected PurchaseService $purchaseService,
+        protected ReturnSourceService $returnSourceService,
     ) {}
 
     /**
@@ -59,13 +60,22 @@ class ReturnService
     public function createSalesReturn(array $data): ReturnDocument
     {
         return DB::transaction(function () use ($data) {
-            $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
             $invoiceId = $data['invoice_id'] ?? null;
-            $invoice = $invoiceId ? Invoice::where('id', $invoiceId)->first() : null;
 
             $totalAmount = '0.000';
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
-            $storeId = $data['store_id'] ?? ($invoice?->store_id ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id);
+            $storeId = $data['store_id'] ?? ($invoiceId ? Invoice::query()->whereKey($invoiceId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
+
+            // Lock order: document -> party -> lines -> items (same as cancelInvoice).
+            $invoice = $invoiceId ? $this->returnSourceService->lockDocument(ReturnSourceService::SALES, (int) $invoiceId, (int) $storeId) : null;
+            $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
+
+            // BE-01: against an invoice, the lines, quantities and prices come from the invoice.
+            // Without one, only the item, quantity and price are taken from the request: a
+            // client can never inject a source-line link.
+            $lines = $invoice !== null
+                ? $this->returnSourceService->resolveLines(ReturnSourceService::SALES, $invoice, (int) $customer->id, $data['items'])
+                : $this->manualLines($data['items']);
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
@@ -81,19 +91,20 @@ class ReturnService
                 'reason' => $data['reason'] ?? 'مرتجع مبيعات',
             ]);
 
-            foreach ($data['items'] as $line) {
+            foreach ($lines as $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
                 $qty = (string) $line['quantity'];
                 $unitPrice = (string) $line['unit_price'];
-                // SETG-13: half-up at scale 3 exactly like InvoiceService, so a full return of
-                // an invoice line refunds the same amount the line was sold for.
-                $lineTotal = Decimal::mul($qty, $unitPrice);
+                // SETG-13: half-up at scale 3 exactly like InvoiceService. A line taken from an
+                // invoice carries its own prorated refund (the sum of a line's refunds is exact).
+                $lineTotal = (string) ($line['total_price'] ?? Decimal::mul($qty, $unitPrice));
 
                 $returnDoc->items()->create([
                     'item_id' => $item->id,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'total_price' => $lineTotal,
+                    'invoice_item_id' => $line['invoice_item_id'] ?? null,
                 ]);
 
                 // Return stock to warehouse/store
@@ -135,13 +146,20 @@ class ReturnService
     public function createPurchaseReturn(array $data): ReturnDocument
     {
         return DB::transaction(function () use ($data) {
-            $supplier = Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
             $purchaseId = $data['purchase_id'] ?? null;
-            $purchase = $purchaseId !== null ? Purchase::query()->find($purchaseId) : null;
 
             $totalAmount = '0.000';
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
-            $storeId = $data['store_id'] ?? ($purchase?->store_id ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id);
+            $storeId = $data['store_id'] ?? ($purchaseId !== null ? Purchase::query()->whereKey($purchaseId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
+
+            // Lock order: document -> party -> lines -> items (same as cancelPurchase).
+            $purchase = $purchaseId !== null ? $this->returnSourceService->lockDocument(ReturnSourceService::PURCHASE, (int) $purchaseId, (int) $storeId) : null;
+            $supplier = Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
+
+            // BE-01: against a purchase, the lines, quantities and prices come from the purchase.
+            $lines = $purchase !== null
+                ? $this->returnSourceService->resolveLines(ReturnSourceService::PURCHASE, $purchase, (int) $supplier->id, $data['items'])
+                : $this->manualLines($data['items']);
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
@@ -157,18 +175,19 @@ class ReturnService
                 'reason' => $data['reason'] ?? 'مرتجع مشتريات للمورد',
             ]);
 
-            foreach ($data['items'] as $line) {
+            foreach ($lines as $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
                 $qty = (string) $line['quantity'];
                 $unitPrice = (string) ($line['unit_price'] ?? $item->cost_price);
                 // CTO: half-up everywhere, purchase returns included (App\Support\Money\Decimal).
-                $lineTotal = Decimal::mul($qty, $unitPrice);
+                $lineTotal = (string) ($line['total_price'] ?? Decimal::mul($qty, $unitPrice));
 
                 $returnDoc->items()->create([
                     'item_id' => $item->id,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'total_price' => $lineTotal,
+                    'purchase_item_id' => $line['purchase_item_id'] ?? null,
                     // BE-02: lets deleting the return put the average back exactly.
                     'wac_before' => $this->purchaseService->effectiveWeightedAverageCost($item),
                 ]);
@@ -222,6 +241,22 @@ class ReturnService
 
             return $returnDoc;
         });
+    }
+
+    /**
+     * Lines of a return with no source document: only item, quantity and price from the
+     * request (a link to an invoice/purchase line is set from a resolved source, never here).
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function manualLines(array $items): array
+    {
+        return array_values(array_map(static fn (array $line): array => [
+            'item_id' => $line['item_id'],
+            'quantity' => $line['quantity'],
+            'unit_price' => $line['unit_price'] ?? null,
+        ], $items));
     }
 
     public function generateUniqueNumber(string $prefix): string

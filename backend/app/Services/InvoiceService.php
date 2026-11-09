@@ -526,6 +526,8 @@ class InvoiceService
                 throw new Exception('هذه الفاتورة ملغاة بالفعل مسبقاً.');
             }
 
+            ReturnSourceService::assertNoLiveReturns($lockedInvoice);
+
             $oldState = $lockedInvoice->toArray();
 
             // Reverse stock for each line
@@ -579,6 +581,7 @@ class InvoiceService
     {
         return DB::transaction(function () use ($invoice, $data) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+            ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             $oldCustomerId = $lockedInvoice->customer_id;
             $newCustomerId = $data['customer_id'];
             $this->assertWalkInPaidInFull(
@@ -852,6 +855,7 @@ class InvoiceService
 
         return DB::transaction(function () use ($invoice) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+            ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             $customerId = $lockedInvoice->customer_id;
             $invoiceNumber = $lockedInvoice->invoice_number;
 

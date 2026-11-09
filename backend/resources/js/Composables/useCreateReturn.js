@@ -1,4 +1,6 @@
 import { ref, reactive, computed, onMounted } from 'vue';
+import { useAuthStore } from '../stores/auth';
+import { useReturnSource } from './useReturnSource';
 import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
@@ -9,6 +11,11 @@ export function useCreateReturn() {
     const { unitLabel } = useUnits();
     const { t } = useTrans();
     const router = useRouter();
+
+    const authStore = useAuthStore();
+    // BE-01: a normal return references an invoice/purchase; the manual form needs this permission.
+    const canWithoutInvoice = computed(() => authStore.can('returns.without_invoice'));
+    const manualMode = ref(false);
 
     const customers = ref([]);
     const suppliers = ref([]);
@@ -27,12 +34,20 @@ export function useCreateReturn() {
         items: [],
     });
 
-    const netTotal = computed(() => {
+    const returnType = computed(() => form.return_type);
+    const source = useReturnSource(returnType);
+    const usingSource = computed(() => !manualMode.value);
+
+    const itemsCount = computed(() => (usingSource.value ? source.chosenLines.value.length : form.items.length));
+
+    const manualTotal = computed(() => {
         return form.items.reduce(
             (sum, it) => sum + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0),
             0
         );
     });
+
+    const netTotal = computed(() => (usingSource.value ? parseFloat(source.total.value) || 0 : manualTotal.value));
 
     const loadFormDependencies = async () => {
         try {
@@ -57,8 +72,15 @@ export function useCreateReturn() {
         }
     };
 
+    const setManualMode = (value) => {
+        manualMode.value = value && canWithoutInvoice.value;
+        source.clearSource();
+    };
+
     const onTypeChange = (type) => {
         form.return_type = type;
+        source.clearSource();
+        source.loadSources();
         form.items.forEach((line) => {
             const it = items.value.find((i) => i.id === line.item_id);
             if (it) {
@@ -104,26 +126,32 @@ export function useCreateReturn() {
     };
 
     const submitReturn = async () => {
-        if (form.items.length === 0) {
+        if (itemsCount.value === 0) {
             Swal.fire({ icon: 'warning', title: t('common.warning'), text: t('returns.add_at_least_one_item') });
             return;
         }
 
         isSubmitting.value = true;
         try {
+            const isSales = form.return_type === 'sales_return';
             const payload = {
                 return_type: form.return_type,
-                customer_id: form.return_type === 'sales_return' ? form.customer_id : null,
-                supplier_id: form.return_type === 'purchase_return' ? form.supplier_id : null,
+                customer_id: isSales ? (usingSource.value ? source.selected.value?.party_id : form.customer_id) : null,
+                supplier_id: !isSales ? (usingSource.value ? source.selected.value?.party_id : form.supplier_id) : null,
                 return_date: form.return_date,
                 refund_amount: parseFloat(form.refund_amount) || 0,
                 reason: form.reason || null,
-                items: form.items.map((it) => ({
-                    item_id: it.item_id,
-                    quantity: parseFloat(it.quantity),
-                    unit_price: parseFloat(it.unit_price),
-                })),
+                items: usingSource.value
+                    ? source.payloadItems()
+                    : form.items.map((it) => ({
+                          item_id: it.item_id,
+                          quantity: parseFloat(it.quantity),
+                          unit_price: parseFloat(it.unit_price),
+                      })),
             };
+            if (usingSource.value) {
+                payload[isSales ? 'invoice_id' : 'purchase_id'] = source.selected.value?.id;
+            }
 
             const response = await api.post('/returns', payload);
             Swal.fire({
@@ -148,6 +176,7 @@ export function useCreateReturn() {
 
     onMounted(() => {
         loadFormDependencies();
+        source.loadSources();
     });
 
     return {
@@ -158,6 +187,12 @@ export function useCreateReturn() {
         selectedItemToAdd,
         form,
         netTotal,
+        itemsCount,
+        canWithoutInvoice,
+        manualMode,
+        usingSource,
+        source,
+        setManualMode,
         onTypeChange,
         updateField,
         addItemRow,
