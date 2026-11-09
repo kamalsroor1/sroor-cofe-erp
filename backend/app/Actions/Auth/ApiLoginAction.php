@@ -64,7 +64,11 @@ final class ApiLoginAction
 
         // 4. Create Sanctum token
         $tokenName = $dto->deviceName.'-'.now()->format('YmdHis');
-        $token = $user->createToken($tokenName, ['*'])->plainTextToken;
+        $token = $user->createToken(
+            $tokenName,
+            ['*'],
+            now()->addMinutes(max(1, (int) config('auth.tokens.tenant_ttl_minutes', 720))),
+        )->plainTextToken;
 
         // 5. Update user metadata
         $user->update([

@@ -15,6 +15,8 @@ final class UpdateProfileAction
      */
     public function execute(User $user, array $validated): User
     {
+        $passwordChanged = false;
+
         if (! empty($validated['new_password'])) {
             if (! Hash::check((string) $validated['current_password'], $user->password)) {
                 throw ValidationException::withMessages([
@@ -22,6 +24,7 @@ final class UpdateProfileAction
                 ]);
             }
             $user->password = Hash::make((string) $validated['new_password']);
+            $passwordChanged = true;
         }
 
         $user->name = (string) $validated['name'];
@@ -33,6 +36,14 @@ final class UpdateProfileAction
             $user->locale = is_string($validated['locale']) ? $validated['locale'] : null;
         }
         $user->save();
+
+        // SEC-03: a new password ends every other session; the token making this request stays.
+        if ($passwordChanged) {
+            $currentId = data_get($user->currentAccessToken(), 'id'); // null when no token is bound (Sanctum docblock says non-null)
+            $user->tokens()
+                ->when($currentId !== null, fn ($query) => $query->whereKeyNot($currentId))
+                ->delete();
+        }
 
         return $user;
     }

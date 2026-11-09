@@ -41,8 +41,17 @@ final class UpdateUserAction
                 $data['password'] = Hash::make($dto->password);
             }
 
+            $wasActive = (bool) $user->is_active;
+            $rolesBefore = $user->getRoleNames()->sort()->values()->all();
+
             $user->update($data);
             $user->syncRoles([$dto->role]);
+
+            // SEC-03: password reset, deactivation or a different role set ends all sessions.
+            $rolesAfter = $user->getRoleNames()->sort()->values()->all();
+            if ($dto->password || ($wasActive && ! $dto->is_active) || $rolesBefore !== $rolesAfter) {
+                $user->tokens()->delete();
+            }
 
             return $user;
         });

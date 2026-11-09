@@ -102,3 +102,9 @@ Artisan::command('central-audit:prune {--days= : Keep rows younger than this man
 Schedule::command('central-audit:prune')
     ->dailyAt('03:15')
     ->withoutOverlapping();
+
+// 9. SEC-03: drop expired tenant API tokens (12h fixed TTL) from every provisioned tenant DB.
+// `tenants:run` is the app's provisioned-tenants-only variant (RunForProvisionedTenants).
+Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')
+    ->dailyAt('03:30')
+    ->withoutOverlapping();
