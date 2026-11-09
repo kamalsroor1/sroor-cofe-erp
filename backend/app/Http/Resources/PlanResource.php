@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Plan;
+use App\Models\PlanFeature;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -41,7 +42,7 @@ class PlanResource extends JsonResource
             'is_active' => $this->is_active,
             'is_public' => $this->is_public,
             'is_popular' => $this->is_popular,
-            'features' => $this->features ?? [],
+            'features' => empty($this->features) ? [] : array_diff_key($this->features, array_flip(PlanFeature::hiddenKeys())),
             'tenants_count' => $this->whenCounted('tenants'),
         ];
     }

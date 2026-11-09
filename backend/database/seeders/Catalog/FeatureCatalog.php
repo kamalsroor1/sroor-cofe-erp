@@ -12,8 +12,10 @@ namespace Database\Seeders\Catalog;
  * - 18 CORE features = in every paid plan (the 17 of Q-E8 + quotations.manage, which has
  *   no routes in Phase 1);
  * - `blender.access` is renamed to the neutral `mixes.manage` (LEGACY_RENAMES);
- * - hidden keys (is_public = false): `pos.offline` (no route until the end of Phase 2)
- *   and `custom.domain` (Q-E9, hidden until Phase 3).
+ * - hidden keys (is_public = false): `pos.offline` (no route until the end of Phase 2),
+ *   `custom.domain` (Q-E9, hidden until Phase 3) and `quotations.manage` (PRD-10: no route,
+ *   model or screen exists, so it must not be listed or sold until it is built). Hidden keys
+ *   stay in the registry and in stored plans.features so existing data remains valid.
  *
  * Names and descriptions are translation keys in lang/{ar,en}/plans.php
  * (plans.features.<lang_slug>.name|description); no brand or trade-specific wording.
@@ -35,7 +37,7 @@ final class FeatureCatalog
         'invoices.create' => ['sales', true, true],
         'invoices.edit' => ['sales', true, true],
         'whatsapp.share' => ['sales', true, true],
-        'quotations.manage' => ['sales', true, true],
+        'quotations.manage' => ['sales', true, false],
         'pos.offline' => ['sales', false, false],
         'items.manage' => ['inventory', true, true],
         'items.movements' => ['inventory', true, true],

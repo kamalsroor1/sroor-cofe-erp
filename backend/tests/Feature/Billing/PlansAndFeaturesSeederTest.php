@@ -127,7 +127,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         }
     }
 
-    public function test_it_seeds_the_feature_registry_with_18_core_and_two_hidden_keys(): void
+    public function test_it_seeds_the_feature_registry_with_18_core_and_three_hidden_keys(): void
     {
         $this->seedCatalog();
 
@@ -144,7 +144,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         $this->assertCount(18, $core);
 
         $hidden = $features->reject(fn (object $feature): bool => (bool) $feature->is_public)->keys()->sort()->values()->all();
-        $this->assertSame(['custom.domain', 'pos.offline'], $hidden);
+        $this->assertSame(['custom.domain', 'pos.offline', 'quotations.manage'], $hidden);
 
         foreach ($features as $key => $feature) {
             $this->assertSame(FeatureCatalog::nameKey($key), $feature->name_key);

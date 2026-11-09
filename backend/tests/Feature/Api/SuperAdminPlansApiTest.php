@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\Plan;
+use App\Models\PlanFeature;
 use Illuminate\Support\Str;
 use Tests\Concerns\SeedsCentralPlatformRoles;
 use Tests\TenantTestCase;
@@ -102,6 +103,40 @@ final class SuperAdminPlansApiTest extends TenantTestCase
             ->assertJsonValidationErrors(['name', 'price_monthly', 'max_users', 'features']);
 
         $this->assertSame('باقة المحامص الاحترافية', Plan::query()->findOrFail($this->plan->id)->name);
+    }
+
+    public function test_hidden_features_are_excluded_from_the_console_catalog_and_kept_on_plans(): void
+    {
+        PlanFeature::query()->updateOrCreate(['key' => 'quotations.manage'], [
+            'name' => 'Quotations', 'module' => 'sales', 'type' => 'boolean',
+            'default_value' => 'true', 'sort_order' => 5, 'is_core' => true, 'is_public' => false,
+        ]);
+        PlanFeature::query()->updateOrCreate(['key' => 'pos.access'], [
+            'name' => 'POS', 'module' => 'sales', 'type' => 'boolean',
+            'default_value' => 'true', 'sort_order' => 1, 'is_core' => true, 'is_public' => true,
+        ]);
+        $this->plan->update(['features' => ['pos.access' => true, 'quotations.manage' => true]]);
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
+
+        $response = $this->getJson('/api/v1/super-admin/plans', $headers)->assertOk();
+        $grouped = collect($response->json('data.grouped_features'))->flatten(1)->pluck('key')->all();
+        $this->assertContains('pos.access', $grouped);
+        $this->assertNotContains('quotations.manage', $grouped);
+
+        $listed = collect($response->json('data.plans'))->firstWhere('id', $this->plan->id);
+        $this->assertArrayHasKey('pos.access', $listed['features']);
+        $this->assertArrayNotHasKey('quotations.manage', $listed['features']);
+
+        // The editing UI never sends the hidden key and cannot switch it on or off.
+        $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
+            'features' => ['pos.access' => true],
+        ]), $headers)->assertOk();
+        $this->assertTrue($this->plan->fresh()->features['quotations.manage'], 'Stored hidden value is preserved.');
+
+        $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
+            'features' => ['pos.access' => true, 'quotations.manage' => false],
+        ]), $headers)->assertOk();
+        $this->assertTrue($this->plan->fresh()->features['quotations.manage']);
     }
 
     public function test_update_of_unknown_plan_is_a_translated_404(): void
