@@ -13,6 +13,8 @@
       </template>
     </PageHeader>
 
+    <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Main Form (Col Span 2) -->
       <div class="lg:col-span-2 space-y-5">
@@ -86,6 +88,7 @@
 
 <script setup>
 import { ArrowRight } from 'lucide-vue-next';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import ReturnPartySection from '../../Components/Returns/ReturnPartySection.vue';
 import ReturnSourcePicker from '../../Components/Returns/ReturnSourcePicker.vue';
@@ -95,6 +98,9 @@ import ReturnFinancialSummary from '../../Components/Returns/ReturnFinancialSumm
 import { useCreateReturn } from '../../Composables/useCreateReturn';
 
 const {
+  error,
+  errorMessage,
+  retry,
   customers,
   suppliers,
   items,

@@ -5,12 +5,15 @@ import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 import { useUnits } from './useUnits';
 import { businessToday } from './useBusinessDate';
 
 export function useCreateReturn() {
     const { unitLabel } = useUnits();
     const { t } = useTrans();
+    const { error, errorMessage, clearError, setError } = useLoadError();
+    const isLoading = ref(false);
     const router = useRouter();
 
     const authStore = useAuthStore();
@@ -51,6 +54,8 @@ export function useCreateReturn() {
     const netTotal = computed(() => (usingSource.value ? parseFloat(source.total.value) || 0 : manualTotal.value));
 
     const loadFormDependencies = async () => {
+        isLoading.value = true;
+        clearError();
         try {
             const [custRes, suppRes, itemRes] = await Promise.all([
                 api.get('/customers?per_page=100'),
@@ -68,8 +73,10 @@ export function useCreateReturn() {
             if (suppliers.value.length > 0) {
                 form.supplier_id = suppliers.value[0].id;
             }
-        } catch (error) {
-            console.error('Failed to load return form data:', error);
+        } catch (err) {
+            setError(err);
+        } finally {
+            isLoading.value = false;
         }
     };
 
@@ -181,6 +188,10 @@ export function useCreateReturn() {
     });
 
     return {
+        isLoading,
+        error,
+        errorMessage,
+        retry: loadFormDependencies,
         customers,
         suppliers,
         items,

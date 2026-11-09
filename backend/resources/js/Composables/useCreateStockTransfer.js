@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 import { useUnits } from './useUnits';
 import { businessToday } from './useBusinessDate';
 
@@ -10,6 +11,8 @@ export function useCreateStockTransfer() {
     const { unitLabel } = useUnits();
     const router = useRouter();
     const { t } = useTrans();
+    const { error, errorMessage, clearError, setError } = useLoadError();
+    const isLoading = ref(false);
 
     const stores = ref([]);
     const items = ref([]);
@@ -47,6 +50,8 @@ export function useCreateStockTransfer() {
     });
 
     const loadDependencies = async () => {
+        isLoading.value = true;
+        clearError();
         try {
             const [storesRes, itemsRes] = await Promise.all([api.get('/stores'), api.get('/items?per_page=100')]);
 
@@ -59,8 +64,10 @@ export function useCreateStockTransfer() {
             } else if (stores.value.length === 1) {
                 form.from_store_id = stores.value[0].id;
             }
-        } catch (error) {
-            console.error('Failed to load transfer dependencies:', error);
+        } catch (err) {
+            setError(err);
+        } finally {
+            isLoading.value = false;
         }
     };
 
@@ -144,6 +151,10 @@ export function useCreateStockTransfer() {
     onMounted(loadDependencies);
 
     return {
+        isLoading,
+        error,
+        errorMessage,
+        retry: loadDependencies,
         stores,
         items,
         form,

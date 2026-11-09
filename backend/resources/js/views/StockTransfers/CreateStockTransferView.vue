@@ -13,6 +13,8 @@
       </template>
     </PageHeader>
 
+    <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
+
     <form @submit.prevent="submitTransfer" class="space-y-6">
       <!-- Branches & Date Selection Card -->
       <CreateStockTransferHeaderCard
@@ -49,6 +51,7 @@
 
 <script setup>
 import { ArrowRight, Truck } from 'lucide-vue-next';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import CreateStockTransferHeaderCard from '../../Components/StockTransfers/CreateStockTransferHeaderCard.vue';
@@ -56,6 +59,9 @@ import CreateStockTransferItemsCard from '../../Components/StockTransfers/Create
 import { useCreateStockTransfer } from '../../Composables/useCreateStockTransfer';
 
 const {
+  error,
+  errorMessage,
+  retry,
   form,
   isSubmitting,
   selectedItemId,

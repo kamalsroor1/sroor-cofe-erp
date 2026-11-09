@@ -12,6 +12,8 @@
       </template>
     </PageHeader>
 
+    <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Left: Blender Studio Workspace (Col span 8) -->
       <div class="lg:col-span-8 space-y-5">
@@ -60,6 +62,7 @@
 
 <script setup>
 import { ArrowRight } from 'lucide-vue-next';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import CoffeeBlenderSpecsCard from '../../Components/CoffeeBlender/CoffeeBlenderSpecsCard.vue';
 import CoffeeBlenderFormulationCard from '../../Components/CoffeeBlender/CoffeeBlenderFormulationCard.vue';
@@ -67,6 +70,9 @@ import CoffeeBlenderCostSummary from '../../Components/CoffeeBlender/CoffeeBlend
 import { useCoffeeBlender } from '../../Composables/useCoffeeBlender';
 
 const {
+  error,
+  errorMessage,
+  retry,
   blendName,
   targetWeightGrams,
   selectedCustomerId,

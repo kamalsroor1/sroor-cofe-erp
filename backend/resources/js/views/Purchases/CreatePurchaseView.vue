@@ -8,6 +8,8 @@
       back-href="/purchases"
     />
 
+    <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
+
     <form @submit.prevent="submitPurchase" class="space-y-6">
       <!-- Supplier & Metadata Card -->
       <CreatePurchaseSupplierCard
@@ -61,6 +63,7 @@
 </template>
 
 <script setup>
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import CreatePurchaseSupplierCard from '../../Components/Purchases/CreatePurchaseSupplierCard.vue';
@@ -69,6 +72,9 @@ import CreatePurchaseSummaryCard from '../../Components/Purchases/CreatePurchase
 import { useCreatePurchase } from '../../Composables/useCreatePurchase';
 
 const {
+  error,
+  errorMessage,
+  retry,
   form,
   availableItems,
   supplierOptions,

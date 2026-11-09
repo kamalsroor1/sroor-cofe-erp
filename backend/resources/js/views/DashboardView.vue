@@ -3,7 +3,7 @@
     <DashboardWelcomeBanner
       :company-name="appConfigStore.companyName || appConfigStore.platformName"
       :loading="isLoading"
-      @refresh="fetchDashboard"
+      @refresh="retry"
     />
 
     <!-- 🚀 Metro App Menu Hub (Tiles & Operations Launcher) -->
@@ -12,7 +12,10 @@
     <!-- 🔄 Facebook-Style Skeleton Loading State -->
     <DashboardSkeleton v-if="isLoading && !dashboardData" />
 
+    <ErrorState v-else-if="error && !dashboardData" :message="errorMessage" :loading="isLoading" @retry="retry" />
+
     <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
       <DashboardKpiGrid :metrics="metrics" />
 
       <DashboardAnalyticsRow
@@ -37,11 +40,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppConfigStore } from '../stores/appConfig';
-import api from '../Services/api';
+import { useDashboard } from '../Composables/useDashboard';
 
+import ErrorState from '../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../Components/Common/InlineErrorBar.vue';
 import DashboardWelcomeBanner from '../Components/Dashboard/DashboardWelcomeBanner.vue';
 import DashboardAppMenuHub from '../Components/Dashboard/DashboardAppMenuHub.vue';
 import DashboardKpiGrid from '../Components/Dashboard/DashboardKpiGrid.vue';
@@ -54,33 +58,22 @@ import DashboardSkeleton from '../Components/Dashboard/DashboardSkeleton.vue';
 const router = useRouter();
 const appConfigStore = useAppConfigStore();
 
-const dashboardData = ref(null);
-const isLoading = ref(true);
-
-const metrics = computed(() => dashboardData.value?.metrics || {});
-const analytics = computed(() => dashboardData.value?.analytics || {});
-const dailyTrend = computed(() => analytics.value?.daily_trend || []);
-const hourlySales = computed(() => analytics.value?.hourly_sales || []);
-const peakHour = computed(() => analytics.value?.peak_hour || null);
-const paymentDistribution = computed(() => analytics.value?.payment_distribution || []);
-const periodAnalytics = computed(() => analytics.value?.period || {});
-const recentInvoices = computed(() => dashboardData.value?.recent_invoices || []);
-const lowStockItems = computed(() => dashboardData.value?.low_stock_items || []);
-const activeShift = computed(() => dashboardData.value?.active_shift || null);
+const {
+  dashboardData,
+  isLoading,
+  error,
+  errorMessage,
+  retry,
+  metrics,
+  dailyTrend,
+  hourlySales,
+  peakHour,
+  paymentDistribution,
+  periodAnalytics,
+  recentInvoices,
+  lowStockItems,
+  activeShift,
+} = useDashboard();
 
 const previewInvoice = (inv) => router.push('/invoices?view=' + inv.id);
-
-const fetchDashboard = async () => {
-  isLoading.value = true;
-  try {
-    const res = await api.get('/dashboard');
-    dashboardData.value = res.data?.data;
-  } catch (e) {
-    console.error('Failed to load dashboard data:', e);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-onMounted(fetchDashboard);
 </script>

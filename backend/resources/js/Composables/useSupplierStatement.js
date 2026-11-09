@@ -1,11 +1,13 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../Services/api';
+import { useLoadError } from './useLoadError';
 import { businessToday, startOfMonth, endOfMonth, startOfYear, endOfYear } from './useBusinessDate';
 
 export function useSupplierStatement() {
     const route = useRoute();
     const supplierId = route.params.id;
+    const { error, errorMessage, clearError, setError } = useLoadError();
 
     const supplier = ref(null);
     const ledger = ref([]);
@@ -42,6 +44,7 @@ export function useSupplierStatement() {
 
     const fetchStatement = async () => {
         isLoading.value = true;
+        clearError();
         try {
             const response = await api.get(`/suppliers/${supplierId}/statement`, {
                 params: {
@@ -54,9 +57,11 @@ export function useSupplierStatement() {
                 supplier.value = data.supplier;
                 ledger.value = data.ledger || [];
                 summary.value = data.summary || {};
+            } else {
+                setError(null);
             }
-        } catch (error) {
-            console.error('Failed to load supplier statement:', error);
+        } catch (err) {
+            setError(err);
         } finally {
             isLoading.value = false;
         }
@@ -76,6 +81,9 @@ export function useSupplierStatement() {
         dateTo,
         activePreset,
         isLoading,
+        error,
+        errorMessage,
+        retry: fetchStatement,
         applyPreset,
         fetchStatement,
         printStatement,

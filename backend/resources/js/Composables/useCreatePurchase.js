@@ -3,12 +3,15 @@ import { useRouter, useRoute } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 import { businessToday } from './useBusinessDate';
 
 export function useCreatePurchase() {
     const router = useRouter();
     const route = useRoute();
     const { t } = useTrans();
+    const { error, errorMessage, clearError, setError } = useLoadError();
+    const isLoading = ref(false);
 
     const suppliers = ref([]);
     const availableItems = ref([]);
@@ -63,6 +66,8 @@ export function useCreatePurchase() {
     };
 
     const loadInitialData = async () => {
+        isLoading.value = true;
+        clearError();
         try {
             const [supRes, itemRes] = await Promise.all([
                 api.get('/suppliers', { params: { per_page: 100 } }),
@@ -83,12 +88,14 @@ export function useCreatePurchase() {
                             cost_price: (p.cost_price || 0).toString(),
                         }));
                     }
-                } catch (err) {
-                    console.error('Error parsing prefill params:', err);
+                } catch {
+                    // Malformed prefill param: start with an empty basket.
                 }
             }
-        } catch (error) {
-            console.error('Failed to load form dependencies:', error);
+        } catch (err) {
+            setError(err);
+        } finally {
+            isLoading.value = false;
         }
     };
 
@@ -136,6 +143,10 @@ export function useCreatePurchase() {
     onMounted(loadInitialData);
 
     return {
+        isLoading,
+        error,
+        errorMessage,
+        retry: loadInitialData,
         form,
         suppliers,
         availableItems,

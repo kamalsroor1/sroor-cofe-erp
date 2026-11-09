@@ -19,7 +19,15 @@
     </PageHeader>
 
     <!-- 2. Categories Grid (With Loading & Empty State) -->
+    <ErrorState
+      v-if="error && categories.length === 0"
+      :message="errorMessage"
+      :loading="isLoading"
+      @retry="fetchCategories"
+    />
+    <InlineErrorBar v-else-if="error" :message="errorMessage" @retry="fetchCategories" />
     <CategoriesGrid
+      v-if="!(error && categories.length === 0)"
       :categories="categories"
       :is-loading="isLoading"
       @create="openCreateModal"
@@ -44,6 +52,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { Plus, Folder } from 'lucide-vue-next';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import CategoriesGrid from '../../Components/Categories/CategoriesGrid.vue';
@@ -51,6 +61,9 @@ import CategoryFormModal from '../../Components/Categories/CategoryFormModal.vue
 import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
+import { useLoadError } from '../../Composables/useLoadError';
+
+const { error, errorMessage, clearError, setError } = useLoadError();
 
 const categories = ref([]);
 const isLoading = ref(false);
@@ -68,11 +81,12 @@ const form = reactive({
 
 const fetchCategories = async () => {
   isLoading.value = true;
+  clearError();
   try {
     const res = await api.get('/categories');
     categories.value = res.data?.data || [];
   } catch (e) {
-    console.error('Failed to load categories:', e);
+    setError(e);
   } finally {
     isLoading.value = false;
   }

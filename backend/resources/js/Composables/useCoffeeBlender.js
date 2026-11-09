@@ -3,10 +3,13 @@ import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
 
 export function useCoffeeBlender() {
     const router = useRouter();
     const { t } = useTrans();
+    const { error, errorMessage, clearError, setError } = useLoadError();
+    const isLoading = ref(false);
 
     const items = ref([]);
     const customers = ref([]);
@@ -108,6 +111,8 @@ export function useCoffeeBlender() {
     });
 
     const loadDependencies = async () => {
+        isLoading.value = true;
+        clearError();
         try {
             const [itemsRes, custRes] = await Promise.all([
                 api.get('/items?per_page=100'),
@@ -142,8 +147,10 @@ export function useCoffeeBlender() {
                     },
                 ];
             }
-        } catch (error) {
-            console.error('Failed to load blender dependencies:', error);
+        } catch (err) {
+            setError(err);
+        } finally {
+            isLoading.value = false;
         }
     };
 
@@ -240,6 +247,10 @@ export function useCoffeeBlender() {
     });
 
     return {
+        isLoading,
+        error,
+        errorMessage,
+        retry: loadDependencies,
         items,
         customers,
         blendName,

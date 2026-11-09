@@ -34,6 +34,14 @@
       <p class="text-xs font-bold">{{ $t('invoices.preparing_receipt') }}</p>
     </div>
 
+    <!-- Error State -->
+    <div
+      v-else-if="error && !invoice"
+      class="no-print w-full max-w-[80mm] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl"
+    >
+      <ErrorState :message="errorMessage" compact @retry="fetchInvoice" />
+    </div>
+
     <!-- 80mm Thermal Receipt Container -->
     <div
       v-else-if="invoice"
@@ -171,6 +179,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Printer, ArrowRight } from 'lucide-vue-next';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import { useLoadError } from '../../Composables/useLoadError';
 import api from '../../Services/api';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -182,6 +192,7 @@ const appConfigStore = useAppConfigStore();
 const { formatMoney, formatTime } = useFormatters();
 const { t } = useTrans();
 
+const { error, errorMessage, clearError, setError } = useLoadError();
 const invoice = ref(null);
 const isLoading = ref(true);
 
@@ -249,11 +260,12 @@ const fetchInvoice = async () => {
   const id = route.params.id;
   if (!id) return;
   isLoading.value = true;
+  clearError();
   try {
     const res = await api.get(`/invoices/${id}`);
     invoice.value = res.data?.data || res.data;
   } catch (e) {
-    console.error('Failed to load invoice for printing', e);
+    setError(e);
   } finally {
     isLoading.value = false;
   }
@@ -261,7 +273,7 @@ const fetchInvoice = async () => {
 
 onMounted(async () => {
   await fetchInvoice();
-  if (route.query.autoprint === 'true') {
+  if (invoice.value && route.query.autoprint === 'true') {
     setTimeout(() => {
       window.print();
     }, 500);
