@@ -7,10 +7,15 @@ namespace App\Actions\Stores;
 use App\DTOs\Stores\StoreDTO;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\StoreStockInitializer;
 use Illuminate\Support\Facades\DB;
 
 final class CreateStoreAction
 {
+    public function __construct(
+        private readonly StoreStockInitializer $stockInitializer,
+    ) {}
+
     /**
      * Create a new store/branch inside a DB transaction
      */
@@ -32,6 +37,9 @@ final class CreateStoreAction
                 'is_active' => $dto->is_active,
                 'is_main' => $dto->is_main,
             ]);
+
+            // BE-04: every item gets a zero store_stocks row in the new store.
+            $this->stockInitializer->seedStore((int) $store->id);
 
             if ($creator) {
                 $store->users()->syncWithoutDetaching([$creator->id]);

@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Item;
+use App\Models\Setting;
 use App\Models\StockDeposit;
 use App\Models\StockMovement;
 use App\Models\Store;
@@ -48,6 +50,31 @@ class StockService
     }
 
     /**
+     * Materialise the zero row for a (store, item) pair that was never seeded and lock it.
+     * Only reached for legacy data; new stores/items are seeded by StoreStockInitializer.
+     * insertOrIgnore + a withTrashed re-read keep a soft-deleted row from hitting the unique
+     * index. When negative stock is disallowed the caller throws and the surrounding
+     * transaction rolls the zero row back with everything else.
+     */
+    private function createMissingStoreStock(int $storeId, Item $item): StoreStock
+    {
+        DB::table('store_stocks')->insertOrIgnore([
+            'store_id' => $storeId,
+            'item_id' => $item->id,
+            'quantity' => '0.000',
+            'min_stock' => (string) $item->min_stock_level,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return StoreStock::withTrashed()
+            ->where('store_id', $storeId)
+            ->where('item_id', $item->id)
+            ->lockForUpdate()
+            ->firstOrFail();
+    }
+
+    /**
      * Deduct stock securely with row locking (at store level and master item level)
      */
     public function deductStock(
@@ -63,8 +90,12 @@ class StockService
         // 1. Lock master item row
         $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
 
-        if (bccomp((string) $lockedItem->current_stock, $quantity, 3) < 0) {
-            throw new Exception("رصيد الصنف [{$lockedItem->name}] غير كافٍ. المتوفر حالياً: {$lockedItem->current_stock}");
+        // BE-04: a missing store_stocks row counts as zero stock, never as "skip the check".
+        $allowNegative = Setting::getBool('allow_negative_stock', false);
+
+        // Item-level check is skipped only when allow_negative_stock is on (intended; same as DeleteReturnAction).
+        if (! $allowNegative && bccomp((string) $lockedItem->current_stock, $quantity, 3) < 0) {
+            throw InsufficientStockException::forItem($lockedItem->name, (string) $lockedItem->current_stock);
         }
 
         // If no storeId passed, try to resolve from user session/default or main store
@@ -74,22 +105,25 @@ class StockService
 
         // 2. Lock and update StoreStock if storeId is determined
         if ($storeId) {
-            $store = Store::find($storeId);
-            $storeStock = StoreStock::where('store_id', $storeId)
+            $storeStock = StoreStock::withTrashed()
+                ->where('store_id', $storeId)
                 ->where('item_id', $lockedItem->id)
                 ->lockForUpdate()
-                ->first();
+                ->first()
+                ?? $this->createMissingStoreStock($storeId, $lockedItem);
 
-            if ($storeStock && bccomp((string) $storeStock->quantity, $quantity, 3) < 0) {
-                $available = (string) $storeStock->quantity;
-                $storeName = $store ? $store->name : "الفرع #{$storeId}";
-                throw new Exception("رصيد الصنف [{$lockedItem->name}] في [{$storeName}] غير كافٍ. المتوفر حالياً: {$available} {$lockedItem->unit}");
+            if (! $allowNegative && bccomp((string) $storeStock->quantity, $quantity, 3) < 0) {
+                $storeName = (string) (Store::query()->whereKey($storeId)->value('name') ?? "#{$storeId}");
+                throw InsufficientStockException::forStore(
+                    $lockedItem->name,
+                    $storeName,
+                    (string) $storeStock->quantity,
+                    (string) $lockedItem->unit,
+                );
             }
 
-            if ($storeStock) {
-                $storeStock->quantity = bcsub((string) $storeStock->quantity, $quantity, 3);
-                $storeStock->save();
-            }
+            $storeStock->quantity = bcsub((string) $storeStock->quantity, $quantity, 3);
+            $storeStock->save();
         }
 
         // 3. Deduct from master item stock

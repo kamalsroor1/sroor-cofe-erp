@@ -399,4 +399,6 @@ return [
     'transfer_cancel_reason_default' => 'Cancelled from the system',
     'delete_category_confirm_text' => 'Category ":name" will be deleted and its items unlinked; the items themselves are kept.',
     'store_delete_blockers' => "Linked operations prevent deletion:\n- :blockers",
+    'insufficient_stock_item' => 'Insufficient stock for item [:item]. Currently available: :available',
+    'insufficient_stock_store' => 'Insufficient stock for item [:item] in [:store]. Currently available: :available :unit',
 ];

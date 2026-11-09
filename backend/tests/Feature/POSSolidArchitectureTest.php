@@ -14,10 +14,13 @@ use App\Models\Item;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
+use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
 class POSSolidArchitectureTest extends TenantTestCase
 {
+    use SeedsStoreStock;
+
     protected Tenant $tenant;
 
     protected User $user;
@@ -71,6 +74,7 @@ class POSSolidArchitectureTest extends TenantTestCase
             'min_stock_level' => '5.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($this->item);
 
         // Create Customer
         $this->customer = Customer::create([

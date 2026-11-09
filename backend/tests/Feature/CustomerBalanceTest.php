@@ -13,10 +13,13 @@ use App\Services\CustomerBalanceService;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
 class CustomerBalanceTest extends TenantTestCase
 {
+    use SeedsStoreStock;
+
     protected Tenant $tenant;
 
     protected User $user;
@@ -45,6 +48,7 @@ class CustomerBalanceTest extends TenantTestCase
                 'selling_price' => '1500.000',
                 'is_active' => true,
             ]);
+            $this->stockInAllStores($item);
 
             $customer = Customer::create([
                 'name' => 'هايبر ماركت السلام',

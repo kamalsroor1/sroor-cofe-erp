@@ -434,4 +434,6 @@ return [
     'transfer_cancel_reason_default' => 'إلغاء من النظام',
     'delete_category_confirm_text' => 'سيتم حذف الفئة ":name" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.',
     'store_delete_blockers' => "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers",
+    'insufficient_stock_item' => 'رصيد الصنف [:item] غير كافٍ. المتوفر حالياً: :available',
+    'insufficient_stock_store' => 'رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit',
 ];

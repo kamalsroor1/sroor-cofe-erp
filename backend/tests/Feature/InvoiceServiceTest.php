@@ -13,10 +13,13 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\InvoiceService;
 use Exception;
+use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
 class InvoiceServiceTest extends TenantTestCase
 {
+    use SeedsStoreStock;
+
     protected Tenant $tenant;
 
     protected InvoiceService $invoiceService;
@@ -50,6 +53,7 @@ class InvoiceServiceTest extends TenantTestCase
             'min_stock_level' => '2.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
 
         $customer = Customer::create([
             'name' => 'شركة الأمل للتجارة',
@@ -107,6 +111,7 @@ class InvoiceServiceTest extends TenantTestCase
             'selling_price' => '150.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
 
         $customer = Customer::create([
             'name' => 'عميل نقدي',
@@ -144,6 +149,7 @@ class InvoiceServiceTest extends TenantTestCase
             'selling_price' => '400.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
 
         $customer = Customer::create(['name' => 'عميل اختبار', 'is_active' => true]);
 
@@ -184,6 +190,7 @@ class InvoiceServiceTest extends TenantTestCase
             'selling_price' => '150.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
 
         $customer = Customer::create(['name' => 'عميل اختبار الأرقام الفريدة', 'is_active' => true]);
 
@@ -233,6 +240,7 @@ class InvoiceServiceTest extends TenantTestCase
             'selling_price' => '150.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
 
         $customer = Customer::create(['name' => 'عميل اختبار تسلسل الأرقام', 'is_active' => true]);
         $mainStore = Store::getMainStore();
@@ -293,6 +301,7 @@ class InvoiceServiceTest extends TenantTestCase
             'selling_price' => '80.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
 
         $customer = Customer::create(['name' => 'عميل فروع متعددة', 'is_active' => true]);
 
@@ -336,6 +345,7 @@ class InvoiceServiceTest extends TenantTestCase
             'selling_price' => '150.000',
             'is_active' => true,
         ]);
+        $this->stockInAllStores($item);
         $customer = Customer::create(['name' => 'عميل المستأجر الأول', 'is_active' => true]);
 
         $invoice = $this->invoiceService->confirmInvoice([
@@ -370,6 +380,7 @@ class InvoiceServiceTest extends TenantTestCase
                 'selling_price' => '150.000',
                 'is_active' => true,
             ]);
+            $this->stockInAllStores($otherItem);
             $otherCustomer = Customer::create(['name' => 'عميل المستأجر الثاني', 'is_active' => true]);
             $otherInvoice = app(InvoiceService::class)->confirmInvoice([
                 'customer_id' => $otherCustomer->id,

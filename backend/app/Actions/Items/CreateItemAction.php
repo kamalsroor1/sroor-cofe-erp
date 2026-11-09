@@ -6,12 +6,15 @@ namespace App\Actions\Items;
 
 use App\DTOs\Items\ItemDTO;
 use App\Models\Item;
-use App\Models\Store;
-use App\Models\StoreStock;
+use App\Services\StoreStockInitializer;
 use Illuminate\Support\Facades\DB;
 
 final class CreateItemAction
 {
+    public function __construct(
+        private readonly StoreStockInitializer $stockInitializer,
+    ) {}
+
     /**
      * Create item inside DB transaction and initialize store stocks
      */
@@ -41,14 +44,8 @@ final class CreateItemAction
                 'is_weighted' => $dto->is_weighted ?? false,
             ]);
 
-            // Auto-initialize StoreStock for existing stores
-            $stores = Store::all();
-            foreach ($stores as $store) {
-                StoreStock::firstOrCreate(
-                    ['store_id' => $store->id, 'item_id' => $item->id],
-                    ['quantity' => '0.000']
-                );
-            }
+            // Auto-initialize StoreStock for every existing store (bulk, idempotent)
+            $this->stockInitializer->seedItem((int) $item->id, (string) $item->min_stock_level);
 
             return $item->fresh(['storeStocks.store']);
         });
