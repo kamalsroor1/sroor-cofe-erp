@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  * @property string|null $base_cost_price
  * @property string $allocated_expense
+ * @property string|null $wac_before effective weighted_avg_cost right before this line was applied
+ * @property string|null $cost_price_before item cost_price right before this line was applied
  */
 class PurchaseItem extends Model
 {
@@ -33,6 +35,8 @@ class PurchaseItem extends Model
         'allocated_expense',
         'cost_price',
         'total_price',
+        'wac_before',
+        'cost_price_before',
     ];
 
     protected function casts(): array
@@ -43,6 +47,8 @@ class PurchaseItem extends Model
             'allocated_expense' => 'decimal:3',
             'cost_price' => 'decimal:3',
             'total_price' => 'decimal:3',
+            'wac_before' => 'decimal:3',
+            'cost_price_before' => 'decimal:3',
         ];
     }
 

@@ -19,6 +19,17 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseService
 {
+    /**
+     * Store-to-store transfer movements: they move store_stocks only, never the tenant-wide
+     * items.current_stock or weighted_avg_cost (see StockTransferService).
+     */
+    private const COST_NEUTRAL_MOVEMENT_TYPES = [
+        'transfer_out',
+        'transfer_in',
+        'transfer_reversal_out',
+        'transfer_reversal_in',
+    ];
+
     public function __construct(
         protected StockService $stockService,
         protected SupplierBalanceService $supplierBalanceService,
@@ -129,7 +140,8 @@ class PurchaseService
                     : '0.000';
                 $landedUnitCost = bcadd($baseCostPrice, $unitAllocatedExpense, 3);
 
-                // Create PurchaseItem
+                // Create PurchaseItem, with the item's costs right before this line is applied
+                // (BUG-03 follow-up: lets a cancel restore them exactly).
                 $purchase->items()->create([
                     'item_id' => $item->id,
                     'quantity' => $quantity,
@@ -137,6 +149,7 @@ class PurchaseService
                     'allocated_expense' => $lineAllocatedExpense,
                     'cost_price' => $landedUnitCost, // Landed unit cost
                     'total_price' => $lineBaseTotal,
+                    ...$this->costSnapshot($item),
                 ]);
 
                 // Calculate weighted average cost with Landed Unit Cost
@@ -396,6 +409,9 @@ class PurchaseService
                 $qty = (string) $itemLine->quantity;
                 $cost = (string) $itemLine->cost_price;
 
+                // Re-snapshot: the item's costs now are what a later cancel goes back to.
+                $itemLine->update($this->costSnapshot($item));
+
                 $newWac = $this->calculateWeightedAverageCost(
                     currentStock: (string) $item->current_stock,
                     currentWac: $this->effectiveWeightedAverageCost($item),
@@ -569,12 +585,15 @@ class PurchaseService
      * BUG-03: the costs each item of a purchase being cancelled goes back to. Lines of the
      * same item are reversed together (one rounding step instead of one per line).
      *
-     * - weighted_avg_cost: reverseWeightedAverageCost(); when no average is left, the last
-     *   known cost = landed cost of the latest other confirmed purchase line of the item,
-     *   else the current average is kept (no independent cost evidence exists).
+     * - weighted_avg_cost: the snapshot taken before the purchase was applied (wac_before of
+     *   the item's first line) when canRestoreCostSnapshot() holds, so a non-terminating
+     *   average does not drift by 0.001. Otherwise reverseWeightedAverageCost(); when no
+     *   average is left, the last known cost = landed cost of the latest other confirmed
+     *   purchase line of the item, else the current average is kept.
      * - cost_price (last purchase landed cost): only when this purchase is the item's
      *   latest confirmed purchase and still owns the value (not edited by hand since); it
-     *   goes back to the previous confirmed purchase's cost, else to the new average.
+     *   goes back to the snapshot (cost_price_before) on the exact path, else to the
+     *   previous confirmed purchase's cost, else to the new average.
      *
      * @param  Collection<int, PurchaseItem>  $lines
      * @param  array<int, Item>  $items  locked, keyed by id
@@ -596,23 +615,91 @@ class PurchaseService
             $previous = $this->latestConfirmedPurchaseLine((int) $itemId, excludePurchaseId: $purchase->id);
             $lastKnownCost = $previous !== null ? (string) $previous->cost_price : null;
 
-            $newWac = $this->reverseWeightedAverageCost(
-                currentStock: (string) $item->current_stock,
-                currentWac: $this->effectiveWeightedAverageCost($item),
-                removedQuantity: $quantity,
-                removedValuation: $valuation,
-            ) ?? $lastKnownCost ?? (string) $item->weighted_avg_cost;
+            /** @var PurchaseItem $firstLine */
+            $firstLine = $itemLines->first();
+            $snapshotCostPrice = null;
+
+            if ($this->canRestoreCostSnapshot($purchase, $item, $itemLines, $quantity)) {
+                // Exact path: nothing has moved the item's cost since this purchase.
+                $newWac = (string) $firstLine->wac_before;
+                $snapshotCostPrice = $firstLine->cost_price_before !== null ? (string) $firstLine->cost_price_before : null;
+            } else {
+                $newWac = $this->reverseWeightedAverageCost(
+                    currentStock: (string) $item->current_stock,
+                    currentWac: $this->effectiveWeightedAverageCost($item),
+                    removedQuantity: $quantity,
+                    removedValuation: $valuation,
+                ) ?? $lastKnownCost ?? (string) $item->weighted_avg_cost;
+            }
 
             $reversals[$itemId] = ['weighted_avg_cost' => $newWac];
 
             $newest = $this->latestConfirmedPurchaseLine((int) $itemId);
             $ownCost = (string) $itemLines->last()->cost_price;
             if ($newest !== null && (int) $newest->purchase_id === (int) $purchase->id && bccomp((string) $item->cost_price, $ownCost, 3) === 0) {
-                $reversals[$itemId]['cost_price'] = $lastKnownCost ?? $newWac;
+                $reversals[$itemId]['cost_price'] = $snapshotCostPrice ?? $lastKnownCost ?? $newWac;
             }
         }
 
         return $reversals;
+    }
+
+    /**
+     * The item's costs right before a purchase line is applied (BUG-03 follow-up snapshot).
+     *
+     * @return array{wac_before: string, cost_price_before: string}
+     */
+    private function costSnapshot(Item $item): array
+    {
+        return [
+            'wac_before' => $this->effectiveWeightedAverageCost($item),
+            'cost_price_before' => (string) $item->cost_price,
+        ];
+    }
+
+    /**
+     * Whether a purchase being cancelled may put the item back on its pre-purchase snapshot
+     * instead of the moving-average formula. All of:
+     *
+     * 1. the item's first line of this purchase has a snapshot (legacy rows have NULL);
+     * 2. the item's latest stock movement (tenant-wide, ignoring store-to-store transfers,
+     *    which move neither items.current_stock nor the average) is this purchase's own
+     *    purchase_in / purchase_restore_in, i.e. no sale, return, adjustment, deposit or
+     *    other purchase came after it;
+     * 3. replaying this purchase's lines from the snapshot on the pre-purchase stock lands
+     *    exactly on the current average, so the cost was not edited by hand in between.
+     *
+     * @param  Collection<int, PurchaseItem>  $itemLines  this purchase's lines of the item, in id order
+     */
+    private function canRestoreCostSnapshot(Purchase $purchase, Item $item, Collection $itemLines, string $quantity): bool
+    {
+        /** @var PurchaseItem|null $firstLine */
+        $firstLine = $itemLines->first();
+        if ($firstLine === null || $firstLine->wac_before === null) {
+            return false;
+        }
+
+        $latest = StockMovement::query()
+            ->where('item_id', $item->id)
+            ->whereNotIn('movement_type', self::COST_NEUTRAL_MOVEMENT_TYPES)
+            ->orderByDesc('id')
+            ->first(['id', 'movement_type', 'source_type', 'source_id']);
+
+        if ($latest === null
+            || $latest->source_type !== Purchase::class
+            || (int) $latest->source_id !== (int) $purchase->id
+            || ! in_array($latest->movement_type, ['purchase_in', 'purchase_restore_in'], true)) {
+            return false;
+        }
+
+        $stock = bcsub((string) $item->current_stock, $quantity, 3);
+        $wac = (string) $firstLine->wac_before;
+        foreach ($itemLines as $line) {
+            $wac = $this->calculateWeightedAverageCost($stock, $wac, (string) $line->quantity, (string) $line->cost_price);
+            $stock = bcadd($stock, (string) $line->quantity, 3);
+        }
+
+        return bccomp($wac, $this->effectiveWeightedAverageCost($item), 3) === 0;
     }
 
     /**
