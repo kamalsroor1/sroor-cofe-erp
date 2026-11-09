@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Invoices\BuildInvoiceListQueryAction;
 use App\Actions\Invoices\CancelSalesInvoiceAction;
 use App\Actions\Invoices\CreateSalesInvoiceAction;
+use App\Actions\Invoices\ExportInvoicesCsvAction;
 use App\Actions\Invoices\GetInvoiceDetailsAction;
 use App\DTOs\Invoices\CancelInvoiceDTO;
 use App\DTOs\Invoices\CreateInvoiceDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelInvoiceRequest;
+use App\Http\Requests\ExportInvoicesRequest;
 use App\Http\Requests\StoreSalesInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\InvoiceSummaryResource;
@@ -22,77 +25,31 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class InvoiceController extends Controller
 {
     public function __construct(
         private readonly CreateSalesInvoiceAction $createSalesInvoiceAction,
         private readonly CancelSalesInvoiceAction $cancelSalesInvoiceAction,
-        private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction
+        private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction,
+        private readonly BuildInvoiceListQueryAction $buildInvoiceListQueryAction,
+        private readonly ExportInvoicesCsvAction $exportInvoicesCsvAction,
     ) {}
 
     /**
      * List Invoices for active store with filters and summary totals
      */
-    public function index(Request $request, ActiveStore $activeStore): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('invoices.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        // STOR-2: the active store (X-Store-Id); a query store_id is an access-checked branch
-        // filter (403). Null (every store) only through a verified `all`.
-        $storeId = $activeStore->readFilter($request);
-
-        $search = trim((string) $request->input('search', ''));
-        $status = (string) $request->input('status', 'all');
-        $customerId = $request->input('customer_id');
-        $paymentType = $request->input('payment_type');
-        $paymentMethod = $request->input('payment_method');
-        $fromDate = $request->input('from_date') ?: $request->input('from');
-        $toDate = $request->input('to_date') ?: $request->input('to');
         $perPage = max(1, min(200, (int) $request->input('per_page', 15)));
 
-        $query = Invoice::query()->with(['customer:id,name,phone,current_balance', 'user:id,name', 'store:id,name']);
-
-        if ($storeId) {
-            $query->where('store_id', $storeId);
-        }
-
-        if ($customerId && $customerId !== 'all') {
-            $query->where('customer_id', (int) $customerId);
-        }
-
-        if ($status !== 'all' && $status !== '') {
-            $query->where('status', $status);
-        }
-
-        if ($paymentType && $paymentType !== 'all') {
-            $query->where('payment_type', $paymentType);
-        }
-
-        if ($paymentMethod && $paymentMethod !== 'all') {
-            $query->where('payment_method', $paymentMethod);
-        }
-
-        if ($fromDate) {
-            $query->whereDate('invoice_date', '>=', $fromDate);
-        }
-
-        if ($toDate) {
-            $query->whereDate('invoice_date', '<=', $toDate);
-        }
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function ($cq) use ($search) {
-                        $cq->where('name', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%");
-                    });
-            });
-        }
+        $query = $this->buildInvoiceListQueryAction->execute();
 
         $totalSales = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('net_total');
         $totalPaid = (float) (clone $query)->where('status', '!=', 'cancelled')->sum('paid_amount');
@@ -117,6 +74,24 @@ final class InvoiceController extends Controller
                 'total_due' => $totalDue,
             ],
         ], 200);
+    }
+
+    /**
+     * Stream the invoices matching the index filters (or the given ids) as a CSV download.
+     */
+    public function export(ExportInvoicesRequest $request): StreamedResponse
+    {
+        $query = $this->buildInvoiceListQueryAction->execute();
+
+        return response()->streamDownload(function () use ($query): void {
+            $out = fopen('php://output', 'wb');
+            $this->exportInvoicesCsvAction->execute($query, $out);
+            fclose($out);
+        }, 'invoices_'.now()->format('Ymd_His').'.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     /**

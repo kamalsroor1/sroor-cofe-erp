@@ -247,6 +247,10 @@ class AppServiceProvider extends ServiceProvider
                 ->by('public-api|'.$endpoint.'|'.$request->ip());
         });
 
+        // Heavy CSV exports (invoices): 6 per minute per user and tenant.
+        RateLimiter::for('exports', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.exports.per_minute', 6))
+            ->by('exports|'.(tenant()?->getTenantKey() ?? 'central').'|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         // L2: release binary downloads, one bucket per IP shared by both download routes (each hit
         // streams a large file). config rate_limits.app_download.per_hour (default 10).
         RateLimiter::for('app-download', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.app_download.per_hour', 10))
