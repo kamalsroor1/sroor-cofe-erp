@@ -158,6 +158,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // POS Fast Operations
         Route::get('/pos/bootstrap', [PosController::class, 'bootstrap'])->name('api.pos.bootstrap')->middleware('store.active')->middleware('feature:pos.access');
+        Route::get('/pos/items', [PosController::class, 'items'])->name('api.pos.items')->middleware('store.active')->middleware('feature:pos.access');
         Route::get('/pos/lookup', [PosController::class, 'lookup'])->name('api.pos.lookup')->middleware('store.active')->middleware('feature:pos.access');
         Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('api.pos.checkout')->middleware('store.active:concrete')->middleware('feature:pos.access');
         Route::post('/pos/quick-customer', [PosController::class, 'quickCustomer'])->name('api.pos.quick_customer')->middleware('feature:pos.access');
@@ -229,6 +230,8 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
             Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('api.users.destroy');
             Route::patch('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('api.users.toggle_active');
+            // BE-08: manager approval PIN for below-minimum-price sales.
+            Route::put('/users/{id}/pos-pin', [UserController::class, 'updatePosPin'])->whereNumber('id')->name('api.users.pos_pin')->middleware('throttle:20,1');
 
             // Roles & Permissions Matrix
             Route::get('/roles', [RoleController::class, 'index'])->name('api.roles.index');
@@ -242,6 +245,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // User Profile & Preferences
         Route::get('/profile', [ProfileController::class, 'show'])->name('api.profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('api.profile.update');
+        Route::put('/profile/pos-pin', [ProfileController::class, 'updatePosPin'])->name('api.profile.pos_pin')->middleware(DenyQuickLoginToken::class)->middleware('throttle:10,1');
 
         Route::middleware(DenyQuickLoginToken::class)->group(function () {
             // Admin Settings & Integrations

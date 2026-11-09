@@ -44,6 +44,7 @@ return [
     'weighted_avg_cost' => 'متوسط التكلفة المرجح (WAC)',
     'retail_price' => 'سعر البيع قطاعي',
     'wholesale_price' => 'سعر البيع جملة',
+    'wholesale_below_min_price' => 'سعر الجملة لا يمكن أن يكون أقل من أقل سعر بيع.',
     'current_stock' => 'الرصيد المتاح بالمخزن',
     'min_stock_level' => 'حد الطلب (تنبيه النواقص)',
     'low_stock_warning' => '⚠️ بضاعة قربت تخلص (تحت حد الطلب)',
@@ -417,6 +418,7 @@ return [
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'cancel_transfer' => 'إلغاء التحويل',
     'min_selling_price' => 'أقل سعر بيع',
+    'wholesale_price' => 'سعر الجملة (0 = نفس سعر القطاعي)',
     'quantity' => 'الكمية',
     'view_transfer_details' => 'عرض تفاصيل التحويل',
 
@@ -436,4 +438,6 @@ return [
     'store_delete_blockers' => "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers",
     'insufficient_stock_item' => 'رصيد الصنف [:item] غير كافٍ. المتوفر حالياً: :available',
     'insufficient_stock_store' => 'رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit',
+    'sold_by_weight' => 'يباع بالوزن',
+    'sold_by_weight_hint' => 'يسمح ببيع كميات كسرية (مثل ربع كيلو) من نقطة البيع',
 ];

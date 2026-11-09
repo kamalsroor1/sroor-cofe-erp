@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\Settings\TenantSettings;
+use App\Support\WeightUnits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +29,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
- * @property string $min_selling_price
+ * @property string $min_selling_price floor: 0 = no floor
+ * @property string|null $wholesale_price BE-08: NULL/0 = not set (wholesale customers pay retail)
  * @property int|null $category_id
  * @property string|null $image
  * @property int $pos_sort_order
@@ -49,6 +51,7 @@ class Item extends Model
         'current_stock',
         'cost_price',
         'min_selling_price',
+        'wholesale_price',
         'weighted_avg_cost',
         'selling_price',
         'min_stock_level',
@@ -70,12 +73,15 @@ class Item extends Model
         return (string) ($this->selling_price ?? '0.000');
     }
 
+    /**
+     * BE-08: the wholesale tier price. The dedicated `wholesale_price` column; NULL/0 = not set, so it
+     * falls back to retail. It is never the minimum selling price (that is only the floor).
+     */
     public function getPriceWholesaleAttribute(): string
     {
-        $min = (string) ($this->min_selling_price ?? '0.000');
+        $wholesale = (string) ($this->getAttribute('wholesale_price') ?? '0.000');
 
-        // 0 means "no floor": fall back to the retail price, never expose 0 or cost.
-        return bccomp($min, '0', 3) > 0 ? $min : (string) ($this->selling_price ?? '0.000');
+        return bccomp($wholesale, '0', 3) > 0 ? $wholesale : (string) ($this->selling_price ?? '0.000');
     }
 
     protected function casts(): array
@@ -84,6 +90,7 @@ class Item extends Model
             'current_stock' => 'decimal:3',
             'cost_price' => 'decimal:3',
             'min_selling_price' => 'decimal:3',
+            'wholesale_price' => 'decimal:3',
             'weighted_avg_cost' => 'decimal:3',
             'selling_price' => 'decimal:3',
             'min_stock_level' => 'decimal:3',
@@ -93,6 +100,14 @@ class Item extends Model
             'pos_sales_count' => 'integer',
             'is_weighted' => 'boolean',
         ];
+    }
+
+    /**
+     * Sold by weight: the explicit flag, or a weight unit (kg, g, ...) on items created before the flag existed.
+     */
+    public function isSoldByWeight(): bool
+    {
+        return (bool) $this->is_weighted || WeightUnits::matches($this->unit);
     }
 
     /**

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Customer;
+use App\Support\TenantClock;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSalesInvoiceRequest extends FormRequest
 {
     use Concerns\ValidatesCheckoutPayments;
+    use Concerns\ValidatesPriceOverride;
 
     public function authorize(): bool
     {
@@ -51,7 +53,8 @@ class StoreSalesInvoiceRequest extends FormRequest
             'client_uuid' => ['nullable', 'uuid'],
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-            'invoice_date' => ['nullable', 'date'],
+            // BE-08: never in the future (tenant calendar day).
+            'invoice_date' => ['nullable', 'date', 'before_or_equal:'.app(TenantClock::class)->now()->toDateString()],
             'payment_type' => ['required', 'in:cash,credit,partial'],
             'payment_method' => ['nullable', 'string', 'in:'.self::CHECKOUT_PAYMENT_METHODS],
             'paid_amount' => ['nullable', 'numeric', 'min:0', 'decimal:0,3'],
@@ -60,9 +63,8 @@ class StoreSalesInvoiceRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
-            'items.*.unit_price' => ['required', 'numeric', 'min:0'],
-            'items.*.discount_amount' => ['nullable', 'numeric', 'min:0'],
+            ...$this->saleLineNumberRules('discount_amount'),
+            ...$this->priceOverrideRules(),
             ...$this->checkoutPaymentAndExpenseRules(),
         ];
     }

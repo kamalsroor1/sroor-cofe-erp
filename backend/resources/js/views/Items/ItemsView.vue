@@ -65,6 +65,7 @@
 </template>
 
 <script setup>
+import { isWeightUnit } from '../../helpers/weightUnits';
 import { ref, reactive, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
 import PageHeader from '../../Components/Common/PageHeader.vue';
@@ -110,8 +111,10 @@ const form = reactive({
   code: '',
   category: '',
   unit: defaultUnit.value,
+  is_weighted: isWeightUnit(defaultUnit.value),
   cost_price: 0,
   selling_price: 0,
+  wholesale_price: 0,
   min_selling_price: 0,
   min_stock_level: 0,
   notes: '',
@@ -163,8 +166,10 @@ const openCreateModal = () => {
   form.code = '';
   form.category = '';
   form.unit = defaultUnit.value;
+  form.is_weighted = isWeightUnit(defaultUnit.value);
   form.cost_price = 0;
   form.selling_price = 0;
+  form.wholesale_price = 0;
   form.min_selling_price = 0;
   form.min_stock_level = 0;
   form.notes = '';
@@ -177,9 +182,13 @@ const openEditModal = (item) => {
   form.code = item.code || '';
   form.category = item.category || '';
   form.unit = item.unit || defaultUnit.value;
-  form.cost_price = Number(item.cost_price) || 0;
+  form.is_weighted = !!item.is_weighted;
+  // null = the cost is hidden from this user (no items.view_cost): keep it null, never turn it into 0.
+  form.cost_price = item.cost_price == null ? null : Number(item.cost_price) || 0;
   form.selling_price = Number(item.selling_price) || 0;
-  form.min_selling_price = Number(item.min_selling_price) || 0;
+  form.wholesale_price = Number(item.wholesale_price) || 0;
+  // null = the floor is hidden from this user (no items.view_cost): keep it null, never turn it into 0.
+  form.min_selling_price = item.min_selling_price == null ? null : Number(item.min_selling_price) || 0;
   form.min_stock_level = Number(item.min_stock_level) || 0;
   form.notes = item.notes || '';
   showItemModal.value = true;
@@ -188,8 +197,12 @@ const openEditModal = (item) => {
 const saveItem = async () => {
   isSubmitting.value = true;
   try {
+    // A hidden (null) floor is not sent at all, so the server keeps the stored value.
+    const payload = { ...form };
+    if (payload.min_selling_price == null) delete payload.min_selling_price;
+    if (payload.cost_price == null && editingItem.value) delete payload.cost_price;
     if (editingItem.value) {
-      await api.put(`/items/${editingItem.value.id}`, form);
+      await api.put(`/items/${editingItem.value.id}`, payload);
       Swal.fire({
         icon: 'success',
         title: trans('common.success'),
@@ -198,7 +211,7 @@ const saveItem = async () => {
         showConfirmButton: false,
       });
     } else {
-      await api.post('/items', form);
+      await api.post('/items', payload);
       Swal.fire({
         icon: 'success',
         title: trans('common.success'),

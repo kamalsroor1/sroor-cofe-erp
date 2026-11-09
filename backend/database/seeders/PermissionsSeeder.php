@@ -31,6 +31,8 @@ class PermissionsSeeder extends Seeder
     public const PERMISSIONS = [
         // POS & Invoices
         'pos.access',
+        // BE-08: sell below an item's minimum selling price without a manager PIN (admin only by default).
+        'pos.price.below_min',
         'invoices.view',
         'invoices.create',
         'invoices.edit',

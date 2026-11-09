@@ -26,9 +26,9 @@ class ItemResource extends JsonResource
         // SEC-1 (M6): cost and cost-derived values only with items.view_cost. Without it the
         // minimum selling price is the stored one, never the cost fallback.
         $showCost = CostVisibility::allows($request->user());
-        $minSellingPrice = $showCost
-            ? (float) ($this->min_selling_price ?? $this->cost_price ?? 0)
-            : (float) $this->min_selling_price;
+        // BE-08: the floor value is hidden from users without it (null, never 0: the edit form must not
+        // send it back); has_min_price still tells them a floor exists.
+        $minSellingPrice = $showCost ? (float) ($this->min_selling_price ?? 0) : null;
 
         return [
             'id' => $this->id,
@@ -40,12 +40,15 @@ class ItemResource extends JsonResource
             'unit' => $this->unit ?? 'كجم',
             'cost_price' => $showCost ? (float) $this->cost_price : null,
             'min_selling_price' => $minSellingPrice,
+            'has_min_price' => bccomp((string) ($this->min_selling_price ?? '0'), '0', 3) > 0,
+            // BE-08: NULL/0 = not set (wholesale customers pay retail).
+            'wholesale_price' => $this->wholesale_price !== null ? (float) $this->wholesale_price : null,
             'selling_price' => $effectivePrice,
             'current_stock' => $storeStock,
             'total_stock' => (float) $this->current_stock,
             'min_stock_level' => (float) $this->min_stock_level,
             'is_active' => (bool) $this->is_active,
-            'is_weighted' => (bool) $this->resource->is_weighted,
+            'is_weighted' => $this->resource->isSoldByWeight(),
             'is_low_stock' => method_exists($this->resource, 'isLowStock') ? $this->isLowStock() : false,
             'notes' => $this->notes,
             'store_stocks' => $this->relationLoaded('storeStocks') ? $this->storeStocks->map(fn ($ss) => [

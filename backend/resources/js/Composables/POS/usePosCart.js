@@ -1,4 +1,4 @@
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import {
@@ -11,6 +11,7 @@ import {
     repriceLines,
 } from '../../helpers/posCartLines';
 import { focusLineField } from '../../helpers/posFocus';
+import { dAdd, isPositive, normalize } from '../../helpers/decimal';
 import { notifyWarning } from '../../helpers/alert';
 
 // Where focus goes after a manually added item (see pos.entry_sequence in the keyboard research):
@@ -59,29 +60,60 @@ export function usePosCart({
         });
     };
 
-    const addToCart = (item, qty = 1, { scanned = false } = {}) => {
+    // POS-06: a weighted item added without a weight (tap, search, plain barcode) waits in the weight picker.
+    const weightPickerItem = ref(null);
+    let weightPickerScanned = false;
+    const weightPickerPrice = computed(() => (weightPickerItem.value ? getItemPrice(weightPickerItem.value) : 0));
+
+    const addLine = (item, qty, scanned) => {
         playScanBeep();
         const existing = cart.value.find((c) => c.id === item.id);
         if (existing) {
-            existing.quantity = parseFloat(existing.quantity) + qty;
+            existing.quantity = existing.is_weighted
+                ? dAdd(existing.quantity, qty)
+                : parseFloat(existing.quantity) + parseFloat(qty);
             focusAfterAdd(existing, scanned);
             return;
         }
+        const weighted = !!item.is_weighted;
         const line = {
             id: item.id,
             name: item.name,
             code: item.code,
             unit: item.unit,
+            is_weighted: weighted,
             unit_price: getItemPrice(item),
             selling_price: item.selling_price,
             wholesale_price: item.wholesale_price,
             price_retail: item.price_retail,
             price_wholesale: item.price_wholesale,
             min_selling_price: item.min_selling_price,
-            quantity: qty,
+            quantity: weighted ? normalize(qty) : qty,
         };
         cart.value.push(line);
         focusAfterAdd(cart.value[cart.value.length - 1], scanned);
+    };
+
+    /** `weighed` means the quantity already is the weight (scale label or a typed `n*` quantity): no picker. */
+    const addToCart = (item, qty = 1, { scanned = false, weighed = false } = {}) => {
+        if (item.is_weighted && !weighed) {
+            weightPickerItem.value = item;
+            weightPickerScanned = scanned;
+            return;
+        }
+        addLine(item, qty, scanned);
+    };
+
+    const confirmWeight = (qty) => {
+        const item = weightPickerItem.value;
+        if (!item || !isPositive(qty)) return;
+        weightPickerItem.value = null;
+        addLine(item, qty, weightPickerScanned);
+    };
+
+    const cancelWeight = () => {
+        weightPickerItem.value = null;
+        focusSearch();
     };
 
     const increaseCartItemQty = (idx) => increaseLineQty(cart.value, idx);
@@ -132,6 +164,10 @@ export function usePosCart({
 
     return {
         addToCart,
+        weightPickerItem,
+        weightPickerPrice,
+        confirmWeight,
+        cancelWeight,
         repriceCart,
         increaseCartItemQty,
         decreaseCartItemQty,

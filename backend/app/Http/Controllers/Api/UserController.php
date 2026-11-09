@@ -6,12 +6,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Users\CreateUserAction;
 use App\Actions\Users\DeleteUserAction;
+use App\Actions\Users\SetUserPosPinAction;
 use App\Actions\Users\ToggleUserActiveAction;
 use App\Actions\Users\UpdateUserAction;
 use App\DTOs\Users\CreateUserDTO;
 use App\DTOs\Users\UpdateUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserPosPinRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Store;
@@ -28,7 +30,8 @@ final class UserController extends Controller
         private readonly CreateUserAction $createUserAction,
         private readonly UpdateUserAction $updateUserAction,
         private readonly DeleteUserAction $deleteUserAction,
-        private readonly ToggleUserActiveAction $toggleUserActiveAction
+        private readonly ToggleUserActiveAction $toggleUserActiveAction,
+        private readonly SetUserPosPinAction $setUserPosPinAction,
     ) {}
 
     /**
@@ -199,5 +202,27 @@ final class UserController extends Controller
             // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
             return SafeJsonError::respond($e);
         }
+    }
+
+    /**
+     * BE-08: set (or clear with null) a user's manager approval PIN.
+     */
+    public function updatePosPin(UpdateUserPosPinRequest $request, int $id): JsonResponse
+    {
+        $actor = $request->user();
+        $target = User::query()->findOrFail($id);
+
+        try {
+            $this->setUserPosPinAction->execute($target, $request->validated('pin'), $actor);
+        } catch (Throwable $e) {
+            // SEC-1 (L4): 422/403/404 pass through; anything else is logged, never echoed.
+            return SafeJsonError::respond($e);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('pos.pos_pin_updated'),
+            'has_pos_pin' => $target->pos_pin !== null,
+        ], 200);
     }
 }

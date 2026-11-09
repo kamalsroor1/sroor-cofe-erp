@@ -136,6 +136,12 @@
                 >
                   +
                 </button>
+                <span
+                  v-if="item.is_weighted"
+                  class="ms-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap"
+                  data-testid="pos-cart-unit"
+                  >{{ unitLabel(item.unit) }}</span
+                >
               </div>
 
               <!-- Price Breakdown (Editable Selling Price) -->
@@ -282,6 +288,12 @@
                   >
                     +
                   </button>
+                  <span
+                    v-if="item.is_weighted"
+                    class="ms-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap"
+                    data-testid="pos-cart-unit"
+                    >{{ unitLabel(item.unit) }}</span
+                  >
                 </div>
               </td>
 
@@ -349,6 +361,7 @@ import { Trash2 } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useUnits } from '../../Composables/useUnits';
 import { toWesternDigits } from '../../helpers/digits';
+import { normalize } from '../../helpers/decimal';
 import { focusLineField, focusPosSearch } from '../../helpers/posFocus';
 
 const { formatMoney } = useFormatters();
@@ -363,9 +376,10 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-
 
 // Arabic-Indic digits are accepted in the numeric line fields and converted before they reach the cart.
 const onNumberInput = (event, index, eventName) => {
-  // Keep digits and a single decimal point only.
+  // Keep digits and a single decimal point only (whole numbers for non-weighted quantities).
+  const wholeOnly = eventName === 'update-qty' && !props.cart[index]?.is_weighted;
   const normalized = toWesternDigits(event.target.value)
-    .replace(/[^0-9.]/g, '')
+    .replace(wholeOnly ? /[^0-9]/g : /[^0-9.]/g, '')
     .replace(/^(\d*\.\d*)\./, '$1');
   if (normalized !== event.target.value) event.target.value = normalized;
   emit(eventName, { index, value: normalized });
@@ -373,9 +387,15 @@ const onNumberInput = (event, index, eventName) => {
 
 // Leaving a field with an invalid or zero value snaps it back to the cart value.
 const onFieldBlur = (event, index, key) => {
+  if (key === 'quantity') {
+    // The field always settles on the cart quantity (weighted: exactly 3 decimals, others: whole).
+    const line = props.cart[index];
+    if (line?.is_weighted) emit('update-qty', { index, value: normalize(event.target.value) });
+    event.target.value = line?.is_weighted ? normalize(line.quantity) : (line?.quantity ?? '');
+    return;
+  }
   const parsed = parseFloat(event.target.value);
-  const minimum = key === 'quantity' ? 0 : -1;
-  if (isNaN(parsed) || parsed <= minimum) event.target.value = props.cart[index]?.[key] ?? '';
+  if (isNaN(parsed) || parsed <= -1) event.target.value = props.cart[index]?.[key] ?? '';
 };
 
 // Select the whole value on focus so typing replaces it, and remember it for Esc.

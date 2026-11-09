@@ -15,6 +15,16 @@
       </span>
 
       <span
+        v-if="item.is_weighted"
+        class="inline-flex items-center gap-0.5 px-1 rounded text-[9px] font-bold shrink-0 bg-sky-500/10 text-sky-600 dark:text-sky-400"
+        data-testid="pos-weight-badge"
+        :title="$t('pos.weight_badge')"
+      >
+        <Scale class="w-3 h-3" aria-hidden="true" />
+        <span>{{ $t('pos.weight_badge') }}</span>
+      </span>
+
+      <span
         class="inline-flex items-center gap-1 px-1 py-0.2 rounded text-[9px] font-mono font-bold shrink-0"
         :class="stockBadgeClass"
       >
@@ -54,6 +64,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { Scale } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const props = defineProps({

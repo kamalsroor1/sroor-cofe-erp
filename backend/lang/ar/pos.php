@@ -282,6 +282,21 @@ return [
         'net_total' => 'الصافي النهائي:',
         'thank_you' => 'شكراً لزيارتكم!',
     ],
+
+    // BE-08
+    'price_below_minimum' => 'هذا السعر أقل من الحد الأدنى المسموح به لهذا الصنف.',
+    'price_override_required' => 'البيع بأقل من الحد الأدنى للسعر يحتاج موافقة المدير.',
+    'override_invalid' => 'موافقة المدير غير صحيحة.',
+    'override_throttled' => 'محاولات موافقة خاطئة كثيرة. حاول مرة أخرى لاحقاً.',
+    'pos_pin_updated' => 'تم حفظ الرقم السري لموافقة المدير.',
+
+    // POS-03
+    'load_failed_title' => 'تعذر تحميل بيانات نقطة البيع',
+    'load_failed_message' => 'تحقق من الاتصال بالإنترنت ثم أعد المحاولة.',
+    'load_failed_categories' => 'تعذر تحميل التصنيفات.',
+    'load_failed_customers' => 'تعذر تحميل قائمة العملاء. يمكنك البحث عن العميل بالاسم أو الهاتف.',
+    'load_failed_shift' => 'تعذر تحميل بيانات الوردية.',
+    'load_failed_category_items' => 'تعذر تحميل أصناف هذا التصنيف.',
     'method_cash' => 'كاش',
     'split_short' => 'تقسيم',
     'tender_label' => 'المبلغ المستلم',
@@ -290,12 +305,8 @@ return [
     'tender_short_due' => 'لسه مطلوب',
     'paid_now_label' => 'المدفوع دلوقتي',
     'remaining_on_account' => 'المتبقي على الحساب',
-    'load_failed_title' => 'تعذر تحميل بيانات نقطة البيع',
-    'load_failed_message' => 'تحقق من الاتصال بالإنترنت ثم أعد المحاولة.',
-    'load_failed_categories' => 'تعذر تحميل التصنيفات.',
-    'load_failed_customers' => 'تعذر تحميل قائمة العملاء. يمكنك البحث عن العميل بالاسم أو الهاتف.',
-    'load_failed_shift' => 'تعذر تحميل بيانات الوردية.',
-    'load_failed_category_items' => 'تعذر تحميل أصناف هذا التصنيف.',
+
+    // POS-16: keyboard shortcuts
     'shortcuts_title' => 'اختصارات لوحة المفاتيح',
     'shortcuts_hint' => 'اضغط F1 أو ؟ في أي وقت لعرض هذه القائمة.',
     'shortcuts_group_general' => 'عام',
@@ -316,6 +327,8 @@ return [
     'shortcut_enter_field' => 'تأكيد والانتقال (الكمية ثم السعر ثم البحث)',
     'shortcut_revert_field' => 'إلغاء التعديل والعودة للبحث',
     'price_missing_scanned' => 'الصنف ":name" الذي تم مسحه بدون سعر. أدخل سعره في الفاتورة.',
+
+    // POS-11: recent sales, reprint and quick return
     'recent_sales_title' => 'آخر المبيعات',
     'recent_sales_search' => 'ابحث برقم الفاتورة أو العميل',
     'recent_sales_empty' => 'لا توجد مبيعات اليوم حتى الآن',
@@ -336,4 +349,21 @@ return [
     'quick_return_forbidden' => 'غير مسموح لك بتسجيل المرتجعات.',
     'quick_return_feature_unavailable' => 'المرتجعات غير مشمولة في باقتك الحالية.',
     'quick_return_not_found' => 'لم يتم العثور على الفاتورة في الفرع النشط.',
+    'quantity_must_be_whole' => 'الكمية الكسرية مسموحة للأصناف الموزونة فقط. أدخل كمية صحيحة لهذا الصنف.',
+    'weight_picker_title' => 'تحديد الوزن',
+    'weight_picker_unit_price' => 'سعر {unit}',
+    'weight_quick_quarter' => '¼',
+    'weight_quick_half' => '½',
+    'weight_quick_three_quarters' => '¾',
+    'weight_quick_kilo' => '1 كجم',
+    'weight_mode_weight' => 'بالوزن',
+    'weight_mode_amount' => 'بالمبلغ',
+    'weight_input_label' => 'الوزن ({unit})',
+    'weight_amount_label' => 'المبلغ ({currency})',
+    'weight_resulting_qty' => 'الكمية الناتجة',
+    'weight_resulting_total' => 'الإجمالي',
+    'weight_add_to_cart' => 'إضافة للسلة',
+    'weight_invalid' => 'أدخل قيمة أكبر من صفر',
+    'weight_badge' => 'موزون',
+    'weight_amount_no_price' => 'لا يوجد سعر لهذا الصنف',
 ];

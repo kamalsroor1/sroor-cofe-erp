@@ -24,6 +24,7 @@ final class GetPermissionsTreeAction
                 'icon' => 'shopping-cart',
                 'permissions' => [
                     'pos.access',
+                    'pos.price.below_min',
                     'invoices.view',
                     'invoices.create',
                     'invoices.edit',

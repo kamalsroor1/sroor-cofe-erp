@@ -25,6 +25,8 @@ class UserResource extends JsonResource
             'show_print_subtitle' => (bool) $this->show_print_subtitle,
             'default_store_id' => $this->default_store_id,
             'is_active' => (bool) $this->is_active,
+            // BE-08: whether a manager approval PIN is set (the hash itself is never exposed).
+            'has_pos_pin' => $this->resource instanceof User && $this->resource->pos_pin !== null,
             'last_login_at' => $this->last_login_at,
             'stores' => $this->whenLoaded('stores', function () {
                 return $this->stores->map(fn ($store) => [

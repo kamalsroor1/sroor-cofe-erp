@@ -56,28 +56,28 @@ export function useBarcodeScanner({ query, results, highlightedIndex, addItem, r
         notifyError(trans('pos.barcode_not_found', { code }));
     };
 
-    const resolve = async (code, fallbackItem, multiplier, scanned) => {
+    const resolve = async (code, fallbackItem, multiplier, scanned, explicit) => {
         try {
             const res = await api.get('/pos/lookup', { params: { code } });
             const data = res.data?.data;
             if (!data?.item) return reportMiss(code);
             const qty = parseFloat(data.quantity);
             // A scale-label weight wins over the typed `n*` multiplier.
-            addItem(data.item, qty > 0 ? qty : multiplier, { scanned });
+            addItem(data.item, qty > 0 ? qty : multiplier, { scanned, weighed: qty > 0 || explicit });
         } catch (err) {
             if (err.response?.status === 404) {
-                if (fallbackItem) return addItem(fallbackItem, multiplier, { scanned });
+                if (fallbackItem) return addItem(fallbackItem, multiplier, { scanned, weighed: explicit });
                 return reportMiss(code);
             }
             // Network failure while typing manually: keep the cashier moving with the row they see.
-            if (!err.response && fallbackItem) return addItem(fallbackItem, multiplier, { scanned });
+            if (!err.response && fallbackItem) return addItem(fallbackItem, multiplier, { scanned, weighed: explicit });
             onMiss?.();
             notifyError(err.userMessage || trans('common.unexpected_error'));
         }
     };
 
-    /** Enter pressed in the search box. `multiplier` is the typed `n*` quantity prefix (default 1). */
-    const submit = (multiplier = 1) => {
+    /** Enter pressed in the search box. `multiplier` is the typed `n*` quantity prefix (default 1); `explicit` says it was typed. */
+    const submit = (multiplier = 1, explicit = false) => {
         const code = query.value.trim();
         if (!code) return;
 
@@ -85,14 +85,14 @@ export function useBarcodeScanner({ query, results, highlightedIndex, addItem, r
         const highlighted = results.value[highlightedIndex.value] || results.value[0] || null;
 
         if (navigated && !burst && highlighted) {
-            addItem(highlighted, multiplier, { scanned: false });
+            addItem(highlighted, multiplier, { scanned: false, weighed: explicit });
             reset();
             return;
         }
 
         const fallbackItem = burst ? null : highlighted;
         reset();
-        queue = queue.then(() => resolve(code, fallbackItem, multiplier, burst));
+        queue = queue.then(() => resolve(code, fallbackItem, multiplier, burst, explicit));
     };
 
     return { submit, noteQueryChange, noteNavigation };

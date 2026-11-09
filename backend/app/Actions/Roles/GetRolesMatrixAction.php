@@ -33,6 +33,7 @@ final class GetRolesMatrixAction
                 'icon' => '🛒',
                 'permissions' => [
                     'pos.access',
+                    'pos.price.below_min',
                     'invoices.view',
                     'invoices.create',
                     'invoices.edit',

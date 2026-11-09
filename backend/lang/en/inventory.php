@@ -44,6 +44,7 @@ return [
     'weighted_avg_cost' => 'Weighted Average Cost (WAC)',
     'retail_price' => 'Retail Selling Price',
     'wholesale_price' => 'Wholesale Selling Price',
+    'wholesale_below_min_price' => 'The wholesale price cannot be lower than the minimum selling price.',
     'current_stock' => 'Available Store Stock',
     'min_stock_level' => 'Reorder Point (Safety Level)',
     'low_stock_warning' => '⚠️ Low stock warning (Under reorder level)',
@@ -382,6 +383,7 @@ return [
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
     'cancel_transfer' => 'Cancel transfer',
     'min_selling_price' => 'Minimum selling price',
+    'wholesale_price' => 'Wholesale price (0 = same as retail)',
     'quantity' => 'Quantity',
     'view_transfer_details' => 'View transfer details',
 
@@ -401,4 +403,6 @@ return [
     'store_delete_blockers' => "Linked operations prevent deletion:\n- :blockers",
     'insufficient_stock_item' => 'Insufficient stock for item [:item]. Currently available: :available',
     'insufficient_stock_store' => 'Insufficient stock for item [:item] in [:store]. Currently available: :available :unit',
+    'sold_by_weight' => 'Sold by weight',
+    'sold_by_weight_hint' => 'Allows fractional quantities (e.g. 0.250 kg) at the POS',
 ];

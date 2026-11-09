@@ -10,6 +10,9 @@ declare(strict_types=1);
 return [
     'pos' => [
         'access' => 'Access the point of sale (POS) screen',
+        'price' => [
+            'below_min' => 'Sell below the minimum selling price without a manager PIN',
+        ],
     ],
     'invoices' => [
         'view' => 'View the sales invoice history',

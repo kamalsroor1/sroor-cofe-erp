@@ -13,6 +13,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Support\ActiveStore;
 use App\Support\CostVisibility;
+use App\Support\PosItemPrices;
 use Illuminate\Support\Facades\DB;
 
 class GetPOSBootstrapDataAction
@@ -25,7 +26,7 @@ class GetPOSBootstrapDataAction
     /**
      * تجميع وتهيئة بيانات شاشة الكاشير ونقاط البيع السريعة عبر JsonResources
      */
-    public function execute(?User $user, ?Store $requestStore = null): array
+    public function execute(?User $user, ?Store $requestStore = null, bool $includeItems = true, bool $includeCustomers = true): array
     {
         // 1. Resolve Active Store (STOR-1/2: access-checked; drives the WHOLE payload)
         $activeStore = $this->resolveActiveStore($user, $requestStore);
@@ -41,7 +42,10 @@ class GetPOSBootstrapDataAction
         }
 
         // 3. Fast Active Items with Store Stock Left-Join (Ultra-Optimized for 10k+ items)
-        if ($storeId) {
+        if (! $includeItems) {
+            // POS-04: the paged GET /pos/items feeds the grid; skip the full catalogue dump.
+            $rawItems = collect();
+        } elseif ($storeId) {
             $rawItems = Item::where('items.is_active', true)
                 ->leftJoin('store_stocks', function ($join) use ($storeId) {
                     $join->on('store_stocks.item_id', '=', 'items.id')
@@ -58,6 +62,7 @@ class GetPOSBootstrapDataAction
                     'items.cost_price',
                     'items.selling_price',
                     'items.min_selling_price',
+                    'items.wholesale_price',
                     'items.min_stock_level',
                     'items.pos_sort_order',
                     'items.is_pos_pinned',
@@ -71,7 +76,7 @@ class GetPOSBootstrapDataAction
             $rawItems = Item::where('is_active', true)
                 ->select([
                     'id', 'code', 'name', 'image', 'category', 'category_id', 'unit',
-                    'cost_price', 'selling_price', 'min_selling_price', 'min_stock_level',
+                    'cost_price', 'selling_price', 'min_selling_price', 'wholesale_price', 'min_stock_level',
                     'pos_sort_order', 'is_pos_pinned', 'pos_sales_count', 'is_weighted',
                     'current_stock as calculated_stock',
                 ])
@@ -83,7 +88,7 @@ class GetPOSBootstrapDataAction
         // the minimum price) only reaches users with items.view_cost.
         $showCost = CostVisibility::allows($user);
 
-        $items = $rawItems->map(function ($it) use ($showCost) {
+        $items = $rawItems->map(function ($it) use ($user, $showCost) {
             return [
                 'id' => (int) $it->id,
                 'name' => (string) $it->name,
@@ -92,10 +97,7 @@ class GetPOSBootstrapDataAction
                 'category' => (string) ($it->category ?: __('inventory.general_category')),
                 'category_id' => $it->category_id ? (int) $it->category_id : null,
                 'price_retail' => (float) $it->selling_price,
-                'price_wholesale' => (float) (($it->min_selling_price && $it->min_selling_price > 0) ? $it->min_selling_price : $it->selling_price),
-                'min_selling_price' => $showCost
-                    ? (float) ($it->min_selling_price ?? $it->cost_price ?? 0)
-                    : (float) $it->min_selling_price,
+                ...PosItemPrices::forItem($it, $user),
                 'cost_price' => $showCost ? (float) $it->cost_price : null,
                 'current_stock' => (float) ($it->calculated_stock ?? 0),
                 'min_stock_level' => (float) ($it->min_stock_level ?: 0),
@@ -103,7 +105,7 @@ class GetPOSBootstrapDataAction
                 'pos_sort_order' => (int) ($it->pos_sort_order ?? 0),
                 'is_pos_pinned' => (bool) ($it->is_pos_pinned ?? false),
                 'pos_sales_count' => (int) ($it->pos_sales_count ?? 0),
-                'is_weighted' => (bool) $it->is_weighted,
+                'is_weighted' => $it->isSoldByWeight(),
             ];
         })->values()->all();
 
@@ -147,9 +149,9 @@ class GetPOSBootstrapDataAction
             ->get(['id', 'name', 'icon', 'color', 'color_light']);
 
         // 5. Active Customers via POSCustomerResource
-        $customers = Customer::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $customers = $includeCustomers
+            ? Customer::where('is_active', true)->orderBy('name')->get()
+            : Customer::where('is_active', true)->orderBy('name')->limit(1)->get();
 
         // Default Cash Customer
         $defaultCustomer = $customers->first();

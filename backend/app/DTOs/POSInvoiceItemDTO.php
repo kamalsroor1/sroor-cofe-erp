@@ -7,7 +7,8 @@ class POSInvoiceItemDTO
     public function __construct(
         public readonly int $itemId,
         public readonly string $quantity,
-        public readonly string $unitPrice,
+        /** null = not sent: the server prices the line at the customer's tier list price (BE-08). */
+        public readonly ?string $unitPrice,
         public readonly string $discountAmount = '0.000',
     ) {}
 
@@ -16,7 +17,7 @@ class POSInvoiceItemDTO
         return new self(
             itemId: (int) $data['item_id'],
             quantity: (string) $data['quantity'],
-            unitPrice: (string) $data['unit_price'],
+            unitPrice: isset($data['unit_price']) && $data['unit_price'] !== '' ? (string) $data['unit_price'] : null,
             discountAmount: (string) ($data['discount'] ?? $data['discount_amount'] ?? '0.000'),
         );
     }

@@ -65,4 +65,7 @@ return [
     'delete_user_confirm_text' => 'Are you sure you want to delete this user?',
     'user_deleted_success' => 'User deleted successfully',
     'user_delete_failed' => 'Failed to delete user',
+
+    // BE-08
+    'pos_pin_format' => 'The approval PIN must be 4 to 6 digits.',
 ];

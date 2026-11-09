@@ -65,4 +65,7 @@ return [
     'delete_user_confirm_text' => 'هل أنت متأكد من حذف هذا المستخدم؟',
     'user_deleted_success' => 'تم حذف المستخدم بنجاح',
     'user_delete_failed' => 'تعذر حذف الحساب',
+
+    // BE-08
+    'pos_pin_format' => 'الرقم السري للموافقة يجب أن يكون من 4 إلى 6 أرقام.',
 ];

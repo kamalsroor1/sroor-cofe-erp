@@ -9,13 +9,16 @@ use App\Actions\Customers\QuickCreateCustomerAction;
 use App\Actions\Invoices\GetInvoiceDetailsAction;
 use App\Actions\Invoices\ProcessPOSInvoiceAction;
 use App\Actions\POS\GetPOSBootstrapDataAction;
+use App\Actions\POS\GetPosItemsAction;
 use App\Actions\POS\LookupPosBarcodeAction;
 use App\DTOs\POSInvoiceDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pos\ListPosItemsRequest;
 use App\Http\Requests\Pos\LookupPosBarcodeRequest;
 use App\Http\Requests\StorePOSInvoiceRequest;
 use App\Http\Requests\StoreQuickCustomerRequest;
 use App\Http\Resources\InvoiceResource;
+use App\Http\Resources\PosGridItemResource;
 use App\Http\Resources\PosLookupItemResource;
 use App\Services\Pos\InvalidScaleBarcodeException;
 use App\Support\ActiveStore;
@@ -31,6 +34,7 @@ final class PosController extends Controller
         private readonly GetCustomerLastSoldPriceAction $getCustomerLastSoldPriceAction,
         private readonly GetInvoiceDetailsAction $getInvoiceDetailsAction,
         private readonly LookupPosBarcodeAction $lookupPosBarcodeAction,
+        private readonly GetPosItemsAction $getPosItemsAction,
     ) {}
 
     /**
@@ -43,12 +47,38 @@ final class PosController extends Controller
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $data = $this->getPOSBootstrapDataAction->execute($user, $activeStore->store());
+        $data = $this->getPOSBootstrapDataAction->execute(
+            $user,
+            $activeStore->store(),
+            includeItems: $request->boolean('include_items', true),
+            includeCustomers: $request->boolean('include_customers', true),
+        );
 
         return response()->json([
             'success' => true,
             'data' => $data,
         ], 200);
+    }
+
+    /**
+     * POS-04/05: lean paged item grid of the active store with real per-category counters.
+     */
+    public function items(ListPosItemsRequest $request): JsonResponse
+    {
+        $result = $this->getPosItemsAction->execute($request->toDto());
+        $paginator = $result['paginator'];
+
+        return response()->json([
+            'success' => true,
+            'data' => PosGridItemResource::collection($paginator->getCollection())->resolve($request),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'counts' => $result['counts'],
+            ],
+        ]);
     }
 
     /**

@@ -111,6 +111,7 @@ export function usePosTerminal() {
         payment.showExpensesModal,
         payment.showMultiPaymentModal,
         showSuccessModal,
+        cartOps.weightPickerItem,
     ];
     usePosKeyboard({
         focusSearch,

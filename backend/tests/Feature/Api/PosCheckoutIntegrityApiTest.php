@@ -122,6 +122,7 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
             'code' => 'BN-COL-INT',
             'category' => 'coffee_beans',
             'unit' => 'كجم',
+            'is_weighted' => true,
             'cost_price' => '400.000',
             'selling_price' => '550.000',
             'price_retail' => '550.000',
@@ -1235,6 +1236,7 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
             'code' => 'HB-FRAC-INT',
             'category' => 'spices',
             'unit' => 'كجم',
+            'is_weighted' => true,
             'cost_price' => '250.000',
             'selling_price' => '333.333',
             'price_retail' => '333.333',
@@ -1304,6 +1306,7 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
                 'name' => 'بن مستأجر آخر',
                 'code' => 'BN-COL-INT',
                 'unit' => 'كجم',
+                'is_weighted' => true,
                 'cost_price' => '400.000',
                 'selling_price' => '550.000',
                 'current_stock' => '50.000',
@@ -1344,5 +1347,64 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
         $this->postAs(self::POS_URL, $this->payload(), null, ['X-Tenant' => (string) $other->getTenantKey()])
             ->assertStatus(401);
         $this->inTenant($other, fn () => $this->assertSame(1, Invoice::count()));
+    }
+
+    // ------------------------------------------------------------------
+    // POS-06: fractional quantities only for weighted items
+    // ------------------------------------------------------------------
+
+    private function weightedPayload(string $quantity): array
+    {
+        return $this->payload(['items' => [[
+            'item_id' => $this->item->id,
+            'quantity' => $quantity,
+            'unit_price' => '550.000',
+        ]]]);
+    }
+
+    public function test_pos_checkout_rejects_fractional_quantity_for_unweighted_item(): void
+    {
+        $this->item->forceFill(['is_weighted' => false, 'unit' => 'قطعة'])->save();
+
+        $response = $this->postAs(self::POS_URL, $this->weightedPayload('0.500'));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.quantity']);
+        $this->assertSame(__('pos.quantity_must_be_whole'), $response->json('errors')['items.0.quantity'][0]);
+        $this->assertSame(0, Invoice::count());
+        $this->assertSame('50.000', $this->storeStockQty());
+    }
+
+    public function test_pos_checkout_accepts_fractional_quantity_for_weighted_item(): void
+    {
+        $this->item->forceFill(['is_weighted' => true])->save();
+
+        $this->postAs(self::POS_URL, $this->weightedPayload('0.250'))->assertStatus(201);
+
+        $this->assertSame('49.750', $this->storeStockQty());
+    }
+
+    public function test_pos_checkout_accepts_fractional_quantity_for_a_weight_unit_item_without_the_flag(): void
+    {
+        $this->item->forceFill(['is_weighted' => false, 'unit' => 'كجم'])->save();
+
+        $this->postAs(self::POS_URL, $this->weightedPayload('0.500'))->assertStatus(201);
+
+        $this->assertSame('49.500', $this->storeStockQty());
+    }
+
+    public function test_pos_checkout_rejects_exponent_notation_quantity(): void
+    {
+        $this->item->forceFill(['is_weighted' => false, 'unit' => 'قطعة'])->save();
+
+        $this->postAs(self::POS_URL, $this->weightedPayload('5e-1'))->assertStatus(422);
+        $this->assertSame(0, Invoice::count());
+    }
+
+    public function test_pos_checkout_accepts_whole_quantity_for_unweighted_item(): void
+    {
+        $this->item->forceFill(['is_weighted' => false, 'unit' => 'قطعة'])->save();
+
+        $this->postAs(self::POS_URL, $this->weightedPayload('3.000'))->assertStatus(201);
     }
 }

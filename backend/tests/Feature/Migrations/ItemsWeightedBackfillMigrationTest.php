@@ -154,4 +154,42 @@ final class ItemsWeightedBackfillMigrationTest extends TenantTestCase
 
         $this->assertFalse($flag, 'Only the one-off backfill infers weighing from the unit; new rows default to false.');
     }
+
+    public function test_rebackfill_flags_unflagged_weight_unit_items_only_and_is_idempotent(): void
+    {
+        $tenant = $this->createTenant();
+        $migration = require database_path('migrations/tenant/2026_11_10_000001_rebackfill_items_is_weighted_from_unit.php');
+
+        $ids = $this->inTenant($tenant, function () use ($migration): array {
+            $make = fn (string $code, string $unit, bool $weighted = false): int => (int) DB::table('items')->insertGetId([
+                'code' => $code,
+                'name' => 'صنف '.$code,
+                'unit' => $unit,
+                'is_weighted' => $weighted,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $ids = [
+                'kg' => $make('RB-1', 'كجم'),
+                'kilo_text' => $make('RB-2', 'نص كيلو'),
+                'gram_en' => $make('RB-3', ' GRAM '),
+                'piece' => $make('RB-4', 'قطعة'),
+                'flagged_piece' => $make('RB-5', 'قطعة', true),
+            ];
+
+            $migration->up();
+            $migration->up();
+
+            return $ids;
+        });
+
+        $flags = $this->inTenant($tenant, fn (): array => DB::table('items')->pluck('is_weighted', 'id')->map(fn ($v): bool => (bool) $v)->all());
+
+        $this->assertTrue($flags[$ids['kg']]);
+        $this->assertTrue($flags[$ids['kilo_text']]);
+        $this->assertTrue($flags[$ids['gram_en']]);
+        $this->assertFalse($flags[$ids['piece']]);
+        $this->assertTrue($flags[$ids['flagged_piece']], 'An explicit flag is never cleared.');
+    }
 }

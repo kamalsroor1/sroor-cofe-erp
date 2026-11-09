@@ -282,6 +282,21 @@ return [
         'net_total' => 'Net total:',
         'thank_you' => 'Thank you for your visit!',
     ],
+
+    // BE-08
+    'price_below_minimum' => 'This price is below the allowed minimum for this item.',
+    'price_override_required' => 'A manager approval is required to sell below the minimum price.',
+    'override_invalid' => 'The manager approval is invalid.',
+    'override_throttled' => 'Too many failed approval attempts. Try again later.',
+    'pos_pin_updated' => 'Manager approval PIN saved.',
+
+    // POS-03
+    'load_failed_title' => 'Could not load POS data',
+    'load_failed_message' => 'Check your internet connection and try again.',
+    'load_failed_categories' => 'Could not load categories.',
+    'load_failed_customers' => 'Could not load the customers list. You can still search by name or phone.',
+    'load_failed_shift' => 'Could not load the shift.',
+    'load_failed_category_items' => 'Could not load the items of this category.',
     'method_cash' => 'Cash',
     'split_short' => 'Split',
     'tender_label' => 'Cash received',
@@ -290,12 +305,8 @@ return [
     'tender_short_due' => 'Still due',
     'paid_now_label' => 'Paid now',
     'remaining_on_account' => 'Remaining on account',
-    'load_failed_title' => 'Could not load POS data',
-    'load_failed_message' => 'Check your internet connection and try again.',
-    'load_failed_categories' => 'Could not load categories.',
-    'load_failed_customers' => 'Could not load the customers list. You can still search by name or phone.',
-    'load_failed_shift' => 'Could not load the shift.',
-    'load_failed_category_items' => 'Could not load the items of this category.',
+
+    // POS-16: keyboard shortcuts
     'shortcuts_title' => 'Keyboard shortcuts',
     'shortcuts_hint' => 'Press F1 or ? any time to show this list.',
     'shortcuts_group_general' => 'General',
@@ -316,6 +327,8 @@ return [
     'shortcut_enter_field' => 'Confirm and continue (quantity to price to search)',
     'shortcut_revert_field' => 'Cancel the edit and return to search',
     'price_missing_scanned' => 'The scanned item ":name" has no price. Enter its price in the cart.',
+
+    // POS-11: recent sales, reprint and quick return
     'recent_sales_title' => 'Recent sales',
     'recent_sales_search' => 'Search by invoice number or customer',
     'recent_sales_empty' => 'No sales today yet',
@@ -336,4 +349,21 @@ return [
     'quick_return_forbidden' => 'You are not allowed to book returns.',
     'quick_return_feature_unavailable' => 'Returns are not included in your current plan.',
     'quick_return_not_found' => 'This invoice was not found in the active store.',
+    'quantity_must_be_whole' => 'Fractional quantities are only allowed for weighted items. Enter a whole quantity for this item.',
+    'weight_picker_title' => 'Set weight',
+    'weight_picker_unit_price' => 'Price per {unit}',
+    'weight_quick_quarter' => '¼',
+    'weight_quick_half' => '½',
+    'weight_quick_three_quarters' => '¾',
+    'weight_quick_kilo' => '1 kg',
+    'weight_mode_weight' => 'By weight',
+    'weight_mode_amount' => 'By amount',
+    'weight_input_label' => 'Weight ({unit})',
+    'weight_amount_label' => 'Amount ({currency})',
+    'weight_resulting_qty' => 'Resulting quantity',
+    'weight_resulting_total' => 'Total',
+    'weight_add_to_cart' => 'Add to cart',
+    'weight_invalid' => 'Enter a value greater than zero',
+    'weight_badge' => 'By weight',
+    'weight_amount_no_price' => 'This item has no price',
 ];

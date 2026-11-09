@@ -31,6 +31,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int|null $default_store_id
  * @property Carbon|null $deleted_at
  * @property string|null $api_token
+ * @property string|null $pos_pin BE-08: hashed manager approval PIN (never fillable / serialized)
  * @property string|null $last_login_at
  * @property string|null $locale
  * @property-read Collection<int, Role> $roles
@@ -57,6 +58,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'api_token',
+        'pos_pin',
     ];
 
     protected function casts(): array

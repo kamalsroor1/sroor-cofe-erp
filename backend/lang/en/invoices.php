@@ -249,4 +249,7 @@ return [
         'copy_text' => "🧾 Invoice #:number\n🏢 Business: :company\n👤 Customer: :customer\n📅 Date: :date\n💰 Net due: :net :currency\n💵 Paid: :paid :currency\n📝 Remaining: :remaining :currency",
         'whatsapp_text' => "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!",
     ],
+
+    // BE-08
+    'line_discount_exceeds_total' => 'The line discount cannot exceed the line total.',
 ];

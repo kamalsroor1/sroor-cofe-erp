@@ -11,6 +11,8 @@ use App\Models\Item;
 use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\User;
+use App\Services\Pricing\SalePriceGuard;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Exception;
@@ -55,8 +57,20 @@ class InvoiceService
     {
         $clientUuid = ! empty($data['client_uuid']) ? (string) $data['client_uuid'] : null;
 
+        // BE-08: the server resolves and validates every line price (authenticated callers only). A manager
+        // PIN is verified here, before the transaction, so rate-limiter hits are never rolled back.
+        $actor = Auth::user();
+        $priceGuard = new SalePriceGuard(
+            $actor instanceof User ? $actor : null,
+            isset($data['override']) && is_array($data['override']) ? $data['override'] : null,
+        );
+        $priceCustomer = Customer::query()->find($data['customer_id'] ?? 0);
+        if ($priceCustomer instanceof Customer) {
+            $priceGuard->preflight($priceCustomer, $this->resolveInvoiceStoreId($data), (array) ($data['items'] ?? []));
+        }
+
         try {
-            return $this->persistConfirmedInvoice($data, $clientUuid);
+            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard);
         } catch (UniqueConstraintViolationException $e) {
             // Backstop for a concurrent insert of the same client_uuid that slipped past the
             // replay check. Any other unique violation (e.g. invoice_number) is rethrown.
@@ -90,9 +104,9 @@ class InvoiceService
         }
     }
 
-    private function persistConfirmedInvoice(array $data, ?string $clientUuid): Invoice
+    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard): Invoice
     {
-        return DB::transaction(function () use ($data, $clientUuid) {
+        return DB::transaction(function () use ($data, $clientUuid, $priceGuard) {
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
 
             $subtotal = '0.000';
@@ -137,7 +151,7 @@ class InvoiceService
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            foreach ($data['items'] as $line) {
+            foreach ($data['items'] as $lineIndex => $line) {
                 // S1: Lock item row and verify stock
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
 
@@ -150,8 +164,18 @@ class InvoiceService
                     throw new \DomainException("الصنف '{$item->name}' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور ({$qty} {$item->unit}).");
                 }
 
-                $unitPrice = (string) $line['unit_price'];
-                $itemDiscount = (string) ($line['discount_amount'] ?? '0.000');
+                $itemDiscount = Decimal::normalize((string) ($line['discount_amount'] ?? '0.000'));
+
+                $priceAudit = $priceGuard->evaluate(
+                    $item,
+                    $customer,
+                    $storeId,
+                    $qty,
+                    isset($line['unit_price']) ? (string) $line['unit_price'] : null,
+                    $itemDiscount,
+                    (int) $lineIndex,
+                );
+                $unitPrice = $priceAudit['unit_price'];
 
                 // Line Total = (Quantity * Unit Price) - Item Discount
                 // SETG-13: half-up at scale 3, identical to the POS (helpers/decimal.js dMul).
@@ -174,6 +198,9 @@ class InvoiceService
                     'quantity' => $qty,
                     'cost_price' => $effectiveCost,
                     'unit_price' => $unitPrice,
+                    'list_unit_price' => $priceAudit['list_unit_price'],
+                    'price_source' => $priceAudit['price_source'],
+                    'override_approved_by' => $priceAudit['override_approved_by'],
                     'discount_amount' => $itemDiscount,
                     'total_price' => $netLineTotal,
                 ]);

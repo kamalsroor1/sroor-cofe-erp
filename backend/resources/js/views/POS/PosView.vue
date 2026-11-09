@@ -16,6 +16,7 @@ import POSMultiPaymentModal from '../../Components/POS/POSMultiPaymentModal.vue'
 import POSShortcutsModal from '../../Components/POS/POSShortcutsModal.vue';
 import POSRecentSalesDrawer from '../../Components/POS/POSRecentSalesDrawer.vue';
 import POSQuickReturnModal from '../../Components/POS/POSQuickReturnModal.vue';
+import POSWeightPickerModal from '../../Components/POS/POSWeightPickerModal.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
 
 const PARTIAL_ERROR_KEYS = {
@@ -224,6 +225,14 @@ const {
       @close="quickReturn.close"
       @set-quantity="quickReturn.setQuantity"
       @submit="quickReturn.submit"
+    />
+
+    <POSWeightPickerModal
+      :show="!!cartOps.weightPickerItem.value"
+      :item="cartOps.weightPickerItem.value || null"
+      :unit-price="cartOps.weightPickerPrice.value"
+      @close="cartOps.cancelWeight"
+      @confirm="cartOps.confirmWeight"
     />
 
     <POSShortcutsModal :show="showShortcutsHelp" @close="showShortcutsHelp = false" />

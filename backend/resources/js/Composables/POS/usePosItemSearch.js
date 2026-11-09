@@ -79,7 +79,7 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
     // "3*" alone waits for the item; with an item it adds that many.
     const selectHighlightedOrFirstItem = () => {
         if (!searchTerm.value.trim()) return;
-        submitScan(multiplier.value);
+        submitScan(multiplier.value, parsedQuery.value.hasMultiplier);
     };
 
     watch(searchQuery, (value) => {
@@ -93,7 +93,7 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
     });
 
     const addItemFromDropdown = (item) => {
-        addWithMultiplier(item, multiplier.value, { scanned: false });
+        addWithMultiplier(item, multiplier.value, { scanned: false, weighed: parsedQuery.value.hasMultiplier });
         resetSearchBox();
     };
 
