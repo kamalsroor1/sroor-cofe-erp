@@ -108,6 +108,7 @@ return [
         'journal_open_cta_hint' => 'Click to open a new journal',
         'journal_number' => '• Journal (#:number)',
         'open_journal' => '• Open journal',
+        'store_and_shift' => 'Branch and journal',
         'back_to_sections' => 'Back to all sections',
         'logout_confirm_title' => 'Sign out?',
         'logout_confirm_text' => 'Are you sure you want to sign out and end this session?',

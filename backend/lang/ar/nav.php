@@ -108,6 +108,7 @@ return [
         'journal_open_cta_hint' => 'اضغط لفتح يومية جديدة',
         'journal_number' => '• يومية (#:number)',
         'open_journal' => '• فتح يومية',
+        'store_and_shift' => 'الفرع واليومية',
         'back_to_sections' => 'العودة لجميع الأقسام',
         'logout_confirm_title' => 'تسجيل الخروج؟',
         'logout_confirm_text' => 'هل أنت متأكد من رغبتك في تسجيل الخروج وإنهاء الجلسة؟',

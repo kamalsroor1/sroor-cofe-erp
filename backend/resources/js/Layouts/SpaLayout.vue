@@ -144,53 +144,9 @@
 
         <NotificationsBell />
 
-        <!-- 🏬 Store Switcher (Branch context dropdown / badge - Desktop/Tablet) -->
-        <div class="hidden lg:flex items-center gap-2">
-          <!-- Multi-store selector -->
-          <div v-if="authStore.stores?.length > 1" class="relative">
-            <select
-              :value="authStore.currentStore?.id"
-              @change="handleStoreSwitch($event.target.value)"
-              class="h-8 pr-7 pl-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-800 dark:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-theme-primary cursor-pointer font-tajawal shadow-2xs"
-            >
-              <option v-for="s in authStore.stores" :key="s.id" :value="s.id">
-                {{ s.name }}
-              </option>
-            </select>
-          </div>
-          <!-- Single Store Badge -->
-          <div
-            v-else
-            class="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 shadow-2xs"
-          >
-            <StoreIcon class="w-3.5 h-3.5" />
-            <span>{{ authStore.activeStoreName || $t('common.main_store_default') }}</span>
-          </div>
-
-          <!-- 🔴/🟢 Shift Status Badge -->
-          <router-link
-            to="/daily-journal"
-            class="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer shadow-2xs"
-            :class="
-              appConfigStore.hasOpenShift
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
-            "
-            :title="
-              appConfigStore.hasOpenShift ? $t('nav.layout.journal_open') : $t('nav.layout.journal_open_cta_hint')
-            "
-          >
-            <span
-              class="w-2 h-2 rounded-full"
-              :class="appConfigStore.hasOpenShift ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'"
-            ></span>
-            <span>{{
-              appConfigStore.hasOpenShift
-                ? $t('nav.layout.journal_number', { number: appConfigStore.currentShiftNumber })
-                : $t('nav.layout.open_journal')
-            }}</span>
-          </router-link>
-        </div>
+        <!-- Store switcher + journal status: full row on lg, compact chip on md -->
+        <StoreShiftSwitcher class="hidden lg:flex" variant="inline" />
+        <StoreShiftSwitcher class="hidden md:block lg:hidden" variant="chip" />
       </div>
 
       <!-- Left Side (in RTL): Live Clock & Logout -->
@@ -283,6 +239,11 @@
             >
               <X class="w-4 h-4" />
             </button>
+          </div>
+
+          <!-- Store switcher + journal status -->
+          <div class="p-3 border-b border-slate-200 dark:border-slate-800">
+            <StoreShiftSwitcher variant="drawer" @navigate="isSidebarOpen = false" />
           </div>
 
           <!-- Drawer Navigation Items -->
@@ -516,10 +477,10 @@ import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
 import DesktopSidebar from '../Components/Navigation/DesktopSidebar.vue';
 import OfflineBanner from '../Components/Layout/OfflineBanner.vue';
 import NotificationsBell from '../Components/Layout/NotificationsBell.vue';
+import StoreShiftSwitcher from '../Components/Layout/StoreShiftSwitcher.vue';
 import Swal from 'sweetalert2';
 import { trans } from '../helpers/trans';
 import {
-  Store as StoreIcon,
   LogOut,
   Sun,
   Moon,
@@ -610,13 +571,6 @@ const updateLiveClock = () => {
 const toggleTheme = () => {
   const nextTheme = appConfigStore.isDark ? 'light' : 'dark';
   appConfigStore.setTheme(nextTheme);
-};
-
-const handleStoreSwitch = (storeId) => {
-  const store = authStore.stores?.find((s) => String(s.id) === String(storeId));
-  if (store) {
-    authStore.switchStore(store);
-  }
 };
 
 const confirmLogout = async () => {
