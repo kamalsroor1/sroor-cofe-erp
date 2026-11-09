@@ -3,14 +3,9 @@ import api from '../../Services/api';
 
 const PRELOAD_ITEMS = 300;
 
-const totalFrom = (categoriesRes, itemsRes, items) =>
-    categoriesRes.data?.total_items_count ||
-    itemsRes.data?.meta?.total ||
-    itemsRes.data?.summary?.total_items ||
-    items.length;
-
 /**
  * POS catalog: items, categories, customers list, store/shift context, initial load and catalog visibility.
+ * POS-03: a failed items load is blocking (`loadFailed`); other failed parts are listed in `partialErrors`.
  */
 export function usePosCatalog({ authStore, customers }) {
     const items = ref([]);
@@ -21,6 +16,8 @@ export function usePosCatalog({ authStore, customers }) {
     const activeShift = ref(null);
     const activeCategoryId = ref('favorites');
     const isLoading = ref(true);
+    const loadFailed = ref(false);
+    const partialErrors = ref([]);
 
     const favoriteItemsCount = computed(
         () =>
@@ -34,26 +31,83 @@ export function usePosCatalog({ authStore, customers }) {
         localStorage.setItem('pos_show_catalog', showCatalog.value ? 'true' : 'false');
     };
 
+    const addPartialError = (key) => {
+        if (!partialErrors.value.includes(key)) partialErrors.value.push(key);
+    };
+    const clearPartialError = (key) => {
+        partialErrors.value = partialErrors.value.filter((k) => k !== key);
+    };
+
+    // Every load takes a ticket; a response from an older ticket (slow store A after switching to B) is dropped.
+    let loadSeq = 0;
+    let inFlight = false;
+
+    const loaders = {
+        items: async () => {
+            const res = await api.get('/items', { params: { per_page: PRELOAD_ITEMS } });
+            return () => {
+                items.value = res.data?.data || [];
+                totalItemsCount.value = res.data?.meta?.total || res.data?.summary?.total_items || items.value.length;
+            };
+        },
+        categories: async () => {
+            const res = await api.get('/categories', { params: { active_only: true } });
+            return () => {
+                categories.value = res.data?.data || [];
+                if (res.data?.total_items_count) totalItemsCount.value = res.data.total_items_count;
+            };
+        },
+        customers: async () => {
+            const res = await api.get('/customers', { params: { per_page: 200 } });
+            return () => {
+                customers.value = res.data?.data || [];
+            };
+        },
+        shift: async () => {
+            const res = await api.get('/shifts/current');
+            return () => {
+                activeShift.value = res.data?.data || null;
+            };
+        },
+    };
+
+    const hasRealCategory = () => !!activeCategoryId.value && activeCategoryId.value !== 'favorites';
+
+    const loadParts = async (names, { silent = false } = {}) => {
+        const seq = ++loadSeq;
+        inFlight = true;
+        if (!silent) isLoading.value = true;
+        try {
+            const results = await Promise.allSettled(names.map((name) => loaders[name]()));
+            if (seq !== loadSeq) return;
+            names.forEach((name, i) => {
+                const result = results[i];
+                if (name === 'items') loadFailed.value = result.status === 'rejected';
+                if (result.status === 'fulfilled') {
+                    result.value();
+                    clearPartialError(name);
+                } else if (name !== 'items') {
+                    addPartialError(name);
+                }
+            });
+        } finally {
+            if (seq === loadSeq) {
+                inFlight = false;
+                isLoading.value = false;
+            }
+        }
+    };
+
+    const ALL_PARTS = ['items', 'categories', 'customers', 'shift'];
+
     const fetchInitialData = async () => {
         activeStore.value = authStore.currentStore;
-        isLoading.value = true;
-        try {
-            const [itemsRes, customersRes, shiftRes, categoriesRes] = await Promise.all([
-                api.get('/items', { params: { per_page: PRELOAD_ITEMS } }),
-                api.get('/customers', { params: { per_page: 200 } }),
-                api.get('/shifts/current').catch(() => ({ data: { data: null } })),
-                api.get('/categories', { params: { active_only: true } }).catch(() => ({ data: { data: [] } })),
-            ]);
-            items.value = itemsRes.data?.data || [];
-            customers.value = customersRes.data?.data || [];
-            activeShift.value = shiftRes.data?.data || null;
-            categories.value = categoriesRes.data?.data || [];
-            totalItemsCount.value = totalFrom(categoriesRes, itemsRes, items.value);
-        } catch (e) {
-            console.error('Failed to load POS data:', e);
-        } finally {
-            isLoading.value = false;
-        }
+        await loadParts(ALL_PARTS);
+    };
+
+    const retryInitial = async () => {
+        if (inFlight) return;
+        await fetchInitialData();
     };
 
     const selectCategory = async (catId) => {
@@ -61,6 +115,7 @@ export function usePosCatalog({ authStore, customers }) {
         if (!catId) return;
 
         isLoadingCategoryItems.value = true;
+        clearPartialError('category_items');
         try {
             const res = await api.get('/items', { params: { per_page: 200, category_id: catId } });
             if (res.data?.data) {
@@ -68,10 +123,20 @@ export function usePosCatalog({ authStore, customers }) {
                 const toAdd = res.data.data.filter((i) => !existingIds.has(i.id));
                 if (toAdd.length > 0) items.value = [...items.value, ...toAdd];
             }
-        } catch (err) {
-            console.error('Failed to load category items:', err);
+        } catch {
+            addPartialError('category_items');
         } finally {
             isLoadingCategoryItems.value = false;
+        }
+    };
+
+    // Retries only the parts that failed; the loaded items are never replaced.
+    const retryPartial = async () => {
+        if (inFlight) return;
+        const failed = partialErrors.value.filter((k) => k in loaders);
+        if (failed.length > 0) await loadParts(failed, { silent: true });
+        if (failed.includes('categories') || partialErrors.value.includes('category_items')) {
+            if (hasRealCategory()) await selectCategory(activeCategoryId.value);
         }
     };
 
@@ -81,17 +146,10 @@ export function usePosCatalog({ authStore, customers }) {
 
         authStore.switchStore(store);
         activeStore.value = store;
-        try {
-            const [itemsRes, categoriesRes] = await Promise.all([
-                api.get('/items', { params: { per_page: PRELOAD_ITEMS } }),
-                api.get('/categories', { params: { active_only: true } }).catch(() => ({ data: { data: [] } })),
-            ]);
-            items.value = itemsRes.data?.data || [];
-            categories.value = categoriesRes.data?.data || [];
-            totalItemsCount.value = totalFrom(categoriesRes, itemsRes, items.value);
-        } catch (e) {
-            console.error('Failed to refresh items for switched store:', e);
-        }
+        // Never show the previous branch's shift, even if the new shift fails to load.
+        activeShift.value = null;
+        partialErrors.value = [];
+        await loadParts(ALL_PARTS, { silent: true });
     };
 
     return {
@@ -103,6 +161,10 @@ export function usePosCatalog({ authStore, customers }) {
         activeShift,
         activeCategoryId,
         isLoading,
+        loadFailed,
+        partialErrors,
+        retryInitial,
+        retryPartial,
         favoriteItemsCount,
         showCatalog,
         toggleCatalog,

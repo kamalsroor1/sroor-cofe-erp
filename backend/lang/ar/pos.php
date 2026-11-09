@@ -290,4 +290,10 @@ return [
     'tender_short_due' => 'لسه مطلوب',
     'paid_now_label' => 'المدفوع دلوقتي',
     'remaining_on_account' => 'المتبقي على الحساب',
+    'load_failed_title' => 'تعذر تحميل بيانات نقطة البيع',
+    'load_failed_message' => 'تحقق من الاتصال بالإنترنت ثم أعد المحاولة.',
+    'load_failed_categories' => 'تعذر تحميل التصنيفات.',
+    'load_failed_customers' => 'تعذر تحميل قائمة العملاء. يمكنك البحث عن العميل بالاسم أو الهاتف.',
+    'load_failed_shift' => 'تعذر تحميل بيانات الوردية.',
+    'load_failed_category_items' => 'تعذر تحميل أصناف هذا التصنيف.',
 ];

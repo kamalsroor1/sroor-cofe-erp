@@ -290,4 +290,10 @@ return [
     'tender_short_due' => 'Still due',
     'paid_now_label' => 'Paid now',
     'remaining_on_account' => 'Remaining on account',
+    'load_failed_title' => 'Could not load POS data',
+    'load_failed_message' => 'Check your internet connection and try again.',
+    'load_failed_categories' => 'Could not load categories.',
+    'load_failed_customers' => 'Could not load the customers list. You can still search by name or phone.',
+    'load_failed_shift' => 'Could not load the shift.',
+    'load_failed_category_items' => 'Could not load the items of this category.',
 ];
