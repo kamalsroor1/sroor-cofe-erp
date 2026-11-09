@@ -170,6 +170,16 @@ return [
         'skipped_not_provisioned' => 'Skipped :count tenant(s) that are not provisioned yet (pending, running or failed: no database).',
         'none_provisioned' => 'No provisioned tenants: nothing to run.',
     ],
+    // BE-05 / IDEN-3.6: tenants:apply-lifecycle.
+    'lifecycle' => [
+        'description' => 'Apply the subscription lifecycle: move tenants whose trial, grace or read-only period ended to the next status',
+        'moved' => 'Tenant :tenant_id: :from -> :to',
+        'would_move' => '[dry run] Tenant :tenant_id: :from -> :to',
+        'archive_due' => 'Tenant :tenant_id is due for archiving: run tenants:archive (a verified final backup is required).',
+        'failed' => 'Tenant :tenant_id could not be moved: :error',
+        'needs_attention' => 'Tenant :tenant_id is in :status with no end date: it will never change status by itself. Set its dates (needs attention).',
+        'summary' => 'Checked :checked tenant(s): :moved moved, :archive_due due for archiving, :attention need attention (no deadline), :failed failed.',
+    ],
     // OPS-9: tenants:archive / tenants:purge.
     'archive' => [
         'description' => 'Archive one suspended or cancelled tenant after a verified final backup (nothing is dropped)',

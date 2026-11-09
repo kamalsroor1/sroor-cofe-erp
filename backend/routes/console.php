@@ -102,3 +102,11 @@ Artisan::command('central-audit:prune {--days= : Keep rows younger than this man
 Schedule::command('central-audit:prune')
     ->dailyAt('03:15')
     ->withoutOverlapping();
+
+// BE-05 / IDEN-3.6: subscription lifecycle sweep. Persists trial → read_only (after the grace
+// days), active → past_due → read_only and read_only → suspended as the System actor, with
+// lifecycle events + central audit. Access is already enforced from the derived status by
+// EnsureTenantActive; this keeps the stored status, the audit trail and the console in step.
+Schedule::command('tenants:apply-lifecycle')
+    ->dailyAt((string) config('tenant_lifecycle.sweep.at', '01:00'))
+    ->withoutOverlapping(60);

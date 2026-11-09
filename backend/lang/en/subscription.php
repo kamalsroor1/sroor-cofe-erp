@@ -69,6 +69,7 @@ return [
     'errors' => [
         'read_only' => 'This account is read-only: you cannot add or change data. Renew your subscription to reactivate it.',
         'access_blocked' => 'Access to this account is blocked (status: :status). Contact the platform team.',
+        'access_blocked_generic' => 'Access to this account is currently unavailable. Contact the platform team.',
         'activation_requires_payment' => 'An account can only be activated after its payment is confirmed.',
         'invalid_transition' => 'The account status cannot change from ":from" to ":to".',
         'status_conflict' => 'The account status has changed to ":status". Refresh the page and try again.',
@@ -101,5 +102,11 @@ return [
         'archive_failed' => 'The archive did not complete and the account status was not changed: :reason.',
         'purge_refused' => 'Permanent deletion refused: :reason.',
         'confirm_code_mismatch' => 'Type the shop code exactly to confirm.',
+    ],
+
+    // Titles of the SPA alert shown when the API refuses a request because of the subscription state.
+    'alerts' => [
+        'read_only_title' => 'Account is read-only',
+        'blocked_title' => 'Account access is blocked',
     ],
 ];

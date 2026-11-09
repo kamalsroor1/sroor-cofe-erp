@@ -23,7 +23,9 @@ class TenantLifecycleConfigTest extends TestCase
     {
         $this->assertSame(14, config('tenant_lifecycle.trial_days'));
         $this->assertSame(7, config('tenant_lifecycle.trial_extension_days'));
-        $this->assertSame(7, config('tenant_lifecycle.past_due_grace_days'));
+        // Owner decision 2026-11 (BE-05): 3 full-access grace days (TENANT_GRACE_DAYS) after a trial or paid period ends.
+        $this->assertSame(3, config('tenant_lifecycle.past_due_grace_days'));
+        $this->assertSame(3, config('tenant_lifecycle.trial_grace_days'));
         $this->assertSame(30, config('tenant_lifecycle.read_only_days'));
         $this->assertSame(90, config('tenant_lifecycle.retention_days'));
         $this->assertSame([7, 3, 1], config('tenant_lifecycle.reminder_days'));

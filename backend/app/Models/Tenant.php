@@ -6,6 +6,7 @@ use App\Enums\TenantAccessLevel;
 use App\Enums\TenantArchiveState;
 use App\Enums\TenantProvisioningStatus;
 use App\Enums\TenantStatus;
+use App\Support\Tenancy\TenantLifecyclePolicy;
 use App\Support\Tenancy\TenantLifecycleSnapshot;
 use App\Support\Tenancy\TenantSuspensionReason;
 use Carbon\CarbonImmutable;
@@ -521,28 +522,18 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     /**
-     * هل المستأجر معلق أو منتهي الاشتراك؟
+     * Is the tenant fully BLOCKED (suspended / cancelled / archived, an unknown stored status,
+     * or a lifecycle that has run past read-only)? Used by the workspace resolver.
      *
-     * Legacy gate of the workspace resolver until IDEN-3.5 (EnsureTenantActive) replaces it
-     * with the derived lifecycle status. IDEN-3.2 keeps it at least as strict as before:
-     *  - every blocked status (suspended / cancelled / archived) and any unknown value;
-     *  - a trial whose trial_ends_at passed (trials no longer carry subscription_ends_at);
-     *  - any tenant whose paid period ended (unchanged legacy rule).
-     * read_only is NOT blocked here: reads stay allowed, writes get 423 from IDEN-3.5.
+     * Reads the DERIVED lifecycle status (IDEN-3.5): a tenant inside its grace days or in
+     * read-only can still be found and can log in to view its data; the API itself is gated
+     * by EnsureTenantActive.
      */
     public function isSuspended(): bool
     {
-        $status = $this->lifecycleStatus();
+        $decision = app(TenantLifecyclePolicy::class)->evaluate($this->lifecycleSnapshot(), CarbonImmutable::now());
 
-        if ($status === null || $status->accessLevel() === TenantAccessLevel::Blocked) {
-            return true;
-        }
-
-        if ($status === TenantStatus::Trial && $this->trial_ends_at !== null && $this->trial_ends_at->isPast()) {
-            return true;
-        }
-
-        return $this->subscription_ends_at !== null && $this->subscription_ends_at->isPast();
+        return $decision->access() === TenantAccessLevel::Blocked;
     }
 
     /**

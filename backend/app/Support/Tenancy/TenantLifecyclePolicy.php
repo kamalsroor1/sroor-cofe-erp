@@ -19,9 +19,9 @@ use InvalidArgumentException;
  * middleware (IDEN-3.5), the banner (IDEN-3.8) and the daily sweep (IDEN-3.6).
  *
  * Time-driven moves (all by TenantLifecycleActor::System, deadline inclusive):
- *   trial      → read_only  at trial_ends_at
+ *   trial      → read_only  at trial_ends_at + trial grace days (full access meanwhile)
  *   active     → past_due   at subscription_ends_at
- *   past_due   → read_only  at grace_ends_at, else past_due start + grace days (7)
+ *   past_due   → read_only  at grace_ends_at, else past_due start + grace days (3, TENANT_GRACE_DAYS)
  *   read_only  → suspended  at read_only start + read-only days (30)
  *   suspended  → archived   at suspension start + retention days (90), never for a
  *                           `violation` suspension (CTO W1 Q2)
@@ -49,6 +49,8 @@ final class TenantLifecyclePolicy
         private readonly ?int $retentionDays,
         #[Config('tenant_lifecycle.trial_extension_days')]
         private readonly int $trialExtensionDays,
+        #[Config('tenant_lifecycle.trial_grace_days')]
+        private readonly int $trialGraceDays = 0,
     ) {
         if ($pastDueGraceDays < 0) {
             throw new InvalidArgumentException('tenant_lifecycle.past_due_grace_days must be >= 0.');
@@ -61,6 +63,9 @@ final class TenantLifecyclePolicy
         }
         if ($trialExtensionDays < 1) {
             throw new InvalidArgumentException('tenant_lifecycle.trial_extension_days must be >= 1.');
+        }
+        if ($trialGraceDays < 0) {
+            throw new InvalidArgumentException('tenant_lifecycle.trial_grace_days must be >= 0.');
         }
     }
 
@@ -150,7 +155,7 @@ final class TenantLifecyclePolicy
     private function nextAutomaticMove(TenantStatus $status, ?CarbonImmutable $since, TenantLifecycleSnapshot $snapshot): ?array
     {
         $deadline = match ($status) {
-            TenantStatus::Trial => $snapshot->trialEndsAt,
+            TenantStatus::Trial => $snapshot->trialEndsAt?->addDays($this->trialGraceDays),
             TenantStatus::Active => $snapshot->subscriptionEndsAt,
             TenantStatus::PastDue => $this->graceDeadline($since, $snapshot->graceEndsAt),
             TenantStatus::ReadOnly => $since?->addDays($this->readOnlyDays),

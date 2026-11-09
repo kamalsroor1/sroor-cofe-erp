@@ -22,6 +22,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * |-------------------------------|------|------------------------------------------|
  * | readOnly()                    | 423  | subscription.read_only                   |
  * | blocked($status)              | 403  | subscription.access_blocked              |
+ * | blockedGeneric() (unauthenticated callers, no status revealed) | 403 | subscription.access_blocked |
  * | activationRequiresPayment()   | 403  | subscription.activation_requires_payment |
  * | invalidTransition()           | 409  | subscription.invalid_transition          |
  * | statusConflict()              | 409  | subscription.status_conflict             |
@@ -68,6 +69,15 @@ final class TenantLifecycleException extends HttpException
         ]), [
             'status' => $status->value,
         ]);
+    }
+
+    /**
+     * SEC-01: blocked, but the caller is not authenticated, so the specific status
+     * (suspended / cancelled / archived) is not revealed (HTTP 403, no details).
+     */
+    public static function blockedGeneric(): self
+    {
+        return new self(Response::HTTP_FORBIDDEN, 'subscription.access_blocked', (string) __('subscription.errors.access_blocked_generic'));
     }
 
     /** Only a verified payment (actor Billing) may make a tenant active (HTTP 403). */

@@ -73,7 +73,7 @@ class ResolveApiTenancy
                 return $this->notReady($current);
             }
 
-            return $next($request);
+            return $this->enforceLifecycle($request, $next);
         }
 
         // 2. Check X-Tenant header or query parameter
@@ -143,7 +143,16 @@ class ResolveApiTenancy
             return $this->notFound();
         }
 
-        return $next($request);
+        return $this->enforceLifecycle($request, $next);
+    }
+
+    /**
+     * SEC-01 / BE-05: with tenancy initialised (whichever path did it), apply the
+     * subscription lifecycle (read-only / blocked) before the request reaches auth.
+     */
+    private function enforceLifecycle(Request $request, Closure $next): Response
+    {
+        return app(EnsureTenantActive::class)->handle($request, $next);
     }
 
     /** OPS-2: 503 `provisioning.workspace_not_ready` (+ Retry-After while in progress). */

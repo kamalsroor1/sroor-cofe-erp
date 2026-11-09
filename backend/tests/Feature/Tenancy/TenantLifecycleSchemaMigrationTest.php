@@ -167,22 +167,25 @@ final class TenantLifecycleSchemaMigrationTest extends TenantTestCase
         $this->assertSame(TenantStatus::Suspended, $legacy->lifecycleSnapshot()->status);
     }
 
-    public function test_legacy_suspension_gate_stays_at_least_as_strict_without_trial_subscription_dates(): void
+    public function test_suspension_gate_follows_the_derived_lifecycle_without_trial_subscription_dates(): void
     {
         $id = $this->centralOnlyTenantId();
         $gate = function (array $columns) use ($id): bool {
             DB::table('tenants')->where('id', $id)->update(array_merge([
                 'trial_ends_at' => null,
                 'subscription_ends_at' => null,
+                'status_changed_at' => null,
             ], $columns));
 
             return Tenant::query()->findOrFail($id)->isSuspended();
         };
 
         $this->assertFalse($gate(['status' => 'trial', 'trial_ends_at' => now()->addDay()]));
-        $this->assertTrue($gate(['status' => 'trial', 'trial_ends_at' => now()->subMinute()]), 'An ended trial is still blocked by the legacy resolver gate.');
+        $this->assertFalse($gate(['status' => 'trial', 'trial_ends_at' => now()->subMinute()]), 'An ended trial is in its grace days (IDEN-3.5): not blocked.');
+        $this->assertFalse($gate(['status' => 'trial', 'trial_ends_at' => now()->subDays(10)]), 'A long-ended trial is read-only (reads allowed), not blocked.');
         $this->assertFalse($gate(['status' => 'active', 'subscription_ends_at' => now()->addMonth()]));
-        $this->assertTrue($gate(['status' => 'active', 'subscription_ends_at' => now()->subMinute()]));
+        $this->assertFalse($gate(['status' => 'active', 'subscription_ends_at' => now()->subMinute()]), 'A just-ended subscription is past_due (grace): not blocked.');
+        $this->assertTrue($gate(['status' => 'active', 'status_changed_at' => now()->subDays(100), 'subscription_ends_at' => now()->subDays(60)]), 'Past grace + 30 read-only days the derived status is suspended.');
         $this->assertFalse($gate(['status' => 'read_only']), 'read-only keeps reads; writes are refused by IDEN-3.5.');
 
         foreach (['suspended', 'cancelled', 'archived', 'expired'] as $blocked) {

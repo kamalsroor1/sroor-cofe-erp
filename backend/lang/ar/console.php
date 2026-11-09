@@ -170,6 +170,16 @@ return [
         'skipped_not_provisioned' => 'تم تخطي :count مستأجر لسه ما اتجهزش (في الانتظار أو جاري التجهيز أو فشل: مفيش قاعدة بيانات).',
         'none_provisioned' => 'مفيش مستأجرين جاهزين: مفيش حاجة تتنفذ.',
     ],
+    // BE-05 / IDEN-3.6: tenants:apply-lifecycle.
+    'lifecycle' => [
+        'description' => 'تطبيق دورة حياة الاشتراك: نقل المستأجرين الذين انتهت تجربتهم أو فترة السماح أو فترة القراءة فقط إلى الحالة التالية',
+        'moved' => 'المستأجر :tenant_id: :from -> :to',
+        'would_move' => '[تجربة بدون تنفيذ] المستأجر :tenant_id: :from -> :to',
+        'archive_due' => 'المستأجر :tenant_id حان موعد أرشفته: شغّل tenants:archive (يلزم نسخة احتياطية نهائية موثّقة).',
+        'failed' => 'تعذّر نقل المستأجر :tenant_id: :error',
+        'needs_attention' => 'المستأجر :tenant_id في حالة :status بدون تاريخ انتهاء: لن تتغير حالته تلقائيًا. حدّد تواريخه (يحتاج انتباهًا).',
+        'summary' => 'تم فحص :checked مستأجر: نُقل :moved، حان موعد أرشفة :archive_due، يحتاج انتباهًا :attention (بدون موعد)، فشل :failed.',
+    ],
     // OPS-9: tenants:archive / tenants:purge.
     'archive' => [
         'description' => 'أرشفة محل موقوف أو ملغي بعد نسخة احتياطية نهائية متأكدين منها (من غير مسح أي حاجة)',

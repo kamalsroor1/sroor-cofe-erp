@@ -69,6 +69,7 @@ return [
     'errors' => [
         'read_only' => 'الحساب للعرض فقط حاليًا، ومش هتقدر تضيف أو تعدّل بيانات. جدّد الاشتراك لإعادة التفعيل.',
         'access_blocked' => 'الوصول للحساب موقوف (الحالة: :status). تواصل مع إدارة المنصة.',
+        'access_blocked_generic' => 'الوصول إلى هذا الحساب غير متاح حاليًا. تواصل مع فريق المنصة.',
         'activation_requires_payment' => 'تفعيل الحساب بيتم بعد تأكيد الدفع فقط.',
         'invalid_transition' => 'لا يمكن تغيير حالة الحساب من «:from» إلى «:to».',
         'status_conflict' => 'حالة الحساب اتغيّرت وأصبحت «:status». حدّث الصفحة وحاول تاني.',
@@ -101,5 +102,11 @@ return [
         'archive_failed' => 'الأرشفة ماكملتش وحالة الحساب ماتغيرتش: :reason.',
         'purge_refused' => 'المسح النهائي اترفض: :reason.',
         'confirm_code_mismatch' => 'اكتب كود المحل بالظبط للتأكيد.',
+    ],
+
+    // Titles of the SPA alert shown when the API refuses a request because of the subscription state.
+    'alerts' => [
+        'read_only_title' => 'الحساب في وضع القراءة فقط',
+        'blocked_title' => 'تم إيقاف الوصول إلى الحساب',
     ],
 ];

@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DailyJournalPrintController;
 use App\Http\Controllers\InvoicePrintController;
 use App\Http\Controllers\POSController;
+use App\Http\Middleware\EnsureTenantActive;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\Store;
@@ -36,6 +37,8 @@ Route::middleware([
     'web',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
+    // SEC-01: blocked tenants get no print / export pages (the SPA shell stays reachable).
+    EnsureTenantActive::class,
 ])->group(function () {
 
     // 1. SPA login page (the SPA signs in through POST /api/v1/auth/login). Named `login`:

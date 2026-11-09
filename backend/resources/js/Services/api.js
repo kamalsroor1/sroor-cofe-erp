@@ -99,8 +99,25 @@ apiClient.interceptors.response.use(
             }
         }
 
+        // Subscription lifecycle (BE-05): 423 read-only account, 403 subscription.access_blocked.
+        const code = typeof data?.error_code === 'string' ? data.error_code : '';
+        const isLifecycleError = status === 423 || (status === 403 && code.startsWith('subscription.'));
+        if (isLifecycleError && !isCentralMode && !Swal.isVisible()) {
+            Swal.fire({
+                icon: 'warning',
+                title: trans(
+                    status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title'
+                ),
+                text: message,
+                confirmButtonText: trans('common.ok'),
+                confirmButtonColor: '#f59e0b',
+                background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff',
+                color: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',
+            });
+        }
+
         // 403 Forbidden: Insufficient Permissions
-        if (status === 403) {
+        if (status === 403 && !isLifecycleError) {
             Swal.fire({
                 icon: 'warning',
                 title: trans('common.permission_alert'),
