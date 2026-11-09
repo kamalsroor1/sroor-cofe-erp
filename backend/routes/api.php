@@ -78,6 +78,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
 
         // System Context (Bootstrap payload for the SPA)
         Route::get('/system/context', [SystemContextApiController::class, 'context'])->name('api.system.context');
+        Route::get('/system/setup-progress', [SystemContextApiController::class, 'setupProgress'])->name('api.system.setup-progress');
 
         // Permissions & Roles Tree
         Route::get('/permissions', [PermissionApiController::class, 'index'])->name('api.permissions.index');

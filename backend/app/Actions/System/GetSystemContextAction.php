@@ -33,6 +33,7 @@ final class GetSystemContextAction
         private readonly GetBrandingAction $getBrandingAction,
         private readonly PlanEnforcer $planEnforcer,
         private readonly TenantFeatureManagerInterface $featureManager,
+        private readonly GetSetupProgressAction $setupProgressAction,
     ) {}
 
     /**
@@ -179,6 +180,7 @@ final class GetSystemContextAction
             ],
             'entitlements' => $this->entitlements($tenant),
             'notifications' => $alerts,
+            'setup_progress' => $this->setupProgressAction->execute($user),
             'locale' => $locale,
             'translations_hash' => $translationsHash,
         ] + ($clientHash === $translationsHash ? [] : ['translations' => $translations]);

@@ -21,6 +21,8 @@ export const useAppConfigStore = defineStore('appConfig', {
         tenant: null,
         entitlements: null,
         activeShift: null,
+        setupProgress: null,
+        setupProgressBooted: false,
         notifications: [],
         locale: localStorage.getItem('app_locale') || 'ar',
         translations: {},
@@ -73,6 +75,8 @@ export const useAppConfigStore = defineStore('appConfig', {
                     if (data.tenant) this.tenant = data.tenant;
                     if (data.entitlements) this.entitlements = data.entitlements;
                     this.activeShift = data.active_shift ?? null;
+                    this.setupProgress = data.setup_progress ?? null;
+                    this.setupProgressBooted = false;
                     if (data.notifications) this.notifications = data.notifications;
                     if (data.locale) this.locale = data.locale;
                     if (data.translations) {
@@ -105,6 +109,19 @@ export const useAppConfigStore = defineStore('appConfig', {
             } catch (error) {
                 console.error('Failed to load system context:', error);
                 throw error;
+            }
+        },
+
+        /**
+         * Re-read only the onboarding checklist progress from its dedicated endpoint.
+         */
+        async refreshSetupProgress() {
+            if (isCentralAppContext()) return;
+            try {
+                const response = await api.get('/system/setup-progress');
+                this.setupProgress = response.data?.data ?? null;
+            } catch {
+                // Keep the last known progress; the checklist is a non-critical hint.
             }
         },
 

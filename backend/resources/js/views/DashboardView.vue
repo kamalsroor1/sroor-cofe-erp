@@ -6,6 +6,13 @@
       @refresh="retry"
     />
 
+    <DashboardSetupChecklist
+      v-if="isChecklistVisible"
+      :steps="checklistSteps"
+      :progress="setupProgress"
+      @dismiss="dismissChecklist"
+    />
+
     <!-- 🚀 Metro App Menu Hub (Tiles & Operations Launcher) -->
     <DashboardAppMenuHub />
 
@@ -43,10 +50,12 @@
 import { useRouter } from 'vue-router';
 import { useAppConfigStore } from '../stores/appConfig';
 import { useDashboard } from '../Composables/useDashboard';
+import { useSetupChecklist } from '../Composables/useSetupChecklist';
 
 import ErrorState from '../Components/Common/ErrorState.vue';
 import InlineErrorBar from '../Components/Common/InlineErrorBar.vue';
 import DashboardWelcomeBanner from '../Components/Dashboard/DashboardWelcomeBanner.vue';
+import DashboardSetupChecklist from '../Components/Dashboard/DashboardSetupChecklist.vue';
 import DashboardAppMenuHub from '../Components/Dashboard/DashboardAppMenuHub.vue';
 import DashboardKpiGrid from '../Components/Dashboard/DashboardKpiGrid.vue';
 import DashboardAnalyticsRow from '../Components/Dashboard/DashboardAnalyticsRow.vue';
@@ -74,6 +83,13 @@ const {
   lowStockItems,
   activeShift,
 } = useDashboard();
+
+const {
+  steps: checklistSteps,
+  progress: setupProgress,
+  isVisible: isChecklistVisible,
+  dismiss: dismissChecklist,
+} = useSetupChecklist();
 
 const previewInvoice = (inv) => router.push('/invoices?view=' + inv.id);
 </script>
