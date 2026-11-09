@@ -49,8 +49,7 @@
         :model-value="selectedCustomerId"
         @update:model-value="$emit('update:selectedCustomerId', $event)"
         :label="$t('contacts.customer')"
-        :options="customerOptions"
-        :required="true"
+        :search-fn="searchCustomers"
       />
     </div>
 
@@ -83,7 +82,7 @@ defineProps({
   totalCalculatedCost: { type: Number, default: 0 },
   totalCalculatedPrice: { type: Number, default: 0 },
   profitMargin: { type: Number, default: 0 },
-  customerOptions: { type: Array, default: () => [] },
+  searchCustomers: { type: Function, required: true },
   selectedCustomerId: { type: [Number, String], default: null },
   isSubmitting: { type: Boolean, default: false },
   componentsCount: { type: Number, default: 0 },

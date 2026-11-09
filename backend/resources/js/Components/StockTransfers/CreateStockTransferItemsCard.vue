@@ -13,9 +13,10 @@
     <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
       <div class="flex-1">
         <BaseSelect
-          :model-value="selectedItemId"
-          @update:model-value="$emit('update:selectedItemId', $event)"
-          :options="itemOptions"
+          :model-value="selectedItem?.id ?? null"
+          :search-fn="searchFn"
+          :selected-option="selectedItem ? { value: selectedItem.id, label: selectedItem.name } : null"
+          @select="$emit('update:selectedItem', $event.raw)"
           :placeholder="$t('inventory.select_item_to_transfer')"
         />
       </div>
@@ -25,7 +26,7 @@
         size="md"
         type="button"
         @click="$emit('add-item')"
-        :disabled="!selectedItemId"
+        :disabled="!selectedItem"
         class="shrink-0 font-black shadow-lg shadow-theme-primary"
       >
         <Plus class="w-4 h-4" />
@@ -138,9 +139,9 @@ import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
   items: { type: Array, default: () => [] },
-  selectedItemId: { type: [Number, String], default: null },
-  itemOptions: { type: Array, default: () => [] },
+  selectedItem: { type: Object, default: null },
+  searchFn: { type: Function, required: true },
 });
 
-defineEmits(['update:selectedItemId', 'add-item', 'remove-item']);
+defineEmits(['update:selectedItem', 'add-item', 'remove-item']);
 </script>

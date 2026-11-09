@@ -27,8 +27,8 @@
       <!-- Transferred Items Card -->
       <CreateStockTransferItemsCard
         :items="form.items"
-        v-model:selected-item-id="selectedItemId"
-        :item-options="itemOptions"
+        v-model:selected-item="selectedItem"
+        :search-fn="searchItems"
         @add-item="addItemRow"
         @remove-item="removeItemRow"
       />
@@ -64,10 +64,10 @@ const {
   retry,
   form,
   isSubmitting,
-  selectedItemId,
+  selectedItem,
   fromStoreOptions,
   toStoreOptions,
-  itemOptions,
+  searchItems,
   addItemRow,
   removeItemRow,
   submitTransfer,

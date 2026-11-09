@@ -23,10 +23,11 @@
     <div class="flex items-center gap-2">
       <div class="flex-1">
         <BaseSelect
-          :model-value="selectedItemIdToAdd"
-          @update:model-value="$emit('update:selectedItemIdToAdd', $event)"
+          :model-value="selectedItemToAdd?.id ?? null"
+          :search-fn="searchFn"
+          :selected-option="selectedItemToAdd ? { value: selectedItemToAdd.id, label: selectedItemToAdd.name } : null"
           :placeholder="$t('inventory.select_blend_item_prompt')"
-          :options="itemOptions"
+          @select="$emit('update:selectedItemToAdd', $event.raw)"
         />
       </div>
 
@@ -34,7 +35,7 @@
         variant="primary"
         size="md"
         @click="$emit('add-component')"
-        :disabled="!selectedItemIdToAdd"
+        :disabled="!selectedItemToAdd"
         class="h-10 shrink-0 shadow-sm"
       >
         + {{ $t('common.add') }}
@@ -141,14 +142,14 @@ defineProps({
   components: { type: Array, default: () => [] },
   calculatedComponents: { type: Array, default: () => [] },
   totalPercentage: { type: Number, default: 0 },
-  selectedItemIdToAdd: { type: [Object, Number, String], default: null },
-  itemOptions: { type: Array, default: () => [] },
+  selectedItemToAdd: { type: Object, default: null },
+  searchFn: { type: Function, required: true },
   cardamomGrams: { type: Number, default: 0 },
   notes: { type: String, default: '' },
 });
 
 defineEmits([
-  'update:selectedItemIdToAdd',
+  'update:selectedItemToAdd',
   'add-component',
   'remove-component',
   'update-percentage',

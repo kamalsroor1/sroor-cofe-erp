@@ -1,23 +1,27 @@
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
-import { useLoadError } from './useLoadError';
+import { useRemoteOptions } from './useRemoteOptions';
 
 export function useCoffeeBlender() {
     const router = useRouter();
     const { t } = useTrans();
-    const { error, errorMessage, clearError, setError } = useLoadError();
-    const isLoading = ref(false);
 
-    const items = ref([]);
-    const customers = ref([]);
+    const { searchFn: searchCustomers } = useRemoteOptions('customers');
+    const { searchFn: searchItems } = useRemoteOptions('items', {
+        map: (row) => ({
+            value: row.id,
+            label: `${row.name} (${row.code || '—'}) — ${t('inventory.retail_price')}: ${row.price_retail || row.selling_price} ${t('common.currency')} | ${t('inventory.current_stock')}: ${row.current_stock} ${row.unit}`,
+            raw: row,
+        }),
+    });
 
     const blendName = ref('تركيبة مجمعة مخصصة');
     const targetWeightGrams = ref(250);
     const selectedCustomerId = ref(null);
-    const selectedItemIdToAdd = ref(null);
+    const selectedItemToAdd = ref(null);
     const roastType = ref('وسط');
     const grindLevel = ref('تركي ناعم');
     const cardamomGrams = ref(0);
@@ -45,21 +49,6 @@ export function useCoffeeBlender() {
         { value: 'فرينش بريس', label: t('inventory.grind_french_press') },
         { value: 'حبوب بدون طحن', label: t('inventory.grind_beans') },
     ]);
-
-    const itemOptions = computed(() => {
-        return items.value.map((it) => ({
-            value: it.id,
-            label: `${it.name} (${it.code || '—'}) — ${t('inventory.retail_price')}: ${it.price_retail || it.selling_price} ${t('common.currency')} | ${t('inventory.current_stock')}: ${it.current_stock} ${it.unit}`,
-            raw: it,
-        }));
-    });
-
-    const customerOptions = computed(() => {
-        return customers.value.map((c) => ({
-            value: c.id,
-            label: `${c.name} ${c.phone ? `(${c.phone})` : ''}`,
-        }));
-    });
 
     const setTargetWeight = (grams) => {
         targetWeightGrams.value = grams;
@@ -110,53 +99,8 @@ export function useCoffeeBlender() {
         return Number(((profit / totalCalculatedPrice.value) * 100).toFixed(1));
     });
 
-    const loadDependencies = async () => {
-        isLoading.value = true;
-        clearError();
-        try {
-            const [itemsRes, custRes] = await Promise.all([
-                api.get('/items?per_page=100'),
-                api.get('/customers?per_page=100'),
-            ]);
-
-            items.value = itemsRes.data?.data || [];
-            customers.value = custRes.data?.data || [];
-
-            if (customers.value.length > 0) {
-                selectedCustomerId.value = customers.value[0].id;
-            }
-
-            // Initialize default formulation with first 2 items if empty
-            if (components.value.length === 0 && items.value.length >= 2) {
-                components.value = [
-                    {
-                        item_id: items.value[0].id,
-                        name: items.value[0].name,
-                        percentage: 60,
-                        cost_price: Number(items.value[0].cost_price),
-                        selling_price: Number(items.value[0].price_retail || items.value[0].selling_price),
-                        current_stock: items.value[0].current_stock,
-                    },
-                    {
-                        item_id: items.value[1].id,
-                        name: items.value[1].name,
-                        percentage: 40,
-                        cost_price: Number(items.value[1].cost_price),
-                        selling_price: Number(items.value[1].price_retail || items.value[1].selling_price),
-                        current_stock: items.value[1].current_stock,
-                    },
-                ];
-            }
-        } catch (err) {
-            setError(err);
-        } finally {
-            isLoading.value = false;
-        }
-    };
-
     const addComponentRow = () => {
-        if (!selectedItemIdToAdd.value) return;
-        const item = items.value.find((it) => it.id === selectedItemIdToAdd.value);
+        const item = selectedItemToAdd.value;
         if (!item) return;
 
         if (components.value.some((c) => c.item_id === item.id)) {
@@ -173,7 +117,7 @@ export function useCoffeeBlender() {
             current_stock: item.current_stock,
         });
 
-        selectedItemIdToAdd.value = null;
+        selectedItemToAdd.value = null;
     };
 
     const removeComponentRow = (idx) => {
@@ -242,21 +186,11 @@ export function useCoffeeBlender() {
         }
     };
 
-    onMounted(() => {
-        loadDependencies();
-    });
-
     return {
-        isLoading,
-        error,
-        errorMessage,
-        retry: loadDependencies,
-        items,
-        customers,
         blendName,
         targetWeightGrams,
         selectedCustomerId,
-        selectedItemIdToAdd,
+        selectedItemToAdd,
         roastType,
         grindLevel,
         cardamomGrams,
@@ -265,8 +199,8 @@ export function useCoffeeBlender() {
         presetWeights,
         roastOptions,
         grindOptions,
-        itemOptions,
-        customerOptions,
+        searchItems,
+        searchCustomers,
         components,
         calculatedComponents,
         totalPercentage,

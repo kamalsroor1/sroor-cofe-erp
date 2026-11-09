@@ -16,13 +16,13 @@
         v-model:supplier-id="form.supplier_id"
         v-model:purchase-date="form.purchase_date"
         v-model:supplier-invoice-ref="form.supplier_invoice_ref"
-        :supplier-options="supplierOptions"
+        :search-fn="searchSuppliers"
       />
 
       <!-- Items Table Card -->
       <CreatePurchaseItemsCard
         :items="form.items"
-        :available-items="availableItems"
+        :search-fn="searchItems"
         @add-line="addItemLine"
         @remove-line="removeItemLine"
         @item-select="onItemSelect"
@@ -76,8 +76,8 @@ const {
   errorMessage,
   retry,
   form,
-  availableItems,
-  supplierOptions,
+  searchSuppliers,
+  searchItems,
   isSubmitting,
   subtotal,
   discount,

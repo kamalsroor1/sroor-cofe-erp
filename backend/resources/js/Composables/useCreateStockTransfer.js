@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useLoadError } from './useLoadError';
 import { useUnits } from './useUnits';
+import { useRemoteOptions } from './useRemoteOptions';
 import { businessToday } from './useBusinessDate';
 
 export function useCreateStockTransfer() {
@@ -15,9 +16,15 @@ export function useCreateStockTransfer() {
     const isLoading = ref(false);
 
     const stores = ref([]);
-    const items = ref([]);
+    const { searchFn: searchItems } = useRemoteOptions('items', {
+        map: (row) => ({
+            value: row.id,
+            label: `${row.name} (${row.code || '—'}) — ${t('inventory.current_stock')}: ${row.current_stock} ${row.unit || ''}`,
+            raw: row,
+        }),
+    });
     const isSubmitting = ref(false);
-    const selectedItemId = ref(null);
+    const selectedItem = ref(null);
 
     const form = reactive({
         from_store_id: null,
@@ -42,21 +49,13 @@ export function useCreateStockTransfer() {
         }));
     });
 
-    const itemOptions = computed(() => {
-        return items.value.map((it) => ({
-            value: it.id,
-            label: `${it.name} (${it.code || '—'}) — ${t('inventory.current_stock')}: ${it.current_stock} ${it.unit || ''}`,
-        }));
-    });
-
     const loadDependencies = async () => {
         isLoading.value = true;
         clearError();
         try {
-            const [storesRes, itemsRes] = await Promise.all([api.get('/stores'), api.get('/items?per_page=100')]);
+            const storesRes = await api.get('/stores');
 
             stores.value = storesRes.data?.data || storesRes.data?.stores || [];
-            items.value = itemsRes.data?.data || [];
 
             if (stores.value.length >= 2) {
                 form.from_store_id = stores.value[0].id;
@@ -72,8 +71,7 @@ export function useCreateStockTransfer() {
     };
 
     const addItemRow = () => {
-        if (!selectedItemId.value) return;
-        const it = items.value.find((i) => i.id === Number(selectedItemId.value));
+        const it = selectedItem.value;
         if (!it) return;
 
         if (form.items.some((i) => i.item_id === it.id)) {
@@ -89,7 +87,7 @@ export function useCreateStockTransfer() {
             quantity: 1,
         });
 
-        selectedItemId.value = null;
+        selectedItem.value = null;
     };
 
     const removeItemRow = (idx) => {
@@ -156,13 +154,12 @@ export function useCreateStockTransfer() {
         errorMessage,
         retry: loadDependencies,
         stores,
-        items,
         form,
         isSubmitting,
-        selectedItemId,
+        selectedItem,
         fromStoreOptions,
         toStoreOptions,
-        itemOptions,
+        searchItems,
         addItemRow,
         removeItemRow,
         submitTransfer,

@@ -12,8 +12,6 @@
       </template>
     </PageHeader>
 
-    <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
-
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Left: Blender Studio Workspace (Col span 8) -->
       <div class="lg:col-span-8 space-y-5">
@@ -29,13 +27,13 @@
         />
 
         <CoffeeBlenderFormulationCard
-          v-model:selected-item-id-to-add="selectedItemIdToAdd"
+          v-model:selected-item-to-add="selectedItemToAdd"
           v-model:cardamom-grams="cardamomGrams"
           v-model:notes="notes"
           :components="components"
           :calculated-components="calculatedComponents"
           :total-percentage="totalPercentage"
-          :item-options="itemOptions"
+          :search-fn="searchItems"
           @add-component="addComponentRow"
           @remove-component="removeComponentRow"
           @update-percentage="updateComponentPercentage"
@@ -50,7 +48,7 @@
           :total-calculated-cost="totalCalculatedCost"
           :total-calculated-price="totalCalculatedPrice"
           :profit-margin="profitMargin"
-          :customer-options="customerOptions"
+          :search-customers="searchCustomers"
           :is-submitting="isSubmitting"
           :components-count="components.length"
           @submit-invoice="submitBlendInvoice"
@@ -62,7 +60,6 @@
 
 <script setup>
 import { ArrowRight } from 'lucide-vue-next';
-import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import CoffeeBlenderSpecsCard from '../../Components/CoffeeBlender/CoffeeBlenderSpecsCard.vue';
 import CoffeeBlenderFormulationCard from '../../Components/CoffeeBlender/CoffeeBlenderFormulationCard.vue';
@@ -70,13 +67,10 @@ import CoffeeBlenderCostSummary from '../../Components/CoffeeBlender/CoffeeBlend
 import { useCoffeeBlender } from '../../Composables/useCoffeeBlender';
 
 const {
-  error,
-  errorMessage,
-  retry,
   blendName,
   targetWeightGrams,
   selectedCustomerId,
-  selectedItemIdToAdd,
+  selectedItemToAdd,
   roastType,
   grindLevel,
   cardamomGrams,
@@ -85,8 +79,8 @@ const {
   presetWeights,
   roastOptions,
   grindOptions,
-  itemOptions,
-  customerOptions,
+  searchItems,
+  searchCustomers,
   components,
   calculatedComponents,
   totalPercentage,

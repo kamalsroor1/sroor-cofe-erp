@@ -154,4 +154,8 @@ return [
     'record_not_found' => 'The requested record was not found.',
     'trash_invalid_type' => 'This record type cannot be restored or deleted from the recycle bin.',
     'no_access' => 'You do not have access to this page.',
+    'no_results' => 'No matching results',
+    'clear_search' => 'Clear search',
+    'search_failed' => 'Could not load results',
+    'retry' => 'Retry',
 ];

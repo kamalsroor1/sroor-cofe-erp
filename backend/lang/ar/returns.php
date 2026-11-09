@@ -114,4 +114,6 @@ return [
     'source_load_failed' => 'تعذر تحميل المستندات. حاول مرة أخرى.',
     'return_manually' => 'مرتجع بدون مستند أصلي',
     'return_from_document' => 'مرتجع على فاتورة بيع أو شراء',
+    'select_customer_warning' => 'يرجى اختيار العميل',
+    'select_supplier_warning' => 'يرجى اختيار المورد',
 ];
