@@ -22,7 +22,8 @@ final class UpdateItemAction
                 'category' => $dto->category,
                 'unit' => $dto->unit,
                 'cost_price' => $dto->cost_price,
-                'min_selling_price' => $dto->min_selling_price,
+                // Partial-update safety: a missing key keeps the stored floor.
+                'min_selling_price' => $dto->min_selling_price ?? $item->min_selling_price,
                 'selling_price' => $dto->selling_price,
                 'min_stock_level' => $dto->min_stock_level,
                 'is_active' => $dto->is_active,

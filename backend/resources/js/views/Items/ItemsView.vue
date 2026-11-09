@@ -179,7 +179,7 @@ const openEditModal = (item) => {
   form.unit = item.unit || defaultUnit.value;
   form.cost_price = Number(item.cost_price) || 0;
   form.selling_price = Number(item.selling_price) || 0;
-  form.min_selling_price = Number(item.min_selling_price || item.price_wholesale || item.selling_price) || 0;
+  form.min_selling_price = Number(item.min_selling_price) || 0;
   form.min_stock_level = Number(item.min_stock_level) || 0;
   form.notes = item.notes || '';
   showItemModal.value = true;

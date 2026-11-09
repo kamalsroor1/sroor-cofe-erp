@@ -172,10 +172,10 @@
                     <span class="text-[10px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
                   </div>
                   <div
-                    v-if="item.price_wholesale || item.min_selling_price"
+                    v-if="Number(item.min_selling_price) > 0"
                     class="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold mt-0.5"
                   >
-                    {{ $t('pos.min_selling_price') }}: {{ formatMoney(item.min_selling_price || item.price_wholesale) }}
+                    {{ $t('pos.min_selling_price') }}: {{ formatMoney(item.min_selling_price) }}
                   </div>
                 </div>
               </div>

@@ -72,7 +72,10 @@ class Item extends Model
 
     public function getPriceWholesaleAttribute(): string
     {
-        return (string) ($this->min_selling_price ?? $this->selling_price ?? '0.000');
+        $min = (string) ($this->min_selling_price ?? '0.000');
+
+        // 0 means "no floor": fall back to the retail price, never expose 0 or cost.
+        return bccomp($min, '0', 3) > 0 ? $min : (string) ($this->selling_price ?? '0.000');
     }
 
     protected function casts(): array

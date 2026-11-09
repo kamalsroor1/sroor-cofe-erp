@@ -12,7 +12,8 @@ final class ItemDTO
         public readonly ?string $category = null,
         public readonly string $unit = 'كجم',
         public readonly string $cost_price = '0.000',
-        public readonly string $min_selling_price = '0.000',
+        /** null = key not sent. Create stores '0.000' (no floor); update keeps the stored value. Never defaults to cost. */
+        public readonly ?string $min_selling_price = null,
         public readonly string $selling_price = '0.000',
         public readonly string $min_stock_level = '0.000',
         public readonly ?string $notes = null,
@@ -29,7 +30,7 @@ final class ItemDTO
             category: isset($data['category']) && $data['category'] !== '' ? (string) $data['category'] : null,
             unit: (string) ($data['unit'] ?? 'كجم'),
             cost_price: isset($data['cost_price']) ? (string) $data['cost_price'] : '0.000',
-            min_selling_price: isset($data['min_selling_price']) ? (string) $data['min_selling_price'] : (isset($data['cost_price']) ? (string) $data['cost_price'] : '0.000'),
+            min_selling_price: isset($data['min_selling_price']) && $data['min_selling_price'] !== '' ? (string) $data['min_selling_price'] : null,
             selling_price: isset($data['selling_price']) ? (string) $data['selling_price'] : '0.000',
             min_stock_level: isset($data['min_stock_level']) ? (string) $data['min_stock_level'] : '0.000',
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
