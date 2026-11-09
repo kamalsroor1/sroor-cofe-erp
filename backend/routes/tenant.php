@@ -41,13 +41,13 @@ Route::middleware([
     // 1. SPA login page (the SPA signs in through POST /api/v1/auth/login). Named `login`:
     //    bootstrap/app.php redirects guests here.
     Route::middleware('guest')->group(function () {
-        Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+        Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login')->middleware('spa.headers');
     });
 
     // 🌐 Pure Vue 3 SPA Host Route (Dual-Engine Mode)
     Route::get('/spa/{any?}', function () {
         return view('spa');
-    })->where('any', '.*')->name('tenant.spa');
+    })->where('any', '.*')->name('tenant.spa')->middleware('spa.headers');
 
     // NOTE: `/invoices/{id}/print` is intentionally NOT defined here. It falls
     // through to the SPA catch-all, whose InvoicePrintView loads the invoice via
@@ -56,11 +56,11 @@ Route::middleware([
     // 2. Protected SPA shell pages and Blade print pages (read-only)
     Route::middleware('auth')->group(function () {
         // Dashboard (Vue 3 SPA). Named `dashboard`: bootstrap/app.php redirects users here.
-        Route::get('/', fn () => view('app'))->name('dashboard');
+        Route::get('/', fn () => view('app'))->name('dashboard')->middleware('spa.headers');
 
         // POS (Vue 3 Fast Cashier Engine): SPA shell only.
-        Route::get('/pos', [POSController::class, 'index'])->name('pos.index')->middleware('can:pos.access');
-        Route::get('/invoices/create', [POSController::class, 'index'])->name('invoices.create')->middleware('can:pos.access');
+        Route::get('/pos', [POSController::class, 'index'])->name('pos.index')->middleware(['can:pos.access', 'spa.headers']);
+        Route::get('/invoices/create', [POSController::class, 'index'])->name('invoices.create')->middleware(['can:pos.access', 'spa.headers']);
 
         // Blade invoice print pages (thermal receipt / A4) — permission + policy + store access enforced
         Route::get('/invoices/{id}/print/thermal', [InvoicePrintController::class, 'thermal'])->whereNumber('id')->name('invoices.print.thermal')->middleware('can:invoices.view');

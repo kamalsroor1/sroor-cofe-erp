@@ -79,14 +79,14 @@
             $locale = app()->getLocale() ?: 'ar';
             $initialTranslations = $translationsAction->execute($locale);
         @endphp
-        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
         window.spaLocale = '{{ $locale }}';
     </script>
 
     <!-- Vite Scripts (Vue 3 Pure SPA) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
+    <style @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         * {
             font-family: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -115,7 +115,7 @@
             <div style="width: 180px; height: 4px; background: #1e293b; border-radius: 999px; overflow: hidden; position: relative;">
                 <div style="position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 999px; animation: app-splash-loader 1.5s infinite ease-in-out;"></div>
             </div>
-            <style>
+            <style @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
                 @keyframes app-splash-loader {
                     0% { transform: translateX(-100%); }
                     50% { transform: translateX(100%); }

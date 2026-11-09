@@ -55,7 +55,7 @@ $spaShell = function (Request $request) {
     return view('app');
 };
 
-Route::get('/stock-transfers', $spaShell)->name('stock-transfers');
+Route::get('/stock-transfers', $spaShell)->name('stock-transfers')->middleware('spa.headers');
 
 Route::post('/logout', function (Request $request) {
     Auth::guard('web')->logout();
@@ -135,4 +135,5 @@ Route::get('/sw.js', function () {
 // registered in routes/tenant.php (loaded after this file, so the catch-all would shadow them).
 Route::get('/{any?}', $spaShell)
     ->where('any', '(?!api(?:/|$)|reports/print$|items/[^/]+/movements/print$).*')
-    ->name('app');
+    ->name('app')
+    ->middleware('spa.headers');
