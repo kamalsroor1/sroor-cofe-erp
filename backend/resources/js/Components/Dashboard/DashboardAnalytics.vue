@@ -40,7 +40,7 @@ const maxDailySales = computed(() => {
           </p>
         </div>
         <div
-          class="text-start sm:text-left bg-slate-50 dark:bg-slate-900/90 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800"
+          class="text-start sm:text-end bg-slate-50 dark:bg-slate-900/90 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800"
         >
           <span class="text-xs text-slate-500 dark:text-slate-400 font-bold block">{{
             $t('dashboard.avg_invoice_val')

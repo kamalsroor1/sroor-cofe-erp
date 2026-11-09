@@ -14,7 +14,7 @@
         ><span>←</span>
       </router-link>
     </template>
-    <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1">
+    <div class="space-y-2 max-h-[460px] overflow-y-auto ps-1">
       <div
         v-for="item in items"
         :key="item.id"

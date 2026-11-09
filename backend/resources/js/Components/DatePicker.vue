@@ -68,7 +68,7 @@ const clearDate = (e) => {
     :class="{ 'opacity-60 pointer-events-none': disabled }"
   >
     <div class="relative flex items-center">
-      <span v-if="icon" class="absolute right-3.5 text-sm text-slate-400 pointer-events-none z-10">
+      <span v-if="icon" class="absolute start-3.5 text-sm text-slate-400 pointer-events-none z-10">
         {{ icon }}
       </span>
 
@@ -78,7 +78,7 @@ const clearDate = (e) => {
         :placeholder="placeholder || $t('common.select_date')"
         :disabled="disabled"
         readonly
-        class="w-full h-11 pr-10 pl-9 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-xs sm:text-sm cursor-pointer focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary focus:outline-none transition shadow-inner font-tajawal"
+        class="w-full h-11 ps-10 pe-9 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono text-xs sm:text-sm cursor-pointer focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary focus:outline-none transition shadow-inner font-tajawal"
         :class="modelValue ? 'font-bold text-theme-primary text-theme-primary' : ''"
       />
 
@@ -87,7 +87,7 @@ const clearDate = (e) => {
         v-if="clearable && modelValue && !disabled"
         @click="clearDate"
         type="button"
-        class="absolute left-2.5 w-6 h-6 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 flex items-center justify-center text-xs transition z-10 active:scale-90"
+        class="absolute end-2.5 w-6 h-6 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 flex items-center justify-center text-xs transition z-10 active:scale-90"
         :title="$t('common.cancel')"
       >
         ✕

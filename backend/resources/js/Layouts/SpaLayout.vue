@@ -1,7 +1,6 @@
 <template>
   <div
     class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-tajawal selection:bg-theme-primary selection:text-slate-950 transition-colors duration-200"
-    dir="rtl"
   >
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- 🔝 TOP HEADER BAR (Clean, Non-Crowded & Responsive)          -->
@@ -47,7 +46,7 @@
           <Transition name="fade">
             <div
               v-if="isUserDropdownOpen"
-              class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 font-tajawal space-y-1"
+              class="absolute start-0 top-full mt-2 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 font-tajawal space-y-1"
             >
               <div
                 class="p-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1"
@@ -101,6 +100,8 @@
                 <FileText class="w-4 h-4 text-slate-400" />
                 <span>{{ $t('nav.layout.activity_audit') }}</span>
               </router-link>
+
+              <LanguageSwitcher variant="menu" @switched="isUserDropdownOpen = false" />
 
               <div class="border-t border-slate-100 dark:border-slate-800/80 pt-1">
                 <button
@@ -210,8 +211,7 @@
       <Transition name="sidebar-drawer">
         <aside
           v-if="isSidebarOpen"
-          class="fixed inset-y-0 right-0 w-[88vw] max-w-[360px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden"
-          dir="rtl"
+          class="fixed inset-y-0 start-0 w-[88vw] max-w-[360px] bg-white dark:bg-slate-950 border-e border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl z-[9999] font-tajawal md:hidden"
         >
           <!-- Drawer Header -->
           <div
@@ -294,7 +294,9 @@
                         </div>
                       </div>
                     </div>
-                    <ChevronLeft class="w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0" />
+                    <ChevronLeft
+                      class="ltr:rotate-180 w-4 h-4 text-slate-400 group-hover:text-theme-primary transition shrink-0"
+                    />
                   </router-link>
 
                   <!-- Category Card with Drill-Down Sub-menu -->
@@ -350,7 +352,7 @@
                           {{ $t('nav.layout.links_count', { count: section.items?.length || 0 }) }}
                         </span>
                         <ChevronLeft
-                          class="w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 transition"
+                          class="ltr:rotate-180 w-4 h-4 text-slate-400 group-hover:text-theme-primary group-hover:-translate-x-0.5 ltr:group-hover:translate-x-0.5 transition"
                         />
                       </template>
                     </div>
@@ -360,7 +362,10 @@
             </div>
 
             <!-- 📂 LEVEL 2: DRILL-DOWN SUB-MENU (When Category is Active) -->
-            <div v-else class="space-y-3 animate-in fade-in slide-in-from-left duration-200">
+            <div
+              v-else
+              class="space-y-3 animate-in fade-in rtl:slide-in-from-left ltr:slide-in-from-right duration-200"
+            >
               <!-- Back to Modules Bar -->
               <div
                 class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
@@ -370,7 +375,7 @@
                   @click="activeMobileSection = null"
                   class="flex items-center gap-1.5 text-xs font-black text-theme-primary hover:opacity-80 transition cursor-pointer active:scale-95"
                 >
-                  <ChevronRight class="w-4 h-4 stroke-[3]" />
+                  <ChevronRight class="ltr:rotate-180 w-4 h-4 stroke-[3]" />
                   <span>{{ $t('nav.layout.back_to_sections') }}</span>
                 </button>
 
@@ -420,7 +425,7 @@
                     </div>
                     <span class="truncate">{{ item.title }}</span>
                   </div>
-                  <ChevronLeft class="w-4 h-4 opacity-40 shrink-0" />
+                  <ChevronLeft class="ltr:rotate-180 w-4 h-4 opacity-40 shrink-0" />
                 </router-link>
               </div>
             </div>
@@ -471,6 +476,7 @@ import { useAppUpdate } from '../Composables/useAppUpdate';
 import { useDesktopHardware } from '../Composables/useDesktopHardware';
 import { useFormatters } from '../Composables/useFormatters';
 import { useTabsStore } from '../stores/tabs';
+import LanguageSwitcher from '../Components/Common/LanguageSwitcher.vue';
 import DesktopPrinterSettingsModal from '../Components/Common/DesktopPrinterSettingsModal.vue';
 import DesktopTabsBar from '../Components/Navigation/DesktopTabsBar.vue';
 import MobileBottomNav from '../Components/Navigation/MobileBottomNav.vue';
@@ -619,6 +625,10 @@ onUnmounted(() => {
 .sidebar-drawer-enter-from,
 .sidebar-drawer-leave-to {
   transform: translateX(100%);
+}
+[dir='ltr'] .sidebar-drawer-enter-from,
+[dir='ltr'] .sidebar-drawer-leave-to {
+  transform: translateX(-100%);
 }
 
 .fade-enter-active,

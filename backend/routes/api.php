@@ -244,6 +244,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         // User Profile & Preferences
         Route::get('/profile', [ProfileController::class, 'show'])->name('api.profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('api.profile.update');
+        Route::put('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
 
         Route::middleware(DenyQuickLoginToken::class)->group(function () {
             // Admin Settings & Integrations

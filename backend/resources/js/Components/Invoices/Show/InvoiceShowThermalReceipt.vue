@@ -3,7 +3,6 @@
     <div
       id="receipt-print-area"
       class="receipt-card bg-white text-black p-4 shadow-2xl rounded-2xl border border-slate-300 w-[80mm] max-w-[80mm] font-tajawal select-none print:shadow-none print:border-none print:rounded-none print:p-1 print:w-[78mm]"
-      dir="rtl"
     >
       <div class="text-center space-y-1 pb-2 border-b-2 border-dashed border-black">
         <h1 class="text-lg font-black tracking-tight leading-tight text-black">{{ companyInfo?.name }}</h1>

@@ -1,8 +1,14 @@
 import { defineStore } from 'pinia';
 import api from '../Services/api';
 import { applyThemeColor } from '../helpers/themeHelper';
-import { trans } from '../helpers/trans';
+import { trans, setTranslations, loadBundledTranslations } from '../helpers/trans';
+import { applyDocumentLocale, directionFor, isSupportedLocale } from '../helpers/locale';
 import { isCentralAppContext } from '../Services/centralApi';
+
+function initialLocale() {
+    const candidates = [localStorage.getItem('app_locale'), window.spaLocale];
+    return candidates.find(isSupportedLocale) || 'ar';
+}
 
 export const useAppConfigStore = defineStore('appConfig', {
     state: () => ({
@@ -24,7 +30,7 @@ export const useAppConfigStore = defineStore('appConfig', {
         setupProgress: null,
         setupProgressBooted: false,
         notifications: [],
-        locale: localStorage.getItem('app_locale') || 'ar',
+        locale: initialLocale(),
         translations: {},
         theme: localStorage.getItem('theme_preference') || 'dark',
         isLoaded: false,
@@ -32,6 +38,8 @@ export const useAppConfigStore = defineStore('appConfig', {
 
     getters: {
         isDark: (state) => state.theme === 'dark',
+        dir: (state) => directionFor(state.locale),
+        isRtl: (state) => directionFor(state.locale) === 'rtl',
         platformName: (state) =>
             state.system.platform_name || state.system.company_name || trans('common.platform_name'),
         companyName: (state) => state.system.company_name || trans('auth.default_company_name'),
@@ -78,14 +86,15 @@ export const useAppConfigStore = defineStore('appConfig', {
                     this.setupProgress = data.setup_progress ?? null;
                     this.setupProgressBooted = false;
                     if (data.notifications) this.notifications = data.notifications;
-                    if (data.locale) this.locale = data.locale;
+                    // The server resolves users.locale first, so its answer wins over the browser preference.
+                    if (data.locale) this.applyLocale(data.locale);
                     if (data.translations) {
+                        setTranslations(data.translations, data.locale || this.locale, data.translations_hash || '');
                         this.translations = data.translations;
-                        window.spaTranslations = data.translations;
-                    } else if (window.spaTranslations) {
-                        this.translations = window.spaTranslations;
+                    } else {
+                        if (window.spaTranslations) this.translations = window.spaTranslations;
+                        if (data.translations_hash) window.spaTranslationsHash = data.translations_hash;
                     }
-                    if (data.translations_hash) window.spaTranslationsHash = data.translations_hash;
                     if (data.stores) {
                         const { useAuthStore } = await import('./auth');
                         const authStore = useAuthStore();
@@ -126,24 +135,66 @@ export const useAppConfigStore = defineStore('appConfig', {
         },
 
         /**
-         * Fetch translation dictionary for locale
+         * Make `locale` the active one: store state, browser preference and <html lang/dir>.
+         * api.js reads app_locale for X-Locale, so every request after this call is in the new language.
          */
-        async fetchTranslations(locale = 'ar') {
-            // Central mode: the server already injected window.spaTranslations; no tenant API call.
+        applyLocale(locale) {
+            if (!isSupportedLocale(locale)) return;
+            this.locale = locale;
+            localStorage.setItem('app_locale', locale);
+            applyDocumentLocale(locale);
+        },
+
+        /**
+         * Fetch the translation dictionary for `locale` and install it (window.spaTranslations, its
+         * hash and the reactive version) so trans() and computed labels re-render. Never throws: when the
+         * API is unreachable the dictionary bundled with the build is used instead.
+         */
+        async fetchTranslations(locale = this.locale) {
+            if (!isSupportedLocale(locale)) locale = 'ar';
+            // Central mode has no tenant API: use the dictionary bundled with the build.
             if (isCentralAppContext()) {
-                if (typeof window !== 'undefined' && window.spaTranslations) this.translations = window.spaTranslations;
+                setTranslations(await loadBundledTranslations(locale), locale);
+                this.translations = window.spaTranslations;
+                this.applyLocale(locale);
                 return;
             }
             try {
-                const response = await api.get(`/system/translations?locale=${locale}`);
+                localStorage.setItem('app_locale', locale); // X-Locale of this very request
+                const response = await api.get('/system/translations', { params: { locale } });
                 if (response.data?.data) {
+                    setTranslations(response.data.data, locale);
                     this.translations = response.data.data;
-                    this.locale = locale;
-                    localStorage.setItem('app_locale', locale);
+                    this.applyLocale(locale);
                 }
             } catch (error) {
-                console.error('Failed to load translations:', error);
+                // API unreachable or not tenant-resolved yet (connect screen): the build ships the same keys.
+                console.error('Failed to load translations, using the bundled dictionary:', error);
+                setTranslations(await loadBundledTranslations(locale), locale);
+                this.translations = window.spaTranslations;
+                this.applyLocale(locale);
             }
+        },
+
+        /**
+         * User-initiated language switch. The new dictionary is installed first and always sticks
+         * (fetchTranslations falls back to the bundled one, so it cannot fail). Then, for a signed-in
+         * user, the choice is saved server-side (users.locale outranks X-Locale there) and the context
+         * is re-read so server-built strings follow. Resolves to false when saving failed: the UI stays
+         * in the new language and the context refresh is skipped so it cannot revert it.
+         */
+        async switchLocale(locale) {
+            if (!isSupportedLocale(locale) || locale === this.locale) return true;
+            await this.fetchTranslations(locale);
+            const { useAuthStore } = await import('./auth');
+            if (!useAuthStore().isAuthenticated || isCentralAppContext()) return true;
+            try {
+                await api.put('/profile/locale', { locale });
+            } catch {
+                return false;
+            }
+            await this.fetchBootstrapContext().catch(() => {});
+            return true;
         },
 
         /**

@@ -87,7 +87,7 @@ const storeColumns = computed(() => [
 
       <!-- Share Pct -->
       <template #cell-share_pct="{ row }">
-        <span class="font-mono text-left font-black text-theme-primary">{{ row.share_pct }}%</span>
+        <span class="font-mono text-end font-black text-theme-primary">{{ row.share_pct }}%</span>
       </template>
 
       <!-- Mobile Card Custom Slot -->

@@ -73,7 +73,7 @@
           <span>{{ $t('auth.workspace_connecting') }}</span>
         </template>
         <template v-else>
-          <ArrowLeft class="w-5 h-5" />
+          <ArrowLeft class="ltr:rotate-180 w-5 h-5" />
           <span>{{ $t('auth.workspace_continue') }}</span>
         </template>
       </button>

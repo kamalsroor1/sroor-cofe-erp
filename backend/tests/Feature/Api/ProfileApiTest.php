@@ -166,4 +166,32 @@ class ProfileApiTest extends TenantTestCase
             ->assertOk()
             ->assertJsonPath('data.name', 'مستخدم مستأجر آخر');
     }
+
+    public function test_locale_endpoint_requires_authentication(): void
+    {
+        $this->putJson('/api/v1/profile/locale', ['locale' => 'en'], $this->tenantGuestHeaders($this->tenant))
+            ->assertStatus(401);
+    }
+
+    public function test_user_can_save_preferred_locale_without_touching_the_rest_of_the_profile(): void
+    {
+        $this->putJson('/api/v1/profile/locale', ['locale' => 'en'], $this->headers)
+            ->assertStatus(200)
+            ->assertJson(['success' => true, 'data' => ['locale' => 'en']]);
+
+        $fresh = $this->inTenant($this->tenant, fn (): User => User::findOrFail($this->user->id));
+        $this->assertSame('en', $fresh->locale);
+        $this->assertSame('كمال سرور', $fresh->name);
+        $this->assertSame(self::PROFILE_PHONE, $fresh->phone);
+    }
+
+    public function test_locale_endpoint_rejects_unsupported_or_missing_locale(): void
+    {
+        $this->putJson('/api/v1/profile/locale', ['locale' => 'fr'], $this->headers)
+            ->assertStatus(422)->assertJsonValidationErrors('locale');
+        $this->putJson('/api/v1/profile/locale', [], $this->headers)
+            ->assertStatus(422)->assertJsonValidationErrors('locale');
+
+        $this->assertNull($this->inTenant($this->tenant, fn () => User::findOrFail($this->user->id)->locale));
+    }
 }

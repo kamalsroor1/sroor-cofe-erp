@@ -136,6 +136,14 @@ textarea,
     filter: blur(2px) !important;
 }
 
+[dir='ltr'] .page-enter-from {
+    transform: translateX(-28px) scale(0.99) !important;
+}
+
+[dir='ltr'] .page-leave-to {
+    transform: translateX(20px) scale(0.99) !important;
+}
+
 .page-content-enter {
     animation: nativePageSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -151,7 +159,7 @@ textarea,
     }
 }
 
-/* 1. Sidebar Drawer Slide (RTL Right to Left) */
+/* 1. Sidebar Drawer Slide (from the start edge: right in RTL, left in LTR) */
 .sidebar-drawer-enter-active,
 .sidebar-drawer-leave-active {
     transition:
@@ -163,6 +171,10 @@ textarea,
 .sidebar-drawer-leave-to {
     transform: translateX(100%) !important;
     opacity: 0.4 !important;
+}
+[dir='ltr'] .sidebar-drawer-enter-from,
+[dir='ltr'] .sidebar-drawer-leave-to {
+    transform: translateX(-100%) !important;
 }
 .sidebar-drawer-enter-to,
 .sidebar-drawer-leave-from {
@@ -229,6 +241,14 @@ textarea,
     opacity: 0 !important;
     transform: translateX(-16px) scale(0.99) !important;
     filter: blur(2px) !important;
+}
+
+[dir='ltr'] .settings-slide-enter-from {
+    transform: translateX(-24px) scale(0.985) !important;
+}
+
+[dir='ltr'] .settings-slide-leave-to {
+    transform: translateX(16px) scale(0.99) !important;
 }
 
 .settings-crossfade-enter-active {

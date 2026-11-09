@@ -2,7 +2,6 @@
   <header
     v-if="isDesktop"
     class="h-9 w-full shrink-0 sticky top-0 bg-slate-950 text-slate-300 border-b border-slate-800/80 flex items-center justify-between px-3 select-none text-xs font-tajawal z-[99999] drag-region"
-    dir="rtl"
   >
     <!-- ☕ Right Side: App Brand & Active Store Context -->
     <div class="flex items-center gap-2.5 shrink-0 no-drag">
@@ -18,13 +17,13 @@
         <select
           :value="authStore.currentStore?.id"
           @change="handleStoreSwitch($event.target.value)"
-          class="h-6 pr-6 pl-2 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/30 text-theme-primary text-[10px] font-bold rounded-lg focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
+          class="h-6 ps-6 pe-2 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/30 text-theme-primary text-[10px] font-bold rounded-lg focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
         >
           <option v-for="s in authStore.stores" :key="s.id" :value="s.id" class="bg-slate-900 text-white">
             🏬 {{ s.name }}
           </option>
         </select>
-        <ChevronDown class="w-3 h-3 text-theme-primary absolute right-1.5 pointer-events-none" />
+        <ChevronDown class="w-3 h-3 text-theme-primary absolute start-1.5 pointer-events-none" />
       </div>
       <router-link
         v-else

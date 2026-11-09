@@ -1,7 +1,6 @@
 <template>
   <nav
     class="h-9 w-full shrink-0 bg-slate-200/90 dark:bg-slate-950 border-b border-slate-300/80 dark:border-slate-800 flex items-center justify-between px-2 select-none text-xs font-tajawal z-30 shadow-2xs"
-    dir="rtl"
   >
     <!-- 🗂️ Scrollable Tabs List Container -->
     <div
@@ -82,7 +81,6 @@
         v-if="contextMenu.visible"
         :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
         class="fixed z-[999999] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 w-48 text-xs font-tajawal space-y-0.5 animate-in fade-in zoom-in-95 duration-100"
-        dir="rtl"
         @click.stop
       >
         <button

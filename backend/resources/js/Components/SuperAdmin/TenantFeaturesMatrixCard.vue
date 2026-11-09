@@ -15,7 +15,7 @@
     </div>
 
     <!-- Feature Matrix List -->
-    <div class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+    <div class="space-y-2.5 max-h-[420px] overflow-y-auto ps-1">
       <div
         v-for="feat in features"
         :key="feat.key"

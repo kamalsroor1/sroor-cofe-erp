@@ -7,7 +7,7 @@
       :class="{ 'text-rose-500': hasError }"
     >
       {{ label }}
-      <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+      <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
     </label>
 
     <!-- Dropzone Box -->
@@ -46,7 +46,7 @@
         <button
           type="button"
           @click.stop="clearFile"
-          class="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full shadow-lg hover:scale-110 transition cursor-pointer"
+          class="absolute -top-2 -start-2 p-1 bg-rose-500 text-white rounded-full shadow-lg hover:scale-110 transition cursor-pointer"
           title="حذف الملف"
         >
           <X class="w-3.5 h-3.5" />

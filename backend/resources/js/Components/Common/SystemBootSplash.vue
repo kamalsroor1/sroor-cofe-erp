@@ -5,11 +5,9 @@
       class="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-slate-950 text-white font-tajawal select-none px-4"
     >
       <!-- Background Ambient Glow -->
+      <div class="absolute w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none -top-20 -end-20"></div>
       <div
-        class="absolute w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none -top-20 -left-20"
-      ></div>
-      <div
-        class="absolute w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none -bottom-20 -right-20"
+        class="absolute w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none -bottom-20 -start-20"
       ></div>
 
       <!-- Main Central Card -->

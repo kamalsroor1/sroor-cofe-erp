@@ -77,7 +77,7 @@ const itemColumns = computed(() => [
 
       <!-- Margin -->
       <template #cell-margin="{ row }">
-        <span class="font-mono text-left font-bold text-theme-primary">{{ row.margin }}%</span>
+        <span class="font-mono text-end font-bold text-theme-primary">{{ row.margin }}%</span>
       </template>
 
       <!-- Mobile Card Custom Slot -->
@@ -106,7 +106,7 @@ const itemColumns = computed(() => [
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.sales_summary') }}</span>
               <span class="font-black text-slate-900 dark:text-white">{{ formatMoney(row.total_revenue) }}</span>
             </div>
-            <div class="text-left">
+            <div class="text-end">
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.gross_profit_trade') }}</span>
               <span class="font-black text-emerald-600 dark:text-emerald-400">{{ formatMoney(row.profit) }}</span>
             </div>

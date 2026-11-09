@@ -2,7 +2,7 @@
   <div class="relative w-full flex items-center" :class="wrapperClass">
     <!-- Leading Search Icon -->
     <Search
-      class="w-4 h-4 absolute right-3.5 text-slate-400 dark:text-slate-500 pointer-events-none transition-colors"
+      class="w-4 h-4 absolute start-3.5 text-slate-400 dark:text-slate-500 pointer-events-none transition-colors"
     />
 
     <!-- Native Search Input -->
@@ -12,7 +12,7 @@
       type="text"
       :placeholder="placeholder || 'بحث سريع...'"
       :disabled="disabled"
-      class="w-full min-h-[44px] pr-10 pl-10 py-2.5 text-base sm:text-sm font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 shadow-2xs"
+      class="w-full min-h-[44px] ps-10 pe-10 py-2.5 text-base sm:text-sm font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 outline-hidden hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 shadow-2xs"
       :class="inputClass"
       v-bind="$attrs"
       @keydown.esc="clear"
@@ -20,7 +20,7 @@
     />
 
     <!-- Trailing Action: Loading Spinner or Instant Clear Button -->
-    <div class="absolute left-3 flex items-center">
+    <div class="absolute end-3 flex items-center">
       <Loader2 v-if="loading" class="w-4 h-4 animate-spin text-theme-primary" />
       <button
         v-else-if="model"

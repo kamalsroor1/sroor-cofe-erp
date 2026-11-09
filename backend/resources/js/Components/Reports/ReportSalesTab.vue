@@ -62,23 +62,23 @@ const { formatMoney } = useMoney();
       </h3>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-right text-xs">
+        <table class="w-full text-start text-xs">
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
             <tr class="py-2.5">
               <td class="py-3 font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.gross_sales') }}</td>
-              <td class="py-3 font-mono font-bold text-slate-900 dark:text-white text-left">
+              <td class="py-3 font-mono font-bold text-slate-900 dark:text-white text-end">
                 {{ formatMoney(summary.total_sales) }} {{ currencyLabel }}
               </td>
             </tr>
             <tr class="py-2.5">
               <td class="py-3 font-bold text-slate-700 dark:text-slate-300">{{ $t('reports.cogs_deducted') }}</td>
-              <td class="py-3 font-mono font-bold text-rose-600 dark:text-rose-400 text-left">
+              <td class="py-3 font-mono font-bold text-rose-600 dark:text-rose-400 text-end">
                 - {{ formatMoney(summary.total_cogs) }} {{ currencyLabel }}
               </td>
             </tr>
             <tr class="py-2.5 bg-slate-50 dark:bg-slate-800/50">
               <td class="py-3 font-black text-theme-primary">{{ $t('reports.gross_profit_trade') }}</td>
-              <td class="py-3 font-mono font-black text-theme-primary text-left">
+              <td class="py-3 font-mono font-black text-theme-primary text-end">
                 {{ formatMoney(summary.gross_profit) }} {{ currencyLabel }}
               </td>
             </tr>
@@ -86,7 +86,7 @@ const { formatMoney } = useMoney();
               <td class="py-3 font-bold text-slate-700 dark:text-slate-300">
                 {{ $t('reports.operating_expenses_deducted') }}
               </td>
-              <td class="py-3 font-mono font-bold text-rose-600 dark:text-rose-400 text-left">
+              <td class="py-3 font-mono font-bold text-rose-600 dark:text-rose-400 text-end">
                 - {{ formatMoney(summary.total_expenses) }} {{ currencyLabel }}
               </td>
             </tr>
@@ -94,7 +94,7 @@ const { formatMoney } = useMoney();
               <td class="py-3 font-black text-emerald-600 dark:text-emerald-400 text-sm">
                 {{ $t('reports.net_operating_profit') }}
               </td>
-              <td class="py-3 font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm text-left">
+              <td class="py-3 font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm text-end">
                 {{ formatMoney(summary.net_profit) }} {{ currencyLabel }}
               </td>
             </tr>

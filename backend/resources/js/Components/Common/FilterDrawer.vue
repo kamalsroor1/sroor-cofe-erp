@@ -8,11 +8,7 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 overflow-hidden font-tajawal select-none"
-        :dir="$i18n?.locale === 'en' ? 'ltr' : 'rtl'"
-      >
+      <div v-if="isOpen" class="fixed inset-0 z-50 overflow-hidden font-tajawal select-none">
         <!-- Backdrop -->
         <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" @click="close" />
 

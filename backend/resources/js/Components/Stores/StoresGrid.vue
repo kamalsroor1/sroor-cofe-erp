@@ -21,7 +21,7 @@
         <!-- Main Branch Ambient Glow -->
         <div
           v-if="store.is_main"
-          class="absolute -top-12 -right-12 w-32 h-32 bg-theme-light rounded-full blur-2xl pointer-events-none"
+          class="absolute -top-12 -start-12 w-32 h-32 bg-theme-light rounded-full blur-2xl pointer-events-none"
         ></div>
 
         <div>

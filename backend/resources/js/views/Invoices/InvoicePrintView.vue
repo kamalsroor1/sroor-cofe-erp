@@ -1,7 +1,6 @@
 <template>
   <div
     class="print-wrapper min-h-screen bg-slate-200 dark:bg-slate-950 py-6 px-2 font-tajawal text-slate-900 select-none flex flex-col items-center justify-start print:bg-white print:p-0 print:m-0 print:min-h-0"
-    dir="rtl"
   >
     <!-- Action Bar (Hidden on Print) -->
     <div
@@ -21,7 +20,7 @@
         @click="goBack"
         class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
       >
-        <ArrowRight class="w-4 h-4" />
+        <ArrowRight class="ltr:rotate-180 w-4 h-4" />
         <span>{{ $t('common.back') }}</span>
       </button>
     </div>

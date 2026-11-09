@@ -90,7 +90,7 @@ const customerColumns = computed(() => [
       <!-- Current Balance -->
       <template #cell-current_balance="{ row }">
         <span
-          class="font-mono text-left font-black"
+          class="font-mono text-end font-black"
           :class="row.current_balance > 0 ? 'text-theme-primary' : 'text-slate-500 dark:text-slate-400'"
         >
           {{ formatMoney(row.current_balance) }} {{ currencyLabel }}
@@ -107,7 +107,7 @@ const customerColumns = computed(() => [
               <div class="font-black text-xs text-slate-900 dark:text-white">{{ row.name }}</div>
               <div class="text-[10px] text-slate-400 font-mono">{{ row.phone || '—' }}</div>
             </div>
-            <div class="text-left">
+            <div class="text-end">
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.cumulative_balance') }}</span>
               <span
                 class="font-mono font-black text-xs"
@@ -127,7 +127,7 @@ const customerColumns = computed(() => [
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.paid_in_period') }}</span>
               <span class="font-black text-emerald-600 dark:text-emerald-400">{{ formatMoney(row.total_paid) }}</span>
             </div>
-            <div class="text-left">
+            <div class="text-end">
               <span class="text-[10px] text-slate-400 block font-tajawal">{{ $t('reports.remaining_in_period') }}</span>
               <span class="font-black text-rose-600 dark:text-rose-400">{{
                 formatMoney(row.total_debt_in_period)

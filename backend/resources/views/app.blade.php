@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="dark">
+@php
+    // The shell's language: the server locale (tenant is not initialised here, so this is the app default).
+    // A saved browser preference is applied by the early script below and by the SPA boot.
+    $locale = in_array(app()->getLocale(), \App\Actions\System\GetTranslationsAction::SUPPORTED_LOCALES, true) ? app()->getLocale() : 'ar';
+    $dir = $locale === 'ar' ? 'rtl' : 'ltr';
+@endphp
+<html lang="{{ $locale }}" dir="{{ $dir }}" class="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -31,6 +37,11 @@
     <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         (function() {
             try {
+                const storedLocale = localStorage.getItem('app_locale');
+                if (storedLocale === 'ar' || storedLocale === 'en') {
+                    document.documentElement.setAttribute('lang', storedLocale);
+                    document.documentElement.setAttribute('dir', storedLocale === 'ar' ? 'rtl' : 'ltr');
+                }
                 const storedTheme = localStorage.getItem('theme_preference') || 'dark';
                 if (storedTheme === 'dark') {
                     document.documentElement.classList.add('dark');
@@ -74,7 +85,6 @@
     <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         @php
             $translationsAction = app(\App\Actions\System\GetTranslationsAction::class);
-            $locale = app()->getLocale() ?: 'ar';
             $initialTranslations = $translationsAction->execute($locale);
         @endphp
         window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) !!};
@@ -98,7 +108,7 @@
 <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-amber-500 selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
     <div id="app">
         <!-- Instant Branded Pre-Vue Splash Screen (Hidden in Electron to avoid double splash) -->
-        <div id="pre-vue-splash" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;" dir="rtl">
+        <div id="pre-vue-splash" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #020617; color: #f8fafc; z-index: 99999; font-family: 'Cairo', 'Tajawal', sans-serif;">
             <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35); margin-bottom: 20px;">
                 {{-- Neutral storefront glyph (lucide "store"): the product is a generic retail SaaS. --}}
                 <svg style="width: 40px; height: 40px; stroke: #020617; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24" aria-hidden="true">
@@ -112,7 +122,7 @@
             <h1 style="font-size: 20px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -0.5px; color: #ffffff;">{{ $platformBrand->name }}</h1>
             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px 0; font-weight: 600;">{{ __('common.splash.subtitle') }}</p>
             <div style="width: 180px; height: 4px; background: #1e293b; border-radius: 999px; overflow: hidden; position: relative;">
-                <div style="position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 999px; animation: app-splash-loader 1.5s infinite ease-in-out;"></div>
+                <div style="position: absolute; top: 0; inset-inline-start: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 999px; animation: app-splash-loader 1.5s infinite ease-in-out;"></div>
             </div>
             <style>
                 @keyframes app-splash-loader {

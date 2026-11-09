@@ -172,7 +172,7 @@ onUnmounted(() => {
     <!-- Dropdown Menu -->
     <div
       v-if="isOpen"
-      class="absolute z-50 right-0 left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      class="absolute z-50 start-0 end-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
     >
       <!-- Search Bar in Dropdown -->
       <div
@@ -185,10 +185,10 @@ onUnmounted(() => {
             v-model="searchQuery"
             type="text"
             :placeholder="searchPlaceholder || $t('common.search_in_list')"
-            class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary transition shadow-inner font-tajawal"
+            class="w-full ps-8 pe-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary transition shadow-inner font-tajawal"
             @keydown.stop
           />
-          <span class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 text-xs pointer-events-none">
+          <span class="absolute inset-y-0 start-0 ps-2.5 flex items-center text-slate-400 text-xs pointer-events-none">
             🔍
           </span>
         </div>

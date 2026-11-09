@@ -1,7 +1,6 @@
 <template>
   <div
     class="h-screen max-h-screen w-screen max-w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans selection:bg-theme-primary selection:text-white flex flex-col"
-    dir="rtl"
   >
     <!-- 0. 🖥️ Native Desktop Frameless Titlebar (Visible ONLY when running in Electron) -->
     <DesktopTitlebar @open-hardware="isDesktopHardwareOpen = true" @open-shortcuts="isDesktopShortcutsOpen = true" />
@@ -57,6 +56,7 @@ import { useAppConfigStore } from './stores/appConfig';
 import { useAuthStore } from './stores/auth';
 import { useTabsStore } from './stores/tabs';
 import { useAppUpdate } from './Composables/useAppUpdate';
+import { useLocaleSync } from './Composables/useLocale';
 import { useDesktopHardware } from './Composables/useDesktopHardware';
 import FeatureGate from './Components/FeatureGate.vue';
 import SpaLayout from './Layouts/SpaLayout.vue';
@@ -68,6 +68,7 @@ import DesktopPrinterSettingsModal from './Components/Common/DesktopPrinterSetti
 import DesktopShortcutsModal from './Components/Common/DesktopShortcutsModal.vue';
 
 const route = useRoute();
+useLocaleSync();
 const appConfigStore = useAppConfigStore();
 const authStore = useAuthStore();
 useTabsStore(); // instantiate the tabs store at boot (side effect kept; the binding was unused)
@@ -120,7 +121,7 @@ onMounted(async () => {
       // The server already inlined the dictionary; no extra request for guests.
       appConfigStore.translations = window.spaTranslations;
     } else {
-      await appConfigStore.fetchTranslations();
+      await appConfigStore.fetchTranslations().catch(() => {});
     }
   } catch (error) {
     console.error('Failed to initialize bootstrap context:', error);

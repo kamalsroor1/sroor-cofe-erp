@@ -52,7 +52,7 @@ const formatTotal = (qty, price) => {
 
   <!-- Desktop Table -->
   <div class="hidden md:block overflow-x-auto pt-2">
-    <table class="w-full text-right text-xs">
+    <table class="w-full text-start text-xs">
       <thead>
         <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
           <th class="pb-2.5">{{ $t('inventory.item_name') }}</th>
@@ -66,7 +66,7 @@ const formatTotal = (qty, price) => {
         <tr v-for="(it, itIdx) in items" :key="it.item_id">
           <td class="py-3 font-bold text-slate-900 dark:text-white font-tajawal">
             {{ it.name }}
-            <span class="text-[10px] text-slate-400 dark:text-slate-500 mr-1">({{ it.unit }})</span>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 ms-1">({{ it.unit }})</span>
           </td>
 
           <td class="py-3">

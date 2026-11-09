@@ -121,7 +121,6 @@ watch(
       <div
         v-if="show"
         class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-tajawal select-none"
-        dir="rtl"
         @click="close"
       >
         <!-- Sheet Panel Container -->
@@ -175,7 +174,7 @@ watch(
           </div>
 
           <!-- Body / Content (Scrollable) -->
-          <div class="flex-1 overflow-y-auto pr-0.5">
+          <div class="flex-1 overflow-y-auto ps-0.5">
             <slot />
           </div>
 

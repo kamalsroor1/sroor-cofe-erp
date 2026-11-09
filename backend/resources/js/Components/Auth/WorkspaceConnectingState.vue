@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 text-center font-sans py-4" dir="rtl">
+  <div class="space-y-6 text-center font-sans py-4">
     <!-- Animated Glowing Pulse Avatar / Logo -->
     <div class="relative inline-flex items-center justify-center">
       <div class="absolute inset-0 rounded-3xl bg-theme-primary/20 animate-ping"></div>
