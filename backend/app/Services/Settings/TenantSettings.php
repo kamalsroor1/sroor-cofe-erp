@@ -105,6 +105,19 @@ final class TenantSettings
         return $this->pick(self::KEY_CURRENCY, self::DEFAULT_CURRENCY, self::readableCurrencies());
     }
 
+    /**
+     * Display symbol of the tenant currency in the active locale (`common.currencies.<CODE>`:
+     * 'ج.م' / 'EGP'). Falls back to the ISO code when no symbol is translated.
+     */
+    public function currencyLabel(): string
+    {
+        $code = $this->currency();
+        $key = 'common.currencies.'.$code;
+        $label = __($key);
+
+        return is_string($label) && $label !== $key ? $label : $code;
+    }
+
     /** Display decimals of the tenant currency (KWD = 3, the others 2). */
     public function currencyDecimals(): int
     {

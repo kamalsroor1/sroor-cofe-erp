@@ -80,10 +80,10 @@
                   </span>
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-bold text-slate-900 dark:text-slate-200">
-                  {{ formatMoney(inv.net_total) }} {{ $t('common.currency') }}
+                  {{ formatMoney(inv.net_total) }} {{ currencyLabel }}
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black text-emerald-500 dark:text-emerald-400">
-                  {{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}
+                  {{ formatMoney(inv.paid_amount) }} {{ currencyLabel }}
                 </td>
                 <td class="py-3.5 px-4 text-center">
                   <span
@@ -111,7 +111,7 @@
               </div>
               <div class="text-end">
                 <span class="text-sm font-black font-mono text-emerald-500 dark:text-emerald-400"
-                  >{{ formatMoney(inv.paid_amount) }} {{ $t('common.currency') }}</span
+                  >{{ formatMoney(inv.paid_amount) }} {{ currencyLabel }}</span
                 >
                 <span class="text-[10px] text-slate-400 block font-mono">{{ inv.time || '—' }}</span>
               </div>
@@ -180,7 +180,7 @@
                   </span>
                 </td>
                 <td class="py-3.5 px-4 text-end font-mono font-black text-rose-500 dark:text-rose-400">
-                  {{ formatMoney(e.amount) }} {{ $t('common.currency') }}
+                  {{ formatMoney(e.amount) }} {{ currencyLabel }}
                 </td>
               </tr>
             </tbody>
@@ -202,7 +202,7 @@
               </div>
               <div class="text-end">
                 <span class="text-sm font-black font-mono text-rose-500 dark:text-rose-400"
-                  >{{ formatMoney(e.amount) }} {{ $t('common.currency') }}</span
+                  >{{ formatMoney(e.amount) }} {{ currencyLabel }}</span
                 >
                 <span class="text-[10px] font-bold block text-slate-400">{{
                   formatPaymentMethod(e.payment_method)
@@ -230,7 +230,7 @@ import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({

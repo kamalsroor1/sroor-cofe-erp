@@ -68,7 +68,7 @@
       </div>
       <div class="text-xl font-black text-purple-600 dark:text-purple-400 font-mono">
         {{ formatMoney(metrics.total_estimated_cost || 0) }}
-        <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400">{{ currencyLabel }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold">{{
         $t('purchases.estimated_reorder_sub')
@@ -82,7 +82,7 @@ import { AlertTriangle, Clock, ShieldCheck, Sparkles } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   metrics: { type: Object, default: () => ({}) },

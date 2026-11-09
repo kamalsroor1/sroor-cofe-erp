@@ -176,7 +176,7 @@
               <span class="text-[10px] text-slate-400 block">{{ $t('inventory.retail_price') }}:</span>
               <span class="font-mono font-black text-sm text-emerald-500">
                 {{ formatMoney(item.selling_price) }}
-                <span class="text-[10px] font-normal font-tajawal">{{ $t('common.currency') }}</span>
+                <span class="text-[10px] font-normal font-tajawal">{{ currencyLabel }}</span>
               </span>
               <div class="text-[10px] text-purple-500 dark:text-purple-400 font-mono mt-0.5">
                 {{ $t('inventory.wholesale_price') }}: {{ formatMoney(item.min_selling_price || item.selling_price) }}
@@ -273,7 +273,7 @@ import { trans } from '../../helpers/trans';
 import { useAuthStore } from '../../stores/auth';
 import { useAppConfigStore } from '../../stores/appConfig';
 
-const { formatMoney, formatQty } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, default: () => [] },

@@ -16,6 +16,7 @@ use App\Http\Requests\OpenShiftRequest;
 use App\Http\Resources\CashShiftResource;
 use App\Models\CashShift;
 use App\Models\User;
+use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -138,7 +139,7 @@ final class ShiftController extends Controller
         $closedShift = $this->closeShiftAction->execute($dto);
 
         $diff = (float) $closedShift->cash_difference;
-        $currency = __('common.currency');
+        $currency = app(TenantSettings::class)->currencyLabel();
         $diffStatus = $diff == 0
             ? __('treasury.cash_diff_matched')
             : ($diff > 0

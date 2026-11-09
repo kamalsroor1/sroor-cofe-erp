@@ -55,14 +55,14 @@
       <!-- Cost Price -->
       <template #cell-cost_price="{ row }">
         <span class="font-mono text-slate-700 dark:text-slate-300">
-          {{ formatMoney(row.cost_price) }} {{ $t('common.currency') }}
+          {{ formatMoney(row.cost_price) }} {{ currencyLabel }}
         </span>
       </template>
 
       <!-- Total Valuation -->
       <template #cell-total_valuation="{ row }">
         <span class="font-mono font-bold text-theme-primary">
-          {{ formatMoney(row.total_valuation) }} {{ $t('common.currency') }}
+          {{ formatMoney(row.total_valuation) }} {{ currencyLabel }}
         </span>
       </template>
 
@@ -100,7 +100,7 @@ import { useFormatters } from '@/Composables/useFormatters';
 import { useTrans } from '@/Composables/useTrans';
 
 const { t } = useTrans();
-const { formatMoney, formatQty } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   stocks: { type: Array, default: () => [] },

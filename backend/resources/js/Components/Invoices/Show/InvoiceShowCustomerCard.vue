@@ -31,7 +31,7 @@
       <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
         <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('invoices.current_balance_after') }}</span>
         <span class="font-mono font-black text-sm" :class="customerBalance > 0 ? 'text-rose-500' : 'text-emerald-500'">
-          {{ formatMoney(customerBalance) }} {{ $t('common.currency') }}
+          {{ formatMoney(customerBalance) }} {{ currencyLabel }}
         </span>
       </div>
     </div>
@@ -41,7 +41,7 @@
 <script setup>
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   customer: { type: Object, default: () => ({}) },

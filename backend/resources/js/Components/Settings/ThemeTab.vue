@@ -16,6 +16,9 @@ import {
 } from 'lucide-vue-next';
 import { useTheme } from '@/Composables/useTheme';
 import { trans } from '@/helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 const props = defineProps({
   form: {
@@ -335,7 +338,7 @@ const onHexTextInput = (val) => {
                 <Zap class="w-4 h-4 text-theme-primary" />
               </div>
               <div class="text-2xl font-black font-mono text-theme-primary">
-                24,850.00 <span class="text-xs font-bold text-slate-500">{{ $t('common.currency') }}</span>
+                24,850.00 <span class="text-xs font-bold text-slate-500">{{ currencyLabel }}</span>
               </div>
             </div>
 

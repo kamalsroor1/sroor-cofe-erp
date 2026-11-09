@@ -113,25 +113,23 @@
       <div class="py-2 border-b-2 border-dashed border-black text-xs space-y-1 text-black">
         <div class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.subtotal') }}:</span>
-          <span class="font-mono font-bold">{{ formatMoney(calculatedSubtotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">{{ formatMoney(calculatedSubtotal) }} {{ currencyLabel }}</span>
         </div>
 
         <div v-if="calculatedDiscount > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.discount') }}:</span>
-          <span class="font-mono font-bold">- {{ formatMoney(calculatedDiscount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">- {{ formatMoney(calculatedDiscount) }} {{ currencyLabel }}</span>
         </div>
 
         <div v-if="calculatedShipping > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.extra_fees_shipping') }}</span>
-          <span class="font-mono font-bold">+ {{ formatMoney(calculatedShipping) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">+ {{ formatMoney(calculatedShipping) }} {{ currencyLabel }}</span>
         </div>
 
         <!-- GIANT NET TOTAL -->
         <div class="flex justify-between items-center text-sm font-black pt-1.5 border-t-2 border-black">
           <span class="text-sm font-black">{{ $t('invoices.net_total') }}:</span>
-          <span class="font-mono text-base font-black"
-            >{{ formatMoney(calculatedNetTotal) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono text-base font-black">{{ formatMoney(calculatedNetTotal) }} {{ currencyLabel }}</span>
         </div>
 
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
@@ -141,7 +139,7 @@
 
         <div v-if="parseFloat(invoice.paid_amount) > 0" class="flex justify-between items-center text-xs">
           <span>{{ $t('invoices.amount_paid_label') }}</span>
-          <span class="font-mono font-black">{{ formatMoney(invoice.paid_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-black">{{ formatMoney(invoice.paid_amount) }} {{ currencyLabel }}</span>
         </div>
 
         <div
@@ -149,9 +147,7 @@
           class="flex justify-between items-center text-xs font-bold"
         >
           <span>{{ $t('invoices.amount_remaining_label') }}</span>
-          <span class="font-mono font-black"
-            >{{ formatMoney(invoice.remaining_amount) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono font-black">{{ formatMoney(invoice.remaining_amount) }} {{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -189,7 +185,7 @@ import { useTrans } from '../../Composables/useTrans';
 const route = useRoute();
 const router = useRouter();
 const appConfigStore = useAppConfigStore();
-const { formatMoney, formatTime } = useFormatters();
+const { formatMoney, formatTime, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 const { error, errorMessage, clearError, setError } = useLoadError();

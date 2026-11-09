@@ -24,7 +24,7 @@
       </div>
       <div class="text-2xl font-black text-rose-500 font-mono">
         {{ formatMoney(metrics.total_month || 0) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold font-tajawal">
         {{ $t('expenses.total_month_sub') }}
@@ -45,7 +45,7 @@
       </div>
       <div class="text-2xl font-black text-theme-primary font-mono">
         {{ formatMoney(metrics.total_cash || 0) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold font-tajawal">
         {{ $t('expenses.cash_expenses_sub') }}
@@ -66,7 +66,7 @@
       </div>
       <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
         {{ formatMoney(metrics.total_filtered || 0) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold font-tajawal">
         {{ $t('expenses.filtered_total_sub') }}
@@ -80,7 +80,7 @@ import { TrendingDown, Wallet, Receipt } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   metrics: { type: Object, default: () => ({}) },

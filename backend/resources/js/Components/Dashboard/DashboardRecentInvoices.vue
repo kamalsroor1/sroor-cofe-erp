@@ -34,7 +34,7 @@
       <template #cell-net_total="{ row }">
         <span class="font-bold text-slate-900 dark:text-white font-mono">
           {{ formatMoney(row.net_total) }}
-          <span class="text-[10px] font-sans text-slate-400">{{ $t('common.currency') }}</span>
+          <span class="text-[10px] font-sans text-slate-400">{{ currencyLabel }}</span>
         </span>
       </template>
 
@@ -67,7 +67,7 @@ import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({ invoices: { type: Array, default: () => [] } });

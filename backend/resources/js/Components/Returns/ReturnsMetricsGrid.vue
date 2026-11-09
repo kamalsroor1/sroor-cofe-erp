@@ -16,7 +16,7 @@
         </div>
         <div class="text-2xl font-black text-rose-500 dark:text-rose-400 font-mono">
           {{ formatMoney(summary.total_value || 0) }}
-          <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-slate-400">{{ $t('returns.total_returns_value_sub') }}</span>
       </div>
@@ -73,6 +73,9 @@
 <script setup>
 import { TrendingDown, RotateCcw, RotateCw, FileText } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   summary: { type: Object, default: () => ({ total_value: 0, sales_count: 0, purchase_count: 0, total_count: 0 }) },

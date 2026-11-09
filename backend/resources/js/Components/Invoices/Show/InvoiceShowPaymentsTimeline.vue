@@ -22,7 +22,7 @@
             </div>
           </div>
           <div class="font-mono font-black text-emerald-500 text-sm">
-            +{{ formatMoney(p.amount) }} {{ $t('common.currency') }}
+            +{{ formatMoney(p.amount) }} {{ currencyLabel }}
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
 <script setup>
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   invoice: { type: Object, default: null },

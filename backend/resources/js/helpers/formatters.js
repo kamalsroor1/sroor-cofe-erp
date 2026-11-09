@@ -183,3 +183,41 @@ export function formatMoneyAmount(value, { decimals = 2, fixed = false } = {}) {
     }
     return formatDecimal(rounded, places);
 }
+
+const DEFAULT_CURRENCY_CODE = 'EGP';
+
+/** system.currency (ISO 4217 alpha-3) -> upper-case code; anything else -> the platform default. */
+export function resolveCurrencyCode(code) {
+    const normalized = String(code || '')
+        .trim()
+        .toUpperCase();
+    return /^[A-Z]{3}$/.test(normalized) ? normalized : DEFAULT_CURRENCY_CODE;
+}
+
+/**
+ * Display symbol of a currency: the `common.currencies.<CODE>` translation, or the code itself when
+ * the key is missing (a translator returns the key untouched when it has no entry).
+ *
+ * @param {string} code
+ * @param {(key: string) => string} translate
+ */
+export function resolveCurrencyLabel(code, translate) {
+    const resolved = resolveCurrencyCode(code);
+    const key = `common.currencies.${resolved}`;
+    const text = typeof translate === 'function' ? translate(key) : key;
+    return typeof text === 'string' && text !== '' && text !== key ? text : resolved;
+}
+
+/**
+ * Amount + currency symbol. Arabic reads "150 ج.م" (symbol after), English "EGP 150" (symbol before).
+ *
+ * @param {string|number|bigint} value
+ * @param {{ decimals?: number, fixed?: boolean, label?: string, locale?: string }} [options]
+ */
+export function formatCurrencyAmount(value, { label = DEFAULT_CURRENCY_CODE, locale, ...moneyOptions } = {}) {
+    const amount = formatMoneyAmount(value, moneyOptions);
+    const base = String(locale || '')
+        .toLowerCase()
+        .split(/[-_]/)[0];
+    return base === 'en' ? `${label} ${amount}` : `${amount} ${label}`;
+}

@@ -24,7 +24,7 @@
       </div>
       <div class="text-2xl font-black text-rose-500 font-mono">
         {{ formatMoney(metrics.total_debt || 0) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold font-tajawal">
         {{ $t('contacts.total_receivables_sub') }}
@@ -80,7 +80,7 @@ import { TrendingUp, AlertCircle, Users } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   metrics: { type: Object, default: () => ({}) },

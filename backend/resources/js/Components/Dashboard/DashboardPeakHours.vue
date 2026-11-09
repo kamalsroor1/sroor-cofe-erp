@@ -15,7 +15,7 @@
         <span>{{ $t('dashboard.peak_hour_badge') }}:</span>
         <span class="font-black font-mono">({{ peakHour.label }})</span>
         <span class="font-mono text-emerald-500 font-bold"
-          >[{{ formatMoney(peakHour.sales) }} {{ $t('common.currency') }}]</span
+          >[{{ formatMoney(peakHour.sales) }} {{ currencyLabel }}]</span
         >
       </div>
     </template>
@@ -72,7 +72,7 @@ import { Zap } from 'lucide-vue-next';
 import DashboardSectionCard from '../Common/DashboardSectionCard.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const activeHour = ref(null);
 const toggleSlot = (hour) => {
   activeHour.value = activeHour.value === hour ? null : hour;

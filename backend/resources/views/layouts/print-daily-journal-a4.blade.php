@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <title>{{ __('treasury.daily_journal_report_title', ['date' => $date]) }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
@@ -229,42 +230,42 @@
         <div class="summary-grid">
             <div class="summary-card">
                 <div class="summary-label">{{ __('common.total') }} {{ __('invoices.title') }}</div>
-                <div class="summary-val">{{ number_format((float)$totalSales, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val">{{ number_format((float)$totalSales, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card" style="background: #f0fdf4;">
                 <div class="summary-label">{{ __('treasury.cash_sales_collected') }}</div>
-                <div class="summary-val" style="color: #166534;">{{ number_format((float)$cashSales, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val" style="color: #166534;">{{ number_format((float)$cashSales, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card" style="background: #fffbeb;">
                 <div class="summary-label">{{ __('treasury.recorded_credit_sales') }}</div>
-                <div class="summary-val" style="color: #92400e;">{{ number_format((float)$creditSales, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val" style="color: #92400e;">{{ number_format((float)$creditSales, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card" style="background: #f8fafc;">
                 <div class="summary-label">{{ __('treasury.customer_receipts_collections') }}</div>
-                <div class="summary-val">{{ number_format((float)$customerPayments, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val">{{ number_format((float)$customerPayments, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card" style="background: #fef2f2;">
                 <div class="summary-label">{{ __('treasury.expenses_and_withdrawals') }}</div>
-                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalExpenses, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalExpenses, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card" style="background: #fef2f2;">
                 <div class="summary-label">{{ __('treasury.supplier_cash_payments') }}</div>
-                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalSupplierPaid, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val" style="color: #991b1b;">{{ number_format((float)$totalSupplierPaid, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card">
                 <div class="summary-label">{{ __('treasury.opening_float') }}</div>
-                <div class="summary-val">{{ number_format((float)$openingCashBalance, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val">{{ number_format((float)$openingCashBalance, 2) }} {{ $currencyLabel }}</div>
             </div>
 
             <div class="summary-card" style="background: #e0f2fe; border: 2px solid #0284c7;">
                 <div class="summary-label" style="color: #0369a1;">{{ __('treasury.calculated_cash_in_drawer') }}</div>
-                <div class="summary-val" style="color: #0369a1; font-size: 16px;">{{ number_format((float)$expectedCashInDrawer, 2) }} {{ __('common.currency') }}</div>
+                <div class="summary-val" style="color: #0369a1; font-size: 16px;">{{ number_format((float)$expectedCashInDrawer, 2) }} {{ $currencyLabel }}</div>
             </div>
         </div>
 
@@ -324,7 +325,7 @@
         @if($expenses->isNotEmpty())
         <div class="section-title">
             <span>💸 {{ __('treasury.cash_expenses_statement') }}</span>
-            <span style="font-size: 12px; font-weight: 900;">{{ __('common.total') }}: {{ number_format((float)$totalExpenses, 2) }} {{ __('common.currency') }}</span>
+            <span style="font-size: 12px; font-weight: 900;">{{ __('common.total') }}: {{ number_format((float)$totalExpenses, 2) }} {{ $currencyLabel }}</span>
         </div>
         <table class="table">
             <thead>
@@ -345,12 +346,12 @@
                     <td style="text-align: right;">{{ $exp->notes ?: $exp->description ?: __('expenses.operational_expense') }}</td>
                     <td>{{ $exp->payment_method === 'cash' ? __('treasury.from_drawer_cash') : __('treasury.bank_other') }}</td>
                     <td>{{ $exp->store?->name ?? __('common.main_store_default') }}</td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$exp->amount, 2) }} {{ __('common.currency') }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$exp->amount, 2) }} {{ $currencyLabel }}</td>
                 </tr>
                 @endforeach
                 <tr class="table-total">
                     <td colspan="5" style="text-align: left; font-weight: 900;">{{ __('common.total') }} {{ __('expenses.title') }}:</td>
-                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalExpenses, 2) }} {{ __('common.currency') }}</td>
+                    <td style="font-family: monospace; font-weight: 900;">{{ number_format((float)$totalExpenses, 2) }} {{ $currencyLabel }}</td>
                 </tr>
             </tbody>
         </table>
@@ -360,7 +361,7 @@
         @if($invoices->isNotEmpty())
         <div class="section-title">
             <span>🧾 {{ __('treasury.issued_invoices_first_30') }}</span>
-            <span style="font-size: 12px; font-weight: 900;">{{ __('common.total') }}: {{ number_format((float)$totalSales, 2) }} {{ __('common.currency') }}</span>
+            <span style="font-size: 12px; font-weight: 900;">{{ __('common.total') }}: {{ number_format((float)$totalSales, 2) }} {{ $currencyLabel }}</span>
         </div>
         <table class="table">
             <thead>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('inventory.item_movements_card_title', ['name' => $item->name]) }}</title>
@@ -119,7 +120,7 @@
         </div>
         <div>
             <span class="text-slate-500 text-[10px] block">{{ __('inventory.approved_selling_price') }}</span>
-            <span class="font-mono font-bold text-slate-900 block">{{ number_format($item->selling_price, 2) }} {{ __('common.currency') }}</span>
+            <span class="font-mono font-bold text-slate-900 block">{{ number_format($item->selling_price, 2) }} {{ $currencyLabel }}</span>
         </div>
     </div>
 

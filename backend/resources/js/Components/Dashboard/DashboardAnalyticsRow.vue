@@ -14,9 +14,7 @@
           class="flex items-center gap-2 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800"
         >
           <span>{{ $t('dashboard.weekly_total') }}:</span>
-          <span class="text-emerald-500 font-black"
-            >{{ formatMoney(period.sales || 0) }} {{ $t('common.currency') }}</span
-          >
+          <span class="text-emerald-500 font-black">{{ formatMoney(period.sales || 0) }} {{ currencyLabel }}</span>
         </div>
       </template>
       <SimpleBarChart
@@ -49,7 +47,7 @@
             <div class="font-mono text-slate-600 dark:text-slate-300">
               {{ $t('dashboard.avg_basket') }}:
               <span class="font-black text-emerald-500"
-                >{{ formatMoney(period.basket_size || 0) }} {{ $t('common.currency') }}</span
+                >{{ formatMoney(period.basket_size || 0) }} {{ currencyLabel }}</span
               >
             </div>
           </div>
@@ -83,7 +81,7 @@
           >
         </div>
         <div class="font-mono font-black text-emerald-500">
-          {{ formatMoney(activeShift.current_cash || activeShift.starting_cash) }} {{ $t('common.currency') }}
+          {{ formatMoney(activeShift.current_cash || activeShift.starting_cash) }} {{ currencyLabel }}
         </div>
       </div>
     </DashboardSectionCard>
@@ -96,7 +94,7 @@ import SimpleBarChart from '../Common/SimpleBarChart.vue';
 import ProgressDistributionList from '../Common/ProgressDistributionList.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { businessToday } from '../../Composables/useBusinessDate';
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 defineProps({
   dailyTrend: { type: Array, default: () => [] },
   period: { type: Object, default: () => ({}) },

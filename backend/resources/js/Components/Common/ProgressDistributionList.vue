@@ -10,7 +10,7 @@
         <div class="flex items-center gap-2 font-mono">
           <span class="text-slate-900 dark:text-white font-black">
             {{ formatFn(item[amountField]) }}
-            <span class="text-[10px] font-sans text-slate-400"> {{ currency }}</span>
+            <span class="text-[10px] font-sans text-slate-400"> {{ currency || currencyLabel }}</span>
           </span>
           <span class="text-[10px] text-slate-400 font-bold">({{ item[percentageField] }}%)</span>
         </div>
@@ -35,6 +35,9 @@
 
 <script setup>
 import DynamicIcon from './DynamicIcon.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, required: true },
@@ -50,7 +53,7 @@ defineProps({
   colorFn: { type: Function, default: null }, // (key) => tailwind class string
   formatFn: { type: Function, default: (v) => v }, // value formatter
 
-  currency: { type: String, default: 'ج.م' },
+  currency: { type: String, default: '' },
   emptyMessage: { type: String, default: 'لا توجد بيانات مسجلة' },
 });
 </script>

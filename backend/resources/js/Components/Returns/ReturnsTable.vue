@@ -65,7 +65,7 @@
 
       <template #cell-total_amount="{ row }">
         <span class="font-mono font-black text-rose-600 dark:text-rose-400 text-sm">
-          {{ formatMoney(row.total_amount) }} {{ $t('common.currency') }}
+          {{ formatMoney(row.total_amount) }} {{ currencyLabel }}
         </span>
       </template>
 
@@ -111,7 +111,7 @@ import { useTrans } from '@/Composables/useTrans';
 import { useFormatters } from '@/Composables/useFormatters';
 
 const { t } = useTrans();
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   returnsList: { type: Array, default: () => [] },

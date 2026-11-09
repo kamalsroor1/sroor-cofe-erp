@@ -13,7 +13,7 @@
       }}</span>
       <div class="text-xl font-black text-emerald-500 dark:text-emerald-400 font-mono">
         {{ totalInflow > 0 ? '+' : '' }}{{ formatMoney(totalInflow) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.inflow_details_sub') }}</span>
     </div>
@@ -27,7 +27,7 @@
       }}</span>
       <div class="text-xl font-black text-rose-500 dark:text-rose-400 font-mono">
         {{ totalOutflow > 0 ? '-' : '' }}{{ formatMoney(totalOutflow) }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.outflow_details_sub') }}</span>
     </div>
@@ -41,7 +41,7 @@
       }}</span>
       <div class="text-xl font-black font-mono" :class="netCashClass">
         {{ netCashDisplay }}
-        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.net_cash_flow_sub') }}</span>
     </div>
@@ -53,7 +53,7 @@
       <span class="text-[11px] font-bold text-theme-primary block">{{ $t('treasury.expected_drawer_balance') }}</span>
       <div class="text-xl font-black text-theme-primary font-mono">
         {{ formatMoney(summary.expected_cash_in_drawer || 0) }}
-        <span class="text-xs text-theme-primary/80 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-theme-primary/80 font-normal font-tajawal">{{ currencyLabel }}</span>
       </div>
       <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $t('treasury.expected_drawer_sub') }}</span>
     </div>
@@ -65,7 +65,7 @@ import { computed } from 'vue';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 const props = defineProps({
   summary: { type: Object, default: () => ({}) },

@@ -52,9 +52,9 @@
         <div class="sm:w-1/3 min-w-0">
           <div class="font-bold text-slate-900 dark:text-white truncate">{{ comp.name }}</div>
           <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-            {{ formatMoney(comp.selling_price) }} {{ $t('common.currency') }} /
-            {{ $t('inventory.unit_weight_short') }} ({{ $t('inventory.current_stock') }}: {{ comp.current_stock }}
-            {{ $t('inventory.unit_weight_short') }})
+            {{ formatMoney(comp.selling_price) }} {{ currencyLabel }} / {{ $t('inventory.unit_weight_short') }} ({{
+              $t('inventory.current_stock')
+            }}: {{ comp.current_stock }} {{ $t('inventory.unit_weight_short') }})
           </div>
         </div>
 
@@ -87,7 +87,7 @@
           <div class="text-end">
             <div class="font-black text-theme-primary text-xs">{{ comp.grams }} {{ $t('inventory.unit_gram') }}</div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400">
-              {{ formatMoney(comp.price) }} {{ $t('common.currency') }}
+              {{ formatMoney(comp.price) }} {{ currencyLabel }}
             </div>
           </div>
 
@@ -136,7 +136,7 @@ import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   components: { type: Array, default: () => [] },

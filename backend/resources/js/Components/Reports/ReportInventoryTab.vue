@@ -1,5 +1,8 @@
 <script setup>
 import { useMoney } from '@/Composables/useMoney';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   summary: {
@@ -29,7 +32,7 @@ const { formatMoney } = useMoney();
         }}</span>
         <div class="text-2xl font-black font-mono text-indigo-600 dark:text-indigo-300">
           {{ formatMoney(summary.stock_cost_valuation) }}
-          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -41,7 +44,7 @@ const { formatMoney } = useMoney();
         }}</span>
         <div class="text-2xl font-black font-mono text-slate-900 dark:text-white">
           {{ formatMoney(summary.stock_selling_valuation) }}
-          <span class="text-xs font-bold text-theme-primary">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-theme-primary">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -53,7 +56,7 @@ const { formatMoney } = useMoney();
         }}</span>
         <div class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
           {{ formatMoney(summary.expected_stock_profit) }}
-          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-bold text-slate-700 dark:text-white">{{ currencyLabel }}</span>
         </div>
       </div>
     </div>

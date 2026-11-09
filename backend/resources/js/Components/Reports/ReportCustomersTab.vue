@@ -3,6 +3,9 @@ import { computed } from 'vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   customerSales: {
@@ -38,7 +41,7 @@ const customerColumns = computed(() => [
       <h3 class="text-sm font-black text-slate-900 dark:text-white">{{ $t('reports.top_customers_sales') }}</h3>
       <div class="text-xs text-rose-600 dark:text-rose-400 font-bold">
         {{ $t('reports.all_customers_debt') }}:
-        <span class="font-mono font-black">{{ formatMoney(totalCustomersDebt) }} {{ $t('common.currency') }}</span>
+        <span class="font-mono font-black">{{ formatMoney(totalCustomersDebt) }} {{ currencyLabel }}</span>
       </div>
     </div>
 
@@ -66,21 +69,21 @@ const customerColumns = computed(() => [
       <!-- Total Bought -->
       <template #cell-total_bought="{ row }">
         <span class="font-mono font-bold text-slate-900 dark:text-white"
-          >{{ formatMoney(row.total_bought) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_bought) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Total Paid -->
       <template #cell-total_paid="{ row }">
         <span class="font-mono text-emerald-600 dark:text-emerald-400"
-          >{{ formatMoney(row.total_paid) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_paid) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Total Debt In Period -->
       <template #cell-total_debt_in_period="{ row }">
         <span class="font-mono text-rose-600 dark:text-rose-400"
-          >{{ formatMoney(row.total_debt_in_period) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_debt_in_period) }} {{ currencyLabel }}</span
         >
       </template>
 
@@ -90,7 +93,7 @@ const customerColumns = computed(() => [
           class="font-mono text-left font-black"
           :class="row.current_balance > 0 ? 'text-theme-primary' : 'text-slate-500 dark:text-slate-400'"
         >
-          {{ formatMoney(row.current_balance) }} {{ $t('common.currency') }}
+          {{ formatMoney(row.current_balance) }} {{ currencyLabel }}
         </span>
       </template>
 

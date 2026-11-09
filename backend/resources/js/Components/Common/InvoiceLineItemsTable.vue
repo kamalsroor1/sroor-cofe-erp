@@ -1,5 +1,8 @@
 <script setup>
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, required: true },
@@ -91,7 +94,7 @@ const formatTotal = (qty, price) => {
           </td>
 
           <td class="py-3 font-mono font-black text-emerald-600 dark:text-emerald-400">
-            {{ formatTotal(it.quantity, it[priceField]) }} {{ $t('common.currency') }}
+            {{ formatTotal(it.quantity, it[priceField]) }} {{ currencyLabel }}
           </td>
 
           <td class="py-3 text-center">
@@ -162,7 +165,7 @@ const formatTotal = (qty, price) => {
       >
         <span class="text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('common.total') }}:</span>
         <span class="font-black text-sm text-emerald-600 dark:text-emerald-400">
-          {{ formatTotal(it.quantity, it[priceField]) }} {{ $t('common.currency') }}
+          {{ formatTotal(it.quantity, it[priceField]) }} {{ currencyLabel }}
         </span>
       </div>
     </div>

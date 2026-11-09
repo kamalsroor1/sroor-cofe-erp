@@ -2,7 +2,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
-import { useFormatters } from './useFormatters';
+import { currentCurrencyLabel, useFormatters } from './useFormatters';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
 import { buildCompanyInfo } from '../helpers/companyInfo';
@@ -107,7 +107,7 @@ export function useInvoiceShow() {
         net: formatMoney(invoice.value.net_total),
         paid: formatMoney(invoice.value.paid_amount),
         remaining: formatMoney(invoice.value.remaining_amount),
-        currency: t('common.currency'),
+        currency: currentCurrencyLabel(),
     });
 
     const copyInvoiceDetails = async () => {

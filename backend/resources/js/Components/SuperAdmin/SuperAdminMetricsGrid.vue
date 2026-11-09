@@ -50,7 +50,8 @@
       >
         <span class="text-purple-600 dark:text-purple-400 text-xs font-bold">{{ $t('super.mrr') }}</span>
         <div class="text-2xl font-black text-purple-600 dark:text-purple-400 font-mono">
-          {{ formatMoney(metrics.mrr || 0) }} <span class="text-xs text-slate-400">{{ $t('common.currency') }}</span>
+          {{ formatMoney(metrics.mrr || 0) }}
+          <span class="text-xs text-slate-400">{{ $t('common.currencies.EGP') }}</span>
         </div>
         <div class="text-[10px] text-slate-400 font-sans">Monthly Recurring Revenue</div>
       </div>

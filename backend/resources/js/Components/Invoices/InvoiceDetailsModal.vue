@@ -65,20 +65,18 @@
       >
         <div class="flex justify-between text-slate-600 dark:text-slate-400 font-tajawal">
           <span>{{ $t('invoices.subtotal') }}:</span>
-          <span class="font-bold font-mono">{{ formatMoney(invoice.subtotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-bold font-mono">{{ formatMoney(invoice.subtotal) }} {{ currencyLabel }}</span>
         </div>
         <div v-if="invoice.discount_amount > 0" class="flex justify-between text-rose-500 font-tajawal">
           <span>{{ $t('invoices.discount') }}:</span>
-          <span class="font-bold font-mono"
-            >- {{ formatMoney(invoice.discount_amount) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-bold font-mono">- {{ formatMoney(invoice.discount_amount) }} {{ currencyLabel }}</span>
         </div>
         <div
           class="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-tajawal"
         >
           <span>{{ $t('invoices.net_total') }}:</span>
           <span class="text-emerald-500 text-base font-mono"
-            >{{ formatMoney(invoice.net_total) }} {{ $t('common.currency') }}</span
+            >{{ formatMoney(invoice.net_total) }} {{ currencyLabel }}</span
           >
         </div>
       </div>
@@ -125,7 +123,7 @@ import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   show: { type: Boolean, default: false },

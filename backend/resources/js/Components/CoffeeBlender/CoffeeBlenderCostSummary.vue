@@ -21,7 +21,7 @@
       <div class="flex justify-between text-slate-500 dark:text-slate-400 font-sans">
         <span>{{ $t('inventory.estimated_raw_cost') }}</span>
         <span class="font-mono text-rose-500 font-bold"
-          >{{ formatMoney(totalCalculatedCost) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(totalCalculatedCost) }} {{ currencyLabel }}</span
         >
       </div>
 
@@ -30,15 +30,14 @@
       >
         <span>{{ $t('inventory.suggested_retail_price') }}:</span>
         <span class="font-mono text-emerald-500 text-lg font-black"
-          >{{ formatMoney(totalCalculatedPrice) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(totalCalculatedPrice) }} {{ currencyLabel }}</span
         >
       </div>
 
       <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-sans">
         <span>{{ $t('inventory.profit_margin') }}:</span>
         <span class="font-mono font-bold text-theme-primary">
-          {{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }}
-          {{ $t('common.currency') }})
+          {{ profitMargin }}% ({{ formatMoney(totalCalculatedPrice - totalCalculatedCost) }} {{ currencyLabel }})
         </span>
       </div>
     </div>
@@ -75,7 +74,7 @@ import { Zap } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   targetWeightGrams: { type: Number, default: 250 },

@@ -3,6 +3,9 @@ import { computed } from 'vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   itemProfits: {
@@ -54,21 +57,21 @@ const itemColumns = computed(() => [
       <!-- Revenue -->
       <template #cell-total_revenue="{ row }">
         <span class="font-mono font-bold text-slate-900 dark:text-white"
-          >{{ formatMoney(row.total_revenue) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_revenue) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- COGS -->
       <template #cell-total_cogs="{ row }">
         <span class="font-mono text-slate-500 dark:text-slate-400"
-          >{{ formatMoney(row.total_cogs) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_cogs) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Profit -->
       <template #cell-profit="{ row }">
         <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400"
-          >{{ formatMoney(row.profit) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.profit) }} {{ currencyLabel }}</span
         >
       </template>
 

@@ -2,6 +2,9 @@
 import { computed } from 'vue';
 import { BarChart3, Zap, CreditCard } from 'lucide-vue-next';
 import { useMoney } from '@/Composables/useMoney';
+import { useFormatters } from '@/Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 const props = defineProps({
   analytics: {
@@ -43,7 +46,7 @@ const maxDailySales = computed(() => {
             $t('dashboard.avg_invoice_val')
           }}</span>
           <span class="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
-            {{ formatMoney(analytics?.period?.basket_size) }} {{ $t('common.currency') }}
+            {{ formatMoney(analytics?.period?.basket_size) }} {{ currencyLabel }}
           </span>
         </div>
       </div>

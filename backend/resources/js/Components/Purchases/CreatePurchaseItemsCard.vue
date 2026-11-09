@@ -72,7 +72,7 @@
 
             <td class="p-2.5 text-end font-mono font-black text-slate-900 dark:text-white text-sm">
               {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
-              {{ $t('common.currency') }}
+              {{ currencyLabel }}
             </td>
 
             <td class="p-2.5 text-center">
@@ -151,7 +151,7 @@
           <span class="font-sans font-bold text-slate-500">{{ $t('common.total') }}:</span>
           <span class="font-black text-slate-900 dark:text-white">
             {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
-            {{ $t('common.currency') }}
+            {{ currencyLabel }}
           </span>
         </div>
       </div>
@@ -165,7 +165,7 @@ import BaseButton from '../Common/BaseButton.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, default: () => [] },

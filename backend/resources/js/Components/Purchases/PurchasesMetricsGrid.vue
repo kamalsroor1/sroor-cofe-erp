@@ -22,7 +22,7 @@
       </div>
       <div class="text-2xl font-black text-emerald-500 font-mono">
         {{ formatMoney(metrics.total_purchases || 0) }}
-        <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal">{{ currencyLabel }}</span>
       </div>
       <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
         {{ $t('purchases.total_purchases_sub') }}
@@ -41,7 +41,7 @@
       </div>
       <div class="text-2xl font-black text-rose-500 font-mono">
         {{ formatMoney(metrics.unpaid_total || 0) }}
-        <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
+        <span class="text-xs text-slate-400 font-normal">{{ currencyLabel }}</span>
       </div>
       <div class="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
         {{ $t('purchases.unpaid_total_sub') }}
@@ -74,7 +74,7 @@ import { TrendingUp, Clock, FileCheck } from 'lucide-vue-next';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   metrics: { type: Object, default: () => ({}) },

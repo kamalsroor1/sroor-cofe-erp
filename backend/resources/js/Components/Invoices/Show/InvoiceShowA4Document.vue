@@ -135,7 +135,7 @@
                 {{ parseFloat(item.discount_amount || 0) > 0 ? '-' + formatMoney(item.discount_amount) : '—' }}
               </td>
               <td class="py-2 px-2.5 text-end font-black text-slate-950">
-                {{ formatMoney(item.total_price) }} {{ $t('common.currency') }}
+                {{ formatMoney(item.total_price) }} {{ currencyLabel }}
               </td>
             </tr>
           </tbody>
@@ -166,7 +166,7 @@
         <div class="col-span-5 p-4 rounded-2xl bg-slate-50 border border-slate-300 space-y-2 text-xs font-mono">
           <div class="flex justify-between text-slate-700 font-sans">
             <span>{{ $t('invoices.subtotal') }}:</span>
-            <span class="font-mono font-bold">{{ formatMoney(invoice?.subtotal) }} {{ $t('common.currency') }}</span>
+            <span class="font-mono font-bold">{{ formatMoney(invoice?.subtotal) }} {{ currencyLabel }}</span>
           </div>
 
           <div
@@ -174,16 +174,12 @@
             class="flex justify-between text-rose-600 font-sans"
           >
             <span>{{ $t('invoices.discount') }}:</span>
-            <span class="font-mono font-bold"
-              >- {{ formatMoney(invoice?.discount_amount) }} {{ $t('common.currency') }}</span
-            >
+            <span class="font-mono font-bold">- {{ formatMoney(invoice?.discount_amount) }} {{ currencyLabel }}</span>
           </div>
 
           <div v-if="parseFloat(invoice?.shipping_cost || 0) > 0" class="flex justify-between text-slate-700 font-sans">
             <span>{{ $t('invoices.shipping') }}:</span>
-            <span class="font-mono font-bold"
-              >+ {{ formatMoney(invoice?.shipping_cost) }} {{ $t('common.currency') }}</span
-            >
+            <span class="font-mono font-bold">+ {{ formatMoney(invoice?.shipping_cost) }} {{ currencyLabel }}</span>
           </div>
 
           <div
@@ -191,14 +187,14 @@
           >
             <span>{{ $t('invoices.net_total') }}:</span>
             <span class="font-mono text-base font-black"
-              >{{ formatMoney(invoice?.net_total) }} {{ $t('common.currency') }}</span
+              >{{ formatMoney(invoice?.net_total) }} {{ currencyLabel }}</span
             >
           </div>
 
           <div class="flex justify-between text-slate-800 font-sans pt-1 border-t border-dashed border-slate-300">
             <span>{{ $t('invoices.paid') }}:</span>
             <span class="font-mono font-black text-emerald-700"
-              >{{ formatMoney(invoice?.paid_amount) }} {{ $t('common.currency') }}</span
+              >{{ formatMoney(invoice?.paid_amount) }} {{ currencyLabel }}</span
             >
           </div>
 
@@ -207,9 +203,7 @@
             class="flex justify-between text-rose-600 font-sans font-bold"
           >
             <span>{{ $t('invoices.remaining') }}:</span>
-            <span class="font-mono font-black"
-              >{{ formatMoney(invoice?.remaining_amount) }} {{ $t('common.currency') }}</span
-            >
+            <span class="font-mono font-black">{{ formatMoney(invoice?.remaining_amount) }} {{ currencyLabel }}</span>
           </div>
         </div>
       </div>
@@ -243,7 +237,7 @@
 import { Coffee, MapPin, Phone } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 import { useUnits } from '../../../Composables/useUnits';
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { unitLabel } = useUnits();
 defineProps({
   invoice: { type: Object, default: null },

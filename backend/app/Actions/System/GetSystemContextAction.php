@@ -104,7 +104,7 @@ final class GetSystemContextAction
                         'type' => 'info',
                         'icon' => '💰',
                         'title' => __('dashboard.system_alerts.high_cash_title'),
-                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => __('common.currency')]),
+                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
                         'link' => '/daily-journal',
                         'link_label' => __('dashboard.system_alerts.high_cash_link'),
                     ];

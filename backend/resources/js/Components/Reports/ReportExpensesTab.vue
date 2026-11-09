@@ -1,5 +1,8 @@
 <script setup>
 import { useMoney } from '@/Composables/useMoney';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   expensesBreakdown: {
@@ -23,7 +26,7 @@ const { formatMoney } = useMoney();
       <h3 class="text-sm font-black text-slate-900 dark:text-white">{{ $t('reports.expenses_by_category') }}</h3>
       <div class="text-xs text-rose-600 dark:text-rose-400 font-bold">
         {{ $t('reports.tab_expenses') }}:
-        <span class="font-mono font-black">{{ formatMoney(totalExpenses) }} {{ $t('common.currency') }}</span>
+        <span class="font-mono font-black">{{ formatMoney(totalExpenses) }} {{ currencyLabel }}</span>
       </div>
     </div>
 
@@ -43,7 +46,7 @@ const { formatMoney } = useMoney();
         </div>
         <div class="text-xl font-black font-mono text-rose-600 dark:text-rose-400">
           {{ formatMoney(exp.amount) }}
-          <span class="text-xs text-slate-400 font-normal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal">{{ currencyLabel }}</span>
         </div>
       </div>
     </div>

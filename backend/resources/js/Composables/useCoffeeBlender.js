@@ -4,6 +4,7 @@ import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
 import { useRemoteOptions } from './useRemoteOptions';
+import { currentCurrencyLabel } from './useFormatters';
 
 export function useCoffeeBlender() {
     const router = useRouter();
@@ -13,7 +14,7 @@ export function useCoffeeBlender() {
     const { searchFn: searchItems } = useRemoteOptions('items', {
         map: (row) => ({
             value: row.id,
-            label: `${row.name} (${row.code || '—'}) — ${t('inventory.retail_price')}: ${row.price_retail || row.selling_price} ${t('common.currency')} | ${t('inventory.current_stock')}: ${row.current_stock} ${row.unit}`,
+            label: `${row.name} (${row.code || '—'}) — ${t('inventory.retail_price')}: ${row.price_retail || row.selling_price} ${currentCurrencyLabel()} | ${t('inventory.current_stock')}: ${row.current_stock} ${row.unit}`,
             raw: row,
         }),
     });

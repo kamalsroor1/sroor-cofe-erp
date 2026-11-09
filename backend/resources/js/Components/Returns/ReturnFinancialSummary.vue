@@ -21,7 +21,7 @@
         >
           <span>{{ $t('returns.total_returns_val') }}:</span>
           <span class="font-mono text-rose-600 dark:text-rose-400"
-            >{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span
+            >{{ formatMoney(netTotal) }} {{ currencyLabel }}</span
           >
         </div>
 
@@ -61,7 +61,7 @@ import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   itemsCount: { type: Number, default: 0 },

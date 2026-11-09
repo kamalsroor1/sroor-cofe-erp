@@ -3,6 +3,9 @@ import { computed } from 'vue';
 import DataTable from '@/Components/Common/DataTable.vue';
 import { useMoney } from '@/Composables/useMoney';
 import { trans } from '@/helpers/trans';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   storeBreakdown: {
@@ -52,28 +55,28 @@ const storeColumns = computed(() => [
       <!-- Total Sales -->
       <template #cell-total_sales="{ row }">
         <span class="font-mono font-bold text-slate-900 dark:text-white"
-          >{{ formatMoney(row.total_sales) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_sales) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Total Paid -->
       <template #cell-total_paid="{ row }">
         <span class="font-mono text-emerald-600 dark:text-emerald-400"
-          >{{ formatMoney(row.total_paid) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_paid) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Total Remaining -->
       <template #cell-total_remaining="{ row }">
         <span class="font-mono text-rose-600 dark:text-rose-400"
-          >{{ formatMoney(row.total_remaining) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.total_remaining) }} {{ currencyLabel }}</span
         >
       </template>
 
       <!-- Gross Profit -->
       <template #cell-gross_profit="{ row }">
         <span class="font-mono font-bold text-theme-primary"
-          >{{ formatMoney(row.gross_profit) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(row.gross_profit) }} {{ currencyLabel }}</span
         >
       </template>
 

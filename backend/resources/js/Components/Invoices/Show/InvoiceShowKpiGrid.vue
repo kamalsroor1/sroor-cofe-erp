@@ -4,7 +4,7 @@
     <MetricCard
       :title="$t('invoices.subtotal')"
       :value="formatMoney(invoice?.subtotal || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="default"
       :icon="Banknote"
       icon-bg="bg-slate-500/10"
@@ -15,7 +15,7 @@
     <MetricCard
       :title="$t('invoices.discount')"
       :value="formatMoney(invoice?.discount_amount || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="danger"
       :icon="Tag"
       icon-bg="bg-rose-500/10"
@@ -26,7 +26,7 @@
     <MetricCard
       :title="$t('invoices.shipping')"
       :value="formatMoney(invoice?.shipping_cost || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="cyan"
       :icon="Truck"
       icon-bg="bg-cyan-500/10"
@@ -37,7 +37,7 @@
     <MetricCard
       :title="$t('invoices.net_total')"
       :value="formatMoney(invoice?.net_total || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="primary"
       :icon="CircleDollarSign"
       icon-bg="bg-theme-light"
@@ -49,7 +49,7 @@
     <MetricCard
       :title="$t('invoices.paid')"
       :value="formatMoney(invoice?.paid_amount || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="success"
       :icon="CheckCircle2"
       icon-bg="bg-emerald-500/10"
@@ -60,7 +60,7 @@
     <MetricCard
       :title="$t('invoices.remaining')"
       :value="formatMoney(invoice?.remaining_amount || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       :variant="parseFloat(invoice?.remaining_amount || 0) > 0 ? 'warning' : 'default'"
       :icon="FileText"
       :icon-bg="parseFloat(invoice?.remaining_amount || 0) > 0 ? 'bg-amber-500/10' : 'bg-slate-500/10'"
@@ -74,7 +74,7 @@ import { Banknote, Tag, Truck, CircleDollarSign, CheckCircle2, FileText } from '
 import MetricCard from '../../Common/MetricCard.vue';
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   invoice: { type: Object, default: null },

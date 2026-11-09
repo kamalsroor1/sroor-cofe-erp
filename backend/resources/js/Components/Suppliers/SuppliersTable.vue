@@ -64,7 +64,7 @@
           :class="row.current_balance > 0 ? 'text-theme-primary' : 'text-emerald-500 dark:text-emerald-400'"
         >
           {{ formatMoney(row.current_balance) }}
-          <span class="text-xs font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <div class="text-[10px] font-tajawal text-slate-500 dark:text-slate-400 mt-0.5 text-end">
           {{ row.current_balance > 0 ? $t('contacts.due_to_supplier') : $t('contacts.fully_settled') }}
@@ -148,7 +148,7 @@ import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 import { useAppConfigStore } from '../../stores/appConfig';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 const appConfigStore = useAppConfigStore();
 

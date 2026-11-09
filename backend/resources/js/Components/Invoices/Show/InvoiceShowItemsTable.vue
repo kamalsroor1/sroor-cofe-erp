@@ -57,7 +57,7 @@
               {{ parseFloat(item.discount_amount || 0) > 0 ? '-' + formatMoney(item.discount_amount) : '—' }}
             </td>
             <td class="py-3 px-3 text-end font-black text-theme-primary text-sm">
-              {{ formatMoney(item.total_price) }} {{ $t('common.currency') }}
+              {{ formatMoney(item.total_price) }} {{ currencyLabel }}
             </td>
           </tr>
         </tbody>
@@ -69,7 +69,7 @@
 <script setup>
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, default: () => [] },

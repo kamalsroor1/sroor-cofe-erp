@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <title>{{ __('invoices.receipt_title', ['number' => $invoice->invoice_number]) }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -130,12 +131,12 @@
     <div class="border-t py-1 my-2">
         <div style="display: flex; justify-content: space-between;">
             <span>{{ __('common.subtotal') }}:</span>
-            <span style="font-weight: 800;">{{ number_format($invoice->subtotal, 2) }} {{ __('common.currency') }}</span>
+            <span style="font-weight: 800;">{{ number_format($invoice->subtotal, 2) }} {{ $currencyLabel }}</span>
         </div>
         @if(bccomp($invoice->discount_amount, '0.000', 3) > 0)
         <div style="display: flex; justify-content: space-between;">
             <span>{{ __('common.discount') }}:</span>
-            <span>-{{ number_format($invoice->discount_amount, 2) }} {{ __('common.currency') }}</span>
+            <span>-{{ number_format($invoice->discount_amount, 2) }} {{ $currencyLabel }}</span>
         </div>
         @endif
 
@@ -147,27 +148,27 @@
             @foreach($customerExpenses as $cExp)
             <div style="display: flex; justify-content: space-between;">
                 <span>+ {{ $cExp->title }}:</span>
-                <span style="font-weight: 800;">+{{ number_format($cExp->amount, 2) }} {{ __('common.currency') }}</span>
+                <span style="font-weight: 800;">+{{ number_format($cExp->amount, 2) }} {{ $currencyLabel }}</span>
             </div>
             @endforeach
         @elseif(bccomp($invoice->shipping_cost, '0.000', 3) > 0)
             <div style="display: flex; justify-content: space-between;">
                 <span>+ {{ __('invoices.shipping_delivery') }}:</span>
-                <span style="font-weight: 800;">+{{ number_format($invoice->shipping_cost, 2) }} {{ __('common.currency') }}</span>
+                <span style="font-weight: 800;">+{{ number_format($invoice->shipping_cost, 2) }} {{ $currencyLabel }}</span>
             </div>
         @endif
 
         <div style="display: flex; justify-content: space-between; font-size: 14px;" class="font-black">
             <span>{{ __('common.net') }}:</span>
-            <span>{{ number_format($invoice->net_total, 2) }} {{ __('common.currency') }}</span>
+            <span>{{ number_format($invoice->net_total, 2) }} {{ $currencyLabel }}</span>
         </div>
         <div style="display: flex; justify-content: space-between;">
             <span>{{ __('common.paid') }}:</span>
-            <span>{{ number_format($invoice->paid_amount, 2) }} {{ __('common.currency') }}</span>
+            <span>{{ number_format($invoice->paid_amount, 2) }} {{ $currencyLabel }}</span>
         </div>
         <div style="display: flex; justify-content: space-between;" class="font-bold">
             <span>{{ __('common.remaining') }}:</span>
-            <span>{{ number_format($invoice->remaining_amount, 2) }} {{ __('common.currency') }}</span>
+            <span>{{ number_format($invoice->remaining_amount, 2) }} {{ $currencyLabel }}</span>
         </div>
 
         @php
@@ -182,7 +183,7 @@
         <div style="margin-top: 5px; padding-top: 4px; border-top: 1px dashed #000; font-size: 11px;">
             <div style="display: flex; justify-content: space-between;">
                 <span>{{ __('contacts.payable_balance_label') }}:</span>
-                <span style="font-weight: 900;">{{ number_format($customer->current_balance, 2) }} {{ __('common.currency') }}</span>
+                <span style="font-weight: 900;">{{ number_format($customer->current_balance, 2) }} {{ $currencyLabel }}</span>
             </div>
         </div>
         @endif
