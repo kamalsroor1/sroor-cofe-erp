@@ -14,6 +14,8 @@ import POSSkeleton from '../../Components/POS/POSSkeleton.vue';
 import POSExpensesModal from '../../Components/POS/POSExpensesModal.vue';
 import POSMultiPaymentModal from '../../Components/POS/POSMultiPaymentModal.vue';
 import POSShortcutsModal from '../../Components/POS/POSShortcutsModal.vue';
+import POSRecentSalesDrawer from '../../Components/POS/POSRecentSalesDrawer.vue';
+import POSQuickReturnModal from '../../Components/POS/POSQuickReturnModal.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
 
 const PARTIAL_ERROR_KEYS = {
@@ -45,6 +47,10 @@ const {
   cartEmpty,
   orderApi,
   showShortcutsHelp,
+  recentSales,
+  quickReturn,
+  reprintInvoice,
+  canReturn,
 } = usePosTerminal();
 </script>
 
@@ -82,6 +88,7 @@ const {
         @open-customer-picker="customer.showCustomerPickerModal.value = true"
         @clear-cart="cartOps.clearCart"
         @switch-store="catalog.switchStore"
+        @open-recent-sales="recentSales.open"
       />
 
       <ErrorState
@@ -188,6 +195,35 @@ const {
       :payment-type="fields.paymentType.value === 'partial' ? 'partial' : 'cash'"
       @close="payment.showMultiPaymentModal.value = false"
       @confirm="payment.confirmMultiPayment"
+    />
+
+    <POSRecentSalesDrawer
+      :show="recentSales.show.value"
+      :sales="recentSales.sales.value"
+      :search="recentSales.search.value"
+      :is-loading="recentSales.isLoading.value"
+      :error-message="recentSales.errorMessage.value"
+      :can-return="canReturn"
+      :offline="!isOnline"
+      @close="recentSales.close"
+      @update:search="recentSales.onSearch"
+      @retry="recentSales.load"
+      @reprint="(sale) => reprintInvoice(sale.id)"
+      @return="quickReturn.open"
+    />
+
+    <POSQuickReturnModal
+      :show="quickReturn.show.value"
+      :invoice="quickReturn.source.selected.value"
+      :lines="quickReturn.source.lines.value"
+      :is-loading="quickReturn.source.isLoadingLines.value"
+      :error-message="quickReturn.source.errorMessage.value"
+      :total="quickReturn.source.total.value"
+      :can-submit="quickReturn.canSubmit.value"
+      :is-submitting="quickReturn.isSubmitting.value"
+      @close="quickReturn.close"
+      @set-quantity="quickReturn.setQuantity"
+      @submit="quickReturn.submit"
     />
 
     <POSShortcutsModal :show="showShortcutsHelp" @close="showShortcutsHelp = false" />

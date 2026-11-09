@@ -267,6 +267,19 @@
           </span>
         </button>
 
+        <!-- Recent sales (F8) -->
+        <button
+          type="button"
+          data-testid="pos-recent-sales-btn"
+          class="min-h-[44px] min-w-[44px] px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+          :title="`${$t('pos.recent_sales_title')} (F8)`"
+          :aria-label="$t('pos.recent_sales_title')"
+          @click="$emit('open-recent-sales')"
+        >
+          <History class="w-4 h-4 text-theme-primary shrink-0" />
+          <span class="hidden lg:inline">{{ $t('pos.recent_sales_title') }}</span>
+        </button>
+
         <!-- Customer Selection Button -->
         <button
           type="button"
@@ -331,7 +344,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { ArrowRight, Search, Users, RotateCcw, Zap, LayoutGrid, ChevronDown } from 'lucide-vue-next';
+import { ArrowRight, Search, Users, RotateCcw, Zap, LayoutGrid, ChevronDown, History } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
 const { formatMoney } = useFormatters();
@@ -366,6 +379,7 @@ defineEmits([
   'open-customer-picker',
   'clear-cart',
   'switch-store',
+  'open-recent-sales',
 ]);
 
 const getItemPrice = (item) => {

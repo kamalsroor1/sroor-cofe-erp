@@ -80,5 +80,22 @@ export function usePosReceipt({
         window.open(`/invoices/${lastCreatedInvoice.value.id}/print?autoprint=true`, '_blank', 'width=800,height=600');
     };
 
-    return { printLastInvoice };
+    // Reprint of any past invoice: never kicks the cash drawer (no money moves).
+    const reprintInvoice = async (invoiceId) => {
+        if (!invoiceId) return;
+
+        if (isDesktop.value) {
+            try {
+                const res = await api.get(`/invoices/${invoiceId}`);
+                await printThermalReceipt(buildThermalHtml(res.data?.data || {}));
+                return;
+            } catch (err) {
+                console.warn('[DesktopPOS] Silent reprint fallback to browser popup:', err);
+            }
+        }
+
+        window.open(`/invoices/${invoiceId}/print?autoprint=true`, '_blank', 'width=800,height=600');
+    };
+
+    return { printLastInvoice, reprintInvoice };
 }

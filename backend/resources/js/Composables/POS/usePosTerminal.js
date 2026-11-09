@@ -16,6 +16,9 @@ import { usePosCart } from './usePosCart';
 import { usePosReceipt } from './usePosReceipt';
 import { usePosSubmit } from './usePosSubmit';
 import { usePosKeyboard } from './usePosKeyboard';
+import { hasPlanFeature } from '../../helpers/planFeatures';
+import { usePosRecentSales } from './usePosRecentSales';
+import { usePosQuickReturn } from './usePosQuickReturn';
 
 /**
  * Wires every POS composable together for the POS screen and returns what the view renders.
@@ -67,7 +70,7 @@ export function usePosTerminal() {
         focusSearch,
         onMiss: sounds.playErrorTone,
     });
-    const { printLastInvoice } = usePosReceipt({
+    const { printLastInvoice, reprintInvoice } = usePosReceipt({
         lastCreatedInvoice,
         paymentType: fields.paymentType,
         isDesktop: hardware.isDesktop,
@@ -93,9 +96,17 @@ export function usePosTerminal() {
         sounds,
     });
 
+    const recentSales = usePosRecentSales();
+    const quickReturn = usePosQuickReturn({ isOnline, onDone: recentSales.load });
+    const canReturn = computed(
+        () => authStore.can('returns.manage') && hasPlanFeature(appConfigStore.tenant, 'returns.manage')
+    );
+
     const showShortcutsHelp = ref(false);
     const modalCloseOrder = [
         showShortcutsHelp,
+        quickReturn.show,
+        recentSales.show,
         customer.showCustomerPickerModal,
         payment.showExpensesModal,
         payment.showMultiPaymentModal,
@@ -104,6 +115,7 @@ export function usePosTerminal() {
     usePosKeyboard({
         focusSearch,
         focusCustomer: () => (customer.showCustomerPickerModal.value = true),
+        openRecentSales: recentSales.open,
         focusDiscount: () => {
             const input = document.querySelector('[data-pos-discount-input]');
             input?.focus();
@@ -118,7 +130,9 @@ export function usePosTerminal() {
         closeTopModal: () => {
             const open = modalCloseOrder.find((flag) => flag.value);
             if (!open) return false;
-            open.value = false;
+            if (open === quickReturn.show) quickReturn.close();
+            else if (open === recentSales.show) recentSales.close();
+            else open.value = false;
             focusSearch();
             return true;
         },
@@ -156,5 +170,9 @@ export function usePosTerminal() {
         cartEmpty,
         orderApi,
         showShortcutsHelp,
+        recentSales,
+        quickReturn,
+        reprintInvoice,
+        canReturn,
     };
 }
