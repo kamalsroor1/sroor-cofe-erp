@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCentralAuthStore } from '../stores/centralAuth';
 import { trans } from '../helpers/trans';
@@ -24,14 +24,24 @@ import {
   Zap,
   ExternalLink,
   Settings,
+  Receipt,
+  Inbox,
 } from 'lucide-vue-next';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
+import { useBillingPendingCount } from '../Composables/useBillingPendingCount';
+import { usePendingSignupRequests } from '../Composables/usePendingSignupRequests';
 
 const centralAuth = useCentralAuthStore();
 const route = useRoute();
 const router = useRouter();
 
 useIdleLogout();
+const { pendingCount: pendingSignupCount } = usePendingSignupRequests();
+
+const { pendingCount, refreshPendingCount } = useBillingPendingCount();
+onMounted(() => {
+  if (centralAuth.can(CENTRAL_PERMISSIONS.billingView)) refreshPendingCount();
+});
 
 const user = computed(() => centralAuth.user || {});
 const mobileMenuOpen = ref(false);
@@ -73,10 +83,26 @@ const navItems = computed(() =>
       active: route.path.startsWith('/super-admin/tenants'),
     },
     {
+      name: trans('signup.console.nav'),
+      href: '/super-admin/signup-requests',
+      icon: Inbox,
+      active: route.path.startsWith('/super-admin/signup-requests'),
+      permission: CENTRAL_PERMISSIONS.tenantsView,
+      badge: pendingSignupCount.value,
+    },
+    {
       name: trans('super.plans'),
       href: '/super-admin/plans',
       icon: Layers,
       active: route.path.startsWith('/super-admin/plans'),
+    },
+    {
+      name: trans('billing.console.nav'),
+      href: '/super-admin/billing',
+      icon: Receipt,
+      active: route.path.startsWith('/super-admin/billing'),
+      permission: CENTRAL_PERMISSIONS.billingView,
+      badge: pendingCount.value || null,
     },
     {
       name: trans('super.nav_units'),
@@ -227,6 +253,12 @@ const handleLogout = async () => {
             >
               <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
               <span>{{ item.name }}</span>
+              <span
+                v-if="item.badge"
+                class="ms-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center"
+              >
+                {{ item.badge }}
+              </span>
             </router-link>
           </template>
         </div>
@@ -281,6 +313,12 @@ const handleLogout = async () => {
             >
               <DynamicIcon :name="item.icon" class="w-4 h-4 shrink-0" />
               <span>{{ item.name }}</span>
+              <span
+                v-if="item.badge"
+                class="ms-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center"
+              >
+                {{ item.badge }}
+              </span>
             </router-link>
           </template>
         </div>

@@ -78,6 +78,24 @@
         </template>
       </button>
     </form>
+
+    <!-- Public pages for people who do not have a workspace yet -->
+    <nav
+      class="flex flex-wrap items-center justify-center gap-x-4 border-t border-slate-200 pt-4 font-tajawal dark:border-slate-800"
+    >
+      <router-link
+        to="/welcome"
+        class="flex min-h-11 items-center text-xs font-bold text-slate-500 transition hover:text-theme-primary dark:text-slate-400"
+      >
+        {{ $t('landing.nav.discover') }}
+      </router-link>
+      <router-link
+        to="/pricing"
+        class="flex min-h-11 items-center text-xs font-bold text-slate-500 transition hover:text-theme-primary dark:text-slate-400"
+      >
+        {{ $t('landing.nav.pricing') }}
+      </router-link>
+    </nav>
   </div>
 </template>
 

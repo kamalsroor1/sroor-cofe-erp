@@ -47,6 +47,8 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
         'central.auth.two-factor-challenge',
         'central.auth.forgot-password',
         'central.auth.reset-password',
+        // PRD-03: payment receipt file, credentialed by a short-lived SIGNED url (see BillingReceiptTest).
+        'api.super_admin.billing.payments.receipt_file',
     ];
 
     /** Central auth endpoints authenticated without a `can:` (any operator acts on itself). */
@@ -85,6 +87,11 @@ final class CentralRouteSecurityGateTest extends TenantTestCase
         'api.super_admin.tenants.unarchive',
         // W2 batch 6 (SEC-1 L11): creating a workspace.
         'api.super_admin.tenants.store',
+        // PRD-03: manual SaaS billing writes.
+        'api.super_admin.tenants.billing_invoices.store',
+        'api.super_admin.billing.invoices.void',
+        'api.super_admin.billing.payments.verify',
+        'api.super_admin.billing.payments.reject',
     ];
 
     protected function setUp(): void

@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\ImportType;
 use App\Enums\TenantLogoVariant;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AppUpdateController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\CentralTenantResolverController;
@@ -12,8 +14,11 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyJournalController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\Landing\PublicPlanController;
+use App\Http\Controllers\Api\Landing\PublicSignupRequestController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionApiController;
 use App\Http\Controllers\Api\PosController;
@@ -42,6 +47,13 @@ use App\Http\Middleware\EnsureQuickLoginAllowed;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Support\Facades\Route;
+
+// PRD-05 / PRD-07: the public marketing site. No authentication and NO tenancy (outside the
+// ResolveApiTenancy group on purpose: central DB only, any host, X-Tenant ignored). Throttled.
+Route::prefix('v1/public')->name('api.public.')->group(function () {
+    Route::get('/plans', [PublicPlanController::class, 'index'])->middleware('throttle:public-api')->name('plans');
+    Route::post('/signup-requests', [PublicSignupRequestController::class, 'store'])->middleware('throttle:signup-requests')->name('signup_requests.store');
+});
 
 // IDEN-4.6: ThrottleTenantMisses caps unknown-tenant 404s per IP before tenancy resolves.
 Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy::class])->group(function () {
@@ -154,6 +166,14 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::put('/categories/{id}', [CategoryApiController::class, 'update'])->name('api.categories.update');
         Route::delete('/categories/{id}', [CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
 
+        // PRD-06: Excel/CSV import wizard. Permission per {type} is enforced in the Form Requests;
+        // preview/commit need one concrete branch (opening stock lands in the X-Store-Id store).
+        Route::prefix('imports/{type}')->where(['type' => ImportType::routePattern()])->middleware('throttle:imports')->group(function () {
+            Route::get('/template', [ImportController::class, 'template'])->name('api.imports.template');
+            Route::post('/preview', [ImportController::class, 'preview'])->name('api.imports.preview')->middleware('store.active:concrete');
+            Route::post('/commit', [ImportController::class, 'commit'])->name('api.imports.commit')->middleware('store.active:concrete');
+        });
+
         // POS & Sales Invoices & WhatsApp
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index')->middleware('store.active');
         Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('api.invoices.export')->middleware(['store.active', 'throttle:exports']);
@@ -241,6 +261,20 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
             // Roles & Permissions Matrix
             Route::get('/roles', [RoleController::class, 'index'])->name('api.roles.index');
             Route::put('/roles/{id}/permissions', [RoleController::class, 'updatePermissions'])->name('api.roles.update_permissions');
+        });
+
+        // PRD-04 / ENTI-3.3: the shop's own subscription & billing. billing.manage on every route; the two
+        // POSTs stay open to a read-only / past-due shop (EnsureTenantActive::WRITE_ALLOWLIST) so it can pay.
+        Route::middleware([DenyQuickLoginToken::class, 'can:billing.manage'])->prefix('billing')->group(function () {
+            Route::get('/subscription', [BillingController::class, 'subscription'])->name('api.billing.subscription');
+            Route::get('/invoices', [BillingController::class, 'invoices'])->name('api.billing.invoices.index');
+            Route::get('/invoices/{id}', [BillingController::class, 'showInvoice'])->whereNumber('id')->name('api.billing.invoices.show');
+            Route::post('/invoices/{id}/payments', [BillingController::class, 'submitPayment'])
+                ->whereNumber('id')
+                ->middleware('throttle:billing-receipt-upload')
+                ->name('api.billing.invoices.payments.store');
+            Route::post('/renewal-invoice', [BillingController::class, 'renewalInvoice'])->middleware('throttle:billing-renewal-invoice')
+                ->name('api.billing.renewal_invoice');
         });
 
         // Activity & Audit Logs

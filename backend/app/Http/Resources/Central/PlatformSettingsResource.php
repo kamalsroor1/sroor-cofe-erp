@@ -37,6 +37,11 @@ final class PlatformSettingsResource extends JsonResource
             'support_phone' => $branding->supportPhone,
             'website_url' => $branding->websiteUrl,
             'powered_by_enabled' => $branding->poweredByEnabled,
+            'billing_instapay_address' => $branding->billingInstapayAddress,
+            'billing_vodafone_cash_number' => $branding->billingVodafoneCashNumber,
+            'billing_account_name' => $branding->billingAccountName,
+            'billing_payment_note' => $branding->billingPaymentNote,
+            'billing_tax_rate' => $branding->billingTaxRate,
             'assets' => [
                 PlatformAssetSlot::LogoLight->value => $this->asset($branding->logoLight),
                 PlatformAssetSlot::LogoDark->value => $this->asset($branding->logoDark),

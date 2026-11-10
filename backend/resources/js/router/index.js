@@ -28,6 +28,25 @@ const tenantRoutes = [
         },
     },
     {
+        // PRD-05 / PRD-07: public marketing pages. Guest-accessible, no workspace connection needed.
+        path: '/welcome',
+        name: 'landing.home',
+        component: () => import('../views/Landing/HomeView.vue'),
+        meta: { titleKey: 'landing.page_titles.home', layout: 'blank' },
+    },
+    {
+        path: '/pricing',
+        name: 'landing.pricing',
+        component: () => import('../views/Landing/PricingView.vue'),
+        meta: { titleKey: 'landing.page_titles.pricing', layout: 'blank' },
+    },
+    {
+        path: '/signup',
+        name: 'landing.signup',
+        component: () => import('../views/Landing/SignupView.vue'),
+        meta: { titleKey: 'landing.page_titles.signup', layout: 'blank' },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),
@@ -333,6 +352,28 @@ const tenantRoutes = [
         },
     },
     {
+        path: '/billing',
+        name: 'billing.index',
+        component: () => import('../views/Billing/SubscriptionView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.billing_index',
+            requiresAuth: true,
+            permission: 'billing.manage',
+        },
+    },
+    {
+        path: '/billing/invoices/:id/print',
+        name: 'billing.invoice.print',
+        component: () => import('../views/Billing/BillingInvoicePrintView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.billing_invoice_print',
+            requiresAuth: true,
+            layout: 'blank',
+            isPrintView: true,
+            permission: 'billing.manage',
+        },
+    },
+    {
         path: '/settings',
         name: 'settings.index',
         component: () => import('../views/Settings/SettingsView.vue'),
@@ -349,6 +390,16 @@ const tenantRoutes = [
         meta: {
             titleKey: 'nav.page_titles.profile_show',
             requiresAuth: true,
+        },
+    },
+    {
+        path: '/imports',
+        name: 'imports.index',
+        component: () => import('../views/Imports/ImportView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.import_index',
+            requiresAuth: true,
+            permissionAny: ['items.create', 'customers.manage', 'suppliers.manage'],
         },
     },
     {
@@ -428,6 +479,13 @@ const centralRoutes = [
         () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue')
     ),
     centralPage(
+        '/super-admin/signup-requests',
+        'super_admin.signup_requests',
+        'signup.console.page_title',
+        () => import('../views/SuperAdmin/SuperAdminSignupRequestsView.vue'),
+        CENTRAL_PERMISSIONS.tenantsView
+    ),
+    centralPage(
         '/super-admin/plans',
         'super_admin.plans',
         'super.page_titles.plans',
@@ -444,6 +502,20 @@ const centralRoutes = [
         'super_admin.units',
         'super.page_titles.units',
         () => import('../views/SuperAdmin/SuperAdminUnitsView.vue')
+    ),
+    centralPage(
+        '/super-admin/billing',
+        'super_admin.billing',
+        'billing.console.page_titles.queue',
+        () => import('../views/SuperAdmin/SuperAdminBillingView.vue'),
+        CENTRAL_PERMISSIONS.billingView
+    ),
+    centralPage(
+        '/super-admin/billing-invoices/:id/print',
+        'super_admin.billing_invoice_print',
+        'billing.console.page_titles.invoice_print',
+        () => import('../views/SuperAdmin/SuperAdminBillingInvoicePrintView.vue'),
+        CENTRAL_PERMISSIONS.billingView
     ),
     centralPage(
         '/super-admin/settings',
@@ -502,6 +574,10 @@ async function tenantGuard(to, from, next) {
     // 5. Permission / Role Check (plan gating via meta.feature is rendered by App.vue as a FeatureGate upsell)
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
         notifyError(trans('common.no_access'));
+        return next({ name: 'dashboard' });
+    }
+
+    if (to.meta.permissionAny && !to.meta.permissionAny.some((permission) => authStore.hasPermission(permission))) {
         return next({ name: 'dashboard' });
     }
 

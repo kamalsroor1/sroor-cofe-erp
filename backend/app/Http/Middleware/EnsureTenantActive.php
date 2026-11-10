@@ -49,6 +49,10 @@ final class EnsureTenantActive
         'api.profile.update',
         // pure calculation, writes nothing
         'api.coffee_blender.calculate',
+        // Owner policy: unpaid -> read_only may still pay; suspended/archived are fully blocked (BLOCKED_ALLOWLIST).
+        // PRD-04: a read-only shop must still be able to pay (receipt upload) and ask for a renewal invoice
+        'api.billing.invoices.payments.store',
+        'api.billing.renewal_invoice',
     ];
 
     /** @var list<string> routes a blocked tenant may still call so the SPA can show the state */

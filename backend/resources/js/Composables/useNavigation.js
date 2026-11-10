@@ -24,6 +24,8 @@ import {
     Trash2,
     Sliders,
     Truck,
+    FileUp,
+    CreditCard,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
@@ -175,6 +177,11 @@ export function useNavigation() {
                     icon: Activity,
                 },
                 {
+                    key: 'imports',
+                    path: '/imports',
+                    icon: FileUp,
+                },
+                {
                     key: 'trash',
                     path: '/trash',
                     icon: Trash2,
@@ -183,6 +190,11 @@ export function useNavigation() {
                     key: 'settings',
                     path: '/settings',
                     icon: Sliders,
+                },
+                {
+                    key: 'billing',
+                    path: '/billing',
+                    icon: CreditCard,
                 },
             ],
         },

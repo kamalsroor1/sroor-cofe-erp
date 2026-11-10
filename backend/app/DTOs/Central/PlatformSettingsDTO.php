@@ -30,6 +30,11 @@ final class PlatformSettingsDTO
         'support_phone',
         'website_url',
         'powered_by_enabled',
+        'billing_instapay_address',
+        'billing_vodafone_cash_number',
+        'billing_account_name',
+        'billing_payment_note',
+        'billing_tax_rate',
     ];
 
     /**
@@ -58,6 +63,12 @@ final class PlatformSettingsDTO
             }
 
             $value = $value === null ? null : trim((string) $value);
+
+            if ($key === PlatformSettingKey::BillingTaxRate->value && $value !== null && $value !== '') {
+                // Stored as a clean 3-decimal string (bcmath, no float).
+                $value = bcadd($value, '0', 3);
+            }
+
             $changes[$key] = $value === '' ? null : $value;
         }
 

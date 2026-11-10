@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Models\OpeningBalance;
 use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\SupplierBalanceService;
 use Tests\TenantTestCase;
 
 class SuppliersApiTest extends TenantTestCase
@@ -79,6 +81,27 @@ class SuppliersApiTest extends TenantTestCase
                     'total_suppliers' => 1,
                 ],
             ]);
+    }
+
+    public function test_supplier_opening_balance_is_a_statement_entry_that_survives_recalculation(): void
+    {
+        $id = (int) $this->postJson('/api/v1/suppliers', [
+            'name' => 'مورد رصيد افتتاحي',
+            'phone' => '01000007998',
+            'opening_balance' => '15000.000',
+        ], $this->adminHeaders)->assertStatus(201)->json('data.id');
+
+        $this->inTenant($this->tenant, function () use ($id): void {
+            $this->assertSame(1, OpeningBalance::query()->where('party_type', 'supplier')->where('party_id', $id)->count());
+
+            $service = app(SupplierBalanceService::class);
+            $this->assertSame('15000.000', (string) $service->updateBalance($id));
+            $this->assertSame('15000.000', (string) Supplier::query()->findOrFail($id)->current_balance);
+
+            $ledger = $service->getSupplierLedger(Supplier::query()->findOrFail($id));
+            $this->assertCount(1, $ledger['ledger']);
+            $this->assertSame(__('import.opening_balance_entry'), $ledger['ledger'][0]['type']);
+        });
     }
 
     public function test_can_create_a_new_supplier_with_opening_balance(): void

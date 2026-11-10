@@ -6,9 +6,11 @@ namespace Tests\Feature\Api;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\OpeningBalance;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\CustomerBalanceService;
 use Tests\TenantTestCase;
 
 class CustomersApiTest extends TenantTestCase
@@ -111,6 +113,35 @@ class CustomersApiTest extends TenantTestCase
             'name' => 'مطحن الأمل للبن',
             'phone' => '01000007003',
         ]));
+    }
+
+    public function test_customer_opening_balance_is_a_statement_entry_that_survives_recalculation(): void
+    {
+        $id = (int) $this->postJson('/api/v1/customers', [
+            'name' => 'عميل رصيد افتتاحي',
+            'phone' => '01000007999',
+            'opening_balance' => '2500.000',
+        ], $this->adminHeaders)->assertStatus(201)->json('data.id');
+
+        $this->inTenant($this->tenant, function () use ($id): void {
+            $this->assertSame(1, OpeningBalance::query()->where('party_type', 'customer')->where('party_id', $id)->count());
+
+            $service = app(CustomerBalanceService::class);
+            $this->assertSame('2500.000', $service->updateBalance($id));
+            $this->assertSame('2500.000', (string) Customer::query()->findOrFail($id)->current_balance);
+
+            $ledger = $service->getCustomerLedger(Customer::query()->findOrFail($id));
+            $this->assertCount(1, $ledger['entries']);
+            $this->assertSame(__('import.opening_balance_entry'), $ledger['entries'][0]['type']);
+            $this->assertSame('2500.000', (string) $ledger['entries'][0]['debit']);
+        });
+
+        // No opening balance = no entry and a zero balance.
+        $zero = (int) $this->postJson('/api/v1/customers', ['name' => 'بدون رصيد'], $this->adminHeaders)->assertStatus(201)->json('data.id');
+        $this->inTenant($this->tenant, function () use ($zero): void {
+            $this->assertSame(0, OpeningBalance::query()->where('party_id', $zero)->count());
+            $this->assertSame('0.000', (string) Customer::query()->findOrFail($zero)->current_balance);
+        });
     }
 
     public function test_create_customer_fails_validation_on_missing_name(): void
