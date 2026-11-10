@@ -200,6 +200,16 @@ return [
     // SETG-3: same keys as lang/ar/validation.php. Without them English messages fell back
     // to the Arabic attribute names (fallback_locale = ar), e.g. "The الاسم field is required.".
     'attributes' => [
+        // Public signup (PRD-05)
+        'business_name' => 'business name',
+        'contact_name' => 'contact name',
+        'business_type' => 'business type',
+        'plan_code' => 'plan',
+        'preferred_subdomain' => 'workspace code',
+        'subdomain' => 'workspace code',
+        'city' => 'city',
+        'owner_email' => 'owner email',
+        'owner_password' => 'owner password',
         // App releases (super-admin upload)
         'apk_file' => 'app file',
         'version_code' => 'version code',

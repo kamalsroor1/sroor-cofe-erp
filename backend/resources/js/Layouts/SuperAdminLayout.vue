@@ -24,15 +24,18 @@ import {
   ExternalLink,
   Settings,
   Receipt,
+  Inbox,
 } from 'lucide-vue-next';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { useBillingPendingCount } from '../Composables/useBillingPendingCount';
+import { usePendingSignupRequests } from '../Composables/usePendingSignupRequests';
 
 const centralAuth = useCentralAuthStore();
 const route = useRoute();
 const router = useRouter();
 
 useIdleLogout();
+const { pendingCount: pendingSignupCount } = usePendingSignupRequests();
 
 const { pendingCount, refreshPendingCount } = useBillingPendingCount();
 onMounted(() => {
@@ -77,6 +80,14 @@ const navItems = computed(() =>
       href: '/super-admin/tenants',
       icon: Store,
       active: route.path.startsWith('/super-admin/tenants'),
+    },
+    {
+      name: trans('signup.console.nav'),
+      href: '/super-admin/signup-requests',
+      icon: Inbox,
+      active: route.path.startsWith('/super-admin/signup-requests'),
+      permission: CENTRAL_PERMISSIONS.tenantsView,
+      badge: pendingSignupCount.value,
     },
     {
       name: trans('super.plans'),

@@ -20,6 +20,7 @@ use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\PlanFeature;
 use App\Models\PlatformSetting;
+use App\Models\SignupRequest;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
@@ -93,6 +94,7 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'CentralAuditLog' => [CentralAuditLog::class, self::VIA_OWN_METHOD],
             'PlatformSetting' => [PlatformSetting::class, self::VIA_OWN_METHOD],
             'AppVersion' => [AppVersion::class, self::VIA_OWN_METHOD],
+            'SignupRequest' => [SignupRequest::class, self::VIA_TRAIT],
             'Tenant' => [Tenant::class, self::VIA_STANCL],
             'Domain' => [Domain::class, self::VIA_STANCL],
         ];

@@ -68,6 +68,8 @@ return [
         'billing_payment_verified' => 'Payment verified',
         'billing_payment_rejected' => 'Payment rejected',
         'billing_receipt_viewed' => 'Payment receipt viewed',
+        'signup_request_approved' => 'Signup request approved',
+        'signup_request_rejected' => 'Signup request rejected',
     ],
     'prune' => [
         'done' => 'Deleted :count platform audit rows older than :date.',

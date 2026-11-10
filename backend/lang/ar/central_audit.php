@@ -68,6 +68,8 @@ return [
         'billing_payment_verified' => 'اعتماد دفعة',
         'billing_payment_rejected' => 'رفض دفعة',
         'billing_receipt_viewed' => 'عرض إيصال دفع',
+        'signup_request_approved' => 'الموافقة على طلب تسجيل',
+        'signup_request_rejected' => 'رفض طلب تسجيل',
     ],
     'prune' => [
         'done' => 'تم حذف :count من سجلات مراجعة المنصة الأقدم من :date.',

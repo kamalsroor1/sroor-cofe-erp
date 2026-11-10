@@ -27,7 +27,7 @@ const tenantRoutes = [
         },
     },
     {
-        // PRD-07: public marketing pages. Guest-accessible, no workspace connection needed.
+        // PRD-05 / PRD-07: public marketing pages. Guest-accessible, no workspace connection needed.
         path: '/welcome',
         name: 'landing.home',
         component: () => import('../views/Landing/HomeView.vue'),
@@ -38,6 +38,12 @@ const tenantRoutes = [
         name: 'landing.pricing',
         component: () => import('../views/Landing/PricingView.vue'),
         meta: { titleKey: 'landing.page_titles.pricing', layout: 'blank' },
+    },
+    {
+        path: '/signup',
+        name: 'landing.signup',
+        component: () => import('../views/Landing/SignupView.vue'),
+        meta: { titleKey: 'landing.page_titles.signup', layout: 'blank' },
     },
     {
         path: '/login',
@@ -456,6 +462,13 @@ const centralRoutes = [
         'super_admin.tenants.show',
         'super.page_titles.tenant_show',
         () => import('../views/SuperAdmin/SuperAdminTenantShowView.vue')
+    ),
+    centralPage(
+        '/super-admin/signup-requests',
+        'super_admin.signup_requests',
+        'signup.console.page_title',
+        () => import('../views/SuperAdmin/SuperAdminSignupRequestsView.vue'),
+        CENTRAL_PERMISSIONS.tenantsView
     ),
     centralPage(
         '/super-admin/plans',

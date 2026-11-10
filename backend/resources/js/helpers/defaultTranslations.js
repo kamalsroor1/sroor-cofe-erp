@@ -675,7 +675,9 @@ export const defaultArabicTranslations = {
             "billing_payment_submitted": "رفع إيصال دفع",
             "billing_payment_verified": "اعتماد دفعة",
             "billing_payment_rejected": "رفض دفعة",
-            "billing_receipt_viewed": "عرض إيصال دفع"
+            "billing_receipt_viewed": "عرض إيصال دفع",
+            "signup_request_approved": "الموافقة على طلب تسجيل",
+            "signup_request_rejected": "رفض طلب تسجيل"
         },
         "prune": {
             "done": "تم حذف :count من سجلات مراجعة المنصة الأقدم من :date."
@@ -2369,6 +2371,91 @@ export const defaultArabicTranslations = {
         "unit_not_in_list": ":unit (غير موجودة في قائمة الوحدات)",
         "printer_test_date_time": "الوقت والتاريخ"
     },
+    "landing": {
+        "unlimited": "غير محدود",
+        "per_month": "شهريًا",
+        "per_year": "سنويًا",
+        "billing_monthly": "شهري",
+        "billing_yearly": "سنوي",
+        "prices_exclude_vat": "الأسعار لا تشمل ضريبة القيمة المضافة.",
+        "founder_badge": "سعر المؤسسين",
+        "founder_slots_left": "تبقّى :count مكان بسعر المؤسسين",
+        "popular": "الأكثر طلبًا",
+        "trial_days": "تجربة مجانية :count يوم",
+        "request_workspace": "اطلب مساحة عملك",
+        "addons_title": "الإضافات",
+        "features_title": "المزايا المتضمنة",
+        "limits": {
+            "users": "المستخدمون",
+            "stores": "فروع البيع",
+            "warehouses": "المخازن",
+            "vans": "سيارات التوزيع",
+            "items": "الأصناف",
+            "invoices_per_month": "الفواتير شهريًا",
+            "storage_mb": "المساحة (ميجابايت)"
+        },
+        "errors": {
+            "plans_unavailable": "الأسعار غير متاحة حاليًا. حاول مرة أخرى بعد قليل."
+        },
+        "request_trial": "اطلب حساب تجريبي",
+        "currencies": {
+            "egp": "جنيه"
+        },
+        "page_titles": {
+            "home": "نظام إدارة المبيعات والمخزون",
+            "pricing": "الأسعار والباقات",
+            "signup": "اطلب حساب تجريبي"
+        },
+        "nav": {
+            "pricing": "الأسعار",
+            "signup": "اطلب حساب تجريبي",
+            "discover": "تعرّف على النظام وأسعاره"
+        },
+        "pricing": {
+            "title": "اختر الباقة المناسبة لنشاطك",
+            "subtitle": "باقات واضحة بأسعار معلنة، وتقدر تغيّر باقتك لاحقًا.",
+            "save_percent": "وفّر :percent٪ سنويًا",
+            "founder_price_months": "سعر المؤسسين لأول :count شهر",
+            "plan_unavailable": "لا توجد باقات متاحة حاليًا.",
+            "billing_toggle": "دورة الفوترة"
+        },
+        "home": {
+            "hero_title": "نظام واحد للبيع والمخزون والحسابات",
+            "hero_subtitle": "مناسب للمحلات والجملة وسيارات التوزيع والبيع بالوزن. ابدأ بتجربة مجانية وإحنا نجهّز لك الحساب.",
+            "points_title": "ليه النظام ده؟",
+            "points": {
+                "pos": {
+                    "title": "شاشة بيع سريعة",
+                    "body": "كاشير يدعم الباركود واللمس واختصارات الكيبورد."
+                },
+                "inventory": {
+                    "title": "مخزون وفروع",
+                    "body": "أرصدة لكل فرع ومخزن، وتحويلات ومشتريات ومرتجعات."
+                },
+                "weighted": {
+                    "title": "بيع بالوزن",
+                    "body": "بيع بالكيلو أو الجرام مع وحدات قياس تضبطها بنفسك."
+                },
+                "wholesale": {
+                    "title": "جملة وتجزئة",
+                    "body": "أسعار حسب شريحة العميل وكشوف حساب للعملاء والموردين."
+                },
+                "vans": {
+                    "title": "سيارات التوزيع",
+                    "body": "حوّل البضاعة لسيارات التوزيع وتابع مخزونها."
+                },
+                "reports": {
+                    "title": "تقارير وصلاحيات",
+                    "body": "تقارير المبيعات والأرباح، وصلاحيات مختلفة لكل مستخدم."
+                }
+            },
+            "teaser_title": "الباقات",
+            "see_all_plans": "شاهد كل التفاصيل والأسعار",
+            "cta_title": "جاهز تبدأ؟",
+            "cta_subtitle": "سيب بياناتك وهنتواصل معاك لتجهيز الحساب.",
+            "support_title": "تواصل معنا"
+        }
+    },
     "media": {
         "invalid_image": "الملف ليس صورة صالحة أو أنه تالف.",
         "svg_forbidden": "غير مسموح برفع صور SVG. ارفع صورة عادية بدلًا منها.",
@@ -3911,6 +3998,104 @@ export const defaultArabicTranslations = {
         "load_error_desc": "حدث خطأ أثناء تحميل إعدادات المؤسسة من الخادم. يرجى المحاولة مرة أخرى.",
         "retry_loading": "إعادة المحاولة"
     },
+    "signup": {
+        "submitted": "شكرًا لك. استلمنا طلبك وسنتواصل معك قريبًا لتجهيز مساحة عملك.",
+        "approved": "تمت الموافقة على الطلب وجارٍ تجهيز مساحة العمل.",
+        "rejected": "تم رفض الطلب.",
+        "validation": {
+            "duplicate_pending": "لدينا طلب قيد المراجعة بهذا الرقم بالفعل، وسنتواصل معك قريبًا.",
+            "plan_unknown": "الباقة المختارة غير متاحة.",
+            "subdomain_format": "كود مساحة العمل من 3 إلى 30 حرفًا: حروف إنجليزية صغيرة وأرقام وشرطات، ولا يبدأ أو ينتهي بشرطة.",
+            "subdomain_reserved": "كود مساحة العمل هذا محجوز. اختر كودًا آخر.",
+            "subdomain_taken": "كود مساحة العمل هذا مستخدم بالفعل. اختر كودًا آخر."
+        },
+        "errors": {
+            "queue_full": "الخدمة مشغولة حاليا. برجاء المحاولة لاحقا.",
+            "not_pending": "تمت معالجة هذا الطلب من قبل.",
+            "no_trial_plan": "لا توجد باقة نشطة لبدء مساحة العمل عليها.",
+            "provisioning_failed": "تعذّر إنشاء مساحة العمل. راجع كود مساحة العمل وحاول مرة أخرى."
+        },
+        "notify": {
+            "backlog": "تراكم طلبات الاشتراك: :count طلب قيد المراجعة. تم إيقاف إشعارات كل طلب لمدة ساعة.",
+            "new_request": "طلب تسجيل جديد\nالنشاط: :business\nالمسؤول: :contact\nالهاتف: :phone\nالباقة: :plan"
+        },
+        "business_types": {
+            "retail": "محل تجزئة",
+            "wholesale": "جملة",
+            "weighted": "بيع بالوزن",
+            "other": "نشاط آخر"
+        },
+        "statuses": {
+            "pending": "قيد المراجعة",
+            "approved": "مقبول",
+            "rejected": "مرفوض"
+        },
+        "form": {
+            "title": "اطلب حساب تجريبي",
+            "subtitle": "اكتب بيانات نشاطك وهنتواصل معاك لتجهيز الحساب.",
+            "business_name": "اسم النشاط",
+            "contact_name": "اسم المسؤول",
+            "phone": "رقم الموبايل",
+            "phone_placeholder": "01xxxxxxxxx",
+            "email": "البريد الإلكتروني (اختياري)",
+            "city": "المدينة (اختياري)",
+            "business_type": "نوع النشاط",
+            "plan": "الباقة (اختياري)",
+            "plan_none": "لسه مش متأكد",
+            "subdomain": "الكود المفضل لمساحة العمل (اختياري)",
+            "subdomain_hint": "حروف إنجليزية صغيرة وأرقام وشرطات، من 3 لـ 30 حرف.",
+            "notes": "ملاحظات (اختياري)",
+            "submit": "إرسال الطلب",
+            "submitting": "جاري الإرسال...",
+            "success_title": "وصلنا طلبك",
+            "back_home": "العودة للرئيسية",
+            "view_pricing": "شاهد الأسعار",
+            "throttled": "محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.",
+            "failed": "تعذّر إرسال الطلب. حاول مرة أخرى.",
+            "plans_failed": "تعذّر تحميل الباقات. تقدر تكمل الطلب بدون اختيار باقة."
+        },
+        "console": {
+            "page_title": "طلبات الحسابات",
+            "page_subtitle": "طلبات التسجيل الواردة من صفحة الأسعار. راجعها واعتمدها أو ارفضها.",
+            "nav": "طلبات الحسابات",
+            "search_placeholder": "ابحث بالاسم أو الموبايل",
+            "load_failed": "تعذّر تحميل الطلبات.",
+            "empty_title": "لا توجد طلبات",
+            "empty_description": "لا توجد طلبات في هذا القسم حاليًا.",
+            "fields": {
+                "contact": "المسؤول",
+                "phone": "الموبايل",
+                "email": "البريد",
+                "city": "المدينة",
+                "type": "النشاط",
+                "plan": "الباقة",
+                "subdomain": "الكود المفضل",
+                "notes": "ملاحظات",
+                "date": "تاريخ الطلب",
+                "rejection_reason": "سبب الرفض"
+            },
+            "approve": "اعتماد",
+            "reject": "رفض",
+            "approve_title": "اعتماد الطلب وإنشاء الحساب",
+            "subdomain_label": "كود مساحة العمل",
+            "plan_label": "الباقة",
+            "owner_email": "بريد المالك",
+            "owner_password": "كلمة مرور المالك",
+            "generate_password": "توليد كلمة مرور",
+            "copy_password": "نسخ كلمة المرور",
+            "copied": "تم النسخ.",
+            "password_hint": "انسخ كلمة المرور الآن وسلّمها للعميل. لن تظهر مرة أخرى.",
+            "approve_confirm": "اعتماد وإنشاء الحساب",
+            "preparing_title": "جاري تجهيز الحساب",
+            "preparing_description": "تم اعتماد الطلب وبيتم تجهيز مساحة العمل الآن. هتلاقيها في قائمة المستأجرين خلال لحظات.",
+            "already_handled": "الطلب اتعالج قبل كده. تم تحديث القائمة.",
+            "reject_title": "رفض الطلب",
+            "reject_label": "سبب الرفض (من 3 إلى 500 حرف)",
+            "reject_confirm": "تأكيد الرفض",
+            "reject_reason_length": "سبب الرفض لازم يكون من 3 إلى 500 حرف.",
+            "action_failed": "تعذّر تنفيذ العملية."
+        }
+    },
     "store_scope": {
         "concrete_store_required": "اختر فرعاً واحداً لتنفيذ هذه العملية؛ لا يُسمح بـ \"كل الفروع\" هنا.",
         "store_not_resolved": "لم يتم تحديد فرع لهذا الطلب.",
@@ -5090,6 +5275,15 @@ export const defaultArabicTranslations = {
             }
         },
         "attributes": {
+            "business_name": "اسم النشاط",
+            "contact_name": "اسم المسؤول",
+            "business_type": "نوع النشاط",
+            "plan_code": "الباقة",
+            "preferred_subdomain": "كود مساحة العمل",
+            "subdomain": "كود مساحة العمل",
+            "city": "المدينة",
+            "owner_email": "بريد المالك",
+            "owner_password": "كلمة مرور المالك",
             "apk_file": "ملف التطبيق",
             "version_code": "رقم الإصدار الداخلي",
             "version_name": "اسم الإصدار",
@@ -5863,7 +6057,9 @@ export const defaultEnglishTranslations = {
             "billing_payment_submitted": "Payment receipt submitted",
             "billing_payment_verified": "Payment verified",
             "billing_payment_rejected": "Payment rejected",
-            "billing_receipt_viewed": "Payment receipt viewed"
+            "billing_receipt_viewed": "Payment receipt viewed",
+            "signup_request_approved": "Signup request approved",
+            "signup_request_rejected": "Signup request rejected"
         },
         "prune": {
             "done": "Deleted :count platform audit rows older than :date."
@@ -7557,6 +7753,91 @@ export const defaultEnglishTranslations = {
         "unit_not_in_list": ":unit (not in the unit list)",
         "printer_test_date_time": "Date and time"
     },
+    "landing": {
+        "unlimited": "Unlimited",
+        "per_month": "per month",
+        "per_year": "per year",
+        "billing_monthly": "Monthly",
+        "billing_yearly": "Yearly",
+        "prices_exclude_vat": "Prices exclude VAT.",
+        "founder_badge": "Founder price",
+        "founder_slots_left": ":count founder spots left",
+        "popular": "Most popular",
+        "trial_days": ":count-day free trial",
+        "request_workspace": "Request your workspace",
+        "addons_title": "Add-ons",
+        "features_title": "Included features",
+        "limits": {
+            "users": "Users",
+            "stores": "Sales branches",
+            "warehouses": "Warehouses",
+            "vans": "Delivery vans",
+            "items": "Items",
+            "invoices_per_month": "Invoices per month",
+            "storage_mb": "Storage (MB)"
+        },
+        "errors": {
+            "plans_unavailable": "Pricing is not available right now. Please try again shortly."
+        },
+        "request_trial": "Request a trial account",
+        "currencies": {
+            "egp": "EGP"
+        },
+        "page_titles": {
+            "home": "Sales and inventory management system",
+            "pricing": "Pricing and plans",
+            "signup": "Request a trial account"
+        },
+        "nav": {
+            "pricing": "Pricing",
+            "signup": "Request a trial account",
+            "discover": "Discover the system and its pricing"
+        },
+        "pricing": {
+            "title": "Choose the plan that fits your business",
+            "subtitle": "Clear plans with published prices. You can change plan later.",
+            "save_percent": "Save :percent% yearly",
+            "founder_price_months": "Founder price for the first :count months",
+            "plan_unavailable": "No plans are available right now.",
+            "billing_toggle": "Billing cycle"
+        },
+        "home": {
+            "hero_title": "One system for sales, inventory and accounts",
+            "hero_subtitle": "Built for shops, wholesale, delivery vans and sold-by-weight items. Start with a free trial and we set the account up for you.",
+            "points_title": "Why this system?",
+            "points": {
+                "pos": {
+                    "title": "Fast point of sale",
+                    "body": "A cashier screen with barcode, touch and keyboard shortcuts."
+                },
+                "inventory": {
+                    "title": "Inventory and branches",
+                    "body": "Balances per branch and warehouse, transfers, purchases and returns."
+                },
+                "weighted": {
+                    "title": "Sell by weight",
+                    "body": "Sell by kilo or gram with units of measurement you configure."
+                },
+                "wholesale": {
+                    "title": "Wholesale and retail",
+                    "body": "Prices by customer tier and account statements for customers and suppliers."
+                },
+                "vans": {
+                    "title": "Delivery vans",
+                    "body": "Transfer goods to delivery vans and follow their stock."
+                },
+                "reports": {
+                    "title": "Reports and permissions",
+                    "body": "Sales and profit reports, with separate permissions per user."
+                }
+            },
+            "teaser_title": "Plans",
+            "see_all_plans": "See all details and prices",
+            "cta_title": "Ready to start?",
+            "cta_subtitle": "Leave your details and we will contact you to set up the account.",
+            "support_title": "Contact us"
+        }
+    },
     "media": {
         "invalid_image": "The file is not a valid image or it is corrupted.",
         "svg_forbidden": "SVG images are not allowed. Upload a raster image instead.",
@@ -9099,6 +9380,104 @@ export const defaultEnglishTranslations = {
         "load_error_desc": "An error occurred while loading settings from the server. Please try again.",
         "retry_loading": "Retry"
     },
+    "signup": {
+        "submitted": "Thank you. We received your request and will contact you shortly to set up your workspace.",
+        "approved": "The request was approved and the workspace is being prepared.",
+        "rejected": "The request was rejected.",
+        "validation": {
+            "duplicate_pending": "We already have a pending request for this phone number. We will contact you soon.",
+            "plan_unknown": "The selected plan is not available.",
+            "subdomain_format": "The workspace code must be 3 to 30 characters: lowercase English letters, digits and dashes, not starting or ending with a dash.",
+            "subdomain_reserved": "This workspace code is reserved. Please choose another one.",
+            "subdomain_taken": "This workspace code is already taken. Please choose another one."
+        },
+        "errors": {
+            "queue_full": "The service is busy right now. Please try again later.",
+            "not_pending": "This request was already handled.",
+            "no_trial_plan": "No active plan is available to start this workspace on.",
+            "provisioning_failed": "The workspace could not be created. Check the workspace code and try again."
+        },
+        "notify": {
+            "backlog": "Signup backlog: :count requests are pending review. Per-request alerts are paused for an hour.",
+            "new_request": "New signup request\nBusiness: :business\nContact: :contact\nPhone: :phone\nPlan: :plan"
+        },
+        "business_types": {
+            "retail": "Retail shop",
+            "wholesale": "Wholesale",
+            "weighted": "Sold by weight",
+            "other": "Other"
+        },
+        "statuses": {
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        },
+        "form": {
+            "title": "Request a trial account",
+            "subtitle": "Enter your business details and we will contact you to set up the account.",
+            "business_name": "Business name",
+            "contact_name": "Contact person",
+            "phone": "Mobile number",
+            "phone_placeholder": "01xxxxxxxxx",
+            "email": "Email (optional)",
+            "city": "City (optional)",
+            "business_type": "Business type",
+            "plan": "Plan (optional)",
+            "plan_none": "Not sure yet",
+            "subdomain": "Preferred workspace code (optional)",
+            "subdomain_hint": "Lowercase English letters, digits and dashes, 3 to 30 characters.",
+            "notes": "Notes (optional)",
+            "submit": "Send request",
+            "submitting": "Sending...",
+            "success_title": "We received your request",
+            "back_home": "Back to home",
+            "view_pricing": "View pricing",
+            "throttled": "Too many attempts. Please wait a moment and try again.",
+            "failed": "The request could not be sent. Please try again.",
+            "plans_failed": "Plans could not be loaded. You can still send the request without choosing a plan."
+        },
+        "console": {
+            "page_title": "Signup requests",
+            "page_subtitle": "Sign-up requests coming from the pricing page. Review them, then approve or reject.",
+            "nav": "Signup requests",
+            "search_placeholder": "Search by name or mobile",
+            "load_failed": "The requests could not be loaded.",
+            "empty_title": "No requests",
+            "empty_description": "There are no requests in this section right now.",
+            "fields": {
+                "contact": "Contact",
+                "phone": "Mobile",
+                "email": "Email",
+                "city": "City",
+                "type": "Business",
+                "plan": "Plan",
+                "subdomain": "Preferred code",
+                "notes": "Notes",
+                "date": "Requested on",
+                "rejection_reason": "Rejection reason"
+            },
+            "approve": "Approve",
+            "reject": "Reject",
+            "approve_title": "Approve request and create the account",
+            "subdomain_label": "Workspace code",
+            "plan_label": "Plan",
+            "owner_email": "Owner email",
+            "owner_password": "Owner password",
+            "generate_password": "Generate password",
+            "copy_password": "Copy password",
+            "copied": "Copied.",
+            "password_hint": "Copy the password now and hand it to the customer. It will not be shown again.",
+            "approve_confirm": "Approve and create account",
+            "preparing_title": "The account is being prepared",
+            "preparing_description": "The request was approved and the workspace is being prepared. It will appear in the tenants list in a moment.",
+            "already_handled": "This request was already handled. The list was refreshed.",
+            "reject_title": "Reject request",
+            "reject_label": "Rejection reason (3 to 500 characters)",
+            "reject_confirm": "Confirm rejection",
+            "reject_reason_length": "The rejection reason must be 3 to 500 characters.",
+            "action_failed": "The operation could not be completed."
+        }
+    },
     "store_scope": {
         "concrete_store_required": "Select a single branch for this operation; \"all branches\" is not allowed here.",
         "store_not_resolved": "No branch is selected for this request.",
@@ -10278,6 +10657,15 @@ export const defaultEnglishTranslations = {
             }
         },
         "attributes": {
+            "business_name": "business name",
+            "contact_name": "contact name",
+            "business_type": "business type",
+            "plan_code": "plan",
+            "preferred_subdomain": "workspace code",
+            "subdomain": "workspace code",
+            "city": "city",
+            "owner_email": "owner email",
+            "owner_password": "owner password",
             "apk_file": "app file",
             "version_code": "version code",
             "version_name": "version name",

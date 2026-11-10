@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Central\CentralPasswordResetController;
 use App\Http\Controllers\Api\Central\CentralTwoFactorController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
+use App\Http\Controllers\Api\Central\SignupRequestController;
 use App\Http\Controllers\Api\Central\TenantArchiveController;
 use App\Http\Controllers\Api\Central\TenantBillingInvoiceController;
 use App\Http\Controllers\Api\Central\TenantProvisioningController;
@@ -60,7 +61,7 @@ use Illuminate\Support\Facades\Route;
 |                                   platform-settings update + asset upload/delete (BRND-2),
 |                                   tenant retry-provisioning (OPS-2), platform units
 |                                   update (W2 batch 4 review), tenant archive (DELETE)
-|                                   and unarchive (OPS-9).
+|                                   and unarchive (OPS-9), signup-request approve (PRD-05).
 |                                   The `can:` check runs first: a read-only operator
 |                                   still gets a plain 403, never a step-up prompt.
 |
@@ -181,6 +182,17 @@ Route::prefix('v1/super-admin')
         Route::post('/billing/payments/{payment}/reject', [BillingReviewController::class, 'reject'])
             ->whereNumber('payment')
             ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.payments.reject');
+
+        // PRD-05: assisted signup. Approve provisions a tenant, so it needs a recent 2FA proof like
+        // POST /tenants; reject is a plain manage action.
+        Route::get('/signup-requests', [SignupRequestController::class, 'index'])
+            ->middleware($can(CentralPermission::TenantsView))->name('signup_requests.index');
+        Route::post('/signup-requests/{id}/approve', [SignupRequestController::class, 'approve'])
+            ->whereNumber('id')
+            ->middleware([$can(CentralPermission::TenantsManage), RequireRecentTwoFactor::class, 'throttle:20,1'])->name('signup_requests.approve');
+        Route::post('/signup-requests/{id}/reject', [SignupRequestController::class, 'reject'])
+            ->whereNumber('id')
+            ->middleware([$can(CentralPermission::TenantsManage), 'throttle:20,1'])->name('signup_requests.reject');
 
         // Plans
         Route::get('/plans', [SuperAdminApiController::class, 'plans'])

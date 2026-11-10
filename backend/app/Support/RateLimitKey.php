@@ -24,6 +24,24 @@ final class RateLimitKey
         return $tenant !== null ? 't:'.$tenant->getTenantKey() : 'c';
     }
 
+    /**
+     * Limiter identity of a client address: IPv4 as is, IPv6 collapsed to its /64 prefix
+     * (one subscriber owns a whole /64, so per-address buckets are trivially rotated).
+     */
+    public static function clientNetwork(string $ip): string
+    {
+        if (! str_contains($ip, ':')) {
+            return $ip;
+        }
+
+        $packed = @inet_pton($ip);
+        if ($packed === false || strlen($packed) !== 16) {
+            return $ip;
+        }
+
+        return bin2hex(substr($packed, 0, 8)).'::/64';
+    }
+
     /** Case/space-insensitive, transliterated identifier (login, phone or email). */
     public static function identifier(mixed $value): string
     {

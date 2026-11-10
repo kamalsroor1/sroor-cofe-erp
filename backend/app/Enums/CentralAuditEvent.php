@@ -98,6 +98,9 @@ enum CentralAuditEvent: string
     case BillingPaymentVerified = 'billing_payment_verified';
     case BillingPaymentRejected = 'billing_payment_rejected';
     case BillingReceiptViewed = 'billing_receipt_viewed';
+    // PRD-05: assisted signup review
+    case SignupRequestApproved = 'signup_request_approved';
+    case SignupRequestRejected = 'signup_request_rejected';
 
     public function translationKey(): string
     {
