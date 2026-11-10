@@ -111,6 +111,55 @@ const form = defineModel('form', { type: Object, required: true });
       :maxlength="500"
     />
 
+    <!-- PRD-08: Explicit consent to Terms of Service, Privacy Policy and DPA -->
+    <div class="space-y-1.5">
+      <label
+        for="signup-terms-accepted"
+        class="flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-200"
+      >
+        <input
+          id="signup-terms-accepted"
+          v-model="form.terms_accepted"
+          data-testid="signup-terms-checkbox"
+          type="checkbox"
+          required
+          class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 accent-emerald-600 focus:ring-2"
+        />
+        <span class="leading-relaxed">
+          {{ $t('signup.form.terms_prefix') }}
+          <RouterLink
+            :to="{ name: 'landing.terms' }"
+            target="_blank"
+            class="underline underline-offset-4"
+            style="color: var(--color-primary)"
+          >
+            {{ $t('signup.form.terms_link') }}
+          </RouterLink>
+          {{ $t('signup.form.terms_and') }}
+          <RouterLink
+            :to="{ name: 'landing.privacy' }"
+            target="_blank"
+            class="underline underline-offset-4"
+            style="color: var(--color-primary)"
+          >
+            {{ $t('signup.form.privacy_link') }}
+          </RouterLink>
+          {{ $t('signup.form.terms_and') }}
+          <RouterLink
+            :to="{ name: 'landing.dpa' }"
+            target="_blank"
+            class="underline underline-offset-4"
+            style="color: var(--color-primary)"
+          >
+            {{ $t('signup.form.dpa_link') }}
+          </RouterLink>
+        </span>
+      </label>
+      <p v-if="errors.terms_accepted" data-testid="signup-terms-error" class="text-xs font-bold text-rose-500">
+        {{ Array.isArray(errors.terms_accepted) ? errors.terms_accepted[0] : errors.terms_accepted }}
+      </p>
+    </div>
+
     <!-- Honeypot: invisible to people and assistive tech; a bot that fills it is dropped by the server. -->
     <div class="absolute h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
       <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off" />

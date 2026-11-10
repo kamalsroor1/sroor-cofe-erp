@@ -37,6 +37,8 @@ final class SignupRequestResource extends JsonResource
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'tenant_id' => $this->tenant_id,
             'ip' => $this->ip,
+            'terms_accepted_at' => $this->terms_accepted_at?->toIso8601String(),
+            'terms_version' => $this->terms_version,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

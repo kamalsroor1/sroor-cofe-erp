@@ -13,6 +13,27 @@ defineProps({
       <p v-if="brand.subtitle" class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ brand.subtitle }}</p>
     </div>
 
+    <div class="flex flex-wrap items-center gap-2">
+      <RouterLink
+        :to="{ name: 'landing.terms' }"
+        class="inline-flex min-h-11 items-center rounded-xl px-2.5 text-xs font-bold text-slate-600 underline-offset-4 hover:underline dark:text-slate-300"
+      >
+        {{ $t('landing.nav.terms') }}
+      </RouterLink>
+      <RouterLink
+        :to="{ name: 'landing.privacy' }"
+        class="inline-flex min-h-11 items-center rounded-xl px-2.5 text-xs font-bold text-slate-600 underline-offset-4 hover:underline dark:text-slate-300"
+      >
+        {{ $t('landing.nav.privacy') }}
+      </RouterLink>
+      <RouterLink
+        :to="{ name: 'landing.dpa' }"
+        class="inline-flex min-h-11 items-center rounded-xl px-2.5 text-xs font-bold text-slate-600 underline-offset-4 hover:underline dark:text-slate-300"
+      >
+        {{ $t('landing.nav.dpa') }}
+      </RouterLink>
+    </div>
+
     <div v-if="brand.support_phone || brand.support_email" class="flex flex-col gap-2 sm:flex-row sm:items-center">
       <span class="text-xs font-black text-slate-700 dark:text-slate-200">{{ $t('landing.home.support_title') }}</span>
       <a

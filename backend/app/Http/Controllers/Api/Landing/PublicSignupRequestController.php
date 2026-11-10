@@ -22,7 +22,7 @@ final class PublicSignupRequestController extends Controller
 
     public function store(StoreSignupRequestRequest $request): JsonResponse
     {
-        /** @var array{business_name: string, contact_name: string, phone: string, email?: string|null, city?: string|null, business_type: string, plan_code?: string|null, preferred_subdomain?: string|null, notes?: string|null, website?: string|null} $data */
+        /** @var array{business_name: string, contact_name: string, phone: string, email?: string|null, city?: string|null, business_type: string, plan_code?: string|null, preferred_subdomain?: string|null, notes?: string|null, terms_accepted?: mixed, website?: string|null} $data */
         $data = $request->validated();
 
         $this->createSignupRequest->execute(
