@@ -26,12 +26,13 @@ import {
     Sliders,
     Truck,
     CreditCard,
+    FileUp,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
     const route = useRoute();
     const { isModuleEnabled } = useModules();
-    const auth = useAuthStore();
+    const authStore = useAuthStore();
 
     const sectionsRaw = [
         {
@@ -258,6 +259,14 @@ export function useNavigation() {
                     module: 'users_and_auth',
                 },
                 {
+                    key: 'imports',
+                    title: 'استيراد البيانات',
+                    titleKey: 'nav.import',
+                    path: '/imports',
+                    icon: FileUp,
+                    permissionAny: ['items.create', 'customers.manage', 'suppliers.manage'],
+                },
+                {
                     key: 'trash',
                     title: 'سلة المحذوفات',
                     titleKey: 'nav.trash',
@@ -297,7 +306,10 @@ export function useNavigation() {
                     if (item.module && !isModuleEnabled(item.module)) {
                         return false;
                     }
-                    if (item.permission && !auth.can(item.permission)) {
+                    if (item.permission && !authStore.can(item.permission)) {
+                        return false;
+                    }
+                    if (item.permissionAny && !item.permissionAny.some((permission) => authStore.can(permission))) {
                         return false;
                     }
                     return true;

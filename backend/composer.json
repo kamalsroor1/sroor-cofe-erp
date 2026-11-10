@@ -16,6 +16,7 @@
         "laravel/telescope": "*",
         "laravel/tinker": "^3.0",
         "masbug/flysystem-google-drive-ext": "^2.5",
+        "openspout/openspout": "^5.3",
         "sentry/sentry-laravel": "^4.28",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-backup": "^10.3",

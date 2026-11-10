@@ -1560,6 +1560,193 @@ export const defaultArabicTranslations = {
             "petty_operations": "نثريات ومصاريف تشغيل"
         }
     },
+    "import": {
+        "committed": "تم استيراد :count سجل بنجاح.",
+        "opening_balance_entry": "رصيد أول المدة",
+        "opening_balance_note": "رصيد أول المدة (استيراد)",
+        "opening_balance_note_manual": "رصيد افتتاحي",
+        "opening_stock_note": "رصيد أول المدة (استيراد من ملف)",
+        "errors": {
+            "too_many_rows": "الملف فيه صفوف أكتر من الحد المسموح (:max صف).",
+            "empty_file": "الملف فاضي أو مفيهوش بيانات تحت صف العناوين.",
+            "unreadable_file": "مقدرناش نقرأ الملف. اتأكد إنه ملف Excel (xlsx) أو CSV سليم.",
+            "missing_columns": "أعمدة مطلوبة ناقصة في الملف: :columns",
+            "required": "الحقل «:field» مطلوب.",
+            "too_long": "الحقل «:field» أطول من :max حرف.",
+            "invalid_number": "القيمة في «:field» مش رقم صحيح.",
+            "negative_not_allowed": "القيمة في «:field» لازم تكون صفر أو أكبر.",
+            "invalid_price_tier": "القيمة في «:field» لازم تكون تجزئة أو جملة.",
+            "invalid_boolean": "القيمة في «:field» لازم تكون نعم أو لا.",
+            "duplicate": "السجل ده موجود قبل كده (أو متكرر في الملف) وهيتم تخطيه.",
+            "token_not_found": "جلسة الاستيراد انتهت أو مش موجودة. ارفع الملف من جديد.",
+            "invalid_rows_present": "في :count صف فيه أخطاء. صحح الملف أو أكد تخطي الصفوف الغلط.",
+            "already_running": "هناك عملية استيراد جارية لنفس الملف. انتظر حتى تنتهي.",
+            "conflict": "تعارض الاستيراد مع سجل أُنشئ في الأثناء (كود أو اسم مكرر). لم يتم استيراد أي شيء؛ ارفع الملف مرة أخرى.",
+            "template_failed": "حصلت مشكلة أثناء تجهيز ملف النموذج."
+        },
+        "columns": {
+            "items": {
+                "code": "الكود",
+                "name": "اسم الصنف",
+                "category": "التصنيف",
+                "unit": "الوحدة",
+                "cost_price": "سعر التكلفة",
+                "selling_price": "سعر البيع",
+                "min_selling_price": "أقل سعر بيع (جملة)",
+                "min_stock_level": "حد الطلب",
+                "is_weighted": "صنف موزون",
+                "opening_quantity": "كمية أول المدة",
+                "opening_cost": "تكلفة أول المدة"
+            },
+            "customers": {
+                "name": "اسم العميل",
+                "phone": "الموبايل",
+                "address": "العنوان",
+                "tax_number": "الرقم الضريبي",
+                "price_tier": "شريحة السعر",
+                "opening_balance": "الرصيد الافتتاحي",
+                "notes": "ملاحظات"
+            },
+            "suppliers": {
+                "name": "اسم المورد",
+                "company_name": "اسم الشركة",
+                "phone": "الموبايل",
+                "address": "العنوان",
+                "opening_balance": "الرصيد الافتتاحي",
+                "notes": "ملاحظات"
+            },
+            "categories": {
+                "name": "اسم التصنيف",
+                "icon": "الأيقونة"
+            }
+        },
+        "examples": {
+            "items": {
+                "code": "ITM-0001",
+                "name": "بن برازيلي",
+                "category": "بن",
+                "unit": "كجم",
+                "cost_price": "250",
+                "selling_price": "320",
+                "min_selling_price": "300",
+                "min_stock_level": "5",
+                "is_weighted": "نعم",
+                "opening_quantity": "20",
+                "opening_cost": "250"
+            },
+            "customers": {
+                "name": "أحمد محمد",
+                "phone": "01000000001",
+                "address": "القاهرة",
+                "tax_number": "123456789",
+                "price_tier": "تجزئة",
+                "opening_balance": "1500",
+                "notes": "ملاحظة"
+            },
+            "suppliers": {
+                "name": "محمود علي",
+                "company_name": "شركة النيل للتوريدات",
+                "phone": "01000000002",
+                "address": "الجيزة",
+                "opening_balance": "5000",
+                "notes": "ملاحظة"
+            },
+            "categories": {
+                "name": "مشروبات ساخنة",
+                "icon": "☕"
+            }
+        },
+        "ui": {
+            "import_button": "استيراد",
+            "title": "استيراد البيانات",
+            "subtitle": "ضيف الأصناف والعملاء والموردين والتصنيفات من ملف Excel أو CSV.",
+            "steps": {
+                "type": "اختيار النوع",
+                "upload": "رفع الملف",
+                "preview": "المراجعة",
+                "done": "تم"
+            },
+            "types": {
+                "items": {
+                    "title": "الأصناف",
+                    "desc": "منتجات بأسعارها وتصنيفاتها ورصيد أول المدة (اختياري)."
+                },
+                "customers": {
+                    "title": "العملاء",
+                    "desc": "عملاء ببيانات التواصل وشريحة السعر والرصيد الافتتاحي."
+                },
+                "suppliers": {
+                    "title": "الموردون",
+                    "desc": "موردون ببيانات الشركة والرصيد الافتتاحي."
+                },
+                "categories": {
+                    "title": "التصنيفات",
+                    "desc": "تصنيفات الأصناف مع أيقونة اختيارية."
+                }
+            },
+            "choose_type": "عايز تستورد إيه؟",
+            "continue": "متابعة",
+            "back": "رجوع",
+            "no_types": "ملكش صلاحية استيراد أي نوع من البيانات.",
+            "download_template": "تحميل النموذج",
+            "downloading": "جاري التجهيز...",
+            "template_hint": "ابدأ من النموذج عشان الأعمدة تطابق بالظبط.",
+            "template_failed": "مقدرناش نحمّل النموذج. جرب تاني.",
+            "no_store_title": "اختار الفرع الأول",
+            "no_store_text": "الاستيراد بيتحفظ على فرع واحد. غيّر من \"كل الفروع\" لفرع محدد وارجع تاني.",
+            "active_store": "الفرع الحالي: :store",
+            "opening_stock_into": "رصيد أول المدة اللي في الملف هيتضاف على الفرع ده.",
+            "upload_title": "ارفع ملف :type",
+            "drop_here": "اسحب الملف وسيبه هنا",
+            "or_browse": "أو اضغط واختار ملف من جهازك",
+            "accepted_files": "ملف Excel (.xlsx) أو CSV، حتى 5 ميجا و5000 صف.",
+            "invalid_file_type": "بنقبل ملفات .xlsx أو .csv بس.",
+            "uploading": "بنقرأ الملف ونراجعه...",
+            "preview_failed": "مقدرناش نراجع الملف.",
+            "session_expired": "جلسة الاستيراد انتهت. ارفع الملف تاني.",
+            "summary": {
+                "total": "إجمالي الصفوف",
+                "valid": "سليمة",
+                "invalid": "فيها أخطاء",
+                "duplicates": "مكررة"
+            },
+            "filter": {
+                "label": "عرض الصفوف",
+                "all": "الكل",
+                "invalid": "فيها أخطاء",
+                "duplicate": "مكررة",
+                "valid": "سليمة"
+            },
+            "status": {
+                "valid": "سليم",
+                "invalid": "خطأ",
+                "duplicate": "مكرر"
+            },
+            "row_number": "صف :number",
+            "row_column": "الصف",
+            "status_column": "الحالة",
+            "truncated": "معروض أول :shown صف من :total. كل الصفوف هتتستورد برضه.",
+            "no_rows": "مفيش صفوف تطابق الفلتر ده.",
+            "skip_invalid": "تخطي الصفوف اللي فيها أخطاء واستيراد الباقي",
+            "skip_invalid_required": "علّم على المربع ده عشان تكمل من غير :count صف فيهم أخطاء.",
+            "import_now": "استيراد :count سجل",
+            "nothing_to_import": "مفيش صفوف سليمة للاستيراد.",
+            "importing": "جاري الاستيراد...",
+            "confirm_title": "تأكيد الاستيراد",
+            "confirm_text": "هيتم إنشاء :valid سجل. وهيتم تخطي :invalid صف فيهم أخطاء و:duplicates مكرر.",
+            "confirm_stock": "رصيد أول المدة هيتضاف على فرع \":store\".",
+            "confirm_button": "استيراد",
+            "result": {
+                "title": "تم الاستيراد",
+                "created": "تم إنشاؤها",
+                "skipped": "تم تخطيها",
+                "duplicates": "مكررة",
+                "errors_title": "صفوف فشلت",
+                "go_to_list": "فتح القائمة",
+                "import_another": "استيراد ملف تاني"
+            }
+        }
+    },
     "inventory": {
         "title": "إدارة المخزون وبطاقات الأصناف",
         "subtitle": "متابعة أرصدة البضاعة في المخازن، أسعار البيع والشراء، وحد الطلب والنواقص",
@@ -1735,6 +1922,7 @@ export const defaultArabicTranslations = {
         "movement_adj_out": "➖ تسوية جردية بالعجز (خصم مخزني)",
         "movement_waste": "🗑️ تسجيل هالك \/ تالف",
         "movement_deposit": "📦 توريد \/ رصيد افتتاحي إضافي",
+        "movement_opening_balance": "رصيد أول المدة (استيراد)",
         "adjust_reason_prompt": "سبب التسوية \/ ملاحظات",
         "adjust_reason_placeholder": "مثال: جرد دوري، تسوية عجز، هالك تشغيل وتالف...",
         "confirm_stock_adjustment": "تأكيد التسوية المخزنية",
@@ -2222,6 +2410,7 @@ export const defaultArabicTranslations = {
         "users": "المستخدمون والكاشير",
         "roles": "الأدوار والصلاحيات",
         "audit_logs": "سجل الرقابة والتدقيق",
+        "import": "استيراد البيانات",
         "trash": "سلة المحذوفات",
         "pulse": "مراقبة السيرفر Pulse",
         "settings": "إعدادات النظام والطباعة",
@@ -2334,6 +2523,7 @@ export const defaultArabicTranslations = {
             "activity_logs_index": "سجل التدقيق الأمني والنشاطات",
             "settings_index": "إعدادات النظام والمؤسسة",
             "profile_show": "الملف الشخصي والحساب",
+            "import_index": "استيراد البيانات",
             "trash_index": "سلة المحذوفات"
         }
     },
@@ -6558,6 +6748,193 @@ export const defaultEnglishTranslations = {
             "petty_operations": "Petty & operating costs"
         }
     },
+    "import": {
+        "committed": ":count records imported successfully.",
+        "opening_balance_entry": "Opening balance",
+        "opening_balance_note": "Opening balance (import)",
+        "opening_balance_note_manual": "Opening balance",
+        "opening_stock_note": "Opening balance (file import)",
+        "errors": {
+            "too_many_rows": "The file has more rows than allowed (:max rows).",
+            "empty_file": "The file is empty or has no data below the header row.",
+            "unreadable_file": "We could not read the file. Make sure it is a valid Excel (xlsx) or CSV file.",
+            "missing_columns": "Required columns are missing from the file: :columns",
+            "required": "The field \":field\" is required.",
+            "too_long": "The field \":field\" is longer than :max characters.",
+            "invalid_number": "The value in \":field\" is not a valid number.",
+            "negative_not_allowed": "The value in \":field\" must be zero or greater.",
+            "invalid_price_tier": "The value in \":field\" must be retail or wholesale.",
+            "invalid_boolean": "The value in \":field\" must be yes or no.",
+            "duplicate": "This record already exists (or is repeated in the file) and will be skipped.",
+            "token_not_found": "The import session expired or does not exist. Upload the file again.",
+            "invalid_rows_present": ":count rows have errors. Fix the file or confirm skipping the invalid rows.",
+            "already_running": "An import with this file is already running. Wait for it to finish.",
+            "conflict": "The import hit a record that was created in the meantime (duplicate code or name). Nothing was imported; upload the file again.",
+            "template_failed": "Something went wrong while preparing the template file."
+        },
+        "columns": {
+            "items": {
+                "code": "Code",
+                "name": "Item name",
+                "category": "Category",
+                "unit": "Unit",
+                "cost_price": "Cost price",
+                "selling_price": "Selling price",
+                "min_selling_price": "Minimum selling price (wholesale)",
+                "min_stock_level": "Reorder level",
+                "is_weighted": "Weighed item",
+                "opening_quantity": "Opening quantity",
+                "opening_cost": "Opening cost"
+            },
+            "customers": {
+                "name": "Customer name",
+                "phone": "Mobile",
+                "address": "Address",
+                "tax_number": "Tax number",
+                "price_tier": "Price tier",
+                "opening_balance": "Opening balance",
+                "notes": "Notes"
+            },
+            "suppliers": {
+                "name": "Supplier name",
+                "company_name": "Company name",
+                "phone": "Mobile",
+                "address": "Address",
+                "opening_balance": "Opening balance",
+                "notes": "Notes"
+            },
+            "categories": {
+                "name": "Category name",
+                "icon": "Icon"
+            }
+        },
+        "examples": {
+            "items": {
+                "code": "ITM-0001",
+                "name": "Brazilian coffee beans",
+                "category": "Coffee",
+                "unit": "كجم",
+                "cost_price": "250",
+                "selling_price": "320",
+                "min_selling_price": "300",
+                "min_stock_level": "5",
+                "is_weighted": "yes",
+                "opening_quantity": "20",
+                "opening_cost": "250"
+            },
+            "customers": {
+                "name": "Ahmed Mohamed",
+                "phone": "01000000001",
+                "address": "Cairo",
+                "tax_number": "123456789",
+                "price_tier": "retail",
+                "opening_balance": "1500",
+                "notes": "Note"
+            },
+            "suppliers": {
+                "name": "Mahmoud Ali",
+                "company_name": "Nile Supplies Co.",
+                "phone": "01000000002",
+                "address": "Giza",
+                "opening_balance": "5000",
+                "notes": "Note"
+            },
+            "categories": {
+                "name": "Hot drinks",
+                "icon": "☕"
+            }
+        },
+        "ui": {
+            "import_button": "Import",
+            "title": "Import data",
+            "subtitle": "Bring your items, customers, suppliers and categories in from an Excel or CSV file.",
+            "steps": {
+                "type": "Choose type",
+                "upload": "Upload file",
+                "preview": "Review",
+                "done": "Done"
+            },
+            "types": {
+                "items": {
+                    "title": "Items",
+                    "desc": "Products with prices, categories and optional opening stock."
+                },
+                "customers": {
+                    "title": "Customers",
+                    "desc": "Customers with contact details, price tier and opening balance."
+                },
+                "suppliers": {
+                    "title": "Suppliers",
+                    "desc": "Suppliers with company details and opening balance."
+                },
+                "categories": {
+                    "title": "Categories",
+                    "desc": "Item categories with an optional icon."
+                }
+            },
+            "choose_type": "What do you want to import?",
+            "continue": "Continue",
+            "back": "Back",
+            "no_types": "You do not have permission to import any data type.",
+            "download_template": "Download template",
+            "downloading": "Preparing...",
+            "template_hint": "Start from the template so your columns match exactly.",
+            "template_failed": "Could not download the template. Please try again.",
+            "no_store_title": "Pick a branch first",
+            "no_store_text": "Imports are saved to one branch. Switch from \"all branches\" to a specific branch, then come back.",
+            "active_store": "Active branch: :store",
+            "opening_stock_into": "Opening stock in the file will be added to this branch.",
+            "upload_title": "Upload your :type file",
+            "drop_here": "Drop the file here",
+            "or_browse": "or tap to choose a file from your device",
+            "accepted_files": "Excel (.xlsx) or CSV, up to 5 MB and 5,000 rows.",
+            "invalid_file_type": "Only .xlsx or .csv files are accepted.",
+            "uploading": "Reading and checking your file...",
+            "preview_failed": "We could not check the file.",
+            "session_expired": "The import session expired. Upload the file again.",
+            "summary": {
+                "total": "Total rows",
+                "valid": "Valid",
+                "invalid": "With errors",
+                "duplicates": "Duplicates"
+            },
+            "filter": {
+                "label": "Show rows",
+                "all": "All",
+                "invalid": "With errors",
+                "duplicate": "Duplicates",
+                "valid": "Valid"
+            },
+            "status": {
+                "valid": "Valid",
+                "invalid": "Error",
+                "duplicate": "Duplicate"
+            },
+            "row_number": "Row :number",
+            "row_column": "Row",
+            "status_column": "Status",
+            "truncated": "Showing the first :shown of :total rows. All rows are still imported.",
+            "no_rows": "No rows match this filter.",
+            "skip_invalid": "Skip rows with errors and import the rest",
+            "skip_invalid_required": "Tick this box to continue without the :count rows that have errors.",
+            "import_now": "Import :count records",
+            "nothing_to_import": "There are no valid rows to import.",
+            "importing": "Importing...",
+            "confirm_title": "Confirm import",
+            "confirm_text": ":valid records will be created. :invalid rows with errors and :duplicates duplicates will be skipped.",
+            "confirm_stock": "Opening stock will be added to the branch \":store\".",
+            "confirm_button": "Import",
+            "result": {
+                "title": "Import finished",
+                "created": "Created",
+                "skipped": "Skipped",
+                "duplicates": "Duplicates",
+                "errors_title": "Rows that failed",
+                "go_to_list": "Open the list",
+                "import_another": "Import another file"
+            }
+        }
+    },
     "inventory": {
         "title": "Inventory & Item Cards Management",
         "subtitle": "Track stock levels across branches, cost\/selling prices, and safety reorder alerts",
@@ -6741,6 +7118,7 @@ export const defaultEnglishTranslations = {
         "movement_adj_out": "➖ Inventory Adjustment Out (Deduct)",
         "movement_waste": "🗑️ Record Waste \/ Damaged",
         "movement_deposit": "📦 Inflow \/ Extra Opening Stock",
+        "movement_opening_balance": "Opening balance (import)",
         "adjust_reason_prompt": "Adjustment Reason \/ Notes",
         "adjust_reason_placeholder": "e.g. Periodic inventory count, variance adjustment, operational damage...",
         "confirm_stock_adjustment": "Confirm Stock Adjustment",
@@ -7220,6 +7598,7 @@ export const defaultEnglishTranslations = {
         "users": "Users & Cashiers",
         "roles": "Roles & Permissions",
         "audit_logs": "Audit & Security Logs",
+        "import": "Import data",
         "trash": "Recycle Bin",
         "pulse": "Pulse Health",
         "settings": "Settings & Printing",
@@ -7332,6 +7711,7 @@ export const defaultEnglishTranslations = {
             "activity_logs_index": "Security audit & activity log",
             "settings_index": "System & business settings",
             "profile_show": "Profile & account",
+            "import_index": "Import data",
             "trash_index": "Recycle bin"
         }
     },

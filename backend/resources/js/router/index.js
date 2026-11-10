@@ -359,6 +359,16 @@ const tenantRoutes = [
         },
     },
     {
+        path: '/imports',
+        name: 'imports.index',
+        component: () => import('../views/Imports/ImportView.vue'),
+        meta: {
+            titleKey: 'nav.page_titles.import_index',
+            requiresAuth: true,
+            permissionAny: ['items.create', 'customers.manage', 'suppliers.manage'],
+        },
+    },
+    {
         path: '/trash',
         name: 'trash.index',
         component: () => import('../views/Trash/TrashView.vue'),
@@ -522,6 +532,10 @@ async function tenantGuard(to, from, next) {
 
     // 5. Permission / Role Check
     if (to.meta.permission && !authStore.hasPermission(to.meta.permission)) {
+        return next({ name: 'dashboard' });
+    }
+
+    if (to.meta.permissionAny && !to.meta.permissionAny.some((permission) => authStore.hasPermission(permission))) {
         return next({ name: 'dashboard' });
     }
 

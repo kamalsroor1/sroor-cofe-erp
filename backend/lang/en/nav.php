@@ -36,6 +36,7 @@ return [
     'users' => 'Users & Cashiers',
     'roles' => 'Roles & Permissions',
     'audit_logs' => 'Audit & Security Logs',
+    'import' => 'Import data',
     'trash' => 'Recycle Bin',
     'pulse' => 'Pulse Health',
     'settings' => 'Settings & Printing',
@@ -153,6 +154,7 @@ return [
         'activity_logs_index' => 'Security audit & activity log',
         'settings_index' => 'System & business settings',
         'profile_show' => 'Profile & account',
+        'import_index' => 'Import data',
         'trash_index' => 'Recycle bin',
     ],
 ];

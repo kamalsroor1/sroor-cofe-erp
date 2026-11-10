@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ImportType;
 use App\Enums\TenantLogoVariant;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AppUpdateController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyJournalController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\PaymentController;
@@ -150,6 +152,14 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::post('/categories', [CategoryApiController::class, 'store'])->name('api.categories.store');
         Route::put('/categories/{id}', [CategoryApiController::class, 'update'])->name('api.categories.update');
         Route::delete('/categories/{id}', [CategoryApiController::class, 'destroy'])->name('api.categories.destroy');
+
+        // PRD-06: Excel/CSV import wizard. Permission per {type} is enforced in the Form Requests;
+        // preview/commit need one concrete branch (opening stock lands in the X-Store-Id store).
+        Route::prefix('imports/{type}')->where(['type' => ImportType::routePattern()])->middleware('throttle:imports')->group(function () {
+            Route::get('/template', [ImportController::class, 'template'])->name('api.imports.template');
+            Route::post('/preview', [ImportController::class, 'preview'])->name('api.imports.preview')->middleware('store.active:concrete');
+            Route::post('/commit', [ImportController::class, 'commit'])->name('api.imports.commit')->middleware('store.active:concrete');
+        });
 
         // POS & Sales Invoices & WhatsApp
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('api.invoices.index')->middleware('store.active');

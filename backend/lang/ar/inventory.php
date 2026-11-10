@@ -224,6 +224,7 @@ return [
     'movement_adj_out' => '➖ تسوية جردية بالعجز (خصم مخزني)',
     'movement_waste' => '🗑️ تسجيل هالك / تالف',
     'movement_deposit' => '📦 توريد / رصيد افتتاحي إضافي',
+    'movement_opening_balance' => 'رصيد أول المدة (استيراد)',
     'adjust_reason_prompt' => 'سبب التسوية / ملاحظات',
     'adjust_reason_placeholder' => 'مثال: جرد دوري، تسوية عجز، هالك تشغيل وتالف...',
     'confirm_stock_adjustment' => 'تأكيد التسوية المخزنية',

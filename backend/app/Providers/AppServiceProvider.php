@@ -280,6 +280,10 @@ class AppServiceProvider extends ServiceProvider
         // Testing-only quick login (AUTH-1a / IDEN-4.1): per tenant + IP.
         RateLimiter::for('quick-login', fn (Request $request): Limit => Limit::perMinute($this->limit('auth.quick_login.per_minute', 5))
             ->by('quick-login|'.RateLimitKey::scope().'|'.$request->ip()));
+
+        // PRD-06: spreadsheet import wizard (template / preview / commit), per tenant and user.
+        RateLimiter::for('imports', fn (Request $request): Limit => Limit::perMinute($this->limit('rate_limits.imports.per_minute', 20))
+            ->by('imports|'.RateLimitKey::scope().'|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 
     /**

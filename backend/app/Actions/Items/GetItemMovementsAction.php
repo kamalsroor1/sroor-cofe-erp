@@ -7,6 +7,7 @@ namespace App\Actions\Items;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
+use App\Support\StockMovementTypes;
 
 final class GetItemMovementsAction
 {
@@ -18,15 +19,6 @@ final class GetItemMovementsAction
      */
     public function execute(Item $item, ?string $fromDate = null, ?string $toDate = null, ?int $storeId = null, ?string $type = null, int $perPage = 20, bool $includeCost = true): array
     {
-        $inTypes = [
-            'purchase_in', 'stock_deposit_in', 'stock_adjustment_in',
-            'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in',
-        ];
-        $outTypes = [
-            'sales_out', 'waste_out', 'stock_adjustment_out',
-            'transfer_out', 'purchase_cancel_out', 'purchase_return_out',
-        ];
-
         $query = StockMovement::with(['user', 'store'])
             ->where('item_id', $item->id);
 
@@ -52,9 +44,9 @@ final class GetItemMovementsAction
         $totalOut = '0.000';
 
         foreach ($allMovements as $mov) {
-            if (in_array($mov->movement_type, $inTypes, true)) {
+            if (StockMovementTypes::isInbound((string) $mov->movement_type)) {
                 $totalIn = bcadd($totalIn, (string) $mov->quantity, 3);
-            } elseif (in_array($mov->movement_type, $outTypes, true)) {
+            } elseif (StockMovementTypes::isOutbound((string) $mov->movement_type)) {
                 $totalOut = bcadd($totalOut, (string) $mov->quantity, 3);
             }
         }

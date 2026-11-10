@@ -4,6 +4,14 @@
     <PageHeader :title="$t('inventory.items_title')" :subtitle="$t('inventory.items_subtitle')" :icon="'☕'">
       <template #actions>
         <BaseButton
+          v-if="authStore.can('items.create')"
+          :to="{ name: 'imports.index', query: { type: 'items' } }"
+          variant="outline"
+          size="md"
+          :icon="FileUp"
+          :label="$t('import.ui.import_button')"
+        />
+        <BaseButton
           type="button"
           variant="gradient"
           size="md"
@@ -66,7 +74,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { Plus } from 'lucide-vue-next';
+import { FileUp, Plus } from 'lucide-vue-next';
+import { useAuthStore } from '../../stores/auth';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ItemsMetricsGrid from '../../Components/Items/ItemsMetricsGrid.vue';
@@ -78,6 +87,8 @@ import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import { useUnits } from '../../Composables/useUnits';
+
+const authStore = useAuthStore();
 
 const { defaultUnit, unitOptionsFor } = useUnits();
 
