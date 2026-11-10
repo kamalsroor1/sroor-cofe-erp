@@ -627,7 +627,30 @@ class InvoiceService
      */
     public function updateInvoice(Invoice $invoice, array $data): Invoice
     {
-        return DB::transaction(function () use ($invoice, $data) {
+        // BE-08 / POS-07: the same price floor, tier and discount-cap guards as confirmInvoice(). A manager PIN is
+        // verified here, before the transaction, so failed-PIN limiter hits are never rolled back.
+        $actor = Auth::user();
+        $priceGuard = new SalePriceGuard(
+            $actor instanceof User ? $actor : null,
+            isset($data['override']) && is_array($data['override']) ? $data['override'] : null,
+        );
+        $discountGuard = new SaleDiscountGuard($actor instanceof User ? $actor : null, $priceGuard);
+        $priceCustomer = Customer::query()->find($data['customer_id'] ?? 0);
+        $currentInvoice = Invoice::query()->find($invoice->id);
+        if ($priceCustomer instanceof Customer && $currentInvoice instanceof Invoice && $currentInvoice->status !== 'cancelled') {
+            $priceStoreId = $currentInvoice->store_id !== null ? (int) $currentInvoice->store_id : null;
+            $data['items'] = $discountGuard->resolveLineDiscounts($priceCustomer, $priceStoreId, (array) ($data['items'] ?? []));
+            $priceGuard->preflight($priceCustomer, $priceStoreId, $data['items']);
+            $discountGuard->preflight(
+                $priceCustomer,
+                $priceStoreId,
+                $data['items'],
+                (string) ($data['discount_type'] ?? 'fixed'),
+                (string) ($data['discount_value'] ?? '0.000'),
+            );
+        }
+
+        return DB::transaction(function () use ($invoice, $data, $priceGuard, $discountGuard) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
             if ($lockedInvoice->status === 'cancelled') {
                 throw BusinessRuleException::conflict('invoices.cannot_edit_cancelled');
@@ -642,10 +665,9 @@ class InvoiceService
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get();
-            $this->assertWalkInPaidInFull(
-                Customer::query()->findOrFail($newCustomerId),
-                (string) ($data['payment_type'] ?? 'cash'),
-            );
+            $customer = Customer::query()->findOrFail($newCustomerId);
+            $this->assertWalkInPaidInFull($customer, (string) ($data['payment_type'] ?? 'cash'));
+            $storeId = $lockedInvoice->store_id !== null ? (int) $lockedInvoice->store_id : null;
 
             // 1. If invoice was confirmed, reverse previous stock back to warehouse
             if ($lockedInvoice->status === 'confirmed') {
@@ -674,13 +696,24 @@ class InvoiceService
 
             // 2. Add new items, deduct new stock, calculate new subtotal and total cost
             $subtotal = '0.000';
+            $grossTotal = '0.000';
+            $lineDiscountsTotal = '0.000';
             $totalCost = '0.000';
 
-            foreach ($data['items'] as $line) {
+            foreach ($data['items'] as $lineIndex => $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
                 $qty = (string) $line['quantity'];
-                $unitPrice = (string) $line['unit_price'];
-                $itemDiscount = (string) ($line['discount_amount'] ?? '0.000');
+                $itemDiscount = Decimal::normalize((string) ($line['discount_amount'] ?? '0.000'));
+                $priceAudit = $priceGuard->evaluate(
+                    $item,
+                    $customer,
+                    $storeId,
+                    $qty,
+                    isset($line['unit_price']) ? (string) $line['unit_price'] : null,
+                    $itemDiscount,
+                    (int) $lineIndex,
+                );
+                $unitPrice = $priceAudit['unit_price'];
 
                 $grossLineTotal = Decimal::mul($qty, $unitPrice);
                 $netLineTotal = bcsub($grossLineTotal, $itemDiscount, 3);
@@ -700,6 +733,9 @@ class InvoiceService
                     'quantity' => $qty,
                     'cost_price' => $effectiveCost,
                     'unit_price' => $unitPrice,
+                    'list_unit_price' => $priceAudit['list_unit_price'],
+                    'price_source' => $priceAudit['price_source'],
+                    'override_approved_by' => $priceAudit['override_approved_by'],
                     'discount_amount' => $itemDiscount,
                     'total_price' => $netLineTotal,
                 ]);
@@ -716,23 +752,18 @@ class InvoiceService
                 );
 
                 $subtotal = bcadd($subtotal, $netLineTotal, 3);
+                $grossTotal = bcadd($grossTotal, $grossLineTotal, 3);
+                $lineDiscountsTotal = bcadd($lineDiscountsTotal, $itemDiscount, 3);
             }
 
             // 3. Invoice-level discount calculation
             $discountType = $data['discount_type'] ?? 'fixed';
             $discountValue = (string) ($data['discount_value'] ?? '0.000');
-            $invoiceDiscountAmount = '0.000';
+            // Same computation as confirmInvoice (SETG-13 half-up percent, capped at the subtotal).
+            $invoiceDiscountAmount = SaleDiscountGuard::invoiceDiscountAmount($subtotal, (string) $discountType, $discountValue);
 
-            if ($discountType === 'percentage') {
-                // SETG-13: half-up, identical to dPercent().
-                $invoiceDiscountAmount = Decimal::percent($subtotal, $discountValue);
-            } else {
-                $invoiceDiscountAmount = $discountValue;
-            }
-
-            if (bccomp($invoiceDiscountAmount, $subtotal, 3) > 0) {
-                $invoiceDiscountAmount = $subtotal;
-            }
+            // POS-07: the cap on the exact totals (the approver, if any, was resolved before the transaction).
+            $discountGuard->assertWithinCap($storeId, $grossTotal, bcadd($lineDiscountsTotal, $invoiceDiscountAmount, 3));
 
             // 3.5. Dynamic additional expenses in edit
             $rawExpenses = $data['additional_expenses'] ?? [];
@@ -840,6 +871,7 @@ class InvoiceService
                 'remaining_amount' => $remainingAmount,
                 'payment_status' => $paymentStatus,
                 'total_cost' => $totalCost,
+                'discount_override_by' => $priceGuard->discountApproverId() ?? $priceGuard->invoiceDiscountFloorApproverId(),
                 'notes' => $data['notes'] ?? $lockedInvoice->notes,
             ]);
 
