@@ -9,13 +9,14 @@ namespace Database\Seeders\Catalog;
  *
  * Source: docs/03-architecture/pricing-model-recommendation-2026-10.md §5 + §6, Q-E8 and
  * CTO 2026-10-09:
- * - 18 CORE features = in every paid plan (the 17 of Q-E8 + quotations.manage, which has
- *   no routes in Phase 1);
+ * - 17 CORE features = in every paid plan (Q-E8). quotations.manage was core until the owner
+ *   decision that follows PRD-10: it has no routes, so it is a plain hidden feature;
  * - `blender.access` is renamed to the neutral `mixes.manage` (LEGACY_RENAMES);
  * - hidden keys (is_public = false): `pos.offline` (no route until the end of Phase 2),
- *   `custom.domain` (Q-E9, hidden until Phase 3) and `quotations.manage` (PRD-10: no route,
- *   model or screen exists, so it must not be listed or sold until it is built). Hidden keys
- *   stay in the registry and in stored plans.features so existing data remains valid.
+ *   `custom.domain` (Q-E9, hidden until Phase 3), `quotations.manage` (PRD-10: no route, model
+ *   or screen exists) and, by owner decision, `api.access` and `whatsapp.share`: none of them
+ *   is listed or sold until it is built/released. Hidden keys stay in the registry and in stored
+ *   plans.features (and the grants of existing tenants) so existing data remains valid.
  *
  * Names and descriptions are translation keys in lang/{ar,en}/plans.php
  * (plans.features.<lang_slug>.name|description); no brand or trade-specific wording.
@@ -36,8 +37,8 @@ final class FeatureCatalog
         'pos.access' => ['sales', true, true],
         'invoices.create' => ['sales', true, true],
         'invoices.edit' => ['sales', true, true],
-        'whatsapp.share' => ['sales', true, true],
-        'quotations.manage' => ['sales', true, false],
+        'whatsapp.share' => ['sales', true, false],
+        'quotations.manage' => ['sales', false, false],
         'pos.offline' => ['sales', false, false],
         'items.manage' => ['inventory', true, true],
         'items.movements' => ['inventory', true, true],
@@ -57,7 +58,7 @@ final class FeatureCatalog
         'printing.thermal' => ['system', true, true],
         'printing.a4' => ['system', true, true],
         'telegram.notifications' => ['system', true, true],
-        'api.access' => ['system', false, true],
+        'api.access' => ['system', false, false],
         'custom.domain' => ['system', false, false],
     ];
 

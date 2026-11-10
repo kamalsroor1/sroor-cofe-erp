@@ -84,7 +84,7 @@ final class ApprovedPlanCatalogMigrationTest extends TenantTestCase
         $this->assertSame(FeatureCatalog::keys(), $features->sortBy('sort_order')->keys()->all());
         $this->assertNull($features['mixes.manage']->icon);
         $this->assertSame(__('plans.features.mixes_manage.name'), $features['mixes.manage']->name);
-        $this->assertTrue((bool) $features['quotations.manage']->is_core);
+        $this->assertFalse((bool) $features['quotations.manage']->is_core);
         $this->assertFalse((bool) $features['pos.offline']->is_public);
 
         // Add-ons created with their availability.
