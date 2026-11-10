@@ -32,6 +32,7 @@ trait ValidatesPriceOverride
     protected function saleLineNumberRules(string $discountKey): array
     {
         return [
+            'items.*.entry_sequence' => ['nullable', 'integer', 'min:1', 'distinct'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3', 'max:999999999.999'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
             'items.*.'.$discountKey => ['nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
