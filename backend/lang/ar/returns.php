@@ -114,4 +114,11 @@ return [
     'source_load_failed' => 'تعذر تحميل المستندات. حاول مرة أخرى.',
     'return_manually' => 'مرتجع بدون مستند أصلي',
     'return_from_document' => 'مرتجع على فاتورة بيع أو شراء',
+    'refund_voucher_note' => 'رد نقدي عن المرتجع :number',
+    'refund_method' => 'طريقة رد المبلغ',
+    'refund_method_cash' => 'رد نقدي (من الدرج)',
+    'refund_method_balance' => 'خصم من رصيد العميل',
+    'refund_method_walk_in_cash' => 'العميل النقدي العام يُرد له المبلغ نقدًا دائمًا',
+    'refund_method_invalid' => 'طريقة الرد المختارة غير صحيحة.',
+    'cash_refund_exceeds_paid' => 'مبلغ الرد النقدي (:required) أكبر من المدفوع فعلًا على هذه الفاتورة (المتاح :available). اختر الخصم من رصيد العميل بدلًا من ذلك.',
 ];

@@ -90,6 +90,8 @@ final class GetDailyJournalAction
                 'supplier_payments' => (float) $supplierPayments,
                 'total_expenses' => (float) $totalExpenses,
                 'cash_expenses' => (float) $cashExpenses,
+                // BE-10: cash handed back to customers for sales returns (already inside total_cash_out).
+                'cash_refunds' => (float) $cashFlow['cash_refunds'],
                 'total_cash_out' => (float) $totalCashOut,
                 'net_cash_today' => (float) $netCashToday,
                 'opening_cash_balance' => (float) $openingCashBalance,

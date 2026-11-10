@@ -322,19 +322,21 @@ class TreasuryService
             ->get();
 
         foreach ($payments as $p) {
+            // BE-10: a refund voucher (negative amount) is cash going OUT to the customer.
+            $isRefund = bccomp((string) $p->amount, '0.000', 3) < 0;
             $entries[] = [
                 'date' => $p->payment_date->format('Y-m-d'),
                 'time' => $p->created_at->format('H:i'),
                 'timestamp' => $p->created_at->timestamp,
                 'doc_number' => $p->payment_number,
-                'type' => 'inflow',
-                'type_label' => 'تحصيل مبيعات / سند قبض',
+                'type' => $isRefund ? 'outflow' : 'inflow',
+                'type_label' => $isRefund ? __('treasury.customer_refund_label') : 'تحصيل مبيعات / سند قبض',
                 'method' => $p->payment_method,
                 'method_label' => PaymentMethod::tryFrom($p->payment_method)?->shortLabel() ?? $p->payment_method,
                 'party' => $p->customer?->name ?? 'عميل نقدي',
                 'notes' => $p->notes ?? 'تحصيل مبيعات',
-                'debit' => (string) $p->amount,
-                'credit' => '0.000',
+                'debit' => $isRefund ? '0.000' : (string) $p->amount,
+                'credit' => $isRefund ? bcsub('0.000', (string) $p->amount, 3) : '0.000',
             ];
         }
 

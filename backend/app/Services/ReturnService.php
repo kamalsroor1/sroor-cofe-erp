@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Actions\Customers\ResolveWalkInCustomerAction;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -25,6 +27,7 @@ class ReturnService
         protected PurchaseService $purchaseService,
         protected ReturnSourceService $returnSourceService,
         protected DocumentNumberService $documentNumbers,
+        protected ResolveWalkInCustomerAction $walkInCustomer,
     ) {}
 
     /**
@@ -80,6 +83,12 @@ class ReturnService
             // BE-09: allocate the number after the document and party locks.
             $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
 
+            // BE-10: how the customer is paid back. The anonymous walk-in customer has no account
+            // to credit, so that return is always handed back in cash.
+            $refundMethod = $this->walkInCustomer->isWalkIn($customer)
+                ? ReturnDocument::REFUND_CASH
+                : $this->resolveRefundMethod($data['refund_method'] ?? null);
+
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
                 'return_type' => 'sales_return',
@@ -92,6 +101,7 @@ class ReturnService
                 'total_amount' => '0.000',
                 'return_date' => $data['return_date'] ?? $this->tenantClock->businessDate(),
                 'reason' => $data['reason'] ?? 'مرتجع مبيعات',
+                'refund_method' => $refundMethod,
             ]);
 
             foreach ($lines as $line) {
@@ -128,6 +138,16 @@ class ReturnService
 
             $returnDoc->update(['total_amount' => $totalAmount]);
 
+            // BE-10: cash leaves the drawer through its own (negative) voucher; the amount is the
+            // return's total, never a client figure. A 'balance' refund books nothing but the
+            // customer balance below.
+            if ($refundMethod === ReturnDocument::REFUND_CASH && bccomp($totalAmount, '0.000', 3) > 0) {
+                if ($invoice !== null) {
+                    $this->assertCashRefundWithinPaid((int) $invoice->id, $totalAmount);
+                }
+                $this->bookCashRefund($returnDoc, $customer, $totalAmount, $this->actorId($data));
+            }
+
             // Update customer balance (reduces debt)
             $this->customerBalanceService->updateBalance($customer->id);
 
@@ -141,6 +161,56 @@ class ReturnService
 
             return $returnDoc;
         });
+    }
+
+    private function resolveRefundMethod(mixed $requested): string
+    {
+        return $requested === ReturnDocument::REFUND_CASH ? ReturnDocument::REFUND_CASH : ReturnDocument::REFUND_BALANCE;
+    }
+
+    /**
+     * BE-10 fraud guard: cash given back against an invoice can never exceed the money the
+     * customer actually paid on it, net of the cash already refunded on it. Runs under the
+     * invoice lock taken at the start of the return, so two refunds cannot both pass.
+     */
+    private function assertCashRefundWithinPaid(int $invoiceId, string $required): void
+    {
+        $paid = Decimal::normalize((string) Payment::query()->where('invoice_id', $invoiceId)->where('amount', '>', 0)->sum('amount'));
+        $refunded = Decimal::normalize((string) Payment::query()->where('invoice_id', $invoiceId)->refunds()->sum('amount'));
+        $available = bcadd($paid, $refunded, 3); // refunds are negative
+
+        if (bccomp($required, $available, 3) > 0) {
+            throw BusinessRuleException::make('returns.cash_refund_exceeds_paid', [
+                'available' => bccomp($available, '0.000', 3) < 0 ? '0.000' : $available,
+                'required' => $required,
+            ]);
+        }
+    }
+
+    /**
+     * BE-10: the cash voucher of a cash refund. A NEGATIVE cash payment of the return's store:
+     * the shift, the daily journal and the treasury see the money leave, and the customer
+     * balance (invoices - payments - returns) stays net-zero for it (return -X, voucher +X).
+     * Called inside the return's transaction after the document/party locks, so the payment
+     * number is allocated after the return number.
+     */
+    private function bookCashRefund(ReturnDocument $returnDoc, Customer $customer, string $amount, ?int $actorId): Payment
+    {
+        return Payment::create([
+            'payment_number' => $this->documentNumbers->nextDated('PAY-RET', 6, Payment::class, 'payment_number'),
+            'customer_id' => $customer->id,
+            'supplier_id' => null,
+            'invoice_id' => $returnDoc->invoice_id,
+            'purchase_id' => null,
+            'store_id' => $returnDoc->store_id,
+            'return_id' => $returnDoc->id,
+            'user_id' => $actorId,
+            'amount' => bcsub('0.000', $amount, 3),
+            // The cash leaves the drawer today, even for a back-dated return.
+            'payment_date' => $this->tenantClock->businessDate(),
+            'payment_method' => 'cash',
+            'notes' => __('returns.refund_voucher_note', ['number' => $returnDoc->return_number]),
+        ]);
     }
 
     /**

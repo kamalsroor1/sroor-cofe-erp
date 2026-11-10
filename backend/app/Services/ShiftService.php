@@ -7,7 +7,6 @@ use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -147,11 +146,9 @@ class ShiftService
         // Cash outflows: Supplier payments paid in cash from this drawer
         $supplierPaid = $this->sumDecimal($cashVouchers()->whereNotNull('payments.supplier_id'), 'payments.amount');
 
-        // Sales Returns refunded in cash
-        $refunds = $this->sumDecimal(ReturnDocument::where('created_at', '>=', $openedAt)
-            ->where('created_at', '<=', $closesAt)
-            ->where('return_type', 'sales_return')
-            ->when($storeId !== null, fn ($q) => $q->where('store_id', $storeId)), 'total_amount');
+        // BE-10: only sales returns refunded IN CASH leave the drawer: their negative refund
+        // vouchers (a 'balance' refund books none), reported as a positive figure.
+        $refunds = bcsub('0.000', $this->sumDecimal($cashVouchers()->refunds(), 'payments.amount'), 3);
 
         $totalOutflows = bcadd($expenses, $supplierPaid, 3);
         $totalOutflows = bcadd($totalOutflows, $refunds, 3);

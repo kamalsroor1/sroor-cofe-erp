@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $invoice_id
  * @property int|null $purchase_id
  * @property int|null $store_id
+ * @property int|null $return_id
  * @property int|null $user_id
  * @property string $amount
  * @property Carbon|null $payment_date
@@ -33,6 +34,9 @@ class Payment extends Model
     /** Number prefix of the vouchers InvoiceService writes when an invoice is issued or edited. */
     public const SALE_NUMBER_PREFIX = 'PAY-INV-';
 
+    /** BE-10 / BE-03: vouchers that give money back to a customer (stored with a NEGATIVE amount). */
+    public const REFUND_NUMBER_PREFIXES = ['PAY-RET-', 'PAY-REF-'];
+
     protected $fillable = [
         'payment_number',
         'customer_id',
@@ -40,6 +44,7 @@ class Payment extends Model
         'invoice_id',
         'purchase_id',
         'store_id',
+        'return_id',
         'user_id',
         'amount',
         'payment_date',
@@ -77,6 +82,14 @@ class Payment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class)->withTrashed();
+    }
+
+    /**
+     * @return BelongsTo<ReturnDocument, $this>
+     */
+    public function returnDocument(): BelongsTo
+    {
+        return $this->belongsTo(ReturnDocument::class, 'return_id')->withTrashed();
     }
 
     /**
@@ -163,6 +176,33 @@ class Payment extends Model
     public function scopeCustomerReceipts(Builder $query): void
     {
         $query->whereNotNull('payments.customer_id')
-            ->where('payments.payment_number', 'not like', self::SALE_NUMBER_PREFIX.'%');
+            ->where('payments.payment_number', 'not like', self::SALE_NUMBER_PREFIX.'%')
+            ->excludingRefunds();
+    }
+
+    /**
+     * Refund vouchers (negative cash given back to a customer by a return / an invoice cancel).
+     *
+     * @param  Builder<Payment>  $query
+     */
+    public function scopeRefunds(Builder $query): void
+    {
+        $query->where(function (Builder $q): void {
+            foreach (self::REFUND_NUMBER_PREFIXES as $prefix) {
+                $q->orWhere('payments.payment_number', 'like', $prefix.'%');
+            }
+        });
+    }
+
+    /**
+     * Everything but refund vouchers.
+     *
+     * @param  Builder<Payment>  $query
+     */
+    public function scopeExcludingRefunds(Builder $query): void
+    {
+        foreach (self::REFUND_NUMBER_PREFIXES as $prefix) {
+            $query->where('payments.payment_number', 'not like', $prefix.'%');
+        }
     }
 }

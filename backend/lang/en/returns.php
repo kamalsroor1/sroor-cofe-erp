@@ -114,4 +114,11 @@ return [
     'source_load_failed' => 'Could not load the documents. Try again.',
     'return_manually' => 'Return without a source document',
     'return_from_document' => 'Return against an invoice or purchase',
+    'refund_voucher_note' => 'Refund for return :number',
+    'refund_method' => 'Refund method',
+    'refund_method_cash' => 'Cash refund (from the drawer)',
+    'refund_method_balance' => 'Credit to customer balance',
+    'refund_method_walk_in_cash' => 'Walk-in customer is always refunded in cash',
+    'refund_method_invalid' => 'The selected refund method is invalid.',
+    'cash_refund_exceeds_paid' => 'The cash refund (:required) exceeds what the customer paid on this invoice (available :available). Refund it on the customer balance instead.',
 ];

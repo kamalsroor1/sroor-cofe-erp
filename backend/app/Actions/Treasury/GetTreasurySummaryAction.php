@@ -68,6 +68,7 @@ final class GetTreasurySummaryAction
                 'supplier_paid' => $cashFlow['supplier_paid'],
                 'expenses_total' => $expensesTotal,
                 'cash_expenses' => $cashFlow['cash_expenses'],
+                'cash_refunds' => $cashFlow['cash_refunds'],
                 'total_outflow' => $cashFlow['total_cash_out'],
                 'net_cash' => $cashFlow['net_cash'],
             ],

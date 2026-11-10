@@ -189,4 +189,5 @@ return [
     'transfer_accounts_required' => 'Please select the source account and the destination account.',
     'transfer_amount_invalid' => 'Please enter a valid transfer amount greater than zero.',
     'transfer_insufficient_balance' => 'Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency).',
+    'customer_refund_label' => 'Customer refund (sales return)',
 ];

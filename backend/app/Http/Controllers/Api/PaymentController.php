@@ -70,12 +70,16 @@ final class PaymentController extends Controller
 
         $payments = $query->latest('id')->paginate($perPage);
 
-        $totalCollections = (string) (Payment::whereNotNull('customer_id')->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
+        // BE-10: refund vouchers (negative) are not collections; they are reported on their own.
+        $totalCollections = (string) (Payment::whereNotNull('customer_id')->excludingRefunds()->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
         $totalDisbursements = (string) (Payment::whereNotNull('supplier_id')->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000');
+
+        $totalRefunds = bcsub('0.000', (string) (Payment::whereNotNull('customer_id')->refunds()->when($storeId !== null, fn ($q) => $q->forStore((int) $storeId))->sum('amount') ?: '0.000'), 3);
 
         return response()->json([
             'success' => true,
             'summary' => [
+                'total_refunds' => (float) $totalRefunds,
                 'total_collections' => (float) $totalCollections,
                 'total_disbursements' => (float) $totalDisbursements,
             ],

@@ -6,6 +6,7 @@ namespace App\Actions\Returns;
 
 use App\Models\Customer;
 use App\Models\Item;
+use App\Models\Payment;
 use App\Models\ReturnDocument;
 use App\Models\ReturnItem;
 use App\Models\Setting;
@@ -30,9 +31,9 @@ use Illuminate\Validation\ValidationException;
  *   average cost returns to the snapshot taken when the return was made (or the moving-average
  *   formula when something moved the cost since) and the supplier balance is recomputed.
  *
- * A return has no treasury effect (the `refund_amount` field is not booked anywhere), so
- * there is no treasury row to reverse. Idempotent: the document is locked and a deleted
- * one is invisible to the lookup, so a second delete is a 404 and cannot reverse twice.
+ * BE-10: a cash-refund sales return also soft-deletes its refund voucher, so the shift,
+ * daily journal, treasury and customer balance all return to their prior values.
+ * Idempotent: the document is locked and a deleted one is invisible to the lookup, so a second delete is a 404 and cannot reverse twice.
  */
 final class DeleteReturnAction
 {
@@ -75,6 +76,11 @@ final class DeleteReturnAction
             } else {
                 $this->reverseSalesReturn($returnDoc, $lines, $items, $storeId);
             }
+
+            // BE-10: the cash refund voucher goes with the return (its cash is back in the drawer).
+            // Both are locked, soft-deleted here, and the balance recompute below ignores them.
+            Payment::query()->where('return_id', $returnDoc->id)->lockForUpdate()->get()
+                ->each(fn (Payment $voucher): ?bool => $voucher->delete());
 
             $returnDoc->delete();
 

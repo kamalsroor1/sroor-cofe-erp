@@ -17,7 +17,7 @@ final class ReturnDocumentDTO
         public readonly ?int $purchase_id = null,
         public readonly ?int $store_id = null,
         public readonly string $return_date = '',
-        public readonly string $refund_amount = '0.000',
+        public readonly ?string $refund_method = null,
         public readonly ?string $reason = null,
     ) {}
 
@@ -32,7 +32,8 @@ final class ReturnDocumentDTO
             purchase_id: isset($data['purchase_id']) && $data['purchase_id'] !== '' ? (int) $data['purchase_id'] : null,
             store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
             return_date: (string) ($data['return_date'] ?? app(TenantClock::class)->businessDate()),
-            refund_amount: isset($data['refund_amount']) ? (string) $data['refund_amount'] : '0.000',
+            // BE-10: the client's refund_amount is ignored; the amount is the return's total.
+            refund_method: isset($data['refund_method']) && $data['refund_method'] !== '' ? (string) $data['refund_method'] : null,
             reason: isset($data['reason']) && $data['reason'] !== '' ? (string) $data['reason'] : null,
         );
     }
@@ -48,7 +49,7 @@ final class ReturnDocumentDTO
             'purchase_id' => $this->purchase_id,
             'store_id' => $this->store_id,
             'return_date' => $this->return_date,
-            'refund_amount' => $this->refund_amount,
+            'refund_method' => $this->refund_method,
             'reason' => $this->reason,
         ];
     }

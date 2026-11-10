@@ -3199,7 +3199,14 @@ export const defaultArabicTranslations = {
         "source_has_returns": "هذا المستند عليه مرتجعات. احذفها أولًا ثم يمكنك إلغاءه أو تعديله أو حذفه.",
         "source_load_failed": "تعذر تحميل المستندات. حاول مرة أخرى.",
         "return_manually": "مرتجع بدون مستند أصلي",
-        "return_from_document": "مرتجع على فاتورة بيع أو شراء"
+        "return_from_document": "مرتجع على فاتورة بيع أو شراء",
+        "refund_voucher_note": "رد نقدي عن المرتجع :number",
+        "refund_method": "طريقة رد المبلغ",
+        "refund_method_cash": "رد نقدي (من الدرج)",
+        "refund_method_balance": "خصم من رصيد العميل",
+        "refund_method_walk_in_cash": "العميل النقدي العام يُرد له المبلغ نقدًا دائمًا",
+        "refund_method_invalid": "طريقة الرد المختارة غير صحيحة.",
+        "cash_refund_exceeds_paid": "مبلغ الرد النقدي (:required) أكبر من المدفوع فعلًا على هذه الفاتورة (المتاح :available). اختر الخصم من رصيد العميل بدلًا من ذلك."
     },
     "roles": {
         "title": "مصفوفة الأدوار والصلاحيات",
@@ -4346,7 +4353,8 @@ export const defaultArabicTranslations = {
         },
         "transfer_accounts_required": "يرجى تحديد الحساب المحول منه والحساب المستلم.",
         "transfer_amount_invalid": "يرجى إدخال مبلغ تحويل صحيح أكبر من الصفر.",
-        "transfer_insufficient_balance": "عفواً، رصيد الحساب المحول منه [:account] غير كافٍ لإتمام التحويل (المتاح: :available :currency - المطلوب بالعمولة: :required :currency)."
+        "transfer_insufficient_balance": "عفواً، رصيد الحساب المحول منه [:account] غير كافٍ لإتمام التحويل (المتاح: :available :currency - المطلوب بالعمولة: :required :currency).",
+        "customer_refund_label": "رد نقدي للعميل (مرتجع مبيعات)"
     },
     "users": {
         "title": "إدارة حسابات المستخدمين والكاشير",
@@ -7873,7 +7881,14 @@ export const defaultEnglishTranslations = {
         "source_has_returns": "This document has returns. Delete them first, then you can cancel, edit or delete it.",
         "source_load_failed": "Could not load the documents. Try again.",
         "return_manually": "Return without a source document",
-        "return_from_document": "Return against an invoice or purchase"
+        "return_from_document": "Return against an invoice or purchase",
+        "refund_voucher_note": "Refund for return :number",
+        "refund_method": "Refund method",
+        "refund_method_cash": "Cash refund (from the drawer)",
+        "refund_method_balance": "Credit to customer balance",
+        "refund_method_walk_in_cash": "Walk-in customer is always refunded in cash",
+        "refund_method_invalid": "The selected refund method is invalid.",
+        "cash_refund_exceeds_paid": "The cash refund (:required) exceeds what the customer paid on this invoice (available :available). Refund it on the customer balance instead."
     },
     "roles": {
         "title": "Roles & Permissions Matrix",
@@ -9020,7 +9035,8 @@ export const defaultEnglishTranslations = {
         },
         "transfer_accounts_required": "Please select the source account and the destination account.",
         "transfer_amount_invalid": "Please enter a valid transfer amount greater than zero.",
-        "transfer_insufficient_balance": "Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency)."
+        "transfer_insufficient_balance": "Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency).",
+        "customer_refund_label": "Customer refund (sales return)"
     },
     "users": {
         "title": "User & Cashier Management",

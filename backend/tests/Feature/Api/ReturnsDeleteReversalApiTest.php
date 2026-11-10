@@ -18,7 +18,7 @@ use Tests\TenantTestCase;
 
 /**
  * BE-02: deleting a return exactly reverses its stock, item cost and party balance.
- * (A return books no treasury movement: refund_amount is not booked anywhere.)
+ * (A cash refund voucher is reversed with its return: see ReturnRefundMethodTest.)
  */
 final class ReturnsDeleteReversalApiTest extends TenantTestCase
 {
