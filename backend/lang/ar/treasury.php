@@ -186,6 +186,7 @@ return [
     'cash_diff_surplus' => 'زيادة بمقدار :amount :currency',
     'cash_diff_shortage' => 'عجز بمقدار :amount :currency',
     'activity' => [
+        'transfer_created' => 'تحويل رصيد مالي برقم [:number] بمبلغ :amount :currency من [:from] إلى [:to]',
         'shift_opened' => 'تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency',
         'shift_closed' => 'تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)',
     ],

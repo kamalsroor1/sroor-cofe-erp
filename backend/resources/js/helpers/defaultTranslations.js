@@ -4340,6 +4340,7 @@ export const defaultArabicTranslations = {
         "cash_diff_surplus": "زيادة بمقدار :amount :currency",
         "cash_diff_shortage": "عجز بمقدار :amount :currency",
         "activity": {
+            "transfer_created": "تحويل رصيد مالي برقم [:number] بمبلغ :amount :currency من [:from] إلى [:to]",
             "shift_opened": "تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency",
             "shift_closed": "تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)"
         },
@@ -9013,6 +9014,7 @@ export const defaultEnglishTranslations = {
         "cash_diff_surplus": "Surplus of :amount :currency",
         "cash_diff_shortage": "Shortage of :amount :currency",
         "activity": {
+            "transfer_created": "Treasury transfer [:number] of :amount :currency from [:from] to [:to]",
             "shift_opened": "Opened shift [:number] at branch (:store) with an opening balance of :amount :currency",
             "shift_closed": "Closed shift [:number] with actual cash of :amount :currency (:status)"
         },

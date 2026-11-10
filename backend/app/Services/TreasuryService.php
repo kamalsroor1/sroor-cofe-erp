@@ -7,7 +7,9 @@ use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Models\Store;
 use App\Models\TreasuryTransfer;
+use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,75 +24,35 @@ class TreasuryService
     ) {}
 
     /**
-     * Get real-time financial balances per payment method / treasury account
+     * Get real-time financial balances per payment method / treasury account.
+     *
+     * BE-11: every payment sum respects the branch (Payment::forStore) and ALL payment methods
+     * are covered. Methods outside PaymentMethod::activeMethods() (visa, bank_transfer, check,
+     * other) are listed only when they have any movement, so the three active accounts stay the
+     * stable core of the response and the dashboard is not padded with empty accounts.
      */
     public function getBalances(?int $storeId = null, ?string $date = null): array
     {
-        $methods = PaymentMethod::activeMethods();
+        $activeKeys = array_map(fn (PaymentMethod $m): string => $m->value, PaymentMethod::activeMethods());
         $balances = [];
         $totalLiquidity = '0.000';
 
-        foreach ($methods as $methodEnum) {
+        foreach (PaymentMethod::cases() as $methodEnum) {
             $methodKey = $methodEnum->value;
 
-            // 1. Inflows: All payments collected via this method (Sales + Debt collections)
-            $inflows = (string) Payment::where('payment_method', $methodKey)
-                ->whereNotNull('customer_id')
-                ->when($date, fn ($q) => $q->whereDate('payment_date', '<=', $date))
-                ->sum('amount');
-
-            // 2. Outflows: Supplier payments + General Expenses recorded via this method
-            $supplierOutflows = (string) Payment::where('payment_method', $methodKey)
-                ->whereNotNull('supplier_id')
-                ->when($date, fn ($q) => $q->whereDate('payment_date', '<=', $date))
-                ->sum('amount');
-
-            // Operational Expenses not generated via payments
-            $generalExpenses = (string) Expense::where('payment_method', $methodKey)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->when($date, fn ($q) => $q->whereDate('expense_date', '<=', $date))
-                ->sum('amount');
-
-            // Expense payments (PAY-EXP)
-            $expensePayments = (string) Payment::where('payment_method', $methodKey)
-                ->where('payment_number', 'like', 'PAY-EXP-%')
-                ->when($date, fn ($q) => $q->whereDate('payment_date', '<=', $date))
-                ->sum('amount');
-
-            $totalOutflows = bcadd($supplierOutflows, bcadd($generalExpenses, $expensePayments, 3), 3);
-
-            // 3. Inbound Transfers (money received into this method)
-            $inboundTransfers = (string) TreasuryTransfer::where('to_method', $methodKey)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->when($date, fn ($q) => $q->whereDate('transfer_date', '<=', $date))
-                ->sum('amount');
-
-            // 4. Outbound Transfers (money sent out from this method)
-            $outboundTransfers = (string) TreasuryTransfer::where('from_method', $methodKey)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->when($date, fn ($q) => $q->whereDate('transfer_date', '<=', $date))
-                ->sum('amount');
-
-            // Outbound Transfer Fees
-            $transferFees = (string) TreasuryTransfer::where('from_method', $methodKey)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->when($date, fn ($q) => $q->whereDate('transfer_date', '<=', $date))
-                ->sum('transfer_fee');
+            $m = $this->movements($methodKey, $storeId, onOrBefore: $date);
 
             // Net Balance calculation: (Inflows + Inbound Transfers) - (Outflows + Outbound Transfers + Fees)
-            $totalIn = bcadd($inflows, $inboundTransfers, 3);
-            $totalOut = bcadd($totalOutflows, bcadd($outboundTransfers, $transferFees, 3), 3);
+            $totalIn = bcadd($m['customer_inflows'], $m['transfers_in'], 3);
+            $totalOutflows = bcadd($m['supplier_outflows'], bcadd($m['general_expenses'], $m['expense_payments'], 3), 3);
+            $totalOut = bcadd($totalOutflows, bcadd($m['transfers_out'], $m['fees'], 3), 3);
             $netBalance = bcsub($totalIn, $totalOut, 3);
 
             // Add Opening cash balance if physical cash drawer
             if ($methodEnum->isPhysicalCash()) {
-                $activeShift = CashShift::where('status', 'open')
-                    ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                    ->latest('id')
-                    ->first();
-                if ($activeShift) {
-                    $netBalance = bcadd($netBalance, (string) $activeShift->opening_cash_balance, 3);
-                }
+                $netBalance = bcadd($netBalance, $this->openShiftsOpeningCash($storeId), 3);
+            } elseif (! in_array($methodKey, $activeKeys, true) && $this->isZero($totalIn) && $this->isZero($totalOut)) {
+                continue;
             }
 
             $balances[$methodKey] = [
@@ -114,7 +76,17 @@ class TreasuryService
     }
 
     /**
-     * Execute an inter-account treasury transfer atomically
+     * Execute an inter-account treasury transfer atomically.
+     *
+     * Lock design (BE-11): the sufficiency check and the insert share one transaction that first
+     * locks the `stores` row(s) the balance is computed from, so two concurrent transfers of the
+     * same branch serialise and the second one sees the first one's outflow.
+     *  - store transfer  -> locks that store row;
+     *  - null-store (all branches) transfer -> locks EVERY store row, ascending id.
+     * A null-store transfer draws on the money of all branches, so it must wait for any branch
+     * transfer, and vice versa; with ascending-id acquisition (one row for a branch transfer)
+     * there is no lock cycle, hence no deadlock. The TRF number is allocated only after these
+     * locks (BE-09 order: lock the business rows first, number sequence last).
      */
     public function transfer(array $data): TreasuryTransfer
     {
@@ -144,22 +116,24 @@ class TreasuryService
             $fee = '0.000';
         }
 
-        // Check source balance sufficiency
-        $balances = $this->getBalances(storeId: $storeId, date: $date);
-        $sourceBal = $balances[$fromMethod]['balance'] ?? '0.000';
-        $totalRequired = bcadd($amount, $fee, 3);
-
-        if (bccomp($totalRequired, $sourceBal, 3) > 0) {
-            $fromLabel = PaymentMethod::tryFrom($fromMethod)?->label() ?? $fromMethod;
-            throw BusinessRuleException::make('treasury.transfer_insufficient_balance', [
-                'account' => $fromLabel,
-                'available' => number_format((float) $sourceBal, 2),
-                'required' => number_format((float) $totalRequired, 2),
-                'currency' => __('common.currency'),
-            ]);
-        }
-
         return DB::transaction(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {
+            $this->lockTreasuryScope($storeId);
+
+            // Check source balance sufficiency (under the lock)
+            $balances = $this->getBalances(storeId: $storeId, date: $date);
+            $sourceBal = $balances[$fromMethod]['balance'] ?? '0.000';
+            $totalRequired = bcadd($amount, $fee, 3);
+
+            if (bccomp($totalRequired, $sourceBal, 3) > 0) {
+                $fromLabel = PaymentMethod::tryFrom($fromMethod)?->label() ?? $fromMethod;
+                throw BusinessRuleException::make('treasury.transfer_insufficient_balance', [
+                    'account' => $fromLabel,
+                    'available' => Decimal::normalize($sourceBal),
+                    'required' => Decimal::normalize($totalRequired),
+                    'currency' => __('common.currency'),
+                ]);
+            }
+
             // Visible prefix TRF- like stock transfers, but its own counter (TTRF-) because both share the prefix.
             $transferNumber = $this->documentNumbers->nextDated('TRF', 4, TreasuryTransfer::class, 'transfer_number', 'TTRF');
 
@@ -188,7 +162,13 @@ class TreasuryService
             $this->activityLogService->log(
                 module: 'treasury',
                 action: 'transfer',
-                description: "تحويل رصيد مالي برقم [{$transferNumber}] بمبلغ ".number_format((float) $amount, 2)." ج.م من [{$fromLabel}] إلى [{$toLabel}]",
+                description: __('treasury.activity.transfer_created', [
+                    'number' => $transferNumber,
+                    'amount' => Decimal::normalize($amount),
+                    'currency' => __('common.currency'),
+                    'from' => $fromLabel,
+                    'to' => $toLabel,
+                ]),
                 subject: $transfer,
                 storeId: $storeId
             );
@@ -198,11 +178,24 @@ class TreasuryService
     }
 
     /**
-     * Get a comprehensive report for all treasuries, accounts, and inter-account transfers over a date range
+     * Serialisation point for treasury balance checks (see transfer()). Must run inside a transaction.
+     */
+    private function lockTreasuryScope(?int $storeId): void
+    {
+        Store::withTrashed()
+            ->when($storeId !== null, fn ($q) => $q->where('id', $storeId))
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->pluck('id');
+    }
+
+    /**
+     * Get a comprehensive report for all treasuries, accounts, and inter-account transfers over a date range.
+     * Same method coverage rule as getBalances(): non-active methods appear only with any movement.
      */
     public function getTreasuryReport(string $fromDate, string $toDate, ?int $storeId = null, string $selectedMethod = 'all'): array
     {
-        $methods = PaymentMethod::activeMethods();
+        $activeKeys = array_map(fn (PaymentMethod $m): string => $m->value, PaymentMethod::activeMethods());
         $accountSummaries = [];
         $totalOpeningBalance = '0.000';
         $totalPeriodInflows = '0.000';
@@ -212,104 +205,35 @@ class TreasuryService
         $totalPeriodFees = '0.000';
         $totalCurrentBalance = '0.000';
 
-        foreach ($methods as $methodEnum) {
+        foreach (PaymentMethod::cases() as $methodEnum) {
             $key = $methodEnum->value;
 
             // 1. Opening Balance (All movements before $fromDate)
-            $priorInflows = (string) Payment::where('payment_method', $key)
-                ->whereNotNull('customer_id')
-                ->whereDate('payment_date', '<', $fromDate)
-                ->sum('amount');
+            $prior = $this->movements($key, $storeId, before: $fromDate);
 
-            $priorSupplierOutflows = (string) Payment::where('payment_method', $key)
-                ->whereNotNull('supplier_id')
-                ->whereDate('payment_date', '<', $fromDate)
-                ->sum('amount');
-
-            $priorGeneralExpenses = (string) Expense::where('payment_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('expense_date', '<', $fromDate)
-                ->sum('amount');
-
-            $priorExpensePayments = (string) Payment::where('payment_method', $key)
-                ->where('payment_number', 'like', 'PAY-EXP-%')
-                ->whereDate('payment_date', '<', $fromDate)
-                ->sum('amount');
-
-            $priorInTransfers = (string) TreasuryTransfer::where('to_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('transfer_date', '<', $fromDate)
-                ->sum('amount');
-
-            $priorOutTransfers = (string) TreasuryTransfer::where('from_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('transfer_date', '<', $fromDate)
-                ->sum('amount');
-
-            $priorFees = (string) TreasuryTransfer::where('from_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('transfer_date', '<', $fromDate)
-                ->sum('transfer_fee');
-
-            $priorTotalIn = bcadd($priorInflows, $priorInTransfers, 3);
-            $priorTotalOut = bcadd($priorSupplierOutflows, bcadd($priorGeneralExpenses, bcadd($priorExpensePayments, bcadd($priorOutTransfers, $priorFees, 3), 3), 3), 3);
+            $priorTotalIn = bcadd($prior['customer_inflows'], $prior['transfers_in'], 3);
+            $priorTotalOut = bcadd($prior['supplier_outflows'], bcadd($prior['general_expenses'], bcadd($prior['expense_payments'], bcadd($prior['transfers_out'], $prior['fees'], 3), 3), 3), 3);
             $openingBal = bcsub($priorTotalIn, $priorTotalOut, 3);
 
             // Add Opening cash shift balance if physical cash drawer
             if ($methodEnum->isPhysicalCash()) {
-                $shift = CashShift::where('status', 'open')
-                    ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                    ->latest('id')
-                    ->first();
-                if ($shift) {
-                    $openingBal = bcadd($openingBal, (string) $shift->opening_cash_balance, 3);
-                }
+                $openingBal = bcadd($openingBal, $this->openShiftsOpeningCash($storeId), 3);
             }
 
             // 2. Period Movements ($fromDate to $toDate)
-            $periodInflows = (string) Payment::where('payment_method', $key)
-                ->whereNotNull('customer_id')
-                ->whereDate('payment_date', '>=', $fromDate)
-                ->whereDate('payment_date', '<=', $toDate)
-                ->sum('amount');
+            $period = $this->movements($key, $storeId, onOrAfter: $fromDate, onOrBefore: $toDate);
 
-            $periodSupplierOutflows = (string) Payment::where('payment_method', $key)
-                ->whereNotNull('supplier_id')
-                ->whereDate('payment_date', '>=', $fromDate)
-                ->whereDate('payment_date', '<=', $toDate)
-                ->sum('amount');
+            $periodInflows = $period['customer_inflows'];
+            $periodInTransfers = $period['transfers_in'];
+            $periodOutTransfers = $period['transfers_out'];
+            $periodFees = $period['fees'];
+            $periodOutflows = bcadd($period['supplier_outflows'], bcadd($period['general_expenses'], $period['expense_payments'], 3), 3);
 
-            $periodGeneralExpenses = (string) Expense::where('payment_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('expense_date', '>=', $fromDate)
-                ->whereDate('expense_date', '<=', $toDate)
-                ->sum('amount');
-
-            $periodExpensePayments = (string) Payment::where('payment_method', $key)
-                ->where('payment_number', 'like', 'PAY-EXP-%')
-                ->whereDate('payment_date', '>=', $fromDate)
-                ->whereDate('payment_date', '<=', $toDate)
-                ->sum('amount');
-
-            $periodOutflows = bcadd($periodSupplierOutflows, bcadd($periodGeneralExpenses, $periodExpensePayments, 3), 3);
-
-            $periodInTransfers = (string) TreasuryTransfer::where('to_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('transfer_date', '>=', $fromDate)
-                ->whereDate('transfer_date', '<=', $toDate)
-                ->sum('amount');
-
-            $periodOutTransfers = (string) TreasuryTransfer::where('from_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('transfer_date', '>=', $fromDate)
-                ->whereDate('transfer_date', '<=', $toDate)
-                ->sum('amount');
-
-            $periodFees = (string) TreasuryTransfer::where('from_method', $key)
-                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                ->whereDate('transfer_date', '>=', $fromDate)
-                ->whereDate('transfer_date', '<=', $toDate)
-                ->sum('transfer_fee');
+            if (! in_array($key, $activeKeys, true)
+                && $this->isZero($openingBal) && $this->isZero($periodInflows) && $this->isZero($periodOutflows)
+                && $this->isZero($periodInTransfers) && $this->isZero($periodOutTransfers) && $this->isZero($periodFees)) {
+                continue;
+            }
 
             // Net Period Change & Closing Balance
             $netPeriodChange = bcsub(bcadd($periodInflows, $periodInTransfers, 3), bcadd($periodOutflows, bcadd($periodOutTransfers, $periodFees, 3), 3), 3);
@@ -393,10 +317,7 @@ class TreasuryService
             ->whereNotNull('customer_id')
             ->whereDate('payment_date', '>=', $fromDate)
             ->whereDate('payment_date', '<=', $toDate)
-            ->when($storeId, fn ($q) => $q->where(function ($sub) use ($storeId) {
-                $sub->whereHas('invoice', fn ($iq) => $iq->where('store_id', $storeId))
-                    ->orWhereNull('invoice_id');
-            }))
+            ->when($storeId, fn ($q) => $q->forStore($storeId))
             ->when($selectedMethod !== 'all', fn ($q) => $q->where('payment_method', $selectedMethod))
             ->get();
 
@@ -422,10 +343,7 @@ class TreasuryService
             ->whereNotNull('supplier_id')
             ->whereDate('payment_date', '>=', $fromDate)
             ->whereDate('payment_date', '<=', $toDate)
-            ->when($storeId, fn ($q) => $q->where(function ($sub) use ($storeId) {
-                $sub->whereHas('purchase', fn ($pq) => $pq->where('store_id', $storeId))
-                    ->orWhereNull('purchase_id');
-            }))
+            ->when($storeId, fn ($q) => $q->forStore($storeId))
             ->when($selectedMethod !== 'all', fn ($q) => $q->where('payment_method', $selectedMethod))
             ->get();
 
@@ -533,5 +451,78 @@ class TreasuryService
 
         // Reverse to show latest on top for UI
         return array_reverse($entries);
+    }
+
+    /**
+     * Every movement of one payment method, as scale-3 strings, over an optional date window.
+     * Payments are scoped to the branch with Payment::forStore (payments.store_id, falling back
+     * to the invoice/purchase store for legacy rows); all branches when $storeId is null.
+     *
+     * PAY-EXP vouchers (treasury-paid purchase expenses) carry supplier_id, so they are already
+     * in supplier_outflows (as DailyCashFlowService counts them: supplier_paid). The
+     * expense_payments bucket therefore only holds PAY-EXP vouchers WITHOUT a supplier.
+     *
+     * @return array{customer_inflows: string, supplier_outflows: string, general_expenses: string, expense_payments: string, transfers_in: string, transfers_out: string, fees: string}
+     */
+    private function movements(string $method, ?int $storeId, ?string $onOrAfter = null, ?string $before = null, ?string $onOrBefore = null): array
+    {
+        $window = function ($q, string $column) use ($onOrAfter, $before, $onOrBefore) {
+            return $q
+                ->when($onOrAfter !== null, fn ($w) => $w->whereDate($column, '>=', $onOrAfter))
+                ->when($before !== null, fn ($w) => $w->whereDate($column, '<', $before))
+                ->when($onOrBefore !== null, fn ($w) => $w->whereDate($column, '<=', $onOrBefore));
+        };
+
+        $payments = fn () => $window(
+            Payment::query()
+                ->where('payments.payment_method', $method)
+                ->when($storeId, fn ($q) => $q->forStore($storeId)),
+            'payments.payment_date'
+        );
+        $transfers = fn () => $window(
+            TreasuryTransfer::query()->when($storeId, fn ($q) => $q->where('store_id', $storeId)),
+            'transfer_date'
+        );
+
+        return [
+            'customer_inflows' => Decimal::normalize((string) $payments()->whereNotNull('payments.customer_id')->sum('payments.amount')),
+            'supplier_outflows' => Decimal::normalize((string) $payments()->whereNotNull('payments.supplier_id')->sum('payments.amount')),
+            'general_expenses' => Decimal::normalize((string) $window(
+                Expense::query()->where('payment_method', $method)->when($storeId, fn ($q) => $q->where('store_id', $storeId)),
+                'expense_date'
+            )->sum('amount')),
+            'expense_payments' => Decimal::normalize((string) $payments()
+                ->where('payments.payment_number', 'like', 'PAY-EXP-%')
+                ->whereNull('payments.supplier_id')
+                ->sum('payments.amount')),
+            'transfers_in' => Decimal::normalize((string) $transfers()->where('to_method', $method)->sum('amount')),
+            'transfers_out' => Decimal::normalize((string) $transfers()->where('from_method', $method)->sum('amount')),
+            'fees' => Decimal::normalize((string) $transfers()->where('from_method', $method)->sum('transfer_fee')),
+        ];
+    }
+
+    /**
+     * Opening cash of the open shift(s): the latest open shift of the branch, or - for the
+     * all-branches view - the latest open shift of every branch.
+     */
+    private function openShiftsOpeningCash(?int $storeId): string
+    {
+        $shifts = CashShift::where('status', 'open')
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+            ->orderBy('id')
+            ->get(['id', 'store_id', 'opening_cash_balance'])
+            ->keyBy(fn (CashShift $s): string => (string) $s->store_id); // later (higher id) wins
+
+        $total = '0.000';
+        foreach ($shifts as $shift) {
+            $total = bcadd($total, (string) $shift->opening_cash_balance, 3);
+        }
+
+        return $total;
+    }
+
+    private function isZero(string $value): bool
+    {
+        return bccomp($value, '0.000', 3) === 0;
     }
 }

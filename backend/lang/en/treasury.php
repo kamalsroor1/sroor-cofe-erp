@@ -180,6 +180,7 @@ return [
     'cash_diff_surplus' => 'Surplus of :amount :currency',
     'cash_diff_shortage' => 'Shortage of :amount :currency',
     'activity' => [
+        'transfer_created' => 'Treasury transfer [:number] of :amount :currency from [:from] to [:to]',
         'shift_opened' => 'Opened shift [:number] at branch (:store) with an opening balance of :amount :currency',
         'shift_closed' => 'Closed shift [:number] with actual cash of :amount :currency (:status)',
     ],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Concurrency;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -12,6 +13,7 @@ use App\Models\StockMovement;
 use App\Models\Tenant;
 use App\Services\DocumentNumberService;
 use App\Services\StockService;
+use App\Services\TreasuryService;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -193,6 +195,39 @@ final class MysqlConcurrencyTest extends TenantTestCase
         ]);
 
         $this->assertSame(['invoices' => 1, 'stock' => '8.500', 'movements' => 1], $state);
+    }
+
+    public function test_treasury_transfer_blocks_on_the_store_row_lock(): void
+    {
+        $tenant = $this->createTenant();
+        $storeId = (int) $this->tenantStore($tenant)->id;
+
+        $holder = $this->tenantSideConnection($tenant, 'qa_treasury_holder');
+        $holder->beginTransaction();
+
+        try {
+            // Another transfer of the same branch is in flight: it holds the branch's store row.
+            $holder->selectOne('select id from stores where id = ? for update', [$storeId]);
+
+            $errorCode = $this->inTenant($tenant, function () use ($storeId): ?int {
+                DB::statement('SET SESSION innodb_lock_wait_timeout = 1');
+
+                try {
+                    app(TreasuryService::class)->transfer(['from_method' => 'cash', 'to_method' => 'instapay', 'amount' => '1.000', 'store_id' => $storeId]);
+
+                    return null;
+                } catch (QueryException $e) {
+                    return (int) ($e->errorInfo[1] ?? 0);
+                } catch (BusinessRuleException) {
+                    return null; // balance check ran without waiting for the lock
+                }
+            });
+        } finally {
+            $holder->rollBack();
+            DB::purge('qa_treasury_holder');
+        }
+
+        $this->assertSame(self::LOCK_WAIT_TIMEOUT, $errorCode, 'transfer() did not wait for the store row lock: the balance check is not serialised.');
     }
 
     public function test_document_number_allocation_blocks_on_the_sequence_row_lock(): void
