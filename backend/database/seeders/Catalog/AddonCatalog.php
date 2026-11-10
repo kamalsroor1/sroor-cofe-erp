@@ -19,7 +19,9 @@ use App\Enums\Billing\AddonType;
  * - `premium_support` is a monthly RECURRING add-on (299), `onboarding` a one-time
  *   SERVICE (1,500);
  * - `custom.domain` is hidden (is_public = false) and not available on any plan until
- *   Phase 3 (Q-E9). Hidden = is_public false; there is no separate "purchasable" flag.
+ *   Phase 3 (Q-E9). Hidden = is_public false; there is no separate "purchasable" flag;
+ * - `api.access` is hidden (is_public = false) by owner decision: it must not be sold. The row,
+ *   its price and plan availability stay so existing subscriptions keep working.
  *
  * `bundled_limits` = limits one unit raises, read by the entitlement engine (ENTI-2.2):
  * stores / warehouses / vans / users / items / storage_mb.
@@ -101,7 +103,7 @@ final class AddonCatalog
             'key' => 'api.access', 'lang' => 'api_access', 'type' => AddonType::Recurring, 'feature_key' => 'api.access',
             'bundled_limits' => null,
             'unit_price' => '299.000', 'yearly_price' => '2990.000', 'price_tiers' => null,
-            'is_public' => true, 'plans' => ['pro'], 'unavailable_on' => [],
+            'is_public' => false, 'plans' => ['pro'], 'unavailable_on' => [],
         ],
         [
             'key' => 'custom.domain', 'lang' => 'custom_domain', 'type' => AddonType::Recurring, 'feature_key' => 'custom.domain',

@@ -71,7 +71,7 @@ final class PlansAndFeaturesSeederTest extends TenantTestCase
         'mixes.manage' => ['recurring', '199.000', '1990.000', [], true],
         'reports.advanced' => ['recurring', '149.000', '1490.000', [], true],
         'audit.logs' => ['recurring', '99.000', '990.000', [], true],
-        'api.access' => ['recurring', '299.000', '2990.000', [], true],
+        'api.access' => ['recurring', '299.000', '2990.000', [], false],
         'custom.domain' => ['recurring', '149.000', '1490.000', [], false],
         'addon.premium_support' => ['recurring', '299.000', '2990.000', [], true],
         'service.onboarding' => ['service', '1500.000', null, [], true],
