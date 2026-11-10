@@ -1,5 +1,5 @@
 <script setup>
-import { ArrowRight } from 'lucide-vue-next';
+import { ArrowRight, CircleHelp } from 'lucide-vue-next';
 import DynamicIcon from './DynamicIcon.vue';
 
 defineProps({
@@ -20,6 +20,10 @@ defineProps({
     default: '',
   },
   backHref: {
+    type: String,
+    default: '',
+  },
+  helpSlug: {
     type: String,
     default: '',
   },
@@ -56,6 +60,17 @@ defineProps({
         >
           {{ badge }}
         </span>
+
+        <router-link
+          v-if="helpSlug"
+          :to="{ path: '/help', query: { article: helpSlug } }"
+          data-testid="contextual-help-btn"
+          :title="$t('help.contextual_button_label')"
+          :aria-label="$t('help.contextual_button_label')"
+          class="min-h-[44px] min-w-[44px] rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-theme-primary border border-slate-200 dark:border-slate-700 flex items-center justify-center transition active:scale-95 shrink-0"
+        >
+          <CircleHelp class="w-4 h-4" />
+        </router-link>
       </div>
 
       <p v-if="subtitle" class="text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed">

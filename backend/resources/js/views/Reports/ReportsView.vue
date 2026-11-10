@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header & Actions -->
-    <PageHeader :title="$t('reports.title')" :subtitle="$t('reports.subtitle')" :icon="BarChart3">
+    <PageHeader :title="$t('reports.title')" :subtitle="$t('reports.subtitle')" :icon="BarChart3" help-slug="reports">
       <template #actions>
         <button
           type="button"

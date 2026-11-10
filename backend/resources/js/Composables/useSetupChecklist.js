@@ -4,13 +4,13 @@ import { useAppConfigStore } from '../stores/appConfig';
 import { useRoutePermission } from './useRoutePermission';
 
 const STEPS = [
-    { key: 'company_info', to: '/settings' },
-    { key: 'branch_setup', to: '/stores' },
-    { key: 'categories', to: '/categories' },
-    { key: 'items', to: '/items' },
-    { key: 'users', to: '/users' },
-    { key: 'shift', to: '/pos' },
-    { key: 'first_sale', to: '/pos' },
+    { key: 'company_info', to: '/settings', helpSlug: 'getting-started' },
+    { key: 'branch_setup', to: '/stores', helpSlug: 'getting-started' },
+    { key: 'categories', to: '/categories', helpSlug: 'items' },
+    { key: 'items', to: '/items', helpSlug: 'items' },
+    { key: 'users', to: '/users', helpSlug: 'users-roles' },
+    { key: 'shift', to: '/pos', helpSlug: 'treasury-shifts' },
+    { key: 'first_sale', to: '/pos', helpSlug: 'pos' },
 ];
 
 const dismissKey = (tenantKey, userId) => `setup_checklist_dismissed_${tenantKey ?? 'tenant'}_${userId ?? 'anon'}`;

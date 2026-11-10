@@ -157,6 +157,7 @@ return [
         'profile_show' => 'Profile & account',
         'import_index' => 'Import data',
         'trash_index' => 'Recycle bin',
+        'help_index' => 'Help Center & Support',
     ],
 
     // Sidebar / drawer menu labels (Composables/useNavigation.js)
@@ -212,6 +213,7 @@ return [
             'trash' => 'Recycle Bin',
             'settings' => 'Business Settings',
             'billing' => 'Subscription & billing',
+            'help' => 'Help & Support Center',
         ],
     ],
 ];

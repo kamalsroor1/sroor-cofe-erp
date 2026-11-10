@@ -1,7 +1,12 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
     <!-- 1. 🔝 Page Header & Actions -->
-    <PageHeader :title="$t('inventory.items_title')" :subtitle="$t('inventory.items_subtitle')" :icon="'coffee'">
+    <PageHeader
+      :title="$t('inventory.items_title')"
+      :subtitle="$t('inventory.items_subtitle')"
+      :icon="'coffee'"
+      help-slug="items"
+    >
       <template #actions>
         <BaseButton
           v-if="authStore.can('items.create')"
