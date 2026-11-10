@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Actions\Customers\ResolveWalkInCustomerAction;
+use App\Actions\Invoices\ReverseInvoicePaymentsAction;
 use App\Enums\PaymentMethod;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
@@ -528,6 +529,10 @@ class InvoiceService
             }
 
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
+            // BE-03 lock order: document -> party -> items -> number sequences.
+            if ($lockedInvoice->customer_id) {
+                Customer::query()->whereKey($lockedInvoice->customer_id)->lockForUpdate()->first();
+            }
 
             $oldState = $lockedInvoice->toArray();
 
@@ -552,6 +557,9 @@ class InvoiceService
                 'remaining_amount' => '0.000',
                 'notes' => ($lockedInvoice->notes ? $lockedInvoice->notes."\n" : '')."تم الإلغاء: {$reason}",
             ]);
+
+            // BE-03: give back what was paid (negative PAY-REF vouchers) before the balance is recomputed
+            app(ReverseInvoicePaymentsAction::class)->execute($lockedInvoice);
 
             // Recalculate customer balance
             $this->customerBalanceService->updateBalance($lockedInvoice->customer_id);
@@ -582,6 +590,9 @@ class InvoiceService
     {
         return DB::transaction(function () use ($invoice, $data) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+            if ($lockedInvoice->status === 'cancelled') {
+                throw BusinessRuleException::conflict('invoices.cannot_edit_cancelled');
+            }
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             $oldCustomerId = $lockedInvoice->customer_id;
             $newCustomerId = $data['customer_id'];
@@ -794,7 +805,7 @@ class InvoiceService
             ]);
 
             // 6. Delete previous payments and re-create payment voucher(s) if paid
-            Payment::where('invoice_id', $lockedInvoice->id)->delete();
+            Payment::where('invoice_id', $lockedInvoice->id)->excludingRefunds()->delete();
 
             if (! empty($data['payments']) && is_array($data['payments'])) {
                 foreach ($data['payments'] as $p) {

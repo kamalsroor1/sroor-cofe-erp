@@ -314,6 +314,7 @@ class TreasuryService
 
         // Customer Payments (Inflows)
         $payments = Payment::with(['customer', 'invoice'])
+            ->excludingCancelledInvoices()
             ->whereNotNull('customer_id')
             ->whereDate('payment_date', '>=', $fromDate)
             ->whereDate('payment_date', '<=', $toDate)
@@ -477,6 +478,7 @@ class TreasuryService
 
         $payments = fn () => $window(
             Payment::query()
+                ->excludingCancelledInvoices()
                 ->where('payments.payment_method', $method)
                 ->when($storeId, fn ($q) => $q->forStore($storeId)),
             'payments.payment_date'

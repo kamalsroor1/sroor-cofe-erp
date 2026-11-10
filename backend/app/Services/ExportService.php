@@ -70,7 +70,7 @@ class ExportService
         }
 
         // 2. Payments
-        $payments = Payment::where('customer_id', $customer->id)->get();
+        $payments = Payment::where('customer_id', $customer->id)->excludingCancelledInvoices()->get();
         foreach ($payments as $pay) {
             // BE-10: a refund voucher (negative amount) is cash given back: a debit, same balance effect.
             $isRefund = bccomp((string) $pay->amount, '0.000', 3) < 0;

@@ -22,7 +22,9 @@ class CustomerBalanceService
             ->sum('net_total');
 
         // Total Customer Payments
+        // BE-03: payments of a legacy cancelled invoice (never reversed) are not customer credit.
         $totalPayments = Payment::where('customer_id', $customerId)
+            ->excludingCancelledInvoices()
             ->sum('amount');
 
         // Total Sales Returns
@@ -70,6 +72,7 @@ class CustomerBalanceService
 
         // Payments
         $payments = Payment::where('customer_id', $customer->id)
+            ->excludingCancelledInvoices()
             ->when($fromDate, fn ($q) => $q->whereDate('payment_date', '>=', $fromDate))
             ->when($toDate, fn ($q) => $q->whereDate('payment_date', '<=', $toDate))
             ->get();

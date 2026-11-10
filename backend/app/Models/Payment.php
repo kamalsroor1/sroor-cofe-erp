@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $purchase_id
  * @property int|null $store_id
  * @property int|null $return_id
+ * @property int|null $reverses_payment_id
  * @property int|null $user_id
  * @property string $amount
  * @property Carbon|null $payment_date
@@ -45,6 +46,7 @@ class Payment extends Model
         'purchase_id',
         'store_id',
         'return_id',
+        'reverses_payment_id',
         'user_id',
         'amount',
         'payment_date',
@@ -145,7 +147,10 @@ class Payment extends Model
     }
 
     /**
-     * Excludes vouchers of cancelled invoices (a cancelled sale's cash is not in the drawer).
+     * Hides the vouchers of cancelled invoices that were never reversed (legacy cancellations,
+     * made before BE-03: that cash is not in the drawer). Since BE-03 a cancel books a negative
+     * PAY-REF voucher per payment, so a reversed payment stays visible (in its own shift/day)
+     * and its reversal nets it out where the cancel happened. A refund voucher is never hidden.
      *
      * @param  Builder<Payment>  $query
      */
@@ -153,7 +158,16 @@ class Payment extends Model
     {
         $query->where(function (Builder $q): void {
             $q->whereNull('payments.invoice_id')
-                ->orWhereNotIn('payments.invoice_id', Invoice::withTrashed()->select('id')->where('status', 'cancelled'));
+                ->orWhereNotIn('payments.invoice_id', Invoice::withTrashed()->select('id')->where('status', 'cancelled'))
+                ->orWhere(function (Builder $refund): void {
+                    $refund->refunds();
+                })
+                ->orWhereExists(function ($sub): void {
+                    $sub->selectRaw('1')
+                        ->from('payments as reversal')
+                        ->whereColumn('reversal.reverses_payment_id', 'payments.id')
+                        ->whereNull('reversal.deleted_at');
+                });
         });
     }
 
