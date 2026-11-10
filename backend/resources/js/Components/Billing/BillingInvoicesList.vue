@@ -52,7 +52,7 @@ const { formatMoney, formatDate } = useFormatters();
               <td class="py-3 pe-3 font-black text-slate-900 dark:text-white whitespace-nowrap">
                 {{ invoice.number }}
               </td>
-              <td class="py-3 pe-3 text-slate-700 dark:text-slate-300">{{ invoice.type.label }}</td>
+              <td class="py-3 pe-3 text-slate-700 dark:text-slate-300">{{ invoice.type?.label }}</td>
               <td class="py-3 pe-3">
                 <div class="space-y-1.5">
                   <BillingStatusBadge :label="invoice.status.label" :tone="invoiceTone(invoice.status.value)" />
@@ -110,7 +110,7 @@ const { formatMoney, formatDate } = useFormatters();
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0">
               <p class="text-sm font-black text-slate-900 dark:text-white">{{ invoice.number }}</p>
-              <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ invoice.type.label }}</p>
+              <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ invoice.type?.label }}</p>
             </div>
             <BillingStatusBadge :label="invoice.status.label" :tone="invoiceTone(invoice.status.value)" />
           </div>

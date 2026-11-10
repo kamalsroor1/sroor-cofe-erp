@@ -40,7 +40,7 @@ const logo = computed(() => appConfig.branding?.logo_light || appConfig.branding
       </div>
       <div class="text-end space-y-0.5">
         <p class="text-lg font-black" dir="ltr">{{ invoice.number }}</p>
-        <p class="text-xs font-bold text-slate-600">{{ invoice.type.label }} - {{ invoice.status.label }}</p>
+        <p class="text-xs font-bold text-slate-600">{{ invoice.type?.label }} - {{ invoice.status.label }}</p>
       </div>
     </header>
 

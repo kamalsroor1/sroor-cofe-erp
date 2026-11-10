@@ -39,9 +39,7 @@ const countdownText = computed(() => {
   return t('subscription.billing.plan.days_left', { days: formatNumber(days) });
 });
 
-const cycleLabel = computed(() =>
-  sub.value.billing_cycle ? t(`billing.billing_cycle.${sub.value.billing_cycle}`) : '-'
-);
+const cycleLabel = computed(() => sub.value.billing_cycle?.label || '-');
 const notice = computed(() => {
   if (access.value === 'read_only') return t('subscription.billing.plan.read_only_notice');
   if (access.value === 'blocked') return t('subscription.billing.plan.blocked_notice');

@@ -27,7 +27,7 @@ const { formatMoney, formatDate, formatDateTime } = useFormatters();
     <div v-if="invoice" class="space-y-4 py-3 font-tajawal text-xs">
       <div class="flex flex-wrap items-center gap-2">
         <BillingStatusBadge :label="invoice.status.label" :tone="invoiceTone(invoice.status.value)" />
-        <span class="font-bold text-slate-500 dark:text-slate-400">{{ invoice.type.label }}</span>
+        <span class="font-bold text-slate-500 dark:text-slate-400">{{ invoice.type?.label }}</span>
         <span v-if="invoice.period_start" class="font-bold text-slate-500 dark:text-slate-400">
           {{ $t('subscription.billing.details.period') }}: {{ formatDate(invoice.period_start) }} -
           {{ formatDate(invoice.period_end) }}

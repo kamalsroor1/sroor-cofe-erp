@@ -6,15 +6,17 @@ import PageHeader from '@/Components/Common/PageHeader.vue';
 import BillingInvoiceDetailsModal from '@/Components/Billing/BillingInvoiceDetailsModal.vue';
 import BillingInvoicesList from '@/Components/Billing/BillingInvoicesList.vue';
 import BillingPaymentModal from '@/Components/Billing/BillingPaymentModal.vue';
+import PlanChangeSection from '@/Components/Billing/PlanChangeSection.vue';
 import BillingSkeleton from '@/Components/Billing/BillingSkeleton.vue';
 import SubscriptionAddonsList from '@/Components/Billing/SubscriptionAddonsList.vue';
 import SubscriptionPlanCard from '@/Components/Billing/SubscriptionPlanCard.vue';
 import SubscriptionUsageList from '@/Components/Billing/SubscriptionUsageList.vue';
 import { useSubscription } from '@/Composables/useSubscription';
 
-const { subscription, invoices, isLoading, error, load, renew, showPlanChange, submitPayment } = useSubscription();
+const { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment } = useSubscription();
 
 const renewing = ref(false);
+const requestOpen = ref(false);
 const detailsId = ref(null);
 const payId = ref(null);
 const detailsInvoice = computed(() => invoices.value.find((i) => i.id === detailsId.value) || null);
@@ -25,12 +27,16 @@ const openInvoice = (invoice) => {
   else detailsId.value = invoice.id;
 };
 
+const openInvoiceById = (id) => {
+  const invoice = invoices.value.find((i) => i.id === id);
+  if (invoice) openInvoice(invoice);
+};
+
 const onRenew = async () => {
   renewing.value = true;
   const id = await renew();
   renewing.value = false;
-  const invoice = invoices.value.find((i) => i.id === id);
-  if (invoice) openInvoice(invoice);
+  openInvoiceById(id);
 };
 
 const onPay = (invoice) => {
@@ -52,7 +58,13 @@ onMounted(load);
     <BillingSkeleton v-if="isLoading" />
     <ErrorState v-else-if="error" :message="error" :retry-label="$t('subscription.billing.page.retry')" @retry="load" />
     <template v-else-if="subscription">
-      <SubscriptionPlanCard :data="subscription" :busy="renewing" @renew="onRenew" @change-plan="showPlanChange" />
+      <SubscriptionPlanCard :data="subscription" :busy="renewing" @renew="onRenew" @change-plan="requestOpen = true" />
+      <PlanChangeSection
+        v-model:open="requestOpen"
+        :subscription="subscription"
+        @changed="refreshInvoices().catch(() => null)"
+        @open-invoice="openInvoiceById"
+      />
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         <SubscriptionUsageList :usage="subscription.usage" />
         <SubscriptionAddonsList :addons="subscription.addons" />

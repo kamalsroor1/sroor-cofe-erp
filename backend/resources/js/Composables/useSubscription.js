@@ -66,7 +66,7 @@ export function useSubscription() {
                 monthly: trans('billing.billing_cycle.monthly'),
                 yearly: trans('billing.billing_cycle.yearly'),
             },
-            inputValue: subscription.value?.subscription?.billing_cycle === 'yearly' ? 'yearly' : 'monthly',
+            inputValue: subscription.value?.subscription?.billing_cycle?.value === 'yearly' ? 'yearly' : 'monthly',
             inputValidator: (value) => (value ? null : trans('subscription.billing.renewal.cycle_required')),
             showCancelButton: true,
             confirmButtonText: trans('subscription.billing.renewal.confirm'),
@@ -76,22 +76,6 @@ export function useSubscription() {
         if (!isConfirmed) return null;
         const result = await requestRenewal(cycle);
         return result ? result.invoiceId : null;
-    };
-
-    /** Plan changes go through support for now: show the contact details. */
-    const showPlanChange = () => {
-        const support = subscription.value?.support || {};
-        const lines = [
-            support.phone ? `${trans('subscription.billing.change_plan.phone')}: ${support.phone}` : '',
-            support.email ? `${trans('subscription.billing.change_plan.email')}: ${support.email}` : '',
-        ].filter(Boolean);
-        return DarkSwal.fire({
-            icon: 'info',
-            title: trans('subscription.billing.change_plan.title'),
-            text: trans('subscription.billing.change_plan.text'),
-            footer: lines.length ? lines.join(' | ') : trans('subscription.billing.change_plan.no_contact'),
-            confirmButtonText: trans('common.close'),
-        });
     };
 
     /** Returns { ok, message, remaining? }: server 422 text is handed back for inline display. */
@@ -112,5 +96,5 @@ export function useSubscription() {
         }
     };
 
-    return { subscription, invoices, isLoading, error, load, renew, showPlanChange, submitPayment };
+    return { subscription, invoices, isLoading, error, load, renew, refreshInvoices, submitPayment };
 }
