@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\AdditionalExpense;
 use App\Models\Customer;
 use App\Models\Expense;
@@ -618,8 +619,9 @@ class PosCheckoutIntegrityApiTest extends TenantTestCase
             ],
         ]));
 
-        $this->assertGreaterThanOrEqual(400, $response->status());
-        $this->assertNotSame(201, $response->status());
+        $response->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', InsufficientStockException::ERROR_CODE);
         $this->assertNothingPersisted();
     }
 

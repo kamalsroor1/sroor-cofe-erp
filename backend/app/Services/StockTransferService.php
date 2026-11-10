@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Item;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\Store;
 use App\Models\StoreStock;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -46,7 +47,7 @@ class StockTransferService
         $toStoreId = (int) $data['to_store_id'];
 
         if ($fromStoreId === $toStoreId) {
-            throw new Exception('لا يمكن إجراء تحويل مخزني لنفس الفرع أو المخزن.');
+            throw BusinessRuleException::make('inventory.transfer_same_location');
         }
 
         return DB::transaction(function () use ($data, $fromStoreId, $toStoreId) {
@@ -87,7 +88,7 @@ class StockTransferService
 
                 if (! $fromStock || bccomp((string) $fromStock->quantity, $quantity, 3) < 0) {
                     $available = $fromStock ? (string) $fromStock->quantity : '0.000';
-                    throw new Exception("رصيد الصنف [{$item->name}] في [{$fromStore->name}] غير كافٍ لإجراء التحويل. المتوفر حالياً: {$available} {$item->unit}");
+                    throw InsufficientStockException::forStore((string) $item->name, (string) $fromStore->name, (string) $available, (string) $item->unit);
                 }
 
                 // 3. If transfer is confirmed, move stock immediately
@@ -190,7 +191,7 @@ class StockTransferService
             $lockedTransfer = StockTransfer::where('id', $transfer->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedTransfer->status === 'cancelled') {
-                throw new Exception('إذن التحويل ملغي مسبقاً.');
+                throw BusinessRuleException::conflict('inventory.transfer_already_cancelled');
             }
 
             if ($lockedTransfer->status === 'confirmed') {
@@ -209,7 +210,7 @@ class StockTransferService
 
                     if (! $toStock || bccomp((string) $toStock->quantity, $quantity, 3) < 0) {
                         $available = $toStock ? (string) $toStock->quantity : '0.000';
-                        throw new Exception("لا يمكن إلغاء التحويل لأن رصيد الصنف [{$item->name}] في [{$toStore->name}] تم التصرف فيه (المتبقي: {$available}، والمطلوب إرجاعه: {$quantity}).");
+                        throw BusinessRuleException::conflict('inventory.transfer_cancel_stock_consumed', ['item' => $item->name, 'store' => $toStore->name, 'available' => $available, 'required' => $quantity]);
                     }
 
                     // 2. Deduct from destination

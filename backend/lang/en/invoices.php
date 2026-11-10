@@ -249,4 +249,10 @@ return [
         'copy_text' => "🧾 Invoice #:number\n🏢 Business: :company\n👤 Customer: :customer\n📅 Date: :date\n💰 Net due: :net :currency\n💵 Paid: :paid :currency\n📝 Remaining: :remaining :currency",
         'whatsapp_text' => "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!",
     ],
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'cancel_admin_only' => 'Sorry, only the general manager can cancel invoices.',
+    'delete_admin_only' => 'Sorry, only the general manager can delete invoices.',
+    'already_cancelled' => 'This invoice has already been cancelled.',
+    'discrete_unit_integer_only' => 'The item \':item\' is sold by piece/box and only accepts whole numbers; fractions are not allowed (:quantity :unit).',
 ];

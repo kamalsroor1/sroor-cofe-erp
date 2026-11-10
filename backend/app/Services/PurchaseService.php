@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Item;
 use App\Models\Payment;
 use App\Models\Purchase;
@@ -11,7 +12,6 @@ use App\Models\Store;
 use App\Models\StoreStock;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -289,7 +289,7 @@ class PurchaseService
             $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedPurchase->status === 'cancelled') {
-                throw new Exception("فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] ملغاة بالفعل مسبقاً.");
+                throw BusinessRuleException::conflict('purchases.already_cancelled', ['number' => $lockedPurchase->purchase_number]);
             }
 
             ReturnSourceService::assertNoLiveReturns($lockedPurchase);
@@ -305,7 +305,7 @@ class PurchaseService
 
                 // Check master stock
                 if (bccomp((string) $item->current_stock, $qty, 3) < 0) {
-                    throw new Exception("تعذر إلغاء الفاتورة: رصيد الصنف [{$item->name}] الحالي ({$item->current_stock} {$item->unit}) أقل من الكمية المطلوب عكسها ({$qty} {$item->unit})، لوجود مبيعات تمت من هذه الشحنة.");
+                    throw BusinessRuleException::conflict('purchases.cancel_stock_sold', ['item' => $item->name, 'current' => $item->current_stock, 'unit' => $item->unit, 'required' => $qty]);
                 }
 
                 // Check store stock if assigned to a specific store
@@ -316,8 +316,8 @@ class PurchaseService
                         ->first();
 
                     if ($storeStock && bccomp((string) $storeStock->quantity, $qty, 3) < 0) {
-                        $storeName = $lockedPurchase->store?->name ?? "الفرع #{$storeId}";
-                        throw new Exception("تعذر إلغاء الفاتورة: رصيد الصنف [{$item->name}] في [{$storeName}] ({$storeStock->quantity} {$item->unit}) غير كافٍ لخصم الكمية ({$qty} {$item->unit}).");
+                        $storeName = $lockedPurchase->store?->name ?? (string) __('inventory.store_fallback_name', ['id' => $storeId]);
+                        throw BusinessRuleException::conflict('purchases.cancel_store_stock_insufficient', ['item' => $item->name, 'store' => $storeName, 'current' => $storeStock->quantity, 'unit' => $item->unit, 'required' => $qty]);
                     }
                 }
             }
@@ -389,7 +389,7 @@ class PurchaseService
             $lockedPurchase = Purchase::where('id', $purchase->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedPurchase->status !== 'cancelled') {
-                throw new Exception("فاتورة المشتريات رقم [{$lockedPurchase->purchase_number}] ليست ملغاة.");
+                throw BusinessRuleException::conflict('purchases.not_cancelled', ['number' => $lockedPurchase->purchase_number]);
             }
 
             $storeId = $lockedPurchase->store_id;

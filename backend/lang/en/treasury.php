@@ -183,4 +183,9 @@ return [
         'shift_opened' => 'Opened shift [:number] at branch (:store) with an opening balance of :amount :currency',
         'shift_closed' => 'Closed shift [:number] with actual cash of :amount :currency (:status)',
     ],
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'transfer_accounts_required' => 'Please select the source account and the destination account.',
+    'transfer_amount_invalid' => 'Please enter a valid transfer amount greater than zero.',
+    'transfer_insufficient_balance' => 'Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency).',
 ];

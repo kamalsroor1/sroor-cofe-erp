@@ -249,4 +249,10 @@ return [
         'copy_text' => "🧾 فاتورة رقم: #:number\n🏢 المؤسسة: :company\n👤 العميل: :customer\n📅 التاريخ: :date\n💰 الصافي المطلوب: :net :currency\n💵 المدفوع: :paid :currency\n📝 المتبقي: :remaining :currency",
         'whatsapp_text' => "مرحباً بك :customer،\nمرفق تفاصيل فاتورتك رقم #:number من :company:\nالإجمالي الصافي: :net :currency\nالمدفوع: :paid :currency\nالمتبقي: :remaining :currency\nشكراً لتعاملكم معنا!",
     ],
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'cancel_admin_only' => 'عفواً، لا يملك صلاحية إلغاء الفواتير سوى المدير العام.',
+    'delete_admin_only' => 'عفواً، لا يملك صلاحية حذف الفواتير سوى المدير العام.',
+    'already_cancelled' => 'هذه الفاتورة ملغاة بالفعل مسبقاً.',
+    'discrete_unit_integer_only' => 'الصنف \':item\' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور (:quantity :unit).',
 ];

@@ -1727,7 +1727,13 @@
             "delete_category_confirm_text": "سيتم حذف الفئة \":name\" وإلغاء ارتباط الأصناف بها دون حذف الأصناف.",
             "store_delete_blockers": "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers",
             "insufficient_stock_item": "رصيد الصنف [:item] غير كافٍ. المتوفر حالياً: :available",
-            "insufficient_stock_store": "رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit"
+            "insufficient_stock_store": "رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit",
+            "adjustment_no_difference": "الرصيد الفعلي المدخل (:quantity) مطابق تماماً للرصيد المسجل حالياً بالمخزن.",
+            "adjustment_negative_total": "لا يمكن تنفيذ التسوية: الرصيد الإجمالي للصنف سيصبح سالباً (:balance).",
+            "transfer_same_location": "لا يمكن إجراء تحويل مخزني لنفس الفرع أو المخزن.",
+            "transfer_already_cancelled": "إذن التحويل ملغي مسبقاً.",
+            "transfer_cancel_stock_consumed": "لا يمكن إلغاء التحويل لأن رصيد الصنف [:item] في [:store] تم التصرف فيه (المتبقي: :available، والمطلوب إرجاعه: :required).",
+            "store_fallback_name": "الفرع #:id"
         },
         "invoices": {
             "title": "فواتير المبيعات",
@@ -1968,7 +1974,11 @@
             "share": {
                 "copy_text": "🧾 فاتورة رقم: #:number\n🏢 المؤسسة: :company\n👤 العميل: :customer\n📅 التاريخ: :date\n💰 الصافي المطلوب: :net :currency\n💵 المدفوع: :paid :currency\n📝 المتبقي: :remaining :currency",
                 "whatsapp_text": "مرحباً بك :customer،\nمرفق تفاصيل فاتورتك رقم #:number من :company:\nالإجمالي الصافي: :net :currency\nالمدفوع: :paid :currency\nالمتبقي: :remaining :currency\nشكراً لتعاملكم معنا!"
-            }
+            },
+            "cancel_admin_only": "عفواً، لا يملك صلاحية إلغاء الفواتير سوى المدير العام.",
+            "delete_admin_only": "عفواً، لا يملك صلاحية حذف الفواتير سوى المدير العام.",
+            "already_cancelled": "هذه الفاتورة ملغاة بالفعل مسبقاً.",
+            "discrete_unit_integer_only": "الصنف ':item' بالقطعة\/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور (:quantity :unit)."
         },
         "items": {
             "unit_not_in_list": ":unit (غير موجودة في قائمة الوحدات)",
@@ -2648,7 +2658,41 @@
                 "col_total": "الإجمالي",
                 "net_total": "الصافي النهائي:",
                 "thank_you": "شكراً لزيارتكم!"
-            }
+            },
+            "method_cash": "كاش",
+            "split_short": "تقسيم",
+            "tender_label": "المبلغ المستلم",
+            "tender_clear": "مسح المبلغ المستلم",
+            "tender_short": "المبلغ المستلم أقل من المطلوب",
+            "tender_short_due": "لسه مطلوب",
+            "paid_now_label": "المدفوع دلوقتي",
+            "remaining_on_account": "المتبقي على الحساب",
+            "load_failed_title": "تعذر تحميل بيانات نقطة البيع",
+            "load_failed_message": "تحقق من الاتصال بالإنترنت ثم أعد المحاولة.",
+            "load_failed_categories": "تعذر تحميل التصنيفات.",
+            "load_failed_customers": "تعذر تحميل قائمة العملاء. يمكنك البحث عن العميل بالاسم أو الهاتف.",
+            "load_failed_shift": "تعذر تحميل بيانات الوردية.",
+            "load_failed_category_items": "تعذر تحميل أصناف هذا التصنيف.",
+            "shortcuts_title": "اختصارات لوحة المفاتيح",
+            "shortcuts_hint": "اضغط F1 أو ؟ في أي وقت لعرض هذه القائمة.",
+            "shortcuts_group_general": "عام",
+            "shortcuts_group_lines": "أسطر الفاتورة",
+            "shortcut_search": "بحث \/ مسح باركود صنف",
+            "shortcut_customer": "اختيار العميل",
+            "shortcut_new_order": "فاتورة جديدة",
+            "shortcut_discount": "خصم الفاتورة",
+            "shortcut_checkout": "إتمام البيع",
+            "shortcut_catalog": "إظهار \/ إخفاء الأصناف",
+            "shortcut_help": "عرض هذه القائمة",
+            "shortcut_escape": "إغلاق النافذة أو النتائج أو مسح البحث",
+            "shortcut_multiplier": "الكمية قبل الصنف (3* ثم مسح أو Enter)",
+            "shortcut_edit_qty": "تعديل كمية السطر النشط",
+            "shortcut_edit_price": "تعديل سعر السطر النشط",
+            "shortcut_last_line": "تعديل سعر آخر سطر مضاف",
+            "shortcut_tab_fields": "التنقل بين الكمية والسعر",
+            "shortcut_enter_field": "تأكيد والانتقال (الكمية ثم السعر ثم البحث)",
+            "shortcut_revert_field": "إلغاء التعديل والعودة للبحث",
+            "price_missing_scanned": "الصنف \":name\" الذي تم مسحه بدون سعر. أدخل سعره في الفاتورة."
         },
         "profile": {
             "title": "الملف الشخصي وإعدادات الحساب",
@@ -2870,7 +2914,11 @@
             "wac_tooltip": "متوسط التكلفة المرجح (Weighted Average Cost - WAC)",
             "landed_cost_tooltip": "التكلفة المحملة تشمل سعر الشراء مضافاً إليه الشحن والجمارك ومصاريف التوريد",
             "status_confirmed": "معتمدة",
-            "cancel_purchase": "إلغاء فاتورة شراء"
+            "cancel_purchase": "إلغاء فاتورة شراء",
+            "already_cancelled": "فاتورة المشتريات رقم [:number] ملغاة بالفعل مسبقاً.",
+            "not_cancelled": "فاتورة المشتريات رقم [:number] ليست ملغاة.",
+            "cancel_stock_sold": "تعذر إلغاء الفاتورة: رصيد الصنف [:item] الحالي (:current :unit) أقل من الكمية المطلوب عكسها (:required :unit)، لوجود مبيعات تمت من هذه الشحنة.",
+            "cancel_store_stock_insufficient": "تعذر إلغاء الفاتورة: رصيد الصنف [:item] في [:store] (:current :unit) غير كافٍ لخصم الكمية (:required :unit)."
         },
         "reports": {
             "title": "التقارير الشاملة والإحصائيات",
@@ -4290,7 +4338,10 @@
             "activity": {
                 "shift_opened": "تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency",
                 "shift_closed": "تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)"
-            }
+            },
+            "transfer_accounts_required": "يرجى تحديد الحساب المحول منه والحساب المستلم.",
+            "transfer_amount_invalid": "يرجى إدخال مبلغ تحويل صحيح أكبر من الصفر.",
+            "transfer_insufficient_balance": "عفواً، رصيد الحساب المحول منه [:account] غير كافٍ لإتمام التحويل (المتاح: :available :currency - المطلوب بالعمولة: :required :currency)."
         },
         "users": {
             "title": "إدارة حسابات المستخدمين والكاشير",
@@ -6349,7 +6400,13 @@
             "delete_category_confirm_text": "Category \":name\" will be deleted and its items unlinked; the items themselves are kept.",
             "store_delete_blockers": "Linked operations prevent deletion:\n- :blockers",
             "insufficient_stock_item": "Insufficient stock for item [:item]. Currently available: :available",
-            "insufficient_stock_store": "Insufficient stock for item [:item] in [:store]. Currently available: :available :unit"
+            "insufficient_stock_store": "Insufficient stock for item [:item] in [:store]. Currently available: :available :unit",
+            "adjustment_no_difference": "The entered actual balance (:quantity) exactly matches the balance currently recorded in the store.",
+            "adjustment_negative_total": "The adjustment cannot be applied: the total balance of the item would become negative (:balance).",
+            "transfer_same_location": "A stock transfer cannot be made to the same branch or store.",
+            "transfer_already_cancelled": "This transfer has already been cancelled.",
+            "transfer_cancel_stock_consumed": "The transfer cannot be cancelled because the stock of [:item] in [:store] has already been used (remaining: :available, required to return: :required).",
+            "store_fallback_name": "Branch #:id"
         },
         "invoices": {
             "title": "Sales Invoices",
@@ -6590,7 +6647,11 @@
             "share": {
                 "copy_text": "🧾 Invoice #:number\n🏢 Business: :company\n👤 Customer: :customer\n📅 Date: :date\n💰 Net due: :net :currency\n💵 Paid: :paid :currency\n📝 Remaining: :remaining :currency",
                 "whatsapp_text": "Hello :customer,\nHere are the details of your invoice #:number from :company:\nNet total: :net :currency\nPaid: :paid :currency\nRemaining: :remaining :currency\nThank you for your business!"
-            }
+            },
+            "cancel_admin_only": "Sorry, only the general manager can cancel invoices.",
+            "delete_admin_only": "Sorry, only the general manager can delete invoices.",
+            "already_cancelled": "This invoice has already been cancelled.",
+            "discrete_unit_integer_only": "The item ':item' is sold by piece\/box and only accepts whole numbers; fractions are not allowed (:quantity :unit)."
         },
         "items": {
             "unit_not_in_list": ":unit (not in the unit list)",
@@ -7270,7 +7331,41 @@
                 "col_total": "Total",
                 "net_total": "Net total:",
                 "thank_you": "Thank you for your visit!"
-            }
+            },
+            "method_cash": "Cash",
+            "split_short": "Split",
+            "tender_label": "Cash received",
+            "tender_clear": "Clear received amount",
+            "tender_short": "The amount received is less than the amount due",
+            "tender_short_due": "Still due",
+            "paid_now_label": "Paid now",
+            "remaining_on_account": "Remaining on account",
+            "load_failed_title": "Could not load POS data",
+            "load_failed_message": "Check your internet connection and try again.",
+            "load_failed_categories": "Could not load categories.",
+            "load_failed_customers": "Could not load the customers list. You can still search by name or phone.",
+            "load_failed_shift": "Could not load the shift.",
+            "load_failed_category_items": "Could not load the items of this category.",
+            "shortcuts_title": "Keyboard shortcuts",
+            "shortcuts_hint": "Press F1 or ? any time to show this list.",
+            "shortcuts_group_general": "General",
+            "shortcuts_group_lines": "Cart lines",
+            "shortcut_search": "Search \/ scan an item",
+            "shortcut_customer": "Choose customer",
+            "shortcut_new_order": "New order tab",
+            "shortcut_discount": "Invoice discount",
+            "shortcut_checkout": "Checkout",
+            "shortcut_catalog": "Show \/ hide catalog",
+            "shortcut_help": "Show this list",
+            "shortcut_escape": "Close window, close results or clear search",
+            "shortcut_multiplier": "Quantity before the item (3* then scan or Enter)",
+            "shortcut_edit_qty": "Edit quantity of the active line",
+            "shortcut_edit_price": "Edit price of the active line",
+            "shortcut_last_line": "Edit price of the last added line",
+            "shortcut_tab_fields": "Move between quantity and price",
+            "shortcut_enter_field": "Confirm and continue (quantity to price to search)",
+            "shortcut_revert_field": "Cancel the edit and return to search",
+            "price_missing_scanned": "The scanned item \":name\" has no price. Enter its price in the cart."
         },
         "profile": {
             "title": "User Profile & Account Settings",
@@ -7492,7 +7587,11 @@
             "wac_tooltip": "Weighted Average Cost (WAC)",
             "landed_cost_tooltip": "Landed cost includes purchase price plus shipping, customs, and delivery fees",
             "status_confirmed": "Confirmed",
-            "cancel_purchase": "Purchase cancellation"
+            "cancel_purchase": "Purchase cancellation",
+            "already_cancelled": "Purchase invoice [:number] has already been cancelled.",
+            "not_cancelled": "Purchase invoice [:number] is not cancelled.",
+            "cancel_stock_sold": "Cannot cancel the invoice: the current balance of [:item] (:current :unit) is less than the quantity to reverse (:required :unit) because sales were made from this shipment.",
+            "cancel_store_stock_insufficient": "Cannot cancel the invoice: the balance of [:item] in [:store] (:current :unit) is not enough to deduct the quantity (:required :unit)."
         },
         "reports": {
             "title": "Financial Reports & Analytics",
@@ -8912,7 +9011,10 @@
             "activity": {
                 "shift_opened": "Opened shift [:number] at branch (:store) with an opening balance of :amount :currency",
                 "shift_closed": "Closed shift [:number] with actual cash of :amount :currency (:status)"
-            }
+            },
+            "transfer_accounts_required": "Please select the source account and the destination account.",
+            "transfer_amount_invalid": "Please enter a valid transfer amount greater than zero.",
+            "transfer_insufficient_balance": "Sorry, the balance of the source account [:account] is not enough for this transfer (available: :available :currency - required including fee: :required :currency)."
         },
         "users": {
             "title": "User & Cashier Management",

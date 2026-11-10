@@ -189,4 +189,9 @@ return [
         'shift_opened' => 'تم فتح وردية عمل جديدة رقم [:number] في فرع (:store) برصيد افتتاحي :amount :currency',
         'shift_closed' => 'تم تقفيل وإغلاق وردية العمل رقم [:number] بنقدية فعلية :amount :currency (:status)',
     ],
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'transfer_accounts_required' => 'يرجى تحديد الحساب المحول منه والحساب المستلم.',
+    'transfer_amount_invalid' => 'يرجى إدخال مبلغ تحويل صحيح أكبر من الصفر.',
+    'transfer_insufficient_balance' => 'عفواً، رصيد الحساب المحول منه [:account] غير كافٍ لإتمام التحويل (المتاح: :available :currency - المطلوب بالعمولة: :required :currency).',
 ];

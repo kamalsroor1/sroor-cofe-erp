@@ -179,4 +179,10 @@ return [
 
     'status_confirmed' => 'معتمدة',
     'cancel_purchase' => 'إلغاء فاتورة شراء',
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'already_cancelled' => 'فاتورة المشتريات رقم [:number] ملغاة بالفعل مسبقاً.',
+    'not_cancelled' => 'فاتورة المشتريات رقم [:number] ليست ملغاة.',
+    'cancel_stock_sold' => 'تعذر إلغاء الفاتورة: رصيد الصنف [:item] الحالي (:current :unit) أقل من الكمية المطلوب عكسها (:required :unit)، لوجود مبيعات تمت من هذه الشحنة.',
+    'cancel_store_stock_insufficient' => 'تعذر إلغاء الفاتورة: رصيد الصنف [:item] في [:store] (:current :unit) غير كافٍ لخصم الكمية (:required :unit).',
 ];

@@ -436,4 +436,12 @@ return [
     'store_delete_blockers' => "يوجد ارتباطات عمليات تمنع الحذف:\n- :blockers",
     'insufficient_stock_item' => 'رصيد الصنف [:item] غير كافٍ. المتوفر حالياً: :available',
     'insufficient_stock_store' => 'رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit',
+
+    // BE-07: business-rule refusals (BusinessRuleException)
+    'adjustment_no_difference' => 'الرصيد الفعلي المدخل (:quantity) مطابق تماماً للرصيد المسجل حالياً بالمخزن.',
+    'adjustment_negative_total' => 'لا يمكن تنفيذ التسوية: الرصيد الإجمالي للصنف سيصبح سالباً (:balance).',
+    'transfer_same_location' => 'لا يمكن إجراء تحويل مخزني لنفس الفرع أو المخزن.',
+    'transfer_already_cancelled' => 'إذن التحويل ملغي مسبقاً.',
+    'transfer_cancel_stock_consumed' => 'لا يمكن إلغاء التحويل لأن رصيد الصنف [:item] في [:store] تم التصرف فيه (المتبقي: :available، والمطلوب إرجاعه: :required).',
+    'store_fallback_name' => 'الفرع #:id',
 ];

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Actions\Customers\ResolveWalkInCustomerAction;
 use App\Enums\PaymentMethod;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -13,7 +14,6 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -147,7 +147,7 @@ class InvoiceService
                 $discreteUnits = ['قطعة', 'حبة', 'علبة', 'باكت', 'كرتونة', 'شيكارة', 'طرد', 'دستة', 'جوال', 'piece', 'pcs', 'box', 'carton', 'pack', 'unit'];
                 $itemUnit = trim(mb_strtolower((string) $item->unit));
                 if (in_array($itemUnit, $discreteUnits, true) && fmod((float) $qty, 1.0) != 0.0) {
-                    throw new \DomainException("الصنف '{$item->name}' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور ({$qty} {$item->unit}).");
+                    throw BusinessRuleException::make('invoices.discrete_unit_integer_only', ['item' => $item->name, 'quantity' => $qty, 'unit' => $item->unit]);
                 }
 
                 $unitPrice = (string) $line['unit_price'];
@@ -516,14 +516,14 @@ class InvoiceService
     public function cancelInvoice(Invoice $invoice, string $reason): Invoice
     {
         if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-            throw new Exception('عفواً، لا يملك صلاحية إلغاء الفواتير سوى المدير العام.');
+            throw BusinessRuleException::forbidden('invoices.cancel_admin_only');
         }
 
         return DB::transaction(function () use ($invoice, $reason) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedInvoice->status === 'cancelled') {
-                throw new Exception('هذه الفاتورة ملغاة بالفعل مسبقاً.');
+                throw BusinessRuleException::conflict('invoices.already_cancelled');
             }
 
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
@@ -850,7 +850,7 @@ class InvoiceService
     public function deleteInvoice(Invoice $invoice): bool
     {
         if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-            throw new Exception('عفواً، لا يملك صلاحية حذف الفواتير سوى المدير العام.');
+            throw BusinessRuleException::forbidden('invoices.delete_admin_only');
         }
 
         return DB::transaction(function () use ($invoice) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Item;
 use App\Models\Purchase;
 use App\Models\Supplier;
@@ -127,7 +128,7 @@ class PurchaseCancelAndRestoreFeatureTest extends TenantTestCase
             $this->assertEquals('5.000', $item->current_stock);
 
             // Attempt to cancel original 20 kg purchase -> Must throw exception because remaining 5 < 20
-            $this->expectException(\Exception::class);
+            $this->expectException(BusinessRuleException::class);
             $this->expectExceptionMessage('تعذر إلغاء الفاتورة');
 
             $purchaseService->cancelPurchase($purchase, 'محاولة إلغاء بعد بيع الصنف');

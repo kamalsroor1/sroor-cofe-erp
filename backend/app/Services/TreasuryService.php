@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Enums\PaymentMethod;
+use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\TreasuryTransfer;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -128,15 +128,15 @@ class TreasuryService
         $actorId = Auth::id() ?? (isset($data['user_id']) && is_numeric($data['user_id']) ? (int) $data['user_id'] : null);
 
         if (empty($fromMethod) || empty($toMethod)) {
-            throw new Exception('يرجى تحديد الحساب المحول منه والحساب المستلم.');
+            throw BusinessRuleException::make('treasury.transfer_accounts_required');
         }
 
         if ($fromMethod === $toMethod) {
-            throw new Exception('عفواً، لا يمكن التحويل لنفس الحساب أو الخزينة!');
+            throw BusinessRuleException::make('treasury.same_account_error');
         }
 
         if (bccomp($amount, '0.000', 3) <= 0) {
-            throw new Exception('يرجى إدخال مبلغ تحويل صحيح أكبر من الصفر.');
+            throw BusinessRuleException::make('treasury.transfer_amount_invalid');
         }
 
         if (bccomp($fee, '0.000', 3) < 0) {
@@ -150,7 +150,12 @@ class TreasuryService
 
         if (bccomp($totalRequired, $sourceBal, 3) > 0) {
             $fromLabel = PaymentMethod::tryFrom($fromMethod)?->label() ?? $fromMethod;
-            throw new Exception("عفواً، رصيد الحساب المحول منه [{$fromLabel}] غير كافٍ لإتمام التحويل (المتاح: ".number_format((float) $sourceBal, 2).' ج.م - المطلوب بالعمولة: '.number_format((float) $totalRequired, 2).' ج.م).');
+            throw BusinessRuleException::make('treasury.transfer_insufficient_balance', [
+                'account' => $fromLabel,
+                'available' => number_format((float) $sourceBal, 2),
+                'required' => number_format((float) $totalRequired, 2),
+                'currency' => __('common.currency'),
+            ]);
         }
 
         return DB::transaction(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {

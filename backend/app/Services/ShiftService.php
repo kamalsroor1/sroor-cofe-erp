@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\CashShift;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -10,7 +11,6 @@ use App\Models\ReturnDocument;
 use App\Models\Store;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
-use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +51,7 @@ class ShiftService
 
         $existing = $this->getActiveShift(storeId: $targetStoreId);
         if ($existing) {
-            throw new Exception(__('treasury.shift_already_open', ['number' => $existing->shift_number]));
+            throw BusinessRuleException::conflict('treasury.shift_already_open', ['number' => $existing->shift_number]);
         }
 
         $shiftNumber = $this->nextShiftNumber();

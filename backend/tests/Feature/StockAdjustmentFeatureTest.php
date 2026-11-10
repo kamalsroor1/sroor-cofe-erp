@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Item;
 use App\Models\StoreStock;
 use App\Models\Tenant;
@@ -78,7 +79,7 @@ class StockAdjustmentFeatureTest extends TenantTestCase
 
             $item = $this->stockedItem('ITM-ADJ-SAME', 'أكواب ورقية 8 أونص', '100.000', '1.000', '2.000');
 
-            $this->expectException(\Exception::class);
+            $this->expectException(BusinessRuleException::class);
             $this->expectExceptionMessage('مطابق تماماً للرصيد المسجل');
 
             app(StockService::class)->adjustStock(

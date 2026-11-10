@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Item;
@@ -12,7 +13,6 @@ use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\InvoiceService;
-use Exception;
 use Tests\Concerns\SeedsStoreStock;
 use Tests\TenantTestCase;
 
@@ -130,7 +130,7 @@ class InvoiceServiceTest extends TenantTestCase
             ],
         ];
 
-        $this->expectException(Exception::class);
+        $this->expectException(InsufficientStockException::class);
         $this->invoiceService->confirmInvoice($invoiceData);
 
         // Verify rollback: stock remains 1.000 and 0 invoices created
