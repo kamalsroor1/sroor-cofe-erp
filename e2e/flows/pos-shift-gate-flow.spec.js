@@ -1,5 +1,6 @@
 // POS-10: Shift gate (blocks POS when requires_shift=true and no open shift; opens shift; X-report & close shift).
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 996001,
@@ -35,6 +36,8 @@ const SHIFT_METRICS = {
 };
 
 test.describe('POS-10: Shift gate, open shift, X-report & close shift', () => {
+    skipOnPhoneViewport(test);
+
     test('shows shift gate when requires_shift is true and no shift is open, then opens shift and closes with X-report', async ({
         page,
     }) => {
@@ -49,14 +52,16 @@ test.describe('POS-10: Shift gate, open shift, X-report & close shift', () => {
         });
 
         await page.route('**/api/v1/items*', (route) =>
-            route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+            route.fulfill({
+                json: { success: true, data: [ITEM], meta: { total: 1 } },
+            })
         );
         await page.route('**/api/v1/categories*', (route) =>
-            route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
+            route.fulfill({
+                json: { success: true, data: [], total_items_count: 1 },
+            })
         );
-        await page.route('**/api/v1/customers*', (route) =>
-            route.fulfill({ json: { success: true, data: [] } })
-        );
+        await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
         await page.route('**/api/v1/pos/bootstrap*', (route) =>
             route.fulfill({
                 json: {

@@ -1,5 +1,6 @@
 // POS-11: Recent sales drawer (F8 open, reprint, quick return clamping to remaining_quantity & POST /returns).
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 995001,
@@ -67,16 +68,22 @@ async function setupPosRoutes(page, onReturnSubmit = null) {
         })
     );
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+        route.fulfill({
+            json: { success: true, data: [ITEM], meta: { total: 1 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
     );
-    await page.route('**/api/v1/customers*', (route) =>
-        route.fulfill({ json: { success: true, data: [] } })
-    );
+    await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -107,6 +114,8 @@ async function setupPosRoutes(page, onReturnSubmit = null) {
 }
 
 test.describe('POS-11: Recent sales drawer, reprint & quick return', () => {
+    skipOnPhoneViewport(test);
+
     test('F8 opens recent sales drawer and reprint button opens invoice print view', async ({ page }) => {
         await setupPosRoutes(page);
         await page.goto('/pos', { waitUntil: 'networkidle' });

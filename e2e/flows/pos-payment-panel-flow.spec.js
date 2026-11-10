@@ -1,5 +1,6 @@
 // POS-08 & POS-02: Payment panel denominations, exact tender, change preview, short-cash block, and walk-in credit/partial lock.
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 993001,
@@ -24,16 +25,22 @@ async function setupPosRoutes(page, onInvoice = null) {
     });
 
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+        route.fulfill({
+            json: { success: true, data: [ITEM], meta: { total: 1 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
     );
-    await page.route('**/api/v1/customers*', (route) =>
-        route.fulfill({ json: { success: true, data: [] } })
-    );
+    await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -50,13 +57,20 @@ async function setupPosRoutes(page, onInvoice = null) {
             status: 201,
             json: {
                 success: true,
-                data: { id: 101, invoice_number: 'INV-101', net_amount: '125.000', change_amount: '75.000' },
+                data: {
+                    id: 101,
+                    invoice_number: 'INV-101',
+                    net_amount: '125.000',
+                    change_amount: '75.000',
+                },
             },
         });
     });
 }
 
 test.describe('POS-08 & POS-02: Payment panel & walk-in restrictions', () => {
+    skipOnPhoneViewport(test);
+
     test('denominations 50/100/200/500 and exact button update tender and change preview', async ({ page }) => {
         await setupPosRoutes(page);
         await page.goto('/pos', { waitUntil: 'networkidle' });

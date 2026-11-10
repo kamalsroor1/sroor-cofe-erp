@@ -8,6 +8,7 @@
 // to the local DB. Local server only (playwright.config.js). Selectors use
 // data-testid, never translated text.
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 990001,
@@ -29,7 +30,12 @@ async function mockPosData(page, onInvoice) {
             json: {
                 success: true,
                 data: [ITEM],
-                meta: { current_page: 1, last_page: 1, total: 1, counts: { total: 1, categories: [] } },
+                meta: {
+                    current_page: 1,
+                    last_page: 1,
+                    total: 1,
+                    counts: { total: 1, categories: [] },
+                },
             },
         })
     );
@@ -50,6 +56,8 @@ async function openPosWithItem(page) {
 }
 
 test.describe('POS split checkout', () => {
+    skipOnPhoneViewport(test);
+
     let consoleErrors = [];
 
     test.beforeEach(async ({ page }) => {
@@ -68,7 +76,12 @@ test.describe('POS split checkout', () => {
                 status: 201,
                 json: {
                     success: true,
-                    data: { id: 1, invoice_number: 'E2E-1', net_amount: '550.500', change_amount: '49.500' },
+                    data: {
+                        id: 1,
+                        invoice_number: 'E2E-1',
+                        net_amount: '550.500',
+                        change_amount: '49.500',
+                    },
                 },
             };
         });
@@ -111,7 +124,12 @@ test.describe('POS split checkout', () => {
                 status: 201,
                 json: {
                     success: true,
-                    data: { id: 2, invoice_number: 'E2E-2', net_amount: '137.625', change_amount: '0.000' },
+                    data: {
+                        id: 2,
+                        invoice_number: 'E2E-2',
+                        net_amount: '137.625',
+                        change_amount: '0.000',
+                    },
                 },
             };
         });

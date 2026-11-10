@@ -1,5 +1,6 @@
 // POS-06: Weighted item picker (opens on tap, 1/2 kg preset adds 0.500, and by-amount mode computes exact weight).
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const WEIGHTED_ITEM = {
     id: 998001,
@@ -24,16 +25,22 @@ async function setupPosRoutes(page) {
     });
 
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [WEIGHTED_ITEM], meta: { total: 1 } } })
+        route.fulfill({
+            json: { success: true, data: [WEIGHTED_ITEM], meta: { total: 1 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
     );
-    await page.route('**/api/v1/customers*', (route) =>
-        route.fulfill({ json: { success: true, data: [] } })
-    );
+    await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -46,6 +53,8 @@ async function setupPosRoutes(page) {
 }
 
 test.describe('POS-06: Weighted item picker flow', () => {
+    skipOnPhoneViewport(test);
+
     test('clicking weighted item opens weight picker and 1/2 kg preset adds 0.500 to cart', async ({ page }) => {
         await setupPosRoutes(page);
         await page.goto('/pos', { waitUntil: 'networkidle' });

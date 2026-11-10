@@ -1,5 +1,6 @@
 // POS-16: Quantity multiplier prefix (3*, ٣*) and F1/Escape shortcuts modal.
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 992001,
@@ -24,16 +25,22 @@ async function setupPosRoutes(page) {
     });
 
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+        route.fulfill({
+            json: { success: true, data: [ITEM], meta: { total: 1 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
     );
-    await page.route('**/api/v1/customers*', (route) =>
-        route.fulfill({ json: { success: true, data: [] } })
-    );
+    await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -47,7 +54,10 @@ async function setupPosRoutes(page) {
         const url = new URL(route.request().url());
         if (url.searchParams.get('code') === ITEM.code) {
             return route.fulfill({
-                json: { success: true, data: { item: ITEM, quantity: null, match_type: 'code' } },
+                json: {
+                    success: true,
+                    data: { item: ITEM, quantity: null, match_type: 'code' },
+                },
             });
         }
         return route.fulfill({ status: 404, json: { success: false } });
@@ -55,6 +65,8 @@ async function setupPosRoutes(page) {
 }
 
 test.describe('POS-16: Quantity multiplier & keyboard shortcuts', () => {
+    skipOnPhoneViewport(test);
+
     test('3* prefix with barcode adds quantity 3 to cart', async ({ page }) => {
         await setupPosRoutes(page);
         await page.goto('/pos', { waitUntil: 'networkidle' });

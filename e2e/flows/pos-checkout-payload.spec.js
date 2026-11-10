@@ -4,6 +4,7 @@
 //
 // Node-only: imports the helper directly, no page and no server data.
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 import {
     computeCheckoutNet,
     previewChange,
@@ -13,14 +14,24 @@ import {
 const kiloCart = [{ quantity: 0.25, unit_price: 550.5 }]; // 137.625
 
 test.describe('POS checkout payload (exact, server-authoritative)', () => {
+    skipOnPhoneViewport(test);
+
     test('fractional kilo net keeps 3 decimals like the server', () => {
         expect(computeCheckoutNet({ cart: kiloCart })).toBe('137.625');
-        expect(computeCheckoutNet({ cart: [{ quantity: '2.000', unit_price: '550.000' }] })).toBe('1100.000');
+        expect(
+            computeCheckoutNet({
+                cart: [{ quantity: '2.000', unit_price: '550.000' }],
+            })
+        ).toBe('1100.000');
     });
 
     test('float drift in quantities never leaks into the net', () => {
         // 0.1 + 0.2 kg stored as a float sum.
-        expect(computeCheckoutNet({ cart: [{ quantity: 0.1 + 0.2, unit_price: '100' }] })).toBe('30.000');
+        expect(
+            computeCheckoutNet({
+                cart: [{ quantity: 0.1 + 0.2, unit_price: '100' }],
+            })
+        ).toBe('30.000');
     });
 
     test('percentage discount and customer expenses mirror the server', () => {
@@ -38,7 +49,13 @@ test.describe('POS checkout payload (exact, server-authoritative)', () => {
     });
 
     test('fixed discount is clamped to the subtotal', () => {
-        expect(computeCheckoutNet({ cart: kiloCart, discountType: 'fixed', discountValue: '500' })).toBe('0.000');
+        expect(
+            computeCheckoutNet({
+                cart: kiloCart,
+                discountType: 'fixed',
+                discountValue: '500',
+            })
+        ).toBe('0.000');
     });
 
     test('cash without split and exact cash sends no payments', () => {
@@ -48,7 +65,11 @@ test.describe('POS checkout payload (exact, server-authoritative)', () => {
             cashReceived: '137.625',
             net: '137.625',
         });
-        expect(res).toEqual({ valid: true, paidAmount: '137.625', payments: undefined });
+        expect(res).toEqual({
+            valid: true,
+            paidAmount: '137.625',
+            payments: undefined,
+        });
     });
 
     test('cash overpay without split sends the tendered amount so the server computes change', () => {
@@ -92,9 +113,14 @@ test.describe('POS checkout payload (exact, server-authoritative)', () => {
                 { method: 'cash', amount: '50.000' },
             ],
         });
-        expect(previewChange({ paymentType: 'cash', cashReceived: '0', net: '137.625', splitPayments: split })).toBe(
-            '12.375'
-        );
+        expect(
+            previewChange({
+                paymentType: 'cash',
+                cashReceived: '0',
+                net: '137.625',
+                splitPayments: split,
+            })
+        ).toBe('12.375');
     });
 
     test('partial split below net stays partial and pays the split total', () => {
@@ -131,7 +157,17 @@ test.describe('POS checkout payload (exact, server-authoritative)', () => {
             cashReceived: '500',
             net: '137.625',
         });
-        expect(res).toEqual({ valid: true, paidAmount: '0.000', payments: undefined });
-        expect(previewChange({ paymentType: 'credit', cashReceived: '500', net: '137.625' })).toBe('0.000');
+        expect(res).toEqual({
+            valid: true,
+            paidAmount: '0.000',
+            payments: undefined,
+        });
+        expect(
+            previewChange({
+                paymentType: 'credit',
+                cashReceived: '500',
+                net: '137.625',
+            })
+        ).toBe('0.000');
     });
 });

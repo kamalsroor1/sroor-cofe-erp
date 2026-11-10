@@ -1,5 +1,6 @@
 // POS-07: Discount cap (<= cap passes without override; > cap shows warning, asks manager PIN on 422, and retries with override).
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 997001,
@@ -38,16 +39,22 @@ async function setupPosRoutes(page, { asCashier = false, onInvoice = null } = {}
     );
 
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+        route.fulfill({
+            json: { success: true, data: [ITEM], meta: { total: 1 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
     );
-    await page.route('**/api/v1/customers*', (route) =>
-        route.fulfill({ json: { success: true, data: [] } })
-    );
+    await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -65,13 +72,20 @@ async function setupPosRoutes(page, { asCashier = false, onInvoice = null } = {}
             status: 201,
             json: {
                 success: true,
-                data: { id: 701, invoice_number: 'INV-701', net_amount: '180.000', change_amount: '0.000' },
+                data: {
+                    id: 701,
+                    invoice_number: 'INV-701',
+                    net_amount: '180.000',
+                    change_amount: '0.000',
+                },
             },
         });
     });
 }
 
 test.describe('POS-07: Discount cap & manager PIN override', () => {
+    skipOnPhoneViewport(test);
+
     test('discount within store cap (<= 10%) succeeds without warning or override', async ({ page }) => {
         let sentPayload = null;
         await setupPosRoutes(page, {
@@ -82,7 +96,12 @@ test.describe('POS-07: Discount cap & manager PIN override', () => {
                     status: 201,
                     json: {
                         success: true,
-                        data: { id: 701, invoice_number: 'INV-701', net_amount: '180.000', change_amount: '0.000' },
+                        data: {
+                            id: 701,
+                            invoice_number: 'INV-701',
+                            net_amount: '180.000',
+                            change_amount: '0.000',
+                        },
                     },
                 };
             },
@@ -124,7 +143,12 @@ test.describe('POS-07: Discount cap & manager PIN override', () => {
                     status: 201,
                     json: {
                         success: true,
-                        data: { id: 702, invoice_number: 'INV-702', net_amount: '160.000', change_amount: '0.000' },
+                        data: {
+                            id: 702,
+                            invoice_number: 'INV-702',
+                            net_amount: '160.000',
+                            change_amount: '0.000',
+                        },
                     },
                 };
             },

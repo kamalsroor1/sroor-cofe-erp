@@ -1,5 +1,6 @@
 // POS-01: Barcode scanner flow (exact lookup, partial/unknown code rejection, serialized fast consecutive scans).
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport } from '../utils/pos-viewport.js';
 
 const ITEM_A = {
     id: 991001,
@@ -39,16 +40,22 @@ async function setupPosRoutes(page) {
     });
 
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM_A, ITEM_B], meta: { total: 2 } } })
+        route.fulfill({
+            json: { success: true, data: [ITEM_A, ITEM_B], meta: { total: 2 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 2 } })
     );
-    await page.route('**/api/v1/customers*', (route) =>
-        route.fulfill({ json: { success: true, data: [] } })
-    );
+    await page.route('**/api/v1/customers*', (route) => route.fulfill({ json: { success: true, data: [] } }));
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -63,12 +70,18 @@ async function setupPosRoutes(page) {
         const code = url.searchParams.get('code');
         if (code === ITEM_A.code) {
             return route.fulfill({
-                json: { success: true, data: { item: ITEM_A, quantity: null, match_type: 'code' } },
+                json: {
+                    success: true,
+                    data: { item: ITEM_A, quantity: null, match_type: 'code' },
+                },
             });
         }
         if (code === ITEM_B.code) {
             return route.fulfill({
-                json: { success: true, data: { item: ITEM_B, quantity: null, match_type: 'code' } },
+                json: {
+                    success: true,
+                    data: { item: ITEM_B, quantity: null, match_type: 'code' },
+                },
             });
         }
         return route.fulfill({
@@ -79,6 +92,8 @@ async function setupPosRoutes(page) {
 }
 
 test.describe('POS-01: Barcode scanner flow', () => {
+    skipOnPhoneViewport(test);
+
     test('exact barcode scan adds the matching item to the cart', async ({ page }) => {
         await setupPosRoutes(page);
         await page.goto('/pos', { waitUntil: 'networkidle' });

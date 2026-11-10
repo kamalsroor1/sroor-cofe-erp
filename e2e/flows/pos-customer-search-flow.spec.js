@@ -1,5 +1,6 @@
 // POS-09: Customer search & selection (remote customer snapshot retention and wholesale cart repricing).
 import { test, expect } from '@playwright/test';
+import { skipOnPhoneViewport, expectSelectedCustomer } from '../utils/pos-viewport.js';
 
 const ITEM = {
     id: 994001,
@@ -34,7 +35,9 @@ async function setupPosRoutes(page) {
     });
 
     await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+        route.fulfill({
+            json: { success: true, data: [ITEM], meta: { total: 1 } },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })
@@ -44,12 +47,20 @@ async function setupPosRoutes(page) {
         const url = new URL(route.request().url());
         const search = url.searchParams.get('search') || '';
         if (search.toLowerCase().includes('roastery') || search.includes('0109988')) {
-            return route.fulfill({ json: { success: true, data: [REMOTE_WHOLESALE_CUSTOMER] } });
+            return route.fulfill({
+                json: { success: true, data: [REMOTE_WHOLESALE_CUSTOMER] },
+            });
         }
         return route.fulfill({ json: { success: true, data: [] } });
     });
     await page.route('**/api/v1/shifts/current*', (route) =>
-        route.fulfill({ json: { success: true, active_shift: { id: 1, shift_number: 'SH-1' }, requires_shift: false } })
+        route.fulfill({
+            json: {
+                success: true,
+                active_shift: { id: 1, shift_number: 'SH-1' },
+                requires_shift: false,
+            },
+        })
     );
     await page.route('**/api/v1/pos/bootstrap*', (route) =>
         route.fulfill({
@@ -62,6 +73,8 @@ async function setupPosRoutes(page) {
 }
 
 test.describe('POS-09: Customer search & wholesale repricing', () => {
+    skipOnPhoneViewport(test);
+
     test('picking a remote-searched wholesale customer keeps customer name and reprices cart to wholesale', async ({
         page,
     }) => {
@@ -85,7 +98,7 @@ test.describe('POS-09: Customer search & wholesale repricing', () => {
 
         // Modal closes, header shows picked customer name (never falls back to walk-in)
         await expect(page.getByTestId('pos-customer-modal')).toBeHidden();
-        await expect(page.getByTestId('pos-selected-customer-name')).toHaveText(REMOTE_WHOLESALE_CUSTOMER.name);
+        await expectSelectedCustomer(page, expect, REMOTE_WHOLESALE_CUSTOMER.name);
 
         // Cart line is automatically repriced to wholesale_price (160) and credit/partial are unlocked
         await expect(priceInput).toHaveValue('160');
