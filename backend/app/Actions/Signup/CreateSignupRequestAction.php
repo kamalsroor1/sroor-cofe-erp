@@ -46,6 +46,8 @@ final class CreateSignupRequestAction
             'status' => SignupRequestStatus::Pending->value,
             'ip' => $dto->ip,
             'user_agent' => $dto->userAgent,
+            'terms_accepted_at' => $dto->termsAccepted ? now() : null,
+            'terms_version' => $dto->termsAccepted ? $dto->termsVersion : null,
         ]);
 
         // Backlog: one summary alert per hour instead of a Telegram message per request.

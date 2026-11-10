@@ -34,6 +34,12 @@ return [
     'quiet_above_pending' => (int) (env('SIGNUP_QUIET_ABOVE_PENDING') ?: 50),
 
     /*
+    | Current legal documents version recorded when an applicant accepts Terms, Privacy Policy
+    | and DPA on signup (PRD-08).
+    */
+    'legal_version' => (string) (env('SIGNUP_LEGAL_VERSION') ?: '2026-11-draft-v1'),
+
+    /*
     | Telegram notification to the platform owner on a new request. Uses the platform bot
     | (services.telegram.bot_token); the chat falls back to services.telegram.chat_id.
     | Empty token/chat = no notification (never an error).

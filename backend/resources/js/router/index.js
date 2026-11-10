@@ -47,6 +47,25 @@ const tenantRoutes = [
         meta: { titleKey: 'landing.page_titles.signup', layout: 'blank' },
     },
     {
+        // PRD-08: public legal draft pages (Terms, Privacy Policy, DPA). Guest-accessible, no auth.
+        path: '/terms',
+        name: 'landing.terms',
+        component: () => import('../views/Landing/LegalDocumentView.vue'),
+        meta: { titleKey: 'landing.page_titles.terms', layout: 'blank', legalDocument: 'terms' },
+    },
+    {
+        path: '/privacy',
+        name: 'landing.privacy',
+        component: () => import('../views/Landing/LegalDocumentView.vue'),
+        meta: { titleKey: 'landing.page_titles.privacy', layout: 'blank', legalDocument: 'privacy' },
+    },
+    {
+        path: '/dpa',
+        name: 'landing.dpa',
+        component: () => import('../views/Landing/LegalDocumentView.vue'),
+        meta: { titleKey: 'landing.page_titles.dpa', layout: 'blank', legalDocument: 'dpa' },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),

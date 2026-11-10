@@ -17,6 +17,7 @@ return [
         'subdomain_format' => 'The workspace code must be 3 to 30 characters: lowercase English letters, digits and dashes, not starting or ending with a dash.',
         'subdomain_reserved' => 'This workspace code is reserved. Please choose another one.',
         'subdomain_taken' => 'This workspace code is already taken. Please choose another one.',
+        'terms_required' => 'You must accept the Terms of Service, Privacy Policy and Data Processing Agreement before sending the request.',
     ],
 
     'errors' => [
@@ -59,6 +60,11 @@ return [
         'subdomain' => 'Preferred workspace code (optional)',
         'subdomain_hint' => 'Lowercase English letters, digits and dashes, 3 to 30 characters.',
         'notes' => 'Notes (optional)',
+        'terms_prefix' => 'I agree to the',
+        'terms_link' => 'Terms of Service',
+        'terms_and' => 'and',
+        'privacy_link' => 'Privacy Policy',
+        'dpa_link' => 'Data Processing Agreement (DPA)',
         'submit' => 'Send request',
         'submitting' => 'Sending...',
         'success_title' => 'We received your request',
