@@ -82,7 +82,19 @@ final class BusinessDayDocumentDefaultsTest extends TenantTestCase
                 'store_id' => $storeId,
             ]), $userId);
 
-            $this->assertSame('EXP-261008-0002', $expense->expense_number);
+            // BE-09: the number is the business date plus a locked per-day sequence (it no
+            // longer counts the day's rows), so hand-typed rows never shift it.
+            $this->assertSame('EXP-261008-0001', $expense->expense_number);
+
+            $second = app(CreateExpenseAction::class)->execute(ExpenseDTO::fromArray([
+                'title' => 'مصروف ليلي 2',
+                'category' => 'other',
+                'amount' => '3.000',
+                'expense_date' => '2026-10-08',
+                'store_id' => $storeId,
+            ]), $userId);
+
+            $this->assertSame('EXP-261008-0002', $second->expense_number);
         });
     }
 

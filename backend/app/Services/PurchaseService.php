@@ -10,6 +10,7 @@ use App\Models\PurchaseItem;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreStock;
+use App\Models\Supplier;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -30,13 +31,17 @@ class PurchaseService
         'transfer_reversal_in',
     ];
 
+    protected DocumentNumberService $documentNumbers;
+
     public function __construct(
         protected StockService $stockService,
         protected SupplierBalanceService $supplierBalanceService,
         protected AuditLogService $auditLogService,
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
+        ?DocumentNumberService $documentNumbers = null,
     ) {
+        $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
     }
@@ -65,6 +70,9 @@ class PurchaseService
         return DB::transaction(function () use ($data) {
             $baseSubtotal = '0.000';
             $storeId = $data['store_id'] ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
+
+            // BE-09 lock order: the supplier row first, then the purchase number and payment numbers.
+            Supplier::where('id', $data['supplier_id'])->lockForUpdate()->firstOrFail();
 
             $purchase = Purchase::create([
                 'purchase_number' => $data['purchase_number'] ?? $this->generateUniqueNumber(),
@@ -207,7 +215,7 @@ class PurchaseService
                     // Paid from treasury (Cash, Instapay, E-wallet)
                     $paymentMethod = str_replace('treasury_', '', $paidBy);
                     $payment = Payment::create([
-                        'payment_number' => 'PAY-EXP-'.strtoupper(uniqid()),
+                        'payment_number' => $this->documentNumbers->nextDated('PAY-EXP', 6, Payment::class, 'payment_number'),
                         'supplier_id' => $purchase->supplier_id,
                         'purchase_id' => $purchase->id,
                         'user_id' => $this->actorId($data),
@@ -248,7 +256,7 @@ class PurchaseService
             // 5. Record direct supplier payment voucher if paid amount exists
             if (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
-                    'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                    'payment_number' => $this->documentNumbers->nextDated('PAY-PUR', 6, Payment::class, 'payment_number'),
                     'supplier_id' => $purchase->supplier_id,
                     'purchase_id' => $purchase->id,
                     'user_id' => $this->actorId($data),
@@ -392,6 +400,9 @@ class PurchaseService
                 throw BusinessRuleException::conflict('purchases.not_cancelled', ['number' => $lockedPurchase->purchase_number]);
             }
 
+            // BE-09 lock order: document -> supplier -> items -> payment number.
+            Supplier::where('id', $lockedPurchase->supplier_id)->lockForUpdate()->firstOrFail();
+
             $storeId = $lockedPurchase->store_id;
 
             $lines = $lockedPurchase->items()->orderBy('id')->get();
@@ -449,7 +460,7 @@ class PurchaseService
                 $hasPayment = Payment::where('purchase_id', $lockedPurchase->id)->exists();
                 if (! $hasPayment) {
                     Payment::create([
-                        'payment_number' => 'PAY-PUR-'.strtoupper(uniqid()),
+                        'payment_number' => $this->documentNumbers->nextDated('PAY-PUR', 6, Payment::class, 'payment_number'),
                         'supplier_id' => $lockedPurchase->supplier_id,
                         'purchase_id' => $lockedPurchase->id,
                         'user_id' => $this->actorId(),
@@ -742,32 +753,15 @@ class PurchaseService
         return $items;
     }
 
+    /**
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
+     */
     public function generateUniqueNumber(): string
     {
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
         $prefix = 'PUR-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastPurchase = Purchase::withTrashed()
-            ->where('purchase_number', 'LIKE', $prefix.'-%')
-            ->orderBy('purchase_number', 'desc')
-            ->first();
-
-        if ($lastPurchase) {
-            $parts = explode('-', $lastPurchase->purchase_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = Purchase::withTrashed()->where('purchase_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return $this->documentNumbers->nextFor($prefix, 4, Purchase::class, 'purchase_number');
     }
 }

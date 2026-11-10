@@ -225,7 +225,9 @@ class InvoiceServiceTest extends TenantTestCase
             ],
         ]);
 
-        $this->assertEquals($todayPrefix.'-0002', $inv2->invoice_number);
+        // BE-09: generateUniqueNumber() above consumed 0002 from the locked sequence, so the
+        // invoice gets the next one (a number is never reused, soft-deleted or not).
+        $this->assertEquals($todayPrefix.'-0003', $inv2->invoice_number);
         $this->assertEquals(1, Invoice::count()); // 1 active
         $this->assertEquals(2, Invoice::withTrashed()->count()); // 2 total in DB
     }

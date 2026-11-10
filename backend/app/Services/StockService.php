@@ -19,6 +19,7 @@ class StockService
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -350,7 +351,7 @@ class StockService
             $isSurplus = bccomp($diff, '0.000', 3) > 0;
             $movementType = $isSurplus ? 'stock_adjustment_in' : 'stock_adjustment_out';
             $adjQty = $isSurplus ? $diff : bcmul($diff, '-1', 3);
-            $docNumber = 'ADJ-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+            $docNumber = $this->documentNumbers->nextDated('ADJ', 4, StockMovement::class, 'document_number');
 
             $movement = StockMovement::create([
                 'item_id' => $lockedItem->id,

@@ -19,12 +19,16 @@ use Illuminate\Support\Facades\Log;
 
 class ShiftService
 {
+    protected DocumentNumberService $documentNumbers;
+
     public function __construct(
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
+        ?DocumentNumberService $documentNumbers = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+        $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
     }
 
     /**
@@ -92,16 +96,9 @@ class ShiftService
      */
     private function nextShiftNumber(): string
     {
-        $prefix = 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate()).'-';
+        $prefix = 'SHIFT-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastNumber = CashShift::query()
-            ->where('shift_number', 'like', $prefix.'%')
-            ->orderByDesc('shift_number')
-            ->value('shift_number');
-
-        $sequence = $lastNumber !== null ? ((int) substr((string) $lastNumber, strlen($prefix))) + 1 : 1;
-
-        return $prefix.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+        return $this->documentNumbers->nextFor($prefix, 3, CashShift::class, 'shift_number');
     }
 
     /**

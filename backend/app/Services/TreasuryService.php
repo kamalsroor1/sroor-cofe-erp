@@ -18,6 +18,7 @@ class TreasuryService
         protected AuditLogService $auditLogService,
         protected ActivityLogService $activityLogService,
         protected TenantClock $tenantClock,
+        protected DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -159,7 +160,8 @@ class TreasuryService
         }
 
         return DB::transaction(function () use ($fromMethod, $toMethod, $amount, $fee, $storeId, $notes, $date, $actorId) {
-            $transferNumber = 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+            // Visible prefix TRF- like stock transfers, but its own counter (TTRF-) because both share the prefix.
+            $transferNumber = $this->documentNumbers->nextDated('TRF', 4, TreasuryTransfer::class, 'transfer_number', 'TTRF');
 
             $transfer = TreasuryTransfer::create([
                 'transfer_number' => $transferNumber,

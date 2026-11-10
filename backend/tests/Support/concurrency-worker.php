@@ -15,6 +15,7 @@ declare(strict_types=1);
  * Usage (by the test only): php concurrency-worker.php <scenario> <tenant-db> <base64-json-payload>
  */
 
+use App\Models\Invoice;
 use App\Models\Item;
 use App\Services\InvoiceService;
 use App\Services\StockService;
@@ -79,7 +80,12 @@ try {
         'checkout' => (static function () use ($payload): array {
             $invoice = app(InvoiceService::class)->confirmInvoice($payload);
 
-            return ['invoice_id' => (int) $invoice->getKey(), 'created' => $invoice->wasRecentlyCreated];
+            return ['invoice_id' => (int) $invoice->getKey(), 'invoice_number' => (string) $invoice->invoice_number, 'created' => $invoice->wasRecentlyCreated];
+        })(),
+        'update' => (static function () use ($payload): array {
+            $invoice = app(InvoiceService::class)->updateInvoice(Invoice::query()->findOrFail((int) $payload['invoice_id']), (array) $payload['data']);
+
+            return ['invoice_id' => (int) $invoice->getKey(), 'invoice_number' => (string) $invoice->invoice_number, 'created' => false];
         })(),
         default => throw new InvalidArgumentException("Unknown scenario [{$scenario}]."),
     };

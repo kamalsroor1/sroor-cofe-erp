@@ -24,6 +24,7 @@ class ReturnService
         protected TenantClock $tenantClock,
         protected PurchaseService $purchaseService,
         protected ReturnSourceService $returnSourceService,
+        protected DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -63,7 +64,6 @@ class ReturnService
             $invoiceId = $data['invoice_id'] ?? null;
 
             $totalAmount = '0.000';
-            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
             $storeId = $data['store_id'] ?? ($invoiceId ? Invoice::query()->whereKey($invoiceId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             // Lock order: document -> party -> lines -> items (same as cancelInvoice).
@@ -76,6 +76,9 @@ class ReturnService
             $lines = $invoice !== null
                 ? $this->returnSourceService->resolveLines(ReturnSourceService::SALES, $invoice, (int) $customer->id, $data['items'])
                 : $this->manualLines($data['items']);
+
+            // BE-09: allocate the number after the document and party locks.
+            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-SALES');
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
@@ -149,7 +152,6 @@ class ReturnService
             $purchaseId = $data['purchase_id'] ?? null;
 
             $totalAmount = '0.000';
-            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
             $storeId = $data['store_id'] ?? ($purchaseId !== null ? Purchase::query()->whereKey($purchaseId)->value('store_id') : null) ?? Auth::user()?->getCurrentStore()?->id ?? Store::getMainStore()?->id;
 
             // Lock order: document -> party -> lines -> items (same as cancelPurchase).
@@ -160,6 +162,9 @@ class ReturnService
             $lines = $purchase !== null
                 ? $this->returnSourceService->resolveLines(ReturnSourceService::PURCHASE, $purchase, (int) $supplier->id, $data['items'])
                 : $this->manualLines($data['items']);
+
+            // BE-09: allocate the number after the document and party locks.
+            $returnNumber = $data['return_number'] ?? $this->generateUniqueNumber('RET-PURCH');
 
             $returnDoc = ReturnDocument::create([
                 'return_number' => $returnNumber,
@@ -259,32 +264,15 @@ class ReturnService
         ], $items));
     }
 
+    /**
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
+     */
     public function generateUniqueNumber(string $prefix): string
     {
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
         $datePrefix = $prefix.'-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastReturn = ReturnDocument::withTrashed()
-            ->where('return_number', 'LIKE', $datePrefix.'-%')
-            ->orderBy('return_number', 'desc')
-            ->first();
-
-        if ($lastReturn) {
-            $parts = explode('-', $lastReturn->return_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $datePrefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = ReturnDocument::withTrashed()->where('return_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return $this->documentNumbers->nextFor($datePrefix, 4, ReturnDocument::class, 'return_number');
     }
 }

@@ -7,6 +7,7 @@ namespace App\Actions\Expenses;
 use App\DTOs\Expenses\ExpenseDTO;
 use App\Models\Expense;
 use App\Models\Store;
+use App\Services\DocumentNumberService;
 use App\Support\TenantClock;
 use Illuminate\Support\Facades\DB;
 
@@ -14,6 +15,7 @@ final class CreateExpenseAction
 {
     public function __construct(
         private readonly TenantClock $tenantClock,
+        private readonly DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -26,12 +28,8 @@ final class CreateExpenseAction
 
             // SETG-2 ext: number and daily counter follow the tenant business day.
             $businessDate = $this->tenantClock->businessDate();
-            [$dayStart, $dayEnd] = $this->tenantClock->businessDayRange($businessDate);
             $prefix = 'EXP-'.substr(str_replace('-', '', $businessDate), 2);
-            $count = Expense::where('created_at', '>=', $dayStart)
-                ->where('created_at', '<', $dayEnd)
-                ->count() + 1;
-            $expenseNumber = $prefix.'-'.str_pad((string) $count, 4, '0', STR_PAD_LEFT);
+            $expenseNumber = $this->documentNumbers->nextFor($prefix, 4, Expense::class, 'expense_number');
 
             return Expense::create([
                 'expense_number' => $expenseNumber,

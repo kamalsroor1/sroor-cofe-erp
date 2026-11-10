@@ -247,7 +247,7 @@ class InvoiceService
                     $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
                 } else {
                     $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = 'EXP-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+                    $expenseNumber = app(DocumentNumberService::class)->nextDated('EXP', 4, Expense::class, 'expense_number');
                     $expense = Expense::create([
                         'expense_number' => $expenseNumber,
                         'category' => 'shipping',
@@ -308,7 +308,7 @@ class InvoiceService
 
             foreach ($checkout['lines'] as $line) {
                 Payment::create([
-                    'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
+                    'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
                     'customer_id' => $customer->id,
                     'invoice_id' => $invoice->id,
                     'user_id' => $this->actorId($data),
@@ -584,6 +584,13 @@ class InvoiceService
             ReturnSourceService::assertNoLiveReturns($lockedInvoice);
             $oldCustomerId = $lockedInvoice->customer_id;
             $newCustomerId = $data['customer_id'];
+            // BE-09 lock order (same as persistConfirmedInvoice): parties first, in id order, before
+            // item locks and before any document-number allocation below.
+            Customer::query()
+                ->whereIn('id', array_values(array_unique(array_filter([(int) $oldCustomerId, (int) $newCustomerId]))))
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
             $this->assertWalkInPaidInFull(
                 Customer::query()->findOrFail($newCustomerId),
                 (string) ($data['payment_type'] ?? 'cash'),
@@ -722,7 +729,7 @@ class InvoiceService
                     $customerExpensesTotal = bcadd($customerExpensesTotal, $expAmount, 3);
                 } else {
                     $paymentMethod = str_replace('treasury_', '', $paidBy) ?: 'cash';
-                    $expenseNumber = 'EXP-'.str_replace('-', '', $this->tenantClock->businessDate()).'-'.strtoupper(substr(uniqid(), -4));
+                    $expenseNumber = app(DocumentNumberService::class)->nextDated('EXP', 4, Expense::class, 'expense_number');
                     $expense = Expense::create([
                         'expense_number' => $expenseNumber,
                         'category' => 'shipping',
@@ -793,7 +800,7 @@ class InvoiceService
                     $pAmount = (string) ($p['amount'] ?? '0.000');
                     if (bccomp($pAmount, '0.000', 3) > 0) {
                         Payment::create([
-                            'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
+                            'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
                             'customer_id' => $newCustomerId,
                             'invoice_id' => $lockedInvoice->id,
                             'user_id' => $this->actorId($data),
@@ -806,7 +813,7 @@ class InvoiceService
                 }
             } elseif (bccomp($paidAmount, '0.000', 3) > 0) {
                 Payment::create([
-                    'payment_number' => 'PAY-INV-'.strtoupper(uniqid()),
+                    'payment_number' => app(DocumentNumberService::class)->nextDated('PAY-INV', 6, Payment::class, 'payment_number'),
                     'customer_id' => $newCustomerId,
                     'invoice_id' => $lockedInvoice->id,
                     'user_id' => $this->actorId($data),
@@ -917,6 +924,10 @@ class InvoiceService
         });
     }
 
+    /**
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
+     */
     public function generateUniqueNumber(?int $storeId = null): string
     {
         $storeCode = null;
@@ -939,27 +950,6 @@ class InvoiceService
         // SETG-2 ext: the date in the number is the business date (tenant clock + cutoff).
         $prefix = "INV-{$storeCode}-".str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastInvoice = Invoice::withTrashed()
-            ->where('invoice_number', 'LIKE', $prefix.'-%')
-            ->orderBy('invoice_number', 'desc')
-            ->first();
-
-        if ($lastInvoice) {
-            $parts = explode('-', $lastInvoice->invoice_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = Invoice::withTrashed()->where('invoice_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return app(DocumentNumberService::class)->nextFor($prefix, 4, Invoice::class, 'invoice_number');
     }
 }

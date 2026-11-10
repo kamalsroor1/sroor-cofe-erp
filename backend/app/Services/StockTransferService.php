@@ -15,12 +15,16 @@ use Illuminate\Support\Facades\DB;
 
 class StockTransferService
 {
+    protected DocumentNumberService $documentNumbers;
+
     public function __construct(
         protected ?ActivityLogService $activityLogService = null,
         protected ?TenantClock $tenantClock = null,
+        ?DocumentNumberService $documentNumbers = null,
     ) {
         $this->activityLogService = $this->activityLogService ?: app(ActivityLogService::class);
         $this->tenantClock = $this->tenantClock ?: app(TenantClock::class);
+        $this->documentNumbers = $documentNumbers ?: app(DocumentNumberService::class);
     }
 
     /**
@@ -291,34 +295,14 @@ class StockTransferService
     }
 
     /**
-     * Generate sequential unique transfer document number
+     * Allocates the next number from the locked sequence: it CONSUMES a number (no previews).
+     * Call it inside the transaction that inserts the document, after the party/document locks.
      */
     public function generateUniqueNumber(): string
     {
         // SETG-2 ext: the number carries the tenant business date, not the server date.
         $prefix = 'TRF-'.str_replace('-', '', $this->tenantClock->businessDate());
 
-        $lastTransfer = StockTransfer::withTrashed()
-            ->where('transfer_number', 'LIKE', $prefix.'-%')
-            ->orderBy('transfer_number', 'desc')
-            ->first();
-
-        if ($lastTransfer) {
-            $parts = explode('-', $lastTransfer->transfer_number);
-            $lastSequence = (int) end($parts);
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
-        }
-
-        do {
-            $candidate = $prefix.'-'.str_pad((string) $nextSequence, 4, '0', STR_PAD_LEFT);
-            $exists = StockTransfer::withTrashed()->where('transfer_number', $candidate)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
-
-        return $candidate;
+        return $this->documentNumbers->nextFor($prefix, 4, StockTransfer::class, 'transfer_number');
     }
 }

@@ -22,6 +22,7 @@ class PaymentService
         protected SupplierBalanceService $supplierBalanceService,
         protected AuditLogService $auditLogService,
         protected TenantClock $tenantClock,
+        protected DocumentNumberService $documentNumbers,
     ) {}
 
     /**
@@ -115,7 +116,7 @@ class PaymentService
             }
 
             $payment = Payment::create([
-                'payment_number' => $data['payment_number'] ?? 'PAY-CUST-'.strtoupper(uniqid()),
+                'payment_number' => $data['payment_number'] ?? $this->documentNumbers->nextDated('PAY-CUST', 6, Payment::class, 'payment_number'),
                 'customer_id' => $customer->id,
                 'supplier_id' => null,
                 'invoice_id' => $invoiceId,
@@ -182,7 +183,7 @@ class PaymentService
             }
 
             $payment = Payment::create([
-                'payment_number' => $data['payment_number'] ?? 'PAY-SUPP-'.strtoupper(uniqid()),
+                'payment_number' => $data['payment_number'] ?? $this->documentNumbers->nextDated('PAY-SUPP', 6, Payment::class, 'payment_number'),
                 'customer_id' => null,
                 'supplier_id' => $supplier->id,
                 'invoice_id' => null,
