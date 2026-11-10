@@ -114,6 +114,7 @@ return [
     'error_occurred' => 'An unexpected error occurred',
     'no_notes_available' => 'No notes recorded for this operation.',
     'unit_piece' => 'Piece',
+    'unnamed_item' => 'Item',
 
     // Multi-Tabs Navigation
     'close_tab' => 'Close Tab',
