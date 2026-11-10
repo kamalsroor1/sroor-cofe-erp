@@ -26,17 +26,18 @@ final class SystemContextSetupProgressApiTest extends TenantTestCase
             ->json('data.setup_progress');
 
         $this->assertSame(
-            ['company_info', 'categories', 'items', 'users', 'shift', 'first_sale', 'completed', 'total'],
+            ['company_info', 'branch_setup', 'categories', 'items', 'users', 'shift', 'first_sale', 'completed', 'total'],
             array_keys($data),
         );
         $this->assertFalse($data['company_info']);
+        $this->assertFalse($data['branch_setup']);
         $this->assertFalse($data['categories']);
         $this->assertFalse($data['items']);
         $this->assertFalse($data['users']);
         $this->assertFalse($data['shift']);
         $this->assertFalse($data['first_sale']);
         $this->assertSame(0, $data['completed']);
-        $this->assertSame(6, $data['total']);
+        $this->assertSame(7, $data['total']);
     }
 
     public function test_steps_turn_true_once_data_exists(): void
@@ -47,6 +48,7 @@ final class SystemContextSetupProgressApiTest extends TenantTestCase
             Setting::set('company_name', 'Shop');
             Setting::set('company_phone', '01000000500');
             Setting::set('company_address', 'Street 1');
+            Store::query()->where('is_main', true)->update(['name' => 'Main', 'phone' => '01000000502', 'address' => 'Street 2']);
             Category::create(['name' => 'Coffee']);
             Item::create(['name' => 'Latte', 'code' => 'LAT-1', 'category' => 'coffee_beans', 'selling_price' => '10.000', 'is_active' => true]);
         });
@@ -57,12 +59,34 @@ final class SystemContextSetupProgressApiTest extends TenantTestCase
             ->json('data.setup_progress');
 
         $this->assertTrue($data['company_info']);
+        $this->assertTrue($data['branch_setup']);
         $this->assertTrue($data['categories']);
         $this->assertTrue($data['items']);
         $this->assertTrue($data['users']);
         $this->assertFalse($data['shift']);
         $this->assertFalse($data['first_sale']);
-        $this->assertSame(4, $data['completed']);
+        $this->assertSame(5, $data['completed']);
+    }
+
+    public function test_branch_setup_needs_name_phone_and_address_on_the_main_store(): void
+    {
+        $tenant = $this->createTenant();
+        $headers = $this->tenantHeaders($tenant);
+        $full = ['name' => 'Main', 'phone' => '01000000503', 'address' => 'Street 3'];
+
+        foreach (['name', 'phone', 'address'] as $missing) {
+            $this->inTenant($tenant, fn () => Store::query()->where('is_main', true)->update([...$full, $missing => $missing === 'name' ? ' ' : null]));
+
+            $this->getJson('/api/v1/system/setup-progress', $headers)
+                ->assertOk()
+                ->assertJsonPath('data.branch_setup', false);
+        }
+
+        $this->inTenant($tenant, fn () => Store::query()->where('is_main', true)->update($full));
+
+        $this->getJson('/api/v1/system/setup-progress', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.branch_setup', true);
     }
 
     public function test_user_without_settings_permission_gets_no_progress(): void
@@ -112,9 +136,9 @@ final class SystemContextSetupProgressApiTest extends TenantTestCase
 
         $this->getJson('/api/v1/system/setup-progress', $this->tenantHeaders($tenant))
             ->assertOk()
-            ->assertJsonPath('data.total', 6)
+            ->assertJsonPath('data.total', 7)
             ->assertJsonPath('data.completed', 0)
-            ->assertJsonStructure(['data' => ['company_info', 'categories', 'items', 'users', 'shift', 'first_sale', 'completed', 'total']]);
+            ->assertJsonStructure(['data' => ['company_info', 'branch_setup', 'categories', 'items', 'users', 'shift', 'first_sale', 'completed', 'total']]);
     }
 
     public function test_setup_progress_endpoint_requires_authentication(): void
@@ -139,6 +163,6 @@ final class SystemContextSetupProgressApiTest extends TenantTestCase
 
         $this->getJson('/api/v1/system/setup-progress', $this->tenantHeaders($tenant, $user))
             ->assertOk()
-            ->assertJsonPath('data.total', 6);
+            ->assertJsonPath('data.total', 7);
     }
 }

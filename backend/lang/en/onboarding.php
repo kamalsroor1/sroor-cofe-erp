@@ -11,6 +11,8 @@ return [
     'steps' => [
         'company_info' => 'Complete your shop details',
         'company_info_hint' => 'Name, phone and address appear on invoices',
+        'branch_setup' => 'Set up your main branch',
+        'branch_setup_hint' => 'Add the branch name, phone and address',
         'categories' => 'Add categories',
         'categories_hint' => 'Group your products into easy-to-pick categories',
         'items' => 'Add items',
