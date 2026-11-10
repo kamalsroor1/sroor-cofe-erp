@@ -296,7 +296,6 @@
           data-testid="pos-customer-picker-btn"
           @click="$emit('open-customer-picker')"
           :aria-label="$t('pos.change_customer')"
-          data-testid="pos-customer-btn"
           class="relative min-h-[44px] min-w-[44px] justify-center md:justify-start px-2 md:px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs"
         >
           <Users class="w-4 h-4 text-theme-primary shrink-0" />
