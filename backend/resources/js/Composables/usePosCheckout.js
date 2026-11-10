@@ -52,6 +52,9 @@ export function usePosCheckout({
             item_id: line.id,
             quantity: normalize(line.quantity),
             unit_price: normalize(line.unit_price),
+            ...(Number.isInteger(line.entry_sequence) && line.entry_sequence >= 1
+                ? { entry_sequence: line.entry_sequence }
+                : {}),
             ...(isPositive(line.discount_value ?? '0')
                 ? line.discount_type === DISCOUNT_FIXED
                     ? { discount_amount: normalize(line.discount_value) }

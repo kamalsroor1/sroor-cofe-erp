@@ -29,10 +29,10 @@ class POSInvoiceDTO
 
     public static function fromArray(array $data): self
     {
-        $items = array_map(
-            fn ($item) => POSInvoiceItemDTO::fromArray($item),
-            $data['items'] ?? []
-        );
+        $items = [];
+        foreach (array_values((array) ($data['items'] ?? [])) as $index => $item) {
+            $items[] = POSInvoiceItemDTO::fromArray((array) $item, $index + 1);
+        }
 
         return new self(
             customerId: (int) $data['customer_id'],

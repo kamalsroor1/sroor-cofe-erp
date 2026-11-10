@@ -34,7 +34,21 @@ export function usePosCart({
     entrySequence = ref(DEFAULT_ENTRY_SEQUENCE),
 }) {
     const { cart, discountValue, additionalExpenses, cashReceived } = fields;
-    const { createNewOrder, closeOrder, saveOrders } = orderApi;
+    const { createNewOrder, closeOrder, saveOrders, activeOrder } = orderApi;
+    let fallbackEntrySequence = 0;
+
+    const nextEntrySequence = () => {
+        const order = activeOrder?.value;
+        if (order) {
+            const current = Number.isInteger(order.lastEntrySequence)
+                ? order.lastEntrySequence
+                : cart.value.reduce((max, l) => Math.max(max, Number(l.entry_sequence) || 0), 0);
+            order.lastEntrySequence = current + 1;
+            return order.lastEntrySequence;
+        }
+        fallbackEntrySequence += 1;
+        return fallbackEntrySequence;
+    };
 
     const getItemPrice = (item) => priceFor(item, activePriceTier.value);
 
@@ -79,6 +93,7 @@ export function usePosCart({
         const weighted = !!item.is_weighted;
         const line = {
             id: item.id,
+            entry_sequence: nextEntrySequence(),
             name: item.name,
             code: item.code,
             unit: item.unit,
@@ -128,6 +143,7 @@ export function usePosCart({
     const clearCart = () => {
         if (cart.value.length === 0) return;
         cart.value = [];
+        if (activeOrder?.value) activeOrder.value.lastEntrySequence = 0;
         discountValue.value = '0';
         additionalExpenses.value = [];
         multiPayments.value = [];
