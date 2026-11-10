@@ -274,6 +274,7 @@ return [
 
     // IDEN-1.4 / IDEN-4.6 ext (backend): central control-plane responses
     'tenant_not_found' => 'Tenant not found.',
+    'plan_pos_requires' => 'The POS feature (pos.access) requires :feature to be enabled on the same plan.',
     'plan_not_found' => 'Plan not found.',
     'tenant_provisioning_failed' => 'The tenant could not be set up. Check the server logs and try again.',
     'tenant_db_missing' => 'The tenant database does not exist on the database server. Create it first, then try again.',

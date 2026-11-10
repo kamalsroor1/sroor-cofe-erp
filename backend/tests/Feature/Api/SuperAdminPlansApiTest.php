@@ -129,14 +129,44 @@ final class SuperAdminPlansApiTest extends TenantTestCase
 
         // The editing UI never sends the hidden key and cannot switch it on or off.
         $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
-            'features' => ['pos.access' => true],
+            'features' => ['pos.access' => true, 'invoices.create' => true, 'shifts.manage' => true],
         ]), $headers)->assertOk();
         $this->assertTrue($this->plan->fresh()->features['quotations.manage'], 'Stored hidden value is preserved.');
 
         $this->putJson("/api/v1/super-admin/plans/{$this->plan->id}", $this->updatePayload([
-            'features' => ['pos.access' => true, 'quotations.manage' => false],
+            'features' => ['pos.access' => true, 'invoices.create' => true, 'shifts.manage' => true, 'quotations.manage' => false],
         ]), $headers)->assertOk();
         $this->assertTrue($this->plan->fresh()->features['quotations.manage']);
+    }
+
+    /**
+     * FE-03: pos.access requires invoices.create and shifts.manage (no plan-create endpoint
+     * exists in the console, so update is the only write path).
+     */
+    public function test_pos_access_requires_invoices_create_and_shifts_manage(): void
+    {
+        $headers = $this->steppedUpCentralHeaders($this->centralSuperAdmin());
+        $url = "/api/v1/super-admin/plans/{$this->plan->id}";
+
+        foreach ([
+            ['pos.access' => true],
+            ['pos.access' => true, 'invoices.create' => true],
+            ['pos.access' => true, 'shifts.manage' => true],
+            ['pos.access' => true, 'invoices.create' => false, 'shifts.manage' => true],
+        ] as $features) {
+            $this->putJson($url, $this->updatePayload(['features' => $features]), $headers)
+                ->assertStatus(422)
+                ->assertJsonValidationErrors(['features']);
+        }
+        $this->assertArrayNotHasKey('pos.access', $this->plan->fresh()->features);
+
+        $this->putJson($url, $this->updatePayload(['features' => [
+            'pos.access' => true, 'invoices.create' => true, 'shifts.manage' => true,
+        ]]), $headers)->assertOk();
+
+        $this->putJson($url, $this->updatePayload(['features' => [
+            'pos.access' => false, 'invoices.create' => false, 'shifts.manage' => false,
+        ]]), $headers)->assertOk();
     }
 
     public function test_update_of_unknown_plan_is_a_translated_404(): void
