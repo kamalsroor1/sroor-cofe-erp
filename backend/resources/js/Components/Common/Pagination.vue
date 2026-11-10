@@ -83,6 +83,12 @@ const to = computed(() => {
   return Number(val) || 0;
 });
 
+// Laravel paginator labels carry HTML entities (&laquo; Previous / Next &raquo;). Decode the
+// few known ones to text instead of rendering the label as HTML (no v-html sink, SEC-07).
+const LABEL_ENTITIES = { '&laquo;': '«', '&raquo;': '»', '&lsaquo;': '‹', '&rsaquo;': '›', '&nbsp;': ' ' };
+const displayLabel = (label) =>
+  String(label ?? '').replace(/&(?:laquo|raquo|lsaquo|rsaquo|nbsp);/g, (entity) => LABEL_ENTITIES[entity]);
+
 const isNextLink = (link, idx) => {
   if (!activeLinks.value || activeLinks.value.length === 0) return false;
   if (idx === activeLinks.value.length - 1) return true;
@@ -142,16 +148,18 @@ const handlePageClick = (link) => {
               ? 'bg-theme-primary text-white font-black shadow-theme-sm'
               : 'bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700',
           ]"
-          v-html="link.label"
-        />
+        >
+          {{ displayLabel(link.label) }}
+        </button>
         <span
           v-else
           :data-testid="
             isNextLink(link, lIdx) ? 'pagination-next' : isPrevLink(link, lIdx) ? 'pagination-prev' : undefined
           "
           class="h-9 min-w-[36px] coarse:min-h-[44px] coarse:min-w-[44px] px-3 rounded-xl text-xs text-slate-400 dark:text-slate-600 font-bold flex items-center justify-center opacity-60"
-          v-html="link.label"
-        />
+        >
+          {{ displayLabel(link.label) }}
+        </span>
       </template>
     </div>
 

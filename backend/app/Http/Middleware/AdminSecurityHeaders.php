@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\Security\ContentSecurityPolicy;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -42,7 +43,7 @@ final class AdminSecurityHeaders
         $response = $next($request);
 
         $headers = $response->headers;
-        $headers->set('Content-Security-Policy', $this->policy($nonce));
+        $headers->set('Content-Security-Policy', ContentSecurityPolicy::admin($nonce));
         $headers->set('Referrer-Policy', 'no-referrer');
         $headers->set('Strict-Transport-Security', self::HSTS);
         $headers->set('X-Frame-Options', 'DENY');
@@ -51,54 +52,5 @@ final class AdminSecurityHeaders
         $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 
         return $response;
-    }
-
-    private function policy(string $nonce): string
-    {
-        [$devScript, $devConnect] = $this->viteDevServerSources();
-
-        $directives = [
-            'default-src' => ["'self'"],
-            'script-src' => array_merge(["'self'", "'nonce-{$nonce}'"], $devScript),
-            'style-src' => array_merge(["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], $devScript),
-            'font-src' => ["'self'", 'https://fonts.gstatic.com', 'data:'],
-            'img-src' => ["'self'", 'data:', 'blob:'],
-            'connect-src' => array_merge(["'self'"], $devConnect),
-            'worker-src' => ["'self'"],
-            'manifest-src' => ["'self'"],
-            'object-src' => ["'none'"],
-            'base-uri' => ["'self'"],
-            'form-action' => ["'self'"],
-            'frame-ancestors' => ["'none'"],
-        ];
-
-        return implode('; ', array_map(
-            static fn (string $name, array $sources): string => $name.' '.implode(' ', $sources),
-            array_keys($directives),
-            $directives,
-        ));
-    }
-
-    /**
-     * @return array{0: list<string>, 1: list<string>} script/style sources and connect sources
-     */
-    private function viteDevServerSources(): array
-    {
-        if (! app()->environment('local') || ! Vite::isRunningHot()) {
-            return [[], []];
-        }
-
-        $hot = @file_get_contents(public_path('hot'));
-        $origin = is_string($hot) ? rtrim(trim($hot), '/') : '';
-        $parts = $origin !== '' ? parse_url($origin) : false;
-
-        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
-            return [[], []];
-        }
-
-        $hostPort = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '');
-        $ws = ($parts['scheme'] === 'https' ? 'wss' : 'ws').'://'.$hostPort;
-
-        return [[$origin], [$origin, $ws]];
     }
 }

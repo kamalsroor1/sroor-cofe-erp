@@ -41,7 +41,7 @@ final class ApiTokenAuth
 
         // 1. Resolve through Sanctum PersonalAccessToken (hashed, revocable).
         $accessToken = PersonalAccessToken::findToken($token);
-        if ($accessToken && $accessToken->expires_at !== null && $accessToken->expires_at->isPast()) {
+        if ($accessToken && $this->isExpired($accessToken)) {
             // Expired (e.g. testing-only quick-login tokens): delete the dead row and stop here.
             $accessToken->delete();
 
@@ -98,6 +98,28 @@ final class ApiTokenAuth
         }
 
         return $next($request);
+    }
+
+    /**
+     * SEC-03: a token dies at its own `expires_at`, and never later than the tenant TTL counted
+     * from its creation (quick-login tokens excepted). The second rule also ends tokens minted before the 12h fixed TTL
+     * (30-day or null `expires_at`) without a data migration.
+     */
+    private function isExpired(PersonalAccessToken $accessToken): bool
+    {
+        if ($accessToken->expires_at !== null && $accessToken->expires_at->isPast()) {
+            return true;
+        }
+
+        // Quick-login tokens carry their own, separately configured TTL in `expires_at`.
+        if (in_array('quick-login', (array) $accessToken->abilities, true)) {
+            return false;
+        }
+
+        $ttlMinutes = max(1, (int) config('auth.tokens.tenant_ttl_minutes', 720));
+
+        return $accessToken->created_at === null
+            || $accessToken->created_at->copy()->addMinutes($ttlMinutes)->isPast();
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureTenantFeature;
 use App\Http\Middleware\RequireRecentTwoFactor;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\ResolveApiTenancy;
+use App\Http\Middleware\SpaSecurityHeaders;
 use App\Http\Middleware\StoreAccess;
 use App\Http\Middleware\StoreScope;
 use App\Http\Middleware\ThrottleTenantMisses;
@@ -93,6 +94,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->alias([
+            'spa.headers' => SpaSecurityHeaders::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

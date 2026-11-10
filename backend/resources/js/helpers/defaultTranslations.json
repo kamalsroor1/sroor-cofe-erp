@@ -208,6 +208,8 @@
             "failed": "بيانات الاعتماد المدخلة غير صحيحة.",
             "password": "كلمة المرور المدخلة غير صحيحة.",
             "throttle": "لقد تجاوزت الحد المسموح من محاولات الدخول. يرجى المحاولة بعد :seconds ثانية.",
+            "account_locked": "تم إيقاف الدخول لهذا الحساب مؤقتاً بسبب كثرة المحاولات الخاطئة. حاول مرة أخرى بعد :minutes دقيقة.",
+            "activity_account_locked": "تم إيقاف الدخول للحساب [:login] بعد محاولات دخول خاطئة متكررة",
             "title": "تسجيل الدخول إلى النظام",
             "app_name": "إبراء",
             "subtitle": "سجل الدخول برقم الهاتف وكلمة المرور للمتابعة",
@@ -817,6 +819,9 @@
                 "restore_user_required": "في الإنتاج الاسترجاع محتاج حساب MySQL مخصص (DB_RESTORE_USERNAME أو --db-user)، مش حساب التطبيق."
             },
             "health": {
+                "telegram_title": "فشل فحص السلامة على :application_name (:env_name)",
+                "heartbeat_sent": "اتبعت الـ heartbeat.",
+                "heartbeat_failed": "فشل إرسال الـ heartbeat.",
                 "archive_password_missing": "BACKUP_ARCHIVE_PASSWORD فاضي: النسخ الاحتياطي يرفض التشغيل.",
                 "archive_password_missing_dev": "BACKUP_ARCHIVE_PASSWORD فاضي: الأرشيفات مش هتتشفر (مسموح في local\/testing بس).",
                 "archive_password_short": "BACKUP_ARCHIVE_PASSWORD أقصر من :min حرف.",
@@ -3314,7 +3319,11 @@
             "deselect_all": "إلغاء الكل",
             "loading_roles_matrix": "جاري تحميل مصفوفة الصلاحيات والأدوار...",
             "permissions_saved_success": "تم تحديث مصفوفة الصلاحيات للدور بنجاح",
-            "permissions_save_failed": "تعذر حفظ الصلاحيات"
+            "permissions_save_failed": "تعذر حفظ الصلاحيات",
+            "cannot_edit_admin_role": "تعديل صلاحيات دور مدير النظام متاح لمدير النظام فقط.",
+            "cannot_edit_own_role": "لا يمكنك تعديل دور مُسند لحسابك.",
+            "cannot_grant_unheld_permission": "لا يمكنك منح صلاحية لا تملكها أنت.",
+            "activity_permissions_updated": ":user عدّل صلاحيات الدور \":role\""
         },
         "settings": {
             "title": "إعدادات النظام والتحكم الشامل",
@@ -4983,6 +4992,8 @@
             "failed": "These credentials do not match our records.",
             "password": "The provided password is incorrect.",
             "throttle": "Too many login attempts. Please try again in :seconds seconds.",
+            "account_locked": "This account is temporarily locked after too many failed sign-in attempts. Try again in :minutes minute(s).",
+            "activity_account_locked": "Account [:login] locked after repeated failed sign-in attempts",
             "title": "Sign in to Ibraa",
             "app_name": "Ibraa",
             "subtitle": "Sign in with your phone number and password to continue",
@@ -5592,6 +5603,9 @@
                 "restore_user_required": "In production a restore needs a dedicated MySQL account (DB_RESTORE_USERNAME or --db-user), never the application account."
             },
             "health": {
+                "telegram_title": "Health check FAILED on :application_name (:env_name)",
+                "heartbeat_sent": "Heartbeat sent.",
+                "heartbeat_failed": "Heartbeat ping failed.",
                 "archive_password_missing": "BACKUP_ARCHIVE_PASSWORD is empty: backups refuse to run.",
                 "archive_password_missing_dev": "BACKUP_ARCHIVE_PASSWORD is empty: archives would not be encrypted (allowed in local\/testing only).",
                 "archive_password_short": "BACKUP_ARCHIVE_PASSWORD is shorter than :min characters.",
@@ -8089,7 +8103,11 @@
             "deselect_all": "Deselect All",
             "loading_roles_matrix": "Loading roles & permissions matrix...",
             "permissions_saved_success": "Permissions matrix updated successfully",
-            "permissions_save_failed": "Failed to save permissions"
+            "permissions_save_failed": "Failed to save permissions",
+            "cannot_edit_admin_role": "Only a system admin can edit the admin role.",
+            "cannot_edit_own_role": "You cannot edit a role that is assigned to you.",
+            "cannot_grant_unheld_permission": "You cannot grant a permission that you do not have yourself.",
+            "activity_permissions_updated": ":user updated the permissions of role \":role\""
         },
         "settings": {
             "title": "System Settings & General Control",

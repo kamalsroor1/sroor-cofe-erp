@@ -24,13 +24,21 @@ final class RateLimitKey
         return $tenant !== null ? 't:'.$tenant->getTenantKey() : 'c';
     }
 
-    /** Case/space-insensitive, transliterated identifier (login, phone or email). */
+    /**
+     * Case/space-insensitive, transliterated identifier (login, phone or email).
+     *
+     * SEC-05: every separator, control and format character (spaces, NBSP, zero-width
+     * U+200B/U+FEFF…) is removed before AND after transliteration, so padding a login with
+     * characters a case-insensitive DB collation ignores cannot mint a fresh limiter key.
+     */
     public static function identifier(mixed $value): string
     {
         if (! is_scalar($value)) {
             return '';
         }
 
-        return Str::transliterate(Str::lower(trim((string) $value)));
+        $strip = static fn (string $s): string => (string) preg_replace('/[\p{Z}\p{Cc}\p{Cf}\s]+/u', '', $s);
+
+        return $strip(Str::transliterate(Str::lower($strip((string) $value))));
     }
 }

@@ -132,7 +132,8 @@ final class UserController extends Controller
     public function store(StoreUserRequest $request): JsonResponse
     {
         $dto = CreateUserDTO::fromArray($request->validated());
-        $user = $this->createUserAction->execute($dto);
+        $actor = $request->user();
+        $user = $this->createUserAction->execute($dto, $actor instanceof User ? $actor : null);
 
         return response()->json([
             'success' => true,

@@ -122,3 +122,9 @@ Schedule::command('central-audit:prune')
 Schedule::command('tenants:apply-lifecycle')
     ->dailyAt((string) config('tenant_lifecycle.sweep.at', '01:00'))
     ->withoutOverlapping(60);
+
+// 9. SEC-03: drop expired tenant API tokens (12h fixed TTL) from every provisioned tenant DB.
+// `tenants:run` is the app's provisioned-tenants-only variant (RunForProvisionedTenants).
+Schedule::command('tenants:run sanctum:prune-expired --option="hours=24"')
+    ->dailyAt('03:30')
+    ->withoutOverlapping();

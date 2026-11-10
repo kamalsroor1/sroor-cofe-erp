@@ -16,6 +16,8 @@ return [
     'failed' => 'These credentials do not match our records.',
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    'account_locked' => 'This account is temporarily locked after too many failed sign-in attempts. Try again in :minutes minute(s).',
+    'activity_account_locked' => 'Account [:login] locked after repeated failed sign-in attempts',
 
     // Vue 3 Login Page Localization
     'title' => 'Sign in to Ibraa',

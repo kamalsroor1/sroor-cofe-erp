@@ -64,6 +64,7 @@
         :label="isEditing ? $t('users.password_edit_label') : $t('users.password_create_label')"
         :required="!isEditing"
         type="password"
+        :minlength="8"
         placeholder="••••••••"
       />
 

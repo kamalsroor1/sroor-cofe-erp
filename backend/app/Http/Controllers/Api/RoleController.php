@@ -8,6 +8,7 @@ use App\Actions\Roles\GetRolesMatrixAction;
 use App\Actions\Roles\UpdateRolePermissionsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateRolePermissionsRequest;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,7 +46,10 @@ final class RoleController extends Controller
         $validated = $request->validated();
         $permissions = $validated['permissions'] ?? [];
 
-        $role = $this->updateRolePermissionsAction->execute($id, $permissions);
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 401);
+
+        $role = $this->updateRolePermissionsAction->execute($id, $permissions, $actor);
 
         return response()->json([
             'success' => true,

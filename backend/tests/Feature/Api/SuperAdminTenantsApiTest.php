@@ -202,6 +202,23 @@ final class SuperAdminTenantsApiTest extends TenantTestCase
             ->assertJsonValidationErrors(['name', 'slug', 'email', 'plan_id', 'password']);
     }
 
+    public function test_store_tenant_rejects_a_seven_char_owner_password(): void
+    {
+        $super = $this->centralSuperAdmin();
+
+        $this->postJson('/api/v1/super-admin/tenants', [
+            'name' => 'محمصة كلمة المرور',
+            'slug' => 'pw-policy-'.Str::lower(Str::random(6)),
+            'email' => 'pw-policy@elbon.test',
+            'phone' => '01000007003',
+            'password' => '1234567',
+            'plan_id' => $this->plan->id,
+            'trial_days' => 14,
+        ], $this->steppedUpCentralHeaders($super))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+    }
+
     public function test_store_tenant_rejects_invalid_values_and_existing_slug(): void
     {
         $existing = $this->createTenant();

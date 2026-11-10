@@ -31,6 +31,11 @@ final class ToggleUserActiveAction
 
         $user->update(['is_active' => ! $user->is_active]);
 
+        // SEC-03: a deactivated account loses every session at once.
+        if (! $user->is_active) {
+            $user->tokens()->delete();
+        }
+
         return $user;
     }
 }

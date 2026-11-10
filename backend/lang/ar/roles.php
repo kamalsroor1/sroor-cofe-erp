@@ -17,4 +17,8 @@ return [
     'loading_roles_matrix' => 'جاري تحميل مصفوفة الصلاحيات والأدوار...',
     'permissions_saved_success' => 'تم تحديث مصفوفة الصلاحيات للدور بنجاح',
     'permissions_save_failed' => 'تعذر حفظ الصلاحيات',
+    'cannot_edit_admin_role' => 'تعديل صلاحيات دور مدير النظام متاح لمدير النظام فقط.',
+    'cannot_edit_own_role' => 'لا يمكنك تعديل دور مُسند لحسابك.',
+    'cannot_grant_unheld_permission' => 'لا يمكنك منح صلاحية لا تملكها أنت.',
+    'activity_permissions_updated' => ':user عدّل صلاحيات الدور ":role"',
 ];

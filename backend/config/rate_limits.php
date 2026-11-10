@@ -29,6 +29,11 @@ return [
         // ApiLoginRequest failure counter (answers 422 auth.throttle). Keep it below
         // per_login_per_minute so the counter answers before the limiter's 429.
         'max_failed_attempts' => (int) env('RATE_LIMIT_TENANT_LOGIN_MAX_FAILURES', 6),
+
+        // SEC-05 per-account lockout: this many failures for one tenant + login (any IP)
+        // locks that login for the given minutes, even for the correct password.
+        'account_lockout_attempts' => (int) env('RATE_LIMIT_TENANT_LOGIN_LOCKOUT_ATTEMPTS', 5),
+        'account_lockout_minutes' => (int) env('RATE_LIMIT_TENANT_LOGIN_LOCKOUT_MINUTES', 15),
     ],
 
     // Central (platform operator) login, used by IDEN-1.3.

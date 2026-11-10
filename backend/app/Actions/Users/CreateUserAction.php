@@ -8,19 +8,29 @@ use App\DTOs\Users\CreateUserDTO;
 use App\Enums\LimitResource;
 use App\Models\User;
 use App\Services\Entitlements\PlanEnforcer;
+use App\Support\Roles\RoleGrantGuard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 final class CreateUserAction
 {
-    public function __construct(private readonly PlanEnforcer $planEnforcer) {}
+    public function __construct(
+        private readonly PlanEnforcer $planEnforcer,
+        private readonly RoleGrantGuard $roleGrantGuard,
+    ) {}
 
     /**
-     * Create user, hash password and assign role inside Transaction
+     * Create user, hash password and assign role inside Transaction.
+     *
+     * SEC-04: a non-admin actor may only assign a role whose permissions they all hold (403).
      */
-    public function execute(CreateUserDTO $dto): User
+    public function execute(CreateUserDTO $dto, ?User $actor = null): User
     {
-        return DB::transaction(function () use ($dto) {
+        return DB::transaction(function () use ($dto, $actor) {
+            if ($actor instanceof User) {
+                $this->roleGrantGuard->assertCanAssignRole($actor, $dto->role);
+            }
+
             // SEC-06 / BE-12: plan users limit (active and inactive seats), counted under the tenant lock.
             $this->planEnforcer->assertWithinLimit(LimitResource::Users, fn (): int => User::query()->count());
 

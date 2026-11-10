@@ -79,14 +79,14 @@
             $locale = app()->getLocale() ?: 'ar';
             $initialTranslations = $translationsAction->execute($locale);
         @endphp
-        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+        window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
         window.spaLocale = '{{ $locale }}';
     </script>
 
     <!-- Vite Scripts (Vue 3 Pure SPA) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
+    <style @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         * {
             font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -110,7 +110,7 @@
             <h1 class="ps-name">{{ $platformBrand->name }}</h1>
             <p class="ps-tagline">{{ __('common.splash.subtitle') }}</p>
             <div class="ps-bar"><div class="ps-bar-fill"></div></div>
-            <style>
+            <style @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
                 #pre-vue-splash {
                     --ps-bg: #13201C; --ps-arc: #4CC3A8; --ps-check: #EEF3F0; --ps-text: #EEF3F0; --ps-muted: #8FA79E; --ps-track: #22332D;
                     position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;

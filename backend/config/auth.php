@@ -166,13 +166,13 @@ return [
     |
     | Every personal access token is issued with its own `expires_at`; that is
     | the single source of truth (config/sanctum.php keeps `expiration` null).
-    | Tenant tokens: 30 days, renewed on use (CTO Q-B10, enforced by IDEN-2.2).
+    | Tenant tokens: 12 hours, FIXED from login and never renewed on use (CTO decision, SEC-03).
     | Central (operator) token TTL lives in config/central.php (IDEN-1.1).
     |
     */
 
     'tokens' => [
-        'tenant_ttl_minutes' => (int) (env('TENANT_TOKEN_TTL_MINUTES') ?: 43200),
+        'tenant_ttl_minutes' => (int) (env('TENANT_TOKEN_TTL_MINUTES') ?: 720),
     ],
 
 ];
