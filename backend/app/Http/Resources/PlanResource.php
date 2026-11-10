@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Money is a "0.000" string; every limit is int|null where null = unlimited.
+ * Money is a "0.000" string; every limit is int|null where null = unlimited. Limits nothing
+ * enforces yet (Plan::HIDDEN_LIMIT_COLUMNS) are not part of the payload; they stay stored.
  *
  * @mixin Plan
  */
@@ -36,8 +37,6 @@ class PlanResource extends JsonResource
             'max_warehouses' => $this->max_warehouses,
             'max_vans' => $this->max_vans,
             'max_items' => $this->max_items,
-            'max_invoices_per_month' => $this->max_invoices_per_month,
-            'max_storage_mb' => $this->max_storage_mb,
             'trial_days' => $this->trial_days,
             'is_active' => $this->is_active,
             'is_public' => $this->is_public,

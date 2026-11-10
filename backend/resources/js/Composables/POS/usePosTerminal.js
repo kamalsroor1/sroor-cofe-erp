@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import versionData from '../../version.json';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useAuthStore } from '../../stores/auth';
@@ -68,10 +68,14 @@ export function usePosTerminal() {
     });
     const search = usePosItemSearch({
         items: catalog.items,
+        searchResults: catalog.searchResults,
+        isSearching: catalog.isSearchingResults,
         addToCart: cartOps.addToCart,
         focusSearch,
         onMiss: sounds.playErrorTone,
     });
+    // The grid shows the server's matches for the same text the header search holds.
+    watch(search.searchTerm, (term) => catalog.setSearch(term));
     const { printLastInvoice, reprintInvoice } = usePosReceipt({
         lastCreatedInvoice,
         paymentType: fields.paymentType,

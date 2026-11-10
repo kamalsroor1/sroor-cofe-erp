@@ -24,8 +24,8 @@ class UpdatePlanRequest extends FormRequest
     }
 
     /**
-     * Limits: null = unlimited. The legacy limit fields must be present (the existing
-     * super-admin form always sends them); the ENTI-1.2 fields are optional so older
+     * Limits: null = unlimited. The legacy limit fields users/stores/items must be present (the
+     * existing super-admin form always sends them); the ENTI-1.2 fields are optional so older
      * clients keep working and an omitted field is left untouched.
      *
      * @return array<string, list<string>>
@@ -42,7 +42,9 @@ class UpdatePlanRequest extends FormRequest
             'max_users' => ['present', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
             'max_stores' => ['present', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
             'max_items' => ['present', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
-            'max_invoices_per_month' => ['present', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
+            // Not enforced yet: no longer part of the console payload (kept optional so older
+            // clients still validate); UpdatePlanAction ignores them and keeps the stored value.
+            'max_invoices_per_month' => ['sometimes', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
             'max_storage_mb' => ['sometimes', 'nullable', 'integer', 'min:1', self::MAX_LIMIT],
             'max_warehouses' => ['sometimes', 'nullable', 'integer', 'min:0', self::MAX_LIMIT],
             'max_vans' => ['sometimes', 'nullable', 'integer', 'min:0', self::MAX_LIMIT],

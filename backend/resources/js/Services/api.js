@@ -9,6 +9,37 @@ import { isCentralAppContext } from './centralApi';
 // host (central mode) this client never sends a tenant token, store or tenant header.
 const isCentralMode = isCentralAppContext();
 
+const goToBilling = () => {
+    if (window.spaRouter) window.spaRouter.push({ name: 'billing.index' });
+    else window.location.assign('/billing');
+};
+
+// "Pay now" is offered only for the read-only state (a blocked account cannot reach /billing),
+// only to users who may manage billing, and never while already on a billing page.
+const canOfferPayment = async () => {
+    if (window.location.pathname.startsWith('/billing')) return false;
+    const { useAuthStore } = await import('../stores/auth');
+    return useAuthStore().hasPermission('billing.manage');
+};
+
+const showLifecycleAlert = async ({ titleKey, message, offerPayment }) => {
+    const canPay = offerPayment && (await canOfferPayment());
+    if (Swal.isVisible()) return;
+    const isDark = document.documentElement.classList.contains('dark');
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: trans(titleKey),
+        text: message,
+        confirmButtonText: trans('common.ok'),
+        confirmButtonColor: '#f59e0b',
+        showDenyButton: canPay,
+        denyButtonText: trans('subscription.billing.plan.pay_now'),
+        background: isDark ? '#0f172a' : '#ffffff',
+        color: isDark ? '#f8fafc' : '#0f172a',
+    });
+    if (result.isDenied) goToBilling();
+};
+
 // 1. Create centralized Axios instance
 const apiClient = axios.create({
     baseURL: '/api/v1',
@@ -108,18 +139,10 @@ apiClient.interceptors.response.use(
             'subscription.limit_reached': 'subscription.alerts.limit_reached_title',
         };
         if (isLifecycleError && !isCentralMode && !Swal.isVisible()) {
-            Swal.fire({
-                icon: 'warning',
-                title: trans(
-                    lifecycleTitleKeys[code] ||
-                        (status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title')
-                ),
-                text: message,
-                confirmButtonText: trans('common.ok'),
-                confirmButtonColor: '#f59e0b',
-                background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff',
-                color: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',
-            });
+            const titleKey =
+                lifecycleTitleKeys[code] ||
+                (status === 423 ? 'subscription.alerts.read_only_title' : 'subscription.alerts.blocked_title');
+            showLifecycleAlert({ titleKey, message, offerPayment: status === 423 });
         }
 
         // 403 Forbidden: Insufficient Permissions

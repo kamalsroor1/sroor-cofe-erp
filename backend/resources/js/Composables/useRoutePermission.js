@@ -15,6 +15,8 @@ export function useRoutePermission() {
         const { matched } = router.resolve(path);
         const required = matched.map((record) => record.meta?.permission).find(Boolean);
         if (required && !authStore.hasPermission(required)) return false;
+        const requiredAny = matched.map((record) => record.meta?.permissionAny).find(Boolean);
+        if (requiredAny && !requiredAny.some((permission) => authStore.hasPermission(permission))) return false;
         const feature = matched.map((record) => record.meta?.feature).find(Boolean);
         return !feature || appConfigStore.hasFeature(feature);
     };

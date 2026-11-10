@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\Auth\AccountLockout;
 use App\Support\RateLimitKey;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
@@ -71,7 +71,7 @@ class ApiLoginRequest extends FormRequest
     public function clearRateLimit(): void
     {
         RateLimiter::clear($this->throttleKey());
-        RateLimiter::clear($this->accountFailuresKey());
+        AccountLockout::clearFailures($this->accountLogin());
     }
 
     /**
@@ -80,9 +80,9 @@ class ApiLoginRequest extends FormRequest
      */
     public function ensureAccountIsNotLocked(): void
     {
-        $until = Cache::get($this->accountLockKey());
+        $until = AccountLockout::lockedUntil($this->accountLogin());
 
-        if (! is_int($until) || $until <= now()->getTimestamp()) {
+        if ($until === null) {
             return;
         }
 
@@ -103,46 +103,25 @@ class ApiLoginRequest extends FormRequest
      */
     public function hitAccountFailure(): bool
     {
-        $decay = $this->lockoutMinutes() * 60;
-        RateLimiter::hit($this->accountFailuresKey(), $decay);
-
-        if (RateLimiter::attempts($this->accountFailuresKey()) < $this->lockoutAttempts()) {
-            return false;
-        }
-
-        Cache::put($this->accountLockKey(), now()->getTimestamp() + $decay, $decay);
-        RateLimiter::clear($this->accountFailuresKey());
-
-        return true;
+        return AccountLockout::hit($this->accountLogin());
     }
 
     public function accountIdentifier(): string
     {
-        return RateLimitKey::identifier($this->input('login') ?? $this->input('phone') ?? $this->input('email'));
+        return RateLimitKey::identifier($this->accountLogin());
     }
 
-    private function accountFailuresKey(): string
+    /** The login exactly as typed (login, else phone, else email). */
+    public function submittedLogin(): string
     {
-        return 'api-login-account|'.RateLimitKey::scope().'|'.$this->accountIdentifier();
+        $login = $this->accountLogin();
+
+        return is_scalar($login) ? (string) $login : '';
     }
 
-    private function accountLockKey(): string
+    private function accountLogin(): mixed
     {
-        return 'api-login-account-lock|'.RateLimitKey::scope().'|'.$this->accountIdentifier();
-    }
-
-    private function lockoutAttempts(): int
-    {
-        $value = config('rate_limits.tenant_login.account_lockout_attempts', 5);
-
-        return max(1, is_numeric($value) ? (int) $value : 5);
-    }
-
-    private function lockoutMinutes(): int
-    {
-        $value = config('rate_limits.tenant_login.account_lockout_minutes', 15);
-
-        return max(1, is_numeric($value) ? (int) $value : 15);
+        return $this->input('login') ?? $this->input('phone') ?? $this->input('email');
     }
 
     /**

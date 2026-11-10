@@ -41,51 +41,6 @@
                     <span>•</span>
                     <span class="text-slate-500 font-tajawal">{{ unitLabel(item.unit) }}</span>
                   </div>
-
-                  <!-- Dual Price Badges -->
-                  <div class="flex flex-wrap items-center gap-1.5 mt-2 font-tajawal">
-                    <!-- Retail Badge -->
-                    <button
-                      v-if="(item.price_retail || item.unit_price) > 0"
-                      type="button"
-                      tabindex="-1"
-                      @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
-                      class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                      :class="
-                        parseFloat(item.unit_price) === parseFloat(item.price_retail || item.unit_price)
-                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
-                      "
-                      :title="$t('pos.price_retail')"
-                    >
-                      <span>🏷️ {{ $t('pos.price_retail') }}:</span>
-                      <span class="font-mono">{{ formatMoney(item.price_retail || item.unit_price) }}</span>
-                    </button>
-
-                    <!-- Wholesale Badge -->
-                    <button
-                      v-if="
-                        (item.price_wholesale || item.min_selling_price) > 0 &&
-                        parseFloat(item.price_wholesale || item.min_selling_price) !==
-                          parseFloat(item.price_retail || item.unit_price)
-                      "
-                      type="button"
-                      tabindex="-1"
-                      @click="
-                        $emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })
-                      "
-                      class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                      :class="
-                        parseFloat(item.unit_price) === parseFloat(item.price_wholesale || item.min_selling_price)
-                          ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-black'
-                          : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-purple-400'
-                      "
-                      :title="$t('pos.price_wholesale')"
-                    >
-                      <span>🏪 {{ $t('pos.price_wholesale') }}:</span>
-                      <span class="font-mono">{{ formatMoney(item.price_wholesale || item.min_selling_price) }}</span>
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -148,20 +103,7 @@
               <div class="flex items-center justify-between sm:justify-end gap-2">
                 <div class="flex items-center gap-1">
                   <label class="text-[10px] font-bold text-slate-500">{{ $t('pos.item_price') }}:</label>
-                  <input
-                    type="text"
-                    inputmode="decimal"
-                    :value="item.unit_price"
-                    :data-line-id="item.id"
-                    data-line-field="price"
-                    :aria-invalid="!(parseFloat(item.unit_price) > 0)"
-                    @focus="onFieldFocus"
-                    @blur="onFieldBlur($event, idx, 'unit_price')"
-                    @input="onNumberInput($event, idx, 'update-price')"
-                    @keydown.enter.prevent="focusPosSearch()"
-                    @keydown.esc.prevent="revertField($event, idx, 'update-price')"
-                    class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 w-18 h-8 px-1.5 text-center font-mono font-black text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-                  />
+                  <POSLinePriceField compact :line="item" :index="idx" @update-price="$emit('update-price', $event)" />
                 </div>
                 <div class="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
                   <div
@@ -222,51 +164,6 @@
                   <span>•</span>
                   <span class="text-slate-500 font-tajawal">{{ unitLabel(item.unit) }}</span>
                 </div>
-
-                <!-- Dual Price Badges -->
-                <div class="flex flex-wrap items-center gap-1.5 mt-2 font-tajawal">
-                  <!-- Retail Badge -->
-                  <button
-                    v-if="(item.price_retail || item.unit_price) > 0"
-                    type="button"
-                    tabindex="-1"
-                    @click="$emit('update-price', { index: idx, value: item.price_retail || item.unit_price })"
-                    class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                    :class="
-                      parseFloat(item.unit_price) === parseFloat(item.price_retail || item.unit_price)
-                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black'
-                        : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
-                    "
-                    :title="$t('pos.price_retail')"
-                  >
-                    <span>🏷️ {{ $t('pos.price_retail') }}:</span>
-                    <span class="font-mono">{{ formatMoney(item.price_retail || item.unit_price) }}</span>
-                  </button>
-
-                  <!-- Wholesale Badge -->
-                  <button
-                    v-if="
-                      (item.price_wholesale || item.min_selling_price) > 0 &&
-                      parseFloat(item.price_wholesale || item.min_selling_price) !==
-                        parseFloat(item.price_retail || item.unit_price)
-                    "
-                    type="button"
-                    tabindex="-1"
-                    @click="
-                      $emit('update-price', { index: idx, value: item.price_wholesale || item.min_selling_price })
-                    "
-                    class="px-1.5 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1 active:scale-95"
-                    :class="
-                      parseFloat(item.unit_price) === parseFloat(item.price_wholesale || item.min_selling_price)
-                        ? 'bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400 font-black'
-                        : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-purple-400'
-                    "
-                    :title="$t('pos.price_wholesale')"
-                  >
-                    <span>🏪 {{ $t('pos.price_wholesale') }}:</span>
-                    <span class="font-mono">{{ formatMoney(item.price_wholesale || item.min_selling_price) }}</span>
-                  </button>
-                </div>
               </td>
 
               <!-- Quantity Controls -->
@@ -313,23 +210,7 @@
 
               <!-- Unit Price (Editable input) -->
               <td class="p-3 font-mono">
-                <div class="flex items-center gap-1">
-                  <input
-                    type="text"
-                    inputmode="decimal"
-                    :value="item.unit_price"
-                    :data-line-id="item.id"
-                    data-line-field="price"
-                    :aria-invalid="!(parseFloat(item.unit_price) > 0)"
-                    @focus="onFieldFocus"
-                    @blur="onFieldBlur($event, idx, 'unit_price')"
-                    @input="onNumberInput($event, idx, 'update-price')"
-                    @keydown.enter.prevent="focusPosSearch()"
-                    @keydown.esc.prevent="revertField($event, idx, 'update-price')"
-                    class="aria-invalid:border-rose-500 aria-invalid:bg-rose-50 dark:aria-invalid:bg-rose-500/10 w-24 h-9 px-2 text-start font-mono font-black text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-950 dark:text-white focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus:outline-none"
-                  />
-                  <span class="text-[10px] font-bold text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
-                </div>
+                <POSLinePriceField :line="item" :index="idx" @update-price="$emit('update-price', $event)" />
               </td>
 
               <!-- Line discount (POS-07) -->
@@ -385,6 +266,7 @@
 <script setup>
 import { Trash2 } from 'lucide-vue-next';
 import POSLineDiscount from './POSLineDiscount.vue';
+import POSLinePriceField from './POSLinePriceField.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useUnits } from '../../Composables/useUnits';
 import { toWesternDigits } from '../../helpers/digits';

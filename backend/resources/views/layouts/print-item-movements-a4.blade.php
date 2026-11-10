@@ -161,15 +161,9 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-300">
-            @php
-                $inboundTypes = [
-                    'purchase_in', 'stock_deposit_in', 'stock_adjustment_in',
-                    'cancellation_in', 'transfer_in', 'sales_return_in', 'purchase_restore_in'
-                ];
-            @endphp
             @forelse($movements as $idx => $row)
             @php
-                $isIn = in_array($row->movement_type, $inboundTypes);
+                $isIn = \App\Support\StockMovementTypes::isInbound((string) $row->movement_type);
                 $typeLabel = match ($row->movement_type) {
                     'sales_out'            => '🛒 ' . __('invoices.sales_invoice'),
                     'purchase_in'          => '📦 ' . __('purchases.title'),
@@ -179,6 +173,7 @@
                     'stock_adjustment_in'  => '⚖️ ' . __('inventory.movement_adj_in'),
                     'stock_adjustment_out' => '⚖️ ' . __('inventory.movement_adj_out'),
                     'stock_deposit_in'     => '📥 ' . __('inventory.movement_deposit'),
+                    'opening_balance_in'   => '📥 ' . __('inventory.movement_opening_balance'),
                     'transfer_in'          => '🚚 ' . __('inventory.transfers_title'),
                     'transfer_out'         => '🚚 ' . __('inventory.transfers_title'),
                     'sales_return_in'      => '🔁 ' . __('returns.sales_return'),

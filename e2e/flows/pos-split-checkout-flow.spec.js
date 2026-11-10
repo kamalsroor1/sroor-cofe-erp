@@ -24,8 +24,14 @@ const ITEM = {
 };
 
 async function mockPosData(page, onInvoice) {
-    await page.route('**/api/v1/items*', (route) =>
-        route.fulfill({ json: { success: true, data: [ITEM], meta: { total: 1 } } })
+    await page.route('**/api/v1/pos/items*', (route) =>
+        route.fulfill({
+            json: {
+                success: true,
+                data: [ITEM],
+                meta: { current_page: 1, last_page: 1, total: 1, counts: { total: 1, categories: [] } },
+            },
+        })
     );
     await page.route('**/api/v1/categories*', (route) =>
         route.fulfill({ json: { success: true, data: [], total_items_count: 1 } })

@@ -4,6 +4,14 @@
     <PageHeader :title="$t('contacts.suppliers_title')" :subtitle="$t('contacts.suppliers_subtitle')" :icon="Truck">
       <template #actions>
         <BaseButton
+          v-if="authStore.can('suppliers.manage')"
+          :to="{ name: 'imports.index', query: { type: 'suppliers' } }"
+          variant="outline"
+          size="md"
+          :icon="FileUp"
+          :label="$t('import.ui.import_button')"
+        />
+        <BaseButton
           type="button"
           variant="primary"
           size="md"
@@ -67,7 +75,8 @@
 </template>
 
 <script setup>
-import { Plus, Truck } from 'lucide-vue-next';
+import { FileUp, Plus, Truck } from 'lucide-vue-next';
+import { useAuthStore } from '../../stores/auth';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import SuppliersMetricsGrid from '../../Components/Suppliers/SuppliersMetricsGrid.vue';
@@ -76,6 +85,8 @@ import SuppliersTable from '../../Components/Suppliers/SuppliersTable.vue';
 import SupplierFormModal from '../../Components/Suppliers/SupplierFormModal.vue';
 import SupplierPaymentModal from '../../Components/Suppliers/SupplierPaymentModal.vue';
 import { useSuppliers } from '../../Composables/useSuppliers';
+
+const authStore = useAuthStore();
 
 const {
   suppliers,

@@ -89,6 +89,7 @@ export function usePosCart({
             price_retail: item.price_retail,
             price_wholesale: item.price_wholesale,
             min_selling_price: item.min_selling_price,
+            has_min_price: !!item.has_min_price,
             quantity: weighted ? normalize(qty) : qty,
         };
         cart.value.push(line);

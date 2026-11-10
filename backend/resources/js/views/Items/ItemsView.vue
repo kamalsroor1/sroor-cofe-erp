@@ -3,6 +3,14 @@
     <!-- 1. 🔝 Page Header & Actions -->
     <PageHeader :title="$t('inventory.items_title')" :subtitle="$t('inventory.items_subtitle')" :icon="'coffee'">
       <template #actions>
+        <BaseButton
+          v-if="authStore.can('items.create')"
+          :to="{ name: 'imports.index', query: { type: 'items' } }"
+          variant="outline"
+          size="md"
+          :icon="FileUp"
+          :label="$t('import.ui.import_button')"
+        />
         <FeatureGate feature="items.manage">
           <BaseButton
             type="button"
@@ -81,7 +89,8 @@
 <script setup>
 import { isWeightUnit } from '../../helpers/weightUnits';
 import { ref, reactive, computed, onMounted } from 'vue';
-import { Plus } from 'lucide-vue-next';
+import { FileUp, Plus } from 'lucide-vue-next';
+import { useAuthStore } from '../../stores/auth';
 import FeatureGate from '../../Components/FeatureGate.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
 import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
@@ -97,6 +106,8 @@ import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import { useUnits } from '../../Composables/useUnits';
 import { useLoadError } from '../../Composables/useLoadError';
+
+const authStore = useAuthStore();
 
 const { defaultUnit, unitOptionsFor } = useUnits();
 const { error, errorMessage, clearError, setError } = useLoadError();

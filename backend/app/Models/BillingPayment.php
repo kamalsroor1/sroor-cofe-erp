@@ -7,10 +7,12 @@ namespace App\Models;
 use App\Enums\Billing\BillingGateway;
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
+use App\Models\Concerns\InteractsWithCentralMedia;
 use App\Models\Concerns\UsesCentralConnection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
 
 /**
  * Central DB: a payment against a SaaS invoice (`billing_payments`, ENTI-1.6).
@@ -43,9 +45,15 @@ use Illuminate\Support\Carbon;
  * @property-read Tenant|null $tenant
  * @property-read CentralUser|null $verifier
  */
-class BillingPayment extends Model
+class BillingPayment extends Model implements HasMedia
 {
+    use InteractsWithCentralMedia;
     use UsesCentralConnection;
+
+    /** Receipt collection: one file on the private central disk, never served directly. */
+    public const RECEIPT_COLLECTION = 'receipt';
+
+    public const RECEIPT_DISK = 'central_private';
 
     protected $table = 'billing_payments';
 
@@ -96,6 +104,14 @@ class BillingPayment extends Model
             'verified_at' => 'datetime',
             'raw_payload' => 'array',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::RECEIPT_COLLECTION)
+            ->useDisk(self::RECEIPT_DISK)
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
     }
 
     /**

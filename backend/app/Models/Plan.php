@@ -55,6 +55,16 @@ class Plan extends Model
         'max_storage_mb',
     ];
 
+    /**
+     * Owner decision (SEC-06 follow-up): limits that nothing enforces yet. They stay stored on
+     * every plan but are neither shown (PlanResource) nor editable from the console
+     * (UpdatePlanAction) until enforcement ships.
+     */
+    public const HIDDEN_LIMIT_COLUMNS = [
+        'max_invoices_per_month',
+        'max_storage_mb',
+    ];
+
     protected $fillable = [
         'name',
         'name_key',

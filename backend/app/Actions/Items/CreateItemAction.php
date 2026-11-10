@@ -38,6 +38,7 @@ final class CreateItemAction
                 'name' => $dto->name,
                 'code' => $code,
                 'category' => $dto->category,
+                'category_id' => $dto->category_id,
                 'unit' => $dto->unit,
                 'cost_price' => $dto->cost_price ?? '0.000',
                 // '0.000' = no price floor; never default to cost (cost leak).

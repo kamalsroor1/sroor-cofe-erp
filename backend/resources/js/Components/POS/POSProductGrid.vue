@@ -7,70 +7,77 @@
         <h2 class="text-sm font-black text-slate-700 dark:text-slate-200">{{ activeCategoryName }}</h2>
         <span
           class="text-xs font-mono bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-lg"
-          >{{ filteredItems.length }}</span
+          data-testid="pos-grid-count"
+          >{{ visibleCount }}</span
         >
-      </div>
-      <!-- Page indicator -->
-      <div v-if="totalPages > 1" class="flex items-center gap-2 text-xs">
-        <button
-          @click="prevPage"
-          :disabled="currentPage <= 1"
-          class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-50"
-        >
-          <ChevronRight class="w-4 h-4" />
-        </button>
-        <span class="font-mono font-bold text-slate-500">{{ currentPage }} / {{ totalPages }}</span>
-        <button
-          @click="nextPage"
-          :disabled="currentPage >= totalPages"
-          class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-50"
-        >
-          <ChevronLeft class="w-4 h-4" />
-        </button>
       </div>
     </div>
 
-    <!-- Products Grid (3 Columns Max) -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar p-3.5">
-      <div
-        v-if="paginatedItems.length"
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3.5"
-      >
-        <POSProductButton
-          v-for="item in paginatedItems"
-          :key="item.id"
-          :item="item"
-          :category-color="getCategoryColor(item)"
-          :category-color-light="getCategoryColorLight(item)"
-          :active-price-tier="activePriceTier"
-          @add-item="$emit('add-item', $event)"
-        />
+    <!-- Products grid: per-branch cards per row, sized by the panel width (container query) -->
+    <div ref="scrollRef" class="flex-1 overflow-y-auto custom-scrollbar p-3.5 @container">
+      <div v-if="isLoading" class="grid gap-3" :class="gridClass" :style="gridStyle" aria-busy="true">
+        <div
+          v-for="n in 9"
+          :key="n"
+          class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-2.5 space-y-2 min-h-[112px]"
+        >
+          <Skeleton width="w-2/3" height="h-3" rounded="rounded-md" />
+          <Skeleton width="w-full" height="h-4" rounded="rounded-md" />
+          <div class="grid grid-cols-2 gap-1.5 pt-2">
+            <Skeleton height="h-9" rounded="rounded-lg" />
+            <Skeleton height="h-9" rounded="rounded-lg" />
+          </div>
+        </div>
       </div>
+
+      <template v-else-if="items.length">
+        <div class="grid gap-3" :class="gridClass" :style="gridStyle" data-testid="pos-product-grid">
+          <POSProductButton
+            v-for="item in items"
+            :key="item.id"
+            :item="item"
+            :category-color="getCategoryColor(item)"
+            :active-price-tier="activePriceTier"
+            :show-image="showImages"
+            @add-item="$emit('add-item', $event)"
+          />
+        </div>
+
+        <div ref="sentinelRef" class="h-px" aria-hidden="true"></div>
+
+        <div v-if="isLoadingMore" class="grid gap-3 mt-3" :class="gridClass" :style="gridStyle" aria-busy="true">
+          <Skeleton v-for="n in 3" :key="n" height="h-28" rounded="rounded-xl" />
+        </div>
+        <div v-else-if="hasMore" class="flex justify-center mt-3">
+          <button
+            type="button"
+            class="min-h-11 px-5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            data-testid="pos-load-more"
+            @click="$emit('load-more')"
+          >
+            {{ $t('pos.catalog_load_more') }}
+          </button>
+        </div>
+      </template>
+
       <!-- Empty State -->
-      <div v-else class="flex flex-col items-center justify-center h-full text-center py-12">
-        <PackageSearch class="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3 stroke-[1.5]" />
-        <p class="text-sm font-bold text-slate-500 dark:text-slate-400">{{ $t('pos.no_items_in_category') }}</p>
-      </div>
+      <EmptyState
+        v-else
+        :icon="PackageSearch"
+        :title="searchQuery ? $t('pos.no_items_match_search') : $t('pos.no_items_in_category')"
+        class="py-12"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import {
-  ChevronRight,
-  ChevronLeft,
-  Search,
-  Star,
-  Store,
-  Folder,
-  PackageSearch,
-  Sparkles,
-  PackageCheck,
-  AlertTriangle,
-} from 'lucide-vue-next';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Search, Star, Store, Folder, PackageSearch, Sparkles, PackageCheck, AlertTriangle } from 'lucide-vue-next';
 import POSProductButton from './POSProductButton.vue';
 import DynamicIcon from '../Common/DynamicIcon.vue';
+import EmptyState from '../Common/EmptyState.vue';
+import Skeleton from '../Common/Skeletons/Skeleton.vue';
 import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
@@ -81,73 +88,62 @@ const props = defineProps({
   activeCategoryId: { type: [Number, String, null], default: null },
   activePriceTier: { type: String, default: 'retail' },
   searchQuery: { type: String, default: '' },
+  visibleCount: { type: Number, default: 0 },
+  isLoading: { type: Boolean, default: false },
+  isLoadingMore: { type: Boolean, default: false },
+  hasMore: { type: Boolean, default: false },
+  cardsPerRow: { type: String, default: '3' },
+  showImages: { type: Boolean, default: false },
 });
 
-defineEmits(['add-item']);
+const emit = defineEmits(['add-item', 'load-more']);
 
-const ITEMS_PER_PAGE = 24;
-const currentPage = ref(1);
+// Static class strings so Tailwind keeps them. 2 and 3 fall back by panel width; "auto" fills with a minimum card width.
+const GRID_CLASSES = {
+  2: 'grid-cols-1 @[340px]:grid-cols-2',
+  3: 'grid-cols-1 @[340px]:grid-cols-2 @[600px]:grid-cols-3',
+};
+const gridClass = computed(() =>
+  props.cardsPerRow === 'auto' ? '' : GRID_CLASSES[props.cardsPerRow] || GRID_CLASSES[3]
+);
+const gridStyle = computed(() =>
+  props.cardsPerRow === 'auto' ? { gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' } : {}
+);
 
-const filteredItems = computed(() => {
-  let result = props.items;
+const scrollRef = ref(null);
+const sentinelRef = ref(null);
+let observer = null;
 
-  if (props.searchQuery) {
-    const q = props.searchQuery.toLowerCase();
-    result = result.filter(
-      (item) => (item.name && item.name.toLowerCase().includes(q)) || (item.code && item.code.toLowerCase().includes(q))
-    );
-  } else if (props.activeCategoryId === 'favorites') {
-    result = [...result].sort((a, b) => (b.pos_sales_count || 0) - (a.pos_sales_count || 0)).slice(0, 50);
-  } else if (props.activeCategoryId === 'newest') {
-    result = [...result].sort((a, b) => b.id - a.id);
-  } else if (props.activeCategoryId === 'in_stock') {
-    result = result.filter((item) => (parseFloat(item.current_stock) || 0) > 0);
-  } else if (props.activeCategoryId === 'low_stock') {
-    result = result.filter((item) => {
-      const stock = parseFloat(item.current_stock) || 0;
-      const min = parseFloat(item.min_stock_level) || 5;
-      return stock <= min && stock > 0;
-    });
-  } else if (props.activeCategoryId !== null) {
-    result = result.filter(
-      (item) =>
-        item.category_id === props.activeCategoryId ||
-        (activeCategoryObject.value && item.category === activeCategoryObject.value.name)
-    );
+const observeSentinel = () => {
+  observer?.disconnect();
+  if (!observer || !sentinelRef.value) return;
+  observer.observe(sentinelRef.value);
+};
+
+onMounted(() => {
+  if (typeof IntersectionObserver === 'undefined') return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((e) => e.isIntersecting) && props.hasMore && !props.isLoadingMore) emit('load-more');
+    },
+    { root: scrollRef.value, rootMargin: '240px' }
+  );
+  observeSentinel();
+});
+
+// The sentinel is re-created with the list; observing again also re-fires when it is still in view.
+watch(
+  () => [props.items.length, props.isLoading, props.isLoadingMore],
+  () => setTimeout(observeSentinel, 0),
+  {
+    flush: 'post',
   }
+);
 
-  return result;
-});
+onBeforeUnmount(() => observer?.disconnect());
 
-const totalPages = computed(() => Math.ceil(filteredItems.value.length / ITEMS_PER_PAGE) || 1);
-
-const paginatedItems = computed(() => {
-  const start = (currentPage.value - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-  return filteredItems.value.slice(start, end);
-});
-
-const prevPage = () => {
-  if (currentPage.value > 1) currentPage.value--;
-};
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) currentPage.value++;
-};
-
-watch([() => props.activeCategoryId, () => props.searchQuery], () => {
-  currentPage.value = 1;
-});
-
-const getCategoryColor = (item) => {
-  const cat = props.categories.find((c) => c.id === item.category_id || c.name === item.category);
-  return cat?.color || '#64748B';
-};
-
-const getCategoryColorLight = (item) => {
-  const cat = props.categories.find((c) => c.id === item.category_id || c.name === item.category);
-  return cat?.color_light || '#f1f5f9';
-};
+const categoryOf = (item) => props.categories.find((c) => c.id === item.category_id || c.name === item.category);
+const getCategoryColor = (item) => item.category_color || categoryOf(item)?.color || '#64748B';
 
 const activeCategoryObject = computed(() => {
   if (!props.activeCategoryId || typeof props.activeCategoryId === 'string') return null;
@@ -155,7 +151,7 @@ const activeCategoryObject = computed(() => {
 });
 
 const activeCategoryName = computed(() => {
-  if (props.searchQuery) return t('pos.no_items_match_search') ? 'نتائج البحث' : 'نتائج البحث';
+  if (props.searchQuery) return t('pos.search_results_title');
   if (props.activeCategoryId === 'favorites') return t('pos.favorites_tab');
   if (props.activeCategoryId === 'newest') return t('pos.newest_tab');
   if (props.activeCategoryId === 'in_stock') return t('pos.in_stock_tab');

@@ -4,6 +4,14 @@
     <PageHeader :title="$t('contacts.customers_title')" :subtitle="$t('contacts.customers_subtitle')" icon="users">
       <template #actions>
         <BaseButton
+          v-if="authStore.can('customers.manage')"
+          :to="{ name: 'imports.index', query: { type: 'customers' } }"
+          variant="outline"
+          size="md"
+          :icon="FileUp"
+          :label="$t('import.ui.import_button')"
+        />
+        <BaseButton
           type="button"
           variant="primary"
           size="md"
@@ -77,7 +85,8 @@
 <script setup>
 import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import ErrorState from '../../Components/Common/ErrorState.vue';
-import { Plus } from 'lucide-vue-next';
+import { FileUp, Plus } from 'lucide-vue-next';
+import { useAuthStore } from '../../stores/auth';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import CustomersMetricsGrid from '../../Components/Customers/CustomersMetricsGrid.vue';
@@ -86,6 +95,8 @@ import CustomersTable from '../../Components/Customers/CustomersTable.vue';
 import CustomerFormModal from '../../Components/Customers/CustomerFormModal.vue';
 import CustomerPaymentModal from '../../Components/Customers/CustomerPaymentModal.vue';
 import { useCustomers } from '../../Composables/useCustomers';
+
+const authStore = useAuthStore();
 
 const {
   customers,

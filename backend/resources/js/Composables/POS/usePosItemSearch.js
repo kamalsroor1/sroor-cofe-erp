@@ -1,5 +1,4 @@
 import { ref, computed, watch } from 'vue';
-import { useRemoteSearch } from './useRemoteSearch';
 import { useBarcodeScanner } from './useBarcodeScanner';
 import { toWesternDigits } from '../../helpers/digits';
 
@@ -19,16 +18,14 @@ export function parseMultiplier(raw) {
 /**
  * Header search box: local + remote item matches, dropdown navigation, and the POS-01 scan queue.
  */
-export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
+export function usePosItemSearch({ items, searchResults, isSearching, addToCart, focusSearch, onMiss }) {
     const searchQuery = ref('');
     const isSearchFocused = ref(false);
     const highlightedIndex = ref(0);
 
-    const {
-        results: remoteResults,
-        isSearching: isSearchingRemote,
-        search,
-    } = useRemoteSearch('/items', (res) => res.data?.data || []);
+    // The server matches come from the catalog grid's first page for the same term (one request, one source).
+    const remoteResults = searchResults;
+    const isSearchingRemote = isSearching;
 
     // Decimal quantities only make sense for weighted items.
     const quantityFor = (item, qty) =>
@@ -89,7 +86,6 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
     watch(searchTerm, (newVal) => {
         noteQueryChange(newVal);
         highlightedIndex.value = 0;
-        search(newVal);
     });
 
     const addItemFromDropdown = (item) => {
@@ -128,5 +124,6 @@ export function usePosItemSearch({ items, addToCart, focusSearch, onMiss }) {
         navigateDropdown,
         escapeSearch,
         multiplier,
+        searchTerm,
     };
 }

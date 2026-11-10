@@ -28,6 +28,12 @@ final class PosItemStockFilter
             $query->whereRaw(self::STOCK_EXPRESSION.' > 0');
         }
 
+        if ($this->dto->onlyLowStock) {
+            // Same rule the POS tab always used: above zero, at or under the item's minimum (5 when none is set).
+            $query->whereRaw(self::STOCK_EXPRESSION.' > 0')
+                ->whereRaw(self::STOCK_EXPRESSION.' <= CASE WHEN items.min_stock_level > 0 THEN items.min_stock_level ELSE 5 END');
+        }
+
         if ($this->dto->isWeighted !== null) {
             $query->where('items.is_weighted', $this->dto->isWeighted);
         }

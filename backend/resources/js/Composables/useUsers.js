@@ -200,6 +200,36 @@ export function useUsers() {
         }
     };
 
+    const unlockLogin = async (u) => {
+        const result = await Swal.fire({
+            title: t('users.unlock_login_confirm', { name: u.name }),
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: t('common.yes'),
+            cancelButtonText: t('common.cancel'),
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await api.post(`/users/${u.id}/unlock-login`);
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                text: res.data?.message || t('users.unlock_login_success'),
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            fetchUsers();
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: e.response?.data?.message || t('users.unlock_login_failed'),
+            });
+        }
+    };
+
     onMounted(() => {
         fetchUsers();
     });
@@ -227,5 +257,6 @@ export function useUsers() {
         submitForm,
         toggleActive,
         deleteUser,
+        unlockLogin,
     };
 }

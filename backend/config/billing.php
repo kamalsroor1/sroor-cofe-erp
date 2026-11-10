@@ -41,6 +41,24 @@ return [
     ],
 
     /*
+    | Days an issued subscription invoice stays payable before it is overdue (PRD-03).
+    */
+    'invoice_due_days' => (int) env('BILLING_INVOICE_DUE_DAYS', 7),
+
+    /*
+    | Payment receipt uploads (ENTI-3.3): jpg/png/webp/pdf only (never SVG), size in kilobytes.
+    */
+    'receipt' => [
+        'max_kb' => 5120,
+        'mimes' => ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+    ],
+
+    /*
+    | Lifetime of the signed receipt link handed to a super-admin (minutes).
+    */
+    'receipt_url_minutes' => 5,
+
+    /*
     | Founder pricing (ENTI-1.7, CTO decision): the first `slots` paying customers keep the
     | plan founder price (plans.founder_price_*) for `months` months from their first payment.
     | Plain values, not env: changing them is a product decision. Lowering `slots` below the

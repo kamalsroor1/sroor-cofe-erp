@@ -38,6 +38,7 @@ export function useItemMovements() {
             cancellation_in: t('invoices.cancelled_badge'),
             waste_out: t('inventory.movement_waste'),
             stock_deposit_in: t('inventory.movement_initial'),
+            opening_balance_in: t('inventory.movement_opening_balance'),
         };
         return map[type] || type;
     };
@@ -46,6 +47,7 @@ export function useItemMovements() {
         const positive = [
             'purchase_in',
             'stock_deposit_in',
+            'opening_balance_in',
             'stock_adjustment_in',
             'cancellation_in',
             'transfer_in',

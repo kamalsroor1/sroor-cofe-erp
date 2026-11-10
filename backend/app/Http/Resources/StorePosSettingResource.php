@@ -32,6 +32,8 @@ class StorePosSettingResource extends JsonResource
             // POS-07: what the server actually enforces (the stored value, else the default).
             'effective_max_discount_percent' => $setting->effectiveMaxDiscountPercent(),
             'require_shift_for_sales' => (bool) $setting->require_shift_for_sales,
+            'catalog_cards_per_row' => (string) $setting->catalog_cards_per_row,
+            'show_item_images' => (bool) $setting->show_item_images,
             'updated_at' => $setting->updated_at?->toIso8601String(),
         ];
     }

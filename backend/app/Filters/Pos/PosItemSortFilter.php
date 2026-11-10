@@ -24,6 +24,7 @@ final class PosItemSortFilter
         $column = match ($this->dto->sort) {
             'code' => 'items.code',
             'pos_sales_count' => 'items.pos_sales_count',
+            'newest' => 'items.id',
             default => 'items.name',
         };
 

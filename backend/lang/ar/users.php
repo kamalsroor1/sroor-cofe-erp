@@ -68,4 +68,11 @@ return [
 
     // BE-08
     'pos_pin_format' => 'الرقم السري للموافقة يجب أن يكون من 4 إلى 6 أرقام.',
+    'activity_login_unlocked' => 'تم إلغاء إيقاف الدخول للحساب [:name] بواسطة :actor',
+    'login_not_locked' => 'الحساب غير موقوف، لا يوجد ما يلزم إلغاؤه',
+    'unlock_login' => 'فتح تسجيل الدخول',
+    'login_locked_badge' => 'مقفل',
+    'unlock_login_confirm' => 'فتح تسجيل الدخول للمستخدم :name؟',
+    'unlock_login_success' => 'تم فتح تسجيل الدخول بنجاح',
+    'unlock_login_failed' => 'تعذر فتح تسجيل الدخول',
 ];

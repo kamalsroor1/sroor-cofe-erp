@@ -42,6 +42,12 @@ final class UpdatePlatformBrandingRequest extends FormRequest
             'support_phone' => ['sometimes', 'nullable', 'string', 'max:30', 'regex:/^\+?[0-9][0-9 ()\-]{2,29}$/'],
             'website_url' => ['sometimes', 'nullable', 'string', 'max:255', 'url:https,http'],
             'powered_by_enabled' => ['sometimes', 'required', 'boolean'],
+            // PRD-03 manual billing details shown to tenants (blank/null = not set).
+            'billing_instapay_address' => ['sometimes', 'nullable', 'string', 'max:100', self::NO_MARKUP],
+            'billing_vodafone_cash_number' => ['sometimes', 'nullable', 'string', 'max:30', 'regex:/^\+?[0-9][0-9 ()\-]{2,29}$/'],
+            'billing_account_name' => ['sometimes', 'nullable', 'string', 'max:100', self::NO_MARKUP],
+            'billing_payment_note' => ['sometimes', 'nullable', 'string', 'max:500', self::NO_MARKUP],
+            'billing_tax_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100', 'regex:/^\d{1,3}(\.\d{1,3})?$/'],
         ];
     }
 

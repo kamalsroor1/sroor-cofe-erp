@@ -24,6 +24,14 @@ enum PlatformSettingKey: string
     case WebsiteUrl = 'website_url';
     case PoweredByEnabled = 'powered_by_enabled';
 
+    // PRD-03: manual SaaS billing. Shown to tenants on their payment screen; all start empty.
+    case BillingInstapayAddress = 'billing_instapay_address';
+    case BillingVodafoneCashNumber = 'billing_vodafone_cash_number';
+    case BillingAccountName = 'billing_account_name';
+    case BillingPaymentNote = 'billing_payment_note';
+    // Subscription VAT, a percentage with 3 decimals (0-100). Default 0.
+    case BillingTaxRate = 'billing_tax_rate';
+
     /**
      * Storage type of the value: string | bool ('1'/'0') | color (#rrggbb) | asset
      * (path on the central public disk, managed by BRND-2).

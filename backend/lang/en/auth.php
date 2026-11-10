@@ -117,4 +117,5 @@ return [
     'cannot_modify_admin_account' => 'Only a system admin can change the role, password or status of an admin account, or delete it.',
     'cannot_change_own_role' => 'You cannot change your own role.',
     'cannot_modify_admin_identity' => 'Only a system admin can change the name, phone or email of an admin account.',
+    'telegram_account_locked' => "🔒 <b>Account temporarily locked</b>\nShop: :shop\nUser: :name\nLogin: :login\nTime: :time\nLock duration: :minutes minute(s)\nIP: :ip",
 ];

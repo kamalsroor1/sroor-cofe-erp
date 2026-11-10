@@ -47,6 +47,8 @@
         </div>
       </div>
 
+      <TenantBillingSection :tenant-id="tenant.id" :tenant-name="tenant.name || ''" />
+
       <EditTenantStatusModal
         :show="showStatusModal"
         :tenant-name="tenant.name || ''"
@@ -69,6 +71,7 @@ import TenantArchivePanel from '../../Components/SuperAdmin/TenantArchivePanel.v
 import TenantStatsGrid from '../../Components/SuperAdmin/TenantStatsGrid.vue';
 import TenantUnitsCard from '../../Components/SuperAdmin/TenantUnitsCard.vue';
 import TenantFeaturesMatrixCard from '../../Components/SuperAdmin/TenantFeaturesMatrixCard.vue';
+import TenantBillingSection from '../../Components/SuperAdmin/Billing/TenantBillingSection.vue';
 import EditTenantStatusModal from '../../Components/SuperAdmin/EditTenantStatusModal.vue';
 import { useSuperAdminTenantShow } from '../../Composables/useSuperAdminTenantShow';
 

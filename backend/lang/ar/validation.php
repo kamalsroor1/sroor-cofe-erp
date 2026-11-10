@@ -190,6 +190,16 @@ return [
     ],
 
     'attributes' => [
+        // التسجيل العام (PRD-05)
+        'business_name' => 'اسم النشاط',
+        'contact_name' => 'اسم المسؤول',
+        'business_type' => 'نوع النشاط',
+        'plan_code' => 'الباقة',
+        'preferred_subdomain' => 'كود مساحة العمل',
+        'subdomain' => 'كود مساحة العمل',
+        'city' => 'المدينة',
+        'owner_email' => 'بريد المالك',
+        'owner_password' => 'كلمة مرور المالك',
         // App releases (super-admin upload)
         'apk_file' => 'ملف التطبيق',
         'version_code' => 'رقم الإصدار الداخلي',

@@ -91,6 +91,17 @@ enum CentralAuditEvent: string
     case TenantPurgeStarted = 'tenant_purge_started';
     case TenantPurgeFailed = 'tenant_purge_failed';
 
+    // PRD-03: manual SaaS billing
+    case BillingInvoiceIssued = 'billing_invoice_issued';
+    case BillingInvoiceVoided = 'billing_invoice_voided';
+    case BillingPaymentSubmitted = 'billing_payment_submitted';
+    case BillingPaymentVerified = 'billing_payment_verified';
+    case BillingPaymentRejected = 'billing_payment_rejected';
+    case BillingReceiptViewed = 'billing_receipt_viewed';
+    // PRD-05: assisted signup review
+    case SignupRequestApproved = 'signup_request_approved';
+    case SignupRequestRejected = 'signup_request_rejected';
+
     public function translationKey(): string
     {
         return 'central_audit.events.'.$this->value;

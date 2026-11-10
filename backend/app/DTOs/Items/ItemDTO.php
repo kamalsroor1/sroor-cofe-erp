@@ -23,6 +23,8 @@ final class ItemDTO
         public readonly bool $is_active = true,
         /** POSB-2: null = not sent (update keeps the stored flag; create defaults to false). */
         public readonly ?bool $is_weighted = null,
+        /** Create-only link to an existing categories row (PRD-06 import). Not part of toArray(): update never touches it. */
+        public readonly ?int $category_id = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -40,6 +42,7 @@ final class ItemDTO
             notes: isset($data['notes']) && $data['notes'] !== '' ? (string) $data['notes'] : null,
             is_active: ! isset($data['is_active']) || (bool) $data['is_active'],
             is_weighted: isset($data['is_weighted']) ? (bool) $data['is_weighted'] : null,
+            category_id: isset($data['category_id']) ? (int) $data['category_id'] : null,
         );
     }
 

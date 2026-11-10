@@ -69,4 +69,25 @@ return [
         'per_minute' => (int) env('RATE_LIMIT_TENANT_RESOLVE', 30),
     ],
 
+    // POST /api/v1/billing/invoices/{id}/payments (receipt upload), per tenant + user + IP.
+    'billing_receipt_upload' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_RECEIPT_HOURLY') ?: 20),
+    ],
+
+    // POST /api/v1/billing/renewal-invoice, per tenant + user + IP.
+    'billing_renewal_invoice' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_RENEWAL_HOURLY') ?: 10),
+    ],
+
+    // Public assisted-signup form (POST /api/v1/public/signup-requests), PRD-05: strict, per client IP (accepted submissions only, see AppServiceProvider).
+    'signup_requests' => [
+        'per_hour' => (int) (env('RATE_LIMIT_SIGNUP_HOURLY') ?: 3),
+        'per_day' => (int) (env('RATE_LIMIT_SIGNUP_DAILY') ?: 10),
+        // Every attempt (valid or not) per IP and hour; the two limits above count accepted submissions only.
+        'attempts_per_hour' => (int) (env('RATE_LIMIT_SIGNUP_ATTEMPTS_HOURLY') ?: 30),
+        // Accepted submissions across ALL client IPs (one shared bucket); IPv6 clients are keyed by their /64.
+        'global_per_hour' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_HOURLY') ?: 30),
+        'global_per_day' => (int) (env('RATE_LIMIT_SIGNUP_GLOBAL_DAILY') ?: 200),
+    ],
+
 ];

@@ -198,6 +198,7 @@ return [
     'movement_adj_out' => '➖ Inventory Adjustment Out (Deduct)',
     'movement_waste' => '🗑️ Record Waste / Damaged',
     'movement_deposit' => '📦 Inflow / Extra Opening Stock',
+    'movement_opening_balance' => 'Opening balance (import)',
     'adjust_reason_prompt' => 'Adjustment Reason / Notes',
     'adjust_reason_placeholder' => 'e.g. Periodic inventory count, variance adjustment, operational damage...',
     'confirm_stock_adjustment' => 'Confirm Stock Adjustment',
