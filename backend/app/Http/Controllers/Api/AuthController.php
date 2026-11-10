@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Auth\ApiLoginAction;
 use App\Actions\Auth\ApiLogoutAction;
 use App\Actions\Auth\ApiMeAction;
+use App\Actions\Auth\DispatchAccountLockAlertAction;
 use App\Actions\Auth\ListQuickLoginUsersAction;
 use App\Actions\Auth\QuickLoginAction;
 use App\DTOs\Auth\ApiLoginDTO;
@@ -28,6 +29,7 @@ final class AuthController extends Controller
         private readonly ActivityLogService $activityLogService,
         private readonly ApiLogoutAction $logoutAction,
         private readonly ApiMeAction $meAction,
+        private readonly DispatchAccountLockAlertAction $lockAlertAction,
         private readonly QuickLoginAction $quickLoginAction,
         private readonly ListQuickLoginUsersAction $listQuickLoginUsersAction,
     ) {}
@@ -60,6 +62,7 @@ final class AuthController extends Controller
                     description: __('auth.activity_account_locked', ['login' => $request->accountIdentifier()]),
                     properties: ['login' => $request->accountIdentifier(), 'ip' => $request->ip()],
                 );
+                $this->lockAlertAction->execute($request->submittedLogin(), $request->ip());
             }
 
             throw $e;
