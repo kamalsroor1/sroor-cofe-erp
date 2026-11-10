@@ -27,6 +27,7 @@ use App\Http\Resources\PlanResource;
 use App\Http\Resources\TenantResource;
 use App\Models\CentralUser;
 use App\Models\Plan;
+use App\Models\PlanChangeRequest;
 use App\Models\SignupRequest;
 use App\Models\Tenant;
 use App\Services\CentralAuditLogger;
@@ -73,6 +74,7 @@ final class SuperAdminApiController extends Controller
             'metrics' => $this->analyticsService->getPlatformMetrics(),
             'plan_stats' => $this->analyticsService->getPlanStatistics(),
             'pending_signup_requests' => SignupRequest::query()->pending()->count(),
+            'pending_plan_change_requests' => PlanChangeRequest::query()->pending()->count(),
             'recent_tenants' => $this->analyticsService->getRecentTenants(),
             'system_info' => [
                 'php_version' => PHP_VERSION,

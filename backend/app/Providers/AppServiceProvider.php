@@ -289,6 +289,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('billing-renewal-invoice', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_renewal_invoice.per_hour', 10))
             ->by('billing-renewal|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
 
+        // Plan change / add-on requests to support, per tenant + user + IP.
+        RateLimiter::for('billing-plan-change-request', fn (Request $request): Limit => Limit::perHour($this->limit('rate_limits.billing_plan_change_request.per_hour', 10))
+            ->by('billing-plan-change|'.RateLimitKey::scope().'|'.RateLimitKey::identifier($request->user()?->getAuthIdentifier()).'|'.$request->ip()));
+
         // PRD-05: the public assisted-signup form, per client IP. Only ACCEPTED submissions (2xx, a
         // honeypot hit included) spend the strict 3/hour + 10/day budget, so a visitor fixing a typo
         // is never locked out; every attempt, valid or not, also spends a looser hourly ceiling.

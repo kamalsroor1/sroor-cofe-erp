@@ -7,6 +7,7 @@ import centralApi, {
 import { trans } from '../helpers/trans';
 import { resetBillingPendingCount } from '../Composables/useBillingPendingCount';
 import { resetPendingSignupRequests } from '../Composables/usePendingSignupRequests';
+import { resetPendingPlanChangeRequests } from '../Composables/usePendingPlanChangeRequests';
 
 /**
  * Platform-operator session (IDEN-1.9). Separate from the tenant `auth` store:
@@ -291,6 +292,7 @@ export const useCentralAuthStore = defineStore('centralAuth', {
         clearSession() {
             resetBillingPendingCount();
             resetPendingSignupRequests();
+            resetPendingPlanChangeRequests();
             if (stepUpWaiter) this.cancelStepUp();
             setTransientCentralToken(null);
             this.token = null;

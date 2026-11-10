@@ -115,4 +115,13 @@ class Subscription extends Model
     {
         return $this->status === SubscriptionStatus::Active && $this->ends_at->isFuture();
     }
+
+    /**
+     * In force = active with a future end, or past_due (grace). Twin of the parent rule in
+     * SubscriptionAddon::scopeActiveFor(): an add-on only counts, and is only sold, on such a subscription.
+     */
+    public function isInForce(): bool
+    {
+        return $this->isActive() || $this->status === SubscriptionStatus::PastDue;
+    }
 }

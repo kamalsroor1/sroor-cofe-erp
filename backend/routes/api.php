@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Landing\PublicPlanController;
 use App\Http\Controllers\Api\Landing\PublicSignupRequestController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionApiController;
+use App\Http\Controllers\Api\PlanChangeRequestController;
 use App\Http\Controllers\Api\PosController;
 use App\Http\Controllers\Api\PosQuickKeyController;
 use App\Http\Controllers\Api\ProfileController;
@@ -277,6 +278,12 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
                 ->name('api.billing.invoices.payments.store');
             Route::post('/renewal-invoice', [BillingController::class, 'renewalInvoice'])->middleware('throttle:billing-renewal-invoice')
                 ->name('api.billing.renewal_invoice');
+            // Plan change / add-on requests go through support (owner decision); both POSTs stay open to a read-only shop.
+            Route::get('/plan-change-requests', [PlanChangeRequestController::class, 'index'])->name('api.billing.plan_change_requests.index');
+            Route::post('/plan-change-requests', [PlanChangeRequestController::class, 'store'])->middleware('throttle:billing-plan-change-request')
+                ->name('api.billing.plan_change_requests.store');
+            Route::post('/plan-change-requests/{id}/cancel', [PlanChangeRequestController::class, 'cancel'])->whereNumber('id')
+                ->name('api.billing.plan_change_requests.cancel');
         });
 
         // Activity & Audit Logs

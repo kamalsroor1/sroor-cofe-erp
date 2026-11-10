@@ -70,6 +70,10 @@ return [
         'billing_receipt_viewed' => 'عرض إيصال دفع',
         'signup_request_approved' => 'الموافقة على طلب تسجيل',
         'signup_request_rejected' => 'رفض طلب تسجيل',
+        'plan_change_requested' => 'طلب تغيير باقة أو إضافة',
+        'plan_change_cancelled' => 'إلغاء طلب تغيير باقة',
+        'plan_change_invoiced' => 'إصدار فاتورة لطلب تغيير باقة',
+        'plan_change_rejected' => 'رفض طلب تغيير باقة',
     ],
     'prune' => [
         'done' => 'تم حذف :count من سجلات مراجعة المنصة الأقدم من :date.',

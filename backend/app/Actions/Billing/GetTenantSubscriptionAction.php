@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace App\Actions\Billing;
 
 use App\Contracts\TenantFeatureManagerInterface;
+use App\Enums\Billing\AddonType;
+use App\Enums\Billing\BillingCycle;
 use App\Enums\Billing\BillingInvoiceStatus;
+use App\Enums\Billing\PlanChangeRequestKind;
 use App\Enums\LimitResource;
+use App\Exceptions\Billing\AddonPricingException;
+use App\Http\Resources\Billing\PlanChangeRequestResource;
 use App\Models\BillingInvoice;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\Plan;
+use App\Models\PlanAddon;
+use App\Models\PlanChangeRequest;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
@@ -73,6 +80,10 @@ final class GetTenantSubscriptionAction
             ],
             'usage' => $this->usage($tenant),
             'addons' => $this->addons($tenant),
+            'pending_plan_change' => $this->pendingRequest($tenant, PlanChangeRequestKind::PlanChange),
+            'pending_addon_request' => $this->pendingRequest($tenant, PlanChangeRequestKind::Addon),
+            'available_plans' => $this->availablePlans($tenant),
+            'available_addons' => $this->availableAddons($plan),
             'open_invoices_count' => BillingInvoice::query()
                 ->where('tenant_id', $tenant->getKey())
                 ->where('status', BillingInvoiceStatus::Pending->value)
@@ -170,6 +181,86 @@ final class GetTenantSubscriptionAction
                 'name' => (string) __($line->addon->name_key),
                 'quantity' => (int) $line->quantity,
                 'ends_at' => $line->ends_at?->toIso8601String(),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The shop's pending request of one kind (at most one exists), shaped like the list resource.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function pendingRequest(Tenant $tenant, PlanChangeRequestKind $kind): ?array
+    {
+        $request = PlanChangeRequest::query()
+            ->with(['currentPlan', 'requestedPlan', 'addon', 'invoice'])
+            ->where('tenant_id', $tenant->getKey())
+            ->where('kind', $kind->value)
+            ->pending()
+            ->orderByDesc('id')
+            ->first();
+
+        return $request === null ? null : (new PlanChangeRequestResource($request))->resolve(request());
+    }
+
+    /**
+     * Public, active plans the shop may ask to move to (price list for the request form).
+     *
+     * @return list<array{code: string, name: string, price_monthly: string, price_yearly: string, is_current: bool}>
+     */
+    private function availablePlans(Tenant $tenant): array
+    {
+        $rows = [];
+
+        foreach (Plan::query()->active()->where('is_public', true)->get() as $plan) {
+            $rows[] = [
+                'code' => $plan->slug,
+                'name' => $plan->name,
+                'price_monthly' => $plan->price_monthly,
+                'price_yearly' => $plan->price_yearly,
+                'is_current' => $tenant->plan_id !== null && (int) $tenant->plan_id === (int) $plan->getKey(),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Recurring add-ons offered on the shop's plan, priced for one unit (plan override, else the
+     * catalog base price). `yearly_price` is null when the add-on is not sold yearly.
+     *
+     * @return list<array{key: string, name: string, unit_price: string, yearly_price: string|null}>
+     */
+    private function availableAddons(?Plan $plan): array
+    {
+        if (! $plan instanceof Plan) {
+            return [];
+        }
+
+        $rows = [];
+
+        $offers = PlanAddon::query()
+            ->with('addon')
+            ->where('plan_id', $plan->getKey())
+            ->where('is_available', true)
+            ->whereHas('addon', fn ($addon) => $addon->where('is_active', true)->where('is_public', true)->where('type', AddonType::Recurring->value))
+            ->orderBy('id')
+            ->get();
+
+        foreach ($offers as $offer) {
+            try {
+                $yearly = $offer->unitPriceFor(BillingCycle::Yearly);
+            } catch (AddonPricingException) {
+                $yearly = null;
+            }
+
+            $rows[] = [
+                'key' => $offer->addon->key,
+                'name' => (string) __($offer->addon->name_key),
+                'unit_price' => $offer->unitPriceFor(BillingCycle::Monthly),
+                'yearly_price' => $yearly,
             ];
         }
 

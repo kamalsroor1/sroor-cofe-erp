@@ -512,6 +512,13 @@ const centralRoutes = [
         CENTRAL_PERMISSIONS.billingView
     ),
     centralPage(
+        '/super-admin/billing/plan-changes',
+        'super_admin.billing_plan_changes',
+        'billing.console.plan_changes.page_title',
+        () => import('../views/SuperAdmin/SuperAdminPlanChangesView.vue'),
+        CENTRAL_PERMISSIONS.billingView
+    ),
+    centralPage(
         '/super-admin/billing-invoices/:id/print',
         'super_admin.billing_invoice_print',
         'billing.console.page_titles.invoice_print',

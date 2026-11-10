@@ -26,10 +26,14 @@ import {
   Settings,
   Receipt,
   Inbox,
+  ArrowUpCircle,
 } from 'lucide-vue-next';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { useBillingPendingCount } from '../Composables/useBillingPendingCount';
 import { usePendingSignupRequests } from '../Composables/usePendingSignupRequests';
+import { usePendingPlanChangeRequests } from '../Composables/usePendingPlanChangeRequests';
+
+const PLAN_CHANGES_PATH = '/super-admin/billing/plan-changes';
 
 const centralAuth = useCentralAuthStore();
 const route = useRoute();
@@ -37,6 +41,7 @@ const router = useRouter();
 
 useIdleLogout();
 const { pendingCount: pendingSignupCount } = usePendingSignupRequests();
+const { pendingCount: pendingPlanChangeCount } = usePendingPlanChangeRequests();
 
 const { pendingCount, refreshPendingCount } = useBillingPendingCount();
 onMounted(() => {
@@ -100,9 +105,17 @@ const navItems = computed(() =>
       name: trans('billing.console.nav'),
       href: '/super-admin/billing',
       icon: Receipt,
-      active: route.path.startsWith('/super-admin/billing'),
+      active: route.path.startsWith('/super-admin/billing') && !route.path.startsWith(PLAN_CHANGES_PATH),
       permission: CENTRAL_PERMISSIONS.billingView,
       badge: pendingCount.value || null,
+    },
+    {
+      name: trans('billing.console.plan_changes.nav'),
+      href: PLAN_CHANGES_PATH,
+      icon: ArrowUpCircle,
+      active: route.path.startsWith(PLAN_CHANGES_PATH),
+      permission: CENTRAL_PERMISSIONS.billingView,
+      badge: pendingPlanChangeCount.value || null,
     },
     {
       name: trans('super.nav_units'),

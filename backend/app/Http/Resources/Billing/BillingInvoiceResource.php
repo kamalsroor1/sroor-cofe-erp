@@ -87,7 +87,8 @@ final class BillingInvoiceResource extends JsonResource
         $lines = [];
 
         foreach ($this->lines as $line) {
-            $isPlan = ($line['type'] ?? null) === 'plan';
+            // A support-decided difference line carries its own stored description.
+            $isPlan = ($line['type'] ?? null) === 'plan' && ! ($line['difference'] ?? false);
             $cycle = $isPlan ? BillingCycle::tryFrom((string) ($line['billing_cycle'] ?? '')) : null;
 
             $lines[] = [

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Central\BillingReviewController;
 use App\Http\Controllers\Api\Central\CentralAuthController;
 use App\Http\Controllers\Api\Central\CentralPasswordResetController;
 use App\Http\Controllers\Api\Central\CentralTwoFactorController;
+use App\Http\Controllers\Api\Central\PlanChangeRequestReviewController;
 use App\Http\Controllers\Api\Central\PlatformSettingsController;
 use App\Http\Controllers\Api\Central\PlatformUnitsController;
 use App\Http\Controllers\Api\Central\SignupRequestController;
@@ -182,6 +183,16 @@ Route::prefix('v1/super-admin')
         Route::post('/billing/payments/{payment}/reject', [BillingReviewController::class, 'reject'])
             ->whereNumber('payment')
             ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.payments.reject');
+
+        // Plan change / add-on requests (owner decision: through support, manual invoice, no proration).
+        Route::get('/billing/plan-change-requests', [PlanChangeRequestReviewController::class, 'index'])
+            ->middleware($can(CentralPermission::BillingView))->name('billing.plan_change_requests.index');
+        Route::post('/billing/plan-change-requests/{changeRequest}/invoice', [PlanChangeRequestReviewController::class, 'invoice'])
+            ->whereNumber('changeRequest')
+            ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.plan_change_requests.invoice');
+        Route::post('/billing/plan-change-requests/{changeRequest}/reject', [PlanChangeRequestReviewController::class, 'reject'])
+            ->whereNumber('changeRequest')
+            ->middleware([$can(CentralPermission::BillingManage), RequireRecentTwoFactor::class])->name('billing.plan_change_requests.reject');
 
         // PRD-05: assisted signup. Approve provisions a tenant, so it needs a recent 2FA proof like
         // POST /tenants; reject is a plain manage action.

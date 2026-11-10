@@ -18,6 +18,7 @@ use App\Models\Concerns\UsesCentralConnection;
 use App\Models\Domain;
 use App\Models\Plan;
 use App\Models\PlanAddon;
+use App\Models\PlanChangeRequest;
 use App\Models\PlanFeature;
 use App\Models\PlatformSetting;
 use App\Models\SignupRequest;
@@ -80,6 +81,7 @@ final class CentralModelsConnectionTest extends TenantTestCase
             'Subscription' => [Subscription::class, self::VIA_TRAIT],
             'Addon' => [Addon::class, self::VIA_TRAIT],
             'PlanAddon' => [PlanAddon::class, self::VIA_TRAIT],
+            'PlanChangeRequest' => [PlanChangeRequest::class, self::VIA_TRAIT],
             'SubscriptionAddon' => [SubscriptionAddon::class, self::VIA_TRAIT],
             'BillingSequence' => [BillingSequence::class, self::VIA_TRAIT],
             'BillingInvoice' => [BillingInvoice::class, self::VIA_TRAIT],

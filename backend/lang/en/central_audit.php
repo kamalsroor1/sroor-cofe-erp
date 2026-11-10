@@ -70,6 +70,10 @@ return [
         'billing_receipt_viewed' => 'Payment receipt viewed',
         'signup_request_approved' => 'Signup request approved',
         'signup_request_rejected' => 'Signup request rejected',
+        'plan_change_requested' => 'Plan change requested',
+        'plan_change_cancelled' => 'Plan change request cancelled',
+        'plan_change_invoiced' => 'Plan change request invoiced',
+        'plan_change_rejected' => 'Plan change request rejected',
     ],
     'prune' => [
         'done' => 'Deleted :count platform audit rows older than :date.',

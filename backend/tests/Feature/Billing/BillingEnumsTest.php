@@ -12,6 +12,8 @@ use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentMethod;
 use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\Billing\Concerns\BillingEnum;
+use App\Enums\Billing\PlanChangeRequestKind;
+use App\Enums\Billing\PlanChangeRequestStatus;
 use App\Enums\Billing\SubscriptionAddonStatus;
 use App\Enums\Billing\SubscriptionStatus;
 use App\Enums\PaymentMethod;
@@ -47,6 +49,8 @@ class BillingEnumsTest extends TestCase
             'BillingPaymentStatus' => [BillingPaymentStatus::class, ['pending', 'verified', 'rejected', 'failed', 'refunded']],
             'BillingPaymentMethod' => [BillingPaymentMethod::class, ['instapay', 'vodafone_cash', 'bank_transfer', 'cash', 'paymob_card', 'paymob_wallet', 'fawry_reference']],
             'BillingGateway' => [BillingGateway::class, ['manual', 'paymob', 'fawry']],
+            'PlanChangeRequestKind' => [PlanChangeRequestKind::class, ['plan_change', 'addon']],
+            'PlanChangeRequestStatus' => [PlanChangeRequestStatus::class, ['pending', 'invoiced', 'rejected', 'cancelled']],
         ];
     }
 

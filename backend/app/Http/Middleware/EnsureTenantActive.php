@@ -53,6 +53,8 @@ final class EnsureTenantActive
         // PRD-04: a read-only shop must still be able to pay (receipt upload) and ask for a renewal invoice
         'api.billing.invoices.payments.store',
         'api.billing.renewal_invoice',
+        'api.billing.plan_change_requests.store',
+        'api.billing.plan_change_requests.cancel',
     ];
 
     /** @var list<string> routes a blocked tenant may still call so the SPA can show the state */

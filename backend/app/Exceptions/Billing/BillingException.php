@@ -28,6 +28,15 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * | noPlan()                 | 422  | billing.no_plan                  |
  * | founderPriceUnavailable()| 422  | billing.founder_unavailable      |
  * | discountTooHigh()        | 422  | billing.discount_too_high        |
+ * | requestNotPending()      | 409  | billing.request_not_pending      |
+ * | requestAlreadyPending()  | 422  | billing.request_already_pending  |
+ * | requestSamePlan()        | 422  | billing.request_same_plan        |
+ * | requestPlanUnavailable() | 422  | billing.request_plan_unavailable |
+ * | requestAddonUnavailable()| 422  | billing.request_addon_unavailable|
+ * | addonNeedsSubscription() | 422  | billing.addon_needs_subscription |
+ * | differenceRequired()     | 422  | billing.difference_required      |
+ * | addonNeedsActiveSubscription() | 422 | billing.addon_needs_active_subscription |
+ * | differenceNeedsActiveTerm() | 422 | billing.difference_needs_active_term |
  */
 final class BillingException extends HttpException
 {
@@ -97,6 +106,51 @@ final class BillingException extends HttpException
     public static function discountTooHigh(): self
     {
         return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'discount_too_high');
+    }
+
+    public static function requestNotPending(): self
+    {
+        return self::make(Response::HTTP_CONFLICT, 'request_not_pending');
+    }
+
+    public static function requestAlreadyPending(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'request_already_pending');
+    }
+
+    public static function requestSamePlan(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'request_same_plan');
+    }
+
+    public static function requestPlanUnavailable(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'request_plan_unavailable');
+    }
+
+    public static function requestAddonUnavailable(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'request_addon_unavailable');
+    }
+
+    public static function addonNeedsSubscription(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'addon_needs_subscription');
+    }
+
+    public static function addonNeedsActiveSubscription(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'addon_needs_active_subscription');
+    }
+
+    public static function differenceNeedsActiveTerm(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'difference_needs_active_term');
+    }
+
+    public static function differenceRequired(): self
+    {
+        return self::make(Response::HTTP_UNPROCESSABLE_ENTITY, 'difference_required');
     }
 
     public function render(Request $request): JsonResponse

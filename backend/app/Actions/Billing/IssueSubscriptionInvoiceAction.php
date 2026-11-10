@@ -11,10 +11,12 @@ use App\Enums\Billing\BillingInvoiceType;
 use App\Enums\Billing\BillingPaymentStatus;
 use App\Enums\CentralAuditEvent;
 use App\Exceptions\Billing\BillingException;
+use App\Models\Addon;
 use App\Models\BillingInvoice;
 use App\Models\BillingPayment;
 use App\Models\CentralUser;
 use App\Models\Plan;
+use App\Models\PlanAddon;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Services\Billing\BillingSequenceService;
@@ -28,8 +30,10 @@ use Illuminate\Support\Facades\DB;
 /**
  * PRD-03 / ENTI-3.2 + ENTI-3.10: issue a SaaS subscription invoice (central DB).
  *
- * Types: plan | renewal | upgrade (a plan line at the chosen cycle) and service (one-off lines).
- * Plan-type invoices may carry extra service lines. Everything is snapshotted into `lines`.
+ * Types: plan | renewal | upgrade (a plan line at the chosen cycle), service (one-off lines) and
+ * addon (add-on lines priced from the tenant's plan catalog, only from a support request).
+ * An upgrade can instead carry ONE "difference" line with the amount the admin decided (no
+ * proration). Plan-type invoices may carry extra service lines. Everything is snapshotted into `lines`.
  *
  * Money: bcmath strings at scale 3. VAT = platform setting billing_tax_rate, computed ONCE on the
  * net (subtotal - discount) and rounded half-up with App\Support\Money\Decimal (the SETG-13 rule).
@@ -60,14 +64,34 @@ final class IssueSubscriptionInvoiceAction
             $subscription = Subscription::query()->where('tenant_id', $tenant->getKey())->orderByDesc('id')->first();
 
             $plan = $this->planFor($dto);
-            $cycle = $plan !== null ? $dto->cycle : null;
+            $cycle = $plan !== null || $dto->type === BillingInvoiceType::Addon ? $dto->cycle : null;
 
             $periodStart = $this->periodStart($dto, $tenant, $subscription);
-            $this->assertNotDuplicate($tenant, $dto->type, $periodStart, $this->futureEnd($tenant, $subscription) === null);
+            if (! $dto->fromRequest && $dto->type !== BillingInvoiceType::Addon) {
+                $this->assertNotDuplicate($tenant, $dto->type, $periodStart, $this->futureEnd($tenant, $subscription) === null);
+            }
+
+            // A difference bills only the gap on a paid term, so it needs a term still running.
+            if ($dto->differenceLine !== null && $this->futureEnd($tenant, $subscription) === null) {
+                throw BillingException::differenceNeedsActiveTerm();
+            }
 
             $lines = [];
             if ($plan instanceof Plan && $cycle instanceof BillingCycle) {
-                $lines[] = $this->planLine($dto, $plan, $cycle, $tenant, $subscription);
+                $lines[] = $dto->differenceLine !== null
+                    ? $this->differenceLine($dto->differenceLine, $plan, $cycle)
+                    : $this->planLine($dto, $plan, $cycle, $tenant, $subscription);
+            }
+            if ($dto->addonLines !== [] && $cycle instanceof BillingCycle) {
+                if (! $subscription instanceof Subscription) {
+                    throw BillingException::addonNeedsSubscription();
+                }
+                if (! $subscription->isInForce()) {
+                    throw BillingException::addonNeedsActiveSubscription();
+                }
+                foreach ($dto->addonLines as $addonLine) {
+                    $lines[] = $this->addonLine($addonLine, $cycle, $tenant);
+                }
             }
             foreach ($dto->serviceLines as $service) {
                 $lines[] = [
@@ -144,6 +168,14 @@ final class IssueSubscriptionInvoiceAction
             return null;
         }
 
+        if ($dto->type === BillingInvoiceType::Addon) {
+            if ($dto->addonLines === [] || ! $dto->cycle instanceof BillingCycle || ! $dto->cycle->isSellable()) {
+                throw BillingException::noPlan();
+            }
+
+            return null;
+        }
+
         if ($dto->planId === null || ! $dto->cycle instanceof BillingCycle || ! $dto->cycle->isSellable()) {
             throw BillingException::noPlan();
         }
@@ -188,6 +220,69 @@ final class IssueSubscriptionInvoiceAction
         ];
     }
 
+    /**
+     * The single line of a support-decided upgrade: the admin's difference, not a catalog price.
+     * `difference` tells ActivateSubscriptionAction to switch the plan without extending the term.
+     *
+     * @param  array{description: string, amount: string}  $difference
+     * @return array<string, mixed>
+     */
+    private function differenceLine(array $difference, Plan $plan, BillingCycle $cycle): array
+    {
+        $amount = Decimal::normalize($difference['amount']);
+
+        return [
+            'type' => 'plan',
+            'difference' => true,
+            'plan_id' => (int) $plan->getKey(),
+            'plan_name' => $plan->name,
+            'billing_cycle' => $cycle->value,
+            'description' => $difference['description'],
+            'quantity' => 1,
+            'unit_price' => $amount,
+            'amount' => $amount,
+            'founder' => false,
+        ];
+    }
+
+    /**
+     * One add-on line, priced from the tenant's plan (plan override, then catalog tier) unless the
+     * admin overrides the unit price. The add-on must be active and offered on the tenant's plan.
+     *
+     * @param  array{addon_id: int, quantity: int, unit_price: string|null}  $line
+     * @return array<string, mixed>
+     */
+    private function addonLine(array $line, BillingCycle $cycle, Tenant $tenant): array
+    {
+        $addon = Addon::query()->find($line['addon_id']);
+        $planAddon = $addon === null || $tenant->plan_id === null ? null : PlanAddon::query()
+            ->where('plan_id', $tenant->plan_id)
+            ->where('addon_id', $addon->getKey())
+            ->where('is_available', true)
+            ->first();
+
+        if (! $addon instanceof Addon || ! $addon->is_active || ! $planAddon instanceof PlanAddon) {
+            throw BillingException::requestAddonUnavailable();
+        }
+
+        $quantity = $line['quantity'];
+        $unit = $line['unit_price'] !== null
+            ? Decimal::normalize($line['unit_price'])
+            : Decimal::normalize($planAddon->unitPriceFor($cycle, $quantity));
+        $amount = bcmul($unit, (string) $quantity, 3);
+
+        return [
+            'type' => 'addon',
+            'addon_id' => (int) $addon->getKey(),
+            'addon_key' => $addon->key,
+            'description' => (string) __('billing.invoice.addon_line', ['addon' => (string) __($addon->name_key), 'cycle' => $cycle->label()]),
+            'billing_cycle' => $cycle->value,
+            'quantity' => $quantity,
+            'unit_price' => $unit,
+            'amount' => $amount,
+        ];
+    }
+
     /** The founder price when FounderPricingService allows it for this tenant, else null. */
     private function founderPrice(Plan $plan, BillingCycle $cycle, Tenant $tenant, ?Subscription $subscription): ?string
     {
@@ -222,7 +317,7 @@ final class IssueSubscriptionInvoiceAction
 
         $now = CarbonImmutable::now();
 
-        if ($dto->type === BillingInvoiceType::Service) {
+        if ($dto->type === BillingInvoiceType::Service || $dto->type === BillingInvoiceType::Addon) {
             return $now->startOfSecond();
         }
 
@@ -238,10 +333,14 @@ final class IssueSubscriptionInvoiceAction
         return $now->startOfDay();
     }
 
-    /** The subscription end when it is still in the future, else null (expired / never paid). */
+    /**
+     * The PAID term end when it is still in the future, else null (expired / never paid). Only the
+     * tenant's subscription_ends_at counts, the same source ActivateSubscriptionAction extends from:
+     * a provisioned-but-unpaid subscription row can carry a future ends_at that was never paid for.
+     */
     private function futureEnd(Tenant $tenant, ?Subscription $subscription): ?CarbonImmutable
     {
-        $end = $tenant->subscription_ends_at ?? $subscription?->ends_at;
+        $end = $tenant->subscription_ends_at;
 
         return $end !== null && $end->isFuture() ? CarbonImmutable::instance($end) : null;
     }

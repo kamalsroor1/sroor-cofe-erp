@@ -98,6 +98,11 @@ enum CentralAuditEvent: string
     case BillingPaymentVerified = 'billing_payment_verified';
     case BillingPaymentRejected = 'billing_payment_rejected';
     case BillingReceiptViewed = 'billing_receipt_viewed';
+    // Plan change / add-on requests through support
+    case PlanChangeRequested = 'plan_change_requested';
+    case PlanChangeCancelled = 'plan_change_cancelled';
+    case PlanChangeInvoiced = 'plan_change_invoiced';
+    case PlanChangeRejected = 'plan_change_rejected';
     // PRD-05: assisted signup review
     case SignupRequestApproved = 'signup_request_approved';
     case SignupRequestRejected = 'signup_request_rejected';

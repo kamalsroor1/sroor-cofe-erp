@@ -79,6 +79,11 @@ return [
         'per_hour' => (int) (env('RATE_LIMIT_BILLING_RENEWAL_HOURLY') ?: 10),
     ],
 
+    // POST /api/v1/billing/plan-change-requests, per tenant + user + IP.
+    'billing_plan_change_request' => [
+        'per_hour' => (int) (env('RATE_LIMIT_BILLING_PLAN_CHANGE_HOURLY') ?: 10),
+    ],
+
     // Public assisted-signup form (POST /api/v1/public/signup-requests), PRD-05: strict, per client IP (accepted submissions only, see AppServiceProvider).
     'signup_requests' => [
         'per_hour' => (int) (env('RATE_LIMIT_SIGNUP_HOURLY') ?: 3),
