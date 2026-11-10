@@ -18,6 +18,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\PurchaseService;
+use App\Services\ShiftService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Validation\ValidationException;
 use Tests\TenantTestCase;
@@ -336,6 +338,90 @@ final class ReturnsAgainstSourceApiTest extends TenantTestCase
         });
     }
 
+    public function test_sales_source_exposes_walk_in_flag_and_the_cash_still_refundable(): void
+    {
+        $this->inTenant($this->tenant, function (): void {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+            app(ShiftService::class)->openShift('100.000', null, $this->storeId);
+        });
+        $walkIn = $this->inTenant($this->tenant, fn (): int => (int) Customer::create(['name' => 'نقدي عام', 'phone' => '0000000000', 'price_tier' => 'retail', 'is_active' => true])->id);
+
+        [$walkInInvoice] = $this->invoiceFor($walkIn, '5.000', 'cash', '100.000');     // 100 paid in cash
+        [$creditInvoice] = $this->invoiceFor($this->customerId, '5.000', 'credit', '0.000'); // nothing paid
+        [$partialInvoice, $partialLine] = $this->invoiceFor($this->customerId, '10.000', 'partial', '120.000'); // 200 total, 120 paid
+
+        $this->getJson('/api/v1/return-sources/sales_return/'.$walkInInvoice, $this->headers)->assertOk()
+            ->assertJsonPath('data.is_walk_in', true)->assertJsonPath('data.cash_refundable_amount', '100.000');
+        $this->getJson('/api/v1/return-sources/sales_return/'.$creditInvoice, $this->headers)->assertOk()
+            ->assertJsonPath('data.is_walk_in', false)->assertJsonPath('data.cash_refundable_amount', '0.000');
+        $this->getJson('/api/v1/return-sources/sales_return/'.$partialInvoice, $this->headers)->assertOk()
+            ->assertJsonPath('data.is_walk_in', false)->assertJsonPath('data.cash_refundable_amount', '120.000');
+
+        // A previous 100 cash return leaves 20 refundable.
+        $this->postJson('/api/v1/returns', [
+            'return_type' => 'sales_return', 'customer_id' => $this->customerId, 'invoice_id' => $partialInvoice,
+            'return_date' => now()->toDateString(), 'refund_method' => 'cash',
+            'items' => [['invoice_item_id' => $partialLine, 'quantity' => '5.000']],
+        ], $this->headers)->assertCreated();
+        $this->getJson('/api/v1/return-sources/sales_return/'.$partialInvoice, $this->headers)->assertOk()
+            ->assertJsonPath('data.cash_refundable_amount', '20.000');
+
+        $rows = collect($this->getJson('/api/v1/return-sources/sales_return', $this->headers)->assertOk()->json('data'))->keyBy('id');
+        $this->assertTrue($rows[$walkInInvoice]['is_walk_in']);
+        $this->assertSame('100.000', $rows[$walkInInvoice]['cash_refundable_amount']);
+        $this->assertFalse($rows[$creditInvoice]['is_walk_in']);
+        $this->assertSame('0.000', $rows[$creditInvoice]['cash_refundable_amount']);
+        $this->assertSame('20.000', $rows[$partialInvoice]['cash_refundable_amount']);
+    }
+
+    public function test_walk_in_found_by_its_placeholder_phone_is_flagged_on_detail_and_list(): void
+    {
+        $this->inTenant($this->tenant, function (): void {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+            app(ShiftService::class)->openShift('100.000', null, $this->storeId);
+        });
+        // Renamed walk-in customer: only the placeholder phone identifies it.
+        $walkIn = $this->inTenant($this->tenant, fn (): int => (int) Customer::create(['name' => 'زبون الكاشير', 'phone' => '0000000000', 'price_tier' => 'retail', 'is_active' => true])->id);
+        [$invoiceId] = $this->invoiceFor($walkIn, '2.000', 'cash', '40.000');
+
+        $this->getJson('/api/v1/return-sources/sales_return/'.$invoiceId, $this->headers)->assertOk()
+            ->assertJsonPath('data.is_walk_in', true);
+        $rows = collect($this->getJson('/api/v1/return-sources/sales_return', $this->headers)->assertOk()->json('data'))->keyBy('id');
+        $this->assertTrue($rows[$invoiceId]['is_walk_in']);
+    }
+
+    public function test_purchase_sources_carry_null_walk_in_and_refundable_keys(): void
+    {
+        $purchaseId = $this->purchase('2.000', '100.000', discount: '0.000');
+
+        $this->getJson('/api/v1/return-sources/purchase_return/'.$purchaseId, $this->headers)->assertOk()
+            ->assertJsonPath('data.is_walk_in', null)->assertJsonPath('data.cash_refundable_amount', null);
+        $this->getJson('/api/v1/return-sources/purchase_return', $this->headers)->assertOk()
+            ->assertJsonPath('data.0.is_walk_in', null)->assertJsonPath('data.0.cash_refundable_amount', null);
+    }
+
+    public function test_sales_source_list_query_count_does_not_grow_with_the_rows(): void
+    {
+        $this->invoiceFor($this->customerId, '1.000', 'partial', '10.000');
+        $this->getJson('/api/v1/return-sources/sales_return', $this->headers)->assertOk(); // warm caches
+        $count = function (): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $this->getJson('/api/v1/return-sources/sales_return', $this->headers)->assertOk();
+            $queries = count(DB::getQueryLog());
+            DB::disableQueryLog();
+
+            return $queries;
+        };
+        $one = $count();
+
+        foreach (range(1, 4) as $_) {
+            $this->invoiceFor($this->customerId, '1.000', 'partial', '10.000');
+        }
+
+        $this->assertSame($one, $count());
+    }
+
     private function purchaseReturn(int $purchaseId, string $qty, ?int $supplierId = null): TestResponse
     {
         $lineId = (int) $this->inTenant($this->tenant, fn () => PurchaseItem::query()->where('purchase_id', $purchaseId)->orderBy('id')->value('id'));
@@ -375,6 +461,23 @@ final class ReturnsAgainstSourceApiTest extends TenantTestCase
                 'payment_type' => 'credit', 'payment_method' => 'cash', 'paid_amount' => '0.000',
                 'discount_type' => 'fixed', 'discount_value' => $discount,
                 'items' => [['item_id' => $this->itemId, 'quantity' => $qty, 'unit_price' => $price]],
+            ]);
+
+            return [(int) $invoice->id, (int) InvoiceItem::query()->where('invoice_id', $invoice->id)->value('id')];
+        });
+    }
+
+    /**
+     * @return array{0: int, 1: int} invoice id, its line id
+     */
+    private function invoiceFor(int $customerId, string $qty, string $paymentType, string $paid): array
+    {
+        return $this->inTenant($this->tenant, function () use ($customerId, $qty, $paymentType, $paid): array {
+            $this->actingAs(User::query()->orderBy('id')->firstOrFail());
+            $invoice = app(InvoiceService::class)->confirmInvoice([
+                'customer_id' => $customerId, 'store_id' => $this->storeId,
+                'payment_type' => $paymentType, 'payment_method' => 'cash', 'paid_amount' => $paid,
+                'items' => [['item_id' => $this->itemId, 'quantity' => $qty, 'unit_price' => '20.000']],
             ]);
 
             return [(int) $invoice->id, (int) InvoiceItem::query()->where('invoice_id', $invoice->id)->value('id')];

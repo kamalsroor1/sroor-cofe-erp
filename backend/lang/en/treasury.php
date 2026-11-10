@@ -85,6 +85,7 @@ return [
     'inflow_details_sub' => 'Cash sales + customer collections',
     'total_disbursements_out' => 'Total Outflows (Cash Out)',
     'outflow_details_sub' => 'Expenses + supplier payouts',
+    'cash_refunds_line' => 'Of which customer cash refunds',
     'net_cash_flow' => 'Daily Net Cash',
     'net_cash_flow_sub' => 'Difference between inflows and outflows',
     'expected_drawer_balance' => 'Expected Drawer Balance 💵',

@@ -4,6 +4,7 @@ import { useTrans } from '../useTrans';
 import { useReturnSource } from '../useReturnSource';
 import { usePosBusinessDate } from './usePosBusinessDate';
 import { mapApiError } from '../../helpers/planFeatures';
+import { useRefundMethod } from '../useRefundMethod';
 import { notifySuccess, notifyError } from '../../helpers/alert';
 
 /**
@@ -15,6 +16,7 @@ export function usePosQuickReturn({ isOnline, onDone }) {
     const { refreshBusinessDate } = usePosBusinessDate();
     const returnType = ref('sales_return');
     const source = useReturnSource(returnType);
+    const refund = useRefundMethod({ source: source.selected, total: source.total });
     const show = ref(false);
     const isSubmitting = ref(false);
 
@@ -45,13 +47,14 @@ export function usePosQuickReturn({ isOnline, onDone }) {
                 invoice_id: source.selected.value.id,
                 customer_id: source.selected.value.party_id,
                 return_date: returnDate,
-                refund_amount: 0,
+                refund_method: refund.method.value,
                 items: source.payloadItems(),
             });
             notifySuccess(res.data?.message || t('pos.quick_return_success'));
             close();
             onDone?.();
         } catch (error) {
+            if (refund.handleCapError(error)) return;
             notifyError(
                 mapApiError(error, {
                     t,
@@ -72,5 +75,5 @@ export function usePosQuickReturn({ isOnline, onDone }) {
         if (inputEl) inputEl.value = line.return_quantity;
     };
 
-    return { setQuantity, show, isSubmitting, canSubmit, source, open, close, submit };
+    return { setQuantity, refund, show, isSubmitting, canSubmit, source, open, close, submit };
 }

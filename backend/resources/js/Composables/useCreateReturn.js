@@ -8,6 +8,7 @@ import { useTrans } from './useTrans';
 import { useRemoteOptions } from './useRemoteOptions';
 import { useUnits } from './useUnits';
 import { businessToday } from './useBusinessDate';
+import { useRefundMethod } from './useRefundMethod';
 
 const defaultUnitPrice = (type, item) =>
     type === 'sales_return'
@@ -36,7 +37,6 @@ export function useCreateReturn() {
         customer_id: null,
         supplier_id: null,
         return_date: businessToday(),
-        refund_amount: '0.000',
         reason: '',
         items: [],
     });
@@ -44,6 +44,16 @@ export function useCreateReturn() {
     const returnType = computed(() => form.return_type);
     const source = useReturnSource(returnType);
     const usingSource = computed(() => !manualMode.value);
+    const isSalesReturn = computed(() => form.return_type === 'sales_return');
+    const refundParty = computed(() => {
+        if (!isSalesReturn.value) return null;
+        return (usingSource.value ? source.selected.value?.party_id : form.customer_id) || null;
+    });
+    const refund = useRefundMethod({
+        source: computed(() => (isSalesReturn.value && usingSource.value ? source.selected.value : null)),
+        total: source.total,
+        partyId: refundParty,
+    });
 
     const itemsCount = computed(() => (usingSource.value ? source.chosenLines.value.length : form.items.length));
 
@@ -125,7 +135,6 @@ export function useCreateReturn() {
                 customer_id: isSales ? (usingSource.value ? source.selected.value?.party_id : form.customer_id) : null,
                 supplier_id: !isSales ? (usingSource.value ? source.selected.value?.party_id : form.supplier_id) : null,
                 return_date: form.return_date,
-                refund_amount: parseFloat(form.refund_amount) || 0,
                 reason: form.reason || null,
                 items: usingSource.value
                     ? source.payloadItems()
@@ -135,6 +144,7 @@ export function useCreateReturn() {
                           unit_price: parseFloat(it.unit_price),
                       })),
             };
+            if (isSales) payload.refund_method = refund.method.value;
             if (usingSource.value) {
                 payload[isSales ? 'invoice_id' : 'purchase_id'] = source.selected.value?.id;
             }
@@ -150,6 +160,7 @@ export function useCreateReturn() {
 
             router.push('/returns');
         } catch (error) {
+            if (refund.handleCapError(error)) return;
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -169,6 +180,8 @@ export function useCreateReturn() {
         isSubmitting,
         selectedItemToAdd,
         form,
+        refund,
+        isSalesReturn,
         netTotal,
         itemsCount,
         canWithoutInvoice,

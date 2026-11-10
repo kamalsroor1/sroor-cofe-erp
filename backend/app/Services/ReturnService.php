@@ -175,9 +175,7 @@ class ReturnService
      */
     private function assertCashRefundWithinPaid(int $invoiceId, string $required): void
     {
-        $paid = Decimal::normalize((string) Payment::query()->where('invoice_id', $invoiceId)->where('amount', '>', 0)->sum('amount'));
-        $refunded = Decimal::normalize((string) Payment::query()->where('invoice_id', $invoiceId)->refunds()->sum('amount'));
-        $available = bcadd($paid, $refunded, 3); // refunds are negative
+        $available = $this->returnSourceService->cashRefundable([$invoiceId])[$invoiceId];
 
         if (bccomp($required, $available, 3) > 0) {
             throw BusinessRuleException::make('returns.cash_refund_exceeds_paid', [

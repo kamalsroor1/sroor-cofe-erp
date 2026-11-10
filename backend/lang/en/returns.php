@@ -121,6 +121,7 @@ return [
     'refund_method_walk_in_cash' => 'Walk-in customer is always refunded in cash',
     'refund_method_invalid' => 'The selected refund method is invalid.',
     'cash_refund_exceeds_paid' => 'The cash refund (:required) exceeds what the customer paid on this invoice (available :available). Refund it on the customer balance instead.',
+    'cash_refundable_hint' => 'Only :amount can still be refunded in cash on this invoice. Choose the customer balance for the rest.',
     'select_customer_warning' => 'Please select the customer',
     'select_supplier_warning' => 'Please select the supplier',
 ];

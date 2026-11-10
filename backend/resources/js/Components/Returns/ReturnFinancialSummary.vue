@@ -25,17 +25,15 @@
           >
         </div>
 
-        <!-- Refund cash from drawer -->
-        <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-          <BaseNumberInput
-            :model-value="refundAmount"
-            @update:model-value="$emit('update:refund-amount', $event)"
-            :label="$t('returns.refund_cash_from_drawer')"
-            :hint="$t('returns.refund_zero_hint')"
-            :decimals="3"
-            class="font-mono text-emerald-600 dark:text-emerald-400 font-bold"
-          />
-        </div>
+        <RefundMethodPicker
+          v-if="isSales"
+          class="pt-2 border-t border-slate-200 dark:border-slate-800"
+          :model-value="refundMethod"
+          :locked="refundLocked"
+          :error="refundError"
+          :hint="refundHint"
+          @update:model-value="$emit('update:refund-method', $event)"
+        />
       </div>
 
       <!-- Submit Button -->
@@ -57,7 +55,7 @@
 
 <script setup>
 import { RotateCcw, BarChart3 } from 'lucide-vue-next';
-import BaseNumberInput from '../Form/BaseNumberInput.vue';
+import RefundMethodPicker from './RefundMethodPicker.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
@@ -66,9 +64,13 @@ const { formatMoney, currencyLabel } = useFormatters();
 defineProps({
   itemsCount: { type: Number, default: 0 },
   netTotal: { type: Number, default: 0 },
-  refundAmount: { type: [Number, String], default: 0 },
+  isSales: { type: Boolean, default: true },
+  refundMethod: { type: String, default: 'balance' },
+  refundLocked: { type: Boolean, default: false },
+  refundError: { type: String, default: '' },
+  refundHint: { type: String, default: '' },
   isSubmitting: { type: Boolean, default: false },
 });
 
-defineEmits(['update:refund-amount', 'submit-return']);
+defineEmits(['update:refund-method', 'submit-return']);
 </script>

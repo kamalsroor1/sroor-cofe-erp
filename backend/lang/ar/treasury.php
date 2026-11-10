@@ -91,6 +91,7 @@ return [
     'inflow_details_sub' => 'مبيعات كاش + تحصيل عملاء',
     'total_disbursements_out' => 'إجمالي المدفوعات (كاش منصرف)',
     'outflow_details_sub' => 'مصروفات + سداد موردين',
+    'cash_refunds_line' => 'منها مرتجعات نقدية للعملاء',
     'net_cash_flow' => 'صافي النقدية اليومية',
     'net_cash_flow_sub' => 'الفارق بين الوارد والمنصرف',
     'expected_drawer_balance' => 'الرصيد المتوقع بالدرج 💵',

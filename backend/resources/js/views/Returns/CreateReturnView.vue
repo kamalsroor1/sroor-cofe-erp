@@ -74,9 +74,13 @@
         <ReturnFinancialSummary
           :items-count="itemsCount"
           :net-total="netTotal"
-          :refund-amount="form.refund_amount"
+          :is-sales="isSalesReturn"
+          :refund-method="refund.method.value"
+          :refund-locked="refund.locked.value"
+          :refund-error="refund.capError.value"
+          :refund-hint="refund.hint.value"
           :is-submitting="isSubmitting"
-          @update:refund-amount="updateField('refund_amount', $event)"
+          @update:refund-method="refund.setMethod"
           @submit-return="submitReturn"
         />
       </div>
@@ -101,6 +105,8 @@ const {
   isSubmitting,
   selectedItemToAdd,
   form,
+  refund,
+  isSalesReturn,
   netTotal,
   itemsCount,
   canWithoutInvoice,

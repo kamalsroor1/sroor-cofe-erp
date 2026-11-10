@@ -326,7 +326,19 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Printer, CheckCircle2, Truck, WifiOff, Split, X, Banknote, Zap, Smartphone } from 'lucide-vue-next';
+import {
+  Printer,
+  CheckCircle2,
+  Truck,
+  WifiOff,
+  Split,
+  X,
+  Banknote,
+  Zap,
+  Smartphone,
+  CreditCard,
+  Building2,
+} from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 import { sanitizeAmountInput } from '../../helpers/posCheckout';
@@ -346,6 +358,8 @@ const methods = computed(() => [
   { key: 'cash', label: t('pos.method_cash'), icon: Banknote },
   { key: 'instapay', label: t('pos.instapay'), icon: Zap },
   { key: 'e_wallet', label: t('pos.smart_wallet'), icon: Smartphone },
+  { key: 'visa', label: t('pos.visa_card'), icon: CreditCard },
+  { key: 'bank_transfer', label: t('pos.bank_transfer'), icon: Building2 },
 ]);
 
 const paymentTypes = computed(() => [

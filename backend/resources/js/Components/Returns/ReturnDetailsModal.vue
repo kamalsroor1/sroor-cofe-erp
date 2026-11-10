@@ -74,6 +74,20 @@
       </div>
 
       <div
+        v-if="returnDetails.refund_method"
+        class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs font-tajawal"
+        data-testid="return-refund-line"
+      >
+        <span class="font-bold text-slate-700 dark:text-slate-300">{{ $t('returns.refund_method') }}:</span>
+        <span class="font-black text-slate-900 dark:text-white text-end">
+          {{ $t(`returns.refund_method_${returnDetails.refund_method}`) }}
+          <span v-if="returnDetails.refund_method === 'cash'" class="font-mono"
+            >· {{ formatMoney(returnDetails.refund_amount) }} {{ currencyLabel }}</span
+          >
+        </span>
+      </div>
+
+      <div
         v-if="returnDetails.reason"
         class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 rounded-xl text-slate-600 dark:text-slate-400 font-tajawal"
       >

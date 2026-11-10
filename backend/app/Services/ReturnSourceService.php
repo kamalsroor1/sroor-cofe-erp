@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Payment;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\ReturnDocument;
@@ -134,6 +135,38 @@ final class ReturnSourceService
         }
 
         return $resolved;
+    }
+
+    /**
+     * BE-10: the cash still refundable on each invoice = live positive payments minus the live
+     * refund vouchers (PAY-RET / PAY-REF, stored negative) already given back. THE single
+     * formula behind the cash-refund cap and the return-source screens; may be negative for
+     * legacy data (callers clamp for display). One grouped query per side, any number of ids.
+     *
+     * @param  list<int>  $invoiceIds
+     * @return array<int, string> invoice id => signed 3-decimal string (every requested id present)
+     */
+    public function cashRefundable(array $invoiceIds): array
+    {
+        $result = array_fill_keys($invoiceIds, '0.000');
+        if ($invoiceIds === []) {
+            return $result;
+        }
+
+        $paid = Payment::query()->whereIn('invoice_id', $invoiceIds)->where('amount', '>', 0)
+            ->selectRaw('invoice_id, SUM(amount) as total')->groupBy('invoice_id')->pluck('total', 'invoice_id');
+        $refunded = Payment::query()->whereIn('invoice_id', $invoiceIds)->refunds()
+            ->selectRaw('invoice_id, SUM(amount) as total')->groupBy('invoice_id')->pluck('total', 'invoice_id');
+
+        foreach ($invoiceIds as $id) {
+            $result[$id] = bcadd(
+                Decimal::normalize((string) ($paid[$id] ?? '0')),
+                Decimal::normalize((string) ($refunded[$id] ?? '0')), // refunds are negative
+                3,
+            );
+        }
+
+        return $result;
     }
 
     /**
