@@ -232,7 +232,7 @@ final class AllowNegativeStockSettingTest extends TenantTestCase
                 ]);
                 $this->fail('Expected InsufficientStockException when allow_negative_stock is disabled.');
             } catch (InsufficientStockException $e) {
-                $this->assertSame(422, $e->getStatusCode());
+                $this->assertSame(422, $e->status());
             }
 
             $this->assertSame('-3.000', (string) $item->fresh()->current_stock);
