@@ -241,6 +241,8 @@ final class TenantBillingApiTest extends BillingTestCase
         $first = $this->postJson('/api/v1/billing/renewal-invoice', ['cycle' => 'monthly'], $headers)->assertCreated();
 
         Carbon::setTestNow('2026-11-11 09:00:00');
+        // SEC-03: tenant tokens die 12h after creation, so mint a fresh one for the later day.
+        $headers = $this->tenantHeaders($tenant);
         $this->postJson('/api/v1/billing/renewal-invoice', ['cycle' => 'yearly'], $headers)
             ->assertStatus(409)
             ->assertJsonPath('error_code', 'billing.invoice_duplicate')
