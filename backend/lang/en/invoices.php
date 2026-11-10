@@ -268,4 +268,5 @@ return [
     'discrete_unit_integer_only' => 'The item \':item\' is sold by piece/box and only accepts whole numbers; fractions are not allowed (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'The line discount cannot exceed the line total.',
+    'export_limit_exceeded' => 'Cannot export more than :max invoices at once. Please narrow your search or filter criteria.',
 ];

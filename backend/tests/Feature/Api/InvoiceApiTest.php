@@ -190,6 +190,85 @@ class InvoiceApiTest extends TenantTestCase
             ]);
     }
 
+    public function test_invoices_summary_returns_precise_scale3_decimal_strings(): void
+    {
+        Invoice::create([
+            'invoice_number' => 'INV-PRECISE-1',
+            'store_id' => $this->mainStore->id,
+            'customer_id' => $this->customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => now()->toDateString(),
+            'subtotal' => '0.100',
+            'net_total' => '0.100',
+            'paid_amount' => '0.040',
+            'remaining_amount' => '0.060',
+            'status' => 'confirmed',
+            'payment_type' => 'partial',
+        ]);
+
+        Invoice::create([
+            'invoice_number' => 'INV-PRECISE-2',
+            'store_id' => $this->mainStore->id,
+            'customer_id' => $this->customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => now()->toDateString(),
+            'subtotal' => '0.200',
+            'net_total' => '0.200',
+            'paid_amount' => '0.160',
+            'remaining_amount' => '0.040',
+            'status' => 'confirmed',
+            'payment_type' => 'partial',
+        ]);
+
+        Invoice::create([
+            'invoice_number' => 'INV-PRECISE-CANCELLED',
+            'store_id' => $this->mainStore->id,
+            'customer_id' => $this->customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => now()->toDateString(),
+            'subtotal' => '500.000',
+            'net_total' => '500.000',
+            'paid_amount' => '500.000',
+            'remaining_amount' => '0.000',
+            'status' => 'cancelled',
+            'payment_type' => 'cash',
+        ]);
+
+        Invoice::create([
+            'invoice_number' => 'INV-PRECISE-BRANCH',
+            'store_id' => $this->branchStore->id,
+            'customer_id' => $this->customer->id,
+            'user_id' => $this->adminUser->id,
+            'invoice_date' => now()->toDateString(),
+            'subtotal' => '999.000',
+            'net_total' => '999.000',
+            'paid_amount' => '999.000',
+            'remaining_amount' => '0.000',
+            'status' => 'confirmed',
+            'payment_type' => 'cash',
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$this->adminToken,
+            'X-Store-Id' => (string) $this->mainStore->id,
+        ])->getJson('/api/v1/invoices');
+
+        $response->assertStatus(200);
+
+        $summary = $response->json('summary');
+        $this->assertIsInt($summary['total_count']);
+        $this->assertSame(3, $summary['total_count']);
+
+        $this->assertIsString($summary['total_sales']);
+        $this->assertSame('0.300', $summary['total_sales']);
+
+        $this->assertIsString($summary['total_paid']);
+        $this->assertSame('0.200', $summary['total_paid']);
+
+        $this->assertIsString($summary['total_due']);
+        $this->assertSame('0.100', $summary['total_due']);
+    }
+
     public function test_can_create_sales_invoice_and_deduct_inventory(): void
     {
         $payload = [
