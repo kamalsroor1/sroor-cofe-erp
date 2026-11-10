@@ -282,4 +282,19 @@ return [
         'unknown_plan' => 'مفيش باقة بالـ slug ":slug".',
         'assigned' => 'اتعيّن :count محل على باقة ":slug".',
     ],
+
+    'stock_drift' => [
+        'description' => 'تقرير للقراءة فقط يعرض الأصناف التي يختلف فيها مجموع أرصدة الفروع عن رصيد الصنف الإجمالي (bcmath).',
+        'tenant_not_found' => 'المستأجر غير موجود: :tenant',
+        'no_tenants' => 'لا يوجد مستأجرين للفحص.',
+        'tenant_failed' => 'تعذر فحص المستأجر :tenant: :error',
+        'col_tenant' => 'المستأجر',
+        'col_id' => 'المعرف',
+        'col_code' => 'الكود',
+        'col_name' => 'الصنف',
+        'col_current_stock' => 'رصيد الصنف',
+        'col_stores_stock' => 'مجموع الفروع',
+        'col_drift' => 'الفرق',
+        'summary' => 'فحص فروق المخزون (للقراءة فقط): :count صنف به فرق في :total مستأجر. لم يتم تعديل أي شيء.',
+    ],
 ];

@@ -41,11 +41,20 @@
       >
         <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
       </button>
+      <router-link
+        :to="{ path: '/help', query: { article: 'getting-started' } }"
+        data-testid="contextual-help-btn"
+        :title="$t('help.contextual_button_label')"
+        :aria-label="$t('help.contextual_button_label')"
+        class="min-h-[44px] min-w-[44px] p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-theme-primary border border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
+      >
+        <CircleHelp class="w-4 h-4" />
+      </router-link>
     </div>
   </div>
 </template>
 <script setup>
-import { Plus, ShoppingCart, RefreshCw, Coffee } from 'lucide-vue-next';
+import { Plus, ShoppingCart, RefreshCw, Coffee, CircleHelp } from 'lucide-vue-next';
 defineProps({
   companyName: { type: String, default: '' },
   loading: { type: Boolean, default: false },

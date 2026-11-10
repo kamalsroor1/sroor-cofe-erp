@@ -16,6 +16,7 @@ const emptyForm = () => ({
     plan_code: '',
     preferred_subdomain: '',
     notes: '',
+    terms_accepted: false,
     website: '', // honeypot: real users never see it, so it must stay empty
 });
 
@@ -55,7 +56,7 @@ export function useSignupRequest() {
         const payload = {};
         Object.entries(form.value).forEach(([key, value]) => {
             const text = typeof value === 'string' ? value.trim() : value;
-            if (key === 'website' || text !== '') payload[key] = text;
+            if (key === 'website' || key === 'terms_accepted' || text !== '') payload[key] = text;
         });
         return payload;
     };

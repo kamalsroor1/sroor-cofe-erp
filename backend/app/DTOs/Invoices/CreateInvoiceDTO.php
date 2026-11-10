@@ -28,9 +28,20 @@ final class CreateInvoiceDTO
 
     public static function fromArray(array $data, ?int $storeId = null): self
     {
+        $items = [];
+        foreach (array_values((array) ($data['items'] ?? [])) as $index => $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $item['entry_sequence'] = isset($item['entry_sequence']) && $item['entry_sequence'] !== ''
+                ? (int) $item['entry_sequence']
+                : $index + 1;
+            $items[] = $item;
+        }
+
         return new self(
             customer_id: (int) $data['customer_id'],
-            items: (array) ($data['items'] ?? []),
+            items: $items,
             store_id: isset($data['store_id']) ? (int) $data['store_id'] : $storeId,
             invoice_date: (string) ($data['invoice_date'] ?? app(TenantClock::class)->businessDate()),
             payment_type: (string) ($data['payment_type'] ?? 'cash'),

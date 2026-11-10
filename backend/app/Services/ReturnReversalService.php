@@ -8,10 +8,10 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\ReturnDocument;
 use App\Models\ReturnItem;
-use App\Models\Setting;
 use App\Models\StockMovement;
 use App\Models\StoreStock;
 use App\Models\Supplier;
+use App\Services\Settings\TenantSettings;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -108,7 +108,7 @@ final class ReturnReversalService
         // negative stock (the same `allow_negative_stock` setting StockService::deductStock
         // honours). A missing store_stocks row counts as zero. Checked per item on the summed
         // quantity, before anything is changed.
-        if (! Setting::getBool('allow_negative_stock', false)) {
+        if (! app(TenantSettings::class)->allowNegativeStock()) {
             foreach ($lines->groupBy('item_id') as $itemId => $itemLines) {
                 /** @var Item $item */
                 $item = $items[$itemId];

@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $invoice_id
  * @property int $item_id
+ * @property int|null $entry_sequence
  * @property string $quantity
  * @property string $cost_price
  * @property string $unit_price
@@ -31,6 +32,7 @@ class InvoiceItem extends Model
     protected $fillable = [
         'invoice_id',
         'item_id',
+        'entry_sequence',
         'quantity',
         'cost_price',
         'unit_price',
@@ -44,6 +46,7 @@ class InvoiceItem extends Model
     protected function casts(): array
     {
         return [
+            'entry_sequence' => 'integer',
             'quantity' => 'decimal:3',
             'cost_price' => 'decimal:3',
             'unit_price' => 'decimal:3',

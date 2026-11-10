@@ -26,6 +26,7 @@ import {
     Truck,
     FileUp,
     CreditCard,
+    LifeBuoy,
 } from 'lucide-vue-next';
 
 export function useNavigation() {
@@ -195,6 +196,11 @@ export function useNavigation() {
                     key: 'billing',
                     path: '/billing',
                     icon: CreditCard,
+                },
+                {
+                    key: 'help',
+                    path: '/help',
+                    icon: LifeBuoy,
                 },
             ],
         },

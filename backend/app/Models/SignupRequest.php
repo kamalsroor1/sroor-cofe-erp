@@ -31,6 +31,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $tenant_id
  * @property string|null $ip
  * @property string|null $user_agent
+ * @property Carbon|null $terms_accepted_at
+ * @property string|null $terms_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -55,6 +57,8 @@ class SignupRequest extends Model
         'tenant_id',
         'ip',
         'user_agent',
+        'terms_accepted_at',
+        'terms_version',
     ];
 
     protected function casts(): array
@@ -64,6 +68,7 @@ class SignupRequest extends Model
             'status' => SignupRequestStatus::class,
             'reviewed_at' => 'datetime',
             'reviewed_by' => 'integer',
+            'terms_accepted_at' => 'datetime',
         ];
     }
 

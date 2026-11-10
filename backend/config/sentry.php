@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\SentryScrubber;
+
 /**
  * Sentry Laravel SDK configuration file.
  *
@@ -57,8 +59,8 @@ return [
 
     // OPS-6: strips request bodies/cookies/query strings/headers/user and bearer tokens in messages
     // before anything leaves the server. Static callable arrays keep `config:cache` working.
-    'before_send' => [\App\Support\SentryScrubber::class, 'beforeSend'],
-    'before_send_transaction' => [\App\Support\SentryScrubber::class, 'beforeSendTransaction'],
+    'before_send' => [SentryScrubber::class, 'beforeSend'],
+    'before_send_transaction' => [SentryScrubber::class, 'beforeSendTransaction'],
 
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore_exceptions
     // 'ignore_exceptions' => [],

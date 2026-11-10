@@ -179,4 +179,15 @@ return [
         'col_total_out' => 'إجمالي المنصرف',
         'col_current_balance' => 'الرصيد الحالي',
     ],
+
+    // Stock drift report (SUM(store_stocks) vs items.current_stock)
+    'tab_stock_drift' => 'فروق المخزون',
+    'stock_drift_title' => 'تقرير فروق المخزون (رصيد الفروع مقابل رصيد الصنف)',
+    'stock_drift_subtitle' => 'يعرض الأصناف التي يختلف فيها مجموع أرصدة الفروع عن رصيد الصنف الإجمالي (للقراءة فقط)',
+    'stock_drift_col_item_stock' => 'رصيد الصنف الإجمالي',
+    'stock_drift_col_branches_sum' => 'مجموع أرصدة الفروع',
+    'stock_drift_col_drift' => 'الفرق (الفروع − الصنف)',
+    'stock_drift_empty_title' => 'لا توجد فروق في المخزون',
+    'stock_drift_empty_desc' => 'جميع الأصناف متطابقة تماماً بين مجموع أرصدة الفروع ورصيد الصنف الإجمالي.',
+    'stock_drift_search_placeholder' => 'بحث باسم الصنف أو الكود...',
 ];

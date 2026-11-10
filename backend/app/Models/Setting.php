@@ -60,8 +60,17 @@ class Setting extends Model
             ['value' => $value]
         );
 
-        Cache::forget(self::getCacheKey());
-        Cache::forget("app_setting_{$key}");
+        // Invalidate only once the write is visible to other connections: forgetting inside an open
+        // transaction lets a concurrent read re-cache the stale pre-commit value. On rollback the
+        // cache is dropped too, since a read inside the transaction may have cached uncommitted data.
+        $cacheKey = self::getCacheKey();
+        $forget = static function () use ($cacheKey, $key): void {
+            Cache::forget($cacheKey);
+            Cache::forget("app_setting_{$key}");
+        };
+        $connection = $setting->getConnection();
+        $connection->afterCommit($forget);
+        $connection->afterRollBack($forget);
 
         return $setting;
     }
@@ -73,8 +82,17 @@ class Setting extends Model
         return in_array($val, ['1', 'true', 'on', 'yes', true, 1], true);
     }
 
+    /**
+     * Drop the cached dictionary after the surrounding transaction commits (immediately when none is open).
+     */
     public static function clearCache(): void
     {
-        Cache::forget(self::getCacheKey());
+        $cacheKey = self::getCacheKey();
+        $forget = static function () use ($cacheKey): void {
+            Cache::forget($cacheKey);
+        };
+        $connection = (new self)->getConnection();
+        $connection->afterCommit($forget);
+        $connection->afterRollBack($forget);
     }
 }

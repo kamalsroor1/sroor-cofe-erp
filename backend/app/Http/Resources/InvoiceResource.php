@@ -50,18 +50,9 @@ class InvoiceResource extends JsonResource
             'change_amount' => (string) ($this->change_amount ?? '0.000'),
             'notes' => $this->notes,
             'items_count' => $this->relationLoaded('items') ? $this->items->count() : 0,
-            'items' => $this->relationLoaded('items') ? $this->items->map(fn ($it) => [
-                'id' => $it->id,
-                'item_id' => $it->item_id,
-                'name' => $it->item?->name ?? 'صنف',
-                'item_name' => $it->item?->name ?? 'صنف',
-                'item_code' => $it->item?->code,
-                'unit' => $it->item?->unit ?? 'قطعة',
-                'quantity' => (float) $it->quantity,
-                'unit_price' => (float) $it->unit_price,
-                'discount_amount' => (float) ($it->discount_amount ?? 0),
-                'total_price' => (float) $it->total_price,
-            ]) : [],
+            'items' => $this->relationLoaded('items')
+                ? InvoiceItemResource::collection($this->items)->resolve($request)
+                : [],
             'payments' => $this->relationLoaded('payments') ? $this->payments->map(fn ($p) => [
                 'id' => $p->id,
                 'amount' => (float) $p->amount,

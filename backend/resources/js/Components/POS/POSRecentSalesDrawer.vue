@@ -74,6 +74,7 @@ const { formatMoney } = useFormatters();
           <div class="flex items-center gap-2">
             <button
               type="button"
+              data-testid="pos-recent-sales-reprint"
               class="min-h-[44px] px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-black flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
               :disabled="sale.is_cancelled"
               @click="$emit('reprint', sale)"
@@ -84,6 +85,7 @@ const { formatMoney } = useFormatters();
             <button
               v-if="canReturn"
               type="button"
+              data-testid="pos-recent-sales-return"
               class="min-h-[44px] px-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-black flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
               :disabled="sale.is_cancelled || offline"
               @click="$emit('return', sale)"

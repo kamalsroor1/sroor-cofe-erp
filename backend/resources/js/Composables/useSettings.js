@@ -136,6 +136,7 @@ export function useSettings() {
         commercial_register: '',
         tax_registration_no: '',
         low_stock_default_threshold: '5.000',
+        allow_negative_stock: false,
         receipt_header_lines: '',
         receipt_footer_text: '',
     });
@@ -347,6 +348,7 @@ export function useSettings() {
         commercial_register: '',
         tax_registration_no: '',
         low_stock_default_threshold: '5.000',
+        allow_negative_stock: false,
         show_print_company_name: true,
         show_print_subtitle: true,
         show_print_logo: true,
@@ -405,6 +407,7 @@ export function useSettings() {
                 tax_registration_no: s.tax_registration_no || '',
                 low_stock_default_threshold:
                     s.low_stock_default_threshold != null ? normalize(s.low_stock_default_threshold) : '5.000',
+                allow_negative_stock: !!s.allow_negative_stock,
                 receipt_header_lines: s.receipt_header_lines || '',
                 receipt_footer_text: s.receipt_footer_text || '',
             };

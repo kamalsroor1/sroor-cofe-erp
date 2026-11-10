@@ -114,6 +114,7 @@ return [
     'error_occurred' => 'حدث خطأ غير متوقع',
     'no_notes_available' => 'لا توجد ملاحظات مسجلة لهذه العملية.',
     'unit_piece' => 'قطعة',
+    'unnamed_item' => 'صنف',
 
     // Multi-Tabs Navigation
     'close_tab' => 'إغلاق التبويب',

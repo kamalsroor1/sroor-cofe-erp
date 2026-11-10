@@ -113,7 +113,8 @@ class Invoice extends Model
      */
     public function items(): HasMany
     {
-        return $this->hasMany(InvoiceItem::class);
+        return $this->hasMany(InvoiceItem::class)
+            ->orderByRaw('CASE WHEN entry_sequence IS NULL THEN 1 ELSE 0 END, entry_sequence ASC, id ASC');
     }
 
     /**

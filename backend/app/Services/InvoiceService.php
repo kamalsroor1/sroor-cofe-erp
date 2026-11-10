@@ -206,9 +206,14 @@ class InvoiceService
                 $lineCost = Decimal::mul($qty, $effectiveCost);
                 $totalCost = bcadd($totalCost, $lineCost, 3);
 
+                $entrySequence = isset($line['entry_sequence']) && $line['entry_sequence'] !== ''
+                    ? (int) $line['entry_sequence']
+                    : ((int) $lineIndex + 1);
+
                 // Create invoice item row
                 $invoice->items()->create([
                     'item_id' => $item->id,
+                    'entry_sequence' => $entrySequence,
                     'quantity' => $qty,
                     'cost_price' => $effectiveCost,
                     'unit_price' => $unitPrice,
@@ -657,7 +662,7 @@ class InvoiceService
             $subtotal = '0.000';
             $totalCost = '0.000';
 
-            foreach ($data['items'] as $line) {
+            foreach ($data['items'] as $lineIndex => $line) {
                 $item = Item::where('id', $line['item_id'])->lockForUpdate()->firstOrFail();
                 $qty = (string) $line['quantity'];
                 $unitPrice = (string) $line['unit_price'];
@@ -676,8 +681,13 @@ class InvoiceService
                 $lineCost = Decimal::mul($qty, $effectiveCost);
                 $totalCost = bcadd($totalCost, $lineCost, 3);
 
+                $entrySequence = isset($line['entry_sequence']) && $line['entry_sequence'] !== ''
+                    ? (int) $line['entry_sequence']
+                    : ((int) $lineIndex + 1);
+
                 $lockedInvoice->items()->create([
                     'item_id' => $item->id,
+                    'entry_sequence' => $entrySequence,
                     'quantity' => $qty,
                     'cost_price' => $effectiveCost,
                     'unit_price' => $unitPrice,

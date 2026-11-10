@@ -1,11 +1,12 @@
 <template>
   <AppModal :show="show" :title="$t('pos.select_customer')" max-width="lg" @close="$emit('close')">
-    <div class="space-y-4 font-tajawal select-none">
+    <div class="space-y-4 font-tajawal select-none" data-testid="pos-customer-modal">
       <!-- 🔍 Search & Toggle Form Bar -->
       <div class="flex items-center justify-between gap-2">
         <div class="relative flex-1">
           <input
             ref="searchInputRef"
+            data-testid="pos-customer-search-input"
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text"
@@ -151,6 +152,7 @@
           v-for="cust in customers"
           :key="cust.id"
           type="button"
+          data-testid="pos-customer-row"
           @click="$emit('select-customer', cust)"
           class="min-h-[52px] w-full p-3 flex items-center justify-between text-start hover:bg-slate-50 dark:hover:bg-slate-800/80 transition cursor-pointer"
           :class="

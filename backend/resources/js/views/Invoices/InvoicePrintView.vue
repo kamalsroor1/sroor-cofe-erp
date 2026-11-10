@@ -197,7 +197,13 @@ const activeStoreName = computed(() => appConfigStore.currentStore?.name || '');
 
 const invoiceItems = computed(() => {
   if (!invoice.value) return [];
-  return invoice.value.items || invoice.value.invoice_items || [];
+  const raw = invoice.value.items || invoice.value.invoice_items || [];
+  return [...raw].sort((a, b) => {
+    const seqA = a.entry_sequence ?? Number.MAX_SAFE_INTEGER;
+    const seqB = b.entry_sequence ?? Number.MAX_SAFE_INTEGER;
+    if (seqA !== seqB) return seqA - seqB;
+    return (a.id ?? 0) - (b.id ?? 0);
+  });
 });
 
 const customerName = computed(() => {

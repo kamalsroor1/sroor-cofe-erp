@@ -45,6 +45,7 @@ final class PublicSignupRequestApiTest extends TenantTestCase
             'plan_code' => 'basic',
             'preferred_subdomain' => 'test-roastery',
             'notes' => 'نريد البدء الأسبوع القادم',
+            'terms_accepted' => true,
         ], $overrides);
     }
 
@@ -66,6 +67,8 @@ final class PublicSignupRequestApiTest extends TenantTestCase
         $this->assertSame('basic', $row->plan_code);
         $this->assertSame('test-roastery', $row->preferred_subdomain);
         $this->assertNotNull($row->ip);
+        $this->assertNotNull($row->terms_accepted_at);
+        $this->assertSame((string) config('legal.version'), $row->terms_version);
         $this->assertNull($row->tenant_id);
 
         Queue::assertPushed(NotifyPlatformOfSignupRequestJob::class, fn (NotifyPlatformOfSignupRequestJob $job): bool => $job->signupRequestId === $row->id);
@@ -80,6 +83,7 @@ final class PublicSignupRequestApiTest extends TenantTestCase
             'contact_name' => 'سارة',
             'phone' => '٠١٠٠٠٠٠٠٦٠٢',
             'business_type' => 'retail',
+            'terms_accepted' => true,
         ])->assertCreated();
 
         $row = SignupRequest::query()->sole();
@@ -99,7 +103,7 @@ final class PublicSignupRequestApiTest extends TenantTestCase
 
     public function test_validation_rejects_bad_input(): void
     {
-        $this->postJson(self::URL, [])->assertStatus(422)->assertJsonValidationErrors(['business_name', 'contact_name', 'phone', 'business_type']);
+        $this->postJson(self::URL, [])->assertStatus(422)->assertJsonValidationErrors(['business_name', 'contact_name', 'phone', 'business_type', 'terms_accepted']);
 
         foreach (['0100000060', '01300000601', 'abc', '02212345678', '010000006011'] as $phone) {
             $this->postJson(self::URL, $this->payload(['phone' => $phone]))->assertStatus(422)->assertJsonValidationErrors(['phone']);

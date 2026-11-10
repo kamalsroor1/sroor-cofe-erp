@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\Landing\PublicLegalDocumentController;
 use App\Http\Controllers\Api\Landing\PublicPlanController;
 use App\Http\Controllers\Api\Landing\PublicSignupRequestController;
 use App\Http\Controllers\Api\PaymentController;
@@ -49,10 +50,14 @@ use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Support\Facades\Route;
 
-// PRD-05 / PRD-07: the public marketing site. No authentication and NO tenancy (outside the
+// PRD-05 / PRD-07 / PRD-08: the public marketing site. No authentication and NO tenancy (outside the
 // ResolveApiTenancy group on purpose: central DB only, any host, X-Tenant ignored). Throttled.
 Route::prefix('v1/public')->name('api.public.')->group(function () {
     Route::get('/plans', [PublicPlanController::class, 'index'])->middleware('throttle:public-api')->name('plans');
+    Route::get('/legal/{document}', [PublicLegalDocumentController::class, 'show'])
+        ->middleware('throttle:public-api')
+        ->whereIn('document', ['terms', 'privacy', 'dpa'])
+        ->name('legal.show');
     Route::post('/signup-requests', [PublicSignupRequestController::class, 'store'])->middleware('throttle:signup-requests')->name('signup_requests.store');
 });
 
@@ -226,6 +231,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('api.reports.inventory')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/treasury', [ReportController::class, 'treasury'])->name('api.reports.treasury')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items')->middleware('store.active')->middleware('feature:reports.basic');
+        Route::get('/reports/stock-drift', [ReportController::class, 'stockDrift'])->name('api.reports.stock_drift')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card')->middleware('store.active')->middleware('feature:reports.basic');
 
         // Returns (Sales & Purchase Returns)

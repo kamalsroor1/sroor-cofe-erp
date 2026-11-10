@@ -18,13 +18,15 @@ final readonly class CreateSignupRequestDTO
         public ?string $planCode,
         public ?string $preferredSubdomain,
         public ?string $notes,
+        public bool $termsAccepted,
+        public string $termsVersion,
         public bool $honeypotFilled,
         public ?string $ip,
         public ?string $userAgent,
     ) {}
 
     /**
-     * @param  array{business_name: string, contact_name: string, phone: string, email?: string|null, city?: string|null, business_type: string, plan_code?: string|null, preferred_subdomain?: string|null, notes?: string|null, website?: string|null}  $data
+     * @param  array{business_name: string, contact_name: string, phone: string, email?: string|null, city?: string|null, business_type: string, plan_code?: string|null, preferred_subdomain?: string|null, notes?: string|null, terms_accepted?: mixed, website?: string|null}  $data
      */
     public static function fromArray(array $data, ?string $ip = null, ?string $userAgent = null): self
     {
@@ -38,6 +40,8 @@ final readonly class CreateSignupRequestDTO
             planCode: self::blankToNull($data['plan_code'] ?? null),
             preferredSubdomain: self::blankToNull($data['preferred_subdomain'] ?? null),
             notes: self::blankToNull($data['notes'] ?? null),
+            termsAccepted: filter_var($data['terms_accepted'] ?? false, FILTER_VALIDATE_BOOL),
+            termsVersion: trim((string) config('legal.version')),
             honeypotFilled: self::blankToNull($data['website'] ?? null) !== null,
             ip: $ip,
             userAgent: $userAgent === null ? null : mb_substr($userAgent, 0, 512),

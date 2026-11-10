@@ -157,6 +157,7 @@ return [
         'profile_show' => 'الملف الشخصي والحساب',
         'import_index' => 'استيراد البيانات',
         'trash_index' => 'سلة المحذوفات',
+        'help_index' => 'مركز المساعدة والدعم الفني',
     ],
 
     // Sidebar / drawer menu labels (Composables/useNavigation.js)
@@ -212,6 +213,7 @@ return [
             'trash' => 'سلة المحذوفات',
             'settings' => 'إعدادات المؤسسة',
             'billing' => 'الاشتراك والفواتير',
+            'help' => 'مركز المساعدة والدعم',
         ],
     ],
 ];

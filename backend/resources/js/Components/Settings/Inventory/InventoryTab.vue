@@ -74,7 +74,7 @@ const emit = defineEmits([
   'reorder-units',
 ]);
 
-const inventoryFields = ['inventory_units', 'low_stock_default_threshold'];
+const inventoryFields = ['inventory_units', 'low_stock_default_threshold', 'allow_negative_stock'];
 
 const isSectionDirty = computed(() => {
   if (!props.initialForm) return false;

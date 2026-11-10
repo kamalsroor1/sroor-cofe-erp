@@ -73,7 +73,19 @@ final class StoreSignupRequestRequest extends FormRequest
             'plan_code' => ['nullable', 'string', 'max:50', $this->publicPlanExists()],
             'preferred_subdomain' => ['nullable', 'string', new AvailableSubdomain(checkTaken: false)],
             'notes' => ['nullable', 'string', 'max:500'],
+            'terms_accepted' => ['required', 'accepted'],
             'website' => ['nullable', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'terms_accepted.required' => (string) __('signup.validation.terms_required'),
+            'terms_accepted.accepted' => (string) __('signup.validation.terms_required'),
         ];
     }
 
