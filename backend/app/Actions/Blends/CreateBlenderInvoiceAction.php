@@ -7,6 +7,7 @@ namespace App\Actions\Blends;
 use App\DTOs\Blends\CreateBlenderInvoiceDTO;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
+use App\Services\Pos\SaleShiftGuard;
 use App\Support\TenantClock;
 
 final class CreateBlenderInvoiceAction
@@ -14,6 +15,7 @@ final class CreateBlenderInvoiceAction
     public function __construct(
         private readonly InvoiceService $invoiceService,
         private readonly TenantClock $tenantClock,
+        private readonly SaleShiftGuard $saleShiftGuard,
     ) {}
 
     /**
@@ -21,6 +23,9 @@ final class CreateBlenderInvoiceAction
      */
     public function execute(CreateBlenderInvoiceDTO $dto): Invoice
     {
+        // POS-10: a branch that requires a shift cannot sell without an open one.
+        $this->saleShiftGuard->assertCanSell($dto->store_id);
+
         $itemsForInvoice = [];
 
         foreach ($dto->components as $comp) {

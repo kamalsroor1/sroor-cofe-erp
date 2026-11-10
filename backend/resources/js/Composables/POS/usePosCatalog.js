@@ -14,6 +14,11 @@ export function usePosCatalog({ authStore, customers }) {
     const isLoadingCategoryItems = ref(false);
     const activeStore = ref(null);
     const activeShift = ref(null);
+    // POS-10: live totals of the open shift (X-report) and whether the active branch needs an open shift to sell.
+    const shiftMetrics = ref(null);
+    const requiresShift = ref(false);
+    // POS-07: the store's discount cap (% of the sale); null until loaded. The server enforces it either way.
+    const maxDiscountPercent = ref(null);
     const activeCategoryId = ref('favorites');
     const isLoading = ref(true);
     const loadFailed = ref(false);
@@ -63,10 +68,25 @@ export function usePosCatalog({ authStore, customers }) {
                 customers.value = res.data?.data || [];
             };
         },
+        // Never blocks the POS: without the cap the warning is simply not shown (the server still enforces it).
+        discountPolicy: async () => {
+            let cap = null;
+            try {
+                const res = await api.get('/pos/bootstrap', { params: { include_items: 0, include_customers: 0 } });
+                cap = res.data?.data?.pos_settings?.effective_max_discount_percent ?? null;
+            } catch {
+                cap = null;
+            }
+            return () => {
+                maxDiscountPercent.value = cap;
+            };
+        },
         shift: async () => {
             const res = await api.get('/shifts/current');
             return () => {
-                activeShift.value = res.data?.data || null;
+                activeShift.value = res.data?.active_shift || null;
+                shiftMetrics.value = res.data?.metrics || null;
+                requiresShift.value = !!res.data?.requires_shift;
             };
         },
     };
@@ -98,7 +118,7 @@ export function usePosCatalog({ authStore, customers }) {
         }
     };
 
-    const ALL_PARTS = ['items', 'categories', 'customers', 'shift'];
+    const ALL_PARTS = ['items', 'categories', 'customers', 'shift', 'discountPolicy'];
 
     const fetchInitialData = async () => {
         activeStore.value = authStore.currentStore;
@@ -148,8 +168,16 @@ export function usePosCatalog({ authStore, customers }) {
         activeStore.value = store;
         // Never show the previous branch's shift, even if the new shift fails to load.
         activeShift.value = null;
+        shiftMetrics.value = null;
+        requiresShift.value = false;
+        maxDiscountPercent.value = null;
         partialErrors.value = [];
         await loadParts(ALL_PARTS, { silent: true });
+    };
+
+    // POS-10: re-read only the shift (after open/close, a refused sale or opening the X-report).
+    const reloadShift = async () => {
+        await loadParts(['shift'], { silent: true });
     };
 
     return {
@@ -159,6 +187,10 @@ export function usePosCatalog({ authStore, customers }) {
         isLoadingCategoryItems,
         activeStore,
         activeShift,
+        shiftMetrics,
+        requiresShift,
+        reloadShift,
+        maxDiscountPercent,
         activeCategoryId,
         isLoading,
         loadFailed,

@@ -1,5 +1,7 @@
 import { dAdd, dSub, dCmp } from './decimal';
 import { limitQuantityText } from './posWeight';
+import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from './posDiscount';
+import { sanitizeAmountInput } from './posCheckout';
 
 /**
  * POS cart line edits. The cart array is owned by the POS view (one per open order);
@@ -40,6 +42,25 @@ export function updateLinePrice(cart, { index, value }) {
     if (isNaN(parsed) || parsed < 0) return false;
     cart[index].unit_price = parsed;
     cart[index].price_overridden = true;
+    return true;
+}
+
+/**
+ * POS-07: set a line's discount from what the cashier typed. `type` ('percentage' | 'fixed') and `value` are
+ * both optional: a missing one keeps the current setting. A percent is capped at 100; an amount larger than the
+ * line total is clamped when the totals are computed, so the typed text is kept as is.
+ */
+export function updateLineDiscount(cart, { index, type, value }) {
+    if (!hasLine(cart, index)) return false;
+    const line = cart[index];
+    if (type === DISCOUNT_PERCENT || type === DISCOUNT_FIXED) line.discount_type = type;
+    if (value !== undefined) {
+        let text = sanitizeAmountInput(value);
+        const [whole, fraction] = text.split('.');
+        if (fraction !== undefined) text = `${whole || '0'}.${fraction.slice(0, 3)}`;
+        if ((line.discount_type || DISCOUNT_PERCENT) === DISCOUNT_PERCENT && parseFloat(text) > 100) text = '100';
+        line.discount_value = text;
+    }
     return true;
 }
 

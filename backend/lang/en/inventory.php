@@ -405,4 +405,12 @@ return [
     'insufficient_stock_store' => 'Insufficient stock for item [:item] in [:store]. Currently available: :available :unit',
     'sold_by_weight' => 'Sold by weight',
     'sold_by_weight_hint' => 'Allows fractional quantities (e.g. 0.250 kg) at the POS',
+
+    // POS-07: branch discount cap
+    'max_discount_percent' => 'Maximum cashier discount (%)',
+    'max_discount_percent_hint' => 'The most a cashier may discount on one sale (item and invoice discounts together, as a % of the total). Above it a manager approval is required. Leave empty for the default (:default%).',
+    'max_discount_percent_invalid' => 'Enter a number from 0 to 100 with up to 3 decimals.',
+    'max_discount_percent_saved' => 'Discount limit saved',
+    'max_discount_percent_load_failed' => 'Could not load the discount limit.',
+    'max_discount_percent_retry' => 'Retry',
 ];

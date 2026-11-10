@@ -51,14 +51,21 @@
                 activeStore?.name || $t('common.main_branch')
               }}</span>
               <span class="text-slate-300 dark:text-slate-700">•</span>
-              <span
-                v-if="activeShift"
-                class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1"
+              <!-- POS-10: the shift badge opens the shift menu (X-report / close, or open when none) -->
+              <button
+                type="button"
+                class="min-h-[44px] px-2 -my-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                :class="activeShift ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'"
+                :aria-label="$t('pos.shift_menu')"
+                data-testid="pos-shift-badge"
+                @click="$emit('open-shift-menu')"
               >
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                {{ $t('pos.shift_number_badge', { number: activeShift.shift_number || activeShift.id }) }}
-              </span>
-              <span v-else class="text-[10px] text-rose-500 font-bold">{{ $t('pos.no_shift_open') }}</span>
+                <template v-if="activeShift">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {{ $t('pos.shift_number_badge', { number: activeShift.shift_number || activeShift.id }) }}
+                </template>
+                <template v-else>{{ $t('pos.no_shift_open') }}</template>
+              </button>
             </div>
           </div>
         </div>
@@ -380,6 +387,7 @@ defineEmits([
   'clear-cart',
   'switch-store',
   'open-recent-sales',
+  'open-shift-menu',
 ]);
 
 const getItemPrice = (item) => {

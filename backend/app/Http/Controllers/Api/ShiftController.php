@@ -16,6 +16,7 @@ use App\Http\Requests\OpenShiftRequest;
 use App\Http\Resources\CashShiftResource;
 use App\Models\CashShift;
 use App\Models\User;
+use App\Services\Pos\SaleShiftGuard;
 use App\Support\ActiveStore;
 use App\Support\ClientStoreGuard;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -70,19 +71,23 @@ final class ShiftController extends Controller
     /**
      * Get Current Active Shift & Live Shift Metrics
      */
-    public function current(Request $request, ActiveStore $activeStore): JsonResponse
+    public function current(Request $request, ActiveStore $activeStore, SaleShiftGuard $saleShiftGuard): JsonResponse
     {
         $user = $request->user();
         if ($user && ! $user->hasRole('admin') && ! $user->can('daily_journal.view') && ! $user->can('pos.access')) {
             return response()->json(['success' => false, 'message' => __('auth.unauthorized')], 403);
         }
 
-        $result = $this->getActiveShiftAction->execute($activeStore->singleStoreId($request));
+        $storeId = $activeStore->singleStoreId($request);
+        $result = $this->getActiveShiftAction->execute($storeId);
+        // POS-10: whether this branch refuses sales without an open shift (the POS gate reads it).
+        $requiresShift = $saleShiftGuard->isRequired($storeId);
 
         if (! $result) {
             return response()->json([
                 'success' => true,
                 'has_active' => false,
+                'requires_shift' => $requiresShift,
                 'active_shift' => null,
                 'metrics' => null,
             ], 200);
@@ -91,6 +96,7 @@ final class ShiftController extends Controller
         return response()->json([
             'success' => true,
             'has_active' => true,
+            'requires_shift' => $requiresShift,
             'active_shift' => (new CashShiftResource($result['shift']))->resolve(),
             'metrics' => $result['metrics'],
         ], 200);

@@ -28,6 +28,7 @@
         </include>
     </source>
     <php>
+        <env name="POS_REQUIRE_SHIFT_BY_DEFAULT" value="false"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_KEY" value="base64:X8p3v8Xz1r1e8tP4w2Q9y7K5m3n1b2c4d6f8g0h2j4k="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import { newUuid } from '../../helpers/uuid';
 import { normalize, isPositive } from '../../helpers/decimal';
+import { needsManagerOverride, overrideReasons, requestManagerOverride } from './usePosOverride';
 
 /**
  * Checkout submission: validation, idempotent POST /invoices, success modal state and printing.
@@ -21,6 +22,7 @@ export function usePosSubmit({
     printLastInvoice,
     lastCreatedInvoice,
     sounds,
+    onShiftRequired = null,
 }) {
     const { cart, selectedCustomerId, paymentType, paymentMethod, discountType } = fields;
 
@@ -28,7 +30,8 @@ export function usePosSubmit({
     const showSuccessModal = ref(false);
     const lastChangeAmount = ref('0.000');
 
-    const submitInvoice = async (printImmediately = false) => {
+    // `override` is the manager approval {user_id, pin} collected after the server asked for one (BE-08 / POS-07).
+    const submitInvoice = async (printImmediately = false, override = null) => {
         if (isSubmitting.value) return;
         if (!isOnline.value) {
             sounds.playErrorTone();
@@ -58,6 +61,7 @@ export function usePosSubmit({
         const checkoutUuid = activeOrder.value.checkoutUuid;
         saveOrders();
 
+        let askOverride = null;
         isSubmitting.value = true;
         try {
             const payload = {
@@ -70,6 +74,7 @@ export function usePosSubmit({
                 ...buildPayloadLines(),
                 paid_amount: payment.paidAmount,
                 payments: payment.payments,
+                ...(override ? { override } : {}),
             };
 
             const res = await api.post('/invoices', payload, { headers: { 'Idempotency-Key': checkoutUuid } });
@@ -92,9 +97,17 @@ export function usePosSubmit({
             focusSearch();
         } catch (e) {
             sounds.playErrorTone();
+            // POS-10: the branch needs an open shift (closed meanwhile, or never opened) - show the gate.
+            const shiftRefused = !!(e.response?.data?.errors?.shift && onShiftRequired);
+            if (shiftRefused) onShiftRequired();
             // 401 and 403 are already handled (redirect / alert) by the api interceptor.
             const handledByInterceptor = [401, 403].includes(e.response?.status);
-            if (!handledByInterceptor) {
+            if (shiftRefused) {
+                // Only the gate is shown; the cart and its idempotency key are kept for after the shift opens.
+            } else if (needsManagerOverride(e)) {
+                // Nothing was saved: the same idempotency key is re-sent together with the manager's approval.
+                askOverride = overrideReasons(e);
+            } else if (!handledByInterceptor) {
                 Swal.fire({
                     icon: 'error',
                     title: trans('pos.checkout_failed'),
@@ -103,6 +116,11 @@ export function usePosSubmit({
             }
         } finally {
             isSubmitting.value = false;
+        }
+
+        if (askOverride) {
+            const approval = await requestManagerOverride(askOverride);
+            if (approval) await submitInvoice(printImmediately, approval);
         }
     };
 

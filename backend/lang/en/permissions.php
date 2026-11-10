@@ -13,6 +13,9 @@ return [
         'price' => [
             'below_min' => 'Sell below the minimum selling price without a manager PIN',
         ],
+        'discount' => [
+            'override' => 'Give a total discount above the store limit without a manager PIN',
+        ],
     ],
     'invoices' => [
         'view' => 'View the sales invoice history',

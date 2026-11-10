@@ -19,6 +19,7 @@ import { usePosKeyboard } from './usePosKeyboard';
 import { hasPlanFeature } from '../../helpers/planFeatures';
 import { usePosRecentSales } from './usePosRecentSales';
 import { usePosQuickReturn } from './usePosQuickReturn';
+import { usePosShift } from './usePosShift';
 
 /**
  * Wires every POS composable together for the POS screen and returns what the view renders.
@@ -54,6 +55,7 @@ export function usePosTerminal() {
         activeOrder,
         activeOrderId,
         isWalkInCustomer: customer.isWalkInCustomer,
+        maxDiscountPercent: catalog.maxDiscountPercent,
     });
     const cartOps = usePosCart({
         fields,
@@ -94,6 +96,7 @@ export function usePosTerminal() {
         printLastInvoice,
         lastCreatedInvoice,
         sounds,
+        onShiftRequired: catalog.reloadShift,
     });
 
     const recentSales = usePosRecentSales();
@@ -102,9 +105,23 @@ export function usePosTerminal() {
         () => authStore.can('returns.manage') && hasPlanFeature(appConfigStore.tenant, 'returns.manage')
     );
 
+    // POS-07: a user with this permission may exceed the discount cap; everyone else needs a manager PIN.
+    const canOverrideDiscount = computed(() => authStore.can('pos.discount.override'));
+
+    // POS-10: shift gate, shift menu (X-report / close) and open/close calls for the active branch.
+    const shift = usePosShift({
+        authStore,
+        activeShift: catalog.activeShift,
+        requiresShift: catalog.requiresShift,
+        isLoading: catalog.isLoading,
+        reloadShift: catalog.reloadShift,
+        isOnline,
+    });
+
     const showShortcutsHelp = ref(false);
     const modalCloseOrder = [
         showShortcutsHelp,
+        shift.showPanel,
         quickReturn.show,
         recentSales.show,
         customer.showCustomerPickerModal,
@@ -175,5 +192,7 @@ export function usePosTerminal() {
         quickReturn,
         reprintInvoice,
         canReturn,
+        canOverrideDiscount,
+        shift,
     };
 }

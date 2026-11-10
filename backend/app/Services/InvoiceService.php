@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Pricing\SaleDiscountGuard;
 use App\Services\Pricing\SalePriceGuard;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
@@ -64,13 +65,24 @@ class InvoiceService
             $actor instanceof User ? $actor : null,
             isset($data['override']) && is_array($data['override']) ? $data['override'] : null,
         );
+        $discountGuard = new SaleDiscountGuard($actor instanceof User ? $actor : null, $priceGuard);
         $priceCustomer = Customer::query()->find($data['customer_id'] ?? 0);
         if ($priceCustomer instanceof Customer) {
-            $priceGuard->preflight($priceCustomer, $this->resolveInvoiceStoreId($data), (array) ($data['items'] ?? []));
+            $priceStoreId = $this->resolveInvoiceStoreId($data);
+            // POS-07: percent line discounts become amounts first, so the floor and the cap see real money.
+            $data['items'] = $discountGuard->resolveLineDiscounts($priceCustomer, $priceStoreId, (array) ($data['items'] ?? []));
+            $priceGuard->preflight($priceCustomer, $priceStoreId, $data['items']);
+            $discountGuard->preflight(
+                $priceCustomer,
+                $priceStoreId,
+                $data['items'],
+                (string) ($data['discount_type'] ?? 'fixed'),
+                (string) ($data['discount_value'] ?? '0.000'),
+            );
         }
 
         try {
-            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard);
+            return $this->persistConfirmedInvoice($data, $clientUuid, $priceGuard, $discountGuard);
         } catch (UniqueConstraintViolationException $e) {
             // Backstop for a concurrent insert of the same client_uuid that slipped past the
             // replay check. Any other unique violation (e.g. invoice_number) is rethrown.
@@ -104,12 +116,14 @@ class InvoiceService
         }
     }
 
-    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard): Invoice
+    private function persistConfirmedInvoice(array $data, ?string $clientUuid, SalePriceGuard $priceGuard, SaleDiscountGuard $discountGuard): Invoice
     {
-        return DB::transaction(function () use ($data, $clientUuid, $priceGuard) {
+        return DB::transaction(function () use ($data, $clientUuid, $priceGuard, $discountGuard) {
             $customer = Customer::where('id', $data['customer_id'])->lockForUpdate()->firstOrFail();
 
             $subtotal = '0.000';
+            $grossTotal = '0.000';
+            $lineDiscountsTotal = '0.000';
             $totalCost = '0.000';
 
             $storeId = $this->resolveInvoiceStoreId($data);
@@ -218,6 +232,8 @@ class InvoiceService
                 );
 
                 $subtotal = bcadd($subtotal, $netLineTotal, 3);
+                $grossTotal = bcadd($grossTotal, $grossLineTotal, 3);
+                $lineDiscountsTotal = bcadd($lineDiscountsTotal, $itemDiscount, 3);
             }
 
             // S3: Invoice-level Discount Calculation
@@ -225,16 +241,11 @@ class InvoiceService
             $discountValue = $data['discount_value'] ?? '0.000';
             $invoiceDiscountAmount = '0.000';
 
-            if ($discountType === 'percentage') {
-                // (Subtotal * Discount Value) / 100 — SETG-13: half-up, identical to dPercent().
-                $invoiceDiscountAmount = Decimal::percent($subtotal, (string) $discountValue);
-            } else {
-                $invoiceDiscountAmount = $discountValue;
-            }
+            // SETG-13 / POS-07: half-up, identical to dPercent(); never above the subtotal.
+            $invoiceDiscountAmount = SaleDiscountGuard::invoiceDiscountAmount($subtotal, (string) $discountType, (string) $discountValue);
 
-            if (bccomp($invoiceDiscountAmount, $subtotal, 3) > 0) {
-                $invoiceDiscountAmount = $subtotal;
-            }
+            // POS-07: the cap on the exact totals (the approver, if any, was resolved before the transaction).
+            $discountGuard->assertWithinCap($storeId, $grossTotal, bcadd($lineDiscountsTotal, $invoiceDiscountAmount, 3));
 
             // S3.5: Process Dynamic Additional Expenses
             $rawExpenses = $data['additional_expenses'] ?? [];
@@ -318,6 +329,7 @@ class InvoiceService
                 'discount_type' => $discountType,
                 'discount_value' => $discountValue,
                 'discount_amount' => $invoiceDiscountAmount,
+                'discount_override_by' => $priceGuard->discountApproverId() ?? $priceGuard->invoiceDiscountFloorApproverId(),
                 'shipping_cost' => $customerExpensesTotal,
                 'net_total' => $netTotal,
                 'paid_amount' => $paidAmount,

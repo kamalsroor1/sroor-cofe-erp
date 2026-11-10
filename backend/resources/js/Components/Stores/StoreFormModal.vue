@@ -68,6 +68,19 @@
         />
       </div>
 
+      <!-- POS-07: the branch's discount cap (own save; only for users who may manage POS settings) -->
+      <StorePosDiscountSettings v-if="editingStore && canManagePosSettings" :store-id="editingStore.id" />
+
+      <!-- POS-10: per-branch rule - sales need an open cash shift -->
+      <div v-if="editingStore && showShiftSetting" class="pt-1">
+        <BaseCheckbox
+          :model-value="requireShift"
+          @update:model-value="emit('update:requireShift', $event)"
+          :label="$t('pos.shift_setting_label')"
+        />
+        <p class="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('pos.shift_setting_hint') }}</p>
+      </div>
+
       <!-- Form Actions Footer -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
         <BaseButton type="button" variant="secondary" size="md" @click="$emit('close')">
@@ -91,24 +104,32 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Plus, Save } from 'lucide-vue-next';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseCheckbox from '../Form/BaseCheckbox.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import StorePosDiscountSettings from './StorePosDiscountSettings.vue';
+import { useAuthStore } from '../../stores/auth';
 import { useTrans } from '../../Composables/useTrans';
 
 const { t } = useTrans();
+const authStore = useAuthStore();
+// Discount cap / scale / quick keys are settings.manage-only on the server (the shift rule has its own switch).
+const canManagePosSettings = computed(() => authStore.can('settings.manage'));
 
 const props = defineProps({
   show: { type: Boolean, default: false },
   editingStore: { type: Object, default: null },
   form: { type: Object, default: () => ({}) },
   submitting: { type: Boolean, default: false },
+  showShiftSetting: { type: Boolean, default: false },
+  requireShift: { type: Boolean, default: true },
 });
 
-const emit = defineEmits(['close', 'submit', 'update:form']);
+const emit = defineEmits(['close', 'submit', 'update:form', 'update:requireShift']);
 
 // Never mutate the prop: emit a patched shallow copy and let the parent apply it.
 const updateForm = (key, value) => emit('update:form', { ...props.form, [key]: value });

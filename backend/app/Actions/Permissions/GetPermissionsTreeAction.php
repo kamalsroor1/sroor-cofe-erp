@@ -25,6 +25,7 @@ final class GetPermissionsTreeAction
                 'permissions' => [
                     'pos.access',
                     'pos.price.below_min',
+                    'pos.discount.override',
                     'invoices.view',
                     'invoices.create',
                     'invoices.edit',

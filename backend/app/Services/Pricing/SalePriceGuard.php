@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Pricing;
 
+use App\Exceptions\DiscountCapExceededException;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\User;
@@ -32,6 +33,9 @@ final class SalePriceGuard
 {
     public const PERMISSION = 'pos.price.below_min';
 
+    /** POS-07: a total discount above the store's cap. Approved by the same manager PIN mechanism. */
+    public const DISCOUNT_PERMISSION = 'pos.discount.override';
+
     public const SOURCE_RETAIL = 'retail';
 
     public const SOURCE_WHOLESALE = 'wholesale';
@@ -44,6 +48,14 @@ final class SalePriceGuard
     private const DECAY_SECONDS = 300;
 
     private ?int $approverId = null;
+
+    private ?int $discountApproverId = null;
+
+    /** The approver of a floor breach caused only by the invoice-level discount (not recorded on any line). */
+    private ?int $invoiceDiscountFloorApproverId = null;
+
+    /** The manager whose PIN was already verified in this request (checked once, reused per permission). */
+    private ?User $pinApprover = null;
 
     /**
      * @param  array{user_id?: mixed, pin?: mixed}|null  $override
@@ -189,11 +201,70 @@ final class SalePriceGuard
             throw $this->approvalRequired($index);
         }
 
-        return $this->approverId = $this->verifyManagerPin((int) $override['user_id'], (string) $override['pin'], $storeId);
+        return $this->approverId = $this->verifyManagerPin((int) $override['user_id'], (string) $override['pin'], $storeId, self::PERMISSION);
     }
 
-    private function verifyManagerPin(int $approverId, string $pin, ?int $storeId): int
+    /**
+     * POS-07: approve a below-minimum sale caused by the invoice-level discount (the lines alone are fine).
+     *
+     * @throws ValidationException
+     * @throws ThrottleRequestsException
+     */
+    public function requireBelowMinApproval(int $index, ?int $storeId): void
     {
+        $this->invoiceDiscountFloorApproverId = $this->approve($index, $storeId);
+    }
+
+    public function invoiceDiscountFloorApproverId(): ?int
+    {
+        return $this->invoiceDiscountFloorApproverId;
+    }
+
+    /**
+     * POS-07: approval of a total discount above the store's cap. The acting user holds
+     * `pos.discount.override`, else the request carries a manager {user_id, pin} whose user does.
+     * Verified before the invoice transaction (limiter hits survive); returns the approver id.
+     *
+     * @throws DiscountCapExceededException
+     * @throws ValidationException
+     * @throws ThrottleRequestsException
+     */
+    public function approveDiscount(string $maxPercent, ?int $storeId): int
+    {
+        if ($this->discountApproverId !== null) {
+            return $this->discountApproverId;
+        }
+
+        $actor = $this->actor;
+        if ($actor instanceof User && $actor->can(self::DISCOUNT_PERMISSION)) {
+            return $this->discountApproverId = (int) $actor->id;
+        }
+
+        $override = $this->override;
+        if ($override === null || ! isset($override['user_id'], $override['pin'])) {
+            throw DiscountCapExceededException::forCap($maxPercent);
+        }
+
+        return $this->discountApproverId = $this->verifyManagerPin((int) $override['user_id'], (string) $override['pin'], $storeId, self::DISCOUNT_PERMISSION);
+    }
+
+    /** The user who approved an over-cap discount (null = none was needed / given). */
+    public function discountApproverId(): ?int
+    {
+        return $this->discountApproverId;
+    }
+
+    private function verifyManagerPin(int $approverId, string $pin, ?int $storeId, string $permission): int
+    {
+        // The PIN of this manager was already verified for another approval of the same request.
+        if ($this->pinApprover instanceof User && (int) $this->pinApprover->id === $approverId) {
+            if ($this->pinApprover->can($permission)) {
+                return $approverId;
+            }
+
+            throw ValidationException::withMessages(['override.pin' => __('pos.override_invalid')]);
+        }
+
         $scope = RateLimitKey::scope();
         $approverKey = 'pos-override:'.$scope.':approver:'.$approverId;
         $actorKey = 'pos-override:'.$scope.':actor:'.$this->actor->id;
@@ -209,7 +280,7 @@ final class SalePriceGuard
 
         // One generic failure for unknown user / no permission / no PIN / wrong PIN / no store access.
         $valid = $approver instanceof User
-            && $approver->can(self::PERMISSION)
+            && $approver->can($permission)
             && ($storeId === null || ActiveStore::canAccess($approver, $storeId))
             && is_string($approver->pos_pin)
             && $approver->pos_pin !== ''
@@ -225,6 +296,7 @@ final class SalePriceGuard
         }
 
         RateLimiter::clear($approverKey);
+        $this->pinApprover = $approver;
 
         return (int) $approver->id;
     }

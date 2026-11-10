@@ -46,6 +46,9 @@
       :show="showStoreModal"
       :editing-store="editingStore"
       :form="form"
+      :show-shift-setting="shiftSetting.available.value"
+      :require-shift="shiftSetting.value.value"
+      @update:require-shift="shiftSetting.value.value = $event"
       @update:form="Object.assign(form, $event)"
       :submitting="isSubmitting"
       @close="showStoreModal = false"
@@ -76,6 +79,7 @@ import BaseButton from '../../Components/Common/BaseButton.vue';
 import StoresMetricsGrid from '../../Components/Stores/StoresMetricsGrid.vue';
 import StoresSearchFilterBar from '../../Components/Stores/StoresSearchFilterBar.vue';
 import StoresGrid from '../../Components/Stores/StoresGrid.vue';
+import { useStoreShiftSetting } from '../../Composables/useStoreShiftSetting';
 import StoreFormModal from '../../Components/Stores/StoreFormModal.vue';
 import StoreStaffModal from '../../Components/Stores/StoreStaffModal.vue';
 
@@ -100,6 +104,8 @@ const form = reactive({
   is_active: true,
   is_main: false,
 });
+
+const shiftSetting = useStoreShiftSetting();
 
 const showStaffModal = ref(false);
 const targetStore = ref(null);
@@ -143,6 +149,7 @@ const fetchStores = async () => {
 
 const openCreateModal = () => {
   editingStore.value = null;
+  shiftSetting.reset();
   Object.assign(form, {
     name: '',
     code: '',
@@ -157,6 +164,7 @@ const openCreateModal = () => {
 
 const openEditModal = (store) => {
   editingStore.value = store;
+  shiftSetting.load(store.id);
   Object.assign(form, {
     name: store.name,
     code: store.code,
@@ -174,12 +182,13 @@ const saveStore = async () => {
   try {
     if (editingStore.value) {
       await api.put(`/stores/${editingStore.value.id}`, form);
+      const shiftSaved = await shiftSetting.save(editingStore.value.id);
       Swal.fire({
-        icon: 'success',
+        icon: shiftSaved ? 'success' : 'warning',
         title: t('common.success'),
-        text: t('inventory.store_updated_success'),
-        timer: 1500,
-        showConfirmButton: false,
+        text: shiftSaved ? t('inventory.store_updated_success') : t('pos.shift_setting_save_failed'),
+        timer: shiftSaved ? 1500 : undefined,
+        showConfirmButton: !shiftSaved,
       });
     } else {
       await api.post('/stores', form);

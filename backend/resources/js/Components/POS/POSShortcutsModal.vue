@@ -35,6 +35,7 @@ const groups = computed(() => [
     rows: [
       { keys: ['Alt+Q'], label: t('pos.shortcut_edit_qty') },
       { keys: ['Alt+P'], label: t('pos.shortcut_edit_price') },
+      { keys: ['Alt+D'], label: t('pos.shortcut_edit_discount') },
       { keys: ['Alt+L'], label: t('pos.shortcut_last_line') },
       { keys: ['Tab', 'Shift+Tab'], label: t('pos.shortcut_tab_fields') },
       { keys: ['Enter'], label: t('pos.shortcut_enter_field') },

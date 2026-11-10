@@ -17,6 +17,8 @@ import POSShortcutsModal from '../../Components/POS/POSShortcutsModal.vue';
 import POSRecentSalesDrawer from '../../Components/POS/POSRecentSalesDrawer.vue';
 import POSQuickReturnModal from '../../Components/POS/POSQuickReturnModal.vue';
 import POSWeightPickerModal from '../../Components/POS/POSWeightPickerModal.vue';
+import POSShiftGate from '../../Components/POS/POSShiftGate.vue';
+import POSShiftPanel from '../../Components/POS/POSShiftPanel.vue';
 import { usePosTerminal } from '../../Composables/POS/usePosTerminal';
 
 const PARTIAL_ERROR_KEYS = {
@@ -52,6 +54,8 @@ const {
   quickReturn,
   reprintInvoice,
   canReturn,
+  canOverrideDiscount,
+  shift,
 } = usePosTerminal();
 </script>
 
@@ -90,6 +94,7 @@ const {
         @clear-cart="cartOps.clearCart"
         @switch-store="catalog.switchStore"
         @open-recent-sales="recentSales.open"
+        @open-shift-menu="shift.openPanel"
       />
 
       <ErrorState
@@ -111,51 +116,68 @@ const {
           />
         </div>
 
-        <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
-          <POSCartSection
-            v-model:payment-type="fields.paymentType.value"
-            v-model:payment-method="fields.paymentMethod.value"
-            v-model:cash-received="fields.cashReceived.value"
-            :cart="fields.cart.value"
-            :total-qty="payment.cartTotalQuantity.value"
-            :orders="orders"
-            :active-order-id="activeOrderId"
-            :subtotal="payment.cartSubtotal.value"
-            :discount-amount="payment.discountAmount.value"
-            :discount-value="fields.discountValue.value"
-            :discount-type="fields.discountType.value"
-            :customer-expenses-total="payment.customerExpensesTotal.value"
-            :net-total="payment.cartNetTotal.value"
-            :change-due="payment.changeDue.value"
-            :walk-in="customer.isWalkInCustomer.value"
-            :is-submitting="isSubmitting"
-            :offline="!isOnline"
-            :expenses-count="fields.additionalExpenses.value.length"
-            @increase-qty="cartOps.increaseCartItemQty"
-            @decrease-qty="cartOps.decreaseCartItemQty"
-            @update-qty="cartOps.onCartQtyUpdate"
-            @update-price="cartOps.onCartPriceUpdate"
-            @remove-item="cartOps.removeFromCart"
-            @switch-order="orderApi.switchOrder"
-            @create-order="cartOps.handleCreateOrder"
-            @close-order="cartOps.handleCloseOrder"
-            @apply-discount="payment.applyDiscountPreset"
-            @submit="submitInvoice"
-            @open-expenses="payment.showExpensesModal.value = true"
-            @open-multi-payment="payment.openMultiPayment"
-          />
+        <div class="relative flex-1 flex flex-col min-h-0">
+          <div class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0">
+            <POSCartSection
+              v-model:payment-type="fields.paymentType.value"
+              v-model:payment-method="fields.paymentMethod.value"
+              v-model:cash-received="fields.cashReceived.value"
+              :cart="fields.cart.value"
+              :total-qty="payment.cartTotalQuantity.value"
+              :orders="orders"
+              :active-order-id="activeOrderId"
+              :subtotal="payment.cartSubtotal.value"
+              :discount-amount="payment.discountAmount.value"
+              :discount-value="fields.discountValue.value"
+              :discount-type="fields.discountType.value"
+              :customer-expenses-total="payment.customerExpensesTotal.value"
+              :net-total="payment.cartNetTotal.value"
+              :change-due="payment.changeDue.value"
+              :walk-in="customer.isWalkInCustomer.value"
+              :is-submitting="isSubmitting"
+              :offline="!isOnline"
+              :expenses-count="fields.additionalExpenses.value.length"
+              :discount-summary="payment.discountSummary.value"
+              :max-discount-percent="catalog.maxDiscountPercent.value"
+              :can-override-discount="canOverrideDiscount"
+              @increase-qty="cartOps.increaseCartItemQty"
+              @decrease-qty="cartOps.decreaseCartItemQty"
+              @update-qty="cartOps.onCartQtyUpdate"
+              @update-price="cartOps.onCartPriceUpdate"
+              @update-discount="cartOps.onCartDiscountUpdate"
+              @remove-item="cartOps.removeFromCart"
+              @switch-order="orderApi.switchOrder"
+              @create-order="cartOps.handleCreateOrder"
+              @close-order="cartOps.handleCloseOrder"
+              @apply-discount="payment.applyDiscountPreset"
+              @submit="submitInvoice"
+              @open-expenses="payment.showExpensesModal.value = true"
+              @open-multi-payment="payment.openMultiPayment"
+            />
 
-          <POSCatalogSection
-            v-if="catalog.showCatalog.value"
-            :items="catalog.items.value"
-            :categories="catalog.categories.value"
-            :active-category-id="catalog.activeCategoryId.value"
-            :active-price-tier="fields.activePriceTier.value"
-            :search-query="search.searchQuery.value"
-            :favorite-count="catalog.favoriteItemsCount.value"
-            :total-items-count="catalog.totalItemsCount.value"
-            @add-item="cartOps.addToCart"
-            @select-category="catalog.selectCategory"
+            <POSCatalogSection
+              v-if="catalog.showCatalog.value"
+              :items="catalog.items.value"
+              :categories="catalog.categories.value"
+              :active-category-id="catalog.activeCategoryId.value"
+              :active-price-tier="fields.activePriceTier.value"
+              :search-query="search.searchQuery.value"
+              :favorite-count="catalog.favoriteItemsCount.value"
+              :total-items-count="catalog.totalItemsCount.value"
+              @add-item="cartOps.addToCart"
+              @select-category="catalog.selectCategory"
+            />
+          </div>
+
+          <!-- POS-10: the branch needs an open shift before it can sell -->
+          <POSShiftGate
+            v-if="shift.gateVisible.value"
+            :opening-cash="shift.openingCash.value"
+            :can-manage="shift.canManageShift.value"
+            :is-submitting="shift.isSubmitting.value"
+            :error-message="shift.errorMessage.value"
+            @update:opening-cash="shift.setOpeningCash"
+            @submit="shift.submitOpen"
           />
         </div>
       </template>
@@ -233,6 +255,25 @@ const {
       :unit-price="cartOps.weightPickerPrice.value"
       @close="cartOps.cancelWeight"
       @confirm="cartOps.confirmWeight"
+    />
+
+    <POSShiftPanel
+      :show="shift.showPanel.value"
+      :shift="catalog.activeShift.value"
+      :metrics="catalog.shiftMetrics.value"
+      :opening-cash="shift.openingCash.value"
+      :counted-cash="shift.countedCash.value"
+      :can-manage="shift.canManageShift.value"
+      :is-submitting="shift.isSubmitting.value"
+      :is-report-loading="shift.isReportLoading.value"
+      :report-failed="shift.reportFailed.value"
+      :error-message="shift.errorMessage.value"
+      @close="shift.closePanel"
+      @refresh="shift.refreshReport"
+      @update:opening-cash="shift.setOpeningCash"
+      @update:counted-cash="shift.setCountedCash"
+      @submit-open="shift.submitOpen"
+      @submit-close="shift.submitClose"
     />
 
     <POSShortcutsModal :show="showShortcutsHelp" @close="showShortcutsHelp = false" />

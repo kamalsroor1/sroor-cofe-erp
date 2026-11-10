@@ -33,6 +33,8 @@ class PermissionsSeeder extends Seeder
         'pos.access',
         // BE-08: sell below an item's minimum selling price without a manager PIN (admin only by default).
         'pos.price.below_min',
+        // POS-07: total discount above the store's max_discount_percent without a manager PIN (admin only by default).
+        'pos.discount.override',
         'invoices.view',
         'invoices.create',
         'invoices.edit',

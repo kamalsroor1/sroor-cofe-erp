@@ -35,6 +35,8 @@ trait ValidatesPriceOverride
             'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3', 'max:999999999.999'],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
             'items.*.'.$discountKey => ['nullable', 'numeric', 'min:0', 'decimal:0,3', 'max:999999999.999'],
+            // POS-07: the line discount as a percent of the line total (wins over the amount; the server turns it into money).
+            'items.*.discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100', 'decimal:0,3'],
         ];
     }
 }

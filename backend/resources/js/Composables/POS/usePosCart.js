@@ -6,6 +6,7 @@ import {
     decreaseLineQty,
     updateLineQty,
     updateLinePrice,
+    updateLineDiscount,
     removeLine,
     priceFor,
     repriceLines,
@@ -120,6 +121,7 @@ export function usePosCart({
     const decreaseCartItemQty = (idx) => decreaseLineQty(cart.value, idx);
     const onCartQtyUpdate = (change) => updateLineQty(cart.value, change);
     const onCartPriceUpdate = (change) => updateLinePrice(cart.value, change);
+    const onCartDiscountUpdate = (change) => updateLineDiscount(cart.value, change);
     const removeFromCart = (idx) => removeLine(cart.value, idx);
 
     const clearCart = () => {
@@ -173,6 +175,7 @@ export function usePosCart({
         decreaseCartItemQty,
         onCartQtyUpdate,
         onCartPriceUpdate,
+        onCartDiscountUpdate,
         removeFromCart,
         clearCart,
         handleCreateOrder,

@@ -19,6 +19,9 @@ defineProps({
   isSubmitting: { type: Boolean, default: false },
   offline: { type: Boolean, default: false },
   expensesCount: { type: Number, default: 0 },
+  discountSummary: { type: Object, default: null },
+  maxDiscountPercent: { type: String, default: null },
+  canOverrideDiscount: { type: Boolean, default: false },
 });
 
 const paymentType = defineModel('paymentType', { type: String, default: 'cash' });
@@ -30,6 +33,7 @@ defineEmits([
   'decrease-qty',
   'update-qty',
   'update-price',
+  'update-discount',
   'remove-item',
   'switch-order',
   'create-order',
@@ -53,6 +57,7 @@ defineEmits([
         @decrease-qty="$emit('decrease-qty', $event)"
         @update-qty="$emit('update-qty', $event)"
         @update-price="$emit('update-price', $event)"
+        @update-discount="$emit('update-discount', $event)"
         @remove-item="$emit('remove-item', $event)"
       >
         <template #header>
@@ -85,6 +90,9 @@ defineEmits([
         :is-submitting="isSubmitting"
         :offline="offline"
         :expenses-count="expensesCount"
+        :discount-summary="discountSummary"
+        :max-discount-percent="maxDiscountPercent"
+        :can-override-discount="canOverrideDiscount"
         @apply-discount="$emit('apply-discount', $event)"
         @submit="$emit('submit', $event)"
         @open-expenses="$emit('open-expenses')"

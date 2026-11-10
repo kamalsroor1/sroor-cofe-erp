@@ -164,10 +164,23 @@
                   />
                 </div>
                 <div class="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">
-                  {{ formatMoney(item.quantity * item.unit_price) }}
+                  <div
+                    v-if="hasLineDiscount(item)"
+                    class="text-[10px] font-normal text-slate-400 line-through"
+                    data-testid="pos-line-gross"
+                  >
+                    {{ formatMoney(lineGross(item)) }}
+                  </div>
+                  {{ formatMoney(lineNet(item)) }}
                   <span class="text-[9px] font-normal text-slate-400 font-tajawal">{{ $t('common.currency') }}</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Line discount (POS-07) -->
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold text-slate-500">{{ $t('pos.line_discount_label') }}</span>
+              <POSLineDiscount :line="item" :index="idx" @update-discount="$emit('update-discount', $event)" />
             </div>
           </div>
         </div>
@@ -182,6 +195,7 @@
               <th class="p-3 text-start">{{ $t('pos.item_and_code') }}</th>
               <th class="p-3 text-center w-36">{{ $t('pos.item_qty') }}</th>
               <th class="p-3 text-start w-32">{{ $t('pos.item_price') }}</th>
+              <th class="p-3 text-start w-40">{{ $t('pos.line_discount_label') }}</th>
               <th class="p-3 text-start w-32">{{ $t('pos.item_total') }}</th>
               <th class="p-3 text-center w-14">{{ $t('pos.delete_item') }}</th>
             </tr>
@@ -318,9 +332,21 @@
                 </div>
               </td>
 
+              <!-- Line discount (POS-07) -->
+              <td class="p-3">
+                <POSLineDiscount :line="item" :index="idx" @update-discount="$emit('update-discount', $event)" />
+              </td>
+
               <!-- Line Subtotal -->
               <td class="p-3 font-mono font-black text-base text-emerald-600 dark:text-emerald-400">
-                {{ formatMoney(item.quantity * item.unit_price) }}
+                <div
+                  v-if="hasLineDiscount(item)"
+                  class="text-[11px] font-normal text-slate-400 line-through"
+                  data-testid="pos-line-gross"
+                >
+                  {{ formatMoney(lineGross(item)) }}
+                </div>
+                {{ formatMoney(lineNet(item)) }}
               </td>
 
               <!-- Delete Action -->
@@ -358,10 +384,12 @@
 
 <script setup>
 import { Trash2 } from 'lucide-vue-next';
+import POSLineDiscount from './POSLineDiscount.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useUnits } from '../../Composables/useUnits';
 import { toWesternDigits } from '../../helpers/digits';
-import { normalize } from '../../helpers/decimal';
+import { normalize, isPositive } from '../../helpers/decimal';
+import { lineGross, lineNet, lineDiscountAmount } from '../../helpers/posDiscount';
 import { focusLineField, focusPosSearch } from '../../helpers/posFocus';
 
 const { formatMoney } = useFormatters();
@@ -372,7 +400,16 @@ const props = defineProps({
   totalQty: { type: Number, default: 0 },
 });
 
-const emit = defineEmits(['increase-qty', 'decrease-qty', 'update-qty', 'update-price', 'remove-item']);
+const emit = defineEmits([
+  'increase-qty',
+  'decrease-qty',
+  'update-qty',
+  'update-price',
+  'update-discount',
+  'remove-item',
+]);
+
+const hasLineDiscount = (line) => isPositive(lineDiscountAmount(line));
 
 // Arabic-Indic digits are accepted in the numeric line fields and converted before they reach the cart.
 const onNumberInput = (event, index, eventName) => {

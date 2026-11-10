@@ -103,6 +103,9 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::middleware(DenyQuickLoginToken::class)->group(function () {
             Route::get('/stores/{store}/pos-settings', [StorePosSettingsController::class, 'show'])->whereNumber('store')->name('api.stores.pos_settings.show');
             Route::put('/stores/{store}/pos-settings', [StorePosSettingsController::class, 'update'])->whereNumber('store')->name('api.stores.pos_settings.update');
+            // POS-10: the shift rule alone; settings.manage OR stores.manage + store access.
+            Route::get('/stores/{store}/pos-settings/shift-rule', [StorePosSettingsController::class, 'showShiftRule'])->whereNumber('store')->name('api.stores.pos_settings.shift_rule.show');
+            Route::put('/stores/{store}/pos-settings/shift-rule', [StorePosSettingsController::class, 'updateShiftRule'])->whereNumber('store')->name('api.stores.pos_settings.shift_rule.update');
             // POSB-6: full replace of a store's POS quick keys. settings.manage + store access.
             Route::put('/stores/{store}/pos/quick-keys', [PosQuickKeyController::class, 'replace'])->whereNumber('store')->name('api.stores.pos_quick_keys.replace');
         });

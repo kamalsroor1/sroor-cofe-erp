@@ -440,4 +440,12 @@ return [
     'insufficient_stock_store' => 'رصيد الصنف [:item] في [:store] غير كافٍ. المتوفر حالياً: :available :unit',
     'sold_by_weight' => 'يباع بالوزن',
     'sold_by_weight_hint' => 'يسمح ببيع كميات كسرية (مثل ربع كيلو) من نقطة البيع',
+
+    // POS-07: branch discount cap
+    'max_discount_percent' => 'أقصى خصم للكاشير (%)',
+    'max_discount_percent_hint' => 'أكبر خصم يمنحه الكاشير على البيع الواحد (خصم الأصناف وخصم الفاتورة معاً كنسبة من الإجمالي). ما فوقه يحتاج موافقة المدير. اتركه فارغاً للقيمة الافتراضية (:default%).',
+    'max_discount_percent_invalid' => 'أدخل رقماً من 0 إلى 100 بحد أقصى 3 خانات عشرية.',
+    'max_discount_percent_saved' => 'تم حفظ حد الخصم',
+    'max_discount_percent_load_failed' => 'تعذر تحميل حد الخصم.',
+    'max_discount_percent_retry' => 'إعادة المحاولة',
 ];

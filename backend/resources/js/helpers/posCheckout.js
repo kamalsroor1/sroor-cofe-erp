@@ -5,19 +5,18 @@
  * server will compute. Everything here is a preview: the server stays the
  * authority for the paid amount, the change and every 422.
  */
-import { normalize, dAdd, dSub, dMul, dPercent, dCmp, dMin, dMax0, dSum, isPositive } from './decimal.js';
+import { normalize, dAdd, dSub, dCmp, dMax0, dSum, isPositive } from './decimal.js';
+import { lineNet, invoiceDiscountAmount } from './posDiscount.js';
 
 const CUSTOMER_PAID_BY = 'customer_account';
 
-/** Net total exactly as the server computes it: sum(qty x price) - discount + customer expenses. */
+/**
+ * Net total exactly as the server computes it: sum(line total - line discount) - invoice discount + customer expenses
+ * (POS-07: every line may carry its own percent / amount discount).
+ */
 export function computeCheckoutNet({ cart = [], discountType = 'percentage', discountValue = '0', expenses = [] }) {
-    const subtotal = dSum(cart.map((line) => dMul(line.quantity, line.unit_price)));
-
-    let discount = '0.000';
-    if (isPositive(discountValue)) {
-        discount = discountType === 'percentage' ? dPercent(subtotal, discountValue) : normalize(discountValue);
-    }
-    discount = dMin(discount, subtotal);
+    const subtotal = dSum(cart.map(lineNet));
+    const discount = invoiceDiscountAmount(subtotal, discountType, discountValue);
 
     const customerExpenses = dSum(
         expenses.filter((exp) => (exp.paid_by || CUSTOMER_PAID_BY) === CUSTOMER_PAID_BY).map((exp) => dMax0(exp.amount))

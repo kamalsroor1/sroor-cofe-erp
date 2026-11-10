@@ -21,6 +21,7 @@ final class StorePosSettingsDTO
         'scale_price_divisor',
         'scale_check_digit',
         'max_discount_percent',
+        'require_shift_for_sales',
     ];
 
     /**
@@ -37,6 +38,7 @@ final class StorePosSettingsDTO
         public readonly ?int $scalePriceDivisor = null,
         public readonly ?bool $scaleCheckDigit = null,
         public readonly ?string $maxDiscountPercent = null,
+        public readonly ?bool $requireShiftForSales = null,
         public readonly array $provided = [],
     ) {}
 
@@ -66,6 +68,7 @@ final class StorePosSettingsDTO
             scalePriceDivisor: isset($data['scale_price_divisor']) ? (int) $data['scale_price_divisor'] : null,
             scaleCheckDigit: isset($data['scale_check_digit']) ? (bool) $data['scale_check_digit'] : null,
             maxDiscountPercent: $maxDiscount,
+            requireShiftForSales: isset($data['require_shift_for_sales']) ? (bool) $data['require_shift_for_sales'] : null,
             provided: $provided,
         );
     }
@@ -87,6 +90,7 @@ final class StorePosSettingsDTO
             'scale_price_divisor' => $this->scalePriceDivisor,
             'scale_check_digit' => $this->scaleCheckDigit,
             'max_discount_percent' => $this->maxDiscountPercent,
+            'require_shift_for_sales' => $this->requireShiftForSales,
         ];
 
         return array_intersect_key($all, array_flip($this->provided));

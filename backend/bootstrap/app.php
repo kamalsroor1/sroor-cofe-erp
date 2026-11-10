@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\DiscountCapExceededException;
 use App\Http\Middleware\AdminSecurityHeaders;
 use App\Http\Middleware\AuthenticateCentral;
 use App\Http\Middleware\EnsureCentralContext;
@@ -147,6 +148,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => $e->getMessage(),
                     'errors' => $e->errors(),
+                    ...($e instanceof DiscountCapExceededException ? ['error_code' => DiscountCapExceededException::ERROR_CODE] : []),
                 ], 422);
             }
         });
