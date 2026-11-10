@@ -85,7 +85,6 @@ const isStandaloneRoute = computed(() => {
     meta.layout === 'blank' ||
     meta.isPrintView ||
     route.name === 'login' ||
-    route.name === 'marketing.brochure' ||
     route.name === 'invoices.print' ||
     path.includes('/print') ||
     path === '/login' ||

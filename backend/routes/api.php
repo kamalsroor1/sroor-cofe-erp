@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\Landing\PublicPlanController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionApiController;
 use App\Http\Controllers\Api\PosController;
@@ -45,6 +46,12 @@ use App\Http\Middleware\EnsureQuickLoginAllowed;
 use App\Http\Middleware\ResolveApiTenancy;
 use App\Http\Middleware\ThrottleTenantMisses;
 use Illuminate\Support\Facades\Route;
+
+// PRD-07: the public marketing site. No authentication and NO tenancy (outside the
+// ResolveApiTenancy group on purpose: central DB only, any host, X-Tenant ignored). Throttled.
+Route::prefix('v1/public')->name('api.public.')->group(function () {
+    Route::get('/plans', [PublicPlanController::class, 'index'])->middleware('throttle:public-api')->name('plans');
+});
 
 // IDEN-4.6: ThrottleTenantMisses caps unknown-tenant 404s per IP before tenancy resolves.
 Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy::class])->group(function () {

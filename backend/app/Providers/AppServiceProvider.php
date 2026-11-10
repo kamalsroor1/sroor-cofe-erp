@@ -13,10 +13,13 @@ use App\Enums\CentralPermission;
 use App\Models\Addon;
 use App\Models\CentralUser;
 use App\Models\Plan;
+use App\Models\PlanAddon;
+use App\Models\PlanFeature;
 use App\Models\Subscription;
 use App\Models\SubscriptionAddon;
 use App\Models\Tenant;
 use App\Observers\Billing\EntitlementsCacheObserver;
+use App\Observers\Landing\PublicCatalogObserver;
 use App\Observers\TenantObserver;
 use App\Services\Branding\PlatformBranding;
 use App\Services\Entitlements\EntitlementFeatures;
@@ -141,6 +144,11 @@ class AppServiceProvider extends ServiceProvider
         // affected tenants' entitlement cache (explicit TenantCache::bumpFor scope).
         foreach ([Tenant::class, Plan::class, Subscription::class, SubscriptionAddon::class, Addon::class] as $model) {
             $model::observe(EntitlementsCacheObserver::class);
+        }
+
+        // PRD-07: the cached public pricing payload follows the catalog rows it is built from.
+        foreach ([Plan::class, PlanFeature::class, Addon::class, PlanAddon::class] as $model) {
+            $model::observe(PublicCatalogObserver::class);
         }
 
         // ENTI-2.2 / Q-E1: Pennant features resolve through the entitlement service (array store).

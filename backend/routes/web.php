@@ -25,10 +25,9 @@ Route::get('/telescope-access', TelescopeAccessController::class)
     ->middleware('signed')
     ->name('telescope.access');
 
-// 📄 Public Marketing Brochure & Pricing PDF Presentation
-Route::get('/brochure', function () {
-    return view('marketing-brochure');
-})->name('marketing.brochure');
+// PRD-07: the old brochure advertised features that do not exist. It is closed for good:
+// /pricing (SPA, built from GET /api/v1/public/plans) replaces it.
+Route::permanentRedirect('/brochure', '/pricing')->name('marketing.brochure');
 
 // NOTE: invoice thermal/A4 and daily-journal print routes live in routes/tenant.php
 // behind auth + permission (+ store.access) middleware. Do not re-add them here.

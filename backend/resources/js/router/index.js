@@ -27,6 +27,19 @@ const tenantRoutes = [
         },
     },
     {
+        // PRD-07: public marketing pages. Guest-accessible, no workspace connection needed.
+        path: '/welcome',
+        name: 'landing.home',
+        component: () => import('../views/Landing/HomeView.vue'),
+        meta: { titleKey: 'landing.page_titles.home', layout: 'blank' },
+    },
+    {
+        path: '/pricing',
+        name: 'landing.pricing',
+        component: () => import('../views/Landing/PricingView.vue'),
+        meta: { titleKey: 'landing.page_titles.pricing', layout: 'blank' },
+    },
+    {
         path: '/login',
         name: 'login',
         component: () => import('../views/Auth/LoginView.vue'),
