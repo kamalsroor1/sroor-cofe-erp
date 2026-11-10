@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Profile\UpdateProfileAction;
+use App\Actions\Profile\UpdateProfileLocaleAction;
 use App\Actions\Users\SetUserPosPinAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateProfileLocaleRequest;
 use App\Http\Requests\UpdateProfilePosPinRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
@@ -21,6 +23,7 @@ final class ProfileController extends Controller
     public function __construct(
         private readonly UpdateProfileAction $updateProfileAction,
         private readonly SetUserPosPinAction $setUserPosPinAction,
+        private readonly UpdateProfileLocaleAction $updateProfileLocaleAction,
     ) {}
 
     /**
@@ -87,6 +90,19 @@ final class ProfileController extends Controller
             'success' => true,
             'message' => __('pos.pos_pin_updated'),
             'has_pos_pin' => $user->pos_pin !== null,
+        ], 200);
+    }
+
+    /**
+     * Save only the authenticated user's preferred language
+     */
+    public function updateLocale(UpdateProfileLocaleRequest $request): JsonResponse
+    {
+        $user = $this->updateProfileLocaleAction->execute($request->user(), $request->validated('locale'));
+
+        return response()->json([
+            'success' => true,
+            'data' => ['locale' => $user->locale],
         ], 200);
     }
 }

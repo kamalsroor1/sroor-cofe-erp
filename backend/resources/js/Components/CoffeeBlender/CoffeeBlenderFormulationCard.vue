@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-700 dark:text-slate-400 flex items-center gap-2">
-        <span>🫘</span>
+        <Bean class="w-4 h-4" />
         <span>{{ $t('inventory.raw_beans_components') }}</span>
       </h2>
       <span
@@ -23,10 +23,11 @@
     <div class="flex items-center gap-2">
       <div class="flex-1">
         <BaseSelect
-          :model-value="selectedItemIdToAdd"
-          @update:model-value="$emit('update:selectedItemIdToAdd', $event)"
+          :model-value="selectedItemToAdd?.id ?? null"
+          :search-fn="searchFn"
+          :selected-option="selectedItemToAdd ? { value: selectedItemToAdd.id, label: selectedItemToAdd.name } : null"
           :placeholder="$t('inventory.select_blend_item_prompt')"
-          :options="itemOptions"
+          @select="$emit('update:selectedItemToAdd', $event.raw)"
         />
       </div>
 
@@ -34,7 +35,7 @@
         variant="primary"
         size="md"
         @click="$emit('add-component')"
-        :disabled="!selectedItemIdToAdd"
+        :disabled="!selectedItemToAdd"
         class="h-10 shrink-0 shadow-sm"
       >
         + {{ $t('common.add') }}
@@ -51,9 +52,9 @@
         <div class="sm:w-1/3 min-w-0">
           <div class="font-bold text-slate-900 dark:text-white truncate">{{ comp.name }}</div>
           <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-            {{ formatMoney(comp.selling_price) }} {{ $t('common.currency') }} /
-            {{ $t('inventory.unit_weight_short') }} ({{ $t('inventory.current_stock') }}: {{ comp.current_stock }}
-            {{ $t('inventory.unit_weight_short') }})
+            {{ formatMoney(comp.selling_price) }} {{ currencyLabel }} / {{ $t('inventory.unit_weight_short') }} ({{
+              $t('inventory.current_stock')
+            }}: {{ comp.current_stock }} {{ $t('inventory.unit_weight_short') }})
           </div>
         </div>
 
@@ -86,7 +87,7 @@
           <div class="text-end">
             <div class="font-black text-theme-primary text-xs">{{ comp.grams }} {{ $t('inventory.unit_gram') }}</div>
             <div class="text-[10px] text-slate-500 dark:text-slate-400">
-              {{ formatMoney(comp.price) }} {{ $t('common.currency') }}
+              {{ formatMoney(comp.price) }} {{ currencyLabel }}
             </div>
           </div>
 
@@ -128,27 +129,27 @@
 </template>
 
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
+import { Trash2, Bean } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
 import BaseInput from '../Form/BaseInput.vue';
 import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   components: { type: Array, default: () => [] },
   calculatedComponents: { type: Array, default: () => [] },
   totalPercentage: { type: Number, default: 0 },
-  selectedItemIdToAdd: { type: [Object, Number, String], default: null },
-  itemOptions: { type: Array, default: () => [] },
+  selectedItemToAdd: { type: Object, default: null },
+  searchFn: { type: Function, required: true },
   cardamomGrams: { type: Number, default: 0 },
   notes: { type: String, default: '' },
 });
 
 defineEmits([
-  'update:selectedItemIdToAdd',
+  'update:selectedItemToAdd',
   'add-component',
   'remove-component',
   'update-percentage',

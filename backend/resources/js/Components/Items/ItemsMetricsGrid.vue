@@ -11,7 +11,7 @@
       <MetricCard
         :title="$t('inventory.total_stock_value')"
         :value="formatMoney(metrics.total_stock_value || 0)"
-        :currency="$t('common.currency')"
+        :currency="currencyLabel"
         variant="cyan"
         :icon="TrendingUp"
         icon-bg="bg-cyan-500/10"
@@ -53,7 +53,7 @@ import MetricCard from '../Common/MetricCard.vue';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   metrics: {

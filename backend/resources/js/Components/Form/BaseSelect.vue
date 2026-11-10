@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col gap-1.5" :class="wrapperClass" ref="dropdownRef">
+  <div class="w-full flex flex-col gap-1.5" :class="wrapperClass" ref="dropdownRef" @focusout="onFocusOut">
     <!-- Label -->
     <label
       v-if="label"
@@ -8,7 +8,7 @@
       :class="{ 'text-rose-500 dark:text-rose-400': hasError }"
     >
       {{ label }}
-      <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+      <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
     </label>
 
     <!-- Custom Searchable Dropdown or Native Select -->
@@ -16,12 +16,15 @@
       <!-- Interactive Trigger Button -->
       <button
         :id="selectId"
+        ref="triggerRef"
         type="button"
         @click="toggleDropdown"
+        @keydown="onTriggerKeydown"
         :disabled="disabled"
         :aria-expanded="isOpen"
+        aria-haspopup="listbox"
         :aria-invalid="hasError ? 'true' : 'false'"
-        class="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-200 flex items-center justify-between gap-2 text-right outline-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
+        class="w-full min-h-[44px] px-3.5 py-2.5 text-base sm:text-sm font-bold rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-all duration-200 flex items-center justify-between gap-2 text-start outline-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900/50"
         :class="[
           hasError
             ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'
@@ -30,7 +33,7 @@
         ]"
       >
         <span class="truncate" :class="{ 'text-slate-400 dark:text-slate-500 font-medium': !selectedLabel }">
-          {{ selectedLabel || placeholder || 'اختر من القائمة...' }}
+          {{ selectedLabel || placeholder || t('common.select_placeholder') }}
         </span>
 
         <div class="flex items-center gap-1.5 shrink-0 text-slate-400 dark:text-slate-500">
@@ -55,35 +58,58 @@
             class="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 shrink-0"
           >
             <div class="relative flex items-center">
-              <Search class="w-3.5 h-3.5 absolute right-3 text-slate-400" />
+              <Search class="w-3.5 h-3.5 absolute start-3 text-slate-400" />
               <input
                 ref="searchInputRef"
                 v-model="searchQuery"
                 type="text"
-                :placeholder="searchPlaceholder || 'بحث...'"
-                class="w-full pr-8 pl-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden focus:border-theme-primary"
+                :placeholder="searchPlaceholder || t('common.search_in_list')"
+                :aria-label="searchPlaceholder || t('common.search_in_list')"
+                autocomplete="off"
+                @keydown="onSearchKeydown"
+                class="w-full min-h-[44px] ps-9 pe-11 py-2 text-base sm:text-sm font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-hidden focus:border-theme-primary"
                 @input="handleSearchInput"
               />
               <button
                 v-if="searchQuery"
                 type="button"
                 @click="clearSearch"
-                class="absolute left-2 text-slate-400 hover:text-slate-600 p-0.5"
+                :aria-label="t('common.clear_search')"
+                class="absolute end-0 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"
               >
-                <X class="w-3 h-3" />
+                <X class="w-4 h-4" />
               </button>
             </div>
           </div>
 
           <!-- Options List -->
-          <div class="flex-1 overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
+          <div
+            class="flex-1 overflow-y-auto p-1.5 space-y-1 custom-scrollbar"
+            role="listbox"
+            :aria-labelledby="selectId"
+          >
             <!-- Loading Indicator -->
             <div
               v-if="isLoading"
               class="py-4 text-center text-xs font-bold text-slate-400 flex items-center justify-center gap-2"
             >
               <Loader2 class="w-4 h-4 animate-spin text-theme-primary" />
-              <span>جاري التحميل...</span>
+              <span>{{ t('common.loading') }}</span>
+            </div>
+
+            <!-- Load failed -->
+            <div
+              v-else-if="searchFailed"
+              class="py-4 flex flex-col items-center gap-2 text-center text-xs font-bold text-rose-500 dark:text-rose-400"
+            >
+              <span>{{ t('common.search_failed') }}</span>
+              <button
+                type="button"
+                class="min-h-[44px] px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer"
+                @click="executeRemoteSearch(searchQuery)"
+              >
+                {{ t('common.retry') }}
+              </button>
             </div>
 
             <!-- Empty State -->
@@ -91,20 +117,24 @@
               v-else-if="filteredOptions.length === 0"
               class="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500"
             >
-              {{ emptyText || 'لا توجد نتائج مطابقة' }}
+              {{ emptyText || t('common.no_results') }}
             </div>
 
             <!-- Options Items -->
             <button
-              v-for="opt in filteredOptions"
+              v-for="(opt, idx) in filteredOptions"
               :key="getOptionValue(opt)"
               type="button"
+              role="option"
+              :aria-selected="isSelected(opt)"
+              :disabled="opt.disabled === true"
               @click="selectOption(opt)"
-              class="w-full px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between text-right transition cursor-pointer"
+              @mouseenter="activeIndex = idx"
+              :data-option-index="idx"
+              class="w-full min-h-[44px] px-3 py-2 text-sm sm:text-xs font-bold rounded-xl flex items-center justify-between text-start transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               :class="[
-                isSelected(opt)
-                  ? 'bg-theme-light text-theme-primary font-black'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800',
+                isSelected(opt) ? 'bg-theme-light text-theme-primary font-black' : 'text-slate-700 dark:text-slate-300',
+                idx === activeIndex && !isSelected(opt) ? 'bg-slate-100 dark:bg-slate-800' : '',
               ]"
             >
               <div class="flex items-center gap-2 truncate">
@@ -112,7 +142,7 @@
                 <span class="truncate">{{ getOptionLabel(opt) }}</span>
                 <span v-if="opt.subtext" class="text-[10px] text-slate-400 font-mono">({{ opt.subtext }})</span>
               </div>
-              <Check v-if="isSelected(opt)" class="w-3.5 h-3.5 text-theme-primary shrink-0 mr-2" />
+              <Check v-if="isSelected(opt)" class="w-3.5 h-3.5 text-theme-primary shrink-0 ms-2" />
             </button>
           </div>
         </div>
@@ -141,8 +171,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { ChevronDown, Check, Search, X, Loader2, AlertCircle } from 'lucide-vue-next';
+import { useTrans } from '../../Composables/useTrans';
+
+const { t } = useTrans();
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 defineOptions({
   inheritAttrs: false,
@@ -157,7 +192,10 @@ const props = defineProps({
   labelKey: { type: String, default: 'label' },
   searchable: { type: Boolean, default: true },
   searchPlaceholder: { type: String, default: '' },
-  searchFn: { type: Function, default: null }, // Async dynamic remote search function
+  // Remote mode: searchFn(query, { signal }) => Promise<option[] | { data: option[] }>
+  searchFn: { type: Function, default: null },
+  // Remote mode: the currently selected option, so its label shows even when it is not in the result page.
+  selectedOption: { type: Object, default: null },
   emptyText: { type: String, default: '' },
   error: { type: [String, Array], default: null },
   hint: { type: String, default: '' },
@@ -179,9 +217,14 @@ const searchQuery = ref('');
 const dynamicOptions = ref([]);
 const isLoading = ref(false);
 const dropdownRef = ref(null);
+const triggerRef = ref(null);
+const searchFailed = ref(false);
 const searchInputRef = ref(null);
+const activeIndex = ref(-1);
+const selectedCache = ref(null);
 let abortController = null;
 let debounceTimeout = null;
+let requestSeq = 0;
 
 const autoId = 'sel-' + Math.random().toString(36).substring(2, 9);
 const selectId = computed(() => props.id || autoId);
@@ -207,8 +250,12 @@ const isSelected = (opt) => {
 
 const selectedLabel = computed(() => {
   if (model.value === null || model.value === undefined || model.value === '') return '';
-  const allOpts = props.searchFn ? dynamicOptions.value : props.options;
-  const found = allOpts.find((o) => getOptionValue(o) === model.value);
+  if (props.searchFn) {
+    const candidates = [...dynamicOptions.value, selectedCache.value, props.selectedOption];
+    const found = candidates.find((o) => o && getOptionValue(o) === model.value);
+    return found ? getOptionLabel(found) : '';
+  }
+  const found = props.options.find((o) => getOptionValue(o) === model.value);
   if (found) return getOptionLabel(found);
   return model.value;
 });
@@ -236,23 +283,89 @@ const errorMessage = computed(() => {
 
 const toggleDropdown = () => {
   if (props.disabled) return;
-  isOpen.value = !isOpen.value;
+  if (isOpen.value) closeDropdown();
+  else openDropdown();
+};
+
+const openDropdown = () => {
+  if (props.disabled) return;
+  isOpen.value = true;
+  if (props.searchFn && dynamicOptions.value.length === 0) {
+    executeRemoteSearch('');
+  }
+  resetActive();
+  nextTick(() => {
+    searchInputRef.value?.focus();
+  });
+};
+
+const closeDropdown = ({ refocus = false } = {}) => {
+  isOpen.value = false;
+  activeIndex.value = -1;
+  // Remote results belong to the last query; drop them so the next open starts from the unfiltered list.
+  if (props.searchFn) {
+    dynamicOptions.value = [];
+    searchFailed.value = false;
+    searchQuery.value = '';
+  }
+  if (refocus) nextTick(() => triggerRef.value?.focus());
+};
+
+const onFocusOut = (e) => {
+  if (isOpen.value && e.relatedTarget && !dropdownRef.value?.contains(e.relatedTarget)) closeDropdown();
+};
+
+const resetActive = () => {
+  const selectedIdx = filteredOptions.value.findIndex(isSelected);
+  activeIndex.value = selectedIdx >= 0 ? selectedIdx : filteredOptions.value.length > 0 ? 0 : -1;
+};
+
+const moveActive = (step) => {
+  const total = filteredOptions.value.length;
+  if (total === 0) return;
+  activeIndex.value = (activeIndex.value + step + total) % total;
+  nextTick(() => {
+    dropdownRef.value
+      ?.querySelector(`[data-option-index="${activeIndex.value}"]`)
+      ?.scrollIntoView({ block: 'nearest' });
+  });
+};
+
+const onSearchKeydown = (e) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    moveActive(1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    moveActive(-1);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const opt = filteredOptions.value[activeIndex.value];
+    if (opt && opt.disabled !== true) selectOption(opt);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    closeDropdown({ refocus: true });
+  }
+};
+
+const onTriggerKeydown = (e) => {
   if (isOpen.value) {
-    if (props.searchFn && dynamicOptions.value.length === 0) {
-      executeRemoteSearch('');
-    }
-    nextTick(() => {
-      searchInputRef.value?.focus();
-    });
+    if (e.key === 'Escape') closeDropdown({ refocus: true });
+    return;
+  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    openDropdown();
   }
 };
 
 const selectOption = (opt) => {
   const val = getOptionValue(opt);
+  selectedCache.value = opt;
   model.value = val;
   emit('change', val);
   emit('select', opt);
-  isOpen.value = false;
+  closeDropdown({ refocus: true });
   searchQuery.value = '';
 };
 
@@ -261,7 +374,7 @@ const handleSearchInput = () => {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     executeRemoteSearch(searchQuery.value);
-  }, 350);
+  }, SEARCH_DEBOUNCE_MS);
 };
 
 const executeRemoteSearch = async (query) => {
@@ -269,16 +382,22 @@ const executeRemoteSearch = async (query) => {
   if (abortController) abortController.abort();
   abortController = new AbortController();
 
+  const seq = ++requestSeq;
   isLoading.value = true;
+  searchFailed.value = false;
   try {
     const res = await props.searchFn(query, { signal: abortController.signal });
+    if (seq !== requestSeq) return;
     dynamicOptions.value = Array.isArray(res) ? res : res?.data || [];
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      console.error('Remote search error:', err);
+    resetActive();
+  } catch {
+    // The api interceptor already surfaced the error; a cancelled request is superseded by a newer one.
+    if (seq === requestSeq) {
+      dynamicOptions.value = [];
+      searchFailed.value = true;
     }
   } finally {
-    isLoading.value = false;
+    if (seq === requestSeq) isLoading.value = false;
   }
 };
 
@@ -289,9 +408,13 @@ const clearSearch = () => {
 
 const handleClickOutside = (e) => {
   if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
-    isOpen.value = false;
+    closeDropdown();
   }
 };
+
+watch(searchQuery, () => {
+  if (!props.searchFn) resetActive();
+});
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);

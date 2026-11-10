@@ -105,6 +105,14 @@ return [
         'confirm_code_mismatch' => 'اكتب كود المحل بالظبط للتأكيد.',
     ],
 
+    // Plan upsell screen shown instead of a module the tenant's plan does not include (FE-03).
+    'upsell' => [
+        'title' => 'هذه الميزة غير متاحة في باقتك',
+        'description' => 'هذه الميزة غير مشمولة في باقتك الحالية. للحصول عليها قم بترقية الباقة أو تواصل مع فريق الدعم.',
+        'back_home' => 'العودة للرئيسية',
+        'locked_badge' => 'غير متاح في باقتك',
+    ],
+
     // Titles of the SPA alert shown when the API refuses a request because of the subscription state.
     'alerts' => [
         'read_only_title' => 'الحساب في وضع القراءة فقط',

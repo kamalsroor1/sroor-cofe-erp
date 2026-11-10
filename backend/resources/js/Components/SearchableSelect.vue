@@ -1,4 +1,5 @@
 <script setup>
+import { X, Search, ChevronDown, Truck, Store, Check } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
@@ -156,7 +157,7 @@ onUnmounted(() => {
           class="w-6 h-6 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 flex items-center justify-center text-xs transition active:scale-90"
           :title="$t('common.cancel')"
         >
-          ✕
+          <X class="w-3.5 h-3.5" />
         </button>
 
         <!-- Arrow Indicator -->
@@ -164,7 +165,7 @@ onUnmounted(() => {
           class="text-xs text-slate-400 dark:text-slate-500 transition-transform duration-200"
           :class="isOpen ? 'rotate-180 text-theme-primary' : ''"
         >
-          ▼
+          <ChevronDown class="w-3.5 h-3.5" />
         </span>
       </div>
     </div>
@@ -172,7 +173,7 @@ onUnmounted(() => {
     <!-- Dropdown Menu -->
     <div
       v-if="isOpen"
-      class="absolute z-50 right-0 left-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      class="absolute z-50 start-0 end-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
     >
       <!-- Search Bar in Dropdown -->
       <div
@@ -185,11 +186,11 @@ onUnmounted(() => {
             v-model="searchQuery"
             type="text"
             :placeholder="searchPlaceholder || $t('common.search_in_list')"
-            class="w-full pr-8 pl-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary transition shadow-inner font-tajawal"
+            class="w-full ps-8 pe-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-theme-primary transition shadow-inner font-tajawal"
             @keydown.stop
           />
-          <span class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 text-xs pointer-events-none">
-            🔍
+          <span class="absolute inset-y-0 start-0 ps-2.5 flex items-center text-slate-400 text-xs pointer-events-none">
+            <Search class="w-3.5 h-3.5" />
           </span>
         </div>
       </div>
@@ -209,13 +210,13 @@ onUnmounted(() => {
         >
           <slot name="option" :option="opt">
             <div class="flex items-center gap-2 truncate">
-              <span v-if="opt.type === 'van'" class="text-sm">🚐</span>
-              <span v-else-if="opt.type === 'main'" class="text-sm">🏬</span>
+              <Truck v-if="opt.type === 'van'" class="w-4 h-4 shrink-0" />
+              <Store v-else-if="opt.type === 'main'" class="w-4 h-4 shrink-0" />
               <span class="truncate">{{ getOptionLabel(opt) }}</span>
             </div>
           </slot>
 
-          <span v-if="getOptionValue(opt) == modelValue" class="text-theme-primary font-bold text-xs"> ✓ </span>
+          <span v-if="getOptionValue(opt) == modelValue" class="text-theme-primary"><Check class="w-4 h-4" /></span>
         </div>
 
         <!-- Empty State -->

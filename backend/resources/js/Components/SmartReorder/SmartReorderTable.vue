@@ -73,7 +73,7 @@
 
       <template #cell-estimated_cost="{ row }">
         <span class="font-mono font-bold text-emerald-500 dark:text-emerald-400">
-          {{ formatMoney(row.estimated_cost || 0) }} {{ $t('common.currency') }}
+          {{ formatMoney(row.estimated_cost || 0) }} {{ currencyLabel }}
         </span>
       </template>
 
@@ -95,7 +95,7 @@ import DataTable from '@/Components/Common/DataTable.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({

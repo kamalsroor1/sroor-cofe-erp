@@ -95,7 +95,7 @@ import BaseDatePicker from '../Form/BaseDatePicker.vue';
 
 defineProps({
   isOpen: { type: Boolean, default: false },
-  storeId: { type: [String, Number], default: 'all' },
+  storeId: { type: [String, Number], default: 'active' },
   paymentType: { type: String, default: 'all' },
   status: { type: String, default: 'all' },
   dateFrom: { type: String, default: '' },

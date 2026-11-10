@@ -17,7 +17,7 @@
         >
         <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
           {{ formatMoney(summary.total_sales) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-slate-500 dark:text-slate-400">{{
           $t('reports.invoices_count_label', { count: summary.invoices_count || 0 })
@@ -35,7 +35,7 @@
         >
         <div class="text-2xl font-black text-rose-500 dark:text-rose-400 font-mono">
           {{ formatMoney(summary.total_cogs) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ $t('reports.total_cogs_desc') }}</span>
       </div>
@@ -51,7 +51,7 @@
         >
         <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
           {{ formatMoney(summary.gross_profit) }}
-          <span class="text-xs text-emerald-500 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-emerald-500 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-emerald-500 font-bold">{{
           $t('reports.gross_margin_label', { pct: summary.margin_percentage || 0 })
@@ -67,7 +67,7 @@
         }}</span>
         <div class="text-2xl font-black text-theme-primary font-mono">
           {{ formatMoney(summary.total_expenses) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-slate-500 dark:text-slate-400">{{
           $t('reports.expenses_count_label', { count: summary.expenses_count || 0 })
@@ -96,7 +96,7 @@
           "
         >
           {{ formatMoney(summary.net_profit) }}
-          <span class="text-sm font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-sm font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[11px] text-slate-600 dark:text-slate-400">{{ $t('reports.net_profit_desc') }}</span>
       </div>
@@ -110,7 +110,7 @@
         }}</span>
         <div class="text-xl font-black text-cyan-500 dark:text-cyan-400 font-mono">
           {{ formatMoney(summary.total_paid) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ $t('reports.cash_collected_sub') }}</span>
       </div>
@@ -124,7 +124,7 @@
         }}</span>
         <div class="text-xl font-black text-theme-primary font-mono">
           {{ formatMoney(summary.total_remaining) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
         <span class="text-[10px] text-slate-500 dark:text-slate-400">{{
           $t('reports.total_customers_debt_sub', { amount: formatMoney(summary.total_customers_debt || 0) })
@@ -138,7 +138,7 @@
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   summary: { type: Object, default: () => ({}) },

@@ -212,6 +212,6 @@ class TenantResource extends JsonResource
   - English: `backend/lang/en/{group}.php`
 * **Automated Frontend Synchronization:**
   - Execute `php artisan lang:export` (or run `npm run build` which triggers it automatically via `prebuild`).
-  - This generates `resources/js/helpers/defaultTranslations.json` and `resources/js/helpers/defaultTranslations.js` automatically.
+  - This generates `resources/js/helpers/defaultTranslations.ar.json` and `defaultTranslations.en.json` automatically (the SPA gets the active locale inlined by `app.blade.php`; these files are only a lazy per-locale fallback).
 * **Zero Fallback Strings:** In Vue templates and scripts, always use `$t('group.key')` or `const { t } = useTrans(); t('group.key')` with ZERO hardcoded text or fallback operators (`|| 'نص'`).
 

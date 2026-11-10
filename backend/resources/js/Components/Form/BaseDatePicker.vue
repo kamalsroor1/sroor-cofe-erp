@@ -7,7 +7,7 @@
       :class="{ 'text-rose-500 dark:text-rose-400': hasError }"
     >
       {{ label }}
-      <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+      <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
     </label>
 
     <!-- Input Wrapper with Icon & Clear button -->

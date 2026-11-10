@@ -5,7 +5,7 @@
       class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4"
     >
       <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-        <span class="text-base">💳</span>
+        <CreditCard class="w-5 h-5" />
         <h3 class="text-xs font-black text-slate-900 dark:text-white">{{ $t('invoices.payments_history_section') }}</h3>
       </div>
 
@@ -17,12 +17,10 @@
         >
           <div>
             <div class="font-bold text-slate-900 dark:text-white">{{ p.payment_method }}</div>
-            <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-              📅 {{ p.payment_date }} • 👤 {{ p.user_name }}
-            </div>
+            <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ p.payment_date }} • {{ p.user_name }}</div>
           </div>
           <div class="font-mono font-black text-emerald-500 text-sm">
-            +{{ formatMoney(p.amount) }} {{ $t('common.currency') }}
+            +{{ formatMoney(p.amount) }} {{ currencyLabel }}
           </div>
         </div>
       </div>
@@ -36,7 +34,7 @@
       class="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4"
     >
       <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-        <span class="text-base">📝</span>
+        <FileText class="w-5 h-5" />
         <h3 class="text-xs font-black text-slate-900 dark:text-white">{{ $t('invoices.notes') }}</h3>
       </div>
 
@@ -50,9 +48,10 @@
 </template>
 
 <script setup>
+import { CreditCard, FileText } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   invoice: { type: Object, default: null },

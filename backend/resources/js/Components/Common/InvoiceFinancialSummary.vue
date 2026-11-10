@@ -1,4 +1,8 @@
 <script setup>
+import DynamicIcon from 'DynamicIcon.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 defineProps({
   title: { type: String, default: '' },
   subtotal: { type: Number, default: null }, // null = don't show subtotal row
@@ -10,7 +14,7 @@ defineProps({
   isProcessing: { type: Boolean, default: false },
   isDisabled: { type: Boolean, default: false },
   submitLabel: { type: String, default: '' },
-  submitIcon: { type: String, default: '✅' },
+  submitIcon: { type: String, default: 'check-circle2' },
 });
 
 defineEmits(['update:discountAmount', 'update:paidAmount', 'update:refundAmount', 'submit']);
@@ -35,15 +39,13 @@ const formatMoney = (val) => {
       <!-- Subtotal row (optional) -->
       <div v-if="subtotal !== null" class="flex items-center justify-between text-xs">
         <span class="text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('common.subtotal') }}:</span>
-        <span class="text-slate-900 dark:text-white font-bold"
-          >{{ formatMoney(subtotal) }} {{ $t('common.currency') }}</span
-        >
+        <span class="text-slate-900 dark:text-white font-bold">{{ formatMoney(subtotal) }} {{ currencyLabel }}</span>
       </div>
 
       <!-- Discount input (optional) -->
       <div v-if="discountAmount !== null" class="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal"
-          >{{ $t('common.discount') }} ({{ $t('common.currency') }})</label
+          >{{ $t('common.discount') }} ({{ currencyLabel }})</label
         >
         <input
           :value="discountAmount"
@@ -58,15 +60,13 @@ const formatMoney = (val) => {
       <!-- Net Total -->
       <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-200 dark:border-slate-800">
         <span class="text-slate-700 dark:text-slate-300 font-bold font-tajawal">{{ $t('common.net') }}:</span>
-        <span class="text-base font-black text-theme-primary"
-          >{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span
-        >
+        <span class="text-base font-black text-theme-primary">{{ formatMoney(netTotal) }} {{ currencyLabel }}</span>
       </div>
 
       <!-- Paid input (optional) -->
       <div v-if="paidAmount !== null" class="space-y-1.5 pt-2 border-t border-slate-200 dark:border-slate-800">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300 font-tajawal"
-          >{{ $t('common.paid') }} ({{ $t('common.currency') }})</label
+          >{{ $t('common.paid') }} ({{ currencyLabel }})</label
         >
         <input
           :value="paidAmount"
@@ -103,7 +103,7 @@ const formatMoney = (val) => {
       >
         <span class="text-slate-500 dark:text-slate-400 font-tajawal">{{ $t('common.remaining') }}:</span>
         <span class="text-rose-600 dark:text-rose-400 font-black"
-          >{{ formatMoney(remainingAmount) }} {{ $t('common.currency') }}</span
+          >{{ formatMoney(remainingAmount) }} {{ currencyLabel }}</span
         >
       </div>
     </div>
@@ -114,7 +114,7 @@ const formatMoney = (val) => {
       :disabled="isProcessing || isDisabled"
       class="w-full h-12 rounded-2xl btn-primary-theme font-black text-sm flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-theme-primary"
     >
-      <span>{{ submitIcon }}</span>
+      <DynamicIcon :name="submitIcon" class="w-4 h-4" />
       <span>{{ isProcessing ? $t('common.save') + '...' : submitLabel }}</span>
     </button>
   </div>

@@ -14,7 +14,7 @@
           class="text-base font-black font-mono"
           :class="targetCustomer?.current_balance > 0 ? 'text-rose-500' : 'text-emerald-500'"
         >
-          {{ formatMoney(targetCustomer?.current_balance || 0) }} {{ $t('common.currency') }}
+          {{ formatMoney(targetCustomer?.current_balance || 0) }} {{ currencyLabel }}
         </span>
       </div>
 
@@ -86,7 +86,7 @@ import BaseButton from '../Common/BaseButton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { useTrans } from '../../Composables/useTrans';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
 defineProps({

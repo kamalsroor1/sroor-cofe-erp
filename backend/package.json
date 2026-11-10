@@ -50,7 +50,6 @@
     "dependencies": {
         "@capacitor/android": "^8.5.0",
         "@capacitor/app": "^8.1.1",
-        "@capacitor/camera": "^8.2.3",
         "@capacitor/cli": "^8.5.0",
         "@capacitor/core": "^8.5.0",
         "@capacitor/haptics": "^8.0.2",
@@ -59,7 +58,6 @@
         "@capacitor/toast": "^8.0.1",
         "@capgo/capacitor-native-biometric": "^8.6.7",
         "@vitejs/plugin-vue": "^6.0.8",
-        "@vuepic/vue-datepicker": "^14.0.0",
         "@vueuse/core": "^15.0.0",
         "axios": "^1.19.0",
         "flatpickr": "^4.6.13",

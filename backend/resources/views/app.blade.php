@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="dark">
+@php
+    // The shell's language: the server locale (tenant is not initialised here, so this is the app default).
+    // A saved browser preference is applied by the early script below and by the SPA boot.
+    $locale = in_array(app()->getLocale(), \App\Actions\System\GetTranslationsAction::SUPPORTED_LOCALES, true) ? app()->getLocale() : 'ar';
+    $dir = $locale === 'ar' ? 'rtl' : 'ltr';
+@endphp
+<html lang="{{ $locale }}" dir="{{ $dir }}" class="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -31,6 +37,11 @@
     <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         (function() {
             try {
+                const storedLocale = localStorage.getItem('app_locale');
+                if (storedLocale === 'ar' || storedLocale === 'en') {
+                    document.documentElement.setAttribute('lang', storedLocale);
+                    document.documentElement.setAttribute('dir', storedLocale === 'ar' ? 'rtl' : 'ltr');
+                }
                 const storedTheme = localStorage.getItem('theme_preference') || 'dark';
                 if (storedTheme === 'dark') {
                     document.documentElement.classList.add('dark');
@@ -60,10 +71,12 @@
         })();
     </script>
 
-    <!-- Google Arabic Fonts: IBM Plex Sans Arabic (body), Reem Kufi (logo wordmark), Cairo & Tajawal (fallbacks) -->
+    {{-- Cairo is self-hosted (resources/css/app.css @font-face); preload the Arabic subset used by first paint. --}}
+    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/cairo-arabic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    {{-- Ibraa brand fonts (IBM Plex Sans Arabic body, Reem Kufi wordmark) still come from Google Fonts (allowed by the CSP); Cairo/Tajawal CDN loads were dropped with FE-13. --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap" rel="stylesheet">
 
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
@@ -76,11 +89,11 @@
     <script @if (\Illuminate\Support\Facades\Vite::cspNonce()) nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}" @endif>
         @php
             $translationsAction = app(\App\Actions\System\GetTranslationsAction::class);
-            $locale = app()->getLocale() ?: 'ar';
             $initialTranslations = $translationsAction->execute($locale);
         @endphp
         window.spaTranslations = {!! json_encode($initialTranslations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
         window.spaLocale = '{{ $locale }}';
+        window.spaTranslationsHash = '{{ $translationsAction->hash($locale, $initialTranslations) }}';
     </script>
 
     <!-- Vite Scripts (Vue 3 Pure SPA) -->
@@ -99,7 +112,7 @@
 <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-[var(--color-primary)] selection:text-white min-h-screen overflow-x-hidden font-sans transition-colors duration-200">
     <div id="app">
         <!-- Instant Branded Pre-Vue Splash Screen (Hidden in Electron to avoid double splash) -->
-        <div id="pre-vue-splash" dir="rtl">
+        <div id="pre-vue-splash" dir="{{ $dir }}">
             <svg class="ps-mark" viewBox="0 0 100 100" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{ $platformBrand->name }}">
                 <g class="ps-settle">
                     <path class="ps-arc" d="M50 14 A36 36 0 1 1 20 30" stroke-width="9" pathLength="100"></path>

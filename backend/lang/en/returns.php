@@ -114,4 +114,6 @@ return [
     'source_load_failed' => 'Could not load the documents. Try again.',
     'return_manually' => 'Return without a source document',
     'return_from_document' => 'Return against an invoice or purchase',
+    'select_customer_warning' => 'Please select the customer',
+    'select_supplier_warning' => 'Please select the supplier',
 ];

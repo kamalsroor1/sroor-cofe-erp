@@ -10,7 +10,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_name',
         descKey: 'settings.company_name_placeholder',
         tabId: 'general',
-        keywords: ['اسم', 'المنشأة', 'المحل', 'الشركة', 'company', 'name', 'branding', 'identity'],
+        keywordsKey: 'settings.search_keywords.company_name',
         isAdvanced: false,
     },
     {
@@ -19,7 +19,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_subtitle',
         descKey: 'settings.company_subtitle_placeholder',
         tabId: 'general',
-        keywords: ['وصف', 'نشاط', 'فرعي', 'subtitle', 'description'],
+        keywordsKey: 'settings.search_keywords.company_subtitle',
         isAdvanced: false,
     },
     {
@@ -28,7 +28,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_phone',
         descKey: 'settings.company_phone_placeholder',
         tabId: 'general',
-        keywords: ['هاتف', 'تليفون', 'موبايل', 'اتصال', 'phone', 'contact'],
+        keywordsKey: 'settings.search_keywords.company_phone',
         isAdvanced: false,
     },
     {
@@ -37,7 +37,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_address',
         descKey: 'settings.company_address_placeholder',
         tabId: 'general',
-        keywords: ['عنوان', 'مقر', 'مكان', 'فرع', 'address', 'location'],
+        keywordsKey: 'settings.search_keywords.company_address',
         isAdvanced: false,
     },
     {
@@ -46,7 +46,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.currency',
         descKey: 'settings.currency',
         tabId: 'general',
-        keywords: ['عملة', 'جنيه', 'ريال', 'دولار', 'currency', 'EGP', 'SAR', 'AED', 'KWD', 'QAR', 'USD'],
+        keywordsKey: 'settings.search_keywords.currency',
         isAdvanced: false,
     },
     {
@@ -55,7 +55,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.timezone',
         descKey: 'settings.timezone',
         tabId: 'general',
-        keywords: ['توقيت', 'منطقة زمنية', 'ساعة', 'timezone', 'Cairo', 'Riyadh'],
+        keywordsKey: 'settings.search_keywords.timezone',
         isAdvanced: false,
     },
     {
@@ -64,7 +64,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.business_day_cutoff',
         descKey: 'settings.business_day_cutoff_hint',
         tabId: 'general',
-        keywords: ['نهاية اليوم', 'بداية اليوم', 'إغلاق اليوم', 'توقيت الإغلاق', 'وردية', 'cutoff', 'business_day'],
+        keywordsKey: 'settings.search_keywords.business_day_cutoff',
         isAdvanced: true,
     },
     {
@@ -73,7 +73,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.commercial_register',
         descKey: 'settings.commercial_register',
         tabId: 'general',
-        keywords: ['سجل تجاري', 'سجل', 'commercial_register', 'cr'],
+        keywordsKey: 'settings.search_keywords.commercial_register',
         isAdvanced: false,
     },
     {
@@ -82,7 +82,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.tax_registration_no',
         descKey: 'settings.tax_registration_no',
         tabId: 'general',
-        keywords: ['رقم ضريبي', 'تسجيل ضريبي', 'ضريبة', 'tax', 'vat'],
+        keywordsKey: 'settings.search_keywords.tax_registration_no',
         isAdvanced: false,
     },
 
@@ -93,7 +93,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.print_company_name_toggle',
         descKey: 'settings.print_company_name_desc',
         tabId: 'printing',
-        keywords: ['طباعة اسم', 'رأس الفاتورة', 'إيصال', 'print', 'header'],
+        keywordsKey: 'settings.search_keywords.show_print_company_name',
         isAdvanced: false,
     },
     {
@@ -102,7 +102,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.print_subtitle_toggle',
         descKey: 'settings.print_subtitle_desc',
         tabId: 'printing',
-        keywords: ['طباعة الوصف', 'وصف فرعي', 'إيصال', 'subtitle'],
+        keywordsKey: 'settings.search_keywords.show_print_subtitle',
         isAdvanced: false,
     },
     {
@@ -111,7 +111,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.show_print_logo',
         descKey: 'settings.logo_hint',
         tabId: 'printing',
-        keywords: ['شعار', 'لوجو', 'logo', 'طباعة اللوجو', 'print logo'],
+        keywordsKey: 'settings.search_keywords.show_print_logo',
         isAdvanced: false,
     },
     {
@@ -120,7 +120,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.thermal_balance_toggle',
         descKey: 'settings.thermal_balance_desc',
         tabId: 'printing',
-        keywords: ['رصيد العميل', 'مديونية', 'آجل', 'balance', 'credit'],
+        keywordsKey: 'settings.search_keywords.thermal_show_customer_balance',
         isAdvanced: false,
     },
     {
@@ -129,7 +129,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.print_qr_toggle',
         descKey: 'settings.print_qr_desc',
         tabId: 'printing',
-        keywords: ['qr', 'رمز الاستجابة', 'باركود', 'qr code'],
+        keywordsKey: 'settings.search_keywords.print_show_qr',
         isAdvanced: false,
     },
     {
@@ -138,7 +138,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.invoice_footer_note_label',
         descKey: 'settings.invoice_footer_placeholder',
         tabId: 'printing',
-        keywords: ['تذييل', 'ملاحظة الفاتورة', 'footer', 'استرجاع', 'شكر', 'invoice footer'],
+        keywordsKey: 'settings.search_keywords.invoice_footer_note',
         isAdvanced: false,
     },
 
@@ -149,7 +149,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.inventory_units',
         descKey: 'settings.sec_units_desc',
         tabId: 'inventory',
-        keywords: ['وحدات', 'وحدة', 'قياس', 'مخزون', 'units', 'measurements'],
+        keywordsKey: 'settings.search_keywords.inventory_units',
         isAdvanced: false,
     },
     {
@@ -158,7 +158,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.low_stock_default_threshold',
         descKey: 'settings.low_stock_default_threshold',
         tabId: 'inventory',
-        keywords: ['نواقص', 'تنبيه النواقص', 'حد النقص', 'threshold', 'low_stock', 'minimum'],
+        keywordsKey: 'settings.search_keywords.low_stock_default_threshold',
         isAdvanced: false,
     },
 
@@ -169,7 +169,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_logo_light',
         descKey: 'settings.logo_light_hint',
         tabId: 'branding',
-        keywords: ['شعار', 'لوجو', 'فاتح', 'نهار', 'logo', 'light'],
+        keywordsKey: 'settings.search_keywords.logo_light',
         isAdvanced: false,
     },
     {
@@ -178,7 +178,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.company_logo_dark',
         descKey: 'settings.logo_dark_hint',
         tabId: 'branding',
-        keywords: ['شعار', 'لوجو', 'داكن', 'ليلي', 'logo', 'dark'],
+        keywordsKey: 'settings.search_keywords.logo_dark',
         isAdvanced: false,
     },
     {
@@ -187,7 +187,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'branding.attributes.receipt_header_lines',
         descKey: 'settings.receipt_header_hint',
         tabId: 'branding',
-        keywords: ['ترويسة', 'رأس', 'إيصال', 'فاتورة', 'header', 'receipt', 'lines'],
+        keywordsKey: 'settings.search_keywords.receipt_header_lines',
         isAdvanced: false,
     },
     {
@@ -196,7 +196,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'branding.attributes.receipt_footer_text',
         descKey: 'settings.receipt_footer_hint',
         tabId: 'branding',
-        keywords: ['تذييل', 'ختام', 'إيصال', 'فاتورة', 'footer', 'receipt'],
+        keywordsKey: 'settings.search_keywords.receipt_footer_text',
         isAdvanced: false,
     },
     {
@@ -205,7 +205,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'branding.attributes.system_theme_color',
         descKey: 'settings.sec_appearance_desc',
         tabId: 'branding',
-        keywords: ['لون', 'ثيم', 'مظهر', 'theme', 'color', 'palette', 'amber', 'emerald'],
+        keywordsKey: 'settings.search_keywords.system_theme_color',
         isAdvanced: false,
     },
 
@@ -216,7 +216,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.telegram_enable_toggle',
         descKey: 'settings.telegram_enable_desc',
         tabId: 'notifications',
-        keywords: ['تلجرام', 'إشعارات', 'تنبيهات', 'telegram', 'bot', 'notifications'],
+        keywordsKey: 'settings.search_keywords.telegram_notifications_enabled',
         isAdvanced: false,
     },
     {
@@ -225,7 +225,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.bot_token',
         descKey: 'settings.bot_token_placeholder',
         tabId: 'notifications',
-        keywords: ['توكن', 'token', 'bot token', 'telegram'],
+        keywordsKey: 'settings.search_keywords.telegram_bot_token',
         isAdvanced: true,
     },
     {
@@ -234,7 +234,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.chat_id',
         descKey: 'settings.chat_id_input_placeholder',
         tabId: 'notifications',
-        keywords: ['chat_id', 'محادثة', 'جروب', 'chat', 'id', 'group'],
+        keywordsKey: 'settings.search_keywords.telegram_chat_id',
         isAdvanced: false,
     },
 
@@ -245,7 +245,7 @@ export const SETTINGS_REGISTRY = [
         labelKey: 'settings.theme_mode_label',
         descKey: 'settings.theme_mode_label',
         tabId: 'device',
-        keywords: ['داكن', 'فاتح', 'ليلي', 'نهاري', 'dark', 'light', 'mode'],
+        keywordsKey: 'settings.search_keywords.theme_mode',
         isAdvanced: false,
     },
 ];
@@ -266,10 +266,15 @@ export function useSettingsSearch(options = {}) {
         return SETTINGS_REGISTRY.map((item) => {
             const label = t(item.labelKey);
             const description = t(item.descKey);
+            const keywords = t(item.keywordsKey)
+                .split(',')
+                .map((kw) => kw.trim())
+                .filter(Boolean);
             return {
                 ...item,
                 label,
                 description,
+                keywords,
             };
         }).filter((item) => {
             return (

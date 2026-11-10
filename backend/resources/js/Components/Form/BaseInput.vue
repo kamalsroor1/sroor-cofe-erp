@@ -8,7 +8,7 @@
       :class="{ 'text-rose-500 dark:text-rose-400': hasError }"
     >
       {{ label }}
-      <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+      <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
     </label>
 
     <!-- Input Wrapper with Leading / Trailing Addons & Password Toggle -->
@@ -16,7 +16,7 @@
       <!-- Leading Icon / Addon -->
       <div
         v-if="$slots.leading || leadingIcon"
-        class="absolute right-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 transition-colors"
+        class="absolute start-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 transition-colors"
         :class="{ 'text-rose-500 dark:text-rose-400': hasError }"
       >
         <slot name="leading">
@@ -46,8 +46,8 @@
           hasError
             ? 'border-rose-500 dark:border-rose-500/80 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-rose-900 dark:text-rose-100'
             : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20',
-          $slots.leading || leadingIcon ? 'pr-10' : '',
-          $slots.trailing || trailingIcon || type === 'password' || isClearable ? 'pl-10' : '',
+          $slots.leading || leadingIcon ? 'ps-10' : '',
+          $slots.trailing || trailingIcon || type === 'password' || isClearable ? 'pe-10' : '',
           inputClass,
         ]"
         v-bind="$attrs"
@@ -57,7 +57,7 @@
       />
 
       <!-- Trailing Addon / Password Toggle / Clear Button -->
-      <div class="absolute left-3 flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
+      <div class="absolute end-3 flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
         <!-- Clear Button -->
         <button
           v-if="isClearable && model && !disabled && !readonly"
@@ -65,7 +65,7 @@
           tabindex="-1"
           @click="model = ''"
           class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
-          title="مسح"
+          :title="$t('common.clear')"
         >
           <X class="w-3.5 h-3.5" />
         </button>
@@ -77,7 +77,7 @@
           tabindex="-1"
           @click="showPassword = !showPassword"
           class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
-          :title="showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'"
+          :title="showPassword ? $t('common.hide_password') : $t('common.show_password')"
         >
           <EyeOff v-if="showPassword" class="w-4 h-4" />
           <Eye v-else class="w-4 h-4" />

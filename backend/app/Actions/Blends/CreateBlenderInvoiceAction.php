@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Blends;
 
 use App\DTOs\Blends\CreateBlenderInvoiceDTO;
+use App\Enums\BlendGrind;
+use App\Enums\BlendRoast;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
 use App\Services\Pos\SaleShiftGuard;
@@ -40,15 +42,22 @@ final class CreateBlenderInvoiceAction
             }
         }
 
-        $extraDetails = "درجة التحميص: {$dto->roast_type} | الطحن: {$dto->grind_level} | الوزن: {$dto->target_weight_grams}جم";
+        $roast = BlendRoast::tryFrom($dto->roast_type)?->label() ?? $dto->roast_type;
+        $grind = BlendGrind::tryFrom($dto->grind_level)?->label() ?? $dto->grind_level;
+
+        $parts = [
+            __('inventory.blend_note.roast', ['value' => $roast]),
+            __('inventory.blend_note.grind', ['value' => $grind]),
+            __('inventory.blend_note.weight', ['grams' => $dto->target_weight_grams]),
+        ];
         if ($dto->cardamom_grams > 0) {
-            $extraDetails .= " | حبهان: {$dto->cardamom_grams}جم";
+            $parts[] = __('inventory.blend_note.cardamom', ['grams' => $dto->cardamom_grams]);
         }
         if ($dto->notes) {
-            $extraDetails .= " | {$dto->notes}";
+            $parts[] = $dto->notes;
         }
 
-        $notesStr = "خلطة وتوليفة مخصوصة: {$dto->blend_name} ({$extraDetails})";
+        $notesStr = __('inventory.blend_note.summary', ['name' => $dto->blend_name, 'details' => implode(' | ', $parts)]);
 
         return $this->invoiceService->confirmInvoice([
             'customer_id' => $dto->customer_id,

@@ -1,7 +1,7 @@
-import { dAdd, dSub, dCmp } from './decimal';
-import { limitQuantityText } from './posWeight';
-import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from './posDiscount';
-import { sanitizeAmountInput } from './posCheckout';
+import { dAdd, dSub, dCmp } from './decimal.js';
+import { limitQuantityText } from './posWeight.js';
+import { DISCOUNT_FIXED, DISCOUNT_PERCENT } from './posDiscount.js';
+import { sanitizeAmountInput } from './posCheckout.js';
 
 /**
  * POS cart line edits. The cart array is owned by the POS view (one per open order);

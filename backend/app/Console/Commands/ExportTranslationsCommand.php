@@ -21,7 +21,7 @@ final class ExportTranslationsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Exports Laravel PHP lang files to unified frontend translations JSON/JS (Single Source of Truth)';
+    protected $description = 'Exports Laravel PHP lang files to per-locale frontend translations JSON (Single Source of Truth)';
 
     /**
      * Execute the console command.
@@ -61,31 +61,14 @@ final class ExportTranslationsCommand extends Command
             }
         }
 
-        // 1. Save as JSON
-        $jsonTarget = resource_path('js/helpers/defaultTranslations.json');
-        File::put($jsonTarget, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-        // 2. Save as JS ES Module export for instant tree-shaking & fallback
-        $jsTarget = resource_path('js/helpers/defaultTranslations.js');
-        $arTranslations = json_encode($result['ar'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $enTranslations = json_encode($result['en'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-        $jsContent = <<<JS
-/**
- * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY!
- * Generated from PHP backend lang/ directory by `php artisan lang:export`
- * Single Source of Truth: backend/lang/ar/*.php and backend/lang/en/*.php
- */
-export const defaultArabicTranslations = {$arTranslations};
-export const defaultEnglishTranslations = {$enTranslations};
-
-export default {
-    ar: defaultArabicTranslations,
-    en: defaultEnglishTranslations,
-};
-JS;
-
-        File::put($jsTarget, $jsContent);
+        // One file per locale: the SPA lazily imports only the active one, and only as a fallback
+        // when the server did not inline window.spaTranslations (resources/js/helpers/trans.js).
+        $targets = [];
+        foreach ($locales as $locale) {
+            $target = resource_path("js/helpers/defaultTranslations.{$locale}.json");
+            File::put($target, json_encode($result[$locale], JSON_UNESCAPED_UNICODE));
+            $targets[] = $target;
+        }
 
         $arGroups = count($result['ar'] ?? []);
         $enGroups = count($result['en'] ?? []);
@@ -93,8 +76,9 @@ JS;
         $this->info('✅ Successfully exported translations:');
         $this->line("   - Arabic (ar): {$arGroups} groups");
         $this->line("   - English (en): {$enGroups} groups");
-        $this->line("   - Generated: {$jsonTarget}");
-        $this->line("   - Generated: {$jsTarget}");
+        foreach ($targets as $target) {
+            $this->line("   - Generated: {$target}");
+        }
 
         return self::SUCCESS;
     }

@@ -14,7 +14,7 @@
         }}</span>
         <div class="text-2xl font-black text-slate-900 dark:text-white font-mono">
           {{ formatMoney(inventoryData.stock_cost_valuation) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -26,7 +26,7 @@
         }}</span>
         <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
           {{ formatMoney(inventoryData.stock_selling_valuation) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -38,7 +38,7 @@
         }}</span>
         <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
           {{ formatMoney(inventoryData.expected_stock_profit) }}
-          <span class="text-xs text-emerald-500 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-emerald-500 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
     </div>
@@ -136,7 +136,12 @@
         </div>
       </div>
 
-      <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="📦" />
+      <EmptyState
+        v-else
+        :title="$t('reports.no_data_title')"
+        :description="$t('reports.no_data_desc')"
+        icon="package"
+      />
     </div>
   </div>
 </template>
@@ -147,7 +152,7 @@ import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   inventoryData: { type: Object, default: () => ({}) },

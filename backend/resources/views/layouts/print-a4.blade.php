@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    @php $currencyLabel = app(\App\Services\Settings\TenantSettings::class)->currencyLabel(); @endphp
     <meta charset="UTF-8">
     <title>{{ __('invoices.sales_invoice') }} - {{ $invoice->invoice_number }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
@@ -267,7 +268,7 @@
                         {{ number_format($item->discount_amount, 2) }}
                     </td>
                     <td style="text-align: left; font-weight: 900; font-size: 14px;">
-                        {{ number_format($item->total_price, 2) }} {{ __('common.currency') }}
+                        {{ number_format($item->total_price, 2) }} {{ $currencyLabel }}
                     </td>
                 </tr>
                 @endforeach
@@ -278,12 +279,12 @@
         <div class="totals-card">
             <div class="totals-row">
                 <span>{{ __('common.subtotal') }}:</span>
-                <span>{{ number_format($invoice->subtotal, 2) }} {{ __('common.currency') }}</span>
+                <span>{{ number_format($invoice->subtotal, 2) }} {{ $currencyLabel }}</span>
             </div>
             @if(bccomp($invoice->discount_amount, '0.000', 3) > 0)
             <div class="totals-row">
                 <span>{{ __('common.discount') }}:</span>
-                <span>-{{ number_format($invoice->discount_amount, 2) }} {{ __('common.currency') }}</span>
+                <span>-{{ number_format($invoice->discount_amount, 2) }} {{ $currencyLabel }}</span>
             </div>
             @endif
 
@@ -295,27 +296,27 @@
                 @foreach($customerExpenses as $cExp)
                 <div class="totals-row">
                     <span>+ {{ $cExp->title }}:</span>
-                    <span>+{{ number_format($cExp->amount, 2) }} {{ __('common.currency') }}</span>
+                    <span>+{{ number_format($cExp->amount, 2) }} {{ $currencyLabel }}</span>
                 </div>
                 @endforeach
             @elseif(bccomp($invoice->shipping_cost, '0.000', 3) > 0)
                 <div class="totals-row">
                     <span>+ {{ __('invoices.shipping_cost') }}:</span>
-                    <span>+{{ number_format($invoice->shipping_cost, 2) }} {{ __('common.currency') }}</span>
+                    <span>+{{ number_format($invoice->shipping_cost, 2) }} {{ $currencyLabel }}</span>
                 </div>
             @endif
 
             <div class="totals-row final-net">
                 <span>{{ __('common.net') }}:</span>
-                <span>{{ number_format($invoice->net_total, 2) }} {{ __('common.currency') }}</span>
+                <span>{{ number_format($invoice->net_total, 2) }} {{ $currencyLabel }}</span>
             </div>
             <div class="totals-row">
                 <span>{{ __('common.paid') }}:</span>
-                <span>{{ number_format($invoice->paid_amount, 2) }} {{ __('common.currency') }}</span>
+                <span>{{ number_format($invoice->paid_amount, 2) }} {{ $currencyLabel }}</span>
             </div>
             <div class="totals-row" style="border-top: 1px solid #000; margin-top: 4px; padding-top: 4px;">
                 <span>{{ __('common.remaining') }}:</span>
-                <span style="font-weight: 900;">{{ number_format($invoice->remaining_amount, 2) }} {{ __('common.currency') }}</span>
+                <span style="font-weight: 900;">{{ number_format($invoice->remaining_amount, 2) }} {{ $currencyLabel }}</span>
             </div>
         </div>
 

@@ -35,7 +35,7 @@
         <div class="text-start md:text-end">
           <span class="text-[10px] text-slate-400 block font-bold">{{ $t('treasury.opening_float_balance') }}</span>
           <span class="text-sm font-black text-theme-primary font-mono"
-            >{{ formatMoney(activeShift.opening_cash_balance) }} {{ $t('common.currency') }}</span
+            >{{ formatMoney(activeShift.opening_cash_balance) }} {{ currencyLabel }}</span
           >
         </div>
 
@@ -77,7 +77,7 @@
 import { ShieldCheck, AlertCircle, Printer, Play } from 'lucide-vue-next';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   activeShift: { type: Object, default: null },

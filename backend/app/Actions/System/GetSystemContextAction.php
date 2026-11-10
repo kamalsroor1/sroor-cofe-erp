@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\System;
 
 use App\Actions\Branding\GetBrandingAction;
+use App\Contracts\TenantFeatureManagerInterface;
+use App\Enums\LimitResource;
 use App\Http\Resources\BrandingResource;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
@@ -13,8 +15,10 @@ use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Setting;
 use App\Models\Store;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Branding\TenantBranding;
+use App\Services\Entitlements\PlanEnforcer;
 use App\Services\Settings\TenantSettings;
 use App\Services\TreasuryService;
 use App\Support\TenantClock;
@@ -28,6 +32,9 @@ final class GetSystemContextAction
         private readonly TenantSettings $tenantSettings,
         private readonly TenantClock $tenantClock,
         private readonly GetBrandingAction $getBrandingAction,
+        private readonly PlanEnforcer $planEnforcer,
+        private readonly TenantFeatureManagerInterface $featureManager,
+        private readonly GetSetupProgressAction $setupProgressAction,
     ) {}
 
     /**
@@ -69,7 +76,7 @@ final class GetSystemContextAction
         if ($lowStockCount > 0) {
             $alerts[] = [
                 'type' => 'danger',
-                'icon' => '🚨',
+                'icon' => 'alert-triangle',
                 'title' => __('dashboard.system_alerts.low_stock_title', ['count' => $lowStockCount]),
                 'description' => __('dashboard.system_alerts.low_stock_desc'),
                 'link' => '/purchases/smart-reorder',
@@ -81,7 +88,7 @@ final class GetSystemContextAction
         if ($debtCount > 0) {
             $alerts[] = [
                 'type' => 'warning',
-                'icon' => '👥',
+                'icon' => 'users',
                 'title' => __('dashboard.system_alerts.debts_title', ['count' => $debtCount]),
                 'description' => __('dashboard.system_alerts.debts_desc'),
                 'link' => '/customers',
@@ -96,9 +103,9 @@ final class GetSystemContextAction
                 if ($cashExpected >= 10000) {
                     $alerts[] = [
                         'type' => 'info',
-                        'icon' => '💰',
+                        'icon' => 'wallet',
                         'title' => __('dashboard.system_alerts.high_cash_title'),
-                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => __('common.currency')]),
+                        'description' => __('dashboard.system_alerts.high_cash_desc', ['amount' => number_format($cashExpected, 0), 'currency' => $this->tenantSettings->currencyLabel()]),
                         'link' => '/daily-journal',
                         'link_label' => __('dashboard.system_alerts.high_cash_link'),
                     ];
@@ -111,6 +118,8 @@ final class GetSystemContextAction
         $headerLocale = $request->header('X-Locale');
         $locale = GetTranslationsAction::normalizeLocale(is_string($headerLocale) ? $headerLocale : null);
         $translations = $this->translationsAction->execute($locale);
+        $translationsHash = $this->translationsAction->hash($locale, $translations);
+        $clientHash = $request->query('translations_hash');
 
         // BRND-3 / BRND-5: one source for the platform and shop brand.
         $branding = $this->getBrandingAction->execute();
@@ -170,9 +179,53 @@ final class GetSystemContextAction
                 'logo_dark' => $tenantBrand->logoDarkUrl ?? $tenantBrand->logoLightUrl ?? $platformLogos['dark'],
                 'logo' => $tenantBrand->logoLightUrl ?? $platformLogos['light'],
             ],
+            'entitlements' => $this->entitlements($tenant),
             'notifications' => $alerts,
+            'setup_progress' => $this->setupProgressAction->execute($user),
             'locale' => $locale,
-            'translations' => $translations,
+            'translations_hash' => $translationsHash,
+        ] + ($clientHash === $translationsHash ? [] : ['translations' => $translations]);
+    }
+
+    /**
+     * Effective plan gating for the SPA, mirroring what the `feature:<key>` middleware enforces
+     * (plan + active add-ons + super-admin overrides, canonical keys; one cached read).
+     *
+     * enforced=false (grandfathered planless tenant): everything is allowed, so `features` is
+     * the full catalog and every limit is null (unlimited). enforced=true: `features` holds only
+     * the enabled keys and `limits` the effective caps (null = unlimited).
+     *
+     * @return array{enforced: bool, features: list<string>, limits: array<string, int|null>}
+     */
+    private function entitlements(mixed $tenant): array
+    {
+        if (! $tenant instanceof Tenant || ! $this->planEnforcer->isEnforcedForCurrentTenant()) {
+            $catalog = array_values(array_unique(array_map(
+                fn (string $key): string => $this->canonical($key),
+                array_values(array_filter((array) config('entitlements.features', []), 'is_string')),
+            )));
+            sort($catalog);
+
+            return [
+                'enforced' => false,
+                'features' => $catalog,
+                'limits' => array_fill_keys(LimitResource::values(), null),
+            ];
+        }
+
+        $entitlements = $this->featureManager->entitlements($tenant);
+
+        return [
+            'enforced' => true,
+            'features' => $entitlements->features,
+            'limits' => $entitlements->limits,
         ];
+    }
+
+    private function canonical(string $key): string
+    {
+        $canonical = (array) config('entitlements.aliases', []);
+
+        return is_string($canonical[$key] ?? null) ? $canonical[$key] : $key;
     }
 }

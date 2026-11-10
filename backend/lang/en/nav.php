@@ -108,6 +108,7 @@ return [
         'journal_open_cta_hint' => 'Click to open a new journal',
         'journal_number' => '• Journal (#:number)',
         'open_journal' => '• Open journal',
+        'store_and_shift' => 'Branch and journal',
         'back_to_sections' => 'Back to all sections',
         'logout_confirm_title' => 'Sign out?',
         'logout_confirm_text' => 'Are you sure you want to sign out and end this session?',
@@ -151,5 +152,59 @@ return [
         'settings_index' => 'System & business settings',
         'profile_show' => 'Profile & account',
         'trash_index' => 'Recycle bin',
+    ],
+
+    // Sidebar / drawer menu labels (Composables/useNavigation.js)
+    'menu' => [
+        'sections' => [
+            'main' => [
+                'title' => 'Home',
+                'subtitle' => 'Dashboard and live analytics',
+            ],
+            'sales' => [
+                'title' => 'Sales & POS',
+                'subtitle' => 'Invoices, POS, daily journal and customers',
+            ],
+            'inventory' => [
+                'title' => 'Inventory, Items & Branches',
+                'subtitle' => 'Items, categories, stores and transfers',
+            ],
+            'purchases' => [
+                'title' => 'Purchases & Suppliers',
+                'subtitle' => 'Supply invoices and supplier accounts',
+            ],
+            'finance' => [
+                'title' => 'Finance, Returns & Reports',
+                'subtitle' => 'Expenses, returns and profits',
+            ],
+            'system' => [
+                'title' => 'System & Security',
+                'subtitle' => 'Users, permissions and audit log',
+            ],
+        ],
+        'items' => [
+            'dashboard' => 'Dashboard',
+            'invoices' => 'Sales Invoices',
+            'pos' => 'Quick POS',
+            'daily-journal' => 'Daily Journal, Cash Drawer & Shifts',
+            'customers' => 'Customers & Companies',
+            'items' => 'Items & Prices',
+            'categories' => 'Item Categories',
+            'stores' => 'Stores & Branches',
+            'stores-stocks' => 'Live Store Stock',
+            'stock-transfers' => 'Stock Transfers',
+            'smart-reorder' => 'Purchasing Assistant & Reorder',
+            'coffee-blender' => 'Blend Maker',
+            'purchases' => 'Purchase & Supply Invoices',
+            'suppliers' => 'Suppliers & Companies',
+            'expenses' => 'Expenses & Custody',
+            'returns' => 'Returns Register',
+            'reports' => 'Financial & Profit Reports',
+            'users' => 'Users & Cashiers',
+            'roles' => 'Roles & Permissions',
+            'activity-logs' => 'Activity & Audit Log',
+            'trash' => 'Recycle Bin',
+            'settings' => 'Business Settings',
+        ],
     ],
 ];

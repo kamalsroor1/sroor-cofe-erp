@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-3xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader :title="$t('profile.title')" :subtitle="$t('profile.subtitle')" icon="👤" />
+    <PageHeader :title="$t('profile.title')" :subtitle="$t('profile.subtitle')" icon="user" />
 
     <!-- Loading Skeleton State -->
     <div v-if="isLoading" class="p-16 text-center">

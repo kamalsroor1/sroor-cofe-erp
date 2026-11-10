@@ -168,7 +168,8 @@
                 {{ formatQty(item.current_stock) }} {{ item.unit }}
               </span>
               <div v-if="item.is_low_stock" class="text-[10px] text-rose-500 font-bold mt-0.5">
-                🚨 {{ $t('inventory.min_stock_level') }}: {{ formatQty(item.min_stock_level) }}
+                <AlertTriangle class="inline w-3 h-3 me-1 align-text-bottom" />{{ $t('inventory.min_stock_level') }}:
+                {{ formatQty(item.min_stock_level) }}
               </div>
             </div>
 
@@ -176,7 +177,7 @@
               <span class="text-[10px] text-slate-400 block">{{ $t('inventory.retail_price') }}:</span>
               <span class="font-mono font-black text-sm text-emerald-500">
                 {{ formatMoney(item.selling_price) }}
-                <span class="text-[10px] font-normal font-tajawal">{{ $t('common.currency') }}</span>
+                <span class="text-[10px] font-normal font-tajawal">{{ currencyLabel }}</span>
               </span>
               <div class="text-[10px] text-purple-500 dark:text-purple-400 font-mono mt-0.5">
                 {{ $t('inventory.wholesale_price') }}: {{ formatMoney(item.min_selling_price || item.selling_price) }}
@@ -243,32 +244,37 @@
       v-else
       :title="$t('inventory.no_items_found')"
       :description="$t('inventory.no_items_description')"
-      :icon="'☕'"
+      :icon="'coffee'"
     >
       <template #action>
-        <BaseButton
-          type="button"
-          variant="gradient"
-          size="md"
-          :icon="Plus"
-          :label="$t('inventory.add_first_item')"
-          @click="$emit('create')"
-        />
+        <FeatureGate feature="items.manage">
+          <BaseButton
+            type="button"
+            variant="gradient"
+            size="md"
+            :icon="Plus"
+            :label="$t('inventory.add_first_item')"
+            @click="$emit('create')"
+          />
+        </FeatureGate>
       </template>
     </EmptyState>
   </div>
 </template>
 
 <script setup>
-import { Sliders, History, Pencil, Trash2, Plus } from 'lucide-vue-next';
+import { Sliders, History, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-vue-next';
 import EmptyState from '../Common/EmptyState.vue';
 import BaseButton from '../Common/BaseButton.vue';
+import FeatureGate from '../FeatureGate.vue';
 import ActionMenu from '../ActionMenu.vue';
 import TableSkeleton from '../Common/Skeletons/TableSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 import { trans } from '../../helpers/trans';
+import { useAuthStore } from '../../stores/auth';
+import { useAppConfigStore } from '../../stores/appConfig';
 
-const { formatMoney, formatQty } = useFormatters();
+const { formatMoney, formatQty, currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, default: () => [] },
@@ -280,27 +286,33 @@ defineProps({
 });
 
 const emit = defineEmits(['create', 'edit', 'adjust', 'delete', 'page-change']);
+const authStore = useAuthStore();
+const appConfigStore = useAppConfigStore();
 
 const getItemActions = (item) => [
   {
     label: trans('inventory.adjust_stock'),
     icon: Sliders,
+    show: authStore.hasPermission('inventory.adjust') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('adjust', item),
   },
   {
     label: trans('inventory.movements_log'),
     icon: History,
     href: `/items/${item.id}/movements`,
+    show: appConfigStore.hasFeature('items.movements'),
   },
   {
     label: trans('common.edit'),
     icon: Pencil,
+    show: authStore.hasPermission('items.edit') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('edit', item),
   },
   {
     label: trans('common.delete'),
     icon: Trash2,
     variant: 'danger',
+    show: authStore.hasPermission('items.delete') && appConfigStore.hasFeature('items.manage'),
     onClick: () => emit('delete', item),
   },
 ];

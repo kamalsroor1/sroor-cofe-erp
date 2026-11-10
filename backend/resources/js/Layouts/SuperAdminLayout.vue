@@ -110,7 +110,6 @@ const handleLogout = async () => {
 <template>
   <div
     class="flex-1 h-full max-h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white font-tajawal"
-    dir="rtl"
   >
     <!-- Top Navbar -->
     <header
@@ -182,7 +181,7 @@ const handleLogout = async () => {
     <Transition name="sidebar-drawer">
       <aside
         v-if="mobileMenuOpen"
-        class="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-indigo-900/40 p-4 flex flex-col space-y-6 shadow-2xl md:hidden font-tajawal"
+        class="fixed inset-y-0 start-0 z-50 w-72 max-w-[85vw] h-full bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-indigo-900/40 p-4 flex flex-col space-y-6 shadow-2xl md:hidden font-tajawal"
       >
         <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2.5">
@@ -250,7 +249,7 @@ const handleLogout = async () => {
     <div class="flex-1 flex overflow-hidden">
       <!-- Desktop Sidebar (Hidden on Mobile) -->
       <aside
-        class="hidden md:flex w-64 bg-white dark:bg-slate-900/60 border-l border-slate-200 dark:border-indigo-900/30 flex-col p-4 space-y-6 shrink-0 font-tajawal shadow-xs"
+        class="hidden md:flex w-64 bg-white dark:bg-slate-900/60 border-e border-slate-200 dark:border-indigo-900/30 flex-col p-4 space-y-6 shrink-0 font-tajawal shadow-xs"
       >
         <div class="space-y-1">
           <div class="px-3 text-[11px] font-black tracking-wider text-indigo-600 dark:text-indigo-400 uppercase mb-2">
@@ -325,6 +324,10 @@ const handleLogout = async () => {
 .sidebar-drawer-enter-from,
 .sidebar-drawer-leave-to {
   transform: translateX(100%);
+}
+[dir='ltr'] .sidebar-drawer-enter-from,
+[dir='ltr'] .sidebar-drawer-leave-to {
+  transform: translateX(-100%);
 }
 
 .fade-enter-active,

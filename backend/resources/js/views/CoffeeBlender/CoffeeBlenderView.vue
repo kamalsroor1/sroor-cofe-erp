@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
-    <PageHeader :title="$t('inventory.blender_title')" :subtitle="$t('inventory.blender_subtitle')" icon="📦">
+    <PageHeader :title="$t('inventory.blender_title')" :subtitle="$t('inventory.blender_subtitle')" icon="package">
       <template #actions>
         <router-link
           to="/invoices"
           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
         >
-          <ArrowRight class="w-4 h-4" />
+          <ArrowRight class="ltr:rotate-180 w-4 h-4" />
           <span>{{ $t('nav.invoices_log') }}</span>
         </router-link>
       </template>
@@ -27,13 +27,13 @@
         />
 
         <CoffeeBlenderFormulationCard
-          v-model:selected-item-id-to-add="selectedItemIdToAdd"
+          v-model:selected-item-to-add="selectedItemToAdd"
           v-model:cardamom-grams="cardamomGrams"
           v-model:notes="notes"
           :components="components"
           :calculated-components="calculatedComponents"
           :total-percentage="totalPercentage"
-          :item-options="itemOptions"
+          :search-fn="searchItems"
           @add-component="addComponentRow"
           @remove-component="removeComponentRow"
           @update-percentage="updateComponentPercentage"
@@ -48,7 +48,7 @@
           :total-calculated-cost="totalCalculatedCost"
           :total-calculated-price="totalCalculatedPrice"
           :profit-margin="profitMargin"
-          :customer-options="customerOptions"
+          :search-customers="searchCustomers"
           :is-submitting="isSubmitting"
           :components-count="components.length"
           @submit-invoice="submitBlendInvoice"
@@ -70,7 +70,7 @@ const {
   blendName,
   targetWeightGrams,
   selectedCustomerId,
-  selectedItemIdToAdd,
+  selectedItemToAdd,
   roastType,
   grindLevel,
   cardamomGrams,
@@ -79,8 +79,8 @@ const {
   presetWeights,
   roastOptions,
   grindOptions,
-  itemOptions,
-  customerOptions,
+  searchItems,
+  searchCustomers,
   components,
   calculatedComponents,
   totalPercentage,

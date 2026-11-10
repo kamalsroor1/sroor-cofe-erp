@@ -42,21 +42,21 @@
     >
       <div class="flex justify-between text-slate-600 dark:text-slate-300 font-sans font-tajawal">
         <span>{{ $t('purchases.items_total_value') }}</span>
-        <span class="font-mono font-bold">{{ formatMoney(subtotal) }} {{ $t('common.currency') }}</span>
+        <span class="font-mono font-bold">{{ formatMoney(subtotal) }} {{ currencyLabel }}</span>
       </div>
       <div v-if="discount > 0" class="flex justify-between text-rose-500 font-sans font-tajawal">
         <span>{{ $t('purchases.discount_earned') }}</span>
-        <span class="font-mono font-bold">-{{ formatMoney(discount) }} {{ $t('common.currency') }}</span>
+        <span class="font-mono font-bold">-{{ formatMoney(discount) }} {{ currencyLabel }}</span>
       </div>
       <div
         class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-sans font-tajawal"
       >
         <span>{{ $t('purchases.final_net_total') }}</span>
-        <span class="font-mono text-theme-primary">{{ formatMoney(netTotal) }} {{ $t('common.currency') }}</span>
+        <span class="font-mono text-theme-primary">{{ formatMoney(netTotal) }} {{ currencyLabel }}</span>
       </div>
       <div v-if="remaining > 0" class="flex justify-between text-rose-500 font-bold font-sans font-tajawal pt-1">
         <span>{{ $t('purchases.remaining_debt') }}</span>
-        <span class="font-mono">{{ formatMoney(remaining) }} {{ $t('common.currency') }}</span>
+        <span class="font-mono">{{ formatMoney(remaining) }} {{ currencyLabel }}</span>
       </div>
     </div>
   </div>
@@ -67,7 +67,7 @@ import BaseNumberInput from '../Form/BaseNumberInput.vue';
 import BaseTextarea from '../Form/BaseTextarea.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   notes: { type: String, default: '' },

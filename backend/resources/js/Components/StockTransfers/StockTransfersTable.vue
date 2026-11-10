@@ -114,6 +114,7 @@ import EmptyState from '@/Components/Common/EmptyState.vue';
 import BaseButton from '@/Components/Common/BaseButton.vue';
 import ActionMenu from '@/Components/ActionMenu.vue';
 import { useTrans } from '@/Composables/useTrans';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useTrans();
 
@@ -128,6 +129,7 @@ defineProps({
 });
 
 const emit = defineEmits(['preview', 'cancel', 'page-change']);
+const authStore = useAuthStore();
 
 const columns = computed(() => [
   { key: 'transfer_number', label: t('inventory.transfer_number'), mono: true },
@@ -149,7 +151,7 @@ const getTransferActions = (trf) => [
     label: t('inventory.cancel_transfer'),
     icon: Ban,
     variant: 'danger',
-    show: !trf.is_cancelled,
+    show: !trf.is_cancelled && authStore.hasPermission('stores.manage'),
     onClick: () => emit('cancel', trf),
   },
 ];

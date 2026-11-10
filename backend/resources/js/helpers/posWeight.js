@@ -1,5 +1,5 @@
-import { dDiv, dMul, isPositive, dRoundTo } from './decimal';
-import { toWesternDigits } from './digits';
+import { dDiv, dMul, isPositive, dRoundTo } from './decimal.js';
+import { toWesternDigits } from './digits.js';
 
 /** Quick weights of the picker, in the item's weight unit (kg). */
 export const WEIGHT_PRESETS = [

@@ -1,10 +1,13 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../Services/api';
+import { useLoadError } from './useLoadError';
+import { businessToday, startOfMonth, endOfMonth, startOfYear, endOfYear } from './useBusinessDate';
 
 export function useSupplierStatement() {
     const route = useRoute();
     const supplierId = route.params.id;
+    const { error, errorMessage, clearError, setError } = useLoadError();
 
     const supplier = ref(null);
     const ledger = ref([]);
@@ -21,22 +24,17 @@ export function useSupplierStatement() {
 
     const applyPreset = (preset) => {
         activePreset.value = preset;
-        const now = new Date();
-        const formatDate = (d) => d.toISOString().split('T')[0];
+        const today = businessToday();
 
         if (preset === 'today') {
-            dateFrom.value = formatDate(now);
-            dateTo.value = formatDate(now);
+            dateFrom.value = today;
+            dateTo.value = today;
         } else if (preset === 'this_month') {
-            const start = new Date(now.getFullYear(), now.getMonth(), 1);
-            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            dateFrom.value = formatDate(start);
-            dateTo.value = formatDate(end);
+            dateFrom.value = startOfMonth(today);
+            dateTo.value = endOfMonth(today);
         } else if (preset === 'this_year') {
-            const start = new Date(now.getFullYear(), 0, 1);
-            const end = new Date(now.getFullYear(), 11, 31);
-            dateFrom.value = formatDate(start);
-            dateTo.value = formatDate(end);
+            dateFrom.value = startOfYear(today);
+            dateTo.value = endOfYear(today);
         } else if (preset === 'all') {
             dateFrom.value = '';
             dateTo.value = '';
@@ -46,6 +44,7 @@ export function useSupplierStatement() {
 
     const fetchStatement = async () => {
         isLoading.value = true;
+        clearError();
         try {
             const response = await api.get(`/suppliers/${supplierId}/statement`, {
                 params: {
@@ -58,9 +57,11 @@ export function useSupplierStatement() {
                 supplier.value = data.supplier;
                 ledger.value = data.ledger || [];
                 summary.value = data.summary || {};
+            } else {
+                setError(null);
             }
-        } catch (error) {
-            console.error('Failed to load supplier statement:', error);
+        } catch (err) {
+            setError(err);
         } finally {
             isLoading.value = false;
         }
@@ -80,6 +81,9 @@ export function useSupplierStatement() {
         dateTo,
         activePreset,
         isLoading,
+        error,
+        errorMessage,
+        retry: fetchStatement,
         applyPreset,
         fetchStatement,
         printStatement,

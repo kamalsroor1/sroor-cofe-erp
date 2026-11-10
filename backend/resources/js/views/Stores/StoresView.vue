@@ -20,26 +20,31 @@
     </PageHeader>
 
     <!-- 2. 📊 Summary Metrics Grid -->
-    <StoresMetricsGrid :stores="stores" :is-loading="isLoading" />
+    <ErrorState v-if="error && stores.length === 0" :message="errorMessage" :loading="isLoading" @retry="fetchStores" />
 
-    <!-- 3. 🔍 Search & Filters Bar -->
-    <StoresSearchFilterBar
-      v-model:search="searchQuery"
-      v-model:type="selectedType"
-      v-model:status="selectedStatus"
-      @reset="resetFilters"
-    />
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="fetchStores" />
+      <StoresMetricsGrid :stores="stores" :is-loading="isLoading" />
 
-    <!-- 4. 🏬 Stores Cards Grid with Shimmer Skeletons -->
-    <StoresGrid
-      :stores="filteredStores"
-      :is-loading="isLoading"
-      @create="openCreateModal"
-      @edit="openEditModal"
-      @delete="deleteStore"
-      @toggle-active="toggleActive"
-      @manage-staff="openStaffModal"
-    />
+      <!-- 3. 🔍 Search & Filters Bar -->
+      <StoresSearchFilterBar
+        v-model:search="searchQuery"
+        v-model:type="selectedType"
+        v-model:status="selectedStatus"
+        @reset="resetFilters"
+      />
+
+      <!-- 4. 🏬 Stores Cards Grid with Shimmer Skeletons -->
+      <StoresGrid
+        :stores="filteredStores"
+        :is-loading="isLoading"
+        @create="openCreateModal"
+        @edit="openEditModal"
+        @delete="deleteStore"
+        @toggle-active="toggleActive"
+        @manage-staff="openStaffModal"
+      />
+    </template>
 
     <!-- 5. Create / Edit Store Modal -->
     <StoreFormModal
@@ -74,6 +79,9 @@ import { Plus, Package, Store as StoreIcon } from 'lucide-vue-next';
 import Swal from 'sweetalert2';
 import api from '../../Services/api';
 import { useTrans } from '../../Composables/useTrans';
+import { useLoadError } from '../../Composables/useLoadError';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import StoresMetricsGrid from '../../Components/Stores/StoresMetricsGrid.vue';
@@ -134,14 +142,17 @@ const resetFilters = () => {
   selectedStatus.value = 'all';
 };
 
+const { error, errorMessage, clearError, setError } = useLoadError();
+
 const fetchStores = async () => {
   isLoading.value = true;
+  clearError();
   try {
     const res = await api.get('/stores');
     stores.value = res.data?.stores || [];
     allUsers.value = res.data?.all_users || [];
   } catch (err) {
-    console.error('Failed to load stores:', err);
+    setError(err);
   } finally {
     isLoading.value = false;
   }

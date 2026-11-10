@@ -2,7 +2,6 @@
   <header
     v-if="isDesktop"
     class="h-9 w-full shrink-0 sticky top-0 bg-slate-950 text-slate-300 border-b border-slate-800/80 flex items-center justify-between px-3 select-none text-xs font-tajawal z-[99999] drag-region"
-    dir="rtl"
   >
     <!-- ☕ Right Side: App Brand & Active Store Context -->
     <div class="flex items-center gap-2.5 shrink-0 no-drag">
@@ -18,22 +17,22 @@
         <select
           :value="authStore.currentStore?.id"
           @change="handleStoreSwitch($event.target.value)"
-          class="h-6 pr-6 pl-2 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/30 text-theme-primary text-[10px] font-bold rounded-lg focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
+          class="h-6 ps-6 pe-2 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/30 text-theme-primary text-[10px] font-bold rounded-lg focus:outline-none focus:ring-1 focus:ring-theme-primary cursor-pointer font-tajawal appearance-none transition"
         >
           <option v-for="s in authStore.stores" :key="s.id" :value="s.id" class="bg-slate-900 text-white">
-            🏬 {{ s.name }}
+            {{ s.name }}
           </option>
         </select>
-        <ChevronDown class="w-3 h-3 text-theme-primary absolute right-1.5 pointer-events-none" />
+        <ChevronDown class="w-3 h-3 text-theme-primary absolute start-1.5 pointer-events-none" />
       </div>
       <router-link
         v-else
         to="/stores"
         class="px-2 py-0.5 rounded-lg bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/20 text-theme-primary text-[10px] font-bold flex items-center gap-1 transition no-drag cursor-pointer"
-        title="الفرع النشط (اضغط لإدارة الفروع)"
+        :title="$t('desktop.titlebar.active_branch_hint')"
       >
         <Store class="w-3 h-3" />
-        <span>{{ authStore.activeStoreName || 'الفرع الرئيسي' }}</span>
+        <span>{{ authStore.activeStoreName || $t('desktop.titlebar.main_branch') }}</span>
       </router-link>
     </div>
 
@@ -55,11 +54,17 @@
       <!-- Network Ping -->
       <div
         class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800"
-        :title="isOnline ? 'الاتصال بالسيرفر سليم ومستقر' : 'تعذر الاتصال بالسيرفر'"
+        :title="isOnline ? $t('desktop.titlebar.server_ok') : $t('desktop.titlebar.server_down')"
       >
         <span class="w-2 h-2 rounded-full" :class="isOnline ? 'bg-emerald-500' : 'bg-rose-500 animate-ping'"></span>
         <span :class="isOnline ? 'text-slate-300 font-bold' : 'text-rose-400 font-bold'">
-          {{ isOnline ? (serverPingMs ? `${serverPingMs}ms` : 'سحابي') : 'غير متصل' }}
+          {{
+            isOnline
+              ? serverPingMs
+                ? `${serverPingMs}ms`
+                : $t('desktop.titlebar.cloud')
+              : $t('desktop.titlebar.offline')
+          }}
         </span>
       </div>
 
@@ -68,10 +73,10 @@
         type="button"
         @click="handleForceReload"
         class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer active:scale-95"
-        title="تحديث فوري وتجاوز الكاش (Ctrl+Shift+R أو F5)"
+        :title="$t('desktop.titlebar.force_reload_hint')"
       >
         <RefreshCw class="w-3 h-3 text-cyan-400" :class="{ 'animate-spin': isReloading }" />
-        <span class="font-sans text-[10px] hidden lg:inline">تحديث الكاش</span>
+        <span class="font-sans text-[10px] hidden lg:inline">{{ $t('desktop.titlebar.clear_cache') }}</span>
       </button>
 
       <!-- 🚀 Live Update Available Badge -->
@@ -80,10 +85,10 @@
         type="button"
         @click="checkForUpdates(true)"
         class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-[10px] animate-bounce shadow-md shadow-amber-500/20 cursor-pointer active:scale-95"
-        title="يتوفر إصدار جديد للبرنامج - انقر للتحديث"
+        :title="$t('desktop.titlebar.update_available_hint')"
       >
         <Rocket class="w-3 h-3" />
-        <span>تحديث v{{ latestVersionData?.latest_version }}</span>
+        <span>{{ $t('desktop.titlebar.update_version', { version: latestVersionData?.latest_version }) }}</span>
       </button>
     </div>
 
@@ -93,7 +98,7 @@
       <router-link
         to="/pos"
         class="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-[11px] transition border border-emerald-500/20 active:scale-95"
-        title="نقطة البيع السريعة (F2)"
+        :title="$t('desktop.titlebar.quick_pos_hint')"
       >
         <Zap class="w-3 h-3 text-emerald-400" />
         <span>POS</span>
@@ -105,7 +110,7 @@
         type="button"
         @click="$emit('open-shortcuts')"
         class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-900 rounded-lg transition"
-        title="دليل اختصارات الكيبورد (F1)"
+        :title="$t('desktop.titlebar.shortcuts_hint')"
       >
         <HelpCircle class="w-3.5 h-3.5" />
       </button>
@@ -116,7 +121,7 @@
         @click="toggleSound"
         class="p-1.5 rounded-lg transition"
         :class="isSoundEnabled ? 'text-theme-primary hover:bg-slate-900' : 'text-slate-500 hover:bg-slate-900'"
-        :title="isSoundEnabled ? 'كتم أصوات الكاشير' : 'تفعيل أصوات الكاشير'"
+        :title="isSoundEnabled ? $t('desktop.titlebar.mute_sound') : $t('desktop.titlebar.unmute_sound')"
       >
         <Volume2 v-if="isSoundEnabled" class="w-3.5 h-3.5" />
         <VolumeX v-else class="w-3.5 h-3.5" />
@@ -137,7 +142,7 @@
         type="button"
         @click="toggleFullscreen"
         class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-900 rounded-lg transition"
-        title="الشاشة الكاملة (F11)"
+        :title="$t('desktop.titlebar.fullscreen_hint')"
       >
         <Maximize2 class="w-3.5 h-3.5" />
       </button>
@@ -149,7 +154,7 @@
         type="button"
         @click="minimizeWindow"
         class="w-7 h-6 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded transition cursor-pointer"
-        title="تصغير (-)"
+        :title="$t('desktop.titlebar.minimize')"
       >
         <Minus class="w-3.5 h-3.5" />
       </button>
@@ -158,7 +163,7 @@
         type="button"
         @click="maximizeWindow"
         class="w-7 h-6 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded transition cursor-pointer"
-        :title="isMaximized ? 'استعادة للحجم الطبيعي' : 'تكبير النافذة'"
+        :title="isMaximized ? $t('desktop.titlebar.restore') : $t('desktop.titlebar.maximize')"
       >
         <Copy v-if="isMaximized" class="w-3 h-3 rotate-180" />
         <Square v-else class="w-3 h-3" />
@@ -168,7 +173,7 @@
         type="button"
         @click="closeWindow"
         class="w-7 h-6 flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-600 rounded transition cursor-pointer"
-        title="إغلاق (Alt+F4)"
+        :title="$t('desktop.titlebar.close')"
       >
         <X class="w-3.5 h-3.5" />
       </button>

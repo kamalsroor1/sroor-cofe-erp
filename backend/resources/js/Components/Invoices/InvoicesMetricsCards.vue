@@ -11,7 +11,7 @@
       <MetricCard
         :title="$t('common.total_sales')"
         :value="formatMoney(summary.total_sales || 0)"
-        :currency="$t('common.currency')"
+        :currency="currencyLabel"
         variant="success"
         :icon="TrendingUp"
         icon-bg="bg-emerald-500/10"
@@ -23,7 +23,7 @@
       <MetricCard
         :title="$t('invoices.collected_cash_electronic')"
         :value="formatMoney(summary.total_paid || 0)"
-        :currency="$t('common.currency')"
+        :currency="currencyLabel"
         variant="cyan"
         :icon="CheckCircle2"
         icon-bg="bg-cyan-500/10"
@@ -35,7 +35,7 @@
       <MetricCard
         :title="$t('invoices.remaining_credit_due')"
         :value="formatMoney(summary.total_due || 0)"
-        :currency="$t('common.currency')"
+        :currency="currencyLabel"
         variant="danger"
         :icon="Clock"
         icon-bg="bg-rose-500/10"
@@ -64,7 +64,7 @@ import MetricCard from '../Common/MetricCard.vue';
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   summary: {

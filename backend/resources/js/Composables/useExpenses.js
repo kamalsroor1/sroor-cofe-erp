@@ -2,6 +2,8 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import api from '../Services/api';
 import Swal from 'sweetalert2';
 import { useTrans } from './useTrans';
+import { useLoadError } from './useLoadError';
+import { businessToday } from './useBusinessDate';
 
 export function useExpenses() {
     const { t } = useTrans();
@@ -22,8 +24,7 @@ export function useExpenses() {
     const dateFrom = ref('');
     const dateTo = ref('');
     const isLoading = ref(false);
-    const hasError = ref(false);
-    const errorMessage = ref('');
+    const { error: hasError, errorMessage, clearError, setError } = useLoadError();
     const isSubmitting = ref(false);
 
     const pagination = ref({
@@ -43,7 +44,7 @@ export function useExpenses() {
         category: '',
         cost_center: 'operational',
         amount: '',
-        expense_date: new Date().toISOString().split('T')[0],
+        expense_date: businessToday(),
         payment_method: 'cash',
         notes: '',
     });
@@ -59,8 +60,7 @@ export function useExpenses() {
 
     const fetchExpenses = async (page = 1) => {
         isLoading.value = true;
-        hasError.value = false;
-        errorMessage.value = '';
+        clearError();
         try {
             const response = await api.get('/expenses', {
                 params: {
@@ -88,9 +88,7 @@ export function useExpenses() {
                 total: expenses.value.length,
             };
         } catch (error) {
-            console.error('Failed to load expenses:', error);
-            hasError.value = true;
-            errorMessage.value = error?.response?.data?.message || '';
+            setError(error);
         } finally {
             isLoading.value = false;
         }
@@ -115,7 +113,7 @@ export function useExpenses() {
             category: t('expenses.preset_customs'),
             cost_center: 'operational',
             amount: '',
-            expense_date: new Date().toISOString().split('T')[0],
+            expense_date: businessToday(),
             payment_method: 'cash',
             notes: '',
         });

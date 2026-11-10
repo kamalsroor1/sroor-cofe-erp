@@ -32,7 +32,7 @@ final class NoHardcodedRealPhonesTest extends TestCase
     /** @var list<string> */
     private const SCANNED_EXTENSIONS = ['php', 'js', 'mjs', 'cjs', 'ts', 'vue', 'json'];
 
-    private const EXCLUDED_PATH_PATTERN = '#(^|/)(node_modules|vendor|\.auth)/|(^|/)tests/e2e/reports/|defaultTranslations\.(js|json)$#';
+    private const EXCLUDED_PATH_PATTERN = '#(^|/)(node_modules|vendor|\.auth)/|(^|/)tests/e2e/reports/|defaultTranslations(\.[a-z]+)?\.(js|json)$#';
 
     private static function backendPath(string $relative = ''): string
     {

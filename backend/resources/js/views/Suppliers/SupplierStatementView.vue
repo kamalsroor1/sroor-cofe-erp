@@ -3,28 +3,36 @@
     <!-- Header & Print Action -->
     <SupplierStatementHeader :supplier-name="supplier?.name" @print="printStatement" />
 
-    <!-- Summary KPI Profile Cards -->
-    <SupplierStatementSummaryCards
-      :summary="summary"
-      :current-balance="supplier?.current_balance || 0"
-      :loading="isLoading"
-    />
+    <ErrorState v-if="error && !supplier" :message="errorMessage" :loading="isLoading" @retry="retry" />
 
-    <!-- Date Range Filter Bar -->
-    <SupplierStatementFilterBar
-      v-model:date-from="dateFrom"
-      v-model:date-to="dateTo"
-      :active-preset="activePreset"
-      @filter="fetchStatement"
-      @preset="applyPreset"
-    />
+    <template v-else>
+      <InlineErrorBar v-if="error" :message="errorMessage" @retry="retry" />
 
-    <!-- Ledger Table & Mobile Cards -->
-    <SupplierStatementTable :ledger="ledger" :loading="isLoading" />
+      <!-- Summary KPI Profile Cards -->
+      <SupplierStatementSummaryCards
+        :summary="summary"
+        :current-balance="supplier?.current_balance || 0"
+        :loading="isLoading"
+      />
+
+      <!-- Date Range Filter Bar -->
+      <SupplierStatementFilterBar
+        v-model:date-from="dateFrom"
+        v-model:date-to="dateTo"
+        :active-preset="activePreset"
+        @filter="fetchStatement"
+        @preset="applyPreset"
+      />
+
+      <!-- Ledger Table & Mobile Cards -->
+      <SupplierStatementTable :ledger="ledger" :loading="isLoading" />
+    </template>
   </div>
 </template>
 
 <script setup>
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import SupplierStatementHeader from '../../Components/Suppliers/SupplierStatementHeader.vue';
 import SupplierStatementSummaryCards from '../../Components/Suppliers/SupplierStatementSummaryCards.vue';
 import SupplierStatementFilterBar from '../../Components/Suppliers/SupplierStatementFilterBar.vue';
@@ -39,6 +47,9 @@ const {
   dateTo,
   activePreset,
   isLoading,
+  error,
+  errorMessage,
+  retry,
   applyPreset,
   fetchStatement,
   printStatement,

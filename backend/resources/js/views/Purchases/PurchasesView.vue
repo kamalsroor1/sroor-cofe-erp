@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader :title="$t('purchases.purchases_list')" :subtitle="$t('purchases.purchases_list_sub')" icon="🚛">
+    <PageHeader :title="$t('purchases.purchases_list')" :subtitle="$t('purchases.purchases_list_sub')" icon="truck">
       <template #actions>
         <div class="flex items-center gap-2">
           <!-- Smart Reorder Link -->

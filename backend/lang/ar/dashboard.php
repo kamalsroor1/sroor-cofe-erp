@@ -120,7 +120,7 @@ return [
     // App Navigation Menu Hub Keys
     'menu_hub_title' => 'لوحة المستندات والعمليات السريعة (App Hub)',
     'menu_hub_subtitle' => 'الوصول المباشر لكافة شاشات ومستندات المنظومة بلمسة واحدة',
-    'search_screens_placeholder' => '🔍 ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...',
+    'search_screens_placeholder' => 'ابحث عن أي شاشة أو مستند (مثال: بيع، شراء، جرد، خزينة)...',
     'no_screens_found' => 'لم يتم العثور على أي شاشة مطابقة لبحثك',
 
     // Keys used by the SPA that were missing (UX review 2026-10-09, appendix B)
@@ -149,5 +149,90 @@ return [
         'high_cash_title' => 'سيولة نقدية عالية بالدرج',
         'high_cash_desc' => 'يوجد حالياً :amount :currency نقداً بالدرج. يُنصح بتوريد الفائض.',
         'high_cash_link' => 'دفتر اليومية والخزينة',
+    ],
+    'menu_hub' => [
+        'tabs' => [
+            'all' => 'الكل',
+            'sales' => 'المبيعات والـ POS',
+            'purchases' => 'المشتريات والتوريد',
+            'finance' => 'الخزينة واليومية',
+            'inventory' => 'المخازن والأصناف',
+            'reports' => 'التقارير والمتابعة',
+            'setup' => 'التعريفات والنظام',
+        ],
+        'tiles' => [
+            'pos' => [
+                'title' => 'نقطة البيع (POS)',
+                'subtitle' => 'كاشير سريع ولمس',
+            ],
+            'invoices' => [
+                'title' => 'فاتورة مبيعات',
+                'subtitle' => 'إصدار ومتابعة البيع',
+            ],
+            'sale_returns' => [
+                'title' => 'مرتجع مبيعات',
+                'subtitle' => 'استرجاع بضاعة',
+            ],
+            'customers' => [
+                'title' => 'العملاء والحسابات',
+                'subtitle' => 'كشوف حساب الآجل',
+            ],
+            'purchases' => [
+                'title' => 'فاتورة مشتريات',
+                'subtitle' => 'توريد واستلام بضاعة',
+            ],
+            'purchase_returns' => [
+                'title' => 'مرتجع مشتريات',
+                'subtitle' => 'إرجاع لمورد',
+            ],
+            'suppliers' => [
+                'title' => 'الموردين والشركات',
+                'subtitle' => 'أرصدة الموردين',
+            ],
+            'smart_reorder' => [
+                'title' => 'رادار النواقص',
+                'subtitle' => 'إعادة الطلب الذكي',
+            ],
+            'daily_journal' => [
+                'title' => 'دفتر اليومية',
+                'subtitle' => 'حركة الخزينة والسيولة',
+            ],
+            'expenses' => [
+                'title' => 'المصروفات والعهد',
+                'subtitle' => 'سندات الصرف والتشغيل',
+            ],
+            'items' => [
+                'title' => 'كارت صنف والمخزن',
+                'subtitle' => 'إدخال البضاعة والأسعار',
+            ],
+            'categories' => [
+                'title' => 'فئات الأصناف',
+                'subtitle' => 'تصنيفات وأقسام المنيو',
+            ],
+            'store_stocks' => [
+                'title' => 'جرد وأرصدة الفروع',
+                'subtitle' => 'جرد الفروع والمخازن',
+            ],
+            'stock_transfers' => [
+                'title' => 'التحويل بين المخازن',
+                'subtitle' => 'إذن تحويل بضاعة',
+            ],
+            'coffee_blender' => [
+                'title' => 'خلطة وتجميع الأصناف',
+                'subtitle' => 'معمل البن والإنتاج',
+            ],
+            'reports' => [
+                'title' => 'التقارير الشاملة',
+                'subtitle' => 'أرباح، مبيعات، ومخازن',
+            ],
+            'stores' => [
+                'title' => 'الفروع والمخازن',
+                'subtitle' => 'إدارة منافذ البيع',
+            ],
+            'settings' => [
+                'title' => 'إعدادات النظام',
+                'subtitle' => 'الضرائب، الفاتورة، والفرع',
+            ],
+        ],
     ],
 ];

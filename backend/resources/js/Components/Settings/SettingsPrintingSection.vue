@@ -42,7 +42,7 @@
           >
             <div
               class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
-              :class="form.show_print_company_name ? '-translate-x-6' : 'translate-x-0'"
+              :class="form.show_print_company_name ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
             ></div>
           </div>
         </div>
@@ -68,7 +68,7 @@
           >
             <div
               class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
-              :class="form.show_print_subtitle ? '-translate-x-6' : 'translate-x-0'"
+              :class="form.show_print_subtitle ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
             ></div>
           </div>
         </div>
@@ -94,7 +94,7 @@
           >
             <div
               class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
-              :class="form.show_print_logo ? '-translate-x-6' : 'translate-x-0'"
+              :class="form.show_print_logo ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
             ></div>
           </div>
         </div>
@@ -122,7 +122,7 @@
           >
             <div
               class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
-              :class="form.thermal_show_customer_balance ? '-translate-x-6' : 'translate-x-0'"
+              :class="form.thermal_show_customer_balance ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
             ></div>
           </div>
         </div>
@@ -146,7 +146,7 @@
           >
             <div
               class="w-5 h-5 rounded-full bg-white transition-transform shadow-md"
-              :class="form.print_show_qr ? '-translate-x-6' : 'translate-x-0'"
+              :class="form.print_show_qr ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'translate-x-0'"
             ></div>
           </div>
         </div>

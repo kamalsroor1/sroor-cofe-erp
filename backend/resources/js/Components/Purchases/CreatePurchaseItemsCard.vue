@@ -21,7 +21,7 @@
     </div>
 
     <!-- 1. Desktop & Tablet Table (hidden md:block) -->
-    <div class="hidden md:block overflow-x-auto">
+    <div class="hidden md:block">
       <table class="w-full text-start text-xs border-collapse">
         <thead>
           <tr
@@ -37,17 +37,13 @@
         <tbody class="divide-y divide-slate-200 dark:divide-slate-800/50">
           <tr v-for="(line, idx) in items" :key="idx" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
             <td class="p-2.5">
-              <select
+              <BaseSelect
                 v-model="line.item_id"
-                @change="$emit('item-select', line)"
-                required
-                class="w-full h-10 px-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-              >
-                <option value="">{{ $t('purchases.select_item_from_list') }}</option>
-                <option v-for="it in availableItems" :key="it.id" :value="it.id">
-                  {{ it.name }} ({{ it.code || $t('purchases.no_code') }}) - {{ it.unit }}
-                </option>
-              </select>
+                :search-fn="searchFn"
+                :selected-option="line.item_option"
+                :placeholder="$t('purchases.select_item_from_list')"
+                @select="$emit('item-select', line, $event)"
+              />
             </td>
 
             <td class="p-2.5">
@@ -76,7 +72,7 @@
 
             <td class="p-2.5 text-end font-mono font-black text-slate-900 dark:text-white text-sm">
               {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
-              {{ $t('common.currency') }}
+              {{ currencyLabel }}
             </td>
 
             <td class="p-2.5 text-center">
@@ -115,17 +111,13 @@
 
         <div>
           <label class="block text-[11px] font-bold text-slate-500 mb-1">{{ $t('purchases.item_material') }}</label>
-          <select
+          <BaseSelect
             v-model="line.item_id"
-            @change="$emit('item-select', line)"
-            required
-            class="w-full h-11 px-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-          >
-            <option value="">{{ $t('purchases.select_item_from_list') }}</option>
-            <option v-for="it in availableItems" :key="it.id" :value="it.id">
-              {{ it.name }} ({{ it.code || $t('purchases.no_code') }})
-            </option>
-          </select>
+            :search-fn="searchFn"
+            :selected-option="line.item_option"
+            :placeholder="$t('purchases.select_item_from_list')"
+            @select="$emit('item-select', line, $event)"
+          />
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -159,7 +151,7 @@
           <span class="font-sans font-bold text-slate-500">{{ $t('common.total') }}:</span>
           <span class="font-black text-slate-900 dark:text-white">
             {{ formatMoney((parseFloat(line.quantity) || 0) * (parseFloat(line.cost_price) || 0)) }}
-            {{ $t('common.currency') }}
+            {{ currencyLabel }}
           </span>
         </div>
       </div>
@@ -170,13 +162,14 @@
 <script setup>
 import { Package, Plus, Trash2 } from 'lucide-vue-next';
 import BaseButton from '../Common/BaseButton.vue';
+import BaseSelect from '../Form/BaseSelect.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   items: { type: Array, default: () => [] },
-  availableItems: { type: Array, default: () => [] },
+  searchFn: { type: Function, required: true },
 });
 
 defineEmits(['add-line', 'remove-line', 'item-select']);

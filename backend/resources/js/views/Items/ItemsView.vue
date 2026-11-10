@@ -1,21 +1,23 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal transition-colors duration-300">
     <!-- 1. 🔝 Page Header & Actions -->
-    <PageHeader :title="$t('inventory.items_title')" :subtitle="$t('inventory.items_subtitle')" :icon="'☕'">
+    <PageHeader :title="$t('inventory.items_title')" :subtitle="$t('inventory.items_subtitle')" :icon="'coffee'">
       <template #actions>
-        <BaseButton
-          type="button"
-          variant="gradient"
-          size="md"
-          :icon="Plus"
-          :label="$t('inventory.add_item')"
-          @click="openCreateModal"
-        />
+        <FeatureGate feature="items.manage">
+          <BaseButton
+            type="button"
+            variant="gradient"
+            size="md"
+            :icon="Plus"
+            :label="$t('inventory.add_item')"
+            @click="openCreateModal"
+          />
+        </FeatureGate>
       </template>
     </PageHeader>
 
     <!-- 2. 📊 Summary KPIs Grid -->
-    <ItemsMetricsGrid :metrics="metrics" :is-loading="isLoading" />
+    <ItemsMetricsGrid v-if="!hasBlockingError" :metrics="metrics" :is-loading="isLoading" />
 
     <!-- 3. 🔍 Search & Status Filters Bar -->
     <ItemsSearchFilterBar
@@ -27,7 +29,19 @@
     />
 
     <!-- 4. 📦 Items Table (Dual Responsive: Desktop Table + Mobile Cards Stack) -->
+    <InlineErrorBar
+      v-if="error && !hasBlockingError"
+      :message="errorMessage"
+      @retry="fetchItems(pagination.current_page)"
+    />
+    <ErrorState
+      v-if="hasBlockingError"
+      :message="errorMessage"
+      :loading="isLoading"
+      @retry="fetchItems(pagination.current_page)"
+    />
     <ItemsTable
+      v-else
       :items="items"
       :pagination="pagination"
       :is-loading="isLoading"
@@ -66,8 +80,11 @@
 
 <script setup>
 import { isWeightUnit } from '../../helpers/weightUnits';
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { Plus } from 'lucide-vue-next';
+import FeatureGate from '../../Components/FeatureGate.vue';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import InlineErrorBar from '../../Components/Common/InlineErrorBar.vue';
 import PageHeader from '../../Components/Common/PageHeader.vue';
 import BaseButton from '../../Components/Common/BaseButton.vue';
 import ItemsMetricsGrid from '../../Components/Items/ItemsMetricsGrid.vue';
@@ -79,8 +96,10 @@ import api from '../../Services/api';
 import Swal from 'sweetalert2';
 import { trans } from '../../helpers/trans';
 import { useUnits } from '../../Composables/useUnits';
+import { useLoadError } from '../../Composables/useLoadError';
 
 const { defaultUnit, unitOptionsFor } = useUnits();
+const { error, errorMessage, clearError, setError } = useLoadError();
 
 const items = ref([]);
 const categories = ref([]);
@@ -94,6 +113,7 @@ const searchQuery = ref('');
 const selectedCategory = ref('all');
 const stockStatus = ref('all');
 const isLoading = ref(true);
+const hasBlockingError = computed(() => error.value && items.value.length === 0);
 const isSubmitting = ref(false);
 
 const pagination = ref({
@@ -130,6 +150,7 @@ const adjustForm = reactive({
 
 const fetchItems = async (page = 1) => {
   isLoading.value = true;
+  clearError();
   try {
     const response = await api.get('/items', {
       params: {
@@ -153,8 +174,8 @@ const fetchItems = async (page = 1) => {
       per_page: 20,
       total: items.value.length,
     };
-  } catch (error) {
-    console.error('Failed to load items:', error);
+  } catch (err) {
+    setError(err);
   } finally {
     isLoading.value = false;
   }

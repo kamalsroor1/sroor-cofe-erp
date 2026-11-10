@@ -86,6 +86,18 @@ final class PlanEnforcer
         }
     }
 
+    /**
+     * Is plan gating in force for the current request's tenant? Same rule assertFeature()
+     * applies (false outside tenancy; false for a grandfathered planless tenant). The SPA
+     * mirrors it through GET /system/context.
+     */
+    public function isEnforcedForCurrentTenant(): bool
+    {
+        $tenant = $this->currentTenant();
+
+        return $tenant !== null && $this->isEnforced($tenant);
+    }
+
     private function currentTenant(): ?Tenant
     {
         if (! function_exists('tenancy') || ! tenancy()->initialized) {

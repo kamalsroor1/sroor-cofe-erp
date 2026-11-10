@@ -1,7 +1,6 @@
 <template>
   <div
     class="print-wrapper min-h-screen bg-slate-200 dark:bg-slate-950 py-6 px-2 font-tajawal text-slate-900 select-none flex flex-col items-center justify-start print:bg-white print:p-0 print:m-0 print:min-h-0"
-    dir="rtl"
   >
     <!-- Action Bar (Hidden on Print) -->
     <div
@@ -21,7 +20,7 @@
         @click="goBack"
         class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
       >
-        <ArrowRight class="w-4 h-4" />
+        <ArrowRight class="ltr:rotate-180 w-4 h-4" />
         <span>{{ $t('common.back') }}</span>
       </button>
     </div>
@@ -32,6 +31,14 @@
         class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"
       ></div>
       <p class="text-xs font-bold">{{ $t('invoices.preparing_receipt') }}</p>
+    </div>
+
+    <!-- Error State -->
+    <div
+      v-else-if="error && !invoice"
+      class="no-print w-full max-w-[80mm] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl"
+    >
+      <ErrorState :message="errorMessage" compact @retry="fetchInvoice" />
     </div>
 
     <!-- 80mm Thermal Receipt Container -->
@@ -105,25 +112,23 @@
       <div class="py-2 border-b-2 border-dashed border-black text-xs space-y-1 text-black">
         <div class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.subtotal') }}:</span>
-          <span class="font-mono font-bold">{{ formatMoney(calculatedSubtotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">{{ formatMoney(calculatedSubtotal) }} {{ currencyLabel }}</span>
         </div>
 
         <div v-if="calculatedDiscount > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.discount') }}:</span>
-          <span class="font-mono font-bold">- {{ formatMoney(calculatedDiscount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">- {{ formatMoney(calculatedDiscount) }} {{ currencyLabel }}</span>
         </div>
 
         <div v-if="calculatedShipping > 0" class="flex justify-between items-center">
           <span class="font-bold">{{ $t('invoices.extra_fees_shipping') }}</span>
-          <span class="font-mono font-bold">+ {{ formatMoney(calculatedShipping) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">+ {{ formatMoney(calculatedShipping) }} {{ currencyLabel }}</span>
         </div>
 
         <!-- GIANT NET TOTAL -->
         <div class="flex justify-between items-center text-sm font-black pt-1.5 border-t-2 border-black">
           <span class="text-sm font-black">{{ $t('invoices.net_total') }}:</span>
-          <span class="font-mono text-base font-black"
-            >{{ formatMoney(calculatedNetTotal) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono text-base font-black">{{ formatMoney(calculatedNetTotal) }} {{ currencyLabel }}</span>
         </div>
 
         <div class="flex justify-between items-center text-xs pt-1 border-t border-dashed border-black/50">
@@ -133,7 +138,7 @@
 
         <div v-if="parseFloat(invoice.paid_amount) > 0" class="flex justify-between items-center text-xs">
           <span>{{ $t('invoices.amount_paid_label') }}</span>
-          <span class="font-mono font-black">{{ formatMoney(invoice.paid_amount) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-black">{{ formatMoney(invoice.paid_amount) }} {{ currencyLabel }}</span>
         </div>
 
         <div
@@ -141,9 +146,7 @@
           class="flex justify-between items-center text-xs font-bold"
         >
           <span>{{ $t('invoices.amount_remaining_label') }}</span>
-          <span class="font-mono font-black"
-            >{{ formatMoney(invoice.remaining_amount) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono font-black">{{ formatMoney(invoice.remaining_amount) }} {{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -171,6 +174,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Printer, ArrowRight } from 'lucide-vue-next';
+import ErrorState from '../../Components/Common/ErrorState.vue';
+import { useLoadError } from '../../Composables/useLoadError';
 import api from '../../Services/api';
 import { useAppConfigStore } from '../../stores/appConfig';
 import { useFormatters } from '../../Composables/useFormatters';
@@ -179,9 +184,10 @@ import { useTrans } from '../../Composables/useTrans';
 const route = useRoute();
 const router = useRouter();
 const appConfigStore = useAppConfigStore();
-const { formatMoney, formatTime } = useFormatters();
+const { formatMoney, formatTime, currencyLabel } = useFormatters();
 const { t } = useTrans();
 
+const { error, errorMessage, clearError, setError } = useLoadError();
 const invoice = ref(null);
 const isLoading = ref(true);
 
@@ -249,11 +255,12 @@ const fetchInvoice = async () => {
   const id = route.params.id;
   if (!id) return;
   isLoading.value = true;
+  clearError();
   try {
     const res = await api.get(`/invoices/${id}`);
     invoice.value = res.data?.data || res.data;
   } catch (e) {
-    console.error('Failed to load invoice for printing', e);
+    setError(e);
   } finally {
     isLoading.value = false;
   }
@@ -261,7 +268,7 @@ const fetchInvoice = async () => {
 
 onMounted(async () => {
   await fetchInvoice();
-  if (route.query.autoprint === 'true') {
+  if (invoice.value && route.query.autoprint === 'true') {
     setTimeout(() => {
       window.print();
     }, 500);

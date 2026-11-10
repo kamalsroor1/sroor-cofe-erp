@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
       <div class="flex items-center gap-2">
-        <span class="text-base">👤</span>
+        <User class="w-5 h-5" />
         <h3 class="text-xs font-black text-slate-900 dark:text-white">{{ $t('invoices.customer_info_section') }}</h3>
       </div>
       <router-link
@@ -13,7 +13,7 @@
         class="text-[11px] font-bold text-theme-primary hover:underline flex items-center gap-1"
       >
         <span>{{ $t('customers.view_statement') }}</span>
-        <span>←</span>
+        <ArrowRight class="w-3.5 h-3.5 rtl:rotate-180" />
       </router-link>
     </div>
 
@@ -31,7 +31,7 @@
       <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
         <span class="text-slate-500 dark:text-slate-400 font-bold">{{ $t('invoices.current_balance_after') }}</span>
         <span class="font-mono font-black text-sm" :class="customerBalance > 0 ? 'text-rose-500' : 'text-emerald-500'">
-          {{ formatMoney(customerBalance) }} {{ $t('common.currency') }}
+          {{ formatMoney(customerBalance) }} {{ currencyLabel }}
         </span>
       </div>
     </div>
@@ -39,9 +39,10 @@
 </template>
 
 <script setup>
+import { ArrowRight, User } from 'lucide-vue-next';
 import { useFormatters } from '../../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   customer: { type: Object, default: () => ({}) },

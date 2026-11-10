@@ -1,10 +1,10 @@
 <template>
   <div
     class="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 sm:p-6 selection:bg-theme-primary selection:text-white relative overflow-clip font-sans transition-colors duration-300"
-    dir="rtl"
   >
-    <!-- Theme Switcher floating button on top left -->
-    <div class="absolute top-4 left-4 z-20">
+    <!-- Language + theme switchers, floating at the end corner -->
+    <div class="absolute top-4 end-4 z-20 flex items-center gap-2">
+      <LanguageSwitcher class="rounded-2xl shadow-md backdrop-blur-md" />
       <button
         type="button"
         @click="toggleTheme"
@@ -20,9 +20,9 @@
     </div>
 
     <!-- Glowing Ambient Lighting Background Blobs -->
-    <div class="absolute top-0 right-0 w-96 h-96 bg-theme-light rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 start-0 w-96 h-96 bg-theme-light rounded-full blur-3xl pointer-events-none"></div>
     <div
-      class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"
+      class="absolute -bottom-32 -end-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"
     ></div>
 
     <div
@@ -126,7 +126,7 @@
           :leading-icon="Phone"
           dir="ltr"
           :error="errorMessage"
-          wrapper-class="text-right"
+          wrapper-class="text-start"
         />
 
         <!-- Password Field with Toggle -->
@@ -140,7 +140,7 @@
           :leading-icon="Lock"
           dir="ltr"
           :error="errorMessage"
-          wrapper-class="text-right"
+          wrapper-class="text-start"
         />
 
         <!-- Options: Remember Me & Biometric Setup -->
@@ -217,6 +217,7 @@ import BaseInput from '../../Components/Form/BaseInput.vue';
 import BaseCheckbox from '../../Components/Form/BaseCheckbox.vue';
 import BrandMark from '../../Components/Brand/BrandMark.vue';
 import WorkspaceBadge from '../../Components/Auth/WorkspaceBadge.vue';
+import LanguageSwitcher from '../../Components/Common/LanguageSwitcher.vue';
 import LoginMethodTabs from '../../Components/Auth/LoginMethodTabs.vue';
 import QuickLoginPanel from '../../Components/Auth/QuickLoginPanel.vue';
 import { useQuickLogin } from '../../Composables/Auth/useQuickLogin';
@@ -333,7 +334,7 @@ onMounted(async () => {
   }
 
   if (!window.spaTranslations || Object.keys(window.spaTranslations).length === 0) {
-    await appConfigStore.fetchTranslations('ar');
+    await appConfigStore.fetchTranslations();
   }
   await checkAvailability();
 

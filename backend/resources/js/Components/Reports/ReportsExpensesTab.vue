@@ -26,12 +26,12 @@
         </div>
         <div class="text-xl font-black text-slate-900 dark:text-white font-mono">
           {{ formatMoney(e.amount) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
     </div>
 
-    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="💸" />
+    <EmptyState v-else :title="$t('reports.no_data_title')" :description="$t('reports.no_data_desc')" icon="receipt" />
   </div>
 </template>
 
@@ -40,7 +40,7 @@ import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import EmptyState from '../Common/EmptyState.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   expensesBreakdown: { type: Array, default: () => [] },

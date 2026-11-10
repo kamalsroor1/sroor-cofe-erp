@@ -4,7 +4,7 @@
   >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-        <span>📦</span>
+        <Package class="w-4 h-4" />
         <span>{{ $t('inventory.transferred_items_section') }}</span>
       </h2>
     </div>
@@ -13,9 +13,10 @@
     <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
       <div class="flex-1">
         <BaseSelect
-          :model-value="selectedItemId"
-          @update:model-value="$emit('update:selectedItemId', $event)"
-          :options="itemOptions"
+          :model-value="selectedItem?.id ?? null"
+          :search-fn="searchFn"
+          :selected-option="selectedItem ? { value: selectedItem.id, label: selectedItem.name } : null"
+          @select="$emit('update:selectedItem', $event.raw)"
           :placeholder="$t('inventory.select_item_to_transfer')"
         />
       </div>
@@ -25,7 +26,7 @@
         size="md"
         type="button"
         @click="$emit('add-item')"
-        :disabled="!selectedItemId"
+        :disabled="!selectedItem"
         class="shrink-0 font-black shadow-lg shadow-theme-primary"
       >
         <Plus class="w-4 h-4" />
@@ -76,7 +77,7 @@
                   type="button"
                   @click="$emit('remove-item', idx)"
                   class="p-2 text-slate-400 hover:text-rose-500 rounded-lg transition cursor-pointer active:scale-90"
-                  title="حذف"
+                  :title="$t('common.delete')"
                 >
                   <Trash2 class="w-4 h-4" />
                 </button>
@@ -132,15 +133,15 @@
 </template>
 
 <script setup>
-import { Plus, Trash2 } from 'lucide-vue-next';
+import { Plus, Trash2, Package } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseButton from '../Common/BaseButton.vue';
 
 defineProps({
   items: { type: Array, default: () => [] },
-  selectedItemId: { type: [Number, String], default: null },
-  itemOptions: { type: Array, default: () => [] },
+  selectedItem: { type: Object, default: null },
+  searchFn: { type: Function, required: true },
 });
 
-defineEmits(['update:selectedItemId', 'add-item', 'remove-item']);
+defineEmits(['update:selectedItem', 'add-item', 'remove-item']);
 </script>

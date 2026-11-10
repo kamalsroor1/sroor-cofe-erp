@@ -60,7 +60,8 @@
         <Banknote class="w-4 h-4 text-emerald-500" />
       </div>
       <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-3 truncate">
-        {{ formatMoney(stats?.total_sales || 0) }} <span class="text-xs font-sans">ج.م</span>
+        {{ formatMoney(stats?.total_sales || 0) }}
+        <span class="text-xs font-sans">{{ $t('common.currencies.EGP') }}</span>
       </div>
       <div class="text-[10px] text-slate-400 mt-1 font-sans">{{ $t('super.total_sales_stat') }}</div>
     </div>

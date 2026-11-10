@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\System\GetSetupProgressAction;
 use App\Actions\System\GetSystemContextAction;
 use App\Actions\System\GetTranslationsAction;
 use App\Http\Controllers\Controller;
@@ -15,7 +16,8 @@ final class SystemContextApiController extends Controller
 {
     public function __construct(
         private readonly GetSystemContextAction $getSystemContextAction,
-        private readonly GetTranslationsAction $getTranslationsAction
+        private readonly GetTranslationsAction $getTranslationsAction,
+        private readonly GetSetupProgressAction $getSetupProgressAction,
     ) {}
 
     /**
@@ -38,6 +40,23 @@ final class SystemContextApiController extends Controller
             'success' => true,
             'data' => $data,
         ], 200);
+    }
+
+    /**
+     * Onboarding checklist progress (admin / settings.manage only).
+     */
+    public function setupProgress(Request $request): JsonResponse
+    {
+        $progress = $this->getSetupProgressAction->execute($request->user());
+
+        if ($progress === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('onboarding.forbidden'),
+            ], 403);
+        }
+
+        return response()->json(['success' => true, 'data' => $progress], 200);
     }
 
     /**

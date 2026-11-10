@@ -12,7 +12,7 @@
         <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('reports.total_inflow_label') }}</span>
         <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
           +{{ formatMoney(treasuryData.total_inflow || 0) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -25,7 +25,7 @@
         }}</span>
         <div class="text-2xl font-black text-rose-500 dark:text-rose-400 font-mono">
           -{{ formatMoney(treasuryData.total_outflow || 0) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
 
@@ -41,7 +41,7 @@
           :class="(treasuryData.net_cash_flow || 0) >= 0 ? 'text-cyan-500 dark:text-cyan-400' : 'text-theme-primary'"
         >
           {{ (treasuryData.net_cash_flow || 0) > 0 ? '+' : '' }}{{ formatMoney(treasuryData.net_cash_flow || 0) }}
-          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ $t('common.currency') }}</span>
+          <span class="text-xs text-slate-400 font-normal font-tajawal">{{ currencyLabel }}</span>
         </div>
       </div>
     </div>
@@ -52,7 +52,7 @@
 import StatCardSkeleton from '../Common/Skeletons/StatCardSkeleton.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   treasuryData: { type: Object, default: () => ({}) },

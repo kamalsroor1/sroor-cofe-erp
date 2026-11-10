@@ -164,7 +164,7 @@ const onUnitChange = (unit) => emit('update:form', { ...props.form, unit, is_wei
 const categoryOptions = computed(() => {
   return props.categories.map((c) => ({
     value: typeof c === 'object' ? c.name : c,
-    label: typeof c === 'object' ? `${c.icon || '☕'} ${c.name}` : c,
+    label: typeof c === 'object' ? c.name : c,
   }));
 });
 

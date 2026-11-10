@@ -42,6 +42,7 @@
       <span class="text-[10px] text-slate-400 font-mono"> #{{ category.sort_order ?? 0 }} </span>
 
       <ActionMenu
+        v-if="authStore.hasPermission(['items.edit', 'items.delete'])"
         :items="getCategoryActions(category)"
         :title="category.name"
         button-class="h-8 w-8 min-w-[32px] p-0"
@@ -55,6 +56,7 @@ import { Pencil, Trash2 } from 'lucide-vue-next';
 import DynamicIcon from '../Common/DynamicIcon.vue';
 import ActionMenu from '../ActionMenu.vue';
 import { trans } from '../../helpers/trans';
+import { useAuthStore } from '../../stores/auth';
 
 defineProps({
   category: {
@@ -64,17 +66,20 @@ defineProps({
 });
 
 const emit = defineEmits(['edit', 'delete']);
+const authStore = useAuthStore();
 
 const getCategoryActions = (cat) => [
   {
     label: trans('common.edit'),
     icon: Pencil,
+    show: authStore.hasPermission('items.edit'),
     onClick: () => emit('edit', cat),
   },
   {
     label: trans('common.delete'),
     icon: Trash2,
     variant: 'danger',
+    show: authStore.hasPermission('items.delete'),
     onClick: () => emit('delete', cat),
   },
 ];

@@ -2,7 +2,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../Services/api';
 import { useAppConfigStore } from '../stores/appConfig';
-import { useFormatters } from './useFormatters';
+import { currentCurrencyLabel, useFormatters } from './useFormatters';
 import { useTrans } from './useTrans';
 import DarkSwal from '../helpers/alert';
 import { buildCompanyInfo } from '../helpers/companyInfo';
@@ -70,8 +70,7 @@ export function useInvoiceShow() {
             const res = await api.get(`/invoices/${id}`);
             invoice.value = res.data?.data || res.data;
         } catch (e) {
-            error.value = e.response?.data?.message || t('invoices.no_invoices_found');
-            console.error('Failed to load invoice:', e);
+            error.value = e.userMessage || e.response?.data?.message || t('common.error_occurred');
         } finally {
             isLoading.value = false;
         }
@@ -108,7 +107,7 @@ export function useInvoiceShow() {
         net: formatMoney(invoice.value.net_total),
         paid: formatMoney(invoice.value.paid_amount),
         remaining: formatMoney(invoice.value.remaining_amount),
-        currency: t('common.currency'),
+        currency: currentCurrencyLabel(),
     });
 
     const copyInvoiceDetails = async () => {
@@ -185,7 +184,7 @@ export function useInvoiceShow() {
 
     onMounted(async () => {
         await fetchInvoice();
-        if (route.query.autoprint === 'true') {
+        if (invoice.value && route.query.autoprint === 'true') {
             triggerPrint();
         }
     });
@@ -199,6 +198,7 @@ export function useInvoiceShow() {
         setMode,
         isLoading,
         error,
+        retry: fetchInvoice,
         activeMode,
         showCancelModal,
         cancelReason,

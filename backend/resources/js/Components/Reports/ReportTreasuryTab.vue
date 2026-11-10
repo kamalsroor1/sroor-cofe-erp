@@ -1,5 +1,8 @@
 <script setup>
 import { useMoney } from '@/Composables/useMoney';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   treasuryData: {
@@ -26,7 +29,7 @@ const { formatMoney } = useMoney();
         >
           <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('reports.cash_collections') }}</span>
           <div class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-            {{ formatMoney(treasuryData?.inflows?.cash || 0) }} {{ $t('common.currency') }}
+            {{ formatMoney(treasuryData?.inflows?.cash || 0) }} {{ currencyLabel }}
           </div>
         </div>
 
@@ -37,7 +40,7 @@ const { formatMoney } = useMoney();
             $t('reports.instapay_collections')
           }}</span>
           <div class="text-xl font-black font-mono text-purple-600 dark:text-purple-400">
-            {{ formatMoney(treasuryData?.inflows?.instapay || 0) }} {{ $t('common.currency') }}
+            {{ formatMoney(treasuryData?.inflows?.instapay || 0) }} {{ currencyLabel }}
           </div>
         </div>
 
@@ -48,7 +51,7 @@ const { formatMoney } = useMoney();
             $t('reports.wallet_collections')
           }}</span>
           <div class="text-xl font-black font-mono text-theme-primary">
-            {{ formatMoney(treasuryData?.inflows?.e_wallet || 0) }} {{ $t('common.currency') }}
+            {{ formatMoney(treasuryData?.inflows?.e_wallet || 0) }} {{ currencyLabel }}
           </div>
         </div>
 
@@ -57,7 +60,7 @@ const { formatMoney } = useMoney();
         >
           <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ $t('reports.visa_collections') }}</span>
           <div class="text-xl font-black font-mono text-cyan-600 dark:text-cyan-400">
-            {{ formatMoney(treasuryData?.inflows?.visa || 0) }} {{ $t('common.currency') }}
+            {{ formatMoney(treasuryData?.inflows?.visa || 0) }} {{ currencyLabel }}
           </div>
         </div>
       </div>

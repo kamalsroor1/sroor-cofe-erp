@@ -16,7 +16,7 @@ import { computeCheckoutNet } from '../../resources/js/helpers/posCheckout.js';
 
 const makeCart = () => [
     { id: 1, name: 'Espresso', unit: 'piece', quantity: 2, unit_price: 50 },
-    { id: 2, name: 'Coffee beans', unit: 'كجم', quantity: 0.5, unit_price: 400 },
+    { id: 2, name: 'Coffee beans', unit: 'كجم', is_weighted: true, quantity: 0.5, unit_price: 400 },
 ];
 
 describe('quantity edits', () => {
@@ -80,7 +80,7 @@ describe('touch stepper (POSCartItem)', () => {
         const cart = makeCart();
         const next = stepQuantity(cart[1].quantity, { weightBased: true, direction: 1 });
         updateLineQty(cart, { index: 1, value: next });
-        assert.equal(cart[1].quantity, 0.75);
+        assert.equal(Number(cart[1].quantity), 0.75);
     });
 });
 

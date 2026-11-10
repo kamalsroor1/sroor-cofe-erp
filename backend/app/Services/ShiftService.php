@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\ReturnDocument;
 use App\Models\Store;
+use App\Services\Settings\TenantSettings;
 use App\Support\Money\Decimal;
 use App\Support\TenantClock;
 use Exception;
@@ -75,7 +76,7 @@ class ShiftService
                 'number' => $shiftNumber,
                 'store' => $storeName,
                 'amount' => number_format((float) $openingCash, 2),
-                'currency' => __('common.currency'),
+                'currency' => app(TenantSettings::class)->currencyLabel(),
             ])
         );
 
@@ -211,7 +212,7 @@ class ShiftService
                 'notes' => $notes ?: $shift->notes,
             ]);
 
-            $currency = __('common.currency');
+            $currency = app(TenantSettings::class)->currencyLabel();
             $diffMsg = bccomp($diff, '0.000', 3) === 0
                 ? __('treasury.cash_diff_matched')
                 : (bccomp($diff, '0.000', 3) > 0

@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6 max-w-7xl mx-auto font-tajawal">
     <!-- Page Header -->
-    <PageHeader :title="$t('contacts.customers_title')" :subtitle="$t('contacts.customers_subtitle')" icon="👥">
+    <PageHeader :title="$t('contacts.customers_title')" :subtitle="$t('contacts.customers_subtitle')" icon="users">
       <template #actions>
         <BaseButton
           type="button"

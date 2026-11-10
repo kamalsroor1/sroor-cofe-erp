@@ -95,9 +95,9 @@
           @click="showCustomDb = !showCustomDb"
           class="text-[11px] text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer"
         >
-          <span>{{
-            showCustomDb ? '▼ ' + $t('super.hide_custom_db_settings') : '▶ ' + $t('super.show_custom_db_settings')
-          }}</span>
+          <ChevronDown v-if="showCustomDb" class="w-3.5 h-3.5" />
+          <ChevronRight v-else class="w-3.5 h-3.5 rtl:rotate-180" />
+          <span>{{ showCustomDb ? $t('super.hide_custom_db_settings') : $t('super.show_custom_db_settings') }}</span>
         </button>
 
         <div
@@ -173,6 +173,7 @@
 </template>
 
 <script setup>
+import { ChevronDown, ChevronRight } from 'lucide-vue-next';
 import { ref } from 'vue';
 import AppModal from '../Common/AppModal.vue';
 import BaseInput from '../Form/BaseInput.vue';

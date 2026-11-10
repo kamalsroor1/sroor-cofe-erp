@@ -51,10 +51,10 @@
               <td class="p-2.5 font-bold text-slate-900 dark:text-white">{{ item.item_name }}</td>
               <td class="p-2.5 text-end font-mono text-theme-primary font-bold">{{ item.quantity }} {{ item.unit }}</td>
               <td class="p-2.5 text-end font-mono text-slate-700 dark:text-slate-300">
-                {{ formatMoney(item.cost_price) }} {{ $t('common.currency') }}
+                {{ formatMoney(item.cost_price) }} {{ currencyLabel }}
               </td>
               <td class="p-2.5 text-end font-mono font-bold text-emerald-500">
-                {{ formatMoney(item.total_price) }} {{ $t('common.currency') }}
+                {{ formatMoney(item.total_price) }} {{ currencyLabel }}
               </td>
             </tr>
           </tbody>
@@ -67,27 +67,23 @@
       >
         <div class="flex justify-between text-slate-600 dark:text-slate-300 font-tajawal">
           <span>{{ $t('purchases.items_subtotal') }}</span>
-          <span class="font-mono font-bold">{{ formatMoney(purchase.subtotal) }} {{ $t('common.currency') }}</span>
+          <span class="font-mono font-bold">{{ formatMoney(purchase.subtotal) }} {{ currencyLabel }}</span>
         </div>
         <div v-if="purchase.discount_amount > 0" class="flex justify-between text-rose-500 font-tajawal">
           <span>{{ $t('purchases.discount_earned') }}</span>
-          <span class="font-mono font-bold"
-            >-{{ formatMoney(purchase.discount_amount) }} {{ $t('common.currency') }}</span
-          >
+          <span class="font-mono font-bold">-{{ formatMoney(purchase.discount_amount) }} {{ currencyLabel }}</span>
         </div>
         <div v-if="purchase.additional_expenses_total > 0" class="flex justify-between text-theme-primary font-tajawal">
           <span>{{ $t('purchases.additional_expenses_loaded') }}</span>
           <span class="font-mono font-bold"
-            >+{{ formatMoney(purchase.additional_expenses_total) }} {{ $t('common.currency') }}</span
+            >+{{ formatMoney(purchase.additional_expenses_total) }} {{ currencyLabel }}</span
           >
         </div>
         <div
           class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800 font-tajawal"
         >
           <span>{{ $t('invoices.net_invoice') }}</span>
-          <span class="text-emerald-500 font-mono"
-            >{{ formatMoney(purchase.net_total) }} {{ $t('common.currency') }}</span
-          >
+          <span class="text-emerald-500 font-mono">{{ formatMoney(purchase.net_total) }} {{ currencyLabel }}</span>
         </div>
       </div>
     </div>
@@ -98,7 +94,7 @@
 import AppModal from '../Common/AppModal.vue';
 import { useFormatters } from '../../Composables/useFormatters';
 
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 
 defineProps({
   show: { type: Boolean, default: false },

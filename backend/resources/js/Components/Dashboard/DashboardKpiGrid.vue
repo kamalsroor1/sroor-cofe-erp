@@ -3,7 +3,7 @@
     <MetricCard
       :title="$t('dashboard.today_sales')"
       :value="formatMoney(metrics.today_sales || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="default"
       :icon="Banknote"
       icon-bg="bg-emerald-500/10"
@@ -15,7 +15,7 @@
     <MetricCard
       :title="$t('dashboard.monthly_gross_profit')"
       :value="formatMoney(metrics.monthly_gross_profit || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="cyan"
       :icon="TrendingUp"
       icon-bg="bg-cyan-500/10"
@@ -27,7 +27,7 @@
     <MetricCard
       :title="$t('dashboard.customers_debt')"
       :value="formatMoney(metrics.customers_debt || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="primary"
       :icon="CreditCard"
       icon-bg="bg-theme-light"
@@ -39,13 +39,13 @@
     <MetricCard
       :title="$t('dashboard.monthly_sales')"
       :value="formatMoney(metrics.monthly_sales || 0)"
-      :currency="$t('common.currency')"
+      :currency="currencyLabel"
       variant="indigo"
       :icon="BarChart3"
       icon-bg="bg-indigo-500/10"
       icon-color="text-indigo-500 dark:text-indigo-400"
       :footer-left="$t('dashboard.net_cash_today') + ':'"
-      :footer-right="`${formatMoney(metrics.net_cash_today || 0)} ${$t('common.currency')}`"
+      :footer-right="`${formatMoney(metrics.net_cash_today || 0)} ${currencyLabel}`"
       footer-right-class="text-emerald-500"
     />
   </div>
@@ -54,6 +54,6 @@
 import { TrendingUp, CreditCard, BarChart3, Banknote } from 'lucide-vue-next';
 import MetricCard from '../Common/MetricCard.vue';
 import { useFormatters } from '../../Composables/useFormatters';
-const { formatMoney } = useFormatters();
+const { formatMoney, currencyLabel } = useFormatters();
 defineProps({ metrics: { type: Object, default: () => ({}) } });
 </script>

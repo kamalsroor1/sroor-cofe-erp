@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Supplier;
 use App\Services\PaymentService;
+use App\Services\Settings\TenantSettings;
 use App\Support\ActiveStore;
 use App\Support\SafeJsonError;
 use Illuminate\Http\JsonResponse;
@@ -104,7 +105,7 @@ final class PaymentController extends Controller
                 'success' => true,
                 'message' => __('contacts.receipt_recorded_success', [
                     'amount' => number_format((float) $validated['amount'], 2),
-                    'currency' => __('common.currency'),
+                    'currency' => app(TenantSettings::class)->currencyLabel(),
                 ]),
                 'data' => $payment,
                 'customer_current_balance' => (float) ($customer?->current_balance ?? 0),
@@ -130,7 +131,7 @@ final class PaymentController extends Controller
                 'success' => true,
                 'message' => __('contacts.disbursement_recorded_success', [
                     'amount' => number_format((float) $validated['amount'], 2),
-                    'currency' => __('common.currency'),
+                    'currency' => app(TenantSettings::class)->currencyLabel(),
                 ]),
                 'data' => $payment,
                 'supplier_current_balance' => (float) ($supplier?->current_balance ?? 0),

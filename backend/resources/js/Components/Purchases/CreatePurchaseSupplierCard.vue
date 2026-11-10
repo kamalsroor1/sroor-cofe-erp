@@ -13,7 +13,7 @@
         <BaseSelect
           :model-value="supplierId"
           @update:model-value="$emit('update:supplierId', $event)"
-          :options="supplierOptions"
+          :search-fn="searchFn"
           :label="$t('purchases.supplier')"
           :placeholder="$t('purchases.select_supplier')"
           required
@@ -54,7 +54,7 @@ defineProps({
   supplierId: { type: [String, Number], default: '' },
   purchaseDate: { type: String, default: '' },
   supplierInvoiceRef: { type: String, default: '' },
-  supplierOptions: { type: Array, default: () => [] },
+  searchFn: { type: Function, required: true },
 });
 
 defineEmits(['update:supplierId', 'update:purchaseDate', 'update:supplierInvoiceRef']);

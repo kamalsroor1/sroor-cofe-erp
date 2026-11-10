@@ -9,7 +9,7 @@
         :class="{ 'text-rose-500 dark:text-rose-400': hasError }"
       >
         {{ label }}
-        <span v-if="required" class="text-rose-500 font-black mr-0.5">*</span>
+        <span v-if="required" class="text-rose-500 font-black ms-0.5">*</span>
       </label>
 
       <span v-if="maxlength" class="text-[10px] font-mono text-slate-400 dark:text-slate-500">

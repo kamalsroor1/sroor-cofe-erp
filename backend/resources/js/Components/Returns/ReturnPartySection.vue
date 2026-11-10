@@ -5,7 +5,7 @@
     <h2
       class="text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2"
     >
-      <span>🔄</span>
+      <RefreshCw class="w-4 h-4" />
       <span>{{ $t('returns.type_and_party_section') }}</span>
     </h2>
 
@@ -46,7 +46,7 @@
         <BaseSelect
           :model-value="form.customer_id"
           @update:model-value="$emit('update:field', 'customer_id', Number($event))"
-          :options="customerOptions"
+          :search-fn="searchCustomers"
           :label="$t('returns.customer_from')"
           :placeholder="$t('pos.choose_invoice_customer')"
           required
@@ -58,7 +58,7 @@
         <BaseSelect
           :model-value="form.supplier_id"
           @update:model-value="$emit('update:field', 'supplier_id', Number($event))"
-          :options="supplierOptions"
+          :search-fn="searchSuppliers"
           :label="$t('returns.supplier_to')"
           :placeholder="$t('purchases.select_supplier')"
           required
@@ -79,30 +79,16 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { RefreshCw } from 'lucide-vue-next';
 import BaseSelect from '../Form/BaseSelect.vue';
 import BaseDatePicker from '../Form/BaseDatePicker.vue';
 
-const props = defineProps({
+defineProps({
   form: { type: Object, required: true },
-  customers: { type: Array, default: () => [] },
-  suppliers: { type: Array, default: () => [] },
+  searchCustomers: { type: Function, required: true },
+  searchSuppliers: { type: Function, required: true },
   hideParty: { type: Boolean, default: false },
 });
 
 defineEmits(['type-change', 'update:field']);
-
-const customerOptions = computed(() =>
-  props.customers.map((c) => ({
-    value: c.id,
-    label: `${c.name} ${c.phone ? '(' + c.phone + ')' : ''}`,
-  }))
-);
-
-const supplierOptions = computed(() =>
-  props.suppliers.map((s) => ({
-    value: s.id,
-    label: `${s.name} ${s.phone ? '(' + s.phone + ')' : ''}`,
-  }))
-);
 </script>

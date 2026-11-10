@@ -4,24 +4,22 @@
   >
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
       <h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-        <span>📦</span>
+        <Package class="w-4 h-4" />
         <span>{{ $t('returns.return_items_section') }}</span>
       </h2>
     </div>
 
     <!-- Add Item Row Selector -->
     <div class="flex items-center gap-2">
-      <select
-        :value="selectedItemToAdd"
-        @change="$emit('update:selected-item', items.find((i) => i.id === Number($event.target.value)) || null)"
-        class="flex-1 h-10 px-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-theme-primary focus:outline-none"
-      >
-        <option :value="null">{{ $t('returns.select_item_to_return') }}</option>
-        <option v-for="it in items" :key="it.id" :value="it.id">
-          {{ it.name }} ({{ it.code || '—' }}) — {{ $t('inventory.current_stock') }}: {{ it.current_stock }}
-          {{ it.unit }}
-        </option>
-      </select>
+      <div class="flex-1">
+        <BaseSelect
+          :model-value="selectedItemToAdd?.id ?? null"
+          :search-fn="searchItems"
+          :selected-option="selectedItemToAdd ? { value: selectedItemToAdd.id, label: selectedItemToAdd.name } : null"
+          :placeholder="$t('returns.select_item_to_return')"
+          @select="$emit('update:selected-item', $event.raw)"
+        />
+      </div>
 
       <button
         type="button"
@@ -72,7 +70,7 @@
               />
             </td>
             <td class="p-3 text-end font-mono font-bold text-rose-600 dark:text-rose-400">
-              {{ formatMoney(item.quantity * item.unit_price) }} {{ $t('common.currency') }}
+              {{ formatMoney(item.quantity * item.unit_price) }} {{ currencyLabel }}
             </td>
             <td class="p-3 text-center">
               <button
@@ -98,11 +96,15 @@
 </template>
 
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
+import { Trash2, Package } from 'lucide-vue-next';
+import BaseSelect from '../Form/BaseSelect.vue';
+import { useFormatters } from '../../Composables/useFormatters';
+
+const { currencyLabel } = useFormatters();
 
 defineProps({
   itemsList: { type: Array, default: () => [] },
-  items: { type: Array, default: () => [] },
+  searchItems: { type: Function, required: true },
   selectedItemToAdd: { type: Object, default: null },
 });
 

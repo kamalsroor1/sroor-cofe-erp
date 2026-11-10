@@ -30,7 +30,11 @@
         v-if="isOpen"
         class="absolute top-full mt-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 space-y-1 min-w-[200px]"
         :class="[
-          align === 'start' ? 'start-0' : align === 'center' ? 'start-1/2 -translate-x-1/2' : 'end-0',
+          align === 'start'
+            ? 'start-0'
+            : align === 'center'
+              ? 'start-1/2 -translate-x-1/2 rtl:translate-x-1/2'
+              : 'end-0',
           menuClass,
         ]"
       >

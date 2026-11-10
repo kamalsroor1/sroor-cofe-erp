@@ -462,4 +462,15 @@ return [
     // OPS-9: tenant archive (DELETE) and unarchive.
     'tenant_archive_queued' => 'Archive requested: the final backup is being taken. The account is archived once it is uploaded and verified.',
     'tenant_unarchived' => 'The account was restored to its previous status.',
+    'mrr_full' => 'Monthly recurring revenue',
+    'server_specs' => [
+        'live' => 'Live',
+        'status_active' => 'Active',
+        'title' => 'Server environment and central system',
+        'online' => 'Online and running well',
+        'php_version' => 'PHP version',
+        'laravel_version' => 'Laravel version',
+        'db_engine' => 'Database engine',
+        'environment' => 'Runtime environment',
+    ],
 ];
