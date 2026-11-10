@@ -559,13 +559,9 @@ class InvoiceService
     /**
      * Cancel an invoice and reverse stock securely
      */
-    public function cancelInvoice(Invoice $invoice, string $reason): Invoice
+    public function cancelInvoice(Invoice $invoice, string $reason, ?int $approvedBy = null): Invoice
     {
-        if (auth()->check() && ! auth()->user()->hasRole('admin')) {
-            throw BusinessRuleException::forbidden('invoices.cancel_admin_only');
-        }
-
-        return DB::transaction(function () use ($invoice, $reason) {
+        return DB::transaction(function () use ($invoice, $reason, $approvedBy) {
             $lockedInvoice = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedInvoice->status === 'cancelled') {
@@ -596,10 +592,15 @@ class InvoiceService
                 );
             }
 
+            $noteText = ($lockedInvoice->notes ? $lockedInvoice->notes."\n" : '')."تم الإلغاء: {$reason}";
+            if ($approvedBy !== null) {
+                $noteText .= " (موافقة أدمن: #{$approvedBy})";
+            }
+
             $lockedInvoice->update([
                 'status' => 'cancelled',
                 'remaining_amount' => '0.000',
-                'notes' => ($lockedInvoice->notes ? $lockedInvoice->notes."\n" : '')."تم الإلغاء: {$reason}",
+                'notes' => $noteText,
             ]);
 
             // BE-03: give back what was paid (negative PAY-REF vouchers) before the balance is recomputed
@@ -608,19 +609,29 @@ class InvoiceService
             // Recalculate customer balance
             $this->customerBalanceService->updateBalance($lockedInvoice->customer_id);
 
+            $newValues = $lockedInvoice->toArray();
+            if ($approvedBy !== null) {
+                $newValues['override_approved_by'] = $approvedBy;
+            }
+
             // Audit & Activity log
             $this->auditLogService->log(
                 action: 'invoice_cancelled',
                 auditable: $lockedInvoice,
                 oldValues: $oldState,
-                newValues: $lockedInvoice->toArray()
+                newValues: $newValues
             );
+
+            $salesProperties = ['reason' => $reason];
+            if ($approvedBy !== null) {
+                $salesProperties['override_approved_by'] = $approvedBy;
+            }
 
             $this->activityLogService->logSales(
                 action: 'cancelled',
                 invoice: $lockedInvoice,
                 description: "تم إلغاء فاتورة المبيعات رقم [{$lockedInvoice->invoice_number}] وإرجاع بضاعتها للمخزن. سبب الإلغاء: {$reason}",
-                properties: ['reason' => $reason]
+                properties: $salesProperties
             );
 
             return $lockedInvoice;

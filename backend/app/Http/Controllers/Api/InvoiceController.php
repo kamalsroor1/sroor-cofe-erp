@@ -152,7 +152,7 @@ final class InvoiceController extends Controller
         }
 
         $dto = CancelInvoiceDTO::fromArray($id, $request->validated());
-        $cancelled = $this->cancelSalesInvoiceAction->execute($dto);
+        $cancelled = $this->cancelSalesInvoiceAction->execute($dto, $user);
 
         return response()->json([
             'success' => true,

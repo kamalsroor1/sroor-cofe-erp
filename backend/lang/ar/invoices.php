@@ -268,4 +268,6 @@ return [
     'discrete_unit_integer_only' => 'الصنف \':item\' بالقطعة/العلبة يقبل فقط أعداداً صحيحة، ولا يمكن بيع أجزاء أو كسور (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'خصم البند لا يمكن أن يزيد عن إجمالي البند.',
+    // BE-03
+    'cancel_cash_requires_admin_pin' => 'إلغاء فاتورة تحتوي على مدفوعات نقدية يتطلب موافقة المدير بالرقم السري.',
 ];

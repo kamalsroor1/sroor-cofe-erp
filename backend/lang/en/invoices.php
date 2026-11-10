@@ -268,4 +268,6 @@ return [
     'discrete_unit_integer_only' => 'The item \':item\' is sold by piece/box and only accepts whole numbers; fractions are not allowed (:quantity :unit).',
     // BE-08
     'line_discount_exceeds_total' => 'The line discount cannot exceed the line total.',
+    // BE-03
+    'cancel_cash_requires_admin_pin' => 'Cancelling an invoice with cash payments requires manager PIN approval.',
 ];
