@@ -9,11 +9,13 @@ use App\Actions\Reports\GetExpensesBreakdownReportAction;
 use App\Actions\Reports\GetInventoryValuationReportAction;
 use App\Actions\Reports\GetItemsProfitabilityReportAction;
 use App\Actions\Reports\GetProfitLossReportAction;
+use App\Actions\Reports\GetStockDriftReportAction;
 use App\Actions\Reports\GetStoresComparativeReportAction;
 use App\Actions\Reports\GetTreasuryReportAction;
 use App\DTOs\Reports\ReportFilterDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FilterReportRequest;
+use App\Http\Requests\StockDriftReportRequest;
 use App\Http\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\StockMovement;
@@ -34,6 +36,7 @@ final class ReportController extends Controller
         private readonly GetExpensesBreakdownReportAction $getExpensesBreakdownReportAction,
         private readonly GetInventoryValuationReportAction $getInventoryValuationReportAction,
         private readonly GetTreasuryReportAction $getTreasuryReportAction,
+        private readonly GetStockDriftReportAction $getStockDriftReportAction,
         private readonly TenantClock $tenantClock,
     ) {}
 
@@ -244,6 +247,25 @@ final class ReportController extends Controller
             // SEC-1 (M6): shaped by ItemResource (cost only with items.view_cost), never the raw model.
             'item' => (new ItemResource($item))->resolve(),
             'movements' => $movements,
+        ], 200);
+    }
+
+    /**
+     * Stock Drift Report (SUM(store_stocks.quantity) vs items.current_stock)
+     */
+    public function stockDrift(StockDriftReportRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? 25);
+        $search = isset($validated['search']) ? (string) $validated['search'] : null;
+
+        $result = $this->getStockDriftReportAction->execute($page, $perPage, $search);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result['items'],
+            'meta' => $result['meta'],
         ], 200);
     }
 }

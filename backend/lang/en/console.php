@@ -261,4 +261,19 @@ return [
         'unknown_plan' => 'No plan with slug ":slug".',
         'assigned' => 'Assigned :count tenant(s) to plan ":slug".',
     ],
+
+    'stock_drift' => [
+        'description' => 'Read-only report of items where the sum of branch balances differs from items.current_stock (bcmath).',
+        'tenant_not_found' => 'Tenant not found: :tenant',
+        'no_tenants' => 'No tenants to inspect.',
+        'tenant_failed' => 'Failed to inspect tenant :tenant: :error',
+        'col_tenant' => 'Tenant',
+        'col_id' => 'ID',
+        'col_code' => 'Code',
+        'col_name' => 'Item',
+        'col_current_stock' => 'Item Stock',
+        'col_stores_stock' => 'Branches Sum',
+        'col_drift' => 'Drift',
+        'summary' => 'Stock drift check (read-only): :count drifted item(s) across :total tenant(s). Nothing was modified.',
+    ],
 ];

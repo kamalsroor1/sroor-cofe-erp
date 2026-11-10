@@ -179,4 +179,15 @@ return [
         'col_total_out' => 'Total out',
         'col_current_balance' => 'Current balance',
     ],
+
+    // Stock drift report (SUM(store_stocks) vs items.current_stock)
+    'tab_stock_drift' => 'Stock Drift',
+    'stock_drift_title' => 'Stock Drift Report (Branches Sum vs Item Stock)',
+    'stock_drift_subtitle' => 'Lists items where the sum of branch balances differs from the item current stock (read-only)',
+    'stock_drift_col_item_stock' => 'Item Current Stock',
+    'stock_drift_col_branches_sum' => 'Branches Stock Sum',
+    'stock_drift_col_drift' => 'Drift (Branches − Item)',
+    'stock_drift_empty_title' => 'No Stock Drift Found',
+    'stock_drift_empty_desc' => 'All items have matching branch stock sums and item total stock.',
+    'stock_drift_search_placeholder' => 'Search by item name or code...',
 ];
