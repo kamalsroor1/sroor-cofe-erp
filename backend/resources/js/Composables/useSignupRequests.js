@@ -1,10 +1,16 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
-import DarkSwal, { DANGER_CONFIRM_BUTTON_CLASS, notifySuccess, notifyWarning } from '../helpers/alert';
+import DarkSwal, {
+    DANGER_CONFIRM_BUTTON_CLASS,
+    DARK_SWAL_CUSTOM_CLASS,
+    notifySuccess,
+    notifyWarning,
+} from '../helpers/alert';
 import { useCentralAuthStore } from '../stores/centralAuth';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import { useSignupRequestApproval } from './useSignupRequestApproval';
+import { refreshPendingSignupRequests } from './usePendingSignupRequests';
 
 export const SIGNUP_STATUSES = Object.freeze(['pending', 'approved', 'rejected']);
 
@@ -58,7 +64,10 @@ export function useSignupRequests() {
         fetchRequests();
     };
 
-    const approval = useSignupRequestApproval(fetchRequests);
+    const approval = useSignupRequestApproval(() => {
+        fetchRequests();
+        refreshPendingSignupRequests();
+    });
 
     const reject = async (signup) => {
         const result = await DarkSwal.fire({
@@ -74,7 +83,7 @@ export function useSignupRequests() {
             showCancelButton: true,
             confirmButtonText: t('signup.console.reject_confirm'),
             cancelButtonText: t('common.cancel'),
-            customClass: { ...DarkSwal.params.customClass, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
+            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
         });
         if (!result.isConfirmed) return;
 
@@ -91,6 +100,7 @@ export function useSignupRequests() {
             }
         }
         fetchRequests();
+        refreshPendingSignupRequests();
     };
 
     onMounted(fetchRequests);

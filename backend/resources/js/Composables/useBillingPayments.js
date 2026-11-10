@@ -4,6 +4,7 @@ import { useCentralAuthStore } from '../stores/centralAuth';
 import { CENTRAL_PERMISSIONS } from '../helpers/centralPermissions';
 import DarkSwal, {
     DANGER_CONFIRM_BUTTON_CLASS,
+    DARK_SWAL_CUSTOM_CLASS,
     confirmDialog,
     notifyError,
     notifySuccess,
@@ -133,7 +134,7 @@ export function useBillingPayments() {
             confirmButtonText: t('billing.console.queue.reject_confirm'),
             cancelButtonText: t('common.cancel'),
             reverseButtons: true,
-            customClass: { ...DarkSwal.params.customClass, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
+            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
             inputValidator: (value) => {
                 const length = String(value || '').trim().length;
                 if (length < REJECT_REASON_MIN) return t('billing.console.queue.reason_required');

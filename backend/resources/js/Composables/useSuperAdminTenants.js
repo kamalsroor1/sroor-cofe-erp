@@ -3,6 +3,7 @@ import api from '../Services/centralApi';
 import { useTrans } from './useTrans';
 import DarkSwal, {
     DANGER_CONFIRM_BUTTON_CLASS,
+    DARK_SWAL_CUSTOM_CLASS,
     notifyError,
     notifySuccess,
     notifyWarning,
@@ -101,7 +102,7 @@ export function useTenantArchiveActions() {
             showCancelButton: true,
             confirmButtonText: t('tenant_archive.confirm_btn'),
             cancelButtonText: t('common.cancel'),
-            customClass: { ...DarkSwal.params.customClass, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
+            customClass: { ...DARK_SWAL_CUSTOM_CLASS, confirmButton: DANGER_CONFIRM_BUTTON_CLASS },
         });
         if (!result.isConfirmed) return null;
 

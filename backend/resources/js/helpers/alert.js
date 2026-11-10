@@ -15,6 +15,19 @@ const triggerToastHaptic = async (type = 'success') => {
     } catch (e) {}
 };
 
+/**
+ * Base `customClass` of DarkSwal. Spread it when a dialog overrides one class: a SweetAlert2
+ * mixin exposes no `.params`, so `DarkSwal.params.customClass` throws.
+ */
+export const DARK_SWAL_CUSTOM_CLASS = Object.freeze({
+    popup: 'font-tajawal',
+    title: 'font-tajawal',
+    htmlContainer: 'font-tajawal',
+    confirmButton: 'font-tajawal',
+    cancelButton: 'font-tajawal',
+    denyButton: 'font-tajawal',
+});
+
 // 🎨 Base ERP SweetAlert2 Dark Configuration
 const DarkSwal = Swal.mixin({
     background: '#090e1a',
@@ -22,14 +35,7 @@ const DarkSwal = Swal.mixin({
     allowOutsideClick: true,
     allowEscapeKey: true,
     showCloseButton: true,
-    customClass: {
-        popup: 'font-tajawal',
-        title: 'font-tajawal',
-        htmlContainer: 'font-tajawal',
-        confirmButton: 'font-tajawal',
-        cancelButton: 'font-tajawal',
-        denyButton: 'font-tajawal',
-    },
+    customClass: { ...DARK_SWAL_CUSTOM_CLASS },
 });
 
 // 🍞 Toast Notification Engine
@@ -114,7 +120,7 @@ export const confirmDialog = async ({
         cancelButtonText,
         reverseButtons: true,
         customClass: {
-            ...DarkSwal.params.customClass,
+            ...DARK_SWAL_CUSTOM_CLASS,
             confirmButton: isDanger
                 ? DANGER_CONFIRM_BUTTON_CLASS
                 : 'px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 transition cursor-pointer mx-1.5 font-tajawal',
