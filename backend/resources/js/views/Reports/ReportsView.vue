@@ -76,6 +76,8 @@
         :loading="isLoading"
       />
 
+      <ReportsStockDriftTab v-else-if="activeTab === 'stock_drift'" :key="'stock_drift'" />
+
       <ReportsTreasuryTab
         v-else-if="activeTab === 'treasury'"
         :key="'treasury'"
@@ -98,6 +100,7 @@ import ReportsStoresTab from '../../Components/Reports/ReportsStoresTab.vue';
 import ReportsCustomersTab from '../../Components/Reports/ReportsCustomersTab.vue';
 import ReportsExpensesTab from '../../Components/Reports/ReportsExpensesTab.vue';
 import ReportsInventoryTab from '../../Components/Reports/ReportsInventoryTab.vue';
+import ReportsStockDriftTab from '../../Components/Reports/ReportsStockDriftTab.vue';
 import ReportsTreasuryTab from '../../Components/Reports/ReportsTreasuryTab.vue';
 import { useReports } from '../../Composables/useReports';
 

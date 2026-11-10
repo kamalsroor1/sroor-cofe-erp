@@ -225,6 +225,7 @@ Route::prefix('v1')->middleware([ThrottleTenantMisses::class, ResolveApiTenancy:
         Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('api.reports.inventory')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/treasury', [ReportController::class, 'treasury'])->name('api.reports.treasury')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/top-items', [ReportController::class, 'topItems'])->name('api.reports.top_items')->middleware('store.active')->middleware('feature:reports.basic');
+        Route::get('/reports/stock-drift', [ReportController::class, 'stockDrift'])->name('api.reports.stock_drift')->middleware('store.active')->middleware('feature:reports.basic');
         Route::get('/reports/items/{id}/card', [ReportController::class, 'itemCard'])->name('api.reports.item_card')->middleware('store.active')->middleware('feature:reports.basic');
 
         // Returns (Sales & Purchase Returns)

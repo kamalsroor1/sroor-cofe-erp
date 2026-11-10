@@ -1,5 +1,5 @@
 import { ref, reactive, computed, onMounted } from 'vue';
-import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2 } from 'lucide-vue-next';
+import { TrendingUp, Coffee, Store, Users, Receipt, Package, Building2, Scale } from 'lucide-vue-next';
 import api from '../Services/api';
 import { useTrans } from './useTrans';
 import { addDays, businessToday, startOfMonth, startOfWeek, startOfYear } from './useBusinessDate';
@@ -28,6 +28,7 @@ export function useReports() {
         { key: 'customers', label: t('reports.tab_customers'), icon: Users },
         { key: 'expenses', label: t('reports.tab_expenses'), icon: Receipt },
         { key: 'inventory', label: t('reports.tab_inventory'), icon: Package },
+        { key: 'stock_drift', label: t('reports.tab_stock_drift'), icon: Scale },
         { key: 'treasury', label: t('reports.tab_treasury'), icon: Building2 },
     ]);
 
