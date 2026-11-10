@@ -30,8 +30,6 @@ final readonly class CreateSignupRequestDTO
      */
     public static function fromArray(array $data, ?string $ip = null, ?string $userAgent = null): self
     {
-        $version = trim((string) config('signup.legal_version', '2026-11-draft-v1'));
-
         return new self(
             businessName: $data['business_name'],
             contactName: $data['contact_name'],
@@ -43,7 +41,7 @@ final readonly class CreateSignupRequestDTO
             preferredSubdomain: self::blankToNull($data['preferred_subdomain'] ?? null),
             notes: self::blankToNull($data['notes'] ?? null),
             termsAccepted: filter_var($data['terms_accepted'] ?? false, FILTER_VALIDATE_BOOL),
-            termsVersion: $version !== '' ? $version : '2026-11-draft-v1',
+            termsVersion: trim((string) config('legal.version')),
             honeypotFilled: self::blankToNull($data['website'] ?? null) !== null,
             ip: $ip,
             userAgent: $userAgent === null ? null : mb_substr($userAgent, 0, 512),

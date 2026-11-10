@@ -2,7 +2,7 @@
 
 # Data Processing Agreement (DPA) — Sroor ERP
 
-**Version:** `2026-11-draft-v1`  
+**Version:** `{{LEGAL_VERSION}}`  
 **Effective Date:** `{{EFFECTIVE_DATE}}`
 
 ---

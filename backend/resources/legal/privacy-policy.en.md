@@ -2,7 +2,7 @@
 
 # Privacy Policy & Personal Data Protection Notice — Sroor ERP
 
-**Version:** `2026-11-draft-v1`  
+**Version:** `{{LEGAL_VERSION}}`  
 **Effective Date:** `{{EFFECTIVE_DATE}}`
 
 ---

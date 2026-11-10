@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Queue;
 use Tests\TenantTestCase;
 
 /**
- * PRD-08: Legal draft documents (`docs/legal/`), public legal API (`GET /api/v1/public/legal/{document}`),
+ * PRD-08: Legal draft documents (`resources/legal/`), public legal API (`GET /api/v1/public/legal/{document}`),
  * and explicit consent enforcement + persistence on `POST /api/v1/public/signup-requests`.
  */
 final class PublicLegalAndConsentTest extends TenantTestCase
@@ -28,7 +28,7 @@ final class PublicLegalAndConsentTest extends TenantTestCase
 
     public function test_legal_markdown_drafts_exist_with_mandatory_draft_banner_and_company_placeholders(): void
     {
-        $legalDir = dirname(base_path()).DIRECTORY_SEPARATOR.'docs'.DIRECTORY_SEPARATOR.'legal';
+        $legalDir = resource_path('legal');
 
         $files = [
             'terms-of-service.ar.md',
@@ -78,7 +78,7 @@ final class PublicLegalAndConsentTest extends TenantTestCase
                 ->assertJsonPath('data.document', $doc)
                 ->assertJsonPath('data.locale', 'ar')
                 ->assertJsonPath('data.is_draft', true)
-                ->assertJsonPath('data.version', config('signup.legal_version'));
+                ->assertJsonPath('data.version', config('legal.version'));
 
             $this->assertStringContainsString('مسودة — تحتاج مراجعة قانونية قبل النشر', (string) $arResponse->json('data.markdown'));
 
@@ -87,7 +87,7 @@ final class PublicLegalAndConsentTest extends TenantTestCase
                 ->assertJsonPath('data.document', $doc)
                 ->assertJsonPath('data.locale', 'en')
                 ->assertJsonPath('data.is_draft', true)
-                ->assertJsonPath('data.version', config('signup.legal_version'));
+                ->assertJsonPath('data.version', config('legal.version'));
 
             $this->assertStringContainsString('DRAFT — Requires Legal Review Before Publication', (string) $enResponse->json('data.markdown'));
         }
@@ -134,7 +134,7 @@ final class PublicLegalAndConsentTest extends TenantTestCase
     public function test_signup_request_with_terms_consent_persists_timestamp_version_and_ip_in_central_db(): void
     {
         Queue::fake();
-        config(['signup.legal_version' => '2026-11-draft-v1']);
+        config(['legal.version' => '2026-11-draft-v1']);
 
         $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.42'])
             ->postJson(self::SIGNUP_URL, [
@@ -151,5 +151,65 @@ final class PublicLegalAndConsentTest extends TenantTestCase
         $this->assertNotNull($signup->terms_accepted_at);
         $this->assertSame('2026-11-draft-v1', $signup->terms_version);
         $this->assertSame('198.51.100.42', $signup->ip);
+    }
+
+    public function test_version_and_company_details_are_rendered_from_config(): void
+    {
+        config([
+            'legal.version' => '2027-01-v2',
+            'legal.placeholders.COMPANY_NAME' => 'Acme Coffee LLC',
+        ]);
+
+        $markdown = (string) $this->getJson('/api/v1/public/legal/terms', ['X-Locale' => 'en'])
+            ->assertOk()
+            ->assertJsonPath('data.version', '2027-01-v2')
+            ->json('data.markdown');
+
+        $this->assertStringContainsString('2027-01-v2', $markdown);
+        $this->assertStringContainsString('Acme Coffee LLC', $markdown);
+        $this->assertStringNotContainsString('{{COMPANY_NAME}}', $markdown);
+        $this->assertStringNotContainsString('{{LEGAL_VERSION}}', $markdown);
+        // Still a draft by default: unfilled placeholders stay visible.
+        $this->assertStringContainsString('{{TAX_REGISTRATION_NO}}', $markdown);
+    }
+
+    public function test_non_draft_document_with_unfilled_placeholders_is_not_served(): void
+    {
+        config(['legal.is_draft' => false]);
+
+        foreach (['terms', 'privacy', 'dpa'] as $doc) {
+            $this->getJson("/api/v1/public/legal/{$doc}", ['X-Locale' => 'en'])->assertStatus(503);
+        }
+    }
+
+    public function test_non_draft_document_is_served_without_banner_once_every_placeholder_is_filled(): void
+    {
+        config([
+            'legal.is_draft' => false,
+            'legal.placeholders' => [
+                'COMPANY_NAME' => 'Acme Coffee LLC',
+                'COMPANY_LEGAL_ADDRESS' => '1 Nile St, Cairo',
+                'COMMERCIAL_REGISTER_NO' => 'CR-1',
+                'TAX_REGISTRATION_NO' => 'TX-1',
+                'EFFECTIVE_DATE' => '2027-01-01',
+                'DPO_EMAIL' => 'dpo@example.test',
+                'HOSTING_REGION' => 'EU',
+                'SUPPORT_EMAIL' => 'help@example.test',
+                'SUPPORT_PHONE' => '01000000000',
+            ],
+        ]);
+
+        foreach (['terms', 'privacy', 'dpa'] as $doc) {
+            foreach (['ar', 'en'] as $locale) {
+                $response = $this->getJson("/api/v1/public/legal/{$doc}", ['X-Locale' => $locale])
+                    ->assertOk()
+                    ->assertJsonPath('data.is_draft', false);
+
+                $markdown = (string) $response->json('data.markdown');
+                $this->assertDoesNotMatchRegularExpression('/\{\{[A-Z_]+\}\}/', $markdown);
+                $this->assertStringNotContainsString('DRAFT', $markdown);
+                $this->assertStringNotContainsString('مسودة', $markdown);
+            }
+        }
     }
 }

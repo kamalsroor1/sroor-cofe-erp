@@ -61,6 +61,7 @@ return [
         'draft_badge' => 'Draft — requires legal review before publication',
         'version_label' => 'Document version:',
         'unavailable' => 'The document could not be loaded right now. Please try again.',
+        'not_ready' => 'This document is not available yet.',
         'retry' => 'Try again',
         'back_signup' => 'Back to trial request',
     ],

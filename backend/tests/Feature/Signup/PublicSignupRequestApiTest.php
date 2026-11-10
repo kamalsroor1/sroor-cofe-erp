@@ -68,7 +68,7 @@ final class PublicSignupRequestApiTest extends TenantTestCase
         $this->assertSame('test-roastery', $row->preferred_subdomain);
         $this->assertNotNull($row->ip);
         $this->assertNotNull($row->terms_accepted_at);
-        $this->assertSame((string) config('signup.legal_version'), $row->terms_version);
+        $this->assertSame((string) config('legal.version'), $row->terms_version);
         $this->assertNull($row->tenant_id);
 
         Queue::assertPushed(NotifyPlatformOfSignupRequestJob::class, fn (NotifyPlatformOfSignupRequestJob $job): bool => $job->signupRequestId === $row->id);
